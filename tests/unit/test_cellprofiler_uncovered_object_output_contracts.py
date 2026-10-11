@@ -9,10 +9,9 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -45,9 +44,7 @@ from openhcs.core.runtime_object_label_building import (
 from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerObjectCoreMeasurementFeature,
 )
-from openhcs.interop.cellprofiler.measurement_lookup import (
-    CellProfilerMeasurementFeature,
-)
+from openhcs.interop.cellprofiler.measurement_lookup import ObjectCountFeatureName
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -332,7 +329,7 @@ def test_identify_dead_worms_projects_exact_native_measurement_features() -> Non
     assert table.source_image_name == "CellMask"
     assert IdentifyDeadWormsModule.owns_measurement_feature_name("Worm_Angle")
     assert not IdentifyDeadWormsModule.owns_measurement_feature_name("Worm_Unknown")
-    count_name = CellProfilerMeasurementFeature.object_count("DeadWorms").name
+    count_name = ObjectCountFeatureName.feature("DeadWorms").name
     assert tuple(row[count_name] for row in rows if count_name in row) == (2,)
     object_rows = tuple(
         row for row in rows if MeasurementRowAxisField.OBJECT_LABEL.value in row

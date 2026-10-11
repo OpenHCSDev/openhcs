@@ -9,7 +9,6 @@ Provides command-line interface and application initialization.
 from __future__ import annotations
 
 import argparse
-from enum import Enum
 import importlib.util
 import logging
 import os
@@ -39,26 +38,6 @@ def is_wsl() -> bool:
         return "microsoft" in platform.uname().release.lower()
     except Exception:
         return False
-
-
-class QtPlatformSystem(Enum):
-    """Closed host-platform axis for Qt platform setup."""
-
-    MACOS = "Darwin"
-    LINUX = "Linux"
-    DEFAULT = "default"
-
-    @classmethod
-    def from_current(cls) -> "QtPlatformSystem":
-        current_system = platform.system()
-        for platform_system in (cls.MACOS, cls.LINUX):
-            if current_system == platform_system.value:
-                return platform_system
-        return cls.DEFAULT
-
-    @property
-    def uses_default_qt_platform(self) -> bool:
-        return self is QtPlatformSystem.DEFAULT
 
 
 def _setup_macos_qt_platform() -> None:
@@ -93,10 +72,11 @@ def _setup_linux_qt_platform() -> None:
     os.environ["QT_X11_NO_MITSHM"] = "1"
 
 
-QT_PLATFORM_SETUP: dict[QtPlatformSystem, Callable[[], None]] = {
-    QtPlatformSystem.MACOS: _setup_macos_qt_platform,
-    QtPlatformSystem.LINUX: _setup_linux_qt_platform,
+QT_PLATFORM_SETUP_BY_SYSTEM: dict[str, Callable[[], None]] = {
+    "Darwin": _setup_macos_qt_platform,
+    "Linux": _setup_linux_qt_platform,
 }
+"""Qt platform setup keyed by ``platform.system()``'s spelling; others use Qt's default."""
 
 
 def setup_qt_platform():
@@ -108,13 +88,12 @@ def setup_qt_platform():
         )
         return
 
-    platform_system = QtPlatformSystem.from_current()
-    if platform_system.uses_default_qt_platform:
+    setup = QT_PLATFORM_SETUP_BY_SYSTEM.get(platform.system())
+    if setup is None:
         # Windows and other platforms do not need QT_QPA_PLATFORM set.
         logging.debug(f"Platform {platform.system()} - using default Qt platform")
         return
-
-    QT_PLATFORM_SETUP[platform_system]()
+    setup()
 
 
 def setup_logging(config, *, log_level=None, log_file=None):

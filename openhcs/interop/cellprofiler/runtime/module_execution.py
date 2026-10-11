@@ -13,11 +13,9 @@ from typing import cast
 
 from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -74,7 +72,11 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,
-    CellProfilerMeasurementImageDomain,
+)
+from openhcs.core.measurement_image_alignment import (
+    MeasurementImageReferenceDomain,
+    ObjectLabelsReference,
+    SourceImageReference,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     CellProfilerRuntimeProfiler,
@@ -630,7 +632,7 @@ class CellProfilerModuleExecutor:
             image_inputs,
             adapter,
             current_image,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
         )
 
     def _independent_measurement_image_inputs(
@@ -656,7 +658,7 @@ class CellProfilerModuleExecutor:
                 source_image_name=None,
                 source_aliases=(),
                 payload=current_image,
-                reference_domain=CellProfilerMeasurementImageDomain.SOURCE_IMAGE,
+                reference_domain=SourceImageReference,
             ),
         )
 
@@ -666,8 +668,8 @@ class CellProfilerModuleExecutor:
         adapter: CellProfilerRuntimeAdapter,
         current_image: RuntimeCallableArgument,
         *,
-        reference_domain: CellProfilerMeasurementImageDomain = (
-            CellProfilerMeasurementImageDomain.SOURCE_IMAGE
+        reference_domain: type[MeasurementImageReferenceDomain] = (
+            SourceImageReference
         ),
     ) -> tuple[CellProfilerMeasurementImage, ...]:
         source_aliases = ArtifactSpecCollection(image_inputs).names()
@@ -689,7 +691,7 @@ class CellProfilerModuleExecutor:
         current_image: RuntimeCallableArgument,
         source_aliases: tuple[str, ...],
         *,
-        reference_domain: CellProfilerMeasurementImageDomain,
+        reference_domain: type[MeasurementImageReferenceDomain],
     ) -> CellProfilerMeasurementImage:
         value = RuntimeInputBindingRequest(
             adapter=adapter,
@@ -742,7 +744,7 @@ class CellProfilerModuleExecutor:
             source_image_name=None,
             source_aliases=(),
             payload=reference_image,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
             plane_projection=preserved_image_plane_projection(
                 reference_image,
                 adapter,

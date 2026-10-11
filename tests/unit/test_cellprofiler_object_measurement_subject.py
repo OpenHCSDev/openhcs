@@ -6,16 +6,17 @@ from typing import ClassVar
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
+    ObjectMeasurementSubjectRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -136,7 +137,7 @@ def test_classification_variants_declare_only_exact_object_subject(function_name
         ClassifyObjectsSingleMeasurementModule, (image, objects, prior), function_name
     )
 
-    subjects = ArtifactSpecRelation.measurement_subjects_for_output(output)
+    subjects = output.measurement_subjects()
     assert len(subjects) == 1
     assert subjects[0].scope is MeasurementScope.OBJECT
     assert subjects[0].name == objects.name
@@ -159,7 +160,7 @@ def test_new_declaration_derives_subject_from_original_capability_and_registry()
     objects = ArtifactSpec.input("AnotherObjectSet", ObjectLabelsArtifactType)
     output = _measurement_output(declaration, (objects,))
 
-    subject = MeasurementsArtifactType.require_output_subject(output)
+    subject = output.require_measurement_subject()
     assert subject.scope is MeasurementScope.OBJECT
     assert subject.name == objects.name
     assert output.relations == (
@@ -213,7 +214,7 @@ def test_independent_stack_hook_preserves_cooperative_subject_and_provenance():
         SourceStackLineageSourceRelation(selected.ref()),
     )
     assert output.source_stack_scope_sources() == (selected.ref(),)
-    assert MeasurementsArtifactType.require_output_subject(output).name == objects.name
+    assert output.require_measurement_subject().name == objects.name
     MeasurementsArtifactType.validate_native_output_declaration(output)
     assert declaration.measurement_record_object_name(None, None) is None
 

@@ -14,14 +14,13 @@ from openhcs.interop.cellprofiler.object_label_variants import SmallRemovedLabel
 from openhcs.constants.constants import MemoryType
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.core.aligned_image_payload import AlignedImageStack
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (

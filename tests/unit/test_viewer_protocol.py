@@ -27,6 +27,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.viewer_protocol import (
+    ViewerConnectedExternal,
     DetachedViewerLaunchLog,
     DetachedViewerLaunchRequest,
     DetachedViewerPythonArguments,
@@ -43,7 +44,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerProcessPlatform,
     ViewerQtEnvironmentPolicy,
     ViewerRuntimeEndpoint,
-    ViewerSettlePhase,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
@@ -451,7 +452,7 @@ def test_managed_viewer_lifecycle_reads_state_through_typed_control_request(
 
     monkeypatch.setattr(ViewerControlMessageRequest, "send", send)
     viewer = StateViewer()
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
 
     observed = viewer.read_viewer_state(timeout=7.5)
 
@@ -515,14 +516,14 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
             return DetachedViewerPythonArguments.from_literals(str(log_file))
 
     progress_rows = (
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 0, True),
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 0, True),
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 1),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 0, True),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 0, True),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 1),
         ViewerSettleProgress.complete(1),
     )
     responses = [
         ViewerControlResponse(
-            payload={"status": "success", **progress.to_wire_mapping()}
+            payload={"status": "success", **progress.to_dict()}
         )
         for progress in progress_rows
     ]
@@ -539,7 +540,7 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
     )
     monkeypatch.setattr(viewer_protocol.time, "sleep", lambda _seconds: None)
     viewer = ProgressViewer()
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     observed_progress = []
 
     assert viewer.settle_viewer_state(
@@ -556,13 +557,13 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
 
 def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
     progress = ViewerSettleProgress(
-        ViewerSettlePhase.RUNNING,
+        SettlementRunning,
         0,
         1,
         "stalled",
     )
     response = ViewerControlResponse(
-        payload={"status": "success", **progress.to_wire_mapping()}
+        payload={"status": "success", **progress.to_dict()}
     )
     viewer = type(
         "StalledViewer",
@@ -590,7 +591,7 @@ def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
             viewer_family=NapariViewer,
         )
     )
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     monotonic_values = iter((0.0, 0.0, 1.1))
     monkeypatch.setattr(ViewerControlMessageRequest, "send", lambda _request: response)
     monkeypatch.setattr(
@@ -677,17 +678,19 @@ def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
     config = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="192.0.2.1")
 
     assert (
-        ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
+        ViewerProcessLaunchConfig.from_wire_mapping(config.to_dict()) == config
     )
 
     with pytest.raises(KeyError):
         ViewerProcessLaunchConfig.from_wire_mapping({})
     with pytest.raises(TypeError):
-        ViewerProcessLaunchConfig.from_wire_mapping({"qt_font_dpi": True})
+        ViewerProcessLaunchConfig.from_wire_mapping(
+            {"qt_font_dpi": True, "listen_host": "127.0.0.1"}
+        )
     with pytest.raises(ValueError):
         ViewerProcessLaunchConfig(qt_font_dpi=0)
 
-    with pytest.raises(TypeError, match="listen host must be a string"):
+    with pytest.raises(TypeError, match="listen_host must be str"):
         ViewerProcessLaunchConfig.from_wire_mapping(
             {"qt_font_dpi": None, "listen_host": True}
         )
@@ -1097,12 +1100,12 @@ def test_managed_viewer_lifecycle_uses_nominal_state_for_external_viewer():
     viewer = ExternalViewer()
     assert not viewer.is_running
 
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     assert viewer.is_running
 
     viewer.connected = False
     assert not viewer.is_running
-    assert not viewer.lifecycle_state.is_active
+    assert not viewer.lifecycle.active
 
 
 def test_prepare_fresh_viewer_start_releases_endpoint_after_shutdown_ack():

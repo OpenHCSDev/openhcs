@@ -46,12 +46,13 @@ from openhcs.core.config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from benchmark.equivalence.report import RuntimeEquivalenceReport
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.native_shape_rows import shape_rows_on_their_labels
 from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
@@ -326,7 +327,7 @@ class OpenHCSAdapter(ToolAdapter):
             ),
             vfs_config=replace(
                 self.global_config.vfs_config,
-                materialization_backend=MaterializationBackend.DISK,
+                materialization_backend=MaterializeToDisk,
             ),
             compilation_debug_config=compilation_debug_config,
             materialize_runtime_artifacts=request.materialize_runtime_artifacts,
@@ -504,6 +505,13 @@ class OpenHCSAdapter(ToolAdapter):
                 else:
                     reference_snapshot = RuntimeOutputSnapshot.from_output_root(
                         equivalence_reference
+                    )
+                    reference_snapshot = RuntimeOutputSnapshot(
+                        tables=tuple(
+                            shape_rows_on_their_labels(table)
+                            for table in reference_snapshot.tables
+                        ),
+                        images=reference_snapshot.images,
                     )
                     if not request.compare_image_outputs:
                         reference_snapshot = RuntimeOutputSnapshot(

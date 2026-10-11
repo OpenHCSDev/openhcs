@@ -5,7 +5,8 @@ from dataclasses import dataclass, replace
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType, SpecialArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.invocation_artifacts import (

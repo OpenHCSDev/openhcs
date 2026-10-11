@@ -17,14 +17,15 @@ from typing import Mapping, Optional, Tuple
 import logging
 
 # OpenHCS imports
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactSpec,
+    ObjectMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.measurement_row_materialization import (

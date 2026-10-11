@@ -21,7 +21,10 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
+from openhcs.core.source_bindings import (
+    FromFileName,
+    MetadataExtractionRule,
+)
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_matching import source_component_metadata_value
@@ -88,7 +91,7 @@ def _config():
     return SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)_z(?P<z_index>\d+)_t(?P<timepoint>\d+)\.tif",
             ),
         )
@@ -471,9 +474,10 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
+    from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
+
     from openhcs.core.config import (
         GlobalPipelineConfig,
-        InputSource,
         LazyProcessingConfig,
         LazySourceBindingsConfig,
         LazyStepMaterializationConfig,
@@ -541,7 +545,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         config = PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig.from_config(_config()),
             vfs_config=LazyVFSConfig(
-                materialization_backend=MaterializationBackend(storage_backend)
+                materialization_backend=MaterializationBackend.__registry__[storage_backend]
             ),
         )
         orchestrator = PipelineOrchestrator(plate, pipeline_config=config).initialize()
@@ -569,7 +573,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                     processing_config=LazyProcessingConfig(
                         variable_components=[Microscopy.Channel],
                         group_by=Ungrouped,
-                        input_source=InputSource.PREVIOUS_STEP,
+                        input_source=ReadPreviousStep,
                     ),
                 ),
             ]
@@ -681,7 +685,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         processing_config=LazyProcessingConfig(
                             variable_components=[Microscopy.Channel],
                             group_by=Ungrouped,
-                            input_source=InputSource.PIPELINE_START,
+                            input_source=ReadPipelineStart,
                         ),
                     )
                 ],

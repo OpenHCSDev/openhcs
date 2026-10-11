@@ -107,11 +107,9 @@ def my_custom_function(image, scale: float = 1.0, offset: float = 0.0):
 # 1. Import the typed artifact declaration and row container:
 #
 #    from dataclasses import dataclass
-#    from openhcs.core.artifacts import (
-#        ArtifactMeasurementSubjectRelation,
-#        ArtifactSpec,
-#        MeasurementsArtifactType,
-#    )
+#    from openhcs.core.artifacts.kinds import MeasurementsArtifactType
+#    from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
+#    from openhcs.core.artifacts.specs import ArtifactSpec
 #    from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 #    from openhcs.core.pipeline.function_contracts import artifact_outputs
 #    from openhcs.processing.materialization import csv_only

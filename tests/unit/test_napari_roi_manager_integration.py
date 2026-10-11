@@ -163,9 +163,9 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
     assert tuple(viewer.layers) == original_layers
     assert manager._layer is layer
     assert manager._roilist.rowCount() == 2
-    from openhcs.napari_roi_manager.widgets._roi_manager import RoiTableColumn
+    from openhcs.napari_roi_manager.widgets._roi_manager import RoiNameColumn
 
-    assert manager._roilist._roi_model.column_values(RoiTableColumn.NAME) == [
+    assert manager._roilist._roi_model.column_values(RoiNameColumn) == [
         "first",
         "second",
     ]
@@ -184,7 +184,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
 
     assert server.require_result_selection_surface().manager is original_manager
     assert manager._layer is second_layer
-    assert manager._roilist._roi_model.column_values(RoiTableColumn.NAME) == ["third"]
+    assert manager._roilist._roi_model.column_values(RoiNameColumn) == ["third"]
     viewer.close()
 
 
@@ -280,7 +280,8 @@ def test_roi_manager_virtualizes_thousands_over_one_native_shapes_owner(
 
     from openhcs.napari_roi_manager.widgets._roi_manager import (
         QRoiManager,
-        RoiTableColumn,
+        RoiNameColumn,
+        RoiShapeTypeColumn,
     )
 
     member_count = 4_097
@@ -310,11 +311,11 @@ def test_roi_manager_virtualizes_thousands_over_one_native_shapes_owner(
     assert not isinstance(table, QTableWidget)
     assert manager.findChildren(QTableWidget) == []
     assert (
-        table.horizontalHeader().sectionResizeMode(RoiTableColumn.SHAPE_TYPE)
+        table.horizontalHeader().sectionResizeMode(RoiShapeTypeColumn.index)
         is QHeaderView.ResizeMode.Interactive
     )
     assert model.rowCount() == member_count
-    last_name = model.index(member_count - 1, RoiTableColumn.NAME)
+    last_name = model.index(member_count - 1, RoiNameColumn.index)
     assert model.data(last_name) == f"ROI-{member_count - 1:04d}"
 
     feature_events = []

@@ -6,7 +6,7 @@ from openhcs.constants.constants import (
     VariableComponents,
 )
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config import (
     LazyAnalysisConsolidationConfig,
     LazyCompilationDebugConfig,

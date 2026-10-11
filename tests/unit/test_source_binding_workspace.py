@@ -10,7 +10,7 @@ import pytest
 import tifffile
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -23,23 +23,29 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.dataset_sources.interfaces import PixelSizeMetadataArtifactProvider
 from openhcs.core.source_bindings import (
+    BroadcastSource,
     ComponentSelector,
+    FromFileName,
+    FromFolderName,
     ImagePlaneSource,
     ImportedMetadataJoin,
     ImportedMetadataTable,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
-    SourceBindingMatchDimension,
-    SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
+    PathIsImage,
+    SourceArtifactRole,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
-    SourceSetRole,
     SourceSelector,
+    TextContains,
+    TextEndsWith,
+    TextEquals,
+    TextStartsWith,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
@@ -124,7 +130,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     workspace = tmp_path / "prepared"
     materialization = SourceBindingWorkspaceProjector(
         SourceBindingsConfig(metadata_rules=(MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME,
+            source=FromFileName,
             pattern=r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)",
         ),)),
         parser=SourceSchemaFilenameParser(),
@@ -134,8 +140,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     (workspace / FIELDS.DEFAULT_SUBDIRECTORY).mkdir(exist_ok=True)
     original_bytes = materialization.metadata_path.read_bytes()
     config = SourceBindingsConfig(source_filters=() if selection is None else (
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS,
+        SourceFilterClause(subject=SourceFileName,
+                          match_type=TextContains,
                           value=f"_s{selection:03}_"),
     ))
     handler = DatasetSourceChoice.named("auto").open(workspace, filemanager=filemanager, source_bindings_config=config)
@@ -198,8 +204,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         assert context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01") is compiled_views["A01"]
     prior_authority = context.runtime_source_workspace_projections
     handler._source_bindings_config = replace(config, source_filters=(
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS, value="_s008_"),
+        SourceFilterClause(subject=SourceFileName,
+                          match_type=TextContains, value="_s008_"),
     ))
     changed = context.runtime_source_workspace_projections
     assert changed is not prior_authority
@@ -207,8 +213,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     handler._source_bindings_config = replace(config, source_filters=())
     assert context.runtime_source_workspace_projections.projection_or_empty() is full
     handler._source_bindings_config = replace(config, source_filters=(
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS, value="_s099_"),
+        SourceFilterClause(subject=SourceFileName,
+                          match_type=TextContains, value="_s099_"),
     ))
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
         context.runtime_source_workspace_projections.projection_or_empty()
@@ -240,8 +246,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         WorkspaceSourceProjections.from_dataset_metadata(
             dataset_root=workspace, metadata_handler=handler.metadata_handler,
             filemanager=filemanager, source_bindings=SourceBindingsConfig(source_filters=(
-                SourceFilterClause(subject=SourceFilterSubject.FILE,
-                                  match_type=SourceFilterMatchType.CONTAINS,
+                SourceFilterClause(subject=SourceFileName,
+                                  match_type=TextContains,
                                   value="_s099_"),
             )),
         ).projection_if_available()
@@ -394,8 +400,8 @@ def test_source_workspace_excludes_non_pixel_sidecars_before_projection(tmp_path
         SourceBindingsConfig(
             source_filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.EXTENSION,
-                    match_type=SourceFilterMatchType.IS_IMAGE,
+                    subject=SourceExtension,
+                    match_type=PathIsImage,
                 ),
             ),
             bindings=(
@@ -441,7 +447,7 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=r".*_(?P<well>[A-Z]\d+)_s(?P<site>\d+)\.png",
                 ),
             ),
@@ -451,8 +457,8 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="nuclei_",
                             ),
                         ),
@@ -464,8 +470,8 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="membrane_",
                             ),
                         ),
@@ -533,7 +539,7 @@ def test_source_binding_workspace_projects_semantic_identity_after_raw_selection
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=(
                         r"^(?P<Well>[A-Z][0-9]+)_s(?P<Site>[0-9]+)_w"
                         r"(?P<Channel>[0-9]+)[.]tif$"
@@ -581,8 +587,8 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
             selector=SourceSelector(
                 filters=(
                     SourceFilterClause(
-                        SourceFilterSubject.FILE,
-                        SourceFilterMatchType.ENDS_WITH,
+                        SourceFileName,
+                        TextEndsWith,
                         f"_{alias}.tif",
                     ),
                 ),
@@ -594,7 +600,7 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    MetadataSource.FILE_NAME,
+                    FromFileName,
                     r"^(?P<Well>[A-H][0-9]{2})_s"
                     r"(?P<Site>[0-9]+)_(?:DNA|RNA)[.]tif$",
                 ),
@@ -644,11 +650,11 @@ def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=r"^.*_(?P<FrameNumber>[0-9]+)\.tif$",
                 ),
                 MetadataExtractionRule(
-                    source=MetadataSource.FOLDER_NAME,
+                    source=FromFolderName,
                     pattern=r".*[\\/](?P<Run>[^\\/]+)$",
                 ),
             ),
@@ -658,8 +664,8 @@ def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.CONTAINS,
+                                subject=SourceFileName,
+                                match_type=TextContains,
                                 value="GFP",
                             ),
                         ),
@@ -711,7 +717,7 @@ def test_source_binding_workspace_projects_registered_well_parts(tmp_path):
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=(r"^image-(?P<WellRow>[A-Z])-(?P<WellCol>[0-9]{2})\.tif$"),
                 ),
             ),
@@ -745,11 +751,11 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=r"^(?P<Well>[A-Z][0-9]+)_.*_(?P<FrameNumber>[0-9]+)\.tif$",
                 ),
                 MetadataExtractionRule(
-                    source=MetadataSource.FOLDER_NAME,
+                    source=FromFolderName,
                     pattern=r".*[\\/](?P<Run>[^\\/]+)$",
                 ),
             ),
@@ -821,8 +827,8 @@ def test_source_binding_workspace_projector_order_matches_aliases(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="DAPI_",
                             ),
                         ),
@@ -833,8 +839,8 @@ def test_source_binding_workspace_projector_order_matches_aliases(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="Actin_",
                             ),
                         ),
@@ -872,23 +878,23 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^DNA_(?P<Well>[A-Z][0-9]+)\.tif$",
                 filters=(
                     SourceFilterClause(
-                        SourceFilterSubject.FILE,
-                        SourceFilterMatchType.STARTS_WITH,
+                        SourceFileName,
+                        TextStartsWith,
                         "DNA_",
                     ),
                 ),
             ),
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^Actin_(?P<Site>[0-9]+)\.tif$",
                 filters=(
                     SourceFilterClause(
-                        SourceFilterSubject.FILE,
-                        SourceFilterMatchType.STARTS_WITH,
+                        SourceFileName,
+                        TextStartsWith,
                         "Actin_",
                     ),
                 ),
@@ -900,8 +906,8 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.STARTS_WITH,
+                            SourceFileName,
+                            TextStartsWith,
                             "DNA_",
                         ),
                     ),
@@ -913,8 +919,8 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.STARTS_WITH,
+                            SourceFileName,
+                            TextStartsWith,
                             "Actin_",
                         ),
                     ),
@@ -967,8 +973,8 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.STARTS_WITH,
+                                SourceFileName,
+                                TextStartsWith,
                                 "DNA",
                             ),
                         ),
@@ -980,8 +986,8 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.STARTS_WITH,
+                                SourceFileName,
+                                TextStartsWith,
                                 "Membrane",
                             ),
                         ),
@@ -1021,7 +1027,7 @@ def test_metadata_source_sets_propagate_imported_metadata(tmp_path):
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Well>[A-Z][0-9]+)_(?:DNA|Actin)\.tif$",
             ),
         ),
@@ -1031,8 +1037,8 @@ def test_metadata_source_sets_propagate_imported_metadata(tmp_path):
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.ENDS_WITH,
+                            SourceFileName,
+                            TextEndsWith,
                             f"_{alias}.tif",
                         ),
                     ),
@@ -1085,7 +1091,7 @@ def test_imported_metadata_duplicate_join_uses_first_matching_row(tmp_path):
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Plate>[0-9]+)_(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
             ),
         ),
@@ -1135,7 +1141,7 @@ def test_imported_metadata_later_stage_overrides_extracted_field(tmp_path):
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Plate>[^_]+)_(?P<Well>[A-Z][0-9]+)_s(?P<Site>[0-9]+)_w(?P<ChannelNumber>[0-9]+)\.tif$",
             ),
         ),
@@ -1178,7 +1184,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Site>[0-9]+)_DNA\.tif$",
             ),
         ),
@@ -1251,7 +1257,7 @@ def test_imported_metadata_rejects_conflicting_or_unmatched_complete_joins(
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Well>[A-Z][0-9]+)_(?P<Stain>DNA|Actin)\.tif$",
             ),
         ),
@@ -1261,8 +1267,8 @@ def test_imported_metadata_rejects_conflicting_or_unmatched_complete_joins(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.ENDS_WITH,
+                            SourceFileName,
+                            TextEndsWith,
                             f"_{stain}.tif",
                         ),
                     ),
@@ -1330,7 +1336,7 @@ def test_imported_metadata_location_is_resolved_exactly(tmp_path):
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
             ),
         ),
@@ -1384,7 +1390,7 @@ def test_imported_metadata_rejects_invalid_table_contracts(
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
             ),
         ),
@@ -1410,7 +1416,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
     config = SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"^(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
             ),
         ),
@@ -1529,7 +1535,7 @@ def test_source_reinitialization_sees_new_physical_files_not_virtual_aliases(tmp
             bindings=(NamedSourceBinding(alias="Images"),),
             metadata_rules=(
                 MetadataExtractionRule(
-                    MetadataSource.FILE_NAME,
+                    FromFileName,
                     r"^(?P<Well>[A-Z]\d{2})_s(?P<Site>\d+)_w(?P<Channel>\d+)\.tif$",
                 ),
             ),
@@ -1624,8 +1630,8 @@ def test_order_source_sets_pair_expanded_stack_planes_across_aliases(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="DNA_",
                             ),
                         ),
@@ -1636,8 +1642,8 @@ def test_order_source_sets_pair_expanded_stack_planes_across_aliases(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="Membrane_",
                             ),
                         ),
@@ -1688,8 +1694,8 @@ def test_source_binding_workspace_projector_order_uses_shortest_member_count(
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="DAPI_",
                             ),
                         ),
@@ -1700,8 +1706,8 @@ def test_source_binding_workspace_projector_order_uses_shortest_member_count(
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.STARTS_WITH,
+                                subject=SourceFileName,
+                                match_type=TextStartsWith,
                                 value="Actin_",
                             ),
                         ),
@@ -1745,8 +1751,8 @@ def test_source_binding_workspace_broadcasts_explicit_single_members(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.STARTS_WITH,
+                                SourceFileName,
+                                TextStartsWith,
                                 "DAPI_",
                             ),
                         ),
@@ -1755,8 +1761,8 @@ def test_source_binding_workspace_broadcasts_explicit_single_members(tmp_path):
                 NamedSourceBinding(
                     alias="Flatfield",
                     artifact_kind=ImageArtifactType,
-                    source_set_role=SourceSetRole.BROADCAST,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    source_set_role=BroadcastSource,
+                    projection_role=SourceArtifactRole,
                     explicit_source=explicit_source,
                 ),
             ),
@@ -1799,7 +1805,7 @@ def test_metadata_source_sets_reuse_declared_partial_match_members(tmp_path):
         SourceBindingsConfig(
             metadata_rules=(
                 MetadataExtractionRule(
-                    MetadataSource.FILE_NAME,
+                    FromFileName,
                     r"^(?P<Well>[A-Z][0-9]+)_s(?P<Site>[0-9]+)_DAPI\.tif$",
                 ),
             ),
@@ -1809,8 +1815,8 @@ def test_metadata_source_sets_reuse_declared_partial_match_members(tmp_path):
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.ENDS_WITH,
+                                SourceFileName,
+                                TextEndsWith,
                                 "DAPI.tif",
                             ),
                         ),
@@ -1819,12 +1825,12 @@ def test_metadata_source_sets_reuse_declared_partial_match_members(tmp_path):
                 NamedSourceBinding(
                     alias="Illumination",
                     artifact_kind=ImageArtifactType,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.EQUALS,
+                                SourceFileName,
+                                TextEquals,
                                 illumination.name,
                             ),
                         ),
@@ -1882,12 +1888,12 @@ def test_source_binding_workspace_materializes_artifact_only_matched_groups(
                 NamedSourceBinding(
                     alias=alias,
                     artifact_kind=ObjectLabelsArtifactType,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                SourceFilterSubject.FILE,
-                                SourceFilterMatchType.EQUALS,
+                                SourceFileName,
+                                TextEquals,
                                 path.name,
                             ),
                         ),
@@ -2030,8 +2036,8 @@ def test_source_bindings_handler_materializes_non_stack_source_artifacts(tmp_pat
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.CONTAINS,
+                                subject=SourceFileName,
+                                match_type=TextContains,
                                 value="Channel 1",
                             ),
                         ),
@@ -2043,13 +2049,13 @@ def test_source_bindings_handler_materializes_non_stack_source_artifacts(tmp_pat
                     selector=SourceSelector(
                         filters=(
                             SourceFilterClause(
-                                subject=SourceFilterSubject.FILE,
-                                match_type=SourceFilterMatchType.EQUALS,
+                                subject=SourceFileName,
+                                match_type=TextEquals,
                                 value="illumination.npy",
                             ),
                         ),
                     ),
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                 ),
             ),
         ),

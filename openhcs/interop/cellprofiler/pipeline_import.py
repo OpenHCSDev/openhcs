@@ -14,14 +14,13 @@ from objectstate.lazy_factory import (
 )
 
 from openhcs.constants import Backend
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import (
     LazyProcessingConfig,
@@ -335,7 +334,7 @@ def _parsed_pipeline_declaration(
     forward_context = ArtifactDeclarationStepContext().with_source_binding_scope(
         source_bindings=step_source_bindings,
         group_by=Ungrouped,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     target_units = _parsed_target_units(
         executable_modules,
@@ -400,11 +399,11 @@ def _pipeline_processing_config(
 def _public_step_source_bindings(
     source_bindings: StepSourceBindingsConfig,
     artifact_inputs: Iterable[ArtifactSpec],
-    input_source: InputSource,
+    input_source: type[InputSource],
 ) -> StepSourceBindingsConfig:
     """Project only direct source inputs loaded beside the resolved main flow."""
 
-    if input_source is not InputSource.PREVIOUS_STEP:
+    if input_source.reads_pipeline_start:
         return source_bindings
     direct_source_refs = tuple(
         spec.ref()
@@ -894,12 +893,12 @@ def _lower_module_batch(
     source_bindings = step_context.source_bindings
     raw_callable = units[0].raw_callable
     input_source = (
-        InputSource.PIPELINE_START
+        ReadPipelineStart
         if any(
-            unit.processing_config.input_source is InputSource.PIPELINE_START
+            unit.processing_config.input_source.reads_pipeline_start
             for unit in units
         )
-        else InputSource.PREVIOUS_STEP
+        else ReadPreviousStep
     )
     processing_config = replace(units[0].processing_config, input_source=input_source)
     if any(
@@ -964,7 +963,7 @@ def _lower_module_batch(
     ) == Counter(source_group_keys)
     has_unscoped_single_invocation = len(units) == 1 and not lineage_keys[0]
     follows_previous_main_flow = (
-        len(units) == 1 and processing_config.input_source is InputSource.PREVIOUS_STEP
+        len(units) == 1 and processing_config.input_source is ReadPreviousStep
     )
     public_pattern: FunctionPatternSyntax | None = None
     lowered_units = units

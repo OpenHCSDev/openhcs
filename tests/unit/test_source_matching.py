@@ -1,9 +1,13 @@
 import pytest
 
 from openhcs.core.source_bindings import (
+    SourceDirectory,
+    SourceFileName,
     SourceFilterClause,
     SourceFilterMatchType,
-    SourceFilterSubject,
+    TextContains,
+    TextDoesNotEqual,
+    TextEquals,
 )
 from openhcs.core.source_matching import (
     DECLARED_SOURCE_METADATA_FIELD,
@@ -27,29 +31,29 @@ from openhcs.domains.microscopy.axes import Microscopy
     ("match_type", "path", "expected"),
     (
         (
-            SourceFilterMatchType.EQUALS,
+            TextEquals,
             "/plate/VitraChannel1ILLUM.npy",
             True,
         ),
         (
-            SourceFilterMatchType.EQUALS,
+            TextEquals,
             "/plate/VitraChannel2ILLUM.npy",
             False,
         ),
         (
-            SourceFilterMatchType.DOES_NOT_EQUAL,
+            TextDoesNotEqual,
             "/plate/VitraChannel1ILLUM.npy",
             False,
         ),
         (
-            SourceFilterMatchType.DOES_NOT_EQUAL,
+            TextDoesNotEqual,
             "/plate/VitraChannel2ILLUM.npy",
             True,
         ),
     ),
 )
 def test_file_source_filters_match_exact_file_names(
-    match_type: SourceFilterMatchType,
+    match_type: type[SourceFilterMatchType],
     path: str,
     expected: bool,
 ):
@@ -58,7 +62,7 @@ def test_file_source_filters_match_exact_file_names(
             path,
             (
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
+                    subject=SourceFileName,
                     match_type=match_type,
                     value="VitraChannel1ILLUM.npy",
                 ),
@@ -71,19 +75,19 @@ def test_file_source_filters_match_exact_file_names(
 def test_source_filters_match_flat_conjunction_of_disjunction_groups() -> None:
     filters = (
         SourceFilterClause(
-            SourceFilterSubject.DIRECTORY,
-            SourceFilterMatchType.CONTAINS,
+            SourceDirectory,
+            TextContains,
             "plate",
         ),
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "_s1_",
             any_group=0,
         ),
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "_s2_",
             any_group=0,
         ),

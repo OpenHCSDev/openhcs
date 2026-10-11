@@ -16,7 +16,7 @@ from zmqruntime.execution.responses import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     SpecialArtifactType,
@@ -26,7 +26,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
@@ -116,7 +116,7 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
     _write_known_dual_channel_images(plate_dir)
 
     suffix = "_dual_channel_test"
-    vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
+    vfs_config = VFSConfig(materialization_backend=MaterializeToDisk)
     global_config = GlobalPipelineConfig(
         num_workers=2,
         dataset_source=ImageXpressHandler,

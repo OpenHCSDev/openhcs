@@ -27,7 +27,7 @@ from polystore.streaming.viewer_transport import (
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,

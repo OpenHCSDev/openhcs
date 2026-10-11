@@ -72,6 +72,30 @@ class RuntimeSliceProjectableValue(ABC):
         """
         return transform(self)
 
+    def stored_slices(self) -> tuple[object, ...]:
+        """Return the separately stored members ``map_slices`` transforms."""
+        return (self,)
+
+    def match_alignment(
+        self,
+        *,
+        scalar: Callable[[Any], Any],
+        aligned: Callable[[Any], Any],
+    ) -> Any:
+        """Answer through ``scalar``; values carried one per slice use ``aligned``."""
+        del aligned
+        return scalar(self)
+
+    def contextualized_output(
+        self,
+        kind: Any,
+        source: object,
+        target: Any,
+        plane_projection: "RuntimePlaneAxisValueProjection | None",
+    ) -> object:
+        """Return this returned value contextualized as an output of ``kind``."""
+        return kind.contextualize_value(source, self, target, plane_projection)
+
 
 class RuntimeSliceIndexedValue(RuntimeSliceProjectableValue):
     """A value whose runtime-slice projection selects one slice index."""
@@ -455,6 +479,45 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     ) -> "RuntimePlaneAxisValueProjection":
         """Select the projection carried into one runtime-slice invocation."""
         return self.selected_plane(slice_index)
+
+    @property
+    def preserves_complete_axis(self) -> bool:
+        """Whether this projection keeps every plane instead of selecting one."""
+        return self.plane_index is None
+
+    @staticmethod
+    def require_axis_size(
+        projection: "RuntimePlaneAxisValueProjection | None",
+        slice_count: int,
+        *,
+        value_name: str,
+    ) -> "RuntimePlaneAxisValueProjection":
+        """Require a declared projection whose axis carries ``slice_count`` planes."""
+        if projection is None or projection.axis_size != slice_count:
+            raise ValueError(
+                f"{value_name} require an exact source plane projection of "
+                f"{slice_count} plane(s)."
+            )
+        return projection
+
+    @staticmethod
+    def require_runtime_slice_axis(
+        projection: "RuntimePlaneAxisValueProjection | None",
+        slice_count: int,
+        *,
+        value_name: str,
+    ) -> "RuntimePlaneAxisValueProjection":
+        """Require the runtime-slice axis, declared with ``slice_count`` planes."""
+        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            raise ValueError(
+                f"{value_name} requires an exact runtime slice projection."
+            )
+        if projection.axis_size != slice_count:
+            raise ValueError(
+                f"{value_name} count must exactly match the declared runtime plane "
+                f"axis: {slice_count} != {projection.axis_size}."
+            )
+        return projection
 
     def require_plane_index(self) -> int:
         """Return the selected plane index required by a projected invocation."""

@@ -8,7 +8,7 @@ from openhcs.core.memory import numpy
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
-    CustomFunctionLifetime,
+    EphemeralLifetime,
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
@@ -44,7 +44,7 @@ def test_canonical_custom_lookup_uses_published_source_owner(monkeypatch):
 
     monkeypatch.setattr(RegistryService, "_metadata_cache", {})
     metadata = project_custom_function(independent_knowledge_source_probe)
-    CustomFunctionRuntimeRegistry.publish(metadata, CustomFunctionLifetime.EPHEMERAL)
+    CustomFunctionRuntimeRegistry.publish(metadata, EphemeralLifetime)
     try:
         assert get_function(metadata.composite_key) is metadata.func
         with pytest.raises(KeyError, match="Unknown canonical function ID"):

@@ -4,15 +4,13 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
 )
+from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
@@ -330,7 +328,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     )
     from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.artifacts import RelationshipsArtifactType
+    from openhcs.core.artifacts.kinds import RelationshipsArtifactType
     from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,
@@ -581,15 +579,17 @@ def test_upstream_tables_without_source_coordinates_are_rejected():
 
 
 def test_input_relation_preserves_original_output_and_surviving_input_relations():
-    from openhcs.core.artifacts import (
+    from openhcs.core.artifacts.relations import (
         InputObjectMeasurementSourceRelation,
         ArtifactSpecRelation,
     )
 
+    from openhcs.core.artifacts.plans import ArtifactPlan
+
     _, child = _declared_input()
 
     class SharedSubjectDependency(ArtifactSpecRelation):
-        target_plan_type = None
+        target_plan_type = ArtifactPlan
 
     relation = SharedSubjectDependency(child.ref())
     output = ArtifactSpec.output(
@@ -610,12 +610,10 @@ def test_input_relation_preserves_original_output_and_surviving_input_relations(
 
 
 def test_measurement_input_relation_rejects_an_image_subject_and_nonmeasurement_target():
-    from openhcs.core.artifacts import (
-        InputObjectMeasurementSourceRelation,
-        ImageArtifactType,
-    )
+    from openhcs.core.artifacts.relations import InputObjectMeasurementSourceRelation
+    from openhcs.core.artifacts.kinds import ImageArtifactType
 
-    with pytest.raises(ValueError, match="object-labels source"):
+    with pytest.raises(ValueError, match="source of kind ObjectLabelsArtifactType"):
         InputObjectMeasurementSourceRelation(
             ArtifactSpec.input("Image", ImageArtifactType).ref()
         )
@@ -631,7 +629,7 @@ def test_measurement_input_relation_rejects_an_image_subject_and_nonmeasurement_
 @pytest.mark.parametrize("dynamic", (False, True))
 def test_plate_projection_keeps_complete_producer_scope(dynamic):
     from openhcs.core.callable_contract import FunctionStepExecutionScope
-    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 
     edge, _ = _compiled_edge(dynamic=dynamic, declared=False)
     scope = ArtifactInputProjectionPlan.producer_selection_for_invocation(
@@ -679,11 +677,11 @@ def test_upstream_repeated_source_coordinates_do_not_merge_distinct_row_planes()
     "case", ("input-role", "image-kind", "other-object", "undeclared-subject")
 )
 def test_relation_refuses_producers_outside_its_measurement_subject(case):
-    from openhcs.core.artifacts import (
+    from openhcs.core.artifacts.relations import (
         InputObjectMeasurementSourceRelation,
         ArtifactSpecRelation,
-        ImageArtifactType,
     )
+    from openhcs.core.artifacts.kinds import ImageArtifactType
 
     _, child = _declared_input()
     subject = InputObjectMeasurementSourceRelation(child.ref())
@@ -708,7 +706,8 @@ def test_relation_refuses_producers_outside_its_measurement_subject(case):
 
 
 def test_relation_selection_conflicts_fail_without_last_writer_precedence():
-    from openhcs.core.artifacts import ArtifactSpecRelation, ArtifactInputProjectionPlan
+    from openhcs.core.artifacts.relations import ArtifactSpecRelation
+    from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 
     edge, child = _compiled_edge()
 

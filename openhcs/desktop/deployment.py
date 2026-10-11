@@ -20,15 +20,16 @@ from pathlib import Path, PureWindowsPath
 from typing import ClassVar
 from uuid import uuid4
 
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from packaging.utils import canonicalize_name
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.agent.runtime_platform import (
-    AgentRuntimePlatformAuthority,
-    AgentRuntimePlatformKey,
+    AgentRuntimePlatform,
+    MacOSRuntimePlatform,
+    WindowsRuntimePlatform,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.mcp.bootstrap import (
     MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE,
     MCP_STABLE_LAUNCH_COMMAND_ENVIRONMENT_VARIABLE,
@@ -155,7 +156,7 @@ class DesktopDeploymentContext:
 class DesktopDeploymentReport:
     """Paths refreshed by one platform's desktop deployment."""
 
-    platform: AgentRuntimePlatformKey
+    platform: type[AgentRuntimePlatform]
     launcher_path: str
     desktop_shortcut_path: str
     application_path: str | None
@@ -295,34 +296,33 @@ def _powershell_literal(value: str) -> str:
 
 
 class DesktopDeployment(
-    EnumKeyedStrategyMixin[AgentRuntimePlatformKey],
+    NominalTypeKeyedStrategyMixin,
     ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Launcher, shortcut and icon files installed for one platform."""
 
-    __enum_member_attr__ = "platform_key"
-    platform_key: ClassVar[AgentRuntimePlatformKey]
+    value_type: ClassVar[type[AgentRuntimePlatform] | None] = None
+    value_type_label: ClassVar[str | None] = None
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @classmethod
     def current(cls) -> "DesktopDeployment":
-        platform_key = AgentRuntimePlatformKey.current()
-        try:
-            return cls.for_enum_member(platform_key)
-        except KeyError as exc:
+        deployments = cls.strategy_types_for_nominal_type(
+            AgentRuntimePlatform.current_type()
+        )
+        if not deployments:
             raise DesktopDeploymentError(
                 "Native desktop deployment refresh is supported only for the "
                 "Windows and macOS installers."
-            ) from exc
+            )
+        return deployments[0]()
 
     @classmethod
     def numba_cache_path(cls) -> Path:
         """Return this platform's user-local compiled-code cache."""
 
-        runtime_platform = AgentRuntimePlatformAuthority.for_enum_member(
-            cls.platform_key
-        )
-        return OpenHCSProcessEnvironment.numba_cache_path(runtime_platform)
+        return OpenHCSProcessEnvironment.numba_cache_path(cls.value_type())
 
     @abstractmethod
     def refresh(
@@ -344,7 +344,7 @@ class DesktopDeployment(
 class WindowsDesktopDeployment(DesktopDeployment):
     """Windows native GUI, stable MCP launcher, and Shell Link."""
 
-    platform_key = AgentRuntimePlatformKey.WINDOWS
+    value_type = WindowsRuntimePlatform
     _application_launcher_name = "OpenHCS.exe"
     _current_environment_pointer_name = "current-environment"
     _launcher_fingerprint_name = "OpenHCS-launcher-fingerprint.json"
@@ -917,7 +917,7 @@ finally {
             for candidate in candidates:
                 _remove_path(candidate)
         return DesktopDeploymentReport(
-            platform=self.platform_key,
+            platform=self.value_type,
             launcher_path=str(context.installation_pointer),
             desktop_shortcut_path=str(shortcut_path),
             application_path=str(application_launcher_path),
@@ -929,7 +929,7 @@ finally {
 class MacOSDesktopDeployment(DesktopDeployment):
     """macOS environment launcher, app bundle, and Desktop link."""
 
-    platform_key = AgentRuntimePlatformKey.MACOS
+    value_type = MacOSRuntimePlatform
 
     def update_candidate(
         self,
@@ -1101,7 +1101,7 @@ class MacOSDesktopDeployment(DesktopDeployment):
             for candidate in candidates:
                 _discard_transaction_path(candidate)
         return DesktopDeploymentReport(
-            platform=self.platform_key,
+            platform=self.value_type,
             launcher_path=str(environment_launcher),
             desktop_shortcut_path=str(desktop_link),
             application_path=str(application_path),
@@ -1174,7 +1174,9 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
     if arguments.json:
-        print(json.dumps(asdict(report), sort_keys=True))
+        from python_introspect import to_jsonable
+
+        print(json.dumps(to_jsonable(report), sort_keys=True))
     else:
         print(f"Refreshed OpenHCS desktop integration: {report.launcher_path}")
     return 0

@@ -10,15 +10,15 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import ArtifactViewerStreaming
+from openhcs.core.artifacts.streaming import AutomaticStreaming, OnDemandStreaming
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
     source_bindings_defaults_to_base,
 )
 from openhcs.core.function_patterns import AuthoredFunctionPattern
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_workspace_projection import (
@@ -95,7 +95,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     assert AuthoredFunctionPattern.first_callable(step.func) is neurite_outgrowth_metaxpress_pixels
     assert step.processing_config.variable_components == [Microscopy.Channel]
     assert step.processing_config.group_by is Ungrouped
-    assert step.processing_config.input_source is InputSource.PIPELINE_START
+    assert step.processing_config.input_source.reads_pipeline_start
     assert step.napari_streaming_config.enabled is True
     assert step.napari_streaming_config.persistent is True
     assert step.napari_streaming_config.port == 5999
@@ -142,22 +142,22 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_morphology",
     )
     assert {spec.name: spec.viewer_streaming for spec in artifact_outputs} == {
-        "neurite_outgrowth_summary": ArtifactViewerStreaming.AUTOMATIC,
-        "neurite_outgrowth_cells": ArtifactViewerStreaming.AUTOMATIC,
-        "cell_bodies": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
-        "neurons": ArtifactViewerStreaming.AUTOMATIC,
-        "nuclei": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_candidate_mask": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_unrooted_residual": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+        "neurite_outgrowth_summary": AutomaticStreaming,
+        "neurite_outgrowth_cells": AutomaticStreaming,
+        "cell_bodies": OnDemandStreaming,
+        "neurite_outgrowth": OnDemandStreaming,
+        "neurons": AutomaticStreaming,
+        "nuclei": OnDemandStreaming,
+        "neurite_candidate_mask": OnDemandStreaming,
+        "neurite_unrooted_residual": OnDemandStreaming,
+        "neurite_secondary_ownership": OnDemandStreaming,
+        "neurite_topology_dropped_trace": OnDemandStreaming,
+        "neurite_topology_added_trace": OnDemandStreaming,
+        **{spec.name: OnDemandStreaming
            for spec in NeuriteAdmissionPlanes.artifact_specs()},
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+        **{spec.name: OnDemandStreaming
            for spec in NeuriteOwnershipPlanes.artifact_specs()},
-        "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
+        "neurite_morphology": AutomaticStreaming,
     }
 
 
@@ -200,22 +200,22 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         output.name: output.viewer_streaming
         for output in plan.artifact_outputs.values()
     } == {
-        "neurite_outgrowth_summary": ArtifactViewerStreaming.AUTOMATIC,
-        "neurite_outgrowth_cells": ArtifactViewerStreaming.AUTOMATIC,
-        "cell_bodies": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
-        "neurons": ArtifactViewerStreaming.AUTOMATIC,
-        "nuclei": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_candidate_mask": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_unrooted_residual": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
-        "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+        "neurite_outgrowth_summary": AutomaticStreaming,
+        "neurite_outgrowth_cells": AutomaticStreaming,
+        "cell_bodies": OnDemandStreaming,
+        "neurite_outgrowth": OnDemandStreaming,
+        "neurons": AutomaticStreaming,
+        "nuclei": OnDemandStreaming,
+        "neurite_candidate_mask": OnDemandStreaming,
+        "neurite_unrooted_residual": OnDemandStreaming,
+        "neurite_secondary_ownership": OnDemandStreaming,
+        "neurite_topology_dropped_trace": OnDemandStreaming,
+        "neurite_topology_added_trace": OnDemandStreaming,
+        **{spec.name: OnDemandStreaming
            for spec in NeuriteAdmissionPlanes.artifact_specs()},
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+        **{spec.name: OnDemandStreaming
            for spec in NeuriteOwnershipPlanes.artifact_specs()},
-        "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
+        "neurite_morphology": AutomaticStreaming,
     }
 
 
@@ -351,9 +351,9 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     assert len(contribution.pipeline_steps) == 2
     contrast_step, analysis_step = contribution.pipeline_steps
     assert AuthoredFunctionPattern.first_callable(contrast_step.func) is percentile_normalize_plane
-    assert contrast_step.processing_config.input_source is InputSource.PIPELINE_START
+    assert contrast_step.processing_config.input_source is ReadPipelineStart
     assert AuthoredFunctionPattern.first_callable(analysis_step.func) is neurite_outgrowth_metaxpress_pixels
-    assert analysis_step.processing_config.input_source is InputSource.PREVIOUS_STEP
+    assert analysis_step.processing_config.input_source is ReadPreviousStep
     assert contribution.presentation_identity.output_key == "neurite_morphology"
     assert contribution.presentation_identity.artifact_kind == "spatial_graph"
     assert contribution.presentation_identity.step_name == analysis_step.name

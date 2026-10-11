@@ -22,7 +22,8 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 )
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,

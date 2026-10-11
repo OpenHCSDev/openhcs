@@ -5,7 +5,7 @@ from polystore.imagej_distribution import (
     ImageJArchiveDownloadPolicy,
 )
 
-from openhcs.agent.runtime_platform import WindowsAgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import WindowsRuntimePlatform
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -29,7 +29,7 @@ def test_process_environment_owns_numba_cache_location(monkeypatch, tmp_path) ->
     monkeypatch.setenv("LOCALAPPDATA", str(local_data))
 
     cache_path = OpenHCSProcessEnvironment.numba_cache_path(
-        WindowsAgentRuntimePlatformAuthority()
+        WindowsRuntimePlatform()
     )
 
     assert cache_path == (local_data / BRAND_PRODUCT_NAME / "numba").resolve()
@@ -41,7 +41,7 @@ def test_windows_numba_cache_preserves_legacy_path_budget(
     local_data = tmp_path / "local-data"
     monkeypatch.setenv("LOCALAPPDATA", str(local_data))
     cache_path = OpenHCSProcessEnvironment.numba_cache_path(
-        WindowsAgentRuntimePlatformAuthority()
+        WindowsRuntimePlatform()
     )
     relative_cache = cache_path.relative_to(local_data.resolve())
     windows_cache = PureWindowsPath(

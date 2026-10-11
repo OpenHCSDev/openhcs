@@ -18,12 +18,13 @@ from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     DebugActionRenderModel,
     DebugSessionPanelText,
     DebugToolbarActionProjector,
-    PipelineDebugSessionContext,
 )
+from openhcs.core.debug_session_projection import DebugSessionProjectionContext
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
-    DebugActionPlacement,
-    DebugToolbarAuxiliaryAction,
+    DebugToolbarPlacement,
+    InspectRuntimeValuesAction,
     PipelineDebugActionDeclarationBase,
+    PrimaryPanel,
 )
 from pyqt_reactive.widgets.shared.button_panel import ButtonPanel
 from pyqt_reactive.theming import ColorScheme
@@ -55,10 +56,6 @@ class DebugToolbarWidget(QWidget):
         color_scheme: ColorScheme | None = None,
     ) -> None:
         super().__init__(parent)
-        self.button_panel: ButtonPanel | None = None
-        self.primary_panel: ButtonPanel | None = None
-        self.session_panel: ButtonPanel | None = None
-        self.inspector_panel: ButtonPanel | None = None
         self.phase_label = QLabel("No Plate")
         self.cursor_label = QLabel("Select a plate to debug.")
         self._buttons_by_id: dict[str, QPushButton] = {}
@@ -68,7 +65,7 @@ class DebugToolbarWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
 
-        initial_context = PipelineDebugSessionContext(
+        initial_context = DebugSessionProjectionContext(
             target=None,
             session=None,
             manager_execution_state=ManagerExecutionState.IDLE,
@@ -76,31 +73,19 @@ class DebugToolbarWidget(QWidget):
         initial_models = DebugToolbarActionProjector.render_models(initial_context)
         layout.addWidget(self.phase_label)
         layout.addWidget(self.cursor_label)
-        self.primary_panel = self._build_panel(
-            initial_models,
-            DebugActionPlacement.PRIMARY,
-            color_scheme,
-        )
-        self.button_panel = self.primary_panel
-        self.session_panel = self._build_panel(
-            initial_models,
-            DebugActionPlacement.SESSION,
-            color_scheme,
-        )
-        self.inspector_panel = self._build_panel(
-            initial_models,
-            DebugActionPlacement.INSPECTOR,
-            color_scheme,
-        )
-        layout.addWidget(self.primary_panel)
-        layout.addWidget(self.session_panel)
-        layout.addWidget(self.inspector_panel)
+        self.panels: dict[type[DebugToolbarPlacement], ButtonPanel] = {
+            placement: self._build_panel(initial_models, placement, color_scheme)
+            for placement in DebugToolbarPlacement.panels()
+        }
+        self.button_panel = self.panels[PrimaryPanel]
+        for panel in self.panels.values():
+            layout.addWidget(panel)
         self.set_action_models(initial_models)
 
     def _build_panel(
         self,
         initial_models: tuple[DebugActionRenderModel, ...],
-        placement: DebugActionPlacement,
+        placement: type[DebugToolbarPlacement],
         color_scheme: ColorScheme | None,
     ) -> ButtonPanel:
         models = tuple(
@@ -133,12 +118,12 @@ class DebugToolbarWidget(QWidget):
     def runtime_inspection_button(self) -> QPushButton | None:
         """Return the declared runtime-inspection button when rendered."""
 
-        return self._buttons_by_id.get(DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value)
+        return self._buttons_by_id.get(InspectRuntimeValuesAction.action_id())
 
     def emit_debug_command(self, action_id: str) -> None:
         PipelineDebugActionDeclarationBase.for_action_id(action_id).emit_from(self)
 
-    def set_debug_session_context(self, context: PipelineDebugSessionContext) -> None:
+    def set_debug_session_context(self, context: DebugSessionProjectionContext) -> None:
         """Project toolbar controls from the current PipelineEditor debug context."""
 
         panel_text = DebugSessionPanelText.from_context(context)
@@ -165,17 +150,6 @@ class DebugToolbarWidget(QWidget):
         if model is None:
             raise ValueError(
                 f"Debug command is not exposed by the toolbar: {command_type}"
-            )
-        return model.enabled
-
-    def auxiliary_action_enabled(
-        self,
-        action_type: DebugToolbarAuxiliaryAction,
-    ) -> bool:
-        model = self._action_models.get(action_type.value)
-        if model is None:
-            raise ValueError(
-                f"Debug auxiliary action is not exposed by the toolbar: {action_type}"
             )
         return model.enabled
 

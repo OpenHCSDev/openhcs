@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from openhcs.core.equivalence.measurement_features import (
+    RuntimeMeasurementFactCounterMapping,
+    RuntimeMeasurementRowIdentity,
+)
+
 import hashlib
 import inspect
 import math
@@ -21,10 +26,10 @@ import openhcs.core.measurement_feature_queries as measurement_feature_queries
 import openhcs.core.measurement_row_materialization as measurement_row_materialization
 import openhcs.core.equivalence.cells as equivalence_cells
 import openhcs.core.equivalence.keys as equivalence_keys
-import openhcs.core.equivalence.measurement_facts as measurement_facts
+import benchmark.equivalence.measurement_facts as measurement_facts
 import openhcs.core.equivalence.measurement_features as measurement_features
 import benchmark.equivalence.measurement_requirements as measurement_requirements
-import openhcs.core.equivalence.measurement_rows as equivalence_measurement_rows
+import benchmark.equivalence.measurement_rows as equivalence_measurement_rows
 import benchmark.equivalence.object_label_measurements as object_label_measurements
 import openhcs.core.equivalence.policy as equivalence_policy
 import openhcs.core.equivalence.relationships as equivalence_relationships
@@ -32,7 +37,7 @@ import benchmark.equivalence.exported_relationships as exported_relationships
 import benchmark.equivalence.row_identity as equivalence_row_identity
 import benchmark.equivalence.table_snapshots as table_snapshots
 import openhcs.core.runtime_measurements as runtime_measurements
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
     ObjectLabelsArtifactType,
@@ -97,13 +102,12 @@ from openhcs.core.equivalence.cells import (
 from benchmark.equivalence.table_snapshots import (
     measurement_table_padding_group,
 )
-from openhcs.core.equivalence.measurement_rows import (
+from benchmark.equivalence.measurement_rows import (
     RuntimeSampleNumberOffset,
     RuntimeMeasurementFeatureKeyCache,
     RuntimeMeasurementPaddingGroupCache,
     RuntimeMeasurementQualifierRenderCache,
     RuntimeMeasurementRequiredKeyIndex,
-    RuntimeMeasurementRowIdentity,
     RuntimeMeasurementRowMapping,
     RuntimeMeasurementRowSchemaCache,
     RuntimeRowProjectionContext,
@@ -113,9 +117,8 @@ from benchmark.equivalence.row_identity import (
     RuntimeMeasurementRowSubjectProjection,
     RuntimeObjectMeasurementRowIdentity,
 )
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeDirectionalPairMeasurementDerivationContract,
-    RuntimeMeasurementFactCounterMapping,
     RuntimeMeasurementFactProjectionContract,
     RuntimeMeasurementFactList as RuntimeMeasurementFactList,
     RuntimeMeasurementFacts,
@@ -148,8 +151,8 @@ from benchmark.equivalence.object_label_measurements import (
 )
 from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureSemantics,
-    RuntimeScopedMeasurementTable,
 )
+from openhcs.core.runtime_measurements import RuntimeScopedMeasurementTable
 from benchmark.equivalence.exported_relationships import (
     RelationshipMeasurementSemantics,
 )
@@ -173,7 +176,7 @@ from benchmark.equivalence.comparison import (
     runtime_table_differences as _table_differences,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenanceIdentity
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeMeasurementFact,
 )
 
@@ -883,10 +886,12 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
             required_key_index=row_required_key_index,
             axis_key=axis_key,
             scoped_table=scoped_table,
-            object_row_occurrence_scope=scoped_table.object_row_occurrence_scope(
-                sample_number_offset
+            object_row_occurrence_scope=object_row_occurrence_scope(
+                scoped_table,
+                sample_number_offset,
             ),
-            image_row_occurrence_identity=scoped_table.image_row_occurrence_identity(
+            image_row_occurrence_identity=image_row_occurrence_identity(
+                scoped_table,
                 axis_key,
                 self.policy.measurement_dialect,
             ),
@@ -1185,11 +1190,7 @@ class RuntimeTableRowProjectionRecorder(RuntimeMeasurementRowProjectionRecorder)
             row,
             self.axis_key,
             self.state.policy,
-            self.scoped_table.object_instance_key(
-                row,
-                object_label,
-                sample_number_offset=self.sample_number_offset,
-            ),
+            self.sample_number_offset.object_instance_key(row.row, object_label),
             occurrence_scope=self.object_row_occurrence_scope,
         )
 
@@ -2036,7 +2037,7 @@ def _artifact_type_counts_repr(counts: Mapping[type[ArtifactType], int]) -> str:
                 (ArtifactType.coerce(artifact_type), count)
                 for artifact_type, count in counts.items()
             ),
-            key=lambda item: item[0].require_value(),
+            key=lambda item: item[0].value,
         )
     )
     return "{" + ", ".join(rendered_items) + "}"
@@ -2834,3 +2835,51 @@ def runtime_measurement_fact_counter(
         counter = Counter()
         measurement_fact_counts[key] = counter
     return counter
+
+
+def object_row_occurrence_scope(
+    scoped: RuntimeScopedMeasurementTable,
+    sample_number_offset: RuntimeSampleNumberOffset,
+) -> ComponentGroupScope | None:
+    """Return group identity only when the table owns one local row domain."""
+    execution_scope = scoped.execution_scope
+    if not (execution_scope is not None and execution_scope.has_value):
+        return None
+    slice_indices: set[int | None] = set()
+    for raw_row in scoped.table.rows.iter_row_mappings():
+        row = RuntimeMeasurementRowMapping(
+            measurement_row_mapping(raw_row),
+            object_row_identity=scoped.table.rows.object_row_identity,
+        )
+        object_id = row.object_label(
+            object_id_field=scoped.table.subject.object_id_field
+        )
+        if object_id is None:
+            continue
+        slice_indices.add(
+            sample_number_offset.object_instance_key(row.row, object_id).slice_index
+        )
+        if len(slice_indices) > 1:
+            return None
+    return execution_scope.group_scope
+
+
+def image_row_occurrence_identity(
+    scoped: RuntimeScopedMeasurementTable,
+    axis_key: str | None,
+    dialect: MeasurementDialect,
+) -> tuple[str | None, SourceImageProvenanceIdentity | None]:
+    """Return table identity only when its rows do not identify a complete domain."""
+    sample_identities: set[tuple[tuple[str, object], ...]] = set()
+    for raw_row in scoped.table.rows.iter_row_mappings():
+        row = RuntimeMeasurementRowMapping(
+            measurement_row_mapping(raw_row),
+            object_row_identity=scoped.table.rows.object_row_identity,
+        )
+        sample_identity = row.sample_identity_key(dialect)
+        if not sample_identity:
+            continue
+        sample_identities.add(sample_identity)
+        if len(sample_identities) > 1:
+            return None, None
+    return axis_key, scoped.table.source_provenance.equality_identity

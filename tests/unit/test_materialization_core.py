@@ -101,7 +101,8 @@ from openhcs.processing.materialization import (
     ImageFileOptions,
     JsonOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     PointROIOptions,
     ROIOptions,
     TiffStackOptions,
@@ -130,6 +131,7 @@ from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.payload_axes import PayloadAxes
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def _memory_materialize(spec, data, path, filemanager):
@@ -139,7 +141,7 @@ def _memory_materialize(spec, data, path, filemanager):
         path=path,
         filemanager=filemanager,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
 
@@ -189,12 +191,12 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".labels.tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         payload,
         "/analysis/A01_labels",
-        filemanager,
+        filemanager, output_plan=materialization_output_plan()
     )
     assert len(outputs) == 1
     output = outputs[0]
@@ -263,7 +265,7 @@ def test_image_file_materialization_densifies_sparse_named_object_labels() -> No
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".labels.tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         payload,
@@ -271,7 +273,7 @@ def test_image_file_materialization_densifies_sparse_named_object_labels() -> No
         filemanager,
         artifact_source_identity=SourceImageIdentity(
             path="/input/A01_s001_w1_z001_t001.tif",
-        ),
+        ), output_plan=materialization_output_plan()
     )
 
     assert isinstance(output.content, np.ndarray)
@@ -292,7 +294,7 @@ def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkey
         MaterializationSpec(csv_options, json_options),
         data,
         "/analysis/A01_counts",
-        filemanager,
+        filemanager, output_plan=materialization_output_plan()
     )
     monkeypatch.setattr(
         "polystore.roi.extract_rois_from_labeled_mask",
@@ -309,7 +311,7 @@ def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkey
                 file_extensions=(".csv", ".json"),
                 exclude_patterns=(),
             ),
-        ),
+        ), output_plan=materialization_output_plan()
     )
     assert [(output.path, output.content) for output in actual] == [
         (output.path, output.content) for output in expected
@@ -323,14 +325,14 @@ def test_roi_output_projection_preserves_requested_summary_content():
     spec = MaterializationSpec(ROIOptions(min_area=0))
     data = np.ones((8, 8), dtype=np.int32)
     all_outputs = materialization_outputs(
-        spec, data, "/analysis/A01_labels", filemanager
+        spec, data, "/analysis/A01_labels", filemanager, output_plan=materialization_output_plan()
     )
     summaries = materialization_outputs(
         spec,
         data,
         "/analysis/A01_labels",
         filemanager,
-        output_path_filter=lambda path: path.suffix == ".txt",
+        output_path_filter=lambda path: path.suffix == ".txt", output_plan=materialization_output_plan()
     )
     assert len(summaries) == 1
     assert [(output.path, output.content) for output in summaries] == [
@@ -504,7 +506,7 @@ def _stream_materialize(spec, data, path, filemanager, context=None):
         filemanager=filemanager,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        context=context,
+        context=context, output_plan=materialization_output_plan()
     )
 
 
@@ -535,7 +537,7 @@ def test_materialization_spec_candidate_paths_follow_registered_writers() -> Non
 def test_materialization_spec_declares_filename_identity() -> None:
     assert tiff_stack().uses_source_identity_filename()
     assert not tiff_stack(
-        TiffStackOptions(filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME)
+        TiffStackOptions(filename_identity=NameByArtifactName)
     ).uses_source_identity_filename()
 
 
@@ -575,7 +577,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
     )
     spec = MaterializationSpec(
         ImageFileOptions(
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
             relative_path_template="frame-{index:04d}.png",
         )
     )
@@ -589,7 +591,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
         filemanager=filemanager,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(component,),
+        variable_components=(component,), output_plan=materialization_output_plan()
     )
 
     assert len(filemanager.saved) == 2
@@ -708,7 +710,7 @@ def test_materialize_strips_roi_zip_compound_suffix_for_json() -> None:
         path="/tmp/A01_test_output.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_test_output.json"
@@ -725,7 +727,7 @@ def test_csv_materialization_preserves_declared_fields_for_empty_rows() -> None:
         path="/tmp/A01_measurements",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_measurements_details.csv"
@@ -759,7 +761,7 @@ def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() 
         path="/tmp/centres",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert fm.load("/tmp/centres.csv", "memory").splitlines() == [
@@ -822,7 +824,7 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         path=str(tmp_path / "centres"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
     assert archive == str(tmp_path / "centres_points.roi.zip")
@@ -902,7 +904,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
         MaterializationSpec(ROIOptions(min_area=0)),
         data=payload, path=str(tmp_path / "volume"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
-        backends=["disk"], variable_components=variable_components,
+        backends=["disk"], variable_components=variable_components, output_plan=materialization_output_plan()
     )
     rois = load_rois_from_zip(Path(archive))
     metadata = ROIArchiveSourceMetadata.decode(rois)
@@ -1013,7 +1015,7 @@ def test_point_roi_materialization_rejects_unreopenable_results(
             path=str(tmp_path / "invalid"),
             filemanager=FileManager({"disk": DiskStorageBackend()}),
             backends=["disk"],
-            backend_kwargs={},
+            backend_kwargs={}, output_plan=materialization_output_plan()
         )
     assert not (tmp_path / "invalid_points.roi.zip").exists()
 
@@ -1028,7 +1030,7 @@ def test_csv_materialization_preserves_declared_field_order_for_dict_rows() -> N
         path="/tmp/A01_measurements",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_measurements_details.csv"
@@ -1054,7 +1056,7 @@ def test_csv_materialization_expands_columnar_rows() -> None:
         path="/tmp/A01_measurements",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_measurements_details.csv"
@@ -1089,7 +1091,7 @@ def test_csv_materialization_expands_mapping_columns() -> None:
         path="/tmp/A01_relationships",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_relationships_details.csv"
@@ -1110,7 +1112,7 @@ def test_json_materialization_filters_to_declared_fields() -> None:
         path="/tmp/A01_measurements",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_measurements.json"
@@ -1140,7 +1142,7 @@ def test_empty_columnar_csv_retains_its_nominal_schema() -> None:
         path="/tmp/A01_cells",
         filemanager=filemanager,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert filemanager.load(output_path, "memory") == "cell_id,area\r\n"
@@ -1160,7 +1162,7 @@ def test_tiff_stack_preserves_channels_last_color_image_as_single_file() -> None
         path="/tmp/A01_rgb",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_rgb_slice_000.tif"
@@ -1184,7 +1186,7 @@ def test_tiff_stack_splits_scalar_3d_stack_by_plane() -> None:
         path="/tmp/A01_stack",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert out == "/tmp/A01_stack_slice_000.tif"
@@ -1218,7 +1220,7 @@ def test_tiff_stack_streaming_saves_per_slice_component_metadata() -> None:
         path="/tmp/A01_s001_w1_z001_t001_NucleiObjects3D_step9",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     saved_slices = [
@@ -1258,7 +1260,7 @@ def test_tiff_stack_streaming_projects_scalar_metadata_over_declared_stack_axis(
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(Microscopy.ZIndex,),
+        variable_components=(Microscopy.ZIndex,), output_plan=materialization_output_plan()
     )
 
     saved_images = [
@@ -1386,7 +1388,7 @@ def test_tiff_stack_streaming_preserves_runtime_source_plane_metadata() -> None:
         variable_components=(
             Microscopy.ZIndex,
             Microscopy.Channel,
-        ),
+        ), output_plan=materialization_output_plan()
     )
 
     saved_images = [
@@ -1427,7 +1429,7 @@ def test_tiff_stack_streaming_projects_artifact_identity_over_declared_stack_axi
                 "timepoint": 1,
             },
         ),
-        variable_components=(Microscopy.ZIndex,),
+        variable_components=(Microscopy.ZIndex,), output_plan=materialization_output_plan()
     )
 
     saved_images = [
@@ -1467,7 +1469,7 @@ def test_tiff_stack_streaming_uses_single_plane_scalar_source_identity() -> None
         path="/tmp/A01_s001_w3_z001_t001_SanityCheck_step6",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     saved_images = [item for item in fm.saved if item[1].endswith(".tif")]
@@ -1515,7 +1517,7 @@ def test_materialized_tiff_output_uses_artifact_source_identity_as_fallback() ->
                 "channel": 1,
                 "timepoint": 20,
             },
-        ),
+        ), output_plan=materialization_output_plan()
     )
 
     saved_images = [item for item in fm.saved if item[1].endswith(".tif")]
@@ -1545,7 +1547,7 @@ def test_roi_materialization_offsets_object_label_payload_geometry() -> None:
         path="/tmp/A01_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     rois = fm.load(out, "memory")
@@ -1582,7 +1584,7 @@ def test_roi_viewer_stream_preserves_source_spatial_domain() -> None:
         path="/tmp/A01_s001_w1_z001_t001_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     roi_outputs = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -1622,7 +1624,7 @@ def test_roi_materialization_extracts_each_plane_from_object_label_stack() -> No
         path="/tmp/A01_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     rois = fm.load(out, "memory")
@@ -1654,7 +1656,7 @@ def test_roi_materialization_preserves_payload_scoped_volume_in_one_archive() ->
         path="/tmp/A01_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     rois = fm.load(out, "memory")
@@ -1701,7 +1703,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(Microscopy.ZIndex,),
+        variable_components=(Microscopy.ZIndex,), output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -1753,7 +1755,7 @@ def test_roi_materialization_projects_singleton_object_label_stack() -> None:
         path="/tmp/A01_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     rois = fm.load(out, "memory")
@@ -1823,7 +1825,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(Microscopy.Site,),
+        variable_components=(Microscopy.Site,), output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -1879,7 +1881,7 @@ def test_generic_object_labels_feed_napari_and_fiji_roi_transports(
         path="/tmp/A01_s001_w1_z001_t001_cells_step3.roi.zip",
         filemanager=fm,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     rois = fm.load(roi_path, "memory")
     stream_request = _viewer_stream_backend_kwargs().values.stream_request
@@ -1950,7 +1952,7 @@ def test_roi_materialization_splits_addressable_label_planes_for_streaming() -> 
         path="/tmp/A01_s001_w1_z001_t001_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -2092,7 +2094,7 @@ def test_roi_materialization_uses_filename_identity_without_restoring_collapsed_
                 "timepoint": 1,
                 "extension": ".tif",
             },
-        ),
+        ), output_plan=materialization_output_plan()
     )
 
     roi_outputs = [output for output in outputs if output.path.endswith(".roi.zip")]
@@ -2151,7 +2153,7 @@ def test_roi_streaming_applies_target_metadata_without_scalar_stream_metadata() 
         path="/tmp/A01_s001_w1_z001_t001_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -2192,7 +2194,7 @@ def test_roi_materialization_coalesces_duplicate_stream_targets() -> None:
         path="/tmp/A01_s001_w1_z001_t001_Nuclei_step3.roi.zip",
         filemanager=fm,
         backends=["napari_stream"],
-        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
+        backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()}, output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -2266,7 +2268,7 @@ def test_roi_materialization_coalesces_source_stack_archive_with_artifact_identi
                 "timepoint": 1,
                 "extension": ".tif",
             },
-        ),
+        ), output_plan=materialization_output_plan()
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -2558,8 +2560,7 @@ def test_roi_materialization_treats_non_spatial_label_payload_as_empty() -> None
 def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     tmp_path, intrinsic
 ):
-    from openhcs.core.artifacts import ImageArtifactType
-    from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.image_file_serialization import TiffImageFileFormat
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -2609,7 +2610,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     manager = FileManager({"disk": DiskStorageBackend()})
     spec = MaterializationSpec(ImageFileOptions(
         filename_suffix=".tif",
-        filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+        filename_identity=NameBySourceIdentity,
     ))
     batch = prepare_materialization(
         spec,
@@ -2621,7 +2622,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         variable_components=(Microscopy.ZIndex,),
         artifact_filename_identity=SourceImageIdentity(
             component_metadata={**components[0], "extension": ".tif"},
-        ),
+        ), output_plan=materialization_output_plan()
     )
     batch.save()
     assert len(batch.outputs) == (1 if intrinsic else 3)

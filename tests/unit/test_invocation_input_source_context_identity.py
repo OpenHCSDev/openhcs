@@ -7,13 +7,9 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
@@ -36,7 +32,8 @@ from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -202,7 +199,7 @@ def test_named_source_binding_owns_unstored_input_over_main_flow_projection(
         bindings=(
             NamedSourceBinding(
                 alias=plate_template.name,
-                projection_role=SourceProjectionRole.PRIMARY_PLANE,
+                projection_role=PrimaryPlaneRole,
             ),
         )
     )
@@ -336,7 +333,7 @@ def test_compiled_producer_edge_overrides_matching_source_binding() -> None:
             bindings=(
                 NamedSourceBinding(
                     alias=combined_image.name,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                 ),
             ),
         ),

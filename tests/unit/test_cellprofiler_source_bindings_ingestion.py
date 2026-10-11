@@ -17,14 +17,16 @@ from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjecto
 from openhcs.core.source_projection import SourceCandidate
 from openhcs.core.source_bindings import (
     ComponentSelector,
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     PairByOrder,
+    PathIsImage,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.axes import Axis
@@ -42,7 +44,7 @@ def _two_channel_config(
     return SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=(
                     r"^(?P<Well>[A-H][0-9]{2})_s(?P<Site>[0-9]+)_" r"(?P<Stain>[^.]+)"
                 ),
@@ -51,8 +53,8 @@ def _two_channel_config(
         match_plan=PairByOrder(),
         source_filters=(
             SourceFilterClause(
-                subject=SourceFilterSubject.EXTENSION,
-                match_type=SourceFilterMatchType.IS_IMAGE,
+                subject=SourceExtension,
+                match_type=PathIsImage,
             ),
         ),
         bindings=(
@@ -61,8 +63,8 @@ def _two_channel_config(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            subject=SourceFilterSubject.FILE,
-                            match_type=SourceFilterMatchType.CONTAINS,
+                            subject=SourceFileName,
+                            match_type=TextContains,
                             value="DNA",
                         ),
                     ),
@@ -74,8 +76,8 @@ def _two_channel_config(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            subject=SourceFilterSubject.FILE,
-                            match_type=SourceFilterMatchType.CONTAINS,
+                            subject=SourceFileName,
+                            match_type=TextContains,
                             value="RNA",
                         ),
                     ),

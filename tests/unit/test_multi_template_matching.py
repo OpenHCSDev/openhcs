@@ -8,11 +8,8 @@ import cv2
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ImageArtifactType,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.pipeline.materialization_flag_planner import (
@@ -27,7 +24,8 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     multi_template_crop_subset,
 )
 from openhcs.processing.materialization import materialization_outputs
-from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+from openhcs.processing.materialization.options import NameByArtifactName
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 @pytest.mark.parametrize(
@@ -81,7 +79,7 @@ def test_template_match_artifact_materializes_every_match_column() -> None:
     assert not artifact_spec.materialization.uses_source_identity_filename()
     assert (
         artifact_spec.materialization.outputs[0].filename_identity
-        is MaterializedFilenameIdentity.ARTIFACT_NAME
+        is NameByArtifactName
     )
     results = [
         TemplateMatchResult(
@@ -102,7 +100,7 @@ def test_template_match_artifact_materializes_every_match_column() -> None:
         artifact_spec.materialization,
         results,
         "/analysis/match_results.pkl",
-        SimpleNamespace(),
+        SimpleNamespace(), output_plan=materialization_output_plan()
     )
 
     assert output.path == "/analysis/match_results_mtm_matches.csv"

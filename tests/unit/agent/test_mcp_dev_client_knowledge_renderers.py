@@ -20,9 +20,9 @@ from openhcs.agent.dto.functions import (
     FunctionCatalogEntry,
     FunctionCatalogPage,
     FunctionDetail,
-    FunctionParameterSource,
     FunctionParameterSpec,
     FunctionRuntimeContractSummary,
+    SuppliedFromPrimaryInput,
 )
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseCatalog,
@@ -34,6 +34,7 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSourceSpan,
 )
 from openhcs.agent.dto.ui_bridge import (
+    DirtyFields,
     UiCatalogPageMetadata,
     UiMutationReceipt,
     UiMutationRequestToken,
@@ -155,7 +156,7 @@ FIELD_LIST = UiObjectStateFieldListResult(
     requested_scope_ids=("scope-1",),
     field_paths=(),
     field_path_contains=("worker",),
-    field_filter="dirty",
+    field_filter=DirtyFields,
     include_container_fields=False,
     matched_scope_count=1,
     matched_field_count=2,
@@ -273,7 +274,7 @@ FAMILY_CASES = (
                 FunctionParameterSpec("threshold", "float", "0.5", False),
                 FunctionParameterSpec(
                     "image", "ndarray", None, True,
-                    supplied_by=FunctionParameterSource.PRIMARY_INPUT,
+                    supplied_by=SuppliedFromPrimaryInput,
                     description="From the step input.",
                 ),
             ),

@@ -1,4 +1,4 @@
-"""Nominal host-platform authorities for headless agent runtime paths."""
+"""Host-platform families for headless agent runtime paths."""
 
 from __future__ import annotations
 
@@ -7,52 +7,40 @@ import sys
 import tempfile
 from abc import ABC
 from collections.abc import Mapping
-from enum import Enum
 from pathlib import Path
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
+class AgentRuntimePlatform(ABC, metaclass=AutoRegisterMeta):
+    """Filesystem, process and session semantics of one host platform.
 
-class AgentRuntimePlatformKey(str, Enum):
-    """Closed host-platform axis used by agent runtime authorities."""
+    Each platform is a subclass; ``name`` is its spelling in reports.
+    """
 
-    WINDOWS = "windows"
-    MACOS = "macos"
-    LINUX = "linux"
-    POSIX = "posix"
-    OTHER = "other"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    @classmethod
-    def current(cls) -> "AgentRuntimePlatformKey":
-        """Return the nominal platform key for the running interpreter."""
+    name: ClassVar[str | None] = None
+
+    @staticmethod
+    def current_type() -> type[AgentRuntimePlatform]:
+        """Return the platform class of the running interpreter."""
         if sys.platform.startswith("win"):
-            return cls.WINDOWS
+            return WindowsRuntimePlatform
         if sys.platform == "darwin":
-            return cls.MACOS
+            return MacOSRuntimePlatform
         if sys.platform.startswith("linux"):
-            return cls.LINUX
+            return LinuxRuntimePlatform
         if os.name == "posix":
-            return cls.POSIX
-        return cls.OTHER
-
-
-class AgentRuntimePlatformAuthority(
-    EnumKeyedStrategyMixin[AgentRuntimePlatformKey],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Registered authority for platform-owned agent filesystem semantics."""
-
-    __enum_member_attr__ = "platform_key"
-    platform_key: ClassVar[AgentRuntimePlatformKey]
+            return PosixRuntimePlatform
+        return OtherRuntimePlatform
 
     @classmethod
-    def current(cls) -> "AgentRuntimePlatformAuthority":
-        """Instantiate the authority declared for the current platform."""
-        return cls.for_enum_member(AgentRuntimePlatformKey.current())
+    def current(cls) -> "AgentRuntimePlatform":
+        """Instantiate the platform of the running interpreter."""
+        return cls.current_type()()
 
     @staticmethod
     def resolved_path(path: str | Path) -> Path:
@@ -199,10 +187,10 @@ class AgentRuntimePlatformAuthority(
         return tuple(dict.fromkeys(candidates))
 
 
-class OtherAgentRuntimePlatformAuthority(AgentRuntimePlatformAuthority):
+class OtherRuntimePlatform(AgentRuntimePlatform):
     """Portable conservative defaults for unknown host platforms."""
 
-    platform_key = AgentRuntimePlatformKey.OTHER
+    name = "other"
 
 
 class PosixAgentRuntimePlatformMixin:
@@ -271,22 +259,22 @@ class NativeGraphicalSessionMixin:
         return True
 
 
-class PosixAgentRuntimePlatformAuthority(
+class PosixRuntimePlatform(
     PosixAgentRuntimePlatformMixin,
-    AgentRuntimePlatformAuthority,
+    AgentRuntimePlatform,
 ):
     """Registered authority for otherwise-unclassified POSIX hosts."""
 
-    platform_key = AgentRuntimePlatformKey.POSIX
+    name = "posix"
 
 
-class LinuxAgentRuntimePlatformAuthority(
+class LinuxRuntimePlatform(
     PosixAgentRuntimePlatformMixin,
-    AgentRuntimePlatformAuthority,
+    AgentRuntimePlatform,
 ):
     """Linux runtime paths, including the standard per-user runtime root."""
 
-    platform_key = AgentRuntimePlatformKey.LINUX
+    name = "linux"
     proc_root: ClassVar[Path] = Path("/proc")
 
     def _process_environment(self, pid: int) -> Mapping[str, str] | None:
@@ -323,14 +311,14 @@ class LinuxAgentRuntimePlatformAuthority(
         return tuple(candidates)
 
 
-class MacOSAgentRuntimePlatformAuthority(
+class MacOSRuntimePlatform(
     NativeGraphicalSessionMixin,
     PosixAgentRuntimePlatformMixin,
-    AgentRuntimePlatformAuthority,
+    AgentRuntimePlatform,
 ):
     """macOS application-data convention plus POSIX runtime ownership."""
 
-    platform_key = AgentRuntimePlatformKey.MACOS
+    name = "macos"
 
     def application_data_root(self, application_name: str) -> Path:
         return (
@@ -338,13 +326,13 @@ class MacOSAgentRuntimePlatformAuthority(
         ).resolve(strict=False)
 
 
-class WindowsAgentRuntimePlatformAuthority(
+class WindowsRuntimePlatform(
     NativeGraphicalSessionMixin,
-    AgentRuntimePlatformAuthority,
+    AgentRuntimePlatform,
 ):
     """Windows user-data and local runtime path conventions."""
 
-    platform_key = AgentRuntimePlatformKey.WINDOWS
+    name = "windows"
 
     def child_process_environment_keys(self) -> tuple[str, ...]:
         """Preserve native Windows process, home, app-data, and temp roots."""

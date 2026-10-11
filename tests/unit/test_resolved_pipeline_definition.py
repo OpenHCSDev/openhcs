@@ -1,7 +1,7 @@
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 import pytest
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     ProcessingConfig,
     StepMaterializationConfig,
@@ -39,7 +39,7 @@ def test_resolved_pipeline_reads_steps_without_object_conversion():
         processing_config=ProcessingConfig(
             variable_components=[Microscopy.Site],
             group_by=None,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         step_materialization_config=StepMaterializationConfig(enabled=False),
     )
@@ -52,7 +52,7 @@ def test_resolved_pipeline_reads_steps_without_object_conversion():
     assert pipeline.step_scope_ids[0] == scope
     assert pipeline.steps[0].source_bindings is source_bindings
     assert (
-        pipeline.steps[0].processing_config.input_source is InputSource.PIPELINE_START
+        pipeline.steps[0].processing_config.input_source.reads_pipeline_start
     )
     assert pipeline.steps[0].processing_config.variable_components == [
         Microscopy.Site

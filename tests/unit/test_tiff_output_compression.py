@@ -16,9 +16,10 @@ from openhcs.core.steps.function_io import save_materialized_data
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     materialize,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def test_configured_main_flow_tiff_output_is_lossless(tmp_path) -> None:
@@ -55,7 +56,7 @@ def test_configured_named_artifact_tiff_output_is_lossless(tmp_path) -> None:
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         pixels,
@@ -64,7 +65,7 @@ def test_configured_named_artifact_tiff_output_is_lossless(tmp_path) -> None:
         backends=[Backend.DISK.value],
         backend_kwargs=PersistentArtifactMaterializationTargetPlan(
             backend=Backend.DISK.value
-        ).persistent_backend_kwargs(SimpleNamespace(tiff_config=config)),
+        ).persistent_backend_kwargs(SimpleNamespace(tiff_config=config)), output_plan=materialization_output_plan()
     )
 
     with tifffile.TiffFile(path) as output:

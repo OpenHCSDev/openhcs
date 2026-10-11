@@ -43,7 +43,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     NapariDisplayConfig,
     PathPlanningConfig,
     PipelineConfig,
@@ -51,7 +51,7 @@ from openhcs.core.config import (
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
@@ -122,7 +122,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
     source_stack = _write_known_neurite_images(plate_dir)
 
     suffix = "_neurite_test"
-    vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
+    vfs_config = VFSConfig(materialization_backend=MaterializeToDisk)
     global_config = GlobalPipelineConfig(
         num_workers=1,
         dataset_source=ImageXpressHandler,

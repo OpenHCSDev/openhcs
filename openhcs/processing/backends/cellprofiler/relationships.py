@@ -9,18 +9,18 @@ from openhcs.core.runtime_relationships import (
     DirectParentReferenceFeatureMarker,
 )
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     InputGroupLineageSourceRelation,
     InputObjectMeasurementSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.equivalence.relationships import (
     GenericRelationshipAggregateFeatureSemantics,

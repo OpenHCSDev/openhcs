@@ -11,13 +11,9 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 )
 
 
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.constants.input_source import ReadPipelineStart
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -214,7 +210,7 @@ def test_measure_image_quality_image_selection_resolves_from_its_typed_scope() -
         step_name=MeasureImageQualityModule.module_name,
         step_index=0,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
         available_artifacts=source_specs,
         main_flow_artifacts=source_specs,
     )

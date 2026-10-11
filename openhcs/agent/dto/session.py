@@ -10,10 +10,27 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentWarning,
 )
+from enum import Enum
+
 from python_introspect import validate_annotated_dataclass
 from zmqruntime.config import PositiveInteger
 
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+
+RuntimeObservationExportScopeName = Enum(
+    "ZMQRuntimeObservationExportScope",
+    [(name.upper(), name) for name in ZMQRuntimeObservationExportScope.__registry__],
+    type=str,
+    module=__name__,
+)
+"""Boundary view of the export-scope registry, for agent request fields.
+
+It keeps the MCP schema's published name and description for the field.
+"""
+RuntimeObservationExportScopeName.__doc__ = ZMQRuntimeObservationExportScope.__doc__.splitlines()[0]
+RuntimeObservationExportScopeName.scope = property(
+    lambda member: ZMQRuntimeObservationExportScope.named(member.value)
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,8 +66,8 @@ class DatasetRunRequest(AgentDataclassCliRequest):
 
     scope_ids: tuple[str, ...]
     runtime_observation_export_path: str | None = None
-    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
-        ZMQRuntimeObservationExportScope.VALUES
+    runtime_observation_export_scope: RuntimeObservationExportScopeName = (
+        RuntimeObservationExportScopeName.VALUES
     )
     submit_timeout_ms: PositiveInteger | None = None
     """Bound on each execution submission; the transport default when unset."""

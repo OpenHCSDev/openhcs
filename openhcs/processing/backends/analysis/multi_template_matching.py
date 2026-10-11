@@ -17,12 +17,8 @@ import MTM
 import numpy as np
 from python_introspect import set_signature_analysis_target
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    MainFlowStackOutputSpec,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
@@ -32,7 +28,7 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     TiffStackOptions,
 )
-from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+from openhcs.processing.materialization.options import NameByArtifactName
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +131,7 @@ _TEMPLATE_MATCH_OUTPUTS = (
         ImageArtifactType,
         materialization=MaterializationSpec(
             TiffStackOptions(
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME
+                filename_identity=NameByArtifactName
             )
         ),
     ),
@@ -145,7 +141,7 @@ _TEMPLATE_MATCH_OUTPUTS = (
         materialization=MaterializationSpec(
             CsvOptions(
                 filename_suffix="_mtm_matches.csv",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
                 fields=[field.name for field in fields(TemplateMatchCsvRow)],
                 row_unpacker=_mtm_row_unpacker,
             )

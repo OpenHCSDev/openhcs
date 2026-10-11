@@ -8,12 +8,15 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.agent.dto.execution import ArtifactPlanInspection
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.source_bindings import SourceProjectionRole
+from openhcs.core.source_bindings import (
+    PrimaryPlaneRole,
+    SourceArtifactRole,
+)
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG, OpenHCSMetadataSubdirectories,
@@ -46,13 +49,13 @@ def addresses(metadata):
 
 def require_projection_inventory(saved, source_addresses, artifact_plans):
     """Require primary AND named image planes from the compiled declarations."""
-    expected = Counter((SourceProjectionRole.PRIMARY_PLANE, None, ImageArtifactType, address)
+    expected = Counter((PrimaryPlaneRole, None, ImageArtifactType, address)
                        for address in source_addresses)
     for plan in artifact_plans:
         artifact_type = ArtifactType.coerce(plan.kind)
         if (issubclass(artifact_type, ImageArtifactType) and plan.materialization is not None
                 and plan.materialization.persistent_enabled):
-            expected.update((SourceProjectionRole.SOURCE_ARTIFACT, plan.name, artifact_type, address)
+            expected.update((SourceArtifactRole, plan.name, artifact_type, address)
                             for address in source_addresses)
     actual = Counter((item.projection_role, item.source_alias, item.artifact_kind, item.address)
                      for item in saved)

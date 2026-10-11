@@ -13,12 +13,12 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.config import FijiStreamingConfig
 from openhcs.core.pipeline.function_contracts import composed_image_payload

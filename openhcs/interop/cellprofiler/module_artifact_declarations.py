@@ -12,26 +12,32 @@ from typing import (
     ClassVar,
 )
 
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.constants.input_source import InputSource, ReadPipelineStart
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
+    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecAccumulator,
-    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputImageSetContextSourceRelation,
     InputObjectMeasurementSourceRelation,
+    ObjectMeasurementSubjectRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
-    ObjectMeasurementSubjectRelation,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -389,7 +395,7 @@ class ObjectArtifactOutputModule(
         from openhcs.core.runtime_measurements import MeasurementRowAxisField
         from openhcs.core.runtime_tabular_values import FieldSpec
         from openhcs.interop.cellprofiler.measurement_lookup import (
-            CellProfilerMeasurementFeature,
+            ObjectCountFeatureName,
         )
 
         row_batches = []
@@ -399,9 +405,7 @@ class ObjectArtifactOutputModule(
                 object_name=object_spec.name,
                 domain_scope=request.object_label_output_domain_scope(),
             )
-            count_feature = CellProfilerMeasurementFeature.object_count(
-                object_spec.name
-            ).name
+            count_feature = ObjectCountFeatureName.feature(object_spec.name).name
             label_plane_domains = location_rows.label_plane_domains()
             count_fields = (
                 FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
@@ -520,7 +524,6 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
 
         from openhcs.interop.cellprofiler.measurement_lookup import (
             CellProfilerMeasurementFeature,
-            CellProfilerMeasurementFeatureKind,
         )
 
         return tuple(
@@ -529,11 +532,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 for binding in cls.measurement_feature_setting_bindings()
                 for feature_name in binding.feature_names(module)
                 for feature in (CellProfilerMeasurementFeature.parse(feature_name),)
-                if (
-                    feature is not None
-                    and feature.kind
-                    is not CellProfilerMeasurementFeatureKind.OBJECT_COUNT
-                )
+                if feature is not None and feature.kind.needs_prior_measurement_rows
             )
         )
 
@@ -1241,7 +1240,7 @@ class ImageMeasurementInputModule(
         callable_contract: CallableContract,
         *,
         step_context: "ArtifactDeclarationStepContext",
-    ) -> InputSource:
+    ) -> type[InputSource]:
         """Keep original measurement images alongside produced image subjects."""
         produced_refs = frozenset(
             producer.spec.ref().for_plan_type(ArtifactInputPlan)
@@ -1252,7 +1251,7 @@ class ImageMeasurementInputModule(
             and step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
             for spec in callable_contract.artifact_inputs.of_artifact_type(ImageArtifactType)
         ):
-            return InputSource.PIPELINE_START
+            return ReadPipelineStart
         return super().input_source_for_contract(
             callable_contract,
             step_context=step_context,

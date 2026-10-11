@@ -31,7 +31,7 @@ class ZMQWorkerExecutionRequest:
     execution_id: str
     orchestrator: Any
     execution_bundle: CompiledExecutionBundle
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
     progress_context: ProgressExecutionContext
     debug_execution_policy: Any
     active_execution_record: Any

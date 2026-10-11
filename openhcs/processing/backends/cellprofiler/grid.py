@@ -18,12 +18,14 @@ from numba import njit
 
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.memory.decorators import numpy
@@ -92,7 +94,7 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.artifacts import ArtifactSpec
+    from openhcs.core.artifacts.specs import ArtifactSpec
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.callable_contract import CallableContract
@@ -123,19 +125,22 @@ class DefineGridCycleScope(str, Enum):
         return cls(normalized)
 
 
-class DefineGridVariant(str, Enum):
-    """Absorbed DefineGrid function variants."""
+class DefineGridVariant(ABC, metaclass=AutoRegisterMeta):
+    """Absorbed DefineGrid function variant.
 
-    MANUAL = "define_grid_manual"
-    AUTOMATIC = "define_grid_automatic"
+    Each variant is a subclass keyed by the function it runs.
+    """
 
-    @property
-    def requires_object_input(self) -> bool:
-        """Return whether this variant derives the grid from object labels."""
-        return self is DefineGridVariant.AUTOMATIC
+    __registry_key__ = "function_name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[DefineGridVariant]]] = {}
 
-    @classmethod
-    def from_module(cls, module: ModuleBlock) -> "DefineGridVariant":
+    function_name: ClassVar[str | None] = None
+    requires_object_input: ClassVar[bool]
+    """The variant derives the grid from object labels."""
+
+    @staticmethod
+    def from_module(module: ModuleBlock) -> type[DefineGridVariant]:
         method = DefineGridManualModule.DefinitionMethod.from_literal(
             _setting_value(
                 module,
@@ -144,10 +149,28 @@ class DefineGridVariant(str, Enum):
             )
         )
         return (
-            cls.AUTOMATIC
+            AutomaticGrid
             if method is DefineGridManualModule.DefinitionMethod.automatic
-            else cls.MANUAL
+            else ManualGrid
         )
+
+    @staticmethod
+    def for_function(function_name: str) -> type[DefineGridVariant]:
+        return DefineGridVariant.__registry__[function_name]
+
+
+class ManualGrid(DefineGridVariant):
+    """A grid placed from two coordinate pairs on an image."""
+
+    function_name = "define_grid_manual"
+    requires_object_input = False
+
+
+class AutomaticGrid(DefineGridVariant):
+    """A grid derived from previously identified objects."""
+
+    function_name = "define_grid_automatic"
+    requires_object_input = True
 
 
 def define_grid_bound_kwargs(
@@ -183,7 +206,7 @@ def define_grid_bound_kwargs(
             )
         ),
     }
-    if DefineGridVariant.from_module(module) is DefineGridVariant.MANUAL:
+    if DefineGridVariant.from_module(module) is ManualGrid:
         first_x, first_y = _coordinate_pair(
             _setting_value(
                 module,
@@ -473,7 +496,7 @@ class DefineGridManualModule(
         """Bind scalar rows and the two coordinate-pair compound rows."""
 
         variant = DefineGridVariant.from_module(module)
-        if not variant.requires_object_input:
+        if variant is ManualGrid:
             manual_method = optional_setting_value(
                 module, cls.manual_definition_method_setting
             )
@@ -509,16 +532,7 @@ class DefineGridManualModule(
         source_bindings: "StepSourceBindingsConfig",
     ) -> Callable[..., object]:
         del contract, source_bindings
-        method = cls.DefinitionMethod.from_literal(
-            cls.setting_value(module, cls.definition_method_setting)
-            or cls.definition_method_default.value
-        )
-        function_name = (
-            cls.function_variants[0]
-            if method is cls.DefinitionMethod.automatic
-            else str(cls.function_name)
-        )
-        return cls.require_callable(function_name)
+        return cls.require_callable(DefineGridVariant.from_module(module).function_name)
 
     @classmethod
     def active_artifact_bindings(
@@ -537,7 +551,7 @@ class DefineGridManualModule(
             return bindings
         if invocation_key is None:
             raise TypeError("DefineGrid requires its exact invocation key.")
-        requires_objects = DefineGridVariant(
+        requires_objects = DefineGridVariant.for_function(
             invocation_key.function_name
         ).requires_object_input
         retain_image = optional_setting_value(module, cls.retain_grid_image_setting)
@@ -576,7 +590,7 @@ class DefineGridManualModule(
                 output_position=output_position,
             )
         del module, name, step_context, output_position
-        variant = DefineGridVariant(invocation_key.function_name)
+        variant = DefineGridVariant.for_function(invocation_key.function_name)
         source_type = (
             ObjectLabelsArtifactType
             if variant.requires_object_input
@@ -585,7 +599,7 @@ class DefineGridManualModule(
         sources = artifact_inputs.of_artifact_type(source_type)
         if len(sources) != 1:
             raise ValueError(
-                f"{variant.value} requires exactly one {source_type.value} "
+                f"{variant.function_name} requires exactly one {source_type.value} "
                 f"grid-domain source, got {tuple(spec.ref() for spec in sources)!r}."
             )
         return (SourceStackLineageSourceRelation(source=sources[0].ref()),)
@@ -851,7 +865,7 @@ class SpatialGridDefinitionBase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def registered_definition_types(
         cls,
-    ) -> tuple[type["SpatialGridDefinitionBase"], ...]:
+    ) -> tuple[type[SpatialGridDefinitionBase], ...]:
         return tuple(cls.__registry__.values())
 
     def canonical_row_index(self, row: int) -> int:
@@ -1275,7 +1289,7 @@ class GridShapeContext(ABC, metaclass=AutoRegisterMeta):
     circle_diameter: int = 20
 
     @classmethod
-    def registered_context_types(cls) -> tuple[type["GridShapeContext"], ...]:
+    def registered_context_types(cls) -> tuple[type[GridShapeContext], ...]:
         return tuple(cls.__registry__.values())
 
 

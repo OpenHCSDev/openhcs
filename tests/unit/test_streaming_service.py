@@ -23,7 +23,7 @@ from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
 from zmqruntime.viewer_state import ViewerStateManager
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.dataset_sources.interfaces import MetadataHandler
@@ -69,6 +69,8 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerItem,
 )
 from openhcs.runtime.viewer_protocol import (
+    ViewerConnectedExternal,
+    ViewerStopped,
     DetachedViewerLaunchFailure,
     DetachedViewerServerEntrypointSpec,
     ManagedViewerLifecycleMixin,
@@ -92,6 +94,7 @@ from openhcs.processing.materialization import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class FakeFileManager:
@@ -232,7 +235,7 @@ def test_napari_viewer_reuse_requires_matching_process_launch(monkeypatch) -> No
         lambda _request: ViewerControlResponse(
             {
                 "status": "success",
-                "process_launch": active_launch.to_wire_mapping(),
+                "process_launch": active_launch.to_dict(),
             }
         ),
     )
@@ -1036,7 +1039,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         path=str(tmp_path / "centres"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     filemanager = FakeFileManager()
     handler = SimpleNamespace(
@@ -1271,7 +1274,7 @@ def lifecycle_manager(monkeypatch):
     )
     monkeypatch.setattr(
         ManagedViewerLifecycleMixin, "force_stop",
-        lambda self: self.lifecycle_state.mark_stopped(),
+        lambda self: setattr(self, "lifecycle", ViewerStopped),
     )
     monkeypatch.setattr(
         ManagedViewerLifecycleMixin, "start",
@@ -1299,7 +1302,7 @@ def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
     )
 
     assert isinstance(viewer, NapariStreamVisualizer)
-    assert viewer.lifecycle_state.is_connected_external
+    assert viewer.lifecycle is ViewerConnectedExternal
 
 
 @pytest.mark.parametrize(
@@ -1398,7 +1401,7 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
 ) -> None:
     active_config = config_type(enabled=True, port=5563, persistent=True, listen_host="*")
     existing_viewer = active_config.create_visualizer(FakeFileManager())
-    existing_viewer.lifecycle_state.mark_connected_external()
+    existing_viewer.lifecycle = ViewerConnectedExternal
     monkeypatch.setattr(
         ManagedViewerLifecycleMixin, "owned_viewer_process_is_alive",
         lambda self: owns_process,
@@ -1407,7 +1410,7 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
         ViewerControlMessageRequest, "send",
         lambda self: ViewerControlResponse({
             "status": "success",
-            "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
+            "process_launch": active_config.viewer_process_launch_config().to_dict(),
         }),
     )
     lifecycle_manager.get_or_create_viewer(

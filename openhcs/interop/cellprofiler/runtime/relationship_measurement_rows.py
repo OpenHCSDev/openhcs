@@ -5,9 +5,7 @@ from dataclasses import dataclass, field, replace
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementSparseColumnarRows,
@@ -39,7 +37,7 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceMeasurementFeature,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (
-    CellProfilerMeasurementFeature,
+    ChildCountFeatureName,
 )
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
@@ -295,7 +293,7 @@ class RelationshipMeasurementRows:
                 )
             parent_number = parent_numbers[parent_id]
             counts[parent_number] = counts[parent_number] + 1
-        feature_name = CellProfilerMeasurementFeature.child_count(child_spec.name).name
+        feature_name = ChildCountFeatureName.feature(child_spec.name).name
         rows = tuple(
             {
                 MeasurementRowAxisField.OBJECT_NAME.value: parent_spec.name,

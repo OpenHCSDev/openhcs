@@ -272,11 +272,8 @@ def test_combine_objects_binds_overlap_policy_nominally():
 
 
 def test_watershed_function_selection_follows_module_revision():
-    from openhcs.core.artifacts import (
-        ArtifactSpec,
-        ArtifactSpecCollection,
-        ImageArtifactType,
-    )
+    from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.function_patterns import (
         DEFAULT_GROUP_KEY,
         FunctionInvocationKey,
@@ -1279,7 +1276,7 @@ def test_measure_image_quality_splits_exact_image_groups_and_preserves_blur_scal
 
 
 def test_measure_image_quality_rejects_empty_explicit_selector_at_contract_build():
-    from openhcs.core.artifacts import ArtifactSpecCollection
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
     from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 
@@ -1945,11 +1942,12 @@ def test_module_settings_binding_rejects_unmapped_settings():
 
 
 def test_module_setting_coverage_has_only_explicit_final_states():
-    assert [(member.name, member.value) for member in ModuleSettingCoverageStatus] == [
-        ("BOUND", "bound"),
-        ("IGNORED", "ignored"),
-        ("UNMAPPED", "unmapped"),
-    ]
+    statuses = ModuleSettingCoverageStatus.__registry__
+    assert {name: status.is_covered for name, status in statuses.items()} == {
+        "bound": True,
+        "ignored": True,
+        "unmapped": False,
+    }
 
 
 def test_setting_to_keyword_binding_owns_keyword_derivation_and_row_reconstruction():

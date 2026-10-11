@@ -9,7 +9,8 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ObjectLabelsArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticObjectLabelsArtifactOutputMaterializationStrategy,
 )

@@ -10,12 +10,9 @@ from typing import ClassVar, Tuple
 import numpy as np
 import scipy.optimize
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpecCollection,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,

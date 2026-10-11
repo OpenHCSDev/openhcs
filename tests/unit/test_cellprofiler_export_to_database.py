@@ -13,17 +13,15 @@ from pycodify import Assignment, generate_python_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
+from openhcs.constants.input_source import ReadPipelineStart
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
@@ -68,7 +66,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.analyst_export import (
@@ -208,10 +206,10 @@ def test_registered_plate_scoped_modules_resolve_previous_step_input() -> None:
     for module_type, callable_contract in plate_declarations:
         resolved = module_type.processing_config(
             callable_contract=callable_contract,
-            inherited=ProcessingConfig(input_source=InputSource.PIPELINE_START),
+            inherited=ProcessingConfig(input_source=ReadPipelineStart),
         )
 
-        assert resolved.input_source is InputSource.PREVIOUS_STEP
+        assert not resolved.input_source.reads_pipeline_start
 
 
 @pytest.mark.parametrize(
@@ -450,7 +448,7 @@ def test_official30_database_pipelines_import_and_round_trip_public_steps(
     assert [step.name for step in steps].count("ExportToDatabase") == 1
     with config_context(pipeline_config):
         export_step = next(step for step in steps if step.name == "ExportToDatabase")
-        assert export_step.processing_config.input_source is InputSource.PREVIOUS_STEP
+        assert not export_step.processing_config.input_source.reads_pipeline_start
         assert export_step.source_bindings.enabled is True
         assert export_step.source_bindings.binding_declarations
 
@@ -665,7 +663,7 @@ def test_official30_database_modules_bind_and_build_exact_contracts(
                 bindings=tuple(
                     NamedSourceBinding(
                         alias=name,
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     )
                     for name in source_names
                 ),

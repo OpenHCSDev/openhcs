@@ -1,12 +1,10 @@
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    GroupLineageSourceRelation,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -17,6 +15,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 
@@ -102,7 +101,7 @@ def test_projected_variable_stack_proves_source_ownership_once(
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -146,7 +145,7 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
         source.metadata
         .collapse_leading_plane_axis()
         .payload_with(np.ones((4, 5), dtype=np.float32), None),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -172,7 +171,7 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.float32),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -200,7 +199,7 @@ def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -256,7 +255,7 @@ def test_projected_crop_preserves_complete_spatial_domain_after_plane_compositio
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -275,7 +274,7 @@ def test_projected_scalar_rgb_proves_complete_identity_once(
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 
@@ -298,7 +297,7 @@ def test_owned_variable_output_without_projector_returns_after_one_proof(
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         None,
     )
 
@@ -327,7 +326,7 @@ def test_unowned_variable_output_without_projector_preserves_error(
         (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
             np.ones((2, 4, 5), dtype=np.float32),
             np.ones((2, 4, 5), dtype=np.uint16),
-            output_plan,
+            output_plan or MAIN_FLOW,
             None,
         )
 

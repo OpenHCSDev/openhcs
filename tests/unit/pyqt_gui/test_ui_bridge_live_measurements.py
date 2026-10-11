@@ -4,15 +4,15 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.ui_bridge import (
-    UiCodeDocumentSelectionMode,
     UiStateSurfaceRequest,
 )
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
     UiStateSurfaceIdentityDeclarationBase,
 )
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.live_measurements import (
@@ -220,13 +220,13 @@ def test_live_measurement_surface_projects_exact_bounded_preview_and_revision() 
         state = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=declaration.surface_id,
-                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+                selection_mode=AllItems.name,
             )
         )
         poll = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=declaration.surface_id,
-                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+                selection_mode=AllItems.name,
                 base_revision_token=state.current_revision_token,
             )
         )
@@ -273,7 +273,7 @@ def test_live_measurement_surface_honors_plate_selection_and_populates_overview(
         selected = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=declaration.surface_id,
-                selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+                selection_mode=SelectedItems.name,
             )
         )
         overview = bridge.get_state_surface(
@@ -299,7 +299,7 @@ def test_live_measurement_surface_honors_plate_selection_and_populates_overview(
         filtered = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=declaration.surface_id,
-                selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+                selection_mode=SelectedItems.name,
             )
         )
 

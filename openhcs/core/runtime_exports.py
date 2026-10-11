@@ -9,11 +9,9 @@ from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 
-from openhcs.core.artifacts import (
-    ArtifactPayloadShape,
-    ArtifactSpec,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.payloads import TablePayloadShape
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import MeasurementTable
@@ -348,7 +346,7 @@ def _materialized_artifact_record_failures(
 ) -> tuple[str, ...]:
     return tuple(
         f"produced no runtime record for materialized artifact {spec.name!r} "
-        f"({spec.artifact_type.require_value()})"
+        f"({spec.artifact_type.value})"
         for spec in output_specs
         if not _runtime_records_for_spec(spec, runtime_records_by_axis)
     )
@@ -393,7 +391,7 @@ def _table_runtime_records(
     return tuple(
         record
         for record in records
-        if record.key.artifact_type.payload_shape is ArtifactPayloadShape.TABLE
+        if record.key.artifact_type.payload_shape is TablePayloadShape
     )
 
 

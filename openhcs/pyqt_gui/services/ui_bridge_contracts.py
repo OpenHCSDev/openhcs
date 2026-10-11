@@ -9,6 +9,13 @@ from typing import ClassVar, Self
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
 from openhcs.agent.dto.ui_bridge import (
+    ActionAccepted,
+    ActionRejected,
+    UiActionCatalog,
+    UiActionIdentity,
+    UiActionInvokeRequest,
+    UiActionInvokeResult,
+    UiActionSummary,
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
@@ -21,20 +28,16 @@ from openhcs.agent.dto.ui_bridge import (
     UiMutationReceipt,
     UiObjectStateScopeCatalog,
     UiObjectStateScopeListRequest,
-    UiActionCatalog,
-    UiActionInvocationStatus,
-    UiActionInvokeRequest,
-    UiActionInvokeResult,
-    UiActionSummary,
-    UiActionIdentity,
+    UiSnapshotRef,
     UiStateSurfaceDocument,
     UiStateSurfaceIdentity,
     UiStateSurfaceRequest,
     UiStateSurfaceSummary,
-    UiSnapshotRef,
-    UiWidgetIdentity,
     UiWidgetActionInvokeRequest,
     UiWidgetActionInvokeResult,
+    UiWidgetIdentity,
+    UiWidgetTreeRequest,
+    UiWidgetTreeResult,
     UiWindowCatalog,
     UiWindowCloseRequest,
     UiWindowCloseResult,
@@ -44,8 +47,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowNavigateResult,
     UiWindowSnapshotRequest,
     UiWindowSnapshotResult,
-    UiWidgetTreeRequest,
-    UiWidgetTreeResult,
 )
 from openhcs.agent.ui_bridge_identities import (
     UiCodeDocumentIdentityDeclaration,
@@ -281,11 +282,7 @@ class UiActionProviderABC(ABC):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=(
-                UiActionInvocationStatus.ACCEPTED
-                if accepted
-                else UiActionInvocationStatus.REJECTED
-            ).value,
+            status=ActionAccepted if accepted else ActionRejected,
             receipt=(
                 UiMutationReceipt.accepted_for(request.request_token)
                 if accepted

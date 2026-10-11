@@ -26,12 +26,16 @@ from openhcs.authoring.session.events import (
 from openhcs.authoring.session.execution_batch import ExecutionBatchRuntime
 from openhcs.authoring.session.progress import execution_server_status_text
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.debug import DebugCursor, DebugEvent, DebugProgressEventRequest
-from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.core.execution_state import ManagerExecutionState, ExecutionCompleted, ExecutionFailed
+from openhcs.constants.constants import (
+    OrchestratorCompileFailed,
+    OrchestratorCompiled,
+    OrchestratorReady,
+)
 from openhcs.core.progress import ProgressExecutionContext, ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
@@ -95,7 +99,7 @@ class StandInServer:
 
 def _ready(session, *scope_ids: str) -> None:
     for scope_id in scope_ids:
-        session.orchestrator(scope_id)._state = OrchestratorState.READY
+        session.orchestrator(scope_id)._state = OrchestratorReady
 
 
 def _running(session, scope_id: str, execution_id: str) -> None:
@@ -181,7 +185,7 @@ def test_run_and_debug_reserve_before_connect_and_release_on_connection_failure(
         asyncio.run(_run(session, target, debug))
         assert session.execution_state is ManagerExecutionState.IDLE
         assert not session.batch.active_plates
-        assert session.batch.terminal_status(target) is TerminalExecutionStatus.FAILED
+        assert session.batch.terminal_status(target) is ExecutionFailed
         assert session.compile_pending == {unrelated}
         assert len(errors) == 1
 
@@ -219,9 +223,9 @@ def test_compiling_another_dataset_keeps_the_active_batch(
         assert session.execution_state is ManagerExecutionState.RUNNING
         assert (other in session.compiled) is not fails
         assert session.orchestrator(other).state is (
-            OrchestratorState.COMPILE_FAILED if fails else OrchestratorState.COMPILED
+            OrchestratorCompileFailed if fails else OrchestratorCompiled
         )
-        session.batch.mark_terminal(running, TerminalExecutionStatus.COMPLETE)
+        session.batch.mark_terminal(running, ExecutionCompleted)
         assert session.batch.all_batch_terminal()
         assert session.batch.terminal_counts() == (1, 0)
 
@@ -272,7 +276,7 @@ def test_compile_publishes_its_inspection_and_clears_the_previous_one(
 
 
 @pytest.mark.parametrize(
-    "terminal", (TerminalExecutionStatus.COMPLETE, TerminalExecutionStatus.FAILED)
+    "terminal", (ExecutionCompleted, ExecutionFailed)
 )
 @pytest.mark.parametrize("fails", (False, True))
 def test_recompile_supersedes_row_activity_without_erasing_the_batch_outcome(
@@ -308,7 +312,7 @@ def test_recompile_supersedes_row_activity_without_erasing_the_batch_outcome(
         asyncio.run(session.compile_datasets((finished,)))
 
         expected = (
-            OrchestratorState.COMPILE_FAILED if fails else OrchestratorState.COMPILED
+            OrchestratorCompileFailed if fails else OrchestratorCompiled
         )
         assert session.orchestrator(finished).state is expected
         assert activity.orchestrator_state is expected
@@ -316,9 +320,9 @@ def test_recompile_supersedes_row_activity_without_erasing_the_batch_outcome(
         assert session.batch.terminal_items() == outcome_before
         assert session.batch.execution_id(active) == "active-A"
         assert session.batch.active_plates == (active,)
-        session.batch.mark_terminal(active, TerminalExecutionStatus.COMPLETE)
+        session.batch.mark_terminal(active, ExecutionCompleted)
         assert session.batch.terminal_counts() == (
-            (2, 0) if terminal is TerminalExecutionStatus.COMPLETE else (1, 1)
+            (2, 0) if terminal is ExecutionCompleted else (1, 1)
         )
 
 
@@ -672,5 +676,5 @@ def test_a_standard_run_retires_the_previous_debug_summary(tmp_path, monkeypatch
         asyncio.run(session.run_datasets((scope_id,)))
 
         assert scope_id not in session.debug_terminal_summaries
-        assert session.batch.terminal_status(scope_id) is TerminalExecutionStatus.FAILED
+        assert session.batch.terminal_status(scope_id) is ExecutionFailed
         assert session.execution_state is ManagerExecutionState.IDLE

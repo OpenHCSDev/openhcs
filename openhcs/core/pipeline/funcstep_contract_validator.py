@@ -38,7 +38,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.runtime_stores import RuntimeArtifactBatch
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import NoMainFlowInput
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirementRequest,
 )
@@ -661,12 +661,11 @@ class FuncStepContractValidator:
                     f"Plate-scoped FunctionStep {step_name!r} cannot use a dict pattern."
                 )
             if (
-                step_plan.main_input_dependency.kind
-                is not StepInputDependencyKind.NO_MAIN_FLOW
+                not isinstance(step_plan.main_input_dependency, NoMainFlowInput)
             ):
                 raise ValueError(
                     f"Plate-scoped FunctionStep {step_name!r} must compile with "
-                    "StepInputDependency.no_main_flow()."
+                    "NoMainFlowInput()."
                 )
             FuncStepContractValidator.validate_dataset_callable_contracts(
                 contracts,

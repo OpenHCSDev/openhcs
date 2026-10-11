@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.artifacts.plans import ArtifactOutputPlan
 
 from .core import MaterializationSpec
 
@@ -15,11 +15,9 @@ class TerminalMaterializationSpec(MaterializationSpec):
     def participates_in_runtime_export_observation(self) -> bool:
         return False
 
-    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan) -> str | None:
         """Retain the compiled image role without changing its source address."""
-        if output_plan is None:
-            return None
-        return output_plan.artifact_type.retained_filename_qualifier(output_plan.name)
+        return output_plan.retained_filename_qualifier()
 
 
 class StreamingOnlyMaterializationSpec(MaterializationSpec):

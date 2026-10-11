@@ -120,10 +120,16 @@ def _source(name, token):
 from dataclasses import dataclass
 from enum import Enum
 from openhcs.core.memory import numpy
-from openhcs.core.artifacts import (
-    ArtifactSpec, ArtifactViewerStreaming, GroupLineageSourceRelation,
-    ImageArtifactType, MainFlowPlaneProjectionOutputSpec, MeasurementsArtifactType,
-    ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowPlaneProjectionOutputSpec
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.relations import (
+    GroupLineageSourceRelation,
+    ObjectMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_measurements import (
@@ -171,7 +177,7 @@ input_spec = ArtifactSpec.input(
 )
 measurement_spec = ArtifactSpec.output(
     "SyntheticMeasurements", MeasurementsArtifactType, required=False,
-    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    viewer_streaming=OnDemandStreaming,
     measurement_feature_owner=HelperFeatureOwner,
     relations=(GroupLineageSourceRelation(input_spec.ref()),
                ObjectMeasurementSubjectRelation(input_spec.ref())),
@@ -204,7 +210,7 @@ def _manager():
 
 def _inspection(func):
     from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
-    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.artifacts.plans import ArtifactOutputPlan
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.function_patterns import (
         CompiledFunctionInvocation,

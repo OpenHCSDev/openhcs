@@ -15,10 +15,9 @@ from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     SpecialArtifactType,
@@ -46,7 +45,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     execute_dataset_scoped_steps,
     validate_dataset_scoped_contexts,
 )
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
@@ -77,10 +76,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.step_dependencies import (
-    StepInputDependency,
-    StepInputDependencyKind,
-)
+from openhcs.core.step_dependencies import NoMainFlowInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
@@ -210,12 +206,9 @@ def test_compiled_step_plan_does_not_store_execution_scope() -> None:
 
 
 def test_plate_dependency_has_no_main_flow() -> None:
-    assert StepInputDependencyKind.NO_MAIN_FLOW.value == "no_main_flow"
-    dependency = StepInputDependency.no_main_flow()
+    dependency = NoMainFlowInput()
 
-    assert dependency.kind is StepInputDependencyKind.NO_MAIN_FLOW
-    assert dependency.source_step_index is None
-    assert dependency.source_step_scope_id is None
+    assert dependency.predecessor_step_index() is None
     assert dependency.is_resolved
 
 
@@ -242,7 +235,7 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
     )
     input_dir, resolved_output_dir = planner.steps.step_io_dirs(dependency, 1)
 
-    assert dependency == StepInputDependency.no_main_flow()
+    assert dependency == NoMainFlowInput()
     assert input_dir == output_dir
     assert resolved_output_dir == output_dir
 
@@ -262,7 +255,7 @@ def test_path_validation_accepts_explicit_no_main_flow_dependency(
             step_index=1,
             step_name="export",
             axis_id="A01",
-            main_input_dependency=StepInputDependency.no_main_flow(),
+            main_input_dependency=NoMainFlowInput(),
         )
     }
     validation = PathPlannerValidationStage(planner)
@@ -418,7 +411,7 @@ def _plate_step_plan(
         analysis_results_dir="/plate/analysis",
         pipeline_position=step_index + 1,
         variable_components=(),
-        main_input_dependency=StepInputDependency.no_main_flow(),
+        main_input_dependency=NoMainFlowInput(),
         artifact_inputs=input_plans,
         artifact_outputs=output_plans,
         compiled_function_pattern=compiled_pattern,
@@ -685,7 +678,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
         count=3,
     )
     observations = context.runtime_value_store.observed_values
-    retained = RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records(
+    retained = MergeDatasetInputRecords.retain_records(
         observations,
         context,
     )
@@ -693,13 +686,13 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
         (["raw"] if stored_image else []) + ["Measurements", "Measurements"]
     )
     assert (
-        RuntimeObservationMode.MERGE_INTO_PARENT.retain_records(
+        MergeAllRuntimeRecords.retain_records(
             observations,
             context,
         )
         is observations
     )
-    assert RuntimeObservationMode.OMIT.retain_records(observations, context) == ()
+    assert OmitRuntimeRecords.retain_records(observations, context) == ()
 
     full_store = type(context.runtime_value_store)()
     full_store.merge_observed_values(observations)
@@ -753,7 +746,7 @@ def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
         metadata_writer=True,
     )
     context = _plate_context("A01", (plan,))
-    assert RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records((), context) == ()
+    assert MergeDatasetInputRecords.retain_records((), context) == ()
     with pytest.raises(ValueError, match="missing required input"):
         _dataset_artifact_batch(
             compiled_contexts={"A01": context},

@@ -11,6 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar, cast
 
+from metaclass_registry import AutoRegisterMeta
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import MessageFields, ProcessIdentity, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
@@ -24,37 +25,11 @@ from openhcs.agent.dto.common import (
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.core.artifacts import ArtifactViewerStreaming
+from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.function_reference import FunctionReference
 from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000
-
-
-class FunctionCatalogControlMessageType(str, Enum):
-    """Execution-server control messages for the live function catalog."""
-
-    READ_CATALOG = "openhcs_function_catalog_read"
-    SEARCH_CATALOG = "openhcs_function_catalog_search"
-    READ_DETAIL = "openhcs_function_detail_read"
-    READ_REFERENCE = "openhcs_function_reference_read"
-    REGISTER_CUSTOM = "openhcs_custom_function_register"
-    OBSERVE_CUSTOM_REGISTRATION = "openhcs_custom_function_registration_observe"
-    CUSTOM_REGISTRATION_DESTINATION = "openhcs_custom_function_registration_destination"
-    START_PREPARATION = "openhcs_function_catalog_prepare"
-    READ_PREPARATION = "openhcs_function_catalog_preparation_status"
-    CANCEL_PREPARATION = "openhcs_function_catalog_preparation_cancel"
-
-
-class FunctionCatalogControlField(str, Enum):
-    """OpenHCS-specific fields carried by function-catalog control messages."""
-
-    REQUEST = "request"
-    CATALOG = "catalog"
-    PREPARATION = "preparation"
-    DETAIL = "detail"
-    REFERENCE = "reference"
-    RESULT = "result"
 
 
 @dataclass(frozen=True)
@@ -71,27 +46,26 @@ class ImportPathRef:
 class FunctionCatalogControlRequestABC(ABC):
     """Nominal owner of one function-catalog control request identity."""
 
-    message_type: ClassVar[FunctionCatalogControlMessageType]
+    wire_type: ClassVar[str]
+    """This request's control message type on the execution-server wire."""
 
     def __init_subclass__(cls) -> None:
-        if "message_type" not in cls.__dict__:
+        if "wire_type" not in cls.__dict__:
             raise TypeError(
-                f"{cls.__name__} must declare its function-catalog message_type."
+                f"{cls.__name__} must declare its function-catalog wire_type."
             )
 
     @classmethod
     def from_control_payload(cls, payload: Mapping[str, Any]) -> Self:
         """Recover this exact request type from its declared wire message."""
 
-        actual_message_type = FunctionCatalogControlMessageType(
-            str(payload[MessageFields.TYPE])
-        )
-        if actual_message_type is not cls.message_type:
+        actual_wire_type = str(payload[MessageFields.TYPE])
+        if actual_wire_type != cls.wire_type:
             raise ValueError(
-                f"Expected function catalog control type {cls.message_type.value!r}, "
-                f"got {actual_message_type.value!r}."
+                f"Expected function catalog control type {cls.wire_type!r}, "
+                f"got {actual_wire_type!r}."
             )
-        request = payload[FunctionCatalogControlField.REQUEST.value]
+        request = payload[FunctionCatalogControlPayload.request_key]
         if not isinstance(request, cls):
             raise TypeError(
                 f"{cls.__name__} control payload requires {cls.__name__}, got "
@@ -107,7 +81,7 @@ class FunctionSearchRequest(FunctionCatalogControlRequestABC):
     limit: int = 50
     compact_signatures: bool = True
 
-    message_type = FunctionCatalogControlMessageType.SEARCH_CATALOG
+    wire_type = "openhcs_function_catalog_search"
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,19 +210,19 @@ class FunctionCatalogNotReadyError(AgentFacingErrorMixin, RuntimeError):
 @dataclass(frozen=True, slots=True)
 class FunctionCatalogPreparationStartRequest(FunctionCatalogControlRequestABC):
     connection: ExecutionConnectionSpec
-    message_type = FunctionCatalogControlMessageType.START_PREPARATION
+    wire_type = "openhcs_function_catalog_prepare"
 
 
 @dataclass(frozen=True, slots=True)
 class FunctionCatalogPreparationStatusRequest(FunctionCatalogControlRequestABC):
     handle: FunctionCatalogPreparationHandle
-    message_type = FunctionCatalogControlMessageType.READ_PREPARATION
+    wire_type = "openhcs_function_catalog_preparation_status"
 
 
 @dataclass(frozen=True, slots=True)
 class FunctionCatalogPreparationCancelRequest(FunctionCatalogControlRequestABC):
     handle: FunctionCatalogPreparationHandle
-    message_type = FunctionCatalogControlMessageType.CANCEL_PREPARATION
+    wire_type = "openhcs_function_catalog_preparation_cancel"
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +251,7 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     admission_policy: AgentPathPolicy | None = field(default=None, repr=False, compare=False)
     server_identity: ProcessIdentity | None = None
 
-    message_type = FunctionCatalogControlMessageType.REGISTER_CUSTOM
+    wire_type = "openhcs_custom_function_register"
 
     @classmethod
     def from_fields(
@@ -338,13 +312,13 @@ class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequest
     """Read the persistence owner's exact path without evaluating source."""
 
     function_name: str | None = None
-    message_type = FunctionCatalogControlMessageType.CUSTOM_REGISTRATION_DESTINATION
+    wire_type = "openhcs_custom_function_registration_destination"
 
 
 @dataclass(frozen=True, slots=True)
 class CustomFunctionRegistrationObservationRequest(FunctionCatalogControlRequestABC):
     handle: CustomFunctionRegistrationHandle
-    message_type = FunctionCatalogControlMessageType.OBSERVE_CUSTOM_REGISTRATION
+    wire_type = "openhcs_custom_function_registration_observe"
 
 
 @dataclass(frozen=True, slots=True)
@@ -390,48 +364,61 @@ class CustomFunctionRegistrationDestination:
             raise ValueError("Registration returned a different persistence destination.")
 
 
-class FunctionParameterSource(str, Enum):
-    """Nominal source of one callable parameter in agent-facing docs."""
+class FunctionParameterSource(ABC, metaclass=AutoRegisterMeta):
+    """Who supplies one callable parameter, as agent-facing docs describe it.
 
-    _runtime_description: str | None
+    Each source is a subclass; ``name`` is its spelling on the wire.
+    """
 
-    def __new__(
-        cls,
-        value: str,
-        runtime_description: str | None,
-    ) -> FunctionParameterSource:
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member._runtime_description = runtime_description
-        return member
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    AGENT = ("agent", None)
-    PRIMARY_INPUT = (
-        "runtime_primary_input",
+    name: ClassVar[str | None] = None
+    runtime_description: ClassVar[str] = ""
+    """Why the agent must not pass this parameter; empty when the agent passes it."""
+
+
+class SuppliedByAgent(FunctionParameterSource):
+    """The agent passes this parameter as a FunctionStep kwarg."""
+
+    name = "agent"
+
+
+class SuppliedAtRuntime(FunctionParameterSource):
+    """OpenHCS supplies this parameter during execution."""
+
+
+
+class SuppliedFromPrimaryInput(SuppliedAtRuntime):
+    name = "runtime_primary_input"
+    runtime_description = (
         "Supplied by OpenHCS from the FunctionStep input image payload; do not "
-        "pass this as a function kwarg.",
+        "pass this as a function kwarg."
     )
-    ARTIFACT_INPUT = (
-        "runtime_artifact_input",
+
+
+class SuppliedFromArtifactInput(SuppliedAtRuntime):
+    name = "runtime_artifact_input"
+    runtime_description = (
         "Supplied by OpenHCS from a declared artifact input during pipeline "
-        "execution; do not pass this as a function kwarg.",
+        "execution; do not pass this as a function kwarg."
     )
-    RUNTIME_PARAMETER = (
-        "runtime_parameter",
+
+
+class SuppliedByRuntime(SuppliedAtRuntime):
+    name = "runtime_parameter"
+    runtime_description = (
         "Supplied by OpenHCS runtime execution infrastructure; do not pass this "
-        "as a function kwarg.",
+        "as a function kwarg."
     )
-    RUNTIME_ADAPTER = (
-        "runtime_adapter",
+
+
+class SuppliedAsRuntimeAdapter(SuppliedAtRuntime):
+    name = "runtime_adapter"
+    runtime_description = (
         "Supplied by OpenHCS as a runtime adapter object; do not pass this as a "
-        "function kwarg.",
+        "function kwarg."
     )
-
-    @property
-    def runtime_description(self) -> str | None:
-        """Explain the runtime-owned source directly from its declaration."""
-
-        return self._runtime_description
 
 
 @dataclass(frozen=True, slots=True)
@@ -465,17 +452,20 @@ class FunctionParameterSpec:
     annotation: str | None
     default_repr: str | None
     required: bool
-    supplied_by: FunctionParameterSource = FunctionParameterSource.AGENT
+    supplied_by: type[FunctionParameterSource] = SuppliedByAgent
     description: str | None = None
     enum_import_path: str | None = None
     enum_members: tuple[str, ...] = ()
     enum_values: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if not isinstance(self.supplied_by, FunctionParameterSource):
+        if not (
+            isinstance(self.supplied_by, type)
+            and issubclass(self.supplied_by, FunctionParameterSource)
+        ):
             raise TypeError(
-                "FunctionParameterSpec.supplied_by requires "
-                f"FunctionParameterSource, got {type(self.supplied_by).__name__}."
+                "FunctionParameterSpec.supplied_by requires a "
+                f"FunctionParameterSource class, got {self.supplied_by!r}."
             )
 
 
@@ -486,14 +476,8 @@ class FunctionArtifactSpec:
     required: bool = True
     sidecar_role: str | None = None
     materialization_uses_source_identity_filename: bool = False
-    viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
-            raise TypeError(
-                "FunctionArtifactSpec.viewer_streaming requires "
-                f"ArtifactViewerStreaming, got {type(self.viewer_streaming).__name__}."
-            )
+    viewer_streaming: str = AutomaticStreaming.name
+    """The declared ``ViewerStreaming`` member's registered name."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -563,7 +547,7 @@ class FunctionCatalogControlRequest(FunctionCatalogControlRequestABC):
 
     compact_signatures: bool = True
 
-    message_type = FunctionCatalogControlMessageType.READ_CATALOG
+    wire_type = "openhcs_function_catalog_read"
 
 
 @dataclass(frozen=True, slots=True)
@@ -577,7 +561,7 @@ class FunctionDetailControlRequest(
     max_doc_chars: int | None = DEFAULT_FUNCTION_DETAIL_DOC_CHARS
     compact_signature: bool = True
 
-    message_type = FunctionCatalogControlMessageType.READ_DETAIL
+    wire_type = "openhcs_function_detail_read"
 
 
 @dataclass(frozen=True, slots=True)
@@ -589,7 +573,7 @@ class FunctionReferenceControlRequest(
 
     catalog_revision: str
 
-    message_type = FunctionCatalogControlMessageType.READ_REFERENCE
+    wire_type = "openhcs_function_reference_read"
 
 
 @dataclass(frozen=True, slots=True)
@@ -597,6 +581,7 @@ class FunctionCatalogControlPayload(Generic[ControlRequestT]):
     """Wire projection of one request declaration and its enum identity."""
 
     request: ControlRequestT
+    request_key: ClassVar[str] = "request"
 
     @classmethod
     def from_request(cls, request: ControlRequestT) -> Self:
@@ -609,8 +594,8 @@ class FunctionCatalogControlPayload(Generic[ControlRequestT]):
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            MessageFields.TYPE: self.request.message_type.value,
-            FunctionCatalogControlField.REQUEST.value: self.request,
+            MessageFields.TYPE: self.request.wire_type,
+            self.request_key: self.request,
         }
 
 
@@ -619,11 +604,11 @@ class FunctionCatalogControlResponseBase(Generic[ControlResponseT]):
     """Shared typed transport for one declared successful control response."""
 
     value: ControlResponseT
-    field: ClassVar[FunctionCatalogControlField]
+    result_key: ClassVar[str] = "result"
     value_type: ClassVar[type]
 
     def __init_subclass__(cls) -> None:
-        for attribute in ("field", "value_type"):
+        for attribute in ("value_type",):
             if attribute not in cls.__dict__:
                 raise TypeError(
                     f"{cls.__name__} must declare function-catalog {attribute}."
@@ -632,17 +617,17 @@ class FunctionCatalogControlResponseBase(Generic[ControlResponseT]):
     def to_control_response(self) -> dict[str, Any]:
         return {
             MessageFields.STATUS: ResponseType.OK.value,
-            self.field.value: self.value,
+            self.result_key: self.value,
         }
 
     @classmethod
     def from_control_response(cls, payload: Mapping[str, Any]) -> Self:
         if payload.get(MessageFields.STATUS) != ResponseType.OK.value:
             raise RuntimeError(str(payload.get(MessageFields.ERROR) or payload))
-        value = payload[cls.field.value]
+        value = payload[cls.result_key]
         if not isinstance(value, cls.value_type):
             raise TypeError(
-                f"Function catalog response field {cls.field.value!r} requires "
+                f"Function catalog response {cls.__name__} requires "
                 f"{cls.value_type.__name__}, got {type(value).__name__}."
             )
         return cls(value=cast(ControlResponseT, value))
@@ -653,7 +638,6 @@ class FunctionCatalogControlResponse(
 ):
     """Typed response carrying one endpoint-owned catalog projection."""
 
-    field = FunctionCatalogControlField.CATALOG
     value_type = FunctionCatalogPage
 
     @property
@@ -664,14 +648,7 @@ class FunctionCatalogControlResponse(
 class FunctionCatalogPreparationStateControlResponse(
     FunctionCatalogControlResponseBase[FunctionCatalogPreparationState]
 ):
-    field = FunctionCatalogControlField.PREPARATION
     value_type = FunctionCatalogPreparationState
-
-
-class FunctionCatalogPreparationStatus(str, Enum):
-    """Control response state while endpoint catalog preparation is active."""
-
-    PENDING = "pending"
 
 
 @dataclass(frozen=True, slots=True)
@@ -680,11 +657,13 @@ class FunctionCatalogPreparationControlResponse:
 
     status: EndpointStartupStatus
     retry_after_seconds: float = 0.1
+    pending_status: ClassVar[str] = "pending"
+    """The control reply status while the endpoint prepares its catalog."""
 
     def to_control_response(self) -> dict[str, Any]:
         return {
-            MessageFields.STATUS: FunctionCatalogPreparationStatus.PENDING.value,
-            FunctionCatalogControlField.PREPARATION.value: self,
+            MessageFields.STATUS: self.pending_status,
+            FunctionCatalogControlResponseBase.result_key: self,
         }
 
     @classmethod
@@ -692,12 +671,9 @@ class FunctionCatalogPreparationControlResponse:
         cls,
         payload: Mapping[str, Any],
     ) -> FunctionCatalogPreparationControlResponse | None:
-        if (
-            payload.get(MessageFields.STATUS)
-            != FunctionCatalogPreparationStatus.PENDING.value
-        ):
+        if payload.get(MessageFields.STATUS) != cls.pending_status:
             return None
-        preparation = payload.get(FunctionCatalogControlField.PREPARATION.value)
+        preparation = payload.get(FunctionCatalogControlResponseBase.result_key)
         if not isinstance(preparation, cls):
             raise TypeError(
                 "Pending function catalog response requires "
@@ -710,7 +686,6 @@ class FunctionCatalogPreparationControlResponse:
 class FunctionDetailControlResponse(FunctionCatalogControlResponseBase[FunctionDetail]):
     """Typed response carrying one revision-consistent function detail."""
 
-    field = FunctionCatalogControlField.DETAIL
     value_type = FunctionDetail
 
     @property
@@ -723,7 +698,6 @@ class FunctionReferenceControlResponse(
 ):
     """Typed response carrying one server-owned compiler reference."""
 
-    field = FunctionCatalogControlField.REFERENCE
     value_type = FunctionReference
 
     @property
@@ -769,7 +743,6 @@ class CustomFunctionRegistrationControlResponse(
 ):
     """Typed response carrying endpoint-owned custom registration results."""
 
-    field = FunctionCatalogControlField.RESULT
     value_type = CustomFunctionRegistrationResult
 
     @property
@@ -780,7 +753,6 @@ class CustomFunctionRegistrationControlResponse(
 class CustomFunctionRegistrationDestinationControlResponse(
     FunctionCatalogControlResponseBase[CustomFunctionRegistrationDestination]
 ):
-    field = FunctionCatalogControlField.RESULT
     value_type = CustomFunctionRegistrationDestination
 
     @property
@@ -791,7 +763,6 @@ class CustomFunctionRegistrationDestinationControlResponse(
 class CustomFunctionRegistrationObservationControlResponse(
     FunctionCatalogControlResponseBase[CustomFunctionRegistrationObservation]
 ):
-    field = FunctionCatalogControlField.RESULT
     value_type = CustomFunctionRegistrationObservation
 
 

@@ -32,8 +32,8 @@ from benchmark.datasets.cache import (
     resolve_benchmark_path_root,
 )
 from openhcs.constants import Backend
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.constants.input_source import ReadPipelineStart
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -49,7 +49,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazyVFSConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     LazySourceBindingsConfig,
     source_bindings_defaults_to_base,
@@ -73,12 +73,12 @@ from openhcs.core.source_binding_workspace import (
 )
 from openhcs.core.source_bindings import (
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingOrigin,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
@@ -177,7 +177,7 @@ def _execute_imported_cppipe_via_zmq(
             output_dir_suffix="_imported_cppipe_zmq",
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
         partition_filter_config=(
             LazyPartitionFilterConfig()
@@ -348,7 +348,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
             func=align,
             name="Align",
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
         )
     ]
@@ -369,13 +369,13 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
                         selector=SourceSelector(
                             filters=(
                                 SourceFilterClause(
-                                    subject=SourceFilterSubject.FILE,
-                                    match_type=SourceFilterMatchType.CONTAINS,
+                                    subject=SourceFileName,
+                                    match_type=TextContains,
                                     value="w1",
                                 ),
                             ),
                         ),
-                        origin=SourceBindingOrigin.PIPELINE_START,
+                        origin=FromPipelineStart,
                         component_identity=(
                             ComponentSelector(Microscopy.Channel, "1"),
                         ),
@@ -387,7 +387,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
             global_output_folder=tmp_path / "invalid_compile_outputs",
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
     )
     observation_path = tmp_path / "invalid_compile_observation.pkl"
@@ -551,8 +551,8 @@ def test_loadimages_cppipe_preserves_source_artifact_bindings_through_zmq(
     illum_assignment = source_bindings.binding_for_alias("Illum")
     assert raw_assignment is not None
     assert illum_assignment is not None
-    assert raw_assignment.origin is SourceBindingOrigin.PIPELINE_START
-    assert illum_assignment.origin is SourceBindingOrigin.PIPELINE_START
+    assert raw_assignment.origin is FromPipelineStart
+    assert illum_assignment.origin is FromPipelineStart
 
     _, export = _execute_imported_cppipe_via_zmq(
         tmp_path,
@@ -1004,14 +1004,14 @@ def test_official_illumination_preserves_rule_row_binding_over_zmq(
     orig_green = source_bindings.binding_for_alias("OrigGreen")
     assert orig_green is not None
     assert source_bindings.binding_for_alias("DNA") is None
-    assert orig_green.origin is SourceBindingOrigin.PIPELINE_START
+    assert orig_green.origin is FromPipelineStart
     assert orig_green.component_identity == (
         ComponentSelector(Microscopy.Channel, "1"),
     )
     assert len(orig_green.selector.filters) == 1
     source_filter = orig_green.selector.filters[0]
-    assert source_filter.subject is SourceFilterSubject.FILE
-    assert source_filter.match_type is SourceFilterMatchType.CONTAINS
+    assert source_filter.subject is SourceFileName
+    assert source_filter.match_type is TextContains
     assert source_filter.value == "AS_09047_"
 
     _, export = _execute_imported_cppipe_via_zmq(

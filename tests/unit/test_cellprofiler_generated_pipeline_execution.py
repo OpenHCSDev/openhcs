@@ -11,18 +11,18 @@ import pytest
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.constants.input_source import ReadPipelineStart
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ArtifactType,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
@@ -57,10 +57,10 @@ from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -163,8 +163,8 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
+                    subject=SourceFileName,
+                    match_type=TextContains,
                     value="OrigStain1",
                 ),
             )
@@ -183,7 +183,7 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         ),
         name="CorrectIlluminationCalculate",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(enabled=True),
     )

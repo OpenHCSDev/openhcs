@@ -1,5 +1,9 @@
 """Default retained image artifacts keep their declared output role identity."""
 
+from openhcs.processing.materialization.options import (
+    NameByArtifactName,
+    NameBySourceIdentity,
+)
 from dataclasses import replace
 from pathlib import Path
 import json
@@ -21,7 +25,10 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
 )
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -217,7 +224,6 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(
     from openhcs.processing.materialization import (
         ImageFileOptions,
         MaterializationSpec,
-        MaterializedFilenameIdentity,
         TerminalMaterializationSpec,
         materialization_outputs,
     )
@@ -228,9 +234,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(
             "authored/plane_{index}.tif" if purpose.endswith("template") else None
         ),
         filename_identity=(
-            MaterializedFilenameIdentity.ARTIFACT_NAME
-            if purpose.endswith("artifact")
-            else MaterializedFilenameIdentity.SOURCE_IDENTITY
+            NameByArtifactName if purpose.endswith("artifact") else NameBySourceIdentity
         ),
     )
     spec = (
@@ -248,7 +252,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(
         )
     )
     output_plan = (
-        None
+        materialization_output_plan()
         if purpose in ("unnamed_terminal", "unnamed_explicit")
         else ArtifactOutputPlan(
             name="DeclaredRole",
@@ -642,7 +646,7 @@ def test_parser_free_render_requires_parser_only_for_automatic_named_role(
         else TerminalMaterializationSpec(options)
     )
     plan = (
-        None
+        materialization_output_plan()
         if purpose == "unnamed_terminal"
         else ArtifactOutputPlan(
             name="Role",

@@ -14,18 +14,13 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.artifact_inspection import (
     CompiledArtifactInspection,
-    CompiledArtifactInspectionControlPayload,
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -223,7 +218,7 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
         compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     request = CompiledArtifactInspectionRequest("compile-1")
-    message = CompiledArtifactInspectionControlPayload.from_request(request).to_dict()
+    message = request.to_dict()
 
     response = ZMQControlMessageRouter.handle(
         message,

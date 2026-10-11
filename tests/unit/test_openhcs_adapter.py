@@ -35,7 +35,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
@@ -161,7 +161,7 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     assert configured.path_planning_config.global_output_folder == request.output_dir
     assert configured.path_planning_config.output_dir_suffix == "_candidate"
     assert configured.vfs_config.intermediate_backend is Backend.DISK
-    assert configured.vfs_config.materialization_backend is MaterializationBackend.DISK
+    assert configured.vfs_config.materialization_backend is MaterializeToDisk
     assert configured.analysis_consolidation_config.enabled is False
     assert configured.analysis_consolidation_config.metaxpress_style is False
     assert (

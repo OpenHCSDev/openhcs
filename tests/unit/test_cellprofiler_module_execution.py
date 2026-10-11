@@ -23,20 +23,21 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
 from openhcs.constants.constants import Backend, MemoryType
 from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ProducedImageStack, ImageOutputBundle, ImagePayloadBundleContext, aligned_image_stack_kwargs, compose_aligned_image_payload, pack_aligned_image_outputs)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ArtifactType,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputStackBroadcastSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLineageArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
@@ -193,8 +194,11 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,
-    CellProfilerMeasurementImageDomain,
     CellProfilerSliceAlignedValues,
+)
+from openhcs.core.measurement_image_alignment import (
+    ObjectLabelsReference,
+    SourceImageReference,
 )
 from openhcs.interop.cellprofiler.runtime.main_flow import (
     cellprofiler_main_flow_output,
@@ -401,6 +405,7 @@ from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
     SliceAlignedLabels,
 )
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _compiled_callable_contract(
@@ -963,7 +968,7 @@ def _measurement_image_for_labels(
     label_payload=None,
     plane_projector=None,
     source_aliases=(),
-    reference_domain=CellProfilerMeasurementImageDomain.SOURCE_IMAGE,
+    reference_domain=SourceImageReference,
 ):
     source = CellProfilerMeasurementImage(
         source_image_name=None,
@@ -4553,12 +4558,10 @@ class _CalculateMathObjectOperandAdapter(_FakeCellProfilerRuntime):
 
 
 def _calculate_math_object_contract() -> CallableContract:
-    from openhcs.core.artifacts import (
-        ArtifactInputPlan,
-        ArtifactSpecCollection,
-        GroupLineageSourceRelation,
-        MeasurementsArtifactType,
-    )
+    from openhcs.core.artifacts.plans import ArtifactInputPlan
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+    from openhcs.core.artifacts.kinds import MeasurementsArtifactType
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import (
@@ -6762,7 +6765,7 @@ def test_resolved_measurement_image_preserves_runtime_slice_projection() -> None
         runtime,
         image,
         ("DNA",),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert measurement_image.plane_projection == (
@@ -6804,7 +6807,7 @@ def test_multi_image_photometry_consumes_each_named_current_source(aliases):
     )
     measurement_images = executor._resolved_measurement_images(
         image_specs, runtime, payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
     labels = ObjectLabelSet(
         name="Cells", variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
@@ -7468,12 +7471,12 @@ def test_measure_object_size_shape_zernikes_use_declared_label_id_domain() -> No
     assert np.isfinite(rows[0]["Zernike_0_0"])
     assert np.isnan(rows[1]["Zernike_0_0"])
     assert np.isfinite(rows[2]["Zernike_0_0"])
-    # Native Area/radius vectors use compact positions; Zernike/Feret retain label slots.
-    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, 16.0, np.nan])
+    # Every value stays on its label; radius and Feret are zero for the empty one.
+    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, np.nan, 16.0])
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0, 0, 0]
-    assert rows[1]["MaximumRadius"] > 0.0
-    assert rows[2]["MaximumRadius"] == 0.0
+    assert rows[1]["MaximumRadius"] == 0.0
+    assert rows[2]["MaximumRadius"] > 0.0
     assert rows[1]["MinFeretDiameter"] == 0.0
     assert rows[2]["MinFeretDiameter"] > 0.0
 
@@ -7499,7 +7502,7 @@ def test_measure_object_size_shape_backend_emits_concrete_cp_index_domain() -> N
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0] * 5
     np.testing.assert_array_equal(
-        [row["Area"] for row in rows], [9.0, 16.0, np.nan, np.nan, np.nan]
+        [row["Area"] for row in rows], [9.0, np.nan, 16.0, np.nan, np.nan]
     )
 
 
@@ -9290,12 +9293,12 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             CellProfilerMeasurementImage(
                 source_image_name=None,
                 payload=dna_payload,
-                reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                reference_domain=ObjectLabelsReference,
             ),
             CellProfilerMeasurementImage(
                 source_image_name=None,
                 payload=rna_payload,
-                reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                reference_domain=ObjectLabelsReference,
             ),
         )
     )
@@ -9668,7 +9671,7 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
     result = ImageArtifactType.contextualize_output(
         dna_payload,
         aligned,
-        None,
+        MAIN_FLOW,
         None,
     )
 
@@ -11262,11 +11265,11 @@ def test_object_only_measurement_carrier_preserves_color_stack() -> None:
         source_image_name=None,
         source_aliases=(),
         payload=color_stack,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert carrier.payload.data is color_stack
-    assert carrier.reference_domain is CellProfilerMeasurementImageDomain.OBJECT_LABELS
+    assert carrier.reference_domain is ObjectLabelsReference
 
 
 def test_compose_image_payload_rejects_unowned_singleton_broadcast():
@@ -12666,7 +12669,7 @@ def test_object_only_measurement_carrier_preserves_payload_stack_context() -> No
         source_image_name=None,
         source_aliases=(),
         payload=payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert carrier.payload is payload
@@ -12691,7 +12694,7 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_image_name=None,
         source_aliases=(),
         payload=payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
         execution_mode=AlignedStackExecution,
     )
 
@@ -12723,7 +12726,7 @@ def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
     )
     carrier = CellProfilerMeasurementImage(
         source_image_name="Source", payload=stack,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
         execution_mode=execution_mode,
     )
     prepared = carrier.prepare_object_labels(labels)
@@ -15613,7 +15616,7 @@ def test_measurement_image_for_labels_rejects_undeclared_object_domain_stack() -
         _measurement_image_for_labels(
             image,
             labels,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
         )
 
 
@@ -15625,7 +15628,7 @@ def test_measurement_image_for_labels_rejects_undeclared_object_domain_shape() -
         _measurement_image_for_labels(
             image,
             labels,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
         )
 
 
@@ -16658,7 +16661,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_object_domain() -> N
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16694,7 +16697,7 @@ def test_measurement_labels_reject_runtime_slice_stack_without_projection() -> N
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="Measurement image alignment"):
@@ -16729,7 +16732,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_unrelated_source_ima
         source_image_name="DF_image",
         source_aliases=("DF_image",),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16766,7 +16769,7 @@ def test_measurement_labels_project_source_binding_stack_for_object_domain() -> 
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16801,7 +16804,7 @@ def test_measurement_labels_project_repeated_source_binding_stack_for_object_dom
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16839,7 +16842,7 @@ def test_measurement_labels_reject_undeclared_nested_runtime_stack_axis() -> Non
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="Measurement image alignment"):
@@ -17169,7 +17172,7 @@ def test_measurement_image_for_labels_uses_object_label_source_spatial_crop() ->
         image,
         label_payload.labels,
         label_payload=label_payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     np.testing.assert_array_equal(
@@ -17289,7 +17292,7 @@ def test_filterobjects_runtime_plan_uses_compiled_removed_output_relation() -> N
 
 
 def test_filterobjects_removed_output_relation_rejects_non_object_source() -> None:
-    with pytest.raises(ValueError, match="requires an object-label source"):
+    with pytest.raises(ValueError, match="source of kind ObjectLabelsArtifactType"):
         FilterObjectsRemovedObjectSourceRelation(
             source=ArtifactSpec.input("Image", ImageArtifactType).ref()
         )
@@ -18208,7 +18211,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(3),
     )
 
@@ -18246,7 +18249,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
             ImagePayloadMetadata().payload_with(
                 np.zeros(labels.shape, dtype=np.uint16)
             ),
-            output_plan,
+            output_plan or MAIN_FLOW,
             RuntimePlaneProjection.stack(2),
         )
 
@@ -18275,7 +18278,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 
@@ -18307,7 +18310,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 

@@ -11,7 +11,7 @@ from skimage.filters import threshold_otsu
 from skimage.measure import label
 from skimage.morphology import skeletonize
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
@@ -40,6 +40,7 @@ from openhcs.processing.backends.analysis.skeletonize_and_save import (
     skeletonize_and_save,
 )
 from openhcs.processing.materialization import CsvOptions, ROIOptions, materialize
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def _skeletonize_and_save_impl():
@@ -255,7 +256,7 @@ def test_skeleton_measurements_materialize_as_csv():
         path="/tmp/A01_skeleton_measurements_step1",
         filemanager=filemanager,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert output_path == "/tmp/A01_skeleton_measurements_step1_details.csv"
@@ -284,7 +285,7 @@ def test_skeleton_roi_materialization_retains_thin_components():
         path="/tmp/A01_skeleton_rois_step1",
         filemanager=filemanager,
         backends=["memory"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
 
     assert output_path == "/tmp/A01_skeleton_rois_step1_rois.roi.zip"

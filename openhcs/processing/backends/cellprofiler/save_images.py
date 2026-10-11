@@ -11,17 +11,15 @@ from urllib.parse import quote
 import numpy as np
 from python_introspect import set_signature_analysis_target
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    MaterializedImageCopy,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.sidecars import MaterializedImageCopy
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     MaterializationSourceIdentityRelation,
-    MeasurementsArtifactType,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.image_file_serialization import ImagePayloadUint8Strategy
 from openhcs.core.memory import numpy
@@ -66,7 +64,8 @@ from openhcs.processing.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     WriteMode,
 )
 from openhcs.core.runtime_image_values import ImagePayload
@@ -322,15 +321,8 @@ class SaveImagesRecordedMeasurementSourceRelation(ArtifactSpecRelation):
     """Identify the exact saved image named by recorded file measurements."""
 
     relation_key: ClassVar[str] = "save_images_recorded_measurement_source"
+    source_artifact_type = ImageArtifactType
     target_artifact_type = MeasurementsArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ImageArtifactType:
-            raise ValueError(
-                "SaveImages recorded measurements require an image source, got "
-                f"{self.source.artifact_type.value}:{self.source.name}."
-            )
 
     def measurement_subject(self) -> MeasurementSubject:
         """Declare the saved image as the owner of recorded file measurements."""
@@ -886,9 +878,9 @@ class SaveImagesModule(
             file_format=file_format,
         )
         filename_identity = (
-            MaterializedFilenameIdentity.SOURCE_IDENTITY
+            NameBySourceIdentity
             if filename_method is SaveImagesFilenameMethod.FROM_IMAGE_FILENAME
-            else MaterializedFilenameIdentity.ARTIFACT_NAME
+            else NameByArtifactName
         )
         options = ImageFileOptions(
             filename_suffix=f"{suffix}{file_format.value}",

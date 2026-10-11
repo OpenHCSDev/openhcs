@@ -6,7 +6,8 @@ import weakref
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata

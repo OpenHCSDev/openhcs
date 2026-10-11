@@ -25,7 +25,7 @@ from benchmark.datasets.cache import (
 )
 from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime
-from openhcs.core.source_matching import is_image_path
+from openhcs.core.source_bindings import PathIsImage
 
 
 class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
@@ -174,6 +174,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
     ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         from openhcs.runtime.zmq_execution_signature import (
+            ExportRuntimeValues,
             ZMQRuntimeObservationExportScope,
         )
 
@@ -198,8 +199,8 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         parser.add_argument("--pipeline-name")
         parser.add_argument(
             "--observation-scope",
-            choices=tuple(scope.value for scope in ZMQRuntimeObservationExportScope),
-            default=ZMQRuntimeObservationExportScope.VALUES.value,
+            choices=tuple(ZMQRuntimeObservationExportScope.__registry__),
+            default=ExportRuntimeValues.name,
             help="Retain full runtime values or outcome-only execution evidence.",
         )
         parser.add_argument("--host", default="localhost")
@@ -281,7 +282,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             runtime_observation_export_path=str(
                 MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(output_dir)
             ),
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.named(
                 args.observation_scope
             ),
             submit_timeout_ms=args.submit_timeout_ms,
@@ -1013,7 +1014,7 @@ def _official_cellprofiler3_source_root(dataset_wrapper_path: Path) -> Path:
 
 def _has_image_payloads(path: Path) -> bool:
     return any(
-        candidate.is_file() and is_image_path(str(candidate))
+        candidate.is_file() and PathIsImage.holds_for(str(candidate))
         for candidate in path.iterdir()
     )
 

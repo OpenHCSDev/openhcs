@@ -50,6 +50,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLaunchContext,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 # A metadata owner that anchors workspace-relative addresses at the plate.
@@ -67,7 +68,7 @@ class FakeHandler:
 
 def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp_path):
     from types import SimpleNamespace
-    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.plate_image_inventory import PlateImageInventory
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -577,7 +578,7 @@ def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
         path=str(tmp_path / "centres"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     assert Path(archive).exists()
 

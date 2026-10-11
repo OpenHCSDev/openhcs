@@ -34,7 +34,7 @@ from openhcs.agent.dto.plate import (
 )
 from openhcs.agent.dto.viewer import ViewerWindowValidationSummaryResult
 from openhcs.core.config import LazyNapariStreamingConfig
-from openhcs.core.execution_state import TerminalExecutionStatus
+from openhcs.core.execution_state import ExecutionCompleted
 from openhcs.core.native_threading import configure_native_thread_environment
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.plate_file_inventory import PlateFileKind
@@ -396,7 +396,7 @@ def _execute_pipeline(
         timeout_seconds=None,
     )
     (row,) = (row for row in datasets.rows if row.root == str(plate_path))
-    if row.terminal_status != TerminalExecutionStatus.COMPLETE.value:
+    if row.terminal_status != ExecutionCompleted.name:
         raise InstalledDemoFailure(
             f"Portable neurite execution ended with {row.terminal_status}: "
             f"{row.finished_execution_error}; row={row}"

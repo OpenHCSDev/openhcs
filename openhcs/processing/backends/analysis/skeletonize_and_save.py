@@ -8,9 +8,9 @@ from skimage.filters import threshold_otsu
 from skimage.measure import label
 from skimage.morphology import remove_small_objects, skeletonize
 
-from openhcs.core.artifacts import (
-    ArtifactMeasurementSubjectRelation,
-    ArtifactSpec,
+from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )

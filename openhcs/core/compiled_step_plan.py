@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpecRef,
@@ -27,7 +27,7 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepInputDependency, UnresolvedStepInput
 from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
@@ -276,7 +276,7 @@ class CompiledStepPlan:
         default_factory=SequentialRuntimeFilterPlan.disabled
     )
     main_input_dependency: StepInputDependency = field(
-        default_factory=StepInputDependency.unresolved
+        default_factory=UnresolvedStepInput
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
         default_factory=CompiledSourceBindingPlan

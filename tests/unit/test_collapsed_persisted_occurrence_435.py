@@ -14,11 +14,8 @@ from polystore.memory import MemoryStorageBackend
 
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
@@ -45,7 +42,7 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 
 from tests.unit.test_function_outputs import (
@@ -90,7 +87,7 @@ def _actual_saved_occurrence(tmp_path, scenario):
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
                 relative_path_template=filename,
             )
         ),

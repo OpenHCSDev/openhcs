@@ -5,16 +5,17 @@ import pickle
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    InputGroupLineageSourceRelation,
-    SourceStackLineageSourceRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    InputGroupLineageSourceRelation,
+    SourceStackLineageSourceRelation,
 )
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,

@@ -19,13 +19,9 @@ from typing import (
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import RuntimeParameterDeclarationABC, add_parameter_exclusions
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.callable_contract import (
     CallableDeclaration,
     FunctionStepExecutionScope,

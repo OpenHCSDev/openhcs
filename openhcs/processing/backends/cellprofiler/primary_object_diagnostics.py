@@ -11,14 +11,14 @@ from typing import NamedTuple, Tuple, get_type_hints
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    QaCheckpoint,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.relations import (
     ArtifactSidecarSourceRelation,
-    ArtifactSpec,
-    ArtifactViewerStreaming,
-    ImageArtifactType,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.runtime_image_values import (
@@ -33,7 +33,7 @@ from openhcs.interop.cellprofiler.object_label_variants import (
 from openhcs.processing.materialization import (
     ImageFileOptions,
     TerminalMaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 
 @dataclass(frozen=True, slots=True)
@@ -199,11 +199,11 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
                 f"{prefix}__{stage}",
                 ImageArtifactType,
                 sidecar_role=QaCheckpoint,
-                viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+                viewer_streaming=OnDemandStreaming,
                 materialization=TerminalMaterializationSpec(
                     ImageFileOptions(
                         filename_suffix=".tif",
-                        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                        filename_identity=NameByArtifactName,
                     )
                 ),
                 relations=(

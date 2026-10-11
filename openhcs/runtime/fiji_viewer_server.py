@@ -62,7 +62,9 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
     ViewerProtocolStatus,
     ViewerServerLaunchRequest,
-    ViewerSettlePhase,
+    SettlementComplete,
+    SettlementFailed,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
@@ -175,15 +177,15 @@ class FijiBatchSettlementState:
 
         with self._lock:
             if self._failure_message is not None:
-                phase = ViewerSettlePhase.FAILED
+                phase = SettlementFailed
             elif (
                 self._completed_update_count == self._total_update_count
                 and not self._pending_item_count
                 and not self._active_update
             ):
-                phase = ViewerSettlePhase.COMPLETE
+                phase = SettlementComplete
             else:
-                phase = ViewerSettlePhase.RUNNING
+                phase = SettlementRunning
             return ViewerSettleProgress(
                 phase=phase,
                 completed_update_count=self._completed_update_count,

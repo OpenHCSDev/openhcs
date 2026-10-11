@@ -37,7 +37,7 @@ from openhcs.core.axes import (
     TimeAxis,
 )
 from metaclass_registry import AutoRegisterMeta
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from python_introspect import (
     AnnotatedDataclassValidationMixin,
     Enableable,
@@ -73,7 +73,7 @@ from openhcs.runtime.viewer_display import (
 )
 from openhcs.core.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.artifacts import ArtifactSpecCollection
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_bindings import (
@@ -125,13 +125,43 @@ ZarrChunkStrategy = _polystore_config.ZarrChunkStrategy
 TiffCompression = _polystore_config.TiffCompression
 
 
-class MaterializationBackend(Enum):
-    """Available backends for materialization (persistent storage only)."""
+class MaterializationBackend(ABC, metaclass=AutoRegisterMeta):
+    """A persistent storage backend materialization may write to.
 
-    AUTO = "auto"
-    ZARR = "zarr"
-    DISK = "disk"
-    OMERO_LOCAL = "omero_local"
+    Each choice declares its PolyStore ``backend``; ``name`` is its spelling in
+    forms and on the wire.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: "ClassVar[dict[str, type[MaterializationBackend]]]" = {}
+
+    name: ClassVar[str | None] = None
+    backend: ClassVar[Backend]
+
+
+class MaterializeAuto(MaterializationBackend):
+    """Use the dataset source's primary backend."""
+
+    name = "auto"
+    backend = Backend.AUTO
+
+
+class MaterializeToZarr(MaterializationBackend):
+    """Write a Zarr store, which needs a Zarr config and converted inputs."""
+
+    name = "zarr"
+    backend = Backend.ZARR
+
+
+class MaterializeToDisk(MaterializationBackend):
+    name = "disk"
+    backend = Backend.DISK
+
+
+class MaterializeToOmeroLocal(MaterializationBackend):
+    name = "omero_local"
+    backend = Backend.OMERO_LOCAL
 
 
 class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
@@ -143,7 +173,7 @@ class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["PartitionFilterMode"]]] = {}
+    __registry__: "ClassVar[dict[str, type[PartitionFilterMode]]]" = {}
 
     name: ClassVar[str | None] = None
     preview_prefix: ClassVar[str]
@@ -411,7 +441,7 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     """
 
     @classmethod
-    def partition_filter_inheritance_branch(cls) -> type["PartitionFilterConfig"]:
+    def partition_filter_inheritance_branch(cls) -> "type[PartitionFilterConfig]":
         """Return the nominal MRO branch that may supply inherited filters."""
         return cls
 
@@ -481,8 +511,10 @@ class VFSConfig(AnnotatedDataclassValidationMixin):
     """
 
     materialization_backend: Annotated[
-        MaterializationBackend, abbreviation("materialize")
-    ] = MaterializationBackend.DISK
+        type[MaterializationBackend],
+        abbreviation("materialize"),
+        RegisteredClassChoices(MaterializationBackend),
+    ] = MaterializeToDisk
     """Persistent backend used by compiled main-flow and artifact materialization plans.
 
     This setting selects how requested outputs are stored; it does not itself
@@ -516,7 +548,7 @@ class DtypeConfig(
         return cls()
 
     @classmethod
-    def annotation_type(cls) -> type["DtypeConfig"]:
+    def annotation_type(cls) -> "type[DtypeConfig]":
         """Expose the inheritable config type on callable signatures."""
         return cls
 
@@ -547,9 +579,9 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     selection. This field does not define the assembled stack axis.
     """
 
-    input_source: Annotated[InputSource, abbreviation("source")] = (
-        InputSource.PREVIOUS_STEP
-    )
+    input_source: Annotated[
+        type[InputSource], abbreviation("source"), RegisteredClassChoices(InputSource)
+    ] = ReadPreviousStep
     """Main-flow source: previous step or pipeline start.
 
     Additional named sources are callable artifact inputs satisfied through
@@ -964,7 +996,7 @@ class StepSourceBindingsConfig(
     enabled: bool = False
     """Whether this step uses source-binding resolution instead of the prior step image stack."""
 
-    def for_input_source(self, input_source: InputSource) -> Self:
+    def for_input_source(self, input_source: type[InputSource]) -> Self:
         """Return the source declarations active for one resolved input source."""
 
         if self.enabled is None:
@@ -972,12 +1004,7 @@ class StepSourceBindingsConfig(
                 "StepSourceBindingsConfig.for_input_source requires "
                 "ObjectState-resolved enabled state."
             )
-        resolved_input_source = (
-            input_source
-            if isinstance(input_source, InputSource)
-            else InputSource(input_source)
-        )
-        if self.enabled or resolved_input_source is InputSource.PIPELINE_START:
+        if self.enabled or input_source.reads_pipeline_start:
             return self
         return type(self)()
 
@@ -1268,13 +1295,13 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     def config_type_for_viewer(
         cls,
         viewer_type: ViewerType,
-    ) -> type["StreamingConfig"]:
+    ) -> "type[StreamingConfig]":
         """Return the registered config declaration for one viewer."""
 
         return cls.__registry__[ViewerFamily.named(viewer_type)]
 
     @classmethod
-    def config_type_for_key(cls, config_key: str) -> type["StreamingConfig"]:
+    def config_type_for_key(cls, config_key: str) -> "type[StreamingConfig]":
         """Return the registered streaming config type for an ObjectState field key."""
         return cls.__registry__[ViewerFamily.for_config_key(config_key)]
 

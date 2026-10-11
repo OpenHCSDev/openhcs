@@ -21,16 +21,15 @@ from openhcs.core.axes import TimeAxis
 from openhcs.processing.backends.cellprofiler._font_raster_native import rasterize
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,

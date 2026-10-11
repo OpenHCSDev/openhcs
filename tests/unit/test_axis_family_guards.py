@@ -319,7 +319,7 @@ EXTERNAL_DIMENSION_WORDS = frozenset({"channel", "channels"})
 KERNEL_DOMAIN_REFERENCE_CEILING = 70
 KERNEL_DOMAIN_REFERENCES = frozenset(
     {
-        ("openhcs/core/artifacts.py", "PLATE"),
+        ("openhcs/core/artifacts/input_projection.py", "PLATE"),
         ("openhcs/core/callable_contract.py", "PLATE"),
         ("openhcs/core/callable_contract.py", "plate"),
         ("openhcs/core/components/parser_metaprogramming.py", "include_site"),
@@ -330,7 +330,6 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_acquisition_datetime"),
         ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_name"),
         ("openhcs/core/dataset_sources/source.py", "plate_root"),
-        ("openhcs/core/debug_session_projection.py", "NO_PLATE"),
         ("openhcs/core/debug_session_projection.py", "NoPlateDebugSessionPhase"),
         ("openhcs/core/debug_session_projection.py", "current_plate_scope_id"),
         ("openhcs/core/debug_session_projection.py", "no_plate"),

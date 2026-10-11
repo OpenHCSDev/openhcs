@@ -1,5 +1,9 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
+from openhcs.processing.materialization.options import (
+    NameByArtifactName,
+    NameBySourceIdentity,
+)
 from dataclasses import asdict, replace
 import json
 
@@ -21,11 +25,8 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     stack_image_payloads,
 )
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
@@ -64,7 +65,6 @@ from python_introspect import to_jsonable
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -188,9 +188,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(
                 ImageFileOptions(
                     filename_suffix=".tif",
                     filename_identity=(
-                        MaterializedFilenameIdentity.ARTIFACT_NAME
-                        if aggregate
-                        else MaterializedFilenameIdentity.SOURCE_IDENTITY
+                        NameByArtifactName if aggregate else NameBySourceIdentity
                     ),
                     relative_path_template=(
                         filename
@@ -412,7 +410,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(
         "artifact_projections": [
             {
                 "path": path,
-                "role": projection.projection_role.value,
+                "role": projection.projection_role.name,
                 "address": (
                     None
                     if projection.address is None

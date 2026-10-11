@@ -2,14 +2,10 @@
 
 from dataclasses import fields
 
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import (
@@ -30,7 +26,7 @@ def test_context_owns_exact_step_artifact_projection_facts() -> None:
     assert "processing_config" not in field_names
     assert ArtifactDeclarationStepContext.empty().group_by is Ungrouped
     assert (
-        ArtifactDeclarationStepContext.empty().input_source is InputSource.PREVIOUS_STEP
+        not ArtifactDeclarationStepContext.empty().input_source.reads_pipeline_start
     )
 
 
@@ -43,7 +39,7 @@ def test_context_pipeline_start_sources_replace_main_flow() -> None:
         source_bindings=StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
         main_flow_artifacts=ArtifactSpecCollection((upstream_image,)),
     ).with_source_declarations((source_image, measurement))
 
@@ -62,7 +58,7 @@ def test_context_pipeline_start_main_flow_uses_declared_source_subset() -> None:
                 NamedSourceBinding(alias="Actin"),
             ),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     ).with_source_declarations((dna,))
 
     assert advanced.available_artifacts.specs == (dna,)
@@ -78,7 +74,7 @@ def test_context_supplemental_step_sources_do_not_replace_previous_main_flow() -
             enabled=True,
             bindings=(NamedSourceBinding(alias="DNA"),),
         ),
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
         main_flow_artifacts=ArtifactSpecCollection((upstream_image,)),
     ).with_source_declarations((source_image,))
 
@@ -91,7 +87,7 @@ def test_context_preserves_main_flow_for_previous_step_source_declarations() -> 
     source_image = ArtifactSpec.input("DNA", ImageArtifactType)
 
     advanced = ArtifactDeclarationStepContext(
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
         main_flow_artifacts=ArtifactSpecCollection((prior_image,)),
     ).with_source_declarations((source_image,))
 

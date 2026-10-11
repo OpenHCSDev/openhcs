@@ -5,7 +5,7 @@ from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 
 
 class EnhanceEdgesModule(CellProfilerModule):

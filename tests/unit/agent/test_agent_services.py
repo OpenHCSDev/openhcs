@@ -33,7 +33,11 @@ from openhcs.agent.dto.execution import (
     PipelineSourceArtifactPlanInspectionRequest,
     RuntimeServerExecutionStatusRequest,
 )
-from openhcs.agent.dto.functions import FunctionParameterSource
+from openhcs.agent.dto.functions import (
+    SuppliedByAgent,
+    SuppliedByRuntime,
+    SuppliedFromPrimaryInput,
+)
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
 from openhcs.agent.dto.viewer import (
     ViewerWindowCloseRequest,
@@ -76,13 +80,9 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService,
     ZMQViewerWindowGateway,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ObjectLabelsArtifactType,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -1173,8 +1173,8 @@ def test_function_catalog_search_and_describe_use_registry_ids(monkeypatch):
     assert detail.entry.signature == "sample_processing_function(sigma=1.0)"
     assert [parameter.name for parameter in detail.parameters] == ["image", "sigma"]
     assert [parameter.supplied_by for parameter in detail.parameters] == [
-        FunctionParameterSource.PRIMARY_INPUT,
-        FunctionParameterSource.AGENT,
+        SuppliedFromPrimaryInput,
+        SuppliedByAgent,
     ]
     assert detail.parameters[0].required is False
     assert detail.parameters[1].required is False
@@ -1236,7 +1236,7 @@ def test_function_catalog_projects_runtime_context_from_callable_contract(
         == "context"
     )
     assert (
-        parameters["context"].supplied_by is FunctionParameterSource.RUNTIME_PARAMETER
+        parameters["context"].supplied_by is SuppliedByRuntime
     )
     assert parameters["context"].required is False
     assert parameters["context"].description == (

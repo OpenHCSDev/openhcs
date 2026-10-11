@@ -5,13 +5,11 @@ from __future__ import annotations
 from abc import abstractmethod
 from pathlib import Path
 import string
-from typing import Any
+from typing import Any, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 import pandas as pd
 
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.processing.backends.experimental_analysis.layout_rows import ExperimentalAnalysisScope
 
 PlateDictionary = dict[str, dict[str, dict[str, Any]]]
 
@@ -25,13 +23,23 @@ def plate_well_ids() -> tuple[str, ...]:
     )
 
 
-class ExperimentalResultFormatStrategy(
-    EnumKeyedStrategyMixin[ExperimentalAnalysisScope],
-    metaclass=AutoRegisterMeta,
-):
-    """Own all result-file behavior for one declared workbook scope."""
+class ExperimentalResultFormatStrategy(metaclass=AutoRegisterMeta):
+    """Own all result-file behavior for one declared workbook scope.
 
-    __enum_member_attr__ = "scope"
+    Each format is a subclass; ``scope_name`` is the scope a workbook declares.
+    """
+
+    __registry_key__ = "scope_name"
+    __skip_if_no_key__ = True
+    scope_name: ClassVar[str | None] = None
+
+    @classmethod
+    def for_scope(cls, scope: object) -> "ExperimentalResultFormatStrategy":
+        """Return the format for the scope a workbook declares."""
+        format_type = cls.__registry__.get(scope)
+        if format_type is None:
+            raise ValueError(f"microscope {scope} not known")
+        return format_type()
 
     @abstractmethod
     def read_results(self, results_path: str | Path) -> pd.DataFrame:
@@ -68,7 +76,7 @@ class ExperimentalResultFormatStrategy(
             "features": features,
             "plate_names": list(plates_dict),
             "plates_dict": plates_dict,
-            "format_name": self.scope.value,
+            "format_name": self.scope_name,
         }
 
     def empty_wells(self, raw_df: pd.DataFrame) -> dict[str, dict[str, Any]]:
@@ -92,7 +100,7 @@ class ExperimentalResultFormatStrategy(
 class CX5ExperimentalResultFormat(ExperimentalResultFormatStrategy):
     """ThermoFisher CX5 result-file behavior."""
 
-    scope = ExperimentalAnalysisScope.CX5
+    scope_name = "EDDU_CX5"
 
     def read_results(self, results_path: str | Path) -> pd.DataFrame:
         return pd.read_excel(results_path, sheet_name="Rawdata")
@@ -128,7 +136,7 @@ class CX5ExperimentalResultFormat(ExperimentalResultFormatStrategy):
 class MetaXpressExperimentalResultFormat(ExperimentalResultFormatStrategy):
     """MetaXpress consolidated CSV and workbook result behavior."""
 
-    scope = ExperimentalAnalysisScope.METAXPRESS
+    scope_name = "EDDU_metaxpress"
 
     def read_results(self, results_path: str | Path) -> pd.DataFrame:
         path = Path(results_path)

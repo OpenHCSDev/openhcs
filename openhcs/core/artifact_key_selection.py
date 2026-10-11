@@ -6,14 +6,12 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactOutputPlan,
     ArtifactPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
-    MeasurementsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
 
@@ -68,7 +66,7 @@ class AdapterRecordedArtifactOutputPolicy(ArtifactOutputPolicy):
     def validate_measurement_subject(cls, spec: ArtifactSpec) -> None:
         """Ordinary recorded tables have one declaration-owned subject."""
 
-        MeasurementsArtifactType.require_output_subject(spec)
+        spec.require_measurement_subject()
 
 
 class ArtifactPlanKeySelector(ABC):

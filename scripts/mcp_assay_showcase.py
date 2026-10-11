@@ -32,7 +32,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -232,7 +232,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_artifact_presentation(
                 "Segment nucleus-like primary objects",
                 "segmentation_masks",
-                ObjectLabelsArtifactType.require_value(),
+                ObjectLabelsArtifactType.value,
             ),
             pipeline_source=_primary_object_source,
             documentation_fixture=True,
@@ -254,7 +254,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_artifact_presentation(
                 "Classify dual-channel reporter phenotype",
                 "w2_stain",
-                ObjectLabelsArtifactType.require_value(),
+                ObjectLabelsArtifactType.value,
             ),
             pipeline_source=_dual_channel_source,
         ),
@@ -294,7 +294,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_artifact_presentation(
                 "Segment nuclei for morphology",
                 "segmentation_masks",
-                ObjectLabelsArtifactType.require_value(),
+                ObjectLabelsArtifactType.value,
             ),
             pipeline_source=_nuclear_morphology_source,
         ),
@@ -315,7 +315,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_main_flow_presentation(
                 "Measure cell-neighbor topology",
                 output_key="MeasureObjectNeighbors_2_image_1",
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
             pipeline_source=_spatial_neighbors_source,
         ),
@@ -336,7 +336,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_artifact_presentation(
                 "Segment nuclei for radial intensity",
                 "segmentation_masks",
-                ObjectLabelsArtifactType.require_value(),
+                ObjectLabelsArtifactType.value,
             ),
             pipeline_source=_radial_intensity_distribution_source,
         ),
@@ -357,7 +357,7 @@ def scenario_blueprints() -> tuple[ScenarioBlueprint, ...]:
             presentation_identity=_artifact_presentation(
                 "Measure foreground skeleton topology",
                 "skeleton_rois",
-                ObjectLabelsArtifactType.require_value(),
+                ObjectLabelsArtifactType.value,
             ),
             pipeline_source=_foreground_skeleton_topology_source,
         ),
@@ -390,7 +390,7 @@ def _common_source_header(
 
 from pathlib import Path
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -490,7 +490,7 @@ def _pipeline_start_processing_config_source() -> str:
     """Render the ordinary pipeline-start processing declaration."""
 
     return """        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
 
@@ -499,7 +499,7 @@ def _z_stack_processing_config_source() -> str:
     """Render the pipeline-start declaration whose variable axis is Z."""
 
     return """        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
             variable_components=[Microscopy.ZIndex],
         ),
 """
@@ -600,7 +600,7 @@ def _dual_channel_source(plate_path: Path, output_path: Path) -> str:
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()
@@ -653,7 +653,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         ),
         FunctionStep(
@@ -667,7 +667,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()
@@ -862,7 +862,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
             },
         ),
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()
@@ -1052,7 +1052,7 @@ def artifact_contracts(plan: Mapping[str, Any]) -> dict[str, Any]:
         {
             output["name"]
             for output in outputs
-            if output["kind"] == MeasurementsArtifactType.require_value()
+            if output["kind"] == MeasurementsArtifactType.value
         }
     )
     if not measurement_names:

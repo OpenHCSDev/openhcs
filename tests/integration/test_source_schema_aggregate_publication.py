@@ -19,8 +19,9 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
+from openhcs.constants.input_source import ReadPipelineStart
+from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
+from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
@@ -28,14 +29,14 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.memory import numpy as numpy_function
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     ComponentSelector,
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     SourceSelector,
 )
@@ -84,7 +85,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 dataset_source=SourceBindingsSource,
                 source_bindings_config=LazySourceBindingsConfig(
                     metadata_rules=(MetadataExtractionRule(
-                        source=MetadataSource.FILE_NAME,
+                        source=FromFileName,
                         pattern=r"(?P<well>A[0-9]+)_s(?P<site>[0-9]+)_w(?P<channel>[0-9]+)_z(?P<z_index>[0-9]+)_t(?P<timepoint>[0-9]+)",
                     ),),
                     bindings=(NamedSourceBinding(
@@ -98,7 +99,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 processing_config=LazyProcessingConfig(
                     variable_components=[Microscopy.ZIndex],
                     group_by=group_by,
-                    input_source=InputSource.PIPELINE_START,
+                    input_source=ReadPipelineStart,
                 ),
             )],
         )
@@ -112,7 +113,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
         orchestrator = PipelineOrchestrator(source, pipeline_config=document.pipeline_config).initialize()
         outcomes = orchestrator.execute_compiled_bundle(
             execution_bundle=bundle, max_workers=1,
-            runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+            runtime_observation_mode=MergeAllRuntimeRecords,
             progress_queue=AgentProgressQueue(),
             progress_context=ProgressExecutionContext(
                 execution_id="source-schema-aggregate-synthetic",

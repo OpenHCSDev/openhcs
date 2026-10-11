@@ -4,14 +4,16 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration

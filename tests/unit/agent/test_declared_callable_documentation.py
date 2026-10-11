@@ -9,7 +9,10 @@ from dataclasses import dataclass
 import numpy as np
 import pytest
 
-from openhcs.agent.dto.functions import FunctionParameterSource
+from openhcs.agent.dto.functions import (
+    SuppliedByAgent,
+    SuppliedByRuntime,
+)
 from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     PARAMETER_DOCUMENTATION_POLICY,
@@ -81,7 +84,7 @@ def test_new_declaration_preserves_authored_prose_without_consumer_edits(monkeyp
     assert "slice_by_slice" not in {parameter.name for parameter in detail.parameters}
     offset = next(parameter for parameter in detail.parameters if parameter.name == "offset")
     assert offset.default_repr == "0.75"
-    assert offset.supplied_by is FunctionParameterSource.AGENT
+    assert offset.supplied_by is SuppliedByAgent
     assert offset.description == "Declared intensity offset in original image units."
     assert catalog.search(query="original image units").total == 1
 
@@ -101,7 +104,7 @@ def test_flexible_controls_remain_typed_and_existing_mro_behavior_is_unchanged(m
     parameters = {parameter.name: parameter for parameter in detail.parameters}
     assert parameters["slice_by_slice"].default_repr == "False"
     assert "Process 3D arrays slice-by-slice" in parameters["slice_by_slice"].description
-    assert parameters["dtype_config"].supplied_by is FunctionParameterSource.RUNTIME_PARAMETER
+    assert parameters["dtype_config"].supplied_by is SuppliedByRuntime
     pixels = np.zeros((2, 4, 6))
     result = metadata.func(pixels, slice_by_slice=True)
     assert seen == [(4, 6), (4, 6)]

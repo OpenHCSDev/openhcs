@@ -4,6 +4,7 @@ The numerical outputs are synthetic, not a BaSiCPy fit. The actual public
 compiler, runtime materialization, metadata reconciliation and reopen are used.
 """
 
+from openhcs.processing.materialization.options import NameByArtifactName
 from dataclasses import dataclass, replace
 import json
 
@@ -12,9 +13,9 @@ import pytest
 import tifffile
 
 from tests.unit.test_artifact_publication_journey import _plate, progress_events
-from openhcs.core.artifacts import (
-    QaCheckpoint,
-    ImageArtifactType,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.artifacts.specs import (
     MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
 )
@@ -48,7 +49,6 @@ from openhcs.core.processing_contracts import (
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
 )
 from openhcs.core.axes import TileAxis
 from openhcs.domains.microscopy.axes import Microscopy
@@ -77,7 +77,7 @@ def _field(name):
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
     )

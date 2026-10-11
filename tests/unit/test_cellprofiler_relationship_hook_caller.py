@@ -75,8 +75,8 @@ def test_relationship_hook_caller_uses_callable_artifact_authorities() -> None:
 def test_relate_objects_hook_uses_the_exact_declared_relationship_spec() -> None:
     """Select only the exact parent-to-child output declared by the callable."""
 
-    from openhcs.core.artifacts import (
-        ArtifactSpec,
+    from openhcs.core.artifacts.specs import ArtifactSpec
+    from openhcs.core.artifacts.kinds import (
         ObjectLabelsArtifactType,
         RelationshipsArtifactType,
     )
@@ -143,8 +143,8 @@ def test_relate_objects_hook_uses_the_exact_declared_relationship_spec() -> None
 def test_relationship_rows_pass_callable_contract_and_exact_output_entry() -> None:
     """Exercise the migrated caller through endpoint resolution and row dispatch."""
 
-    from openhcs.core.artifacts import (
-        ArtifactSpec,
+    from openhcs.core.artifacts.specs import ArtifactSpec
+    from openhcs.core.artifacts.kinds import (
         ObjectLabelsArtifactType,
         RelationshipsArtifactType,
     )

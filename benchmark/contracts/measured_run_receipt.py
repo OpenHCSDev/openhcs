@@ -14,7 +14,10 @@ from python_introspect import dataclass_from_mapping, to_jsonable
 from benchmark.contracts.run_artifacts import write_new_measured_artifact
 from benchmark.timing import PhaseTimingRecord
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
-from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_signature import (
+    ExportRuntimeValues,
+    ZMQRuntimeObservationExportScope,
+)
 
 MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v2"
 _ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = (
@@ -65,8 +68,8 @@ class MeasuredPipelineRunReceipt:
     completed_at_epoch_seconds: float
     compile_artifact_id: str | None = None
     server_environment: RuntimeEnvironmentSnapshot | None = None
-    observation_export_scope: ZMQRuntimeObservationExportScope = (
-        ZMQRuntimeObservationExportScope.VALUES
+    observation_export_scope: type[ZMQRuntimeObservationExportScope] = (
+        ExportRuntimeValues
     )
     expected_axis_count: int | None = None
     observed_axis_count: int | None = None
@@ -138,11 +141,8 @@ class MeasuredPipelineRunReceipt:
             cls,
             {
                 **payload,
-                "observation_export_scope": ZMQRuntimeObservationExportScope(
-                    payload.get(
-                        "observation_export_scope",
-                        ZMQRuntimeObservationExportScope.VALUES.value,
-                    )
+                "observation_export_scope": ZMQRuntimeObservationExportScope.named(
+                    payload.get("observation_export_scope", ExportRuntimeValues.name)
                 ),
                 "phase_timings": tuple(
                     PhaseTimingRecord.from_payload(record) for record in timing_payloads

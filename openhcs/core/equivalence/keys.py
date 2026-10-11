@@ -14,7 +14,6 @@ from openhcs.core.equivalence.policy import (
 )
 from openhcs.core.measurement_dialect import (
     MeasurementDialect,
-    RuntimeMeasurementSourceNameEncoding,
     RuntimeMeasurementSourceQualifiedFeature,
 )
 from openhcs.core.runtime_identifier import (
@@ -231,8 +230,6 @@ class RuntimeMeasurementFeatureKey:
         if (
             subject.scope is MeasurementScope.SAMPLE
             and source_qualified_feature.source_name is not None
-            and measurement_dialect.source_name_encoding(subject.scope)
-            is RuntimeMeasurementSourceNameEncoding.SEPARATE_KEY
         ):
             return cls(
                 RuntimeMeasurementSubjectKey(

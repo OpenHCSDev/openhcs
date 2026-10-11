@@ -9,11 +9,8 @@ import pytest
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepSpec
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
@@ -38,7 +35,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
-    CustomFunctionLifetime,
+    EphemeralLifetime,
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
@@ -288,7 +285,7 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         ) < NewAuthoringModule.__mro__.index(CellProfilerModuleSettings)
         metadata = project_custom_function(new_authoring_callable)
         CustomFunctionRuntimeRegistry.publish(
-            metadata, CustomFunctionLifetime.EPHEMERAL
+            metadata, EphemeralLifetime
         )
         monkeypatch.setitem(
             RegistryService._metadata_cache, metadata.composite_key, metadata

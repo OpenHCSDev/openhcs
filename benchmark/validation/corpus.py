@@ -43,16 +43,16 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
+    FromFileName,
+    FromPipelineStart,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
-    SourceBindingOrigin,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
+    PathIsImage,
+    SourceFileName,
     SourceSelector,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -533,7 +533,7 @@ def source_bindings_for_validation(
                 metadata=(MetadataSelector(field="channel", value=channel.value),),
                 inherit_current_scope=True,
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(
                 ComponentSelector(
                     component=Microscopy.Channel,
@@ -562,14 +562,14 @@ def source_bindings_for_validation(
     return SourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                subject=SourceFilterSubject.FILE,
-                match_type=SourceFilterMatchType.IS_IMAGE,
+                subject=SourceFileName,
+                match_type=PathIsImage,
             ),
         ),
         bindings=bindings,
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=(
                     r"^(?:plate-(?P<plate>[^_]+)_)?"
                     r"well-(?P<well>[A-P]\d{2})_site-(?P<site>[^_]+)_"

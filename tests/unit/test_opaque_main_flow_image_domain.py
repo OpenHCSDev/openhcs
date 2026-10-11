@@ -20,7 +20,7 @@ from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBun
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.payload_axes import PayloadAxes
@@ -208,7 +208,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         context.runtime_image_stack_cache.clear()
     consumer_plan = replace(
         plan, step_index=1, step_scope_id="whole-consumer", input_dir=tmp_path,
-        main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id),
+        main_input_dependency=StepOutputInput(source_step_index=0, source_step_scope_id=plan.step_scope_id),
     )
     consumer = PatternGroupExecutionRequest(
         context=context, execution_plan=consumer_plan, compiled_group=pattern.default_group,
@@ -309,7 +309,8 @@ def test_record_axis_survives_replace_and_pickle(tmp_path):
 
 
 def _selected_pattern(name):
-    from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+    from openhcs.core.artifacts.specs import ArtifactSpec
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan, InvocationArtifactInputProjectionKey
     spec = ArtifactSpec.input(name, ImageArtifactType)
@@ -329,7 +330,7 @@ def _selected_pattern(name):
 
 @pytest.mark.parametrize("cache_hit", [False, True])
 def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_domains(tmp_path, monkeypatch, cache_hit):
-    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     source = "/input/A01_s001_w1_z001_t001.tif"
     components = {"well": "A01", "site": "1", "channel": "1", "z_index": "1", "timepoint": "1"}
     contexts = tuple(AlignedImageSliceContext.main_flow(name, artifact_kind=ImageArtifactType.value) for name in ("Planes", "Volume"))
@@ -367,7 +368,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     def consumer_for(compiled):
         consumer_plan = replace(plan, step_index=1, step_scope_id="mixed-consumer", input_dir=tmp_path,
             compiled_function_pattern=compiled,
-            main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id))
+            main_input_dependency=StepOutputInput(source_step_index=0, source_step_scope_id=plan.step_scope_id))
         consumer = PatternGroupExecutionRequest(context=context,
             execution_plan=consumer_plan,
             compiled_group=compiled.default_group,

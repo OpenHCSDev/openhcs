@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, fields, replace
 from inspect import signature
 
@@ -9,9 +10,9 @@ from polystore.filemanager import FileManager
 from scipy import ndimage as ndi
 from skimage.draw import disk, line
 
-from openhcs.core.artifacts import (
-    QaCheckpoint,
-    ArtifactViewerStreaming,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -39,6 +40,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NeuriteOwnershipPlanes,
     NeuriteAdmissionResult,
     NeuriteIllumination,
+    NeuriteTopologyClass,
     _adopt_secondary_owned_path_segments,
     _analyze_owned_topology,
     _analyze_topology,
@@ -71,6 +73,8 @@ from openhcs.processing.materialization import (
 from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
     PrimaryObjectDiagnosticPlanes,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _declared_shaft_admission(response, mask=None):
@@ -251,7 +255,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     )
     source = metadata.payload_with(image)
     graph = SpatialGraphArtifactType.contextualize_output(
-        source, result[-1], None, None
+        source, result[-1], MAIN_FLOW, None
     )
     assert graph.source_voxel_spacing == spacing
     assert graph.coordinate_spacing.unit is SourceVoxelSpacingUnit.PIXELS
@@ -262,7 +266,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     csv_path = materialize(
         declarations[1].materialization, data=result[2],
         path=str(tmp_path / "cells.csv"), filemanager=manager,
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     with open(csv_path, newline="") as stream:
         rows = tuple(csv.DictReader(stream))
@@ -272,7 +276,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     zip_path = materialize(
         declarations[-1].materialization, data=graph,
         path=str(tmp_path / "morphology.roi.zip"), filemanager=manager,
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     restored = load_rois_from_zip(Path(zip_path))
     saved = ROIArchiveSourceMetadata.decode(restored)
@@ -289,7 +293,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
         materialize(
             MaterializationSpec(SWCOptions()), data=graph,
             path=str(tmp_path / "forbidden.swc"), filemanager=manager,
-            backends=["disk"], backend_kwargs={},
+            backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
         )
     assert not tuple(tmp_path.glob("*.swc"))
 
@@ -538,7 +542,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
     ):
         assert spec.artifact_type is ImageArtifactType
         assert spec.sidecar_role is QaCheckpoint
-        assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert spec.viewer_streaming is OnDemandStreaming
         assert tuple(type(output) for output in spec.materialization.outputs) == (
             ImageFileOptions,
         )
@@ -569,7 +573,7 @@ def test_neurite_label_materialization_preserves_exact_pixels_below_roi_area_cut
         path=str(tmp_path / "neurons.roi.zip"),
         filemanager=filemanager,
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     paths = tuple(tmp_path.glob("*.labels.tif"))
     assert len(paths) == 1
@@ -1118,10 +1122,16 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     }
     assert final.root_paths_by_cell.keys() == {1, 2}
     final_rendered = _render_owned_skeleton(skeleton.shape, final)
+    # The final topology replaces the distorted span around the core with each
+    # owner's route through one shared crossing pixel; the rest keeps its owner.
+    replaced, _ = topology.crossing_routes(
+        repaired, owner=1, origin=(0, 0), outgrowth_width_px=8.0,
+    )
     for path_index in topology.crossing_paths:
         coordinates = topology.path_coordinates[path_index]
-        outside = ~core[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
+        outside = ~replaced[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
         assert np.all(final_rendered[tuple(coordinates[outside].T)] == topology.path_owners[path_index])
+    assert set(final.shared_trace_owners().values()) == {(1, 2)}
 
     unsupported_response = response.copy()
     unsupported_response[core] = 0
@@ -1726,6 +1736,150 @@ def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
     assert traces[64, 75] in {horizontal_owner, vertical_owner}
     np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
+
+
+_CROSSING_SCENES = {
+    # Each neuron: (body centre, neurite segments). Every neurite crosses
+    # another neuron's; each is compared with itself drawn alone.
+    "orthogonal": (
+        ((64, 20), (((64, 28), (64, 115)),)),
+        ((20, 75), (((28, 75), (115, 75)),)),
+    ),
+    "diagonal": (
+        ((25, 25), (((32, 32), (115, 115)),)),
+        ((25, 115), (((32, 108), (115, 25)),)),
+    ),
+    "one_neurite_crosses_two": (
+        ((64, 12), (((64, 20), (64, 120)),)),
+        ((15, 50), (((23, 50), (115, 50)),)),
+        ((115, 90), (((107, 90), (12, 90)),)),
+    ),
+    "crossing_four_pixels_from_a_branch_point": (
+        ((64, 20), (((64, 28), (64, 115)), ((64, 79), (44, 89)))),
+        ((20, 75), (((28, 75), (115, 75)),)),
+    ),
+}
+
+
+def _scene_image(neurons, bright_pixels=()):
+    image = np.zeros((2, 128, 128), dtype=np.uint16)
+    for centre, segments in neurons:
+        rr, cc = disk(centre, 7, shape=image.shape[1:])
+        image[:, rr, cc] = 1000
+        for start, end in segments:
+            rr, cc = line(*start, *end)
+            image[1, rr, cc] = 700
+    for pixel in bright_pixels:
+        image[(1, *pixel)] = 1400
+    return image
+
+
+def _run_scene(neurons, bright_pixels=()):
+    result = _implementation()(
+        _scene_image(neurons, bright_pixels),
+        neurite_channel_index=1,
+        cell_body=_cell_body_settings(channel_index=0),
+        outgrowth=_outgrowth_settings(),
+        pixel_size=1.0,
+    )
+    bodies = result[3][0]
+    rows = {row["cell"]: row for row in _rows(result[2])}
+    return result, [rows[int(bodies[centre])] for centre, _ in neurons]
+
+
+@pytest.mark.parametrize("scene", sorted(_CROSSING_SCENES))
+def test_crossing_neurons_measure_as_if_drawn_alone(scene):
+    neurons = _CROSSING_SCENES[scene]
+    result, together = _run_scene(neurons)
+    summary = _rows(result[1])[0]
+    crossing_count = {"one_neurite_crosses_two": 2}.get(scene, 1)
+    assert summary["resolved_crossovers"] == crossing_count
+
+    for neuron, row in zip(neurons, together):
+        _, (alone,) = _run_scene((neuron,))
+        # The crossing is a node both neurons' paths pass through, so neither
+        # pays a detour: within one pixel step, and exact for these geometries.
+        assert abs(row["total_outgrowth"] - alone["total_outgrowth"]) <= np.sqrt(2.0)
+        assert row["total_outgrowth"] == pytest.approx(alone["total_outgrowth"])
+        assert row["straightness"] == pytest.approx(alone["straightness"])
+        assert row["processes"] == alone["processes"]
+        assert row["branches"] == alone["branches"]
+
+    # Both owners' graph paths traverse the same crossing pixel; the trace
+    # image draws it once, for the lowest owner label.
+    traces = result[4][1]
+    classes = result[-2].data[0]
+    values = NeuriteTopologyClass.value_table()
+    crossing_pixels = np.argwhere(classes == values["crossing"])
+    assert len(crossing_pixels) >= crossing_count
+    edge_pixels_by_owner = defaultdict(set)
+    for edge in result[-1].edges:
+        owner = edge.feature_mapping()["neuron_label"]
+        edge_pixels_by_owner[owner].update(map(tuple, np.rint(edge.coordinates).astype(int)))
+    for pixel in map(tuple, crossing_pixels):
+        owners = {owner for owner, pixels in edge_pixels_by_owner.items() if pixel in pixels}
+        assert len(owners) >= 2
+        assert traces[pixel] == min(owners)
+    assert not np.any(
+        (classes == values["branch_point"])
+        & ndi.binary_dilation(classes == values["crossing"], iterations=2)
+    )
+    expected_branch_points = sum(row["branches"] for row in together)
+    assert (np.count_nonzero(classes == values["branch_point"]) > 0) == (
+        expected_branch_points > 0
+    )
+
+
+def test_crossing_signal_counts_for_every_neuron_passing_through_it():
+    neurons = _CROSSING_SCENES["orthogonal"]
+    crossing = (64, 75)
+    _, together = _run_scene(neurons, bright_pixels=(crossing,))
+    for neuron, row in zip(neurons, together):
+        _, (alone,) = _run_scene((neuron,), bright_pixels=(crossing,))
+        assert row["mean_outgrowth_intensity"] > 700.0
+        assert row["mean_outgrowth_intensity"] == pytest.approx(
+            alone["mean_outgrowth_intensity"]
+        )
+
+
+@pytest.mark.parametrize(
+    "daughters",
+    [
+        # A T: the shaft ends where two collinear daughters leave (3 arms).
+        (((40, 80), (88, 80)),),
+        # Two daughters leaving one shaft point on opposite sides at 60°.
+        (((64, 80), (43, 92)), ((64, 80), (85, 92))),
+    ],
+    ids=["T", "same_point_60_degrees"],
+)
+def test_single_neuron_bifurcation_is_not_a_crossing(daughters):
+    shaft_end = (64, 80) if len(daughters) == 1 else (64, 120)
+    neuron = ((64, 20), (((64, 28), shaft_end), *daughters))
+    result, (row,) = _run_scene((neuron,))
+    classes = result[-2].data[0]
+    values = NeuriteTopologyClass.value_table()
+    assert _rows(result[1])[0]["resolved_crossovers"] == 0
+    assert not np.any(classes == values["crossing"])
+    # Both daughters stay owned: the trace keeps their full length.
+    traces = result[4][1]
+    for start, end in daughters:
+        rr, cc = line(*start, *end)
+        assert np.count_nonzero(traces[rr, cc] == row["cell"]) >= len(rr) - 4
+    if len(daughters) == 1:
+        assert row["branches"] == 1
+        assert np.any(classes == values["branch_point"])
+
+
+def test_collinear_opposite_daughters_stay_an_unowned_crossing():
+    """Open owner decision, default kept: a shaft with two collinear daughters
+    leaving one point on opposite sides is the same image as an unrooted
+    neurite crossing the shaft (``test_unrooted_crossing_arm_is_not_reported_as_a_branch``).
+    It stays a crossing and the daughters stay unowned."""
+    neuron = ((64, 20), (((64, 28), (64, 120)), ((40, 80), (88, 80))))
+    result, (row,) = _run_scene((neuron,))
+    assert row["branches"] == 0
+    traces = result[4][1]
+    assert np.count_nonzero(traces[:, 80]) == 1
 
 
 def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
@@ -2653,7 +2807,7 @@ def test_signal_supported_repair_reserves_core_from_unrelated_earlier_owner():
         path_coordinates=(np.array([[20, x] for x in range(5, 20)]),
                           np.array([[20, x] for x in range(21, 36)]),
                           np.array([[20, 19], [20, 20], [20, 21]])),
-        resolved_crossings=(_ResolvedCrossing(0, (0, 1), (2,)),),
+        resolved_crossings=(_ResolvedCrossing(0, ((0, 1), (1, 0)), (2,)),),
     )
     repaired = _repair_signal_supported_skeleton(
         labels, _declared_shaft_admission(response), regions, bodies, minimum_response=100.0,
@@ -2676,7 +2830,7 @@ def test_crossing_resolution_keeps_branch_arms_in_shared_support_declaration():
     topology = replace(
         _empty_topology(), path_owners=np.array([1, 1, 2, 2, 2, 0]),
         path_coordinates=tuple(np.array([[4, 5]]) for _ in range(6)),
-        resolved_crossings=(_ResolvedCrossing(0, (0, 1, 2, 3, 4), (5,)),),
+        resolved_crossings=(_ResolvedCrossing(0, tuple((path, 0) for path in range(5)), (5,)),),
     )
     assert topology.crossing_paths == frozenset({0, 1})
     assert topology.resolved_crossings[0].supports_owner(2, topology.path_owners)

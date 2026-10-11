@@ -42,6 +42,7 @@ from openhcs.processing.materialization import (
     prepare_materialization,
 )
 from openhcs.processing.materialization.core import _WRITERS_BY_OPTIONS
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class CsvOnlyMemoryBackend(MemoryStorageBackend):
@@ -59,7 +60,7 @@ def test_rendered_batch_reuses_exact_outputs_after_logical_payload_mutates(
         rows,
         str(tmp_path / "measurements"),
         manager,
-        ("disk",),
+        ("disk",), output_plan=materialization_output_plan()
     )
     original_outputs = batch.outputs
     rows[0]["Area"] = 999
@@ -96,7 +97,7 @@ def test_saved_outcomes_include_only_backend_accepted_outputs(tmp_path):
         [{"Area": 42}],
         str(tmp_path / "measurements"),
         manager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
 
     outcome = batch.save()
@@ -114,7 +115,7 @@ def test_failed_save_does_not_return_a_successful_outcome(tmp_path, monkeypatch)
         [{"Area": 42}],
         str(tmp_path / "measurements"),
         manager,
-        ("disk",),
+        ("disk",), output_plan=materialization_output_plan()
     )
 
     def failed_save(*_args, **_kwargs):
@@ -162,7 +163,7 @@ class FrozenWorkerContext(ProcessingContext):
         self.released = True
 
 
-@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode))
+@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode.__subclasses__()))
 def test_worker_exports_actual_step_outcomes_after_resource_release(
     tmp_path, monkeypatch, mode
 ):

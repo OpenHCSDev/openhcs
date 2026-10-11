@@ -29,6 +29,7 @@ from openhcs.core.xdg_paths import get_data_file_path
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionLifetime,
+    PersistedLifetime,
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
@@ -433,7 +434,7 @@ class CustomFunctionManager(CustomFunctionSourceFilesMixin):
                 return 1
             CustomFunctionRuntimeRegistry.publish(
                 metadata,
-                CustomFunctionLifetime.PERSISTED,
+                PersistedLifetime,
             )
 
         functions = [metadata.func]

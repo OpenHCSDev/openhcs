@@ -10,11 +10,13 @@ import pytest
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
     ArtifactSpecRef,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -109,13 +111,13 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingOrigin,
+    SourceArtifactRole,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -679,13 +681,13 @@ def _pipeline_start_contains_binding(alias):
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.CONTAINS,
+                    SourceFileName,
+                    TextContains,
                     alias,
                 ),
             )
         ),
-        origin=SourceBindingOrigin.PIPELINE_START,
+        origin=FromPipelineStart,
     )
 
 
@@ -916,10 +918,8 @@ def _calculate_math_contract(
     operand1_object_name: str | None = None,
     operand2_object_name: str | None = None,
 ) -> CallableContract:
-    from openhcs.core.artifacts import (
-        ArtifactSpecCollection,
-        GroupLineageSourceRelation,
-    )
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import GroupLineageSourceRelation
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
@@ -4052,7 +4052,7 @@ def test_cellprofiler_adapter_allows_measurements_for_source_bound_objects():
             NamedSourceBinding(
                 alias=NUCLEI,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         )
     )

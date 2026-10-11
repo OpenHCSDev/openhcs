@@ -5,7 +5,7 @@ from objectstate import ObjectState
 from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.constants.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPreviousStep
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     MaterializedOutputPlan,
@@ -15,7 +15,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyStepMaterializationConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     VFSConfig,
 )
@@ -111,7 +111,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
         pipeline_config=SimpleNamespace(
             vfs_config=VFSConfig(
                 read_backend=Backend.DISK,
-                materialization_backend=MaterializationBackend.DISK,
+                materialization_backend=MaterializeToDisk,
             ),
             path_planning_config=effective_config.path_planning_config,
         ),
@@ -124,7 +124,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
         [
             SimpleNamespace(
                 processing_config=SimpleNamespace(
-                    input_source=InputSource.PREVIOUS_STEP
+                    input_source=ReadPreviousStep
                 )
             )
         ],

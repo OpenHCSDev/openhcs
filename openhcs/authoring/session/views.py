@@ -221,10 +221,8 @@ class DatasetActivity:
     @property
     def status_prefix(self) -> str:
         phase = self.debug_phase
-        if phase is not None:
-            prefix = PlateStatusPresenter.build_debug_status_prefix(debug_phase=phase)
-            if prefix:
-                return prefix
+        if phase is not None and phase.status_prefix:
+            return phase.status_prefix
         return PlateStatusPresenter.build_status_prefix(
             orchestrator_state=self.orchestrator_state,
             is_init_pending=self.scope_id in self.session.init_pending,
@@ -310,10 +308,10 @@ class DatasetListView(SessionView):
             execution_active=activity.execution_active,
             status_prefix=activity.status_prefix,
             orchestrator_state=(
-                None if orchestrator_state is None else orchestrator_state.value
+                None if orchestrator_state is None else orchestrator_state.name
             ),
             execution_id=activity.execution_id,
-            terminal_status=None if terminal is None else terminal.value,
+            terminal_status=None if terminal is None else terminal.name,
             runtime_state=None if runtime is None else runtime.state.state_name,
             runtime_percent=None if runtime is None else runtime.percent,
             queue_position=None if runtime is None else runtime.queue_position,
@@ -321,7 +319,7 @@ class DatasetListView(SessionView):
             output_root=relation.output_root,
             source_scope_id=relation.source_scope_id,
             source_root=relation.source_root,
-            debug_phase=None if debug_phase is None else debug_phase.value,
+            debug_phase=None if debug_phase is None else debug_phase.name,
             debug_session_id=activity.debug_session_id,
             finished_execution_id=finished_id,
             finished_execution_error=(

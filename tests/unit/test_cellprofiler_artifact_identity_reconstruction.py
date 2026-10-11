@@ -7,15 +7,13 @@ from dataclasses import replace
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
@@ -32,7 +30,7 @@ from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactS
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -179,7 +177,7 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
             NamedSourceBinding(
                 "Cells",
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
                 component_identity=(object_scope,),
             ),
         ),

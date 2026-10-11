@@ -19,10 +19,8 @@ from typing import (
     Optional,
 )
 
-from openhcs.constants.constants import Backend, OrchestratorState
-from openhcs.core.artifacts import (
-    SpecialArtifactType,
-)
+from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
+from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
@@ -45,6 +43,8 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
+    MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
@@ -146,7 +146,7 @@ class BundleExecutionResults(dict[str, ExecutionResult]):
     def require_success(self) -> None:
         """Reject failed axes at terminal boundaries without dropping their outputs."""
         failures = [
-            f"{axis_id}: {result.status.value}: {result.error_message or 'no error detail'}"
+            f"{axis_id}: {result.status.name}: {result.error_message or 'no error detail'}"
             for axis_id, result in self.items()
             if not result.is_success()
         ]
@@ -170,7 +170,7 @@ class BundleExecutionRequest(ProgressExecutionContext):
     visualizer: ExecutionVisualizerABC | None
     log_file_base: Optional[str]
     progress_queue: ProgressQueue
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
     debug_execution_policy: DebugExecutionPolicy
     prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
 
@@ -236,7 +236,7 @@ def execute_bundle_request(
     for context in validated.compiled_contexts.values():
         context.reset_completed_step_outputs()
     try:
-        orchestrator._state = OrchestratorState.EXECUTING
+        orchestrator._state = OrchestratorExecuting
         logger.info(
             f"Starting execution for {len(validated.compiled_contexts)} axis values "
             f"with max_workers={validated.actual_max_workers}."
@@ -360,11 +360,11 @@ def execute_bundle_request(
             ),
         )
     except ExecutionCancelledError:
-        orchestrator._state = OrchestratorState.READY
+        orchestrator._state = OrchestratorReady
         logger.info("Compiled bundle execution cancelled")
         raise
     except Exception as exc:
-        orchestrator._state = OrchestratorState.EXEC_FAILED
+        orchestrator._state = OrchestratorExecFailed
         logger.error(f"Failed to execute compiled bundle: {exc}")
         raise
     finally:
@@ -395,12 +395,12 @@ def validate_bundle_execution(
     dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
     if (
         dataset_step_indexes
-        and request.runtime_observation_mode is RuntimeObservationMode.OMIT
+        and request.runtime_observation_mode is OmitRuntimeRecords
     ):
         raise ValueError(
-            "Dataset-scoped FunctionSteps require RuntimeObservationMode."
-            "MERGE_INTO_PARENT so compiled artifact inputs are available after "
-            "worker execution."
+            "Dataset-scoped FunctionSteps require a runtime observation mode "
+            "that returns records, so compiled artifact inputs are available "
+            "after worker execution."
         )
     runtime_environment = request.execution_bundle.runtime_environment
     return ValidatedBundleExecution(
@@ -656,7 +656,7 @@ def execute_dataset_scoped_steps(
                 context_key=context_key,
                 context=context,
                 records=records,
-                runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+                runtime_observation_mode=MergeAllRuntimeRecords,
                 outputs=StepExecutionObservation.combine(
                     observations_by_context[context_key]
                 ),
@@ -1166,7 +1166,7 @@ class ViewerSettlementProgressObserver:
             percent=percent,
             context={
                 "viewer_port": self.viewer_port,
-                **progress.to_wire_mapping(),
+                **progress.to_dict(),
             },
         )
 
@@ -1252,6 +1252,6 @@ def project_execution_state(
     """Project worker-lane results back into orchestrator lifecycle state."""
 
     if execution_results.is_success():
-        orchestrator._state = OrchestratorState.COMPLETED
+        orchestrator._state = OrchestratorCompleted
     else:
-        orchestrator._state = OrchestratorState.EXEC_FAILED
+        orchestrator._state = OrchestratorExecFailed

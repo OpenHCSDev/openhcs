@@ -49,7 +49,7 @@ from openhcs.core.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 
 
 class RenumberChoice(Enum):

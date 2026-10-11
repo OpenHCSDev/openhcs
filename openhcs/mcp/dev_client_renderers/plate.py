@@ -25,7 +25,6 @@ from openhcs.agent.dto.plate import (
     PlateInspectionResultFileRecordSummary,
     PlatePathInspectionResult,
     SelectedPlateFileQueryResult,
-    SelectedPlateFileQueryTarget,
     SelectedPlateFileStreamResult,
     SelectedPlateImageInspectionResult,
     SelectedPlateImageSampleResult,
@@ -843,7 +842,7 @@ class SelectedPlateRenderer(McpDevOutputRenderer):
             "Selected plate: "
             f"{cls.text(None if row is None else row.name)} "
             f"root={cls.text(None if row is None else row.root)} "
-            f"target={payload.target.value}"
+            f"target={payload.target.name}"
         )
 
     @classmethod
@@ -876,8 +875,8 @@ class SelectedPlateImagesRenderer(SelectedPlateRenderer):
             return "\n".join(lines)
         target_prefix = (
             ""
-            if payload.target is SelectedPlateFileQueryTarget.SELECTED
-            else f"--target {payload.target.value} "
+            if payload.target.is_selected_row_root
+            else f"--target {payload.target.name} "
         )
         lines.append(
             PlateInspectionRenderer.inspection_text(
@@ -910,7 +909,7 @@ class SelectedPlateFilesRenderer(SelectedPlateRenderer):
         lines.append(PlateFileQueryRenderer.render_payload(query, options))
         row = cls.selected_row(payload)
         if (
-            payload.target is SelectedPlateFileQueryTarget.SELECTED
+            payload.target.is_selected_row_root
             and query.total_count == 0
             and row is not None
             and row.output_root

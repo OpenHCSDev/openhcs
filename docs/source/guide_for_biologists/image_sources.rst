@@ -244,10 +244,9 @@ produced on another channel of the same declared image set, use the existing
 
 .. code-block:: python
 
-   from openhcs.core.artifacts import (
-       ArtifactSpec, ImageArtifactType, InputImageSetContextSourceRelation,
-       ObjectLabelsArtifactType,
-   )
+   from openhcs.core.artifacts.specs import ArtifactSpec
+   from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+   from openhcs.core.artifacts.relations import InputImageSetContextSourceRelation
 
    SIGNAL = ArtifactSpec.input(
        "Signal", ImageArtifactType, parameter_name="signal",

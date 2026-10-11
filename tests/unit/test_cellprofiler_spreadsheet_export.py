@@ -13,18 +13,16 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
     SpatialGridArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import FunctionInvocationKey
@@ -73,7 +71,8 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.module_settings import (
-    ModuleSettingCoverageStatus,
+    SettingBound,
+    SettingIgnored,
 )
 from openhcs.interop.cellprofiler.worm_measurements import (
     WormControlPointAxis,
@@ -104,6 +103,7 @@ from openhcs.processing.materialization import (
 )
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -251,8 +251,8 @@ def test_export_to_spreadsheet_binds_scalars_and_repeated_file_rows() -> None:
     )
     assert not bound.unmapped_kwargs
     assert {record.status for record in bound.setting_coverage} <= {
-        ModuleSettingCoverageStatus.BOUND,
-        ModuleSettingCoverageStatus.IGNORED,
+        SettingBound,
+        SettingIgnored,
     }
 
 
@@ -585,7 +585,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
             data=bundle,
             path="/analysis/ExportToSpreadsheet_1_files.pkl",
             filemanager=filemanager,
-            context=context,
+            context=context, output_plan=materialization_output_plan()
         )
         assert len(outputs) == 1
         assert outputs[0].path == "/analysis/Image.csv"
@@ -596,7 +596,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
             path="/analysis/ExportToSpreadsheet_1_files.pkl",
             filemanager=filemanager,
             backends=("memory",),
-            context=context,
+            context=context, output_plan=materialization_output_plan()
         )
     assert context.runtime_step_outputs is None
     assert primary_path == "/analysis/Image.csv"

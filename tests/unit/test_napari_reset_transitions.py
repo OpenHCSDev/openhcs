@@ -21,7 +21,7 @@ from openhcs.core.config import (
     NapariDimensionMode,
     NapariDisplayConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.napari_streaming_handlers import (
@@ -50,7 +50,7 @@ from openhcs.runtime.napari_viewer_server import (
 )
 from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
@@ -61,7 +61,7 @@ from openhcs.runtime.viewer_controls import (
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.runtime.viewer_protocol import (
-    OpenHCSViewerControlMessageType, ViewerSettlePhase,
+    OpenHCSViewerControlMessageType, SettlementComplete, SettlementFailed, SettlementRunning,
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
@@ -129,7 +129,7 @@ def enqueue(
         colour_mode=NapariDimensionMode.LAYER,
         stack_mode=(NapariDimensionMode.STACK if z_domain else NapariDimensionMode.LAYER),
         time_mode=NapariDimensionMode.LAYER,
-        variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
+        variable_size_handling=PadToMaxSize,
     )
     semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
@@ -549,9 +549,9 @@ def test_selected_retirement_uses_registered_queue_and_releases_payloads(receive
     # Genuine original terminal settlement, not a manually fabricated complete flag.
     receiver.display_pipeline.settlement_progress()
     app = QApplication.instance()
-    while receiver.layer_route_state.existing_settlement_progress().phase is ViewerSettlePhase.RUNNING:
+    while receiver.layer_route_state.existing_settlement_progress().phase is SettlementRunning:
         app.processEvents()
-    assert receiver.layer_route_state.existing_settlement_progress().phase is ViewerSettlePhase.COMPLETE
+    assert receiver.layer_route_state.existing_settlement_progress().phase is SettlementComplete
     native = receiver.layer_route_state.layer(route)
     native_ref = weakref.ref(native)
     receiver.batch_processors.get_or_create(layer_key=route, napari_server=receiver)
@@ -693,7 +693,7 @@ def test_terminal_failed_candidate_is_retirable_without_erasing_other_failure(re
     receiver.layer_route_state.record_update_error(keep, ValueError("other original failure"))
     result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, route))
     assert result.applied and not result.errors
-    assert settlement.phase is ViewerSettlePhase.FAILED
+    assert settlement.phase is SettlementFailed
     assert not settlement.updates
     assert receiver.layer_route_state.layer_update_errors == {keep: "other original failure"}
     assert keep in receiver.layer_route_state.layers

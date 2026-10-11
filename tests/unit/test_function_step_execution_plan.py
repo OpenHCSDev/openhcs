@@ -17,15 +17,16 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    InputStackBroadcastSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    InputStackBroadcastSourceRelation,
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.function_patterns import (
@@ -37,15 +38,13 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import (
-    StepInputDependency,
-    StepInputDependencyKind,
-)
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )
 from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def noop(image):
@@ -72,7 +71,7 @@ def _compiled_plan(**overrides):
         output_dir=Path("/tmp/output"),
         variable_components=(Microscopy.Site,),
         group_by=None,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="plate::functionstep_1",
         ),
@@ -131,7 +130,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert plan.step_scope_id == "plate::functionstep_2"
     assert plan.execution_group_scope.keys == ("2",)
     assert plan.variable_components == (Microscopy.Site,)
-    assert plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
+    assert isinstance(plan.main_input_dependency, StepOutputInput)
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
     assert plan.source_binding_plan == CompiledSourceBindingPlan()
     assert plan.device_id_for(plan.input_memory_type) is None
@@ -401,6 +400,7 @@ def test_build_analysis_filename_falls_back_to_axis_and_pipeline_position_withou
             "measurements",
             plan,
             context=context,
+            output_plan=materialization_output_plan("measurements"),
         )[0]
         == "A01_measurements_step7.roi.zip"
     )

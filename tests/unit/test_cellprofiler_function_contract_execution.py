@@ -15,11 +15,8 @@ import openhcs.core.callable_contract as callable_contract_module
 
 from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle, compose_aligned_image_payload)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableDeclaration,

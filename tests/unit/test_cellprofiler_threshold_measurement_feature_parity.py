@@ -7,12 +7,8 @@ from typing import get_type_hints
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy

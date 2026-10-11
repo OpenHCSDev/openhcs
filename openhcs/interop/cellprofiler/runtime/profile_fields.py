@@ -6,7 +6,7 @@ import numpy as np
 
 from openhcs.core.runtime_profile import RuntimeProfileFieldValue
 from arraybridge import ArrayGeometry
-from openhcs.core.artifacts import ArtifactSpec
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,
@@ -31,7 +31,7 @@ def object_label_stage_profile_fields(
         ("stage", stage),
         ("object", object_spec.name),
         ("source_image_name", measurement_image.source_image_name),
-        ("reference_domain", measurement_image.reference_domain.value),
+        ("reference_domain", measurement_image.reference_domain.name),
         ("value_type", type(value).__name__),
         ("data_type", type(label_data).__name__),
         ("data_shape", _shape_for(label_data)),
@@ -62,7 +62,7 @@ def dense_label_argument_stage_profile_fields(
         ("stage", stage),
         ("object", object_spec.name),
         ("source_image_name", measurement_image.source_image_name),
-        ("reference_domain", measurement_image.reference_domain.value),
+        ("reference_domain", measurement_image.reference_domain.name),
         ("value_type", type(value).__name__),
         ("data_type", type(data).__name__),
         ("data_shape", _shape_for(data)),

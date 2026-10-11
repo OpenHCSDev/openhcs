@@ -3,9 +3,9 @@ from openhcs.processing.materialization.persistence import TerminalMaterializati
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -18,11 +18,12 @@ from openhcs.core.runtime_exports import RuntimeExportExpectation
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     MaterializationSpec,
     ROIOptions,
     materialize,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class DerivedImageArtifactType(ImageArtifactType):
@@ -78,11 +79,11 @@ def test_object_label_output_gets_terminal_roi_and_label_materialization() -> No
     assert materialization.outputs == (
         ROIOptions(
             min_area=1,
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
         ImageFileOptions(
             filename_suffix=".labels.tif",
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
     )
     assert materialization.participates_in_persistent_materialization()
@@ -111,7 +112,7 @@ def test_terminal_measurement_output_gets_artifact_named_csv_materialization() -
     assert isinstance(materialization, TerminalMaterializationSpec)
     assert materialization.outputs == (
         CsvOptions(
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
     )
 
@@ -169,7 +170,7 @@ def test_scalar_image_materialization_preserves_planned_vfs_path() -> None:
         data=np.zeros((4, 5), dtype=np.uint16),
         path="/output/A01_s001_w1_z001_t001.tif",
         filemanager=filemanager,
-        backends=("memory",),
+        backends=("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/output/A01_s001_w1_z001_t001.tif"

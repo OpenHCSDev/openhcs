@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.steps.function_runtime import (

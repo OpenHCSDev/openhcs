@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,

@@ -20,13 +20,14 @@ from typing import (
 import numpy as np
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    NoMainFlowOutput,
-    ImageArtifactType,
     ArtifactSpecRef,
+    MAIN_FLOW,
 )
+from openhcs.core.artifacts.payloads import NoMainFlowOutput
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
@@ -105,9 +106,9 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceBindingOrigin,
+    FromPipelineStart,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayload,
@@ -127,7 +128,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
@@ -807,8 +808,7 @@ class PatternGroupExecutionRequest(
                 tuple(full_file_paths),
                 (
                     Backend.MEMORY
-                    if plan.main_input_dependency.kind
-                    is StepInputDependencyKind.STEP_OUTPUT
+                    if isinstance(plan.main_input_dependency, StepOutputInput)
                     else Backend(plan.read_backend)
                 ),
             ).load_images(context.filemanager, zarr_config=plan.zarr_config)
@@ -872,8 +872,7 @@ class PatternGroupExecutionRequest(
     ) -> list[str]:
         """Constrain grouped executions to files from the current component."""
         if (
-            self.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
+            isinstance(self.execution_plan.main_input_dependency, StepOutputInput)
             or self.compiled_group.runtime_domain
             is RuntimeInvocationDomain.ARTIFACT_MANAGED
         ):
@@ -908,8 +907,7 @@ class PatternGroupExecutionRequest(
         """Constrain the loaded main stack to declared image source bindings."""
 
         if (
-            self.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
+            isinstance(self.execution_plan.main_input_dependency, StepOutputInput)
         ):
             return matching_files
 
@@ -919,7 +917,7 @@ class PatternGroupExecutionRequest(
         bindings = tuple(
             binding
             for binding in source_binding_plan.bindings
-            if binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            if binding.projection_role is PrimaryPlaneRole
         )
         if not bindings:
             return matching_files
@@ -1783,9 +1781,9 @@ class FunctionCoreExecutor(FunctionCoreDebugMixin):
         if (
             binding is None
             or self.invocation.key.position != 0
-            or self.group_data.execution_plan.main_input_dependency.kind
-            is not StepInputDependencyKind.PIPELINE_START
-            or binding.origin is not SourceBindingOrigin.PIPELINE_START
+            or not self.group_data.execution_plan.main_input_dependency
+            .uses_pipeline_start_anchors()
+            or binding.origin is not FromPipelineStart
             or request.context is not self.group_data.context
         ):
             return None
@@ -2228,7 +2226,7 @@ class FunctionCoreExecutor(FunctionCoreDebugMixin):
         return ImageArtifactType.contextualize_output_from_projector(
             output_source_payload,
             main_output,
-            None,
+            MAIN_FLOW,
             self.plane_projection,
         )
 

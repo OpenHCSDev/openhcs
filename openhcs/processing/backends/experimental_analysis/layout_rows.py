@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 
 
 class ExperimentalLayoutRowRole:
@@ -34,15 +33,3 @@ class ExperimentalLayoutRowRole:
         return None
 
 
-class ExperimentalAnalysisScope(Enum):
-    """Stable workbook declarations for supported experimental result formats."""
-
-    CX5 = "EDDU_CX5"
-    METAXPRESS = "EDDU_metaxpress"
-
-    @classmethod
-    def coerce(cls, scope: object) -> "ExperimentalAnalysisScope":
-        for member in cls:
-            if scope == member or scope == member.value:
-                return member
-        raise ValueError(f"microscope {scope} not known")

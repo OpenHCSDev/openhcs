@@ -56,7 +56,7 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponse,
-    ViewerSettlePhase,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from tests.unit.viewer_axes_fixture import STREAM_AXES
@@ -236,15 +236,13 @@ def test_fiji_settlement_tracks_queued_and_bounded_native_work() -> None:
 
     settlement.queue_items(2)
     settlement.queue_items(3)
-    queued = ViewerSettleProgress.from_response(
-        ViewerControlResponse(
+    queued = ViewerSettleProgress.from_dict(
             fiji_control_server(settlement=settlement).handle_control_message(
                 {"type": ViewerControlMessageType.SETTLE.value}
             )
         )
-    )
 
-    assert queued.phase is ViewerSettlePhase.RUNNING
+    assert queued.phase is SettlementRunning
     assert queued.completed_update_count == 0
     assert queued.total_update_count == 5
     assert queued.active_route is None
@@ -258,14 +256,14 @@ def test_fiji_settlement_tracks_queued_and_bounded_native_work() -> None:
     settlement.complete_active_work_unit(route)
     active = settlement.progress()
 
-    assert active.phase is ViewerSettlePhase.RUNNING
+    assert active.phase is SettlementRunning
     assert active.active_route == route
     assert active.active_route_work_unit_count == 2
 
     settlement.complete_active_update(route)
     between_batches = settlement.progress()
 
-    assert between_batches.phase is ViewerSettlePhase.RUNNING
+    assert between_batches.phase is SettlementRunning
     assert between_batches.completed_update_count == 5
     assert between_batches.total_update_count == 9
 

@@ -26,7 +26,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
 from openhcs.core.image_payload_execution_mode import NaturalExecution
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
@@ -60,7 +60,7 @@ def _gray_creator_session(tmp_path):
         step_index=1,
         step_name="SplitComposedRoles",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="step-0",
         ),
@@ -353,7 +353,7 @@ def test_color_to_gray_does_not_preserve_consumed_payload_axis_for_later_consume
         consumer,
         step_index=2,
         step_name="RejectSecondScalarSplit",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="step-1",
         ),

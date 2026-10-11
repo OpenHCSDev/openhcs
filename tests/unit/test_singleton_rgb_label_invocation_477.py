@@ -3,11 +3,8 @@
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import (

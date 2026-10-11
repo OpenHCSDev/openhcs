@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
 from openhcs.core.source_bindings import (

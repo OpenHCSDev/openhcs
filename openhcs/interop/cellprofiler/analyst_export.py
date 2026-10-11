@@ -27,10 +27,9 @@ from typing import cast, Any, ClassVar, Literal
 import numpy as np
 from PIL import Image
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
@@ -45,13 +44,12 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.equivalence.measurement_rows import measurement_qualifier_field_names
-from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     ColumnarRows,
 )
 from openhcs.core.runtime_measurements import (
+    RuntimeScopedMeasurementTable,
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
@@ -523,7 +521,7 @@ class CPAImageChannelSpec:
             if spec.artifact_type is not ImageArtifactType:
                 raise TypeError(
                     "CPAImageChannelSpec.defaults_for_artifacts requires image "
-                    f"artifacts, got {spec.artifact_type.require_value()}:{spec.name}."
+                    f"artifacts, got {spec.artifact_type.value}:{spec.name}."
                 )
         specs_by_ref = {
             spec.ref().for_plan_type(ArtifactInputPlan): spec for spec in specs
@@ -754,9 +752,7 @@ class CPATableRowProjection:
             default_subject=default_subject,
             default_scope=table.subject.scope,
             object_id_field=table.subject.object_id_field,
-            qualifier_field_names=measurement_qualifier_field_names(
-                CELLPROFILER_MEASUREMENT_DIALECT
-            ),
+            qualifier_field_names=CELLPROFILER_MEASUREMENT_DIALECT.row_qualifier_field_names(),
         )
         object_subjects = accumulator.object_subjects()
         object_subject_set = frozenset(object_subjects)

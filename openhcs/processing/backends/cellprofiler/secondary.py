@@ -19,12 +19,10 @@ from openhcs.interop.cellprofiler.object_label_variants import (
     UneditedLabels,
 )
 from openhcs.constants.constants import MemoryType
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.relations import (
     InputGroupLineageSourceRelation,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import processing_prepare
@@ -1081,16 +1079,8 @@ class IdentifySecondaryObjectsReplacementPrimarySourceRelation(
     relation_key: ClassVar[str] = (
         "identify_secondary_objects_replacement_primary_source"
     )
+    source_artifact_type = ObjectLabelsArtifactType
     target_artifact_type = ObjectLabelsArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "IdentifySecondaryObjects replacement-primary output requires an "
-                f"object-label source, got {self.source.artifact_type.value}:"
-                f"{self.source.name}."
-            )
 
 
 @dataclass(frozen=True, slots=True)

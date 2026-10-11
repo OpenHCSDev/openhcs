@@ -7,11 +7,8 @@ import pickle
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.orchestrator.execution_result import (
@@ -55,6 +52,8 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from tests.unit.test_materialization_core import _viewer_stream_backend_kwargs
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _source(sites):
@@ -108,7 +107,7 @@ def test_mixed_acquired_and_reduced_batch_uses_distinct_original_display_scopes(
     reduced = ImageArtifactType.contextualize_output(
         source,
         declaration,
-        None,
+        MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
         ),
@@ -257,6 +256,7 @@ def _saved_table(tmp_path, *, producer, fields):
         table,
         str(tmp_path / f"Cells_{producer}"),
         filemanager,
+        output_plan=materialization_output_plan(),
     )
     for output in outputs:
         # Persist exactly the original writer's content and declared path.

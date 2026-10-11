@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from openhcs.core.execution_state import TerminalExecutionStatus
+from openhcs.core.execution_state import ExecutionCompleted
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     consolidate_multi_plate_summaries,
 )
@@ -26,7 +26,7 @@ def consolidate_batch_results(session: "Session") -> None:
     summary_paths: list[str] = []
     names: list[str] = []
     for scope_id, status in session.batch.terminal_items():
-        if status is not TerminalExecutionStatus.COMPLETE:
+        if status is not ExecutionCompleted:
             continue
         root = Path(scope_id)
         base = (
