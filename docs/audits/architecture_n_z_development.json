@@ -1944,7 +1944,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "PyQt desktop main window composition."
       },
       {
@@ -1958,6 +1958,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/architecture/tui_system.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/tui_system.rst in full and compared it against the changed authorities: pyproject.toml, openhcs/pyqt_gui/main.py; pyproject.toml declares no Textual dependency, main.py only swapped selection and update-check enum members for class families, and docs/source/user_guide/index.rst and docs/archive exist.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/tui_system.rst in full and compared it against the changed authorities: pyproject.toml, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_ui_config_lifecycle.py; pyproject.toml still has no Textual dependency and the openhcs-gui gui-script points at openhcs.pyqt_gui.__main__:main; main.py changes are U3 moves of generic Qt machinery; the lifecycle test still guards that openhcs/textual_tui does not return (its shortcut tests moved to pyqt-reactive); docs/archive still exists. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/tui_system.rst against B6's later changes to openhcs/pyqt_gui/main.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2060,7 +2061,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "OpenHCSMainWindow.set_ui_config consumer reconciliation and rollback, and preview-policy propagation to both managers."
       },
       {
@@ -2137,6 +2138,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/architecture/ui_services_architecture.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/ui_services_architecture.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/config.py, openhcs/pyqt_gui/app.py, openhcs/desktop/update.py, openhcs/pyqt_gui/main.py, openhcs/pyqt_gui/widgets/plate_manager.py; E1 turned the startup-readiness state, the update-check origin (ExplicitUpdateCheck/StartupUpdateCheck), the selection scope (SelectedItems/AllItems) and OrchestratorState into class families; the page names none of them and its statements on OpenHCSPyQtApp shutdown, UIConfig fields, set_ui_config, the update-check preference and Plate Manager's session rendering are unaffected; every named class was grepped and exists; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/ui_services_architecture.rst in full and compared it against the changed authorities: pyqt_gui/services/window_handlers.py (ScopeKey separator, OpenHCSConfigWindow over pyqt-reactive ConfigWindow, session event connection), tests/unit/pyqt_gui/test_ui_config_lifecycle.py (shortcut tests removed), pyqt_gui/main.py (pyqt-reactive ShortcutLifecycle, DockLayoutStore/DockPane, TimeTravelCommands/TimeTravelNavigator) and widgets/plate_manager.py (GuiEventBusBroadcaster removed, PathCacheKey and external-editor policy from pyqt-reactive); corrected the shortcut-lifecycle and configuration-window transaction owners and checked the save transaction order in pyqt-reactive ConfigWindow.save_config against the page's rollback description.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/ui_services_architecture.rst against B6's later changes to openhcs/pyqt_gui/services/ui_bridge_session_actions.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2492,7 +2494,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Projects the configured endpoint snapshot into its dedicated right-hand indicator, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -2529,6 +2531,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/architecture/zmq_server_browser_system.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_server_browser_system.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py; the diff swaps selection and update-check enum members for class families and touches no endpoint-snapshot, status-bar or server-browser code; the listed module paths exist and every named class was grepped; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_server_browser_system.rst in full and compared it against the changed authorities: pyqt_gui/main.py (shortcut, dock and time-travel machinery moved to pyqt-reactive; endpoint indicator projection unchanged) and core/progress/runtime_tree.py (K6 ProgressStream classes replace channel helpers); verified every named class (ZMQServerBrowserWidgetABC, EndpointObservationSnapshot, RuntimeExecutionTopology, RuntimeTreeProjectionBuilder, ProgressTreeBuilder, ExecutionProgressProjection, ServerRowPresenter, LiveServerTreeSync, EndpointShutdownService, ZMQClientService, ProgressUIConfig, EndpointClientSession), the primary module paths, and mean/explicit percent node policies on subject/worker vs partition/step/compilation nodes; no claim needed correction.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/zmq_server_browser_system.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/core/progress/runtime_tree.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -3287,7 +3290,7 @@
       },
       {
         "path": "openhcs/agent/dto/session.py",
-        "sha256": "730cbcfcda6c7d52a1c6e1d142ec2e7d721f32c51bb78c845a8a03201da70ba0",
+        "sha256": "5a261a14d3cd2880ecc14c2fc83f6e8664655799789f91a79e81f1fd40a8656d",
         "role": "Typed run request fields runtime_observation_export_path, runtime_observation_export_scope and submit_timeout_ms, and event_sequence results."
       },
       {
@@ -3354,6 +3357,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/agent/dto/session.py changed by black formatting only (AST-equal) after docs/source/development/mcp_development.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/development/mcp_development.rst in full and compared it against the changed authorities: openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_commands/ui.py, openhcs/agent/services/ui_bridge_service.py, openhcs/agent/dto/session.py, openhcs/authoring/session/session.py, openhcs/mcp/server.py, openhcs/runtime/zmq_execution_client.py, openhcs/pyqt_gui/services/ui_bridge_server.py and the two test modules (E1: poll status, orchestrator state, field filter, selection scope and export scope became class families); the page names no enum member; the selected-workflow wait policy, the session-operation tool names, the submit_timeout_ms budget, and the runtime-observation export checks (writable root, no existing path, `values`/`outcomes` spellings, scope.check_export_path before submission) still hold in the current files, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/mcp_development.rst in full and compared it against the changed authorities: openhcs/authoring/session/session.py, openhcs/runtime/zmq_execution_client.py and tests/unit/pyqt_gui/test_ui_agent_bridge.py (K6: debug commands, boundaries and progress phases/statuses became class families; debug control requests send request.to_dict() directly; U3: DockPane and ConfigCodeDocumentDriver moved to pyqt-reactive). The page names none of those types; rechecked the openhcs-mcp-dev entry point, every dev-client command and option it shows, the SessionOperation operation_ids behind the six named tools, openhcs_session_events/openhcs_session_datasets, execution_submission_timeout_ms on OpenHCSZMQConfig's zmqruntime base, UIConfigCacheEnvironment, the bridge/cache environment variables and OPENHCS_MCP_VERBOSE; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
@@ -3960,7 +3964,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "83d9eca90f2dca33ff8074bb768a24fadc5dfb1881855274eab9203b4cc41770",
+        "sha256": "0b5b3b025811df3b8075e51d605474b8be1e4b7f6fe873da82882e0232bf7dc2",
         "role": "Runtime conversion and invocation inside the compiled execution-framework device scope."
       },
       {
@@ -3977,6 +3981,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/core/steps/function_runtime.py changed by black formatting only (AST-equal) after docs/source/development/pyclesperanto_simple_implementation.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/development/pyclesperanto_simple_implementation.rst in full and compared it against the changed authorities: openhcs/processing/backends/processors/pyclesperanto_processor.py and openhcs/core/callable_contract.py (K2: artifact imports moved to openhcs.core.artifacts.specs/kinds/plans) and the current openhcs/core/steps/function_runtime.py; the example imports only openhcs.core.memory and openhcs.core.processing_contracts, both unchanged; Pure3DContract, PyclesperantoRegistry's runtime-owned output_image/output_image_matrix/device parameters and the runtime execution_device_scope still exist, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/pyclesperanto_simple_implementation.rst in full and compared it against the changed authorities: openhcs/core/processing_contracts.py and openhcs/core/callable_contract.py (K5: CallableMetadata replaced by CallableDeclaration, which CallableContract inherits), openhcs/core/steps/function_runtime.py (K6 debug boundary classes; main-flow source-binding plan no longer None) and tests/unit/test_unified_registry_runtime_payloads.py. The page names none of the changed types; rechecked the pyclesperanto decorator re-exported from openhcs.core.memory, Pure3DContract, and PyclesperantoRegistry's runtime-owned output_image, output_image_matrix and device parameters; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/pyclesperanto_simple_implementation.rst against B6's later changes to openhcs/processing/backends/processors/pyclesperanto_processor.py, openhcs/core/memory/decorators.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/steps/function_runtime.py, tests/unit/test_unified_registry_runtime_payloads.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",

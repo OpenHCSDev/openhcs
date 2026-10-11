@@ -1258,7 +1258,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Dock layout (system monitor above, Datasets and ZMQ server manager left, Pipeline Editor right), View/Tools/Help menus, and preview-policy application to both panes."
       },
       {
@@ -1380,6 +1380,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/basic_interface.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/basic_interface.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py, widgets/plate_manager.py, widgets/pipeline_editor.py, services/ui_bridge_windows.py, openhcs/pyqt_gui/config.py, openhcs/agent/services/ui_bridge_service.py, openhcs/authoring/session/views.py and the three test modules (E1: selection scope, orchestrator state, action status and update-check origin became class families; the error-dialog marker became a boolean); the page describes user-visible behaviour and names no changed type; all-plates versus selected code documents, Connect/Compile/Run/Stop control behaviour and the pane identities are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/basic_interface.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py, widgets/plate_manager.py, widgets/pipeline_editor.py, shared/services/pipeline_editor_workflows.py, services/ui_bridge_windows.py, openhcs/core/pipeline_document.py and their tests (U3: DockPane, DockLayoutStore, ShortcutLifecycle, time-travel navigation, path cache and the external-editor switch moved to pyqt-reactive, GlobalEventBus broadcasts replaced by session events, ScopeKey scope ids; L6: pipeline documents render through pycodify generate_python_source; K6 debug command classes). The page describes behaviour, not those classes; rechecked the dock arrangement (system monitor above, Datasets and ZMQ server manager stacked left, Pipeline Editor right), the plate_manager window identity, list_previews on UIConfig, and that PipelineDocument still requires pipeline_steps; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/basic_interface.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -1849,7 +1850,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -1866,6 +1867,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/index.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/index.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py and openhcs/demo/synthetic_plate_pipeline.py; both diffs are E1 enum-to-family renames (SelectedItems/AllItems, update-check origins, ReadPipelineStart, PadToMaxSize); the demo pipeline still declares eight steps and the page names no renamed symbol, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/index.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3: dock layout, shortcut lifecycle and time-travel navigation now come from pyqt-reactive); the page only routes readers and names no main-window mechanism, so no correction was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/index.rst against B6's later changes to openhcs/pyqt_gui/main.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2038,7 +2040,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Places Generate Synthetic Plate in the View menu."
       },
       {
@@ -2050,6 +2052,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/intro_stitching.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/intro_stitching.rst in full and compared it against the changed authorities: openhcs/demo/synthetic_plate_pipeline.py and openhcs/pyqt_gui/main.py; the supplied pipeline still has eight steps running from Image Enhancement Processing to Cell Counting (only its InputSource and variable-size spellings became ReadPipelineStart and PadToMaxSize) and main.py still places Generate Synthetic Plate under View; no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/intro_stitching.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3 dock, shortcut and time-travel moves to pyqt-reactive); the View menu still holds the Generate Synthetic Plate action, so no correction was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/intro_stitching.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, openhcs/pyqt_gui/main.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2117,7 +2120,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Wires endpoint compatibility to the version-restart workflow and gates the restart operation until initialisation, compilation and execution have finished."
       },
       {
@@ -2174,6 +2177,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/troubleshooting_FAQ.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/troubleshooting_FAQ.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/utils/environment.py, openhcs/pyqt_gui/launch.py, openhcs/runtime/viewer_protocol.py, openhcs/runtime/zmq_execution_client.py, openhcs/pyqt_gui/main.py and openhcs/pyqt_gui/services/ui_bridge_server.py; confirmed --no-gpu, OPENHCS_CPU_ONLY, the .startup.jsonl journal, materialize_runtime_artifacts and submit_timeout_ms still exist; the diffs are enum-to-family renames (orchestrator states, settle phases, viewer lifecycle, update-check origins), the AgentRuntimePlatform rename and the removed QtPlatformSystem enum, none of which the page names, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/troubleshooting_FAQ.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py (ScopeKey scope ids, K6 progress classes), openhcs/runtime/zmq_execution_client.py (K6: debug requests serialize themselves, command types are DebugCommandType classes; the .startup.jsonl journal beside the server log is unchanged) and openhcs/pyqt_gui/main.py (U3 moves to pyqt-reactive); the restart-and-restore action, OPENHCS_UI_CONFIG_CACHE_FILE, submit_timeout_ms and materialize_runtime_artifacts still exist, so no correction was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/troubleshooting_FAQ.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, openhcs/core/pipeline/compiler.py, openhcs/runtime/viewer_protocol.py, openhcs/runtime/zmq_execution_client.py, openhcs/pyqt_gui/main.py, tests/unit/desktop/test_desktop_restart.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2524,7 +2528,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "83d9eca90f2dca33ff8074bb768a24fadc5dfb1881855274eab9203b4cc41770",
+        "sha256": "0b5b3b025811df3b8075e51d605474b8be1e4b7f6fe873da82882e0232bf7dc2",
         "role": "Enters the invocation's execution device scope around the function body."
       },
       {
@@ -2551,6 +2555,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/core/steps/function_runtime.py changed by black formatting only (AST-equal) after docs/source/guides/memory_type_integration.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/memory_type_integration.rst in full and compared it against the changed authorities: openhcs/constants/constants.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py, openhcs/core/steps/function_runtime.py, openhcs/core/orchestrator/worker_execution.py and openhcs/core/config.py; constants.py still re-exports arraybridge's MemoryType (its OrchestratorState enum became a class family, which the page does not mention), CallableContract still reads MemoryContractAttribute, FrameworkDeviceAssignment is still on CompiledStepPlan, function_runtime.py still enters execution_device_scope() around the function body, and variable_components and group_by remain on ProcessingConfig; no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guides/memory_type_integration.rst in full and compared it against the changed authorities: openhcs/core/processing_contracts.py and openhcs/core/callable_contract.py (K5: CallableMetadata became CallableDeclaration, which CallableContract inherits and which reads the input, output and execution keys through MemoryContractAttribute), openhcs/core/compiled_step_plan.py (empty-plan defaults), openhcs/core/steps/function_runtime.py (execution_device_scope still wraps the function body), openhcs/core/orchestrator/worker_execution.py (K6 progress classes; compiled GPU footprint cleanup unchanged), openhcs/core/config.py (variable_components and group_by still on the processing config) and tests/unit/test_framework_execution_scope.py; confirmed openhcs.constants.MemoryType and openhcs.core.memory.MemoryType are arraybridge.MemoryType and that MemoryType.subprocess_environment exists; no correction was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/memory_type_integration.rst against B6's later changes to openhcs/core/memory/decorators.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py, openhcs/core/steps/function_runtime.py, openhcs/core/orchestrator/worker_execution.py, openhcs/core/config.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -3117,7 +3122,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -3139,6 +3144,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/index.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/index.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py and openhcs/interop/cellprofiler/pipeline_import.py; both diffs are enum-to-family renames plus the artifacts-package import paths; the landing page routes readers and names no changed symbol, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/index.rst in full and compared it against the changed authorities: pipeline_document.py (render now via pycodify.generate_python_source, L6; PipelineDocument/Codec unchanged), pyqt_gui/main.py (dock layout, shortcuts and time-travel navigation moved to pyqt-reactive, U3), cellprofiler/pipeline_import.py (SourceBindingsConfig now imported from openhcs.core.config, K4); the landing page names no module, class or window behaviour these touched, and still routes to existing pages; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/index.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/interop/cellprofiler/pipeline_import.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -3545,7 +3551,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Composes the main desktop window and its stable docked surfaces from the registered identities."
       },
       {
@@ -3577,6 +3583,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/reference/ui_windows.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/reference/ui_windows.rst in full and compared it against the changed authorities: openhcs/authoring/session/views.py (dataset rows report state, terminal status and debug phase by family name) and openhcs/pyqt_gui/main.py (SelectedItems/AllItems selection scopes, ExplicitUpdateCheck/StartupUpdateCheck); the view titles that the window identities present and the main-window composition are unchanged, and the page still lists no window itself; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/reference/ui_windows.rst in full and compared it against the changed authorities: pyqt_gui/main.py and main_window_workflows.py (U3 moved dock layout, shortcut lifecycle and time-travel navigation to pyqt-reactive DockLayoutStore/DockPanes, ShortcutLifecycle, TimeTravelNavigator); build_main_window_specs still projects UiStableWindowIdentityDeclaration subclasses into WindowManager specs and the openhcs-ui-window-reference directive still renders the registry, so the page (which keeps no window list of its own) remains accurate; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/reference/ui_windows.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -3604,7 +3611,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Declares the four Tools > Analysis Consolidation actions and the experimental-analysis directory check."
       },
       {
@@ -3631,6 +3638,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/user_guide/analysis_consolidation.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/analysis_consolidation.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py (selection-scope and update-check families, E1) and experimental_analysis/unified_analysis_engine.py (result format resolved with for_scope); the four Tools > Analysis Consolidation actions, the config.xlsx and metaxpress_style_summary.csv directory contract and the three output workbooks are unchanged; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/analysis_consolidation.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3: dock layout, shortcuts and time-travel navigation moved to pyqt-reactive); the Tools > Analysis Consolidation submenu still declares the four actions (Consolidate Results Directory, Merge MetaXpress Summaries, Concatenate MetaXpress Summaries (Keep Headers), Run Experimental Analysis) and the experimental-analysis directory dialog; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/analysis_consolidation.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py, tests/unit/test_experimental_analysis_engine.py, openhcs/domains/microscopy/analysis_consolidation.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -3932,7 +3940,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Declares the Tools > Custom Functions > Manage Functions action."
       },
       {
@@ -3989,6 +3997,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/user_guide/custom_function_management.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/custom_function_management.rst in full and compared it against the changed authorities: custom_functions/manager.py and runtime_registry.py (CustomFunctionLifetime became PersistedLifetime and EphemeralLifetime classes), openhcs/pyqt_gui/main.py (E1 families) and tests/unit/test_custom_function_lifecycle.py and test_function_catalog_zmq.py (K2 artifacts imports, parameter-source classes); reloading persisted functions still keeps declarations whose lifetime is EphemeralLifetime, CustomFunctionManager.register_from_code(persist=...) is unchanged and the Manage Functions action remains; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/custom_function_management.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py (U3 moved dock layout, shortcuts and time-travel navigation to pyqt-reactive; Tools > Custom Functions > Manage Functions unchanged) and tests/unit/test_custom_function_lifecycle.py (function references expose .declaration instead of .metadata, K5); CustomFunctionManager.register_from_code and its package export, and CustomFunctionRuntimeRegistry publishing FunctionMetadata, are unchanged, so the code example and prose remain accurate; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/custom_function_management.rst against B6's later changes to openhcs/processing/custom_functions/manager.py, openhcs/pyqt_gui/main.py, openhcs/mcp/context.py, tests/unit/test_custom_function_lifecycle.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -4042,7 +4051,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Declares the Tools > Custom Functions > Create New Function action."
       },
       {
@@ -4074,6 +4083,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/user_guide/custom_functions.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/custom_functions.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py (E1 families), custom_functions/templates.py (commented artifact example imports from the K2 artifacts package), manager.py and runtime_registry.py (lifetime classes) and the two custom-function tests; the page's example imports only openhcs.core.memory.decorators.numpy and Pure2DContract, both unchanged, and the Create New Function action remains; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/custom_functions.rst in full and compared it against the changed authorities: processing_contracts.py (signature lookup through CallableDeclaration, K5), pyqt_gui/main.py (U3; Tools > Custom Functions > Create New Function unchanged) and tests/unit/test_custom_function_lifecycle.py (reference.declaration); the example's numpy decorator still accepts contract= with ProcessingContract subclasses (default FlexibleContract), and Pure2DContract, Pure3DContract, VolumetricToSliceContract and FlexibleContract still exist; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/custom_functions.rst against B6's later changes to openhcs/core/memory/decorators.py, openhcs/core/processing_contracts.py, openhcs/pyqt_gui/main.py, openhcs/processing/custom_functions/manager.py, tests/unit/test_custom_function_lifecycle.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -4171,7 +4181,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Declares the Tools > Analysis Consolidation > Run Experimental Analysis action and its directory check for the config and results files."
       },
       {
@@ -4203,6 +4213,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/user_guide/experimental_layouts.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/experimental_layouts.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py (E1 families), experimental_analysis/analysis.py and unified_analysis_engine.py (for_scope) and tests/unit/test_experimental_layout_rows.py; the Run Experimental Analysis action, the directory filenames, the three output workbooks and ExperimentalAnalysisConfig.normalization_method are unchanged; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/experimental_layouts.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3: dock layout, shortcuts and time-travel navigation moved to pyqt-reactive); the Run Experimental Analysis action and its directory dialog are unchanged, and ExperimentalAnalysisConfig.normalization_method still defaults to fold change in openhcs/domains/microscopy/config.py; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/experimental_layouts.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/processing/backends/experimental_analysis/analysis.py, openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py, tests/unit/test_experimental_analysis_engine.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -4232,7 +4243,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Composes the PyQt desktop main window that the openhcs command launches."
       },
       {
@@ -4259,6 +4270,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/user_guide/index.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/index.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py (E1 families), openhcs/core/config.py (MaterializationBackend and InputSource families) and openhcs/core/pipeline/compiler.py (OrchestratorCompiled/OrchestratorCompileFailed state classes, MaterializeToZarr, PrimaryPlaneRole); the declaration model (list[FunctionStep] plus PipelineConfig, nested configs, compilation into typed plans and a bundle) is unchanged and every toctree page exists; no edit needed.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/index.rst in full and compared it against the changed authorities: pyqt_gui/main.py (U3 dock/shortcut/time-travel machinery moved to pyqt-reactive), tests/unit/pyqt_gui/test_ui_config_lifecycle.py (shortcut lifecycle tests moved with it; the textual_tui non-recurrence check remains), pipeline_document.py (generate_python_source), core/config.py (PartitionFilterMode family, K4 source-binding classes) and compiler.py (ScopeKey scope ids, K6 progress phase/status classes; still returns CompiledExecutionBundle); the PyQt-only interface, toctree and declaration-model claims remain accurate; no edit needed.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/index.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/core/config.py, openhcs/core/pipeline/compiler.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",

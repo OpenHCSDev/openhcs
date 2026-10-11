@@ -1325,7 +1325,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine.run_directory with the default configuration."
       },
       {
@@ -1339,6 +1339,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/architecture/experimental_analysis_system.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/experimental_analysis_system.rst in full and compared it against the changed authorities: unified_analysis_engine.py, result_formats.py and analysis.py (E1: ExperimentalAnalysisScope deleted, formats resolved by ExperimentalResultFormatStrategy.for_scope over the scope_name registry) and openhcs/pyqt_gui/main.py (selection and update-check classes); replaced the ExperimentalAnalysisScope sentence with the scope_name selection, and confirmed NormalizationMethod, ExperimentalAnalysisConfig and the desktop ExperimentalAnalysisEngine call are unchanged.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/experimental_analysis_system.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3 moved dock layout, shortcuts and time-travel navigation to pyqt-reactive); the desktop analysis action still constructs ExperimentalAnalysisEngine() with its default configuration and calls run_directory, and ExperimentalAnalysisConfig and NormalizationMethod are still declared in openhcs/domains/microscopy/config.py; no claim changed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/experimental_analysis_system.rst against B6's later changes to openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py, openhcs/processing/backends/experimental_analysis/result_formats.py, openhcs/processing/backends/experimental_analysis/analysis.py, openhcs/pyqt_gui/main.py, tests/unit/test_experimental_analysis_engine.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2086,7 +2087,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
+        "sha256": "817acfd0e44060440d57a2ada0ba75545dfa8dde009363143b2b86e831bd1dd7",
         "role": "_apply_list_preview_config applies list_previews to Plate Manager and Pipeline Editor at startup and on UI config change."
       },
       {
@@ -2128,6 +2129,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/architecture/list_item_preview_system.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/list_item_preview_system.rst in full and compared it against the changed authorities: openhcs/core/config.py (E1: MaterializationBackend and InputSource families; PartitionFilterMode subclasses and preview_prefix unchanged), openhcs/pyqt_gui/services/reactor_providers.py (OrchestratorCreated), openhcs/pyqt_gui/config.py (log-level helper, AgentRuntimePlatform rename; UIConfig.list_previews unchanged) and openhcs/pyqt_gui/main.py (selection and update-check classes); the formatter, shared-policy and wrapping claims still hold and the pyqt-reactive target page still exists.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/list_item_preview_system.rst in full and compared it against the page change (PartitionFilterMode members to subclasses) and the changed authorities: openhcs/core/config.py (PartitionFilterMode subclasses declare preview_prefix), openhcs/pyqt_gui/services/reactor_providers.py (still registers the one PartitionFilterConfig preview formatter; code documents now use pycodify generate_python_source) and openhcs/pyqt_gui/main.py (U3 moves; still applies UIConfig.list_previews to each manager via set_preview_config); every claim holds.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/list_item_preview_system.rst against B6's later changes to openhcs/core/config.py, openhcs/pyqt_gui/services/reactor_providers.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2433,7 +2435,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "cf05a4e08f0a24a68b9d11fa06f1ae362f81de1a959fffcfa02437557acc026d",
+        "sha256": "22bebf055ec452170aa59e75468760094a42c4a4688a132b383bdef33fa3a11a",
         "role": "Wraps the ordinary compile-and-execute submission with observation validation, phase timing from completed server records, endpoint provenance, and the completed-run receipt."
       },
       {
@@ -2513,6 +2515,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), benchmark/openhcs_measured_run.py changed by black formatting only (AST-equal) after docs/source/architecture/measurement_equivalence_system.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/measurement_equivalence_system.rst in full and compared it against the changed authorities: openhcs/core/equivalence/keys.py, measurement_features.py and relationships.py (K3: row and fact projection and plane alignment moved to benchmark/equivalence, aggregate-feature semantics stay), openhcs/core/measurement_dialect.py (SourceNameEncoding family; row qualifiers in openhcs/core/measurement_row_qualifiers.py), benchmark/adapters/openhcs.py (shape_rows_on_their_labels on reference snapshots, MaterializeToDisk), benchmark/openhcs_measured_run.py, benchmark/control.py, benchmark/contracts/measured_run_receipt.py and openhcs/runtime/zmq_execution_observation.py (E1: export scope and axis status classes) and benchmark/cellprofiler_reference_exports.py (K2 import path); corrected the product-package module list, added the native AreaShape row placement, and confirmed that no openhcs module imports benchmark and that the dialect, policy, receipt, timing and Official30 claims still hold.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against B6's later changes to openhcs/core/equivalence/keys.py, openhcs/core/equivalence/measurement_features.py, openhcs/core/measurement_dialect.py, benchmark/control_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
