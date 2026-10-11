@@ -37,12 +37,17 @@ class RecordingRelay:
     def close(self) -> None:
         self.closed = True
 
+    def release(self) -> None:
+        self.close()
+
 
 def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
     window = DualEditorWindow.__new__(DualEditorWindow)
     relay = RecordingRelay()
+    restore_subscription = RecordingRelay()
     orchestrator_signal = RecordingSignal()
     window._session_events = relay
+    window._pipeline_restore_subscription = restore_subscription
     window._orchestrator_config_signal = orchestrator_signal
     window._compiled_artifact_signal = None
     window._runtime_artifact_signal = None
@@ -52,7 +57,7 @@ def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
 
     window._cleanup_managed_resources()
 
-    assert relay.closed
+    assert relay.closed and restore_subscription.closed
     assert orchestrator_signal.disconnected == [window.on_orchestrator_config_changed]
     assert window._session_events is None
     assert window._orchestrator_config_signal is None

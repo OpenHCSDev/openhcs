@@ -945,7 +945,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         self.time_travel_navigator = TimeTravelNavigator(
             function_scope=step_function_scope,
-            window_shown=select_step_editor_tab_after_time_travel,
+            target_shown=select_step_editor_tab_after_time_travel,
         )
         self._time_travel_complete_subscription = (
             ObjectStateRegistry.add_time_travel_complete_callback(

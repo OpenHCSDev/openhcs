@@ -186,7 +186,7 @@ def test_time_travel_navigation_runs_after_later_refresh_callbacks(monkeypatch) 
 
     navigator = TimeTravelNavigator(
         function_scope=step_function_scope,
-        window_shown=lambda scope_id, target: window.tab_widget.setCurrentIndex(0),
+        target_shown=lambda scope_id, target: window.tab_widget.setCurrentIndex(0),
     )
     navigator.on_time_travel_complete([(step_scope, step_state)], step_scope)
 

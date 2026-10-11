@@ -306,7 +306,6 @@ class DualEditorWindow(BaseFormDialog):
         self._save_button_base_style = ""
         self._function_pattern_controller = None
         self._time_travel_title_refresh_callback = None
-        self._session = None
         self._session_events = None
         self._orchestrator_config_signal = None
         self._compiled_artifact_signal = None
@@ -333,11 +332,7 @@ class DualEditorWindow(BaseFormDialog):
         if not self.scope_id:
             return
 
-        pipeline_scope = PipelineScopeIdentity.from_plate_scope(self.plate_scope).scope_id
-
-        def refresh_after_time_travel(dirty_states, _triggering_scope) -> None:
-            if any(scope_id == pipeline_scope for scope_id, _state in dirty_states or ()):
-                QTimer.singleShot(0, lambda: self._follow_pipeline(self.plate_scope))
+        def refresh_after_time_travel(_dirty_states, _triggering_scope) -> None:
             QTimer.singleShot(0, self._refresh_after_time_travel)
 
         ObjectStateRegistry.add_time_travel_complete_callback(refresh_after_time_travel)
@@ -789,6 +784,16 @@ class DualEditorWindow(BaseFormDialog):
         # A bound method, not a closure over self: PyQt holds bound-method
         # slots weakly, so the connection does not keep this window alive.
         self._session_events.published.connect(self._on_session_record)
+        pipeline_scope = PipelineScopeIdentity.from_plate_scope(self.plate_scope).scope_id
+
+        def follow_restored_pipeline(dirty_states, _triggering_scope) -> None:
+            if any(scope_id == pipeline_scope for scope_id, _state in dirty_states):
+                QTimer.singleShot(0, lambda: self._follow_pipeline(self.plate_scope))
+
+        self._pipeline_restore_subscription = (
+            ObjectStateRegistry.add_time_travel_complete_callback(follow_restored_pipeline)
+        )
+        self.destroyed.connect(self._pipeline_restore_subscription.release)
 
     def _on_session_record(self, record) -> None:
         self.on_session_event(record.event)
@@ -813,7 +818,7 @@ class DualEditorWindow(BaseFormDialog):
         ObjectStateRegistry.increment_token()
 
     def _follow_pipeline(self, scope_id: str) -> None:
-        if self._session is None or scope_id != self.plate_scope:
+        if scope_id != self.plate_scope:
             return
         self._on_pipeline_changed(self._session.pipeline_steps(scope_id))
 
@@ -849,6 +854,7 @@ class DualEditorWindow(BaseFormDialog):
         session_events = self._session_events
         if session_events is not None:
             session_events.close()
+            self._pipeline_restore_subscription.release()
             self._session_events = None
 
         orchestrator_signal = self._orchestrator_config_signal
@@ -1296,12 +1302,12 @@ def step_function_scope(scope_id: str) -> FunctionScopeRef | None:
 
 def select_step_editor_tab_after_time_travel(
     scope_id: str,
-    target: NavigationTarget | None,
+    target: NavigationTarget,
 ) -> None:
     """Show the tab that holds the field or function time travel focused."""
 
     window = WindowManager.get_window(scope_id)
-    if isinstance(window, DualEditorWindow) and target is not None:
+    if isinstance(window, DualEditorWindow):
         DualEditorWindowNavigationDriver(window).select_tab_for_field_path(
             target.to_field_path()
         )
