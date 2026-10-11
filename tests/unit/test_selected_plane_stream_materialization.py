@@ -328,7 +328,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             np.asarray(source)[1].astype(np.float32), labels[1] > 0,
             np.asarray(source)[1].astype(np.float32),
         ).selected_outputs(1),
-        *NeuriteOwnershipPlanes(labels[1], labels[1], labels[1]).selected_outputs(1),
+        *NeuriteOwnershipPlanes(
+            labels[1], labels[1], labels[1], (labels[1] > 0).astype(np.uint8),
+        ).selected_outputs(1),
         graph,
     )
     specs = CallableContract.from_callable(

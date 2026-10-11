@@ -7,16 +7,19 @@ segmentation leaves and measures the final soma-rooted neurite topology.
 """
 
 import heapq
+from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from dataclasses import dataclass, fields, replace
 from enum import Enum
 from itertools import combinations
-from typing import Iterable, Mapping, Sequence, Tuple, get_type_hints
+from typing import ClassVar, Iterable, Mapping, Sequence, Tuple, get_type_hints
 
 import numpy as np
+from metaclass_registry import AutoRegisterMeta
 from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
 from skan import Skeleton, summarize
+from skimage.draw import line as draw_line
 from skimage.graph import MCP_Geometric
 from skimage.measure import regionprops
 from skimage.segmentation import expand_labels
@@ -408,15 +411,7 @@ class CellProfilerNeuriteEngineProfile:
             topology,
         )
         crossing_core_mask = topology.crossing_core_mask(outgrowth_skeleton.shape)
-        resolved_crossovers = _count_multi_owner_crossings(
-            crossing_core_mask,
-            crossing_support,
-        )
-        crossing_core_support = np.where(
-            crossing_core_mask,
-            crossing_support,
-            0,
-        ).astype(np.int32, copy=False)
+        resolved_crossovers = topology.multi_owner_crossing_count
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
             admission,
@@ -463,16 +458,6 @@ class CellProfilerNeuriteEngineProfile:
         )
         topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
         final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
-        # A physical crossing core supports two logical paths, but an object-label
-        # raster can store only one identity per pixel. The topology above remains
-        # authoritative for both neurites; publish the already-resolved nearest
-        # owner for each shared physical core pixel so QA and raster expansion do
-        # not misclassify valid crossover signal as an unrooted residual.
-        neurite_skeleton = np.where(
-            crossing_core_support > 0,
-            crossing_core_support,
-            neurite_skeleton,
-        ).astype(np.int32, copy=False)
         owner_outgrowth = _expand_skeleton_ownership(
             neurite_skeleton,
             outgrowth_binary,
@@ -513,6 +498,7 @@ class CellProfilerNeuriteEngineProfile:
 
         cell_results = _build_cell_results(
             cell_body_labels,
+            neurite_skeleton,
             owner_outgrowth,
             neurite_image,
             topology,
@@ -652,6 +638,7 @@ class CellProfilerNeuriteEngineProfile:
             *admission.planes.selected_outputs(neurite_channel_index),
             *NeuriteOwnershipPlanes(
                 initial_owned_trace, adopted_owned_trace, pre_topology_owner_skeleton,
+                NeuriteTopologyClass.render(topology, cell_body_labels),
             ).selected_outputs(neurite_channel_index),
             neurite_morphology,
         )
@@ -1256,16 +1243,21 @@ class NeuriteAdmissionPlanes(NeuriteDiagnosticPlanes):
 
 @dataclass(frozen=True)
 class NeuriteOwnershipPlanes(NeuriteDiagnosticPlanes):
-    """Original owner labels at each graph stage, before final topology.
+    """Owner labels at each graph stage, and the final topology classes.
 
-    These are execution snapshots, not an alternative ownership decision.
-    Repaired trace excludes soma interiors, matching the consumed final graph
-    input; initial and adopted trace preserve the corresponding original inputs.
+    The owner traces are execution snapshots, not an alternative ownership
+    decision. Repaired trace excludes soma interiors, matching the consumed
+    final graph input; initial and adopted trace preserve the corresponding
+    inputs. ``topology_class`` marks each final trace pixel with one
+    ``NeuriteTopologyClass`` value (path, endpoint, soma attachment, branch
+    point, crossing), so a viewer can overlay where crossings and branch
+    points are without reserving values in the neuron ID images.
     """
 
     initial_owned_trace: np.ndarray
     adopted_owned_trace: np.ndarray
     repaired_owned_trace: np.ndarray
+    topology_class: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -1327,13 +1319,78 @@ NeuriteOutgrowthRuntimeTuple = Tuple[(
 )]
 
 
+def _chamfer_lengths(start: np.ndarray, ends: np.ndarray) -> np.ndarray:
+    """Shortest 8-connected path length from one pixel to each of several."""
+
+    steps = np.abs(np.asarray(ends, dtype=float) - np.asarray(start, dtype=float))
+    diagonal = steps.min(axis=-1)
+    return steps.max(axis=-1) - diagonal + np.sqrt(2.0) * diagonal
+
+
 @dataclass(frozen=True)
 class _ResolvedCrossing:
-    """The original logical arms sharing one physical junction core."""
+    """The logical arms sharing one physical junction core.
+
+    ``arms`` names each arm by its path and the endpoint index that touches the
+    core. The crossing is shared: every owner whose arms enter it passes
+    through one crossing pixel, so each neuron's path, length and straightness
+    include the crossing exactly as if the other neurite were absent.
+    """
 
     node: int
-    arm_paths: tuple[int, ...]
+    arms: tuple[tuple[int, int], ...]
     core_paths: tuple[int, ...]
+
+    @property
+    def arm_paths(self) -> tuple[int, ...]:
+        return tuple(sorted({path for path, _ in self.arms}))
+
+    def shifted(self, *, path_offset: int, node_offset: int) -> "_ResolvedCrossing":
+        return _ResolvedCrossing(
+            self.node + node_offset,
+            tuple((path + path_offset, endpoint) for path, endpoint in self.arms),
+            tuple(path + path_offset for path in self.core_paths),
+        )
+
+    def passages(
+        self, path_owners: np.ndarray, path_coordinates: tuple[np.ndarray, ...],
+        lookahead: int,
+    ) -> tuple[np.ndarray, np.ndarray, dict[int, list[np.ndarray]]]:
+        """Return the pixels this crossing replaces, its crossing pixel, and
+        each owner's outer arm pixels.
+
+        Two shafts crossing distort their medial axis within about one shaft
+        width of the core: the raster arms meet in a hollow diamond or a 2x2
+        block and detour around the true crossing point. The core and each
+        arm's first ``lookahead`` pixels (the span the pairing already reads
+        directions over) are replaced. The crossing pixel is the pixel near the
+        core through which the owners' passages are shortest, so a straight
+        neurite stays straight through it.
+        """
+        core = self.core_coordinates(path_coordinates)
+        outward = [
+            path_coordinates[path] if endpoint == 0 else path_coordinates[path][::-1]
+            for path, endpoint in self.arms
+        ]
+        replaced = np.concatenate([core, *(arm[:lookahead] for arm in outward)])
+        outer_by_owner: dict[int, list[np.ndarray]] = defaultdict(list)
+        for (path, _), arm in zip(self.arms, outward):
+            if path_owners[path] > 0:
+                outer_by_owner[int(path_owners[path])].append(
+                    arm[min(lookahead, len(arm) - 1)]
+                )
+        attachment = np.concatenate([core, [arm[0] for arm in outward]])
+        lower, upper = attachment.min(axis=0) - 1, attachment.max(axis=0) + 2
+        candidates = np.moveaxis(np.indices(tuple(upper - lower)), 0, -1).reshape(-1, 2) + lower
+        passage_lengths = sum(
+            (_chamfer_lengths(outer, candidates) for outers in outer_by_owner.values()
+             for outer in outers),
+            np.zeros(len(candidates)),
+        )
+        offsets = np.linalg.norm(candidates - attachment.mean(axis=0), axis=1)
+        order = np.lexsort((candidates[:, 1], candidates[:, 0], offsets,
+                            np.round(passage_lengths, 9)))
+        return replaced, candidates[order[0]], dict(outer_by_owner)
 
     def supports_owner(self, owner: int, path_owners: np.ndarray) -> bool:
         return any(int(path_owners[path]) == owner for path in self.arm_paths)
@@ -1375,6 +1432,11 @@ class _TopologyResult:
     @staticmethod
     def soma_attachment_radius(outgrowth_width_px: float) -> int:
         return max(1, int(np.ceil(outgrowth_width_px)) + 2)
+
+    @staticmethod
+    def crossing_lookahead(outgrowth_width_px: float) -> int:
+        """Arm pixels within which a crossing distorts the medial axis."""
+        return max(2, int(np.ceil(outgrowth_width_px)))
 
     @classmethod
     def soma_neighborhood(
@@ -1601,6 +1663,15 @@ class _TopologyResult:
                          for path in crossing.crossover_paths(self.path_owners))
 
     @property
+    def multi_owner_crossing_count(self) -> int:
+        """Resolved crossings whose crossover arms belong to two or more neurons."""
+        return sum(
+            len({int(self.path_owners[path])
+                 for path in crossing.crossover_paths(self.path_owners)}) >= 2
+            for crossing in self.resolved_crossings
+        )
+
+    @property
     def crossing_core_paths(self) -> frozenset[int]:
         return frozenset(path for crossing in self.resolved_crossings
                          for path in crossing.core_paths)
@@ -1641,6 +1712,221 @@ class _TopologyResult:
             coordinates = coordinates[(current == 0) | np.isin(current, arm_owners)]
             mask[tuple(coordinates.T)] = True
         return mask
+
+    def crossing_routes(
+        self, occupied_owners: np.ndarray, *, owner: int,
+        origin: tuple[int, int], outgrowth_width_px: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Return the pixels the owner's crossings replace and its routes.
+
+        Each surviving arm of the owner (its outer pixel still carries the
+        owner after repair) is joined to the shared crossing pixel by a
+        digital straight line. Two owners crossing therefore both traverse
+        the crossing pixel; the label image can show only one of them, but the
+        topology built from these routes measures the crossing for both.
+        """
+        lookahead = self.crossing_lookahead(outgrowth_width_px)
+        shape = np.asarray(occupied_owners.shape)
+        offset = np.asarray(origin)
+        replaced = np.zeros(occupied_owners.shape, dtype=bool)
+        routes = np.zeros(occupied_owners.shape, dtype=bool)
+
+        def inside(coordinates: np.ndarray) -> np.ndarray:
+            return coordinates[np.all((coordinates >= 0) & (coordinates < shape), axis=1)]
+
+        for crossing in self.resolved_crossings:
+            if not crossing.supports_owner(owner, self.path_owners):
+                continue
+            crossing_pixels, centre, outer_by_owner = crossing.passages(
+                self.path_owners, self.path_coordinates, lookahead,
+            )
+            replaced[tuple(inside(crossing_pixels - offset).T)] = True
+            for outer in outer_by_owner.get(owner, ()):
+                local_outer = outer - offset
+                if not np.all((local_outer >= 0) & (local_outer < shape)):
+                    continue
+                if occupied_owners[tuple(local_outer)] != owner:
+                    continue
+                route = np.column_stack(draw_line(*outer, *centre)) - offset
+                routes[tuple(inside(route).T)] = True
+        return replaced, routes
+
+    def shared_trace_owners(self) -> dict[tuple[int, int], tuple[int, ...]]:
+        """Trace pixels that the paths of several owners traverse.
+
+        Resolved crossings are the source: each owner's route passes the
+        shared crossing pixel. Derived from the paths, not the label image.
+        """
+        owned = [path for path, owner in enumerate(self.path_owners) if owner > 0]
+        if not owned:
+            return {}
+        rows = np.unique(np.concatenate([
+            np.column_stack((
+                self.path_coordinates[path],
+                np.full(len(self.path_coordinates[path]), self.path_owners[path]),
+            ))
+            for path in owned
+        ]), axis=0)
+        keys = rows[:, 0] * (int(rows[:, 1].max()) + 1) + rows[:, 1]
+        unique_keys, counts = np.unique(keys, return_counts=True)
+        owners_by_pixel: dict[tuple[int, int], list[int]] = defaultdict(list)
+        for row, column, owner in rows[np.isin(keys, unique_keys[counts > 1])].tolist():
+            owners_by_pixel[row, column].append(owner)
+        return {pixel: tuple(owners) for pixel, owners in owners_by_pixel.items()}
+
+    def owned_paths(self) -> tuple[int, ...]:
+        return tuple(int(path) for path in np.flatnonzero(self.path_owners > 0))
+
+    def endpoint_pixels(self, paths: Iterable[int], groups: set[int]) -> np.ndarray:
+        """Physical endpoint pixels of ``paths`` that sit at any of ``groups``."""
+        pixels = [
+            self.path_coordinates[path][0 if endpoint == 0 else -1]
+            for path in paths
+            for endpoint, group in enumerate(self.path_endpoint_groups[path])
+            if group in groups
+        ]
+        return np.asarray(pixels, dtype=int).reshape(-1, 2)
+
+
+def _as_pixels(coordinates: Iterable[np.ndarray]) -> np.ndarray:
+    arrays = [np.asarray(array, dtype=int).reshape(-1, 2) for array in coordinates]
+    return np.concatenate(arrays) if arrays else np.empty((0, 2), dtype=int)
+
+
+class NeuriteTopologyClass(ABC, metaclass=AutoRegisterMeta):
+    """One class of the topology-class plane.
+
+    Owner label images hold neuron IDs, so topology cannot be drawn into them.
+    The topology-class plane shows it instead: each class owns its plane value
+    and the pixels it marks in the final topology. Classes paint in ascending
+    value, so where two apply the higher one shows; a crossing is painted last
+    and is never shown as a branch point.
+    """
+
+    __registry_key__ = "plane_value"
+    __skip_if_no_key__ = True
+    plane_value: ClassVar[int | None] = None
+
+    @classmethod
+    def class_name(cls) -> str:
+        name = cls.__name__.removeprefix("Topology")
+        return "".join(
+            f"_{letter.lower()}" if letter.isupper() and index else letter.lower()
+            for index, letter in enumerate(name)
+        )
+
+    @classmethod
+    def value_table(cls) -> dict[str, int]:
+        return {
+            member.class_name(): int(value)
+            for value, member in sorted(cls.__registry__.items())
+        }
+
+    @classmethod
+    def render(
+        cls, topology: "_TopologyResult", cell_body_labels: np.ndarray,
+    ) -> np.ndarray:
+        plane = np.zeros(cell_body_labels.shape, dtype=np.uint8)
+        for value, member in sorted(cls.__registry__.items()):
+            pixels = member.pixels(topology, cell_body_labels)
+            plane[tuple(pixels.T)] = value
+        return plane
+
+    @staticmethod
+    @abstractmethod
+    def pixels(topology: "_TopologyResult", cell_body_labels: np.ndarray) -> np.ndarray:
+        """Return the (N, 2) pixels this class marks."""
+
+
+class TopologyNone(NeuriteTopologyClass):
+    plane_value = 0
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        return np.empty((0, 2), dtype=int)
+
+
+class TopologyPath(NeuriteTopologyClass):
+    plane_value = 1
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        return _as_pixels(topology.path_coordinates[path] for path in topology.owned_paths())
+
+
+class TopologyEndpoint(NeuriteTopologyClass):
+    """Free tips: an endpoint that no other path of the same owner shares."""
+
+    plane_value = 2
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        incidence = Counter(
+            (int(topology.path_owners[path]), group)
+            for path in topology.owned_paths()
+            for group in topology.path_endpoint_groups[path]
+        )
+        return _as_pixels(
+            topology.endpoint_pixels(
+                (path,),
+                {group for group in topology.path_endpoint_groups[path]
+                 if incidence[int(topology.path_owners[path]), group] == 1},
+            )
+            for path in topology.owned_paths()
+        )
+
+
+class TopologySomaAttachment(NeuriteTopologyClass):
+    """Trace pixels touching their own neuron's cell body."""
+
+    plane_value = 3
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        offsets = np.argwhere(np.ones((3, 3), dtype=bool)) - 1
+        shape = np.asarray(cell_body_labels.shape)
+        attached = []
+        for path in topology.owned_paths():
+            coordinates = topology.path_coordinates[path]
+            neighbors = np.clip(coordinates[:, None] + offsets, 0, shape - 1)
+            touches = np.any(
+                cell_body_labels[neighbors[..., 0], neighbors[..., 1]]
+                == topology.path_owners[path],
+                axis=1,
+            )
+            attached.append(coordinates[touches])
+        return _as_pixels(attached)
+
+
+class TopologyBranchPoint(NeuriteTopologyClass):
+    """The endpoints of an owner's paths at its counted branch events."""
+
+    plane_value = 4
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        return _as_pixels(
+            topology.endpoint_pixels(
+                (path for path in topology.owned_paths()
+                 if topology.path_owners[path] == owner),
+                set(groups),
+            )
+            for owner, groups in topology.branch_nodes_by_cell.items()
+        )
+
+
+class TopologyCrossing(NeuriteTopologyClass):
+    """Pixels several neurons' paths pass through, and resolved crossing cores."""
+
+    plane_value = 5
+
+    @staticmethod
+    def pixels(topology, cell_body_labels):
+        return _as_pixels((
+            np.asarray(list(topology.shared_trace_owners()), dtype=int),
+            *(crossing.core_coordinates(topology.path_coordinates)
+              for crossing in topology.resolved_crossings),
+        ))
 
 
 def _raw_processing_leaf(func):
@@ -2738,7 +3024,7 @@ def _analyze_topology(
     path_endpoint_groups = [[0, 0] for _ in range(path_count)]
     endpoint_group_coordinates: dict[int, tuple[float, float]] = {}
     next_endpoint_group = 1
-    lookahead = max(2, int(np.ceil(outgrowth_width_px)))
+    lookahead = _TopologyResult.crossing_lookahead(outgrowth_width_px)
     junction_nodes = {
         node
         for node, incident_paths in node_incidence.items()
@@ -2753,7 +3039,7 @@ def _analyze_topology(
     ] = {}
     crossing_cluster_nodes: set[int] = set()
     crossing_core_paths: set[int] = set()
-    crossing_paths_by_node: dict[int, tuple[int, ...]] = {}
+    crossing_arms_by_node: dict[int, tuple[tuple[int, int], ...]] = {}
     crossing_core_paths_by_node: dict[int, tuple[int, ...]] = {}
     for cluster in _junction_node_clusters(
         junction_nodes,
@@ -2794,9 +3080,7 @@ def _analyze_topology(
         crossing_clusters[anchor] = (crossing_pairs, internal_endpoints)
         crossing_cluster_nodes.update(cluster)
         crossing_core_paths.update(internal_paths)
-        crossing_paths_by_node[anchor] = tuple(
-            sorted({path_index for path_index, _ in external_endpoints})
-        )
+        crossing_arms_by_node[anchor] = external_endpoints
         crossing_core_paths_by_node[anchor] = internal_paths
 
     for node in sorted(node_incidence):
@@ -2896,7 +3180,7 @@ def _analyze_topology(
         cell_body_labels, outgrowth_width_px, path_coordinates, transitions, path_owners,
     )
     resolved_crossings = tuple(
-        _ResolvedCrossing(node, crossing_paths_by_node[node],
+        _ResolvedCrossing(node, crossing_arms_by_node[node],
                           crossing_core_paths_by_node[node])
         for node in sorted(crossing_nodes)
     )
@@ -2987,10 +3271,14 @@ def _analyze_owned_topology(
                 min(owned.shape[1], max(bound[3] for bound in bounds) + margin),
             ),
         )
-        local_owner_mask = owned[owner_slice] == owner
-        local_owner_mask |= crossing_topology.crossing_support_mask(
+        replaced, routes = crossing_topology.crossing_routes(
             owned[owner_slice], owner=owner,
             origin=(owner_slice[0].start, owner_slice[1].start),
+            outgrowth_width_px=outgrowth_width_px,
+        )
+        local_bodies = bodies[owner_slice]
+        local_owner_mask = ((owned[owner_slice] == owner) & ~replaced) | (
+            routes & ((local_bodies == 0) | (local_bodies == owner))
         )
         local_owned = np.where(local_owner_mask, owner, 0).astype(
             np.int32,
@@ -3056,9 +3344,7 @@ def _analyze_owned_topology(
             }
         )
         resolved_crossings.extend(
-            _ResolvedCrossing(crossing.node + node_offset,
-                              tuple(path + path_offset for path in crossing.arm_paths),
-                              tuple(path + path_offset for path in crossing.core_paths))
+            crossing.shifted(path_offset=path_offset, node_offset=node_offset)
             for crossing in local.resolved_crossings
         )
 
@@ -3154,13 +3440,9 @@ def _crossing_pairs(
         coordinates = path_coordinates[path_index]
         if len(coordinates) < 2:
             return None
-        source_side = endpoint_index == 0
-        node_coordinate = coordinates[0] if source_side else coordinates[-1]
-        sample_index = min(lookahead, len(coordinates) - 1)
-        sample_coordinate = (
-            coordinates[sample_index] if source_side else coordinates[-sample_index - 1]
-        )
-        vector = sample_coordinate.astype(float) - node_coordinate.astype(float)
+        outward = coordinates if endpoint_index == 0 else coordinates[::-1]
+        far = min(2 * lookahead, len(outward) - 1)
+        vector = outward[far].astype(float) - outward[max(0, far - lookahead)].astype(float)
         norm = np.linalg.norm(vector)
         if norm == 0:
             return None
@@ -3572,10 +3854,18 @@ def _render_owned_skeleton(
     shape: tuple[int, int],
     topology: _TopologyResult,
 ) -> np.ndarray:
+    """Render one owner label per trace pixel.
+
+    A label image holds one label per pixel. Where the paths of several owners
+    traverse one pixel (a shared crossing, or a node where owners meet) the
+    pixel shows the lowest owner label. Measurements never read this choice:
+    they come from the topology, where the pixel lies on every owner's path.
+    """
     owner_skeleton = np.zeros(shape, dtype=np.int32)
-    for path_index, coordinates in enumerate(topology.path_coordinates):
+    for path_index in np.argsort(topology.path_owners, kind="stable"):
         owner = int(topology.path_owners[path_index])
         if owner > 0:
+            coordinates = topology.path_coordinates[path_index]
             empty = owner_skeleton[tuple(coordinates.T)] == 0
             owner_skeleton[tuple(coordinates[empty].T)] = owner
     return owner_skeleton
@@ -3675,39 +3965,6 @@ def _render_crossing_support(
     return support
 
 
-def _count_multi_owner_crossings(
-    crossing_core_mask: np.ndarray,
-    owner_support: np.ndarray,
-) -> int:
-    """Count physical crossing cores joining two or more rooted owners."""
-
-    crossing_mask = np.asarray(crossing_core_mask, dtype=bool)
-    owners = np.asarray(owner_support, dtype=np.int32)
-    if crossing_mask.shape != owners.shape:
-        raise ValueError(
-            "crossing_core_mask and owner_support must have the same shape"
-        )
-    connectivity = np.ones((3, 3), dtype=bool)
-    components, component_count = ndi.label(
-        crossing_mask,
-        structure=connectivity,
-    )
-    resolved = 0
-    for component in range(1, component_count + 1):
-        component_mask = components == component
-        adjacent = (
-            ndi.binary_dilation(
-                component_mask,
-                structure=connectivity,
-            )
-            & ~component_mask
-        )
-        adjacent_owners = np.unique(owners[adjacent])
-        if np.count_nonzero(adjacent_owners > 0) >= 2:
-            resolved += 1
-    return resolved
-
-
 def _expand_skeleton_ownership(
     owner_skeleton: np.ndarray,
     outgrowth_binary: np.ndarray,
@@ -3730,6 +3987,7 @@ def _expand_skeleton_ownership(
 
 def _build_cell_results(
     cell_body_labels: np.ndarray,
+    neurite_skeleton: np.ndarray,
     owner_outgrowth: np.ndarray,
     neurite_image: np.ndarray,
     topology: _TopologyResult,
@@ -3754,6 +4012,24 @@ def _build_cell_results(
         weights=np.asarray(neurite_image, dtype=float).ravel(),
         minlength=cell_count + 1,
     )
+    # The label image draws a shared crossing pixel, and the outgrowth nearest
+    # to it, for one owner. Every neuron whose path traverses that pixel
+    # carries the signal there, so it counts for each of them.
+    shared_trace_owners = topology.shared_trace_owners()
+    if shared_trace_owners:
+        _, nearest = ndi.distance_transform_edt(
+            neurite_skeleton == 0, return_indices=True,
+        )
+        shared_pixels = np.array(list(shared_trace_owners))
+        shared_trace = np.zeros(neurite_skeleton.shape, dtype=np.int64)
+        shared_trace[tuple(shared_pixels.T)] = np.arange(1, len(shared_pixels) + 1)
+        nearest_shared = np.where(owner_outgrowth > 0, shared_trace[tuple(nearest)], 0)
+        for index in np.flatnonzero(nearest_shared.ravel()):
+            pixel = tuple(shared_pixels[nearest_shared.flat[index] - 1])
+            for owner in shared_trace_owners[pixel]:
+                if owner != outgrowth_labels[index] and owner <= cell_count:
+                    outgrowth_pixel_counts[owner] += 1
+                    outgrowth_intensity_sums[owner] += float(neurite_image.flat[index])
     results = []
 
     for cell in range(1, cell_count + 1):
