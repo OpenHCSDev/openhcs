@@ -445,7 +445,7 @@ def test_runtime_scan_info_and_status_render_server_facts():
         execution_id="run-1", status="ok",
         response={"status": "ok", "active_executions": 1, "uptime": 12.34,
                   "executions": ["run-1", "run-2"], "queued_executions": [],
-                  "running_executions": [{"execution_id": "run-1", "plate_id": "p",
+                  "running_executions": [{"execution_id": "run-1", "subject_id": "p",
                                           "start_time": 1.0, "elapsed": 2.0}]},
     )
     rendered = RuntimeExecutionStatusRenderer.render(

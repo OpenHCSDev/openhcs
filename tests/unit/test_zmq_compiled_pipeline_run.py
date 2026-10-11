@@ -56,7 +56,7 @@ class FakeExecutionClient:
             "execution_id": execution_id,
             "execution": {
                 "execution_id": execution_id,
-                "plate_id": "/tmp/plate",
+                "subject_id": "/tmp/plate",
                 "status": self.compile_status if execution_id == "compile-1" else self.execute_status,
                 "start_time": 10.0,
                 "end_time": 12.0,

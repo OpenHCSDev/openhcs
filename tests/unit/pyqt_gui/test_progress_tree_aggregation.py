@@ -260,12 +260,12 @@ def test_queued_plates_are_projected_without_progress_events():
             queued=[
                 {
                     "execution_id": "exec-123",
-                    "plate_id": "/tmp/plate_a",
+                    "subject_id": "/tmp/plate_a",
                     "queue_position": 1,
                 },
                 {
                     "execution_id": "exec-456",
-                    "plate_id": "/tmp/plate_b",
+                    "subject_id": "/tmp/plate_b",
                     "queue_position": 2,
                 },
             ]
@@ -293,7 +293,7 @@ def test_new_queued_execution_replaces_old_compiled_identity_for_same_plate():
             queued=[
                 {
                     "execution_id": "exec-run",
-                    "plate_id": "/tmp/plate_a",
+                    "subject_id": "/tmp/plate_a",
                     "queue_position": 2,
                 }
             ]
@@ -313,7 +313,9 @@ def test_running_plate_is_projected_without_progress_events():
             running=[
                 {
                     "execution_id": "exec-run",
-                    "plate_id": "/tmp/plate_a",
+                    "subject_id": "/tmp/plate_a",
+                    "start_time": 0.0,
+                    "elapsed": 0.0,
                     "compile_only": True,
                 }
             ]
@@ -328,7 +330,14 @@ def test_running_snapshot_advances_init_only_projection_to_executing():
     nodes = _nodes(
         {"exec-run": [_init_event(execution_id="exec-run")]},
         _execution_server_info(
-            running=[{"execution_id": "exec-run", "plate_id": "/tmp/plate"}]
+            running=[
+                {
+                    "execution_id": "exec-run",
+                    "subject_id": "/tmp/plate",
+                    "start_time": 0.0,
+                    "elapsed": 0.0,
+                }
+            ]
         ),
     )
 
@@ -410,7 +419,14 @@ def test_progress_renderer_expands_new_typed_hierarchy_and_preserves_user_collap
 
     tree = QTreeWidget()
     server_info = _execution_server_info(
-        running=[{"execution_id": "exec-1", "plate_id": "/tmp/plate"}]
+        running=[
+            {
+                "execution_id": "exec-1",
+                "subject_id": "/tmp/plate",
+                "start_time": 0.0,
+                "elapsed": 0.0,
+            }
+        ]
     )
     server_item = QTreeWidgetItem(["Execution Server", "", ""])
     server_item.setData(0, Qt.ItemDataRole.UserRole, server_info)

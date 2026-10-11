@@ -341,7 +341,7 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
         # The server publishes progress only for executions it admitted.
         server.active_executions["run-1"] = ExecutionRecord(
             execution_id="run-1",
-            plate_id="/plates/one",
+            subject_id="/plates/one",
             client_address=None,
             status="running",
         )

@@ -337,7 +337,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 "status": "ok",
                 "execution": {
                     "execution_id": execution_id,
-                    "plate_id": "/tmp/execution_plate",
+                    "subject_id": "/tmp/execution_plate",
                     "client_address": None,
                     "status": "complete",
                     "results_summary": {"output_plate_root": str(tmp_path)},

@@ -1374,7 +1374,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
                 timing_observer(
                     {
                         "execution_id": "job-1",
-                        "plate_id": "plate-1",
+                        "subject_id": "plate-1",
                         "axis_id": f"W{index:03d}",
                         "step_name": "pipeline",
                         "phase": phase,
@@ -1464,7 +1464,7 @@ def test_well_throughput_rejects_two_worker_label_from_one_pid() -> None:
     events = [
         {
             "execution_id": "job-1",
-            "plate_id": "plate-1",
+            "subject_id": "plate-1",
             "axis_id": axis_id,
             "step_name": "pipeline",
             "phase": phase,

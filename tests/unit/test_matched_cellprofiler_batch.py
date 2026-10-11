@@ -597,7 +597,7 @@ def _axis_event(axis_id: str, phase: str, pid: int, timestamp: float) -> Progres
     return ProgressEvent.from_dict(
         {
             "execution_id": "job-1",
-            "plate_id": "plate-1",
+            "subject_id": "plate-1",
             "axis_id": axis_id,
             "step_name": "pipeline",
             "phase": phase,

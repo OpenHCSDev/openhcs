@@ -451,7 +451,7 @@ class ProgressIdentity:
     def from_transport_fields(cls, data: dict[str, Any]) -> "ProgressIdentity":
         return cls(
             execution_id=str(data["execution_id"]),
-            plate_id=str(data["plate_id"]),
+            plate_id=str(data["subject_id"]),
             axis_id=str(data["axis_id"]),
             step_name=str(data["step_name"]),
         )
@@ -647,7 +647,7 @@ class ProgressEvent:
         # Validate OpenHCS-required fields
         required_fields = {
             "execution_id",
-            "plate_id",
+            "subject_id",
             "axis_id",
             "step_name",
             "phase",
@@ -718,7 +718,7 @@ class ProgressEvent:
         """
         result = {
             "execution_id": self.execution_id,
-            "plate_id": self.plate_id,
+            "subject_id": self.plate_id,
             "axis_id": self.axis_id,
             "step_name": self.step_name,
             "phase": self.phase.value,  # Enum → string

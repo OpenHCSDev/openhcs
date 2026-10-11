@@ -7,6 +7,7 @@ from zmqruntime.client import AttachedEndpointConnection
 from zmqruntime.execution import ExecutionClient
 from zmqruntime.messages import (
     ControlMessageType,
+    ExecuteRequest,
     MessageFields,
     PongResponse,
     ServerRole,
@@ -50,7 +51,7 @@ def test_submission_uses_declared_timeout_for_progress_registration():
         observed.append(("progress", timeout_ms))
 
     def serialize_task(self, _task, _config=None):
-        return {}
+        return ExecuteRequest(subject_id="subject", pipeline_code="pass", config_code="")
 
     def send_control_request(self, request, *, timeout_ms: int):
         observed.append((request[MessageFields.TYPE], timeout_ms))
