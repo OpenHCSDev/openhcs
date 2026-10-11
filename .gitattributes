@@ -1,0 +1,7 @@
+# Tracked files are checked out as their committed bytes on every platform.
+# Benchmark corpora, reference-export sidecars and documentation audits are
+# compared by sha256, which Windows end-of-line conversion would change.
+* -text
+# Windows command scripts keep the platform's line endings.
+*.cmd text
+*.bat text
