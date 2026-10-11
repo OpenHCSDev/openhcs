@@ -15,15 +15,15 @@ from zmqruntime import EndpointApplication, EndpointApplicationCompatibilityErro
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
 from openhcs.agent.dto.ui_bridge import (
-    SemanticFields,
+    ActionAccepted,
     OperationCompleted,
     OperationFailed,
     OperationNotFound,
     OperationRunning,
     OperationUnavailable,
+    SemanticFields,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
@@ -336,7 +336,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
+            status=ActionAccepted,
             receipt=UiMutationReceipt(
                 request_token=request.request_token,
                 accepted=True,
@@ -360,7 +360,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
                     widget_id=WIDGET_ID,
                     action_id=request.workflow.value,
                 ),
-                status=UiActionInvocationStatus.ACCEPTED.value,
+                status=ActionAccepted,
                 receipt=UiMutationReceipt(
                     request_token=request.request_token,
                     accepted=True,
@@ -1505,7 +1505,7 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
     assert close_result.closed is True
     assert gateway.close_requests == [UiWindowCloseRequest(window_id=WINDOW_ID)]
     assert (
-        workflow_result.action_result.status == UiActionInvocationStatus.ACCEPTED.value
+        workflow_result.action_result.status is ActionAccepted
     )
     assert gateway.selected_plate_workflow_requests == [
         UiSelectedPlateWorkflowRequest(

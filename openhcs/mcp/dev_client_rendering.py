@@ -9,6 +9,7 @@ warnings and the batch diagnostics. Renderers read DTO attributes only.
 from __future__ import annotations
 
 import argparse
+from abc import ABC
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
@@ -30,19 +31,39 @@ DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
 PresentationValue = TypeVar("PresentationValue")
 
 
-class WidgetTreeOutputFormat(str, Enum):
-    """CLI presentation formats for widget-tree command output."""
+class WidgetTreeOutputFormat(ABC, metaclass=AutoRegisterMeta):
+    """CLI presentation format for widget-tree command output.
 
-    JSON = "json"
-    OUTLINE = "outline"
+    Each format is a subclass; ``name`` is its ``--output`` spelling.
+    """
 
-    @property
-    def is_json(self) -> bool:
-        return self is WidgetTreeOutputFormat.JSON
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    @classmethod
-    def choices(cls) -> tuple[str, ...]:
-        return tuple(output_format.value for output_format in cls)
+    name: ClassVar[str | None] = None
+    is_json: ClassVar[bool]
+    """The command prints the JSON payload instead of rendering it."""
+    default_max_nodes: ClassVar[int]
+    shows_whole_tree: ClassVar[bool]
+    """The request includes the nested tree and non-actionable branches."""
+
+    @staticmethod
+    def named(name: str) -> type["WidgetTreeOutputFormat"]:
+        return WidgetTreeOutputFormat.__registry__[name]
+
+
+class JsonWidgetTree(WidgetTreeOutputFormat):
+    name = "json"
+    is_json = True
+    default_max_nodes = 40
+    shows_whole_tree = False
+
+
+class OutlineWidgetTree(WidgetTreeOutputFormat):
+    name = "outline"
+    is_json = False
+    default_max_nodes = 800
+    shows_whole_tree = True
 
 
 @dataclass(frozen=True, slots=True)

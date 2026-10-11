@@ -1,4 +1,5 @@
 from openhcs.agent.dto.session import DatasetRowState
+from openhcs.mcp.dev_client_core import PollCompleted, PollFailed, PollTimedOut
 import asyncio
 import importlib.util
 import inspect
@@ -6076,7 +6077,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
             target_scope_ids=("scope-a",),
             policy=run_policy,
         )
-        is dev_client.WorkflowPollSummaryStatus.FAILED
+        is PollFailed
     )
     assert (
         dev_client.workflow_poll_terminal_status(
@@ -6084,7 +6085,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
             target_scope_ids=("scope-a",),
             policy=compile_policy,
         )
-        is dev_client.WorkflowPollSummaryStatus.FAILED
+        is PollFailed
     )
 
 
@@ -6355,7 +6356,7 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
         "openhcs_ui_selected_plate_workflow",
         "openhcs_ui_wait_for_operation_receipt",
     ]
-    assert response.results[-1].payloads[0].status is dev_client.WorkflowPollSummaryStatus.FAILED
+    assert response.results[-1].payloads[0].status is PollFailed
     from openhcs.mcp.dev_client_core import WorkflowPollSkipReason
     assert response.results[-1].payloads[0].skip_reason is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
 
@@ -6433,7 +6434,7 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
     ]
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.TIMEOUT
+    assert summary.payloads[0].status is PollTimedOut
     assert summary.payloads[0].poll_count == 1
 
 
@@ -6514,7 +6515,7 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
     ]
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.COMPLETED
+    assert summary.payloads[0].status is PollCompleted
     assert summary.payloads[0].poll_count == 1
 
 
@@ -7115,7 +7116,7 @@ def test_mcp_dev_client_workflow_poll_timeout_summary_is_error():
 
     summary = dev_client.workflow_poll_summary_result(
         workflow="compile_datasets",
-        status=dev_client.WorkflowPollSummaryStatus.TIMEOUT,
+        status=PollTimedOut,
         poll_requested=True,
         poll_completed=False,
         poll_count=2,

@@ -35,6 +35,7 @@ from openhcs.core.function_reference import (
     RegistryFunctionReference,
 )
 from openhcs.agent.dto.ui_bridge import (
+    ActionRejected,
     OperationCompleted,
     OperationFailed,
     OperationNotFound,
@@ -43,7 +44,6 @@ from openhcs.agent.dto.ui_bridge import (
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
@@ -1878,7 +1878,7 @@ class UiAgentBridgeService(UiBridgeOperationServer):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.REJECTED.value,
+            status=ActionRejected,
             receipt=UiMutationReceipt.rejected_for(request.request_token),
             target_scope_ids=request.selected_scope_ids,
             selection_revision_token=request.observed_selection_revision_token,

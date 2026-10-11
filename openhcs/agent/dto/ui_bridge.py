@@ -1029,10 +1029,27 @@ class UiStateSurfaceDocument(
     payload: JsonObject
 
 
-class UiActionInvocationStatus(str, Enum):
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    UNAVAILABLE = "unavailable"
+class UiActionInvocationStatus(ABC, metaclass=AutoRegisterMeta):
+    """Whether the UI took a requested action; ``name`` is its wire spelling."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    accepted: ClassVar[bool] = False
+
+
+class ActionAccepted(UiActionInvocationStatus):
+    name = "accepted"
+    accepted = True
+
+
+class ActionRejected(UiActionInvocationStatus):
+    name = "rejected"
+
+
+class ActionUnavailable(UiActionInvocationStatus):
+    name = "unavailable"
 
 
 class UiWidgetActionInvocationOutcome(str, Enum):
@@ -1289,7 +1306,7 @@ class UiActionInvokeRequest(
 class UiActionInvokeResult:
     schema_version: str
     identity: UiActionIdentity
-    status: str
+    status: type[UiActionInvocationStatus]
     receipt: UiMutationReceipt
     target_scope_ids: tuple[str, ...] = ()
     selection_revision_token: str | None = None
@@ -1317,10 +1334,6 @@ class UiWindowManagerScope:
     @classmethod
     def from_identity(cls, identity: UiWindowIdentity) -> "UiWindowManagerScope":
         return cls(value=identity.window_id)
-
-
-class UiWindowSemanticMarker(str, Enum):
-    ERROR_DIALOG = "error_dialog"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1353,6 +1366,8 @@ class UiWindowSummary(UiWindowSemanticCarrier):
     visible: bool
     focusable: bool
     manager_scope: UiWindowManagerScope | None = None
+    error_dialog: bool = False
+    """The window is a critical message box reporting an error."""
 
     @property
     def window_id(self) -> str:

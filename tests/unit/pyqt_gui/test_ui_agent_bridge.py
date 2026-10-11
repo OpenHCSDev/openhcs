@@ -58,18 +58,20 @@ from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiBridgeOperationStatusRequest,
+    ActionAccepted,
+    ActionRejected,
+    DirtyFields,
     UiActionInvokeRequest,
     UiBranchSwitchRequest,
     UiBridgeConfirmationRequirement,
     UiBridgeConnectionSpec,
+    UiBridgeOperationStatusRequest,
     UiBridgeRequestEnvelope,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentId,
     UiCodeDocumentRequest,
     UiCodeDocumentSelectionMode,
     UiCodeDocumentValidationRequest,
-    DirtyFields,
     UiObjectStateScopeListRequest,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -2696,7 +2698,7 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
         )
 
         assert action.invocation_mode == "async"
-        assert result.status == "accepted"
+        assert result.status is ActionAccepted
         assert result.receipt.bridge_operation_id is not None
         assert result.target_scope_ids == (window.scope_id,)
         assert window.save_count == 0
@@ -3801,7 +3803,7 @@ def test_main_window_actions_are_application_operations_presented_by_the_window(
                 ),
             )
         )
-        assert result.status == "accepted", result.errors
+        assert result.status is ActionAccepted, result.errors
         assert result.warnings == operation.warnings
         counts.append(
             (
@@ -3836,7 +3838,7 @@ def test_main_window_action_is_unavailable_while_its_window_action_is_disabled()
 
     assert action.enabled is False
     assert action.disabled_error.code == "update_check_in_progress"
-    assert result.status == "rejected"
+    assert result.status is ActionRejected
     assert main_window.update_check_count == 0
 
 
@@ -4141,12 +4143,12 @@ def test_plate_manager_action_catalog_token_can_guard_invoke() -> None:
 
         assert action.selection_revision_token
         assert action.target_scope_ids == (DATASET_SCOPE_ID,)
-        assert accepted.status == "accepted"
+        assert accepted.status is ActionAccepted
         assert accepted.selection_revision_token == action.selection_revision_token
         assert [operation for operation, _request in renderer.presented] == [
             ShowDatasetCode
         ]
-        assert stale.status == "rejected"
+        assert stale.status is ActionRejected
         assert stale.errors[0].code == "stale_ui_action_revision"
 
 
@@ -4182,7 +4184,7 @@ def test_selected_run_workflow_dispatches_stop_while_execution_is_active(
         assert action.enabled is True
         assert action.title == ManagerExecutionState.RUNNING.run_button_text
         assert action.disabled_error is None
-        assert result.action_result.status == "accepted"
+        assert result.action_result.status is ActionAccepted
         assert forces == [False]
         assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
 
@@ -4208,7 +4210,7 @@ def test_selected_workflow_returns_before_the_queued_operation_runs(
         )
 
         operation_id = result.action_result.receipt.bridge_operation_id
-        assert result.action_result.status == "accepted"
+        assert result.action_result.status is ActionAccepted
         assert operation_id is not None
         assert result.action_result.workflow_status_surface_ids == (
             "plate_manager.state",
@@ -4288,7 +4290,7 @@ def test_selected_compile_reports_the_init_precondition(monkeypatch) -> None:
             assert error.code == "dataset_not_initialized"
             assert InitializeDatasets.operation_id in error.hint
         assert not action.enabled
-        assert result.action_result.status == "rejected"
+        assert result.action_result.status is ActionRejected
 
 
 def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
@@ -4311,7 +4313,7 @@ def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
             )
         )
 
-        assert result.action_result.status == "rejected"
+        assert result.action_result.status is ActionRejected
         assert result.errors[0].code == "confirmation_required"
         assert result.action_result.workflow_status_surface_ids == (
             "plate_manager.state",
@@ -4397,10 +4399,10 @@ def test_pipeline_editor_action_invoke_uses_selection_token_and_confirmation() -
         edit_result = invoke(edit_action, confirm=True)
         stale_result = invoke(edit_action, confirm=False, targets=("wrong-target",))
 
-        assert code_result.status == "accepted"
-        assert edit_result.status == "rejected"
+        assert code_result.status is ActionAccepted
+        assert edit_result.status is ActionRejected
         assert edit_result.errors[0].code == "confirmation_required"
-        assert stale_result.status == "rejected"
+        assert stale_result.status is ActionRejected
         assert stale_result.errors[0].code == "stale_ui_action_selection"
         assert [operation for operation, _request in renderer.presented] == [
             ShowPipelineCode
@@ -4537,9 +4539,9 @@ def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
         rejected = invoke(True)
         accepted = invoke(False)
 
-        assert rejected.status == "rejected"
+        assert rejected.status is ActionRejected
         assert rejected.errors[0].code == "confirmation_required"
-        assert accepted.status == "accepted"
+        assert accepted.status is ActionAccepted
         ((work, args, kwargs),) = started
         assert work == gui.session.run_debug
         assert args == (DATASET_SCOPE_ID,)
@@ -4578,7 +4580,7 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
 
         assert action.enabled is True
         assert action.confirmation_required is False
-        assert result.status == "accepted"
+        assert result.status is ActionAccepted
         assert len(inspections) == 1
 
 

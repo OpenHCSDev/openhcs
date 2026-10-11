@@ -9,7 +9,6 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from enum import Enum
 from os import environ
 from pathlib import Path
 from typing import Annotated, ClassVar
@@ -32,13 +31,14 @@ from zmqruntime.config import (
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.session import SessionEventBatch, SessionEventsRequest
 from openhcs.agent.dto.ui_bridge import (
+    ActionAccepted,
+    ActionUnavailable,
     OperationRunning,
     OperationUnavailable,
     UI_BRIDGE_UNKNOWN_WIDGET,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
@@ -630,7 +630,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.UNAVAILABLE.value,
+            status=ActionUnavailable,
             receipt=UiMutationReceipt.rejected_for(request.request_token),
             errors=errors,
         )
@@ -643,7 +643,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
+            status=ActionAccepted,
             receipt=UiMutationReceipt.accepted_for(
                 request.request_token,
                 bridge_operation_id=bridge_operation.identity.operation_id,
@@ -654,7 +654,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
 
     @classmethod
     def outcome(cls, result) -> str:
-        return result.status
+        return result.status.name
 
 
 class UiBridgeSelectedPlateWorkflowOperation(UiBridgeOperation):
@@ -674,7 +674,7 @@ class UiBridgeSelectedPlateWorkflowOperation(UiBridgeOperation):
                     widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
                     action_id=request.workflow.value,
                 ),
-                status=UiActionInvocationStatus.UNAVAILABLE.value,
+                status=ActionUnavailable,
                 receipt=UiMutationReceipt.rejected_for(request.request_token),
                 errors=errors,
             ),
@@ -1302,27 +1302,21 @@ class UiBridgeDescriptorProcessIdentityError(ValueError):
         )
 
 
-class DescriptorSetCardinality(Enum):
-    NONE = "none"
-    ONE = "one"
-    MANY = "many"
-
-
 @dataclass(frozen=True, slots=True)
 class LiveUiBridgeDescriptorSet:
     descriptors: tuple[UiBridgeDescriptorFile, ...]
 
-    @property
-    def cardinality(self) -> DescriptorSetCardinality:
+    def resolution_runner(self) -> "DescriptorSetResolutionRunner":
+        """Return the resolver for this set's size: none, one or many."""
         count = len(self.descriptors)
         if count == 0:
-            return DescriptorSetCardinality.NONE
+            return NoDescriptorSetResolutionRunner()
         if count == 1:
-            return DescriptorSetCardinality.ONE
-        return DescriptorSetCardinality.MANY
+            return SingleDescriptorSetResolutionRunner()
+        return AmbiguousDescriptorSetResolutionRunner()
 
     def only_descriptor(self) -> UiBridgeDescriptorFile:
-        if self.cardinality is not DescriptorSetCardinality.ONE:
+        if len(self.descriptors) != 1:
             raise ValueError(
                 "Live UI bridge descriptor set does not contain exactly one descriptor."
             )
@@ -1363,20 +1357,8 @@ class UiBridgeEnvironment(UiBridgeConnectionFields):
         )
 
 
-class DescriptorSetResolutionRunner(ABC, metaclass=AutoRegisterMeta):
-    """Registered resolver behavior for live UI bridge descriptor cardinality."""
-
-    __registry_key__ = "cardinality"
-    __skip_if_no_key__ = True
-
-    cardinality: ClassVar[DescriptorSetCardinality | None] = None
-
-    @classmethod
-    def for_cardinality(
-        cls,
-        cardinality: DescriptorSetCardinality,
-    ) -> "DescriptorSetResolutionRunner":
-        return cls.__registry__[cardinality]()
+class DescriptorSetResolutionRunner(ABC):
+    """Resolver behavior for a live UI bridge descriptor set of one size."""
 
     @abstractmethod
     def resolve(
@@ -1389,8 +1371,6 @@ class DescriptorSetResolutionRunner(ABC, metaclass=AutoRegisterMeta):
 
 
 class NoDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.NONE
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1405,8 +1385,6 @@ class NoDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
 
 
 class SingleDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.ONE
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1421,8 +1399,6 @@ class SingleDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
 
 
 class AmbiguousDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.MANY
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1692,9 +1668,9 @@ class UiBridgeDescriptorResolver:
         descriptor_set = LiveUiBridgeDescriptorSet(
             UiBridgeDescriptorCatalog.live_descriptors()
         )
-        return DescriptorSetResolutionRunner.for_cardinality(
-            descriptor_set.cardinality
-        ).resolve(self, descriptor_set, connection)
+        return descriptor_set.resolution_runner().resolve(
+            self, descriptor_set, connection
+        )
 
     def _resolve_explicit_file(
         self,

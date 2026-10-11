@@ -47,7 +47,6 @@ from openhcs.agent.dto.ui_bridge import (
     InheritedFields,
     RawResolvedFields,
     SemanticFields,
-    UiActionInvocationStatus,
     UiBridgeOperationRef,
     UiBridgeOperationStatus,
     UiBridgeOperationWaitRequest,
@@ -181,45 +180,63 @@ class McpDevProtocolError(RuntimeError):
     """Malformed or unsupported MCP wire response."""
 
 
-class WorkflowPollSummaryStatus(str, Enum):
-    """Machine-readable selected-workflow polling outcome."""
+class WorkflowPollSummaryStatus(ABC, metaclass=AutoRegisterMeta):
+    """Machine-readable selected-workflow polling outcome; ``name`` is its spelling."""
 
-    COMPLETED = "completed"
-    FAILED = "failed"
-    TIMEOUT = "timeout"
-    SKIPPED = "skipped"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    completed: ClassVar[bool] = False
+
+
+class PollCompleted(WorkflowPollSummaryStatus):
+    name = "completed"
+    completed = True
+
+
+class PollFailed(WorkflowPollSummaryStatus):
+    name = "failed"
+
+
+class PollTimedOut(WorkflowPollSummaryStatus):
+    name = "timeout"
+
+
+class PollSkipped(WorkflowPollSummaryStatus):
+    name = "skipped"
 
 
 class WorkflowPollSkipReason(str, Enum):
     """Machine-readable reason selected-workflow polling did not start."""
 
-    poll_status: WorkflowPollSummaryStatus
+    poll_status: type[WorkflowPollSummaryStatus]
 
     WORKFLOW_NOT_ACCEPTED = (
         "workflow_not_accepted",
-        WorkflowPollSummaryStatus.SKIPPED,
+        PollSkipped,
     )
     WORKFLOW_TOOL_ERROR = (
         "workflow_tool_error",
-        WorkflowPollSummaryStatus.SKIPPED,
+        PollSkipped,
     )
     OPERATION_RECEIPT_MISSING = (
         "operation_receipt_missing",
-        WorkflowPollSummaryStatus.FAILED,
+        PollFailed,
     )
     OPERATION_RECEIPT_FAILED = (
         "operation_receipt_failed",
-        WorkflowPollSummaryStatus.FAILED,
+        PollFailed,
     )
     OPERATION_RECEIPT_TIMEOUT = (
         "operation_receipt_timeout",
-        WorkflowPollSummaryStatus.TIMEOUT,
+        PollTimedOut,
     )
 
     def __new__(
         cls,
         value: str,
-        poll_status: WorkflowPollSummaryStatus,
+        poll_status: type[WorkflowPollSummaryStatus],
     ) -> "WorkflowPollSkipReason":
         member = str.__new__(cls, value)
         member._value_ = value
@@ -638,7 +655,7 @@ class WorkflowPollSummary:
 
     tool_name: ClassVar[str] = "mcp_dev_selected_workflow_poll"
     workflow: str | None
-    status: WorkflowPollSummaryStatus
+    status: type[WorkflowPollSummaryStatus]
     poll_requested: bool
     poll_completed: bool
     poll_count: int
@@ -649,11 +666,11 @@ class WorkflowPollSummary:
 
     @property
     def mcp_error(self) -> bool:
-        return self.status is not WorkflowPollSummaryStatus.COMPLETED
+        return not self.status.completed
 
     def as_payload(self) -> dict[str, JsonValue]:
         payload: dict[str, JsonValue] = {
-            "poll_status": self.status.value,
+            "poll_status": self.status.name,
             "poll_requested": self.poll_requested,
             "poll_completed": self.poll_completed,
             "poll_count": self.poll_count,
@@ -2312,14 +2329,13 @@ def state_surface_tool_arguments(
 
 
 def workflow_result_was_accepted(result: McpDevToolResult) -> bool:
-    return (
-        workflow_result_action_status(result) == UiActionInvocationStatus.ACCEPTED.value
-    )
+    payload = workflow_result_payload(result)
+    return payload is not None and payload.action_result.status.accepted
 
 
 def workflow_result_action_status(result: McpDevToolResult) -> str | None:
     payload = workflow_result_payload(result)
-    return None if payload is None else payload.action_result.status
+    return None if payload is None else payload.action_result.status.name
 
 
 def workflow_result_event_sequence(result: McpDevToolResult) -> int:
@@ -2414,7 +2430,7 @@ def workflow_poll_terminal_status(
     *,
     target_scope_ids: tuple[str, ...],
     policy: WorkflowStatePollPolicy,
-) -> WorkflowPollSummaryStatus | None:
+) -> type[WorkflowPollSummaryStatus] | None:
     if not workflow_poll_manager_is_idle(result):
         return None
     rows = workflow_poll_target_rows(
@@ -2424,9 +2440,9 @@ def workflow_poll_terminal_status(
     if not rows:
         return None
     if any(policy.failed_for_row(row) for row in rows):
-        return WorkflowPollSummaryStatus.FAILED
+        return PollFailed
     if all(policy.terminal_for_row(row) for row in rows):
-        return WorkflowPollSummaryStatus.COMPLETED
+        return PollCompleted
     return None
 
 
@@ -2480,7 +2496,7 @@ def parse_orchestrator_state(
 def workflow_poll_summary_result(
     *,
     workflow: str | None = None,
-    status: WorkflowPollSummaryStatus | None = None,
+    status: type[WorkflowPollSummaryStatus] | None = None,
     poll_requested: bool,
     poll_completed: bool,
     poll_count: int,
@@ -2491,9 +2507,9 @@ def workflow_poll_summary_result(
 ) -> McpDevToolResult:
     if status is None:
         status = (
-            WorkflowPollSummaryStatus.COMPLETED
+            PollCompleted
             if poll_completed
-            else WorkflowPollSummaryStatus.TIMEOUT
+            else PollTimedOut
         )
     summary = WorkflowPollSummary(
         workflow=workflow,

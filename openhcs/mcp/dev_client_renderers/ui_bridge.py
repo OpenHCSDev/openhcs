@@ -540,6 +540,8 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
         ]
         if summary.semantic_markers:
             status_parts.append("markers=" + ",".join(summary.semantic_markers))
+        if summary.error_dialog:
+            status_parts.append("error_dialog")
         return [f"Window: {summary.title}", "Status: " + " ".join(status_parts)]
 
     @classmethod
@@ -870,7 +872,7 @@ class UiActionResultRenderer(UiMutationRenderer, ABC):
                 *cls.introduction_lines(payload),
                 f"UI action invoke: "
                 f"action={action.identity.widget_id}/{action.identity.action_id} "
-                f"status={action.status}",
+                f"status={action.status.name}",
                 cls.acknowledgement_line(action.receipt),
                 f"Selection: targets={cls.sequence_text(action.target_scope_ids)} "
                 f"selection_rev={cls.text(action.selection_revision_token)}",
