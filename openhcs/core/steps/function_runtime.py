@@ -141,7 +141,7 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 from openhcs.core.runtime_image_values import owned_runtime_value
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 from openhcs.core.debug import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
@@ -235,7 +235,7 @@ class PatternGroupExecutionScope:
 
         plan = self.unscoped_main_flow_source_binding_plan
         represented_names = frozenset(
-            image_metadata_of(payload).source_provenance.represented_source_image_names
+            as_runtime_value(payload).image_metadata.source_provenance.represented_source_image_names
         )
         if represented_names:
             variable_components = ComponentSet.of(

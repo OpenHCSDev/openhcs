@@ -43,6 +43,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
+    RuntimeSliceInvariantValue,
     RuntimeSliceProjectableValue,
 )
 from openhcs.core.source_image_provenance import (
@@ -1371,6 +1372,14 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Return the image metadata attached to this payload."""
 
     @property
+    def image_metadata(self) -> ImagePayloadMetadata:
+        return self.metadata
+
+    @property
+    def array_data(self) -> Any:
+        return self.data
+
+    @property
     def mask(self) -> Any | None:
         """Return the validity mask this payload carries, if any."""
         return None
@@ -1727,22 +1736,27 @@ def owned_runtime_value(value: Any) -> Any:
     return PlainImagePayload(value)
 
 
-def image_metadata_of(value: Any) -> "ImagePayloadMetadata":
-    """Image metadata of a runtime value of any artifact kind.
+@dataclass(frozen=True, slots=True)
+class UnownedRuntimeValue(RuntimeSliceInvariantValue):
+    """A value no runtime family owns (a mapping, a list of rows, a scalar)."""
 
-    Kind-generic layers (projection items, materialization, output recording)
-    hold values of every artifact kind. Only image payloads carry image
-    metadata; every other kind carries none. This is the one place that
-    decision is made until K2 gives each artifact kind its own metadata.
+    value: Any
+
+    @property
+    def array_data(self) -> Any:
+        return self.value
+
+
+def as_runtime_value(value: Any) -> RuntimeSliceProjectableValue:
+    """Return any value as a member of the runtime-value family.
+
+    Layers that hold values of every artifact kind call this once and then ask
+    the member (``image_metadata``, ``array_data``).
     """
     value = owned_runtime_value(value)
-    return value.metadata if isinstance(value, ImagePayload) else ImagePayloadMetadata()
-
-
-def array_data_of(value: Any) -> Any:
-    """Array of an image payload, or a value of another artifact kind unchanged."""
-    value = owned_runtime_value(value)
-    return value.data if isinstance(value, ImagePayload) else value
+    if isinstance(value, RuntimeSliceProjectableValue):
+        return value
+    return UnownedRuntimeValue(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1964,7 +1978,7 @@ def project_image_mask_to_data_domain(
     if mask is None:
         return None
     if metadata is None:
-        metadata = image_metadata_of(data)
+        metadata = as_runtime_value(data).image_metadata
     data_array = runtime_array_operand(data)
     candidate = mask_array(mask)
     target = MemoryType(detect_memory_type(data_array))

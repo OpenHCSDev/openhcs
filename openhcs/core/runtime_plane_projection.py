@@ -16,6 +16,7 @@ from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
@@ -34,6 +35,18 @@ class RuntimeSliceProjectableValue(ABC):
     def declared_plane_axis(self) -> "RuntimePlaneAxis | None":
         """Return the leading plane axis this value declares, if any."""
         return None
+
+    @property
+    def image_metadata(self) -> "ImagePayloadMetadata":
+        """Return the image metadata this value carries; only images carry any."""
+        from openhcs.core.runtime_image_values import ImagePayloadMetadata
+
+        return ImagePayloadMetadata()
+
+    @property
+    def array_data(self) -> object:
+        """Return the array a writer stores for this value; only images unwrap."""
+        return self
 
     @abstractmethod
     def value_for_slice(

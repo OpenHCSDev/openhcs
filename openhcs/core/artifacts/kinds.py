@@ -630,9 +630,9 @@ class ImagePayloadArtifactKind(SourceContextKind, ArtifactType):
 
     @classmethod
     def materialization_image_metadata(cls, value: RuntimeValue) -> ImagePayloadMetadata:
-        from openhcs.core.runtime_image_values import image_metadata_of
+        from openhcs.core.runtime_image_values import as_runtime_value
 
-        return image_metadata_of(cls.materialization_payload(value))
+        return as_runtime_value(cls.materialization_payload(value)).image_metadata
 
 
 class ImageArtifactType(ImagePayloadArtifactKind):
@@ -1204,12 +1204,12 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     ) -> object:
         """Own returned rows as this output's table, in the source's context."""
 
-        from openhcs.core.runtime_image_values import image_metadata_of
+        from openhcs.core.runtime_image_values import as_runtime_value
         from openhcs.core.runtime_measurements import MeasurementTable
 
         del plane_projection
         subject = target.require_measurement_subject()
-        source_provenance = image_metadata_of(source_payload).source_provenance
+        source_provenance = as_runtime_value(source_payload).image_metadata.source_provenance
         if cls.accepts_runtime_payload(output_value):
             cls._validate_table(output_value, target, subject)
             contextualized_provenance = (

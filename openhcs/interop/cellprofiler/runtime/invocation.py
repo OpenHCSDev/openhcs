@@ -43,7 +43,7 @@ from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.axes import ColourAxis
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 from openhcs.core.runtime_image_values import owned_runtime_value
 
 
@@ -231,7 +231,7 @@ class CellProfilerSourceIdentityMixin:
         if isinstance(payload, RuntimeSliceAlignedValueSet):
             return tuple(cls.scalar_source_provenance(value) for value in payload.values)
         count = RuntimeSliceProjection.slice_count_from_values((payload,))
-        metadata = image_metadata_of(payload)
+        metadata = as_runtime_value(payload).image_metadata
         provenance = metadata.source_provenance
         if count is None:
             return (provenance,)

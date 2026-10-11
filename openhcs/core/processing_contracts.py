@@ -42,7 +42,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayload,
     MaskedImagePayload,
     PlainImagePayload,
-    image_metadata_of,
+    as_runtime_value,
     owned_runtime_value,
 )
 from openhcs.core.runtime_object_label_aggregation import (
@@ -1293,7 +1293,7 @@ class VolumetricToSliceContract(WholeStackInputContract):
     @classmethod
     def main_flow_output_source_payload(cls, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""
-        metadata = image_metadata_of(source_payload)
+        metadata = as_runtime_value(source_payload).image_metadata
         if not metadata.has_values:
             return source_payload
         if metadata.plane_axis is None:

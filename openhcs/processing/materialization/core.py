@@ -105,7 +105,7 @@ from openhcs.processing.materialization.options import (
 from openhcs.core.axes import Axis
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -1218,7 +1218,7 @@ class MaterializationInputItem(RuntimeProjectedPayloadItem):
 
     @property
     def data(self) -> MaterializationValue:
-        return runtime_array_operand(array_data_of(self.value))
+        return runtime_array_operand(as_runtime_value(self.value).array_data)
 
     @property
     def runtime_plane(self) -> RuntimeProjectionPlaneMetadata | None:
@@ -1283,7 +1283,7 @@ class SourcePlaneProjectionContract:
                 plane_count_source
                 for payload in payloads
                 for plane_count_source in (
-                    image_metadata_of(payload).source_provenance.plane_count_sources
+                    as_runtime_value(payload).image_metadata.source_provenance.plane_count_sources
                 )
             )
         )

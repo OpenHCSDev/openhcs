@@ -63,7 +63,7 @@ from openhcs.processing.materialization.core import (
     prepare_materialization,
 )
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -537,7 +537,7 @@ class RuntimeArtifactMaterialization:
     def payload_source_identity(
         data: MaterializationValue,
     ) -> SourceImageIdentity | None:
-        metadata = image_metadata_of(data)
+        metadata = as_runtime_value(data).image_metadata
         source_identity = metadata.source_provenance.scalar_source_identity
         if source_identity.addressable:
             return source_identity
@@ -708,7 +708,7 @@ class RuntimeArtifactMaterialization:
             return ImagePayloadMetadata(
                 source_provenance=record.data.source_provenance,
             )
-        return image_metadata_of(record.data)
+        return as_runtime_value(record.data).image_metadata
 
     @classmethod
     def record_metadata_with_runtime_scope(

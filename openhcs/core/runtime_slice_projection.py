@@ -21,7 +21,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimeSliceProjectableValue,
 )
 from openhcs.core.source_image_provenance import SourceComponentMetadata
-from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
@@ -81,9 +81,9 @@ class RuntimeProjectionSourceIdentityRequest:
         context: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...] | None:
         """Return exact provenance projection for the request-declared stack axis."""
-        source_plane_count = image_metadata_of(
+        source_plane_count = as_runtime_value(
             self.value
-        ).source_provenance.source_plane_count
+        ).image_metadata.source_provenance.source_plane_count
         if source_plane_count == 0:
             return None
         if source_plane_count != context.axis_size:
@@ -250,12 +250,12 @@ class RuntimeProjectedPayloadItem:
 
     @property
     def data(self) -> RuntimeProjectionData:
-        return array_data_of(self.value)
+        return as_runtime_value(self.value).array_data
 
     @property
     def metadata(self) -> ImagePayloadMetadata:
         """Image metadata of the item; items of non-image kinds carry none."""
-        return image_metadata_of(self.value)
+        return as_runtime_value(self.value).image_metadata
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:

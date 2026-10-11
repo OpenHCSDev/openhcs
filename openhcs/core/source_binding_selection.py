@@ -67,7 +67,7 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
@@ -1628,7 +1628,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         source_provenance = (
             None
             if source_payload is None
-            else image_metadata_of(source_payload).source_provenance
+            else as_runtime_value(source_payload).image_metadata.source_provenance
         )
         if source_provenance is not None and not source_provenance.has_values:
             raise ValueError(
