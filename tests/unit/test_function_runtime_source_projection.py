@@ -39,6 +39,8 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
+    DynamicGroupScope,
+    UngroupedScope,
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
@@ -1475,7 +1477,7 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
             source_step_index=4,
             source_step_scope_id="object_to_image",
         ),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("0",),
             component=Microscopy.Channel,
         ),
@@ -1521,7 +1523,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value="channel",
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("2",),
             component=Microscopy.Channel,
         ),
@@ -1573,9 +1575,9 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         compiled_pattern,
         artifact_inputs={runtime_plan.ref(): runtime_plan},
         relation_source_scopes={
-            runtime_image.ref(): runtime_plan.producer_group_scope(),
+            runtime_image.ref(): runtime_plan.group_scope,
         },
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -1595,7 +1597,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value="channel",
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -1668,7 +1670,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
             source_step_index=4,
             source_step_scope_id="crop",
         ),
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+        execution_group_scope=DynamicGroupScope(Microscopy.Site),
         compiled_function_pattern=compile_function_pattern(
             admitted_graph(lambda image: image),
             {},
@@ -1701,7 +1703,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
 def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
     plan = SimpleNamespace(
         main_input_dependency=StepInputDependency.pipeline_start(),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -1772,8 +1774,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         name="SourceSetMeasurements",
         path="/memory/SourceSetMeasurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         relations=source_set_measurements.relations,
     )
 
@@ -1783,7 +1784,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         step_name="SourceBoundAnchorFilter",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),
@@ -1903,9 +1904,9 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         compiled_pattern,
         artifact_inputs={runtime_plan.ref(): runtime_plan},
         relation_source_scopes={
-            runtime_image.ref(): runtime_plan.producer_group_scope(),
+            runtime_image.ref(): runtime_plan.group_scope,
         },
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("3",),
             component=Microscopy.Channel,
         ),
@@ -1949,7 +1950,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         step_name="SaveImages",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("3",),
             component=Microscopy.Channel,
         ),
@@ -2007,7 +2008,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         step_name="ExactSourceInput",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -2061,7 +2062,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
         step_name="ExactSourceInput",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -2114,7 +2115,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
         axis_id="A01",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=bindings),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("MCP_DNA", "MCP_AGP"),
             component=Microscopy.Channel,
         ),
@@ -2298,7 +2299,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=source_binding_plan,
         execution_group_value=None,
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         compiled_function_pattern=compiled_pattern,
     )
     pattern_filter = _anchor_executor(
@@ -2336,7 +2337,7 @@ def test_default_callable_runtime_scope_projects_bindings_to_selected_group() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compile_function_pattern(
                 admitted_graph(lambda image: image),
@@ -2381,7 +2382,7 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2424,7 +2425,7 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         source_binding_plan=source_binding_plan,
         compiled_function_pattern=compiled_pattern,
         variable_components=(Microscopy.Site,),
@@ -2500,8 +2501,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
             name=spec.name,
             path=f"/memory/{spec.name}.pkl",
             artifact_type=spec.artifact_type,
-            group_keys=(channel,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
             paths_by_group={channel: f"/memory/{spec.name}__{channel}.pkl"},
             relations=spec.relations,
         )
@@ -2546,7 +2546,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         source_binding_plan=source_binding_plan,
         input_memory_type="numpy",
         variable_components=(Microscopy.Site,),
@@ -2654,8 +2654,8 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
                 spec=source_spec,
                 storage_plan=storage,
                 projection=ArtifactInputProjectionPlan(
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=storage.producer_group_scope(),
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=storage.group_scope,
                 ),
                 main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD,
             ),
@@ -2711,16 +2711,14 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         name=first_spec.name,
         path="/memory/FirstLabels.pkl",
         artifact_type=first_spec.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/FirstLabels_1.pkl"},
     )
     second_plan = ArtifactOutputPlan(
         name=second_spec.name,
         path="/memory/SecondLabels.pkl",
         artifact_type=second_spec.artifact_type,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/SecondLabels_2.pkl"},
     )
 
@@ -2771,7 +2769,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_index=0,
         step_scope_id="pipeline::step_0",
         step_name="record labels",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan(),
         input_memory_type="numpy",
         variable_components=(Microscopy.Site,),
@@ -2850,7 +2848,7 @@ def test_invocation_source_artifact_owns_cross_component_runtime_binding_scope()
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+            execution_group_scope=DynamicGroupScope(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2928,7 +2926,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2971,7 +2969,7 @@ def test_payload_provenance_excludes_auxiliary_binding_from_main_flow_scope() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             variable_components=(Microscopy.Site,),
             compiled_function_pattern=compiled_pattern,
@@ -3009,7 +3007,7 @@ def test_payload_provenance_outranks_unrelated_artifact_execution_group() -> Non
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.from_raw(
+            execution_group_scope=ComponentGroupScope.of(
                 ("1",),
                 component=Microscopy.Channel,
             ),
@@ -3084,7 +3082,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+            execution_group_scope=DynamicGroupScope(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             variable_components=(Microscopy.Channel,),
         ),
@@ -3165,7 +3163,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+            execution_group_scope=DynamicGroupScope(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -3234,7 +3232,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="R04C09",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+            execution_group_scope=DynamicGroupScope(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -3370,7 +3368,7 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
 
     plan = SimpleNamespace(
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         artifact_outputs={},
@@ -3447,16 +3445,14 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         name=corrected_stain_1_spec.name,
         path="/memory/CorrectedStain1.pkl",
         artifact_type=corrected_stain_1_spec.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/CorrectedStain1_1.pkl"},
     )
     corrected_stain_2 = ArtifactOutputPlan(
         name=corrected_stain_2_spec.name,
         path="/memory/CorrectedStain2.pkl",
         artifact_type=corrected_stain_2_spec.artifact_type,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/CorrectedStain2_2.pkl"},
     )
     plan = SimpleNamespace(
@@ -3464,7 +3460,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         artifact_outputs={
             plan.ref(): plan for plan in (corrected_stain_1, corrected_stain_2)
         },
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
 
@@ -3534,7 +3530,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
         execution_plan=SimpleNamespace(
             artifact_inputs={},
             artifact_outputs=output_plans,
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             source_binding_plan=CompiledSourceBindingPlan(),
         ),
         compiled_group=compiled_group,
@@ -3562,22 +3558,20 @@ def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> Non
         name="Stain1",
         path="/memory/Stain1.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/Stain1_1.pkl"},
     )
     channel_2 = ArtifactOutputPlan(
         name="Stain2",
         path="/memory/Stain2.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/Stain2_2.pkl"},
     )
     plan = SimpleNamespace(
         artifact_inputs={},
         artifact_outputs={plan.ref(): plan for plan in (channel_1, channel_2)},
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+        execution_group_scope=DynamicGroupScope(Microscopy.Site),
     )
 
     selected = PatternGroupExecutionScope._select_output_plans_for_component(
@@ -3653,7 +3647,7 @@ def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
         step_plan = SimpleNamespace(
             artifact_inputs=invalid_inputs,
             artifact_outputs=invalid_outputs,
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
         )
         with pytest.raises(error_type, match=message):
             request = PatternGroupExecutionRequest(
@@ -3684,7 +3678,7 @@ def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+            execution_group_scope=DynamicGroupScope(Microscopy.Site),
             source_binding_plan=source_binding_plan,
         ),
         compiled_group=compiled_pattern.default_group,
@@ -3742,7 +3736,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
         ),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             main_input_dependency=StepInputDependency.pipeline_start(),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
@@ -4004,7 +3998,7 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
     )
     plan = SimpleNamespace(
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
@@ -5685,7 +5679,7 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             step_name="ExplicitIdentity",
             pipeline_position=0,
             step_scope_id="explicit-identity",
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             artifact_outputs=output_plans,
         ),
         pattern_group_info="A01_s{iii}_w1_z001_t001.tif",

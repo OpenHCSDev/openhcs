@@ -379,15 +379,9 @@ def actual_materialization_records(
     output_plan: ArtifactOutputPlan,
 ) -> tuple[StoredRuntimeValue, ...]:
     """Return actually produced memory records for one planned artifact output."""
-    if not output_plan.group_keys:
-        raise RuntimeError(
-            f"Artifact output plan '{output_plan.name}' has no group keys."
-        )
     artifact_type = output_plan.artifact_type
 
-    if output_plan.group_component is not None and tuple(output_plan.group_keys) == (
-        None,
-    ):
+    if not output_plan.group_scope.has_compiled_keys:
         dynamic_records = tuple(
             record
             for record in store.find(
@@ -434,11 +428,12 @@ def actual_materialization_records(
             )
 
     group_order = {
-        group_key: index for index, group_key in enumerate(output_plan.group_keys)
+        group_key: index
+        for index, group_key in enumerate(output_plan.group_scope.keys)
     }
     record_sort_items = []
     missing_group_keys = []
-    for group_key in output_plan.group_keys:
+    for group_key in output_plan.group_scope.keys:
         records = tuple(
             record
             for record in store.find(
@@ -1161,7 +1156,7 @@ def planned_materialization_preview(
             output_plan=output_plan.for_group(group_key),
             materialization_spec=materialization_spec,
         )
-        for group_key in (output_plan.group_keys or (None,))
+        for group_key in output_plan.group_scope.keys
     )
     return PlannedArtifactMaterializationPreview(
         filename_uses_source_identity=(
@@ -1184,14 +1179,14 @@ def _planned_materialization_path(
         output_key,
         plan,
         context,
-        output_plan.single_group_key,
+        output_plan.group_scope.single_key(),
         artifact_path=output_plan.path,
         output_plan=output_plan,
     )
     base_path = str(plan.artifact_analysis_output_dir / filename)
     shared_output_stem = materialization_spec.shared_output_stem(base_path)
     return PlannedArtifactMaterializationPath(
-        group_key=output_plan.single_group_key,
+        group_key=output_plan.group_scope.single_key(),
         shared_output_stem=shared_output_stem,
         candidate_paths=materialization_spec.candidate_paths(base_path),
     )

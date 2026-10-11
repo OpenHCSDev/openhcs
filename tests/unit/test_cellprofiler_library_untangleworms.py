@@ -17,6 +17,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.processing.backends.cellprofiler.worms import (
     OverlapStyle,
@@ -108,8 +109,8 @@ def _straighten_worms_binding_request(
             artifact_type=object_spec.artifact_type,
         ),
         spec=object_spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )

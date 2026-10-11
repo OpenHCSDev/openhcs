@@ -103,6 +103,9 @@ from openhcs.processing.materialization import (
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -1882,8 +1885,7 @@ def _measurement_record(
         name=name,
         path=f"/memory/{name}.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=(group_key,),
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((group_key,), component=group_component),
         variable_components=variable_components,
     )
     value = RuntimeValue.normalize(

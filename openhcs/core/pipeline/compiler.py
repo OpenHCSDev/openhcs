@@ -1210,7 +1210,7 @@ class PipelineCompiler:
         """Validate an exact source anchor, or leave ancestry work outstanding."""
 
         declared_plan = plan.source_binding_plan
-        if grouped_pattern and plan.execution_group_scope.component is None:
+        if grouped_pattern and not plan.execution_group_scope.as_grouped():
             raise ValueError(
                 f"{owner}: cannot project source bindings for a grouped callable "
                 "pattern without a routed component scope."
@@ -1220,16 +1220,13 @@ class PipelineCompiler:
         try:
             if not declared_plan.has_primary_content:
                 component_value = None
-            elif execution_scope.component is None:
-                component_value = None
-            elif not grouped_pattern and execution_scope.has_single_static_key:
-                component_value = execution_scope.require_single_static_key()
             elif not grouped_pattern:
-                # A single callable is applied across every static/dynamic routed
-                # coordinate.  The compiled plan itself is the exact source scope;
-                # it must be validated as a whole rather than guessed from the
-                # synthetic ``default`` function-group key.
-                component_value = None
+                # A single callable over one exact coordinate projects it. Over
+                # several static/dynamic routed coordinates (or none), the
+                # compiled plan itself is the exact source scope; it is
+                # validated as a whole rather than guessed from the synthetic
+                # ``default`` function-group key.
+                component_value = execution_scope.single_key()
             else:
                 component_value = execution_scope.resolve_runtime_key(group.group_key)
             if declared_plan.has_primary_content:

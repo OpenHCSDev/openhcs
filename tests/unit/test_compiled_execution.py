@@ -53,6 +53,9 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -278,8 +281,7 @@ def test_runtime_execution_observation_merges_into_parent_contexts():
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
-            group_keys=("DAPI",),
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
         ),
         MeasurementTable(
             name="measurements",
@@ -318,8 +320,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=Microscopy.Channel,
-        group_keys=("DAPI",),
+        group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
     )
 
     def measurement_value(object_id: int) -> RuntimeValue:

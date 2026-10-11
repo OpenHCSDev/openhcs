@@ -10,7 +10,7 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
+    GroupedScope,
     RuntimeExecutionAxisScope,
 )
 
@@ -72,11 +72,7 @@ class RuntimeValue:
             raise TypeError(
                 "RuntimeValue execution_scope must be a RuntimeExecutionAxisScope."
             )
-        group_key = output_plan.single_group_key
-        artifact_scope = execution_scope.for_group_coordinate(
-            output_plan.group_component if group_key is not None else None,
-            group_key,
-        )
+        artifact_scope = execution_scope.for_output_scope(output_plan.group_scope)
         return RuntimeValue.from_spec(
             output_plan,
             data,
@@ -105,44 +101,43 @@ class RuntimeValue:
         )
 
     @classmethod
-    def compose(
+    def compose(cls, values: Sequence["RuntimeValue"]) -> Any:
+        """Compose records through their shared artifact-type owner."""
+
+        runtime_values = cls._one_artifact_type(values)
+        return runtime_values[0].artifact_type.compose_runtime_values(runtime_values)
+
+    @classmethod
+    def compose_groups(
         cls,
         values: Sequence["RuntimeValue"],
-        producer_group_scope: ComponentGroupScope | None = None,
+        producer_scope: GroupedScope,
     ) -> Any:
-        """Compose producer records through their shared artifact-type owner."""
+        """Rebuild the producer's group axis from one record per producer group."""
 
+        runtime_values = cls._one_artifact_type(values)
+        for value in runtime_values:
+            value_scope = value.key.scope
+            if value_scope.component is not producer_scope.component:
+                raise ValueError(
+                    "Runtime producer-group composition received a value from "
+                    f"{value_scope.component!r}, expected "
+                    f"{producer_scope.component!r}."
+                )
+            if not producer_scope.contains_runtime_key(value_scope.value_text):
+                raise ValueError(
+                    "Runtime producer-group composition received a value outside "
+                    f"the declared scope {producer_scope!r}."
+                )
+        return runtime_values[0].artifact_type.compose_runtime_groups(runtime_values)
+
+    @staticmethod
+    def _one_artifact_type(
+        values: Sequence["RuntimeValue"],
+    ) -> tuple["RuntimeValue", ...]:
         runtime_values = tuple(values)
         if not runtime_values:
             raise ValueError("Cannot compose an empty runtime value group.")
-        if producer_group_scope is not None and not isinstance(
-            producer_group_scope, ComponentGroupScope
-        ):
-            raise TypeError(
-                "RuntimeValue.compose producer_group_scope must be a "
-                "ComponentGroupScope or None."
-            )
-        if producer_group_scope is not None:
-            if producer_group_scope.is_ungrouped:
-                raise ValueError(
-                    "Runtime producer-group composition requires a grouped producer "
-                    "scope."
-                )
-            for value in runtime_values:
-                value_scope = value.key.scope
-                if value_scope.component is not producer_group_scope.component:
-                    raise ValueError(
-                        "Runtime producer-group composition received a value from "
-                        f"{value_scope.component!r}, expected "
-                        f"{producer_group_scope.component!r}."
-                    )
-                if not producer_group_scope.contains_runtime_key(
-                    value_scope.value_text
-                ):
-                    raise ValueError(
-                        "Runtime producer-group composition received a value outside "
-                        f"the declared scope {producer_group_scope!r}."
-                    )
         artifact_type = runtime_values[0].artifact_type
         mismatched_types = tuple(
             value.artifact_type
@@ -154,10 +149,7 @@ class RuntimeValue:
                 "Grouped runtime values must have one artifact type, got "
                 f"{(artifact_type, *mismatched_types)!r}."
             )
-        return artifact_type.compose_runtime_values(
-            runtime_values,
-            producer_group_scope=producer_group_scope,
-        )
+        return runtime_values
 
     @staticmethod
     def normalize(
@@ -214,14 +206,7 @@ class RuntimeValue:
             raise TypeError(
                 "RuntimeValue execution_scope must be a RuntimeExecutionAxisScope."
             )
-        expected_scope = execution_scope.for_group_coordinate(
-            (
-                output_plan.group_component
-                if output_plan.single_group_key is not None
-                else None
-            ),
-            output_plan.single_group_key,
-        )
+        expected_scope = execution_scope.for_output_scope(output_plan.group_scope)
         if isinstance(value, RuntimeValue):
             validated = value.validated_for_output_plan(
                 output_plan,

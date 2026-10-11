@@ -25,6 +25,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -116,8 +117,8 @@ def _runtime_request(contract, kwargs, table=None):
             plan,
             spec=spec,
             input_index=index,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )

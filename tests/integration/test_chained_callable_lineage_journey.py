@@ -156,7 +156,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             [record] = context.runtime_value_store.find_matching(
                 RuntimeArtifactQuery.from_output_plan(
                     plan, axis_id="A01", backend="memory",
-                    group_key=plan.group_scope().select_runtime_key(
+                    group_key=plan.group_scope.select_runtime_key(
                         invocation.key.group_key
                     ),
                 )

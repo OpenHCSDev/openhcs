@@ -326,7 +326,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             output_dir=Path("/tmp/out/A01"),
             main_flow_axis_persistence_enabled=False,
         )
-        step_plan.execution_group_scope = ComponentGroupScope.from_raw(
+        step_plan.execution_group_scope = ComponentGroupScope.of(
             ("A01",),
             component=Microscopy.Well,
         )
@@ -346,8 +346,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="positions",
             artifact_type=SpecialArtifactType,
             path="/tmp/out/A01/positions.pkl",
-            group_component=Microscopy.Well,
-            group_keys=("A01",),
+            group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
             paths_by_group={"A01": "/tmp/out/A01/positions.pkl"},
             source_step_id=0,
             source_step_scope_id="step-find-positions",
@@ -357,8 +356,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="objects",
             artifact_type=ObjectLabelsArtifactType,
             path="/tmp/out/A01/objects.zarr",
-            group_component=Microscopy.Well,
-            group_keys=("A01",),
+            group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
             paths_by_group={"A01": "/tmp/out/A01/objects.zarr"},
         )
         step_plan.artifact_outputs[output_plan.ref()] = output_plan

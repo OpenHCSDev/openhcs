@@ -25,7 +25,7 @@ from openhcs.core.artifacts.payloads import (
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
 from openhcs.core.axes import Axis
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import ComponentGroupScope, UngroupedScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
@@ -285,8 +285,7 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
     name: str
     path: str
     artifact_type: type[ArtifactType] = SpecialArtifactType
-    group_keys: tuple[str | None, ...] = (None,)
-    group_component: type[Axis] | None = None
+    group_scope: ComponentGroupScope = field(default_factory=UngroupedScope)
     variable_components: tuple[type[Axis], ...] = ()
     component_domains: tuple[ComponentGroupScope, ...] = ()
     paths_by_group: Mapping[str | None, str] | None = None
@@ -314,27 +313,33 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
                 owner=f"Artifact plan {self.name!r}",
             ),
         )
-        if self.group_component in self.variable_components:
-            raise ValueError(
-                f"Artifact plan {self.name!r} cannot group by "
-                f"{self.group_component.name!r} while also retaining it as a "
-                "variable component."
+        if not isinstance(self.group_scope, ComponentGroupScope):
+            raise TypeError(
+                f"Artifact plan {self.name!r} group_scope must be a "
+                f"ComponentGroupScope, got {type(self.group_scope).__name__}."
             )
-        self.group_scope()
-
-    def group_scope(self) -> ComponentGroupScope:
-        """Return this plan's typed component-group identity."""
-
-        return ComponentGroupScope.from_raw(
-            self.group_keys or (None,),
-            component=self.group_component,
-        )
+        for grouped in self.group_scope.as_grouped():
+            if grouped.component in self.variable_components:
+                raise ValueError(
+                    f"Artifact plan {self.name!r} cannot group by "
+                    f"{grouped.component.name!r} while also retaining it as a "
+                    "variable component."
+                )
 
     @property
     def participates_in_main_flow(self) -> bool:
         """Return whether this compiled artifact publishes to the main image flow."""
 
         return self.artifact_type.publishes_to_main_flow(self.sidecar_role)
+
+    def relation_scope(
+        self,
+        component: type[Axis] | None,
+    ) -> ComponentGroupScope:
+        """Return the domain this plan carries for one relation component."""
+
+        domain = None if component is None else self.component_domain(component)
+        return self.group_scope if domain is None else domain
 
     def component_domain(
         self,
@@ -357,8 +362,7 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
         scopes_by_component = {
             domain.component: domain for domain in self.component_domains
         }
-        group_scope = self.group_scope()
-        if group_scope.is_grouped:
+        for group_scope in self.group_scope.as_grouped():
             inherited_domain = scopes_by_component.get(group_scope.component)
             if inherited_domain is not None and not inherited_domain.contains_scope(
                 group_scope
@@ -389,26 +393,14 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
             if own_scope.component in other_scopes
         )
 
-    @property
-    def single_group_key(self) -> str | None:
-        group_keys = self.group_keys or (None,)
-        if len(group_keys) == 1:
-            return group_keys[0]
-        return None
-
-    @property
-    def has_dynamic_group_scope(self) -> bool:
-        """Return whether concrete runtime groups are discovered during execution."""
-        return self.group_scope().is_dynamic
-
     def require_single_group_key(self) -> str | None:
         """Return the only artifact group key, failing for ambiguous groups."""
-        group_keys = self.group_keys or (None,)
-        if len(group_keys) == 1:
-            return group_keys[0]
-        raise RuntimeError(
-            f"Artifact plan '{self.name}' requires one group key, got {group_keys!r}."
-        )
+        if self.group_scope.names_several_keys:
+            raise RuntimeError(
+                f"Artifact plan '{self.name}' requires one group key, got "
+                f"{self.group_scope.keys!r}."
+            )
+        return self.group_scope.single_key()
 
     def ref(self) -> ArtifactSpecRef:
         """Return this compiled plan's scope-free declaration identity."""
@@ -450,10 +442,11 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
         if group_key in self.paths_by_group:
             return self.paths_by_group[group_key]
         if None in self.paths_by_group:
-            if group_key is None or self.group_component is None:
+            component = self.group_scope.component
+            if group_key is None or component is None:
                 return self.paths_by_group[None]
             return grouped_artifact_path(
-                self.paths_by_group[None], self.group_component, group_key
+                self.paths_by_group[None], component, group_key
             )
         if self._missing_group_uses_default_path:
             return self.path
@@ -468,7 +461,9 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
             replace(
                 self,
                 path=group_path,
-                group_keys=(group_key,),
+                group_scope=ComponentGroupScope.of(
+                    (group_key,), self.group_scope.component
+                ),
                 paths_by_group={group_key: group_path},
             ),
         )
@@ -553,7 +548,7 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
                 aligned, self, axis_id=axis_id
             ),
         )
-        if self.group_component is None or self.variable_components:
+        if not self.group_scope.as_grouped() or self.variable_components:
             return normalized
         return kind.normalize_group_scoped_payload(self, normalized)
 
@@ -602,7 +597,7 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
 
         declared = super().group_scope_sources()
         source_map = self.group_scope_sources_by_group
-        group_keys = self.group_scope().keys
+        group_keys = self.group_scope.keys
         if not source_map or len(group_keys) != 1:
             return declared
         selected = source_map.get(group_keys[0])
@@ -623,10 +618,12 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     ) -> ArtifactOutputPlan:
         """Resolve storage scope from the invocation or this exact output plan."""
 
-        output_scope = self.group_scope()
-        if group_key is None and output_scope.is_static:
-            group_key = output_scope.require_single_static_key()
-        return self.for_group(output_scope.resolve_runtime_key(group_key))
+        scope = self.group_scope
+        return self.for_group(
+            scope.select_runtime_key(None)
+            if group_key is None
+            else scope.resolve_runtime_key(group_key)
+        )
 
     def for_execution_scope(
         self,
@@ -635,15 +632,15 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     ) -> ArtifactOutputPlan | None:
         """Project this output into one compiled component execution."""
 
-        output_scope = self.group_scope()
-        if output_scope.is_ungrouped:
-            return self
-        if output_scope.component is execution_scope.component:
-            if output_scope.contains_runtime_key(component_key):
-                return self.for_group(output_scope.resolve_runtime_key(component_key))
-            return None
-        if output_scope.has_single_static_key:
-            return self.for_invocation_group(None)
+        output_scope = self.group_scope
+        for grouped in output_scope.as_grouped():
+            if execution_scope.groups_by(grouped.component):
+                if grouped.contains_runtime_key(component_key):
+                    return self.for_group(grouped.resolve_runtime_key(component_key))
+                return None
+        single_key = output_scope.single_key()
+        if single_key is not None:
+            return self.for_group(single_key)
         return self
 
 
@@ -660,18 +657,13 @@ class ArtifactInputPlan(ArtifactPlan):
         """Return a group-specific input plan, or None if not available."""
         return self._plan_for_group(group_key)
 
-    def producer_group_scope(self) -> ComponentGroupScope:
-        """Return the compiler-resolved scope of this named producer."""
-
-        return self.group_scope()
-
     def composes_producer_groups(
         self,
         consumer_variable_components: ComponentSet,
     ) -> bool:
         """Return whether this consumer reconstructs the producer group axis."""
 
-        return self.producer_group_scope().component in consumer_variable_components
+        return self.group_scope.component in consumer_variable_components
 
     def retains_producer_stack(
         self,
@@ -692,7 +684,7 @@ class ArtifactInputPlan(ArtifactPlan):
         """Return axes present after this input is reconstructed for a consumer."""
 
         if self.composes_producer_groups(consumer_variable_components):
-            return ComponentSet((self.producer_group_scope().component,))
+            return ComponentSet((self.group_scope.component,))
         if self.retains_producer_stack(consumer_variable_components):
             return consumer_variable_components
         return ComponentSet()

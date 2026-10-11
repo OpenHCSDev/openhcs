@@ -278,7 +278,7 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=(grayscale_binding, rgb_binding),
         ),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),
@@ -641,7 +641,7 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=(grayscale_binding, rgb_binding),
         ),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),

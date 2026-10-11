@@ -30,7 +30,9 @@ from openhcs.core.artifacts.plans import (
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
+    DynamicGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -186,7 +188,7 @@ class CoreExecutionRequest:
     artifact_inputs: Mapping[ArtifactSpecRef, ArtifactInputPlan]
     artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan]
     group_key: str = "default"
-    execution_group_scope: ComponentGroupScope = ComponentGroupScope.ungrouped()
+    execution_group_scope: ComponentGroupScope = UngroupedScope()
     processing_contract: ProcessingContract = Pure3DContract
     runtime_plane_count: int = 1
 
@@ -208,7 +210,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         compiled_pattern,
         artifact_inputs=request.artifact_inputs,
         relation_source_scopes={
-            plan.ref(): plan.producer_group_scope()
+            plan.ref(): plan.group_scope
             for plan in request.artifact_inputs.values()
         },
         execution_group_scope=request.execution_group_scope,
@@ -1095,8 +1097,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
                         name="segmentation_masks",
                         path="/memory/A01_w2_segmentation_masks.pkl",
                         artifact_type=ObjectLabelsArtifactType,
-                        group_component=Microscopy.Channel,
-                        group_keys=("2",),
+                        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
                         paths_by_group={
                             "2": "/memory/A01_w2_segmentation_masks.pkl",
                         },
@@ -1104,7 +1105,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
                 )
             },
             group_key="2",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         )
     )
 
@@ -1160,8 +1161,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
                         name="segmentation_masks",
                         path="/memory/A01_segmentation_masks.pkl",
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(None,),
-                        group_component=Microscopy.Channel,
+                        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                         paths_by_group={
                             None: "/memory/A01_segmentation_masks.pkl",
                         },
@@ -1169,7 +1169,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
                 )
             },
             group_key="2",
-            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+            execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         )
     )
 
@@ -1579,8 +1579,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
                         path="/memory/A01_measurements.pkl",
                         artifact_type=MeasurementsArtifactType,
                         relations=measurement_spec.relations,
-                        group_component=Microscopy.Site,
-                        group_keys=("1", "2"),
+                        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                         paths_by_group={
                             "1": "/memory/A01_s1_measurements.pkl",
                             "2": "/memory/A01_s2_measurements.pkl",
@@ -1589,7 +1588,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
                 )
             },
             group_key="2",
-            execution_group_scope=ComponentGroupScope.from_raw(
+            execution_group_scope=ComponentGroupScope.of(
                 ("2",),
                 component=Microscopy.Site,
             ),
@@ -1752,7 +1751,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             artifact_outputs={
                 output_plan.ref(): output_plan,
             },
@@ -1801,7 +1800,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             artifact_outputs={},
         ),
         component_value=None,
@@ -1852,7 +1851,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             artifact_outputs={},
         ),
         component_value=None,

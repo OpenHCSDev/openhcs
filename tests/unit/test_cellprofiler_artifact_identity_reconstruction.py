@@ -15,7 +15,10 @@ from openhcs.core.artifacts.plans import (
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
     compile_function_pattern,
@@ -263,7 +266,7 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
         compiled,
         artifact_inputs={},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
         source_bindings=source_bindings,
         available_artifacts=ArtifactSpecCollection(contract.artifact_inputs),

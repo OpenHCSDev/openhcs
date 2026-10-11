@@ -9,7 +9,10 @@ import pytest
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -47,7 +50,7 @@ def _runtime():
             variable_components=(),
             artifact_inputs={},
             artifact_outputs={},
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
         ),
         component_value=None,
     )

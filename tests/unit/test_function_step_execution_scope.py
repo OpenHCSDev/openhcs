@@ -27,7 +27,10 @@ from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    RuntimeExecutionAxisScope,
+    UngroupedScope,
+)
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
@@ -405,9 +408,9 @@ def _plate_step_plan(
         compiled_pattern,
         artifact_inputs=input_plans,
         relation_source_scopes={
-            plan.ref(): plan.producer_group_scope() for plan in artifact_inputs
+            plan.ref(): plan.group_scope for plan in artifact_inputs
         },
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
     )
     return CompiledStepPlan(
@@ -485,8 +488,7 @@ def _record_measurements(
         name=name,
         path=path,
         artifact_type=MeasurementsArtifactType,
-        group_keys=(group_key,),
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((group_key,), component=group_component),
     )
     subject = (
         MeasurementSubject(MeasurementScope.ARTIFACT, name)
@@ -1042,7 +1044,7 @@ def test_plate_scope_collects_runtime_discovered_component_groups() -> None:
                 name=measurement_spec.name,
                 path=input_path,
                 artifact_type=measurement_spec.artifact_type,
-                group_component=Microscopy.Channel,
+                group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                 paths_by_group={None: input_path},
             ),
         ),

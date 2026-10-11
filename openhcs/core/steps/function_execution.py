@@ -593,7 +593,7 @@ class FunctionStepExecutor:
                 variable_components=ComponentSet.of(plan.variable_components),
             )
 
-        if scope.is_dynamic:
+        if not scope.has_compiled_keys:
             discovered_keys = []
             for group in pattern.groups:
                 for invocation in group.invocations:
@@ -634,9 +634,7 @@ class FunctionStepExecutor:
             for edge in edges:
                 edge_cohorts = candidate_scopes(
                     edge,
-                    ComponentGroupScope.from_raw(
-                        (component_key,), component=scope.component
-                    ),
+                    ComponentGroupScope.of((component_key,), component=scope.component),
                 )
                 if not edge_cohorts:
                     raise ValueError(
@@ -972,7 +970,7 @@ class FunctionStepExecutor:
                 "Ungrouped is only valid for non-dict function patterns."
             )
         if (
-            plan.execution_group_scope.is_ungrouped
+            not plan.execution_group_scope.as_grouped()
             and not plan.compiled_function_pattern.is_grouped
         ):
             axis_patterns = _single_execution_group_patterns(axis_patterns)

@@ -28,6 +28,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import DebugArtifactRef, DebugCursor, DebugSnapshot
@@ -112,8 +113,8 @@ def _compiled_fixture() -> tuple[
         spec=input_spec,
         storage_plan=input_plan,
         projection=ArtifactInputProjectionPlan(
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
         ),
     )
     invocation = CompiledFunctionInvocation(

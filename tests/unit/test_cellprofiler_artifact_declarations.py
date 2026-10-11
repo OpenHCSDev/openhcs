@@ -626,12 +626,11 @@ def test_calculate_math_retains_measurement_subjects_across_producer_channels() 
         name=measurements.name,
         path="/memory/intensity.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2", "1"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2", "1"), component=Microscopy.Channel),
     )
     assert ArtifactInputProjectionPlan.declared_producer_selection_scope(
         measurement_input, storage
-    ) == ComponentGroupScope.from_raw(("2", "1"), component=Microscopy.Channel)
+    ) == ComponentGroupScope.of(("2", "1"), component=Microscopy.Channel)
 
 
 def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:

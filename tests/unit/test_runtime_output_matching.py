@@ -31,6 +31,9 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 def _contract(
@@ -269,8 +272,7 @@ def test_compiled_output_selection_accepts_exact_runtime_group_projection(
         name=output.name,
         path="/memory/output",
         artifact_type=output.artifact_type,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -294,8 +296,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         name=output.name,
         path="/memory/output",
         artifact_type=output.artifact_type,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -310,8 +311,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         name=output.name,
         path="/memory/wrong",
         artifact_type=output.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/wrong"},
     )
 

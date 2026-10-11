@@ -14,6 +14,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.constants.constants import Backend
@@ -76,7 +77,7 @@ def _compile_source_context_edges(
         compiled,
         artifact_inputs=input_plans,
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
         main_flow_artifacts=ArtifactSpecCollection((combined_image,)),
     )
@@ -124,7 +125,7 @@ def test_implicit_native_main_flow_consumes_complete_payload_not_source_alias() 
         compiled,
         artifact_inputs={},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
         main_flow_artifacts=ArtifactSpecCollection((cursor,)),
     )
@@ -170,7 +171,7 @@ def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
         compile_function_pattern(admitted_graph(consume_both), {}, {}),
         artifact_inputs={},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
         main_flow_artifacts=ArtifactSpecCollection((first, second)),
     )

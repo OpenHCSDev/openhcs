@@ -33,6 +33,9 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 class _CompiledInputRequest:
@@ -175,8 +178,7 @@ def _compiled_image_output(
         path=f"/memory/{spec.name}.pkl",
         artifact_type=spec.artifact_type,
         relations=spec.relations,
-        group_keys=(channel,),
-        group_component=(None if channel is None else Microscopy.Channel),
+        group_scope=ComponentGroupScope.of((channel,), component=None if channel is None else Microscopy.Channel),
     )
 
 

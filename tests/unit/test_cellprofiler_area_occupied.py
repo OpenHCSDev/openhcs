@@ -15,6 +15,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
@@ -60,8 +61,8 @@ def _binding_request(
             ),
             spec=spec,
             input_index=input_index,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )

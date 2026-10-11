@@ -31,7 +31,7 @@ class ArtifactInputProjectionPlan:
     ) -> ComponentGroupScope | None:
         """Resolve one producer selection declared by the input's relations."""
 
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         scopes = input_spec.relation_answers(
             lambda relation: relation.input_producer_selection_scope(producer_scope)
         )
@@ -60,23 +60,23 @@ class ArtifactInputProjectionPlan:
         declared = cls.declared_producer_selection_scope(input_spec, storage_plan)
         if declared is not None:
             return declared
-        producer_scope = storage_plan.producer_group_scope()
-        if producer_scope.is_ungrouped:
-            return producer_scope
-        if (
-            producer_scope.has_single_static_key
-            or execution_scope is FunctionStepExecutionScope.PLATE
-            or producer_scope.component in consumer_variable_components
-        ):
-            return producer_scope
-        for scope in component_scopes:
-            if scope.component is producer_scope.component:
-                return scope
-        raise ValueError(
-            f"Invocation {invocation_key!r} input {storage_plan.ref()!r} has "
-            f"producer scope {producer_scope!r} but no exact relation-owned "
-            "selection coordinate."
-        )
+        producer_scope = storage_plan.group_scope
+        for grouped in producer_scope.as_grouped():
+            if (
+                grouped.single_key() is not None
+                or execution_scope is FunctionStepExecutionScope.PLATE
+                or grouped.component in consumer_variable_components
+            ):
+                return grouped
+            for scope in component_scopes:
+                if scope.component is grouped.component:
+                    return scope
+            raise ValueError(
+                f"Invocation {invocation_key!r} input {storage_plan.ref()!r} has "
+                f"producer scope {grouped!r} but no exact relation-owned "
+                "selection coordinate."
+            )
+        return producer_scope
 
     def selects_declared_complete_producer(
         self, input_spec: ArtifactSpec, storage_plan: ArtifactInputPlan
@@ -91,25 +91,15 @@ class ArtifactInputProjectionPlan:
                 f"Artifact input {input_spec.ref()!r} compiled selection "
                 f"{self.producer_selection_scope!r} contradicts declaration {declared!r}."
             )
-        return declared == storage_plan.producer_group_scope()
+        return declared == storage_plan.group_scope
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "invocation_scope",
-            ComponentGroupScope.from_raw(
-                self.invocation_scope.keys,
-                component=self.invocation_scope.component,
-            ),
-        )
-        object.__setattr__(
-            self,
-            "producer_selection_scope",
-            ComponentGroupScope.from_raw(
-                self.producer_selection_scope.keys,
-                component=self.producer_selection_scope.component,
-            ),
-        )
+        for scope in (self.invocation_scope, self.producer_selection_scope):
+            if not isinstance(scope, ComponentGroupScope):
+                raise TypeError(
+                    "Artifact input projection scopes must be ComponentGroupScope, "
+                    f"got {type(scope).__name__}."
+                )
         object.__setattr__(
             self,
             "component_scopes",
@@ -150,22 +140,9 @@ class ArtifactInputProjectionPlan:
         """Require this projection to select within its producer storage plan."""
 
         artifact_ref = storage_plan.ref()
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         selection_scope = self.producer_selection_scope
-        if producer_scope.is_ungrouped:
-            if selection_scope.is_ungrouped:
-                return
-            raise ValueError(
-                f"Ungrouped producer {artifact_ref!r} cannot use grouped "
-                f"selection {selection_scope!r}."
-            )
-        if selection_scope.component is not producer_scope.component:
-            raise ValueError(
-                f"Artifact input {artifact_ref!r} producer component "
-                f"{producer_scope.component.name!r} does not match selection "
-                f"{selection_scope.component!r}."
-            )
-        if selection_scope.is_dynamic or producer_scope.contains_scope(selection_scope):
+        if selection_scope.selectable_from(producer_scope):
             return
         raise ValueError(
             f"Artifact input {artifact_ref!r} selection "
@@ -178,21 +155,16 @@ class ArtifactInputProjectionPlan:
 
         self.validate_storage_plan(storage_plan)
         artifact_ref = storage_plan.ref()
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         selection_scope = self.producer_selection_scope
         retained_components = ComponentSet.of(self.consumer_variable_components)
-        # validate_storage_plan proved an ungrouped producer has an ungrouped
-        # selection, so only grouped producers reach either branch below.
         if producer_scope.component in retained_components:
             if selection_scope != producer_scope:
                 raise ValueError(
                     f"Retained producer axis {producer_scope.component.name!r} for "
                     f"{artifact_ref!r} must select the complete producer scope."
                 )
-        elif selection_scope.is_dynamic and (
-            self.invocation_scope.component is not selection_scope.component
-            or self.invocation_scope.is_ungrouped
-        ):
+        elif not selection_scope.owned_by(self.invocation_scope):
             raise ValueError(
                 f"Dynamic producer selection {selection_scope!r} for "
                 f"{artifact_ref!r} is not owned by invocation scope "
@@ -206,12 +178,12 @@ class ArtifactInputProjectionPlan:
                     f"Artifact input {artifact_ref!r} projects producer stack "
                     f"component {component.name!r} without an exact coordinate."
                 )
-            if scope.is_static and len(scope.keys) != 1:
+            if scope.names_several_keys:
                 raise ValueError(
                     f"Artifact input {artifact_ref!r} projection for component "
                     f"{component.name!r} is not a single exact coordinate: {scope!r}."
                 )
-            if scope.is_dynamic and self.invocation_scope.component is not component:
+            if not scope.owned_by(self.invocation_scope):
                 raise ValueError(
                     f"Dynamic stack projection {scope!r} for {artifact_ref!r} "
                     f"is not owned by invocation scope {self.invocation_scope!r}."
@@ -225,7 +197,7 @@ class ArtifactInputProjectionPlan:
 
         self.validate_storage_plan(storage_plan)
         artifact_ref = storage_plan.ref()
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         if self.producer_selection_scope != producer_scope:
             raise ValueError(
                 f"Plate artifact input {artifact_ref!r} must select complete "
