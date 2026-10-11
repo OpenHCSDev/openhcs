@@ -11,13 +11,11 @@ from enum import Enum
 from typing import ClassVar
 
 from pyqt_reactive.services.scope_window_navigation import ScopeWindowNavigationService
-from pyqt_reactive.services.function_pattern_code_document import (
+from formbridge.services.function_pattern_code_document import (
     FunctionPatternScopeCodeDocumentDriver,
 )
-from pyqt_reactive.forms.parameter_form_service import ParameterFormService
-from pyqt_reactive.services.window_code_document import (
-    PYTHON_MIME_TYPE,
-)
+from formbridge.forms.parameter_form_service import ParameterFormService
+from formbridge.services.window_code_document import PYTHON_MIME_TYPE
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import WindowNavigationRequest
 from python_introspect import (

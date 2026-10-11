@@ -138,7 +138,7 @@ def test_xdg_paths_carry_no_legacy_migration() -> None:
 
 
 def test_library_families_are_classes_not_enums() -> None:
-    import pyqt_reactive.core.path_cache as path_cache
+    import formbridge.core.path_cache as path_cache
     import pyqt_reactive.services.time_travel_navigation as time_travel_navigation
     import pyqt_reactive.widgets.enhanced_path_widget as enhanced_path_widget
     import pyqt_reactive.widgets.grid_selector as grid_selector

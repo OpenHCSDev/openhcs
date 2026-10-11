@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Optional
 
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
-from pyqt_reactive.core.path_cache import PathCacheKey, cache_path, get_initial_path
-from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
+from formbridge.core.path_cache import PathCacheKey, cache_path, get_initial_path
+from formbridge.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.theming import ColorScheme, ThemeManager
 

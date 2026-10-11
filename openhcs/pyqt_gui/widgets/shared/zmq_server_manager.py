@@ -6,11 +6,8 @@ import logging
 
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QTreeWidgetItem
-from pyqt_reactive.services.zmq_server_info import (
-    BaseServerInfo,
-    ExecutionServerInfo,
-)
-from pyqt_reactive.services.zmq_server_scan_service import (
+from formbridge.services.zmq_server_info import BaseServerInfo, ExecutionServerInfo
+from formbridge.services.zmq_server_scan_service import (
     EndpointObservationSnapshot,
     StartingEndpointObservation,
     ZMQServerScanService,

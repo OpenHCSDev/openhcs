@@ -7,7 +7,7 @@ from types import FunctionType
 from typing import TypeVar
 
 from metaclass_registry import AutoRegisterMeta
-from pyqt_reactive.services.function_pattern_code_document import FunctionPatternValue
+from formbridge.services.function_pattern_code_document import FunctionPatternValue
 from python_introspect import AnnotatedDataclassValidationMixin
 
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -141,7 +141,7 @@ class FunctionPatternDocumentNormalizationStrategy(
         clean_mode: bool,
     ) -> str:
         del declaration_type
-        from pyqt_reactive.services.function_pattern_code_document import (
+        from formbridge.services.function_pattern_code_document import (
             FunctionPatternCodeDocumentService,
         )
 

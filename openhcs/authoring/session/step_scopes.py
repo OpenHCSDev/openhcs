@@ -7,12 +7,12 @@ from dataclasses import dataclass
 
 from objectstate import ScopeKey
 from openhcs.core.steps.function_step import FunctionStep
-from pyqt_reactive.services.function_navigation import (
+from formbridge.services.function_navigation import (
     FUNCTION_FIELD_ROOT,
     build_function_token_field_path,
     is_function_field_path,
 )
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 
 FUNCTION_STEP_SCOPE_TOKEN_PREFIX = f"{FunctionStep.__name__.lower()}_"
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING, Self
 
-from pyqt_reactive.services.tab_identity import TabLabelDeclarationMixin
+from formbridge.services.tab_identity import TabLabelDeclarationMixin
 
 if TYPE_CHECKING:
     from pyqt_reactive.widgets.shared import ActionTabbedWindowBody

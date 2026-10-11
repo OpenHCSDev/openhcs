@@ -198,7 +198,7 @@ def test_failed_observation_frame_and_existing_trace_decode_through_registered_o
     native_snapshot_bridge,
     tmp_path,
 ):
-    from pyqt_reactive.flash_trace import FlashTraceRecord
+    from formbridge.flash_trace import FlashTraceRecord
     from pyqt_reactive.services.window_snapshot import FlashPaintFrame
 
     bridge, form, window_id = native_snapshot_bridge

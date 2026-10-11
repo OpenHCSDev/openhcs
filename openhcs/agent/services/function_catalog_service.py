@@ -13,8 +13,8 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
-from pyqt_reactive.services.help_document import HelpDocument
-from pyqt_reactive.services.parameter_help_service import (
+from formbridge.services.help_document import HelpDocument
+from formbridge.services.parameter_help_service import (
     dataclass_type_from_annotation,
     docstring_info_for_target,
 )

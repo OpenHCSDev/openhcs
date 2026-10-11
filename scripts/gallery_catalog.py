@@ -21,7 +21,7 @@ import openhcs  # noqa: F401  # Activate recorded source dependencies before UI 
 from pyqt_reactive.services.function_list_editor_actions import (
     FunctionListEditorAction,
 )
-from pyqt_reactive.services.function_navigation import FUNCTION_FIELD_ROOT
+from formbridge.services.function_navigation import FUNCTION_FIELD_ROOT
 from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 import zmq
-from pyqt_reactive.services.zmq_server_scan_service import ZMQServerScanService
+from formbridge.services.zmq_server_scan_service import ZMQServerScanService
 from zmqruntime import (
     ControlMessageType,
     DataControlPortPairAuthority,

@@ -29,7 +29,7 @@ import openhcs  # noqa: F401
 # isort: split
 
 from pyqt_reactive.dialogs.group_by_selector_dialog import GroupBySelectorDialog
-from pyqt_reactive.services.function_navigation import FunctionPatternField
+from formbridge.services.function_navigation import FunctionPatternField
 from pyqt_reactive.widgets.shared import DetachableActionBar, ManagedWindowAction
 from zmqruntime import (
     EndpointShutdownMode,

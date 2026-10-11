@@ -7,7 +7,7 @@ the :class:`DatasetListView` operations; changes arrive as session events.
 
 from __future__ import annotations
 
-from pyqt_reactive.services.window_code_document import use_external_code_editor
+from formbridge.services.window_code_document import use_external_code_editor
 import logging
 from dataclasses import fields, replace
 from functools import singledispatchmethod
@@ -17,21 +17,18 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from objectstate import DataclassFieldAccess
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import pyqtSignal
-from pyqt_reactive.core.path_cache import PathCacheKey
+from formbridge.core.path_cache import PathCacheKey
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
     AbstractManagerWidget,
     ListItemFormat,
 )
-from pyqt_reactive.widgets.shared.manager_item_hooks import (
-    AttributeItemIdProjection,
-    ManagerItemHooks,
-)
+from formbridge.managers.item_hooks import AttributeItemIdProjection, ManagerItemHooks
 from pyqt_reactive.widgets.shared.manager_selection_controller import (
     ItemIdSelectionPayloadProjection,
 )
-from pyqt_reactive.widgets.shared.manager_state_binding import ManagerStateBinding
+from formbridge.managers.state_binding import ManagerStateBinding
 from pyqt_reactive.widgets.shared.scope_visual_config import ListItemType
 from typing_extensions import override
 

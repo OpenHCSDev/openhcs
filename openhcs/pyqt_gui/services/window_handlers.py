@@ -355,7 +355,7 @@ class OpenHCSWindowCreationAuthority:
         window.tab_widget.setCurrentIndex(tab_index)
 
     def _plate_manager(self):
-        from pyqt_reactive.services.service_registry import ServiceRegistry
+        from formbridge.services.service_registry import ServiceRegistry
 
         from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 

@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Annotated
 
 from pyqt_reactive.qt_types import QtKeySequenceText
-from pyqt_reactive.services.system_monitor_config import PerformanceMonitorConfig
-from pyqt_reactive.strategies.preview_formatting import FormattingConfig
+from formbridge.services.system_monitor_config import PerformanceMonitorConfig
+from formbridge.strategies.preview_formatting import FormattingConfig
 from python_introspect import (
     EnvironmentVariable,
     overlay_dataclass_from_environment,

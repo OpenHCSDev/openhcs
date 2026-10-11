@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
 
-from pyqt_reactive.services.parameter_help_service import (
+from formbridge.services.parameter_help_service import (
     NO_PARAMETER_DESCRIPTION,
     docstring_info_for_target,
     parameter_help_content,

@@ -23,10 +23,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from pyqt_reactive.protocols import register_codegen_provider
-from pyqt_reactive.services.pattern_data_manager import (
-    FUNC_EDITOR_PATTERN_TOKENS_META_KEY,
-)
+from formbridge.protocols.codegen_provider import register_codegen_provider
+from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.services.widget_tree_projection import (
     WidgetActionKind,
@@ -34,10 +32,7 @@ from pyqt_reactive.services.widget_tree_projection import (
     WidgetRect,
     WidgetTreeProjection,
 )
-from pyqt_reactive.services.window_code_document import (
-    WindowCodeDocument,
-    WindowCodeDocumentDriver,
-)
+from formbridge.services.window_code_document import WindowCodeDocument, WindowCodeDocumentDriver
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from pyqt_reactive.widgets.editors import simple_code_editor

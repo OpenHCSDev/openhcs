@@ -430,7 +430,7 @@ def test_compile_function_pattern_builds_invocation_source_of_truth():
                         "sigma": 1,
                         "enabled": True,
                         "dtype_config": "inherited",
-                        "__pyqt_reactive_scope_token__": "ui",
+                        "__formbridge_scope_token__": "ui",
                     },
                 ),
                 measure,

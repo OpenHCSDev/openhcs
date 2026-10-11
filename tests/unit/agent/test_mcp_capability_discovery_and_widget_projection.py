@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import fields
 
-from pyqt_reactive.services.widget_tree_projection_config import (
+from formbridge.services.widget_tree_projection_config import (
     COMPACT_FIELD_PROJECTION_METADATA_KEY,
     CompactFieldProjection,
     WidgetNodeIdentity,

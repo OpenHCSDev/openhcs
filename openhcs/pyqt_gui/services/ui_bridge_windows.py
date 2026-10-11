@@ -16,9 +16,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QWidget,
 )
-from pyqt_reactive.forms.parameter_form_constants import (
-    CONSTANTS as PARAMETER_FORM_CONSTANTS,
-)
+from formbridge.forms.parameter_form_constants import CONSTANTS as PARAMETER_FORM_CONSTANTS
 from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
 from pyqt_reactive.services.scope_window_factory import ScopeWindowRegistry
 from pyqt_reactive.services.scope_window_navigation import ScopeWindowNavigationService

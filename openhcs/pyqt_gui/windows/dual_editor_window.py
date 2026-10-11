@@ -21,11 +21,11 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
-from pyqt_reactive.services.function_navigation import is_function_field_path
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.forms.layout_constants import CURRENT_LAYOUT
+from formbridge.services.function_navigation import is_function_field_path
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.services.time_travel_navigation import FunctionScopeRef, NavigationTarget
-from pyqt_reactive.services.window_code_document import WindowCodeDocumentDriver
+from formbridge.services.window_code_document import WindowCodeDocumentDriver
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import (
     FieldWindowNavigationDriver,
@@ -60,7 +60,7 @@ from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from python_introspect import SignatureAnalyzer
 from openhcs.authoring.session.step_scopes import (
     StepEditorScope,
@@ -921,10 +921,6 @@ class DualEditorWindow(BaseFormDialog):
         self._invalidate_artifact_plan()
 
         logger.debug("✅ Triggered function editor refresh from context")
-
-    def _current_function_spec(self) -> FunctionSpec:
-        """Compatibility wrapper for tests; authority lives in DualEditorSession."""
-        return self._session.current_function_spec()
 
     def _invalidate_artifact_plan(self) -> None:
         if self.artifact_plan_view is None:

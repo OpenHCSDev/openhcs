@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate import DottedFieldPath
-from pyqt_reactive.services.widget_tree_projection_config import (
+from formbridge.services.widget_tree_projection_config import (
     COMPACT_FIELD_PROJECTION_METADATA_KEY,
     CompactFieldProjection,
     WidgetNodeIdentity,

@@ -13,7 +13,7 @@ from pycodify import (
     imported_name,
     to_source,
 )
-from pyqt_reactive.pattern_metadata import PatternScopeToken
+from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import callable_declaration_kwargs, parameter_exclusions
 
 from openhcs.core.axes import is_grouping_declaration

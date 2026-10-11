@@ -24,7 +24,7 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate import get_base_type_for_lazy
-from pyqt_reactive.services.parameter_help_service import (
+from formbridge.services.parameter_help_service import (
     class_docstring_text,
     dataclass_parameter_descriptions,
     parameter_description_from_target,

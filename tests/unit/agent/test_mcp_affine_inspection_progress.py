@@ -6,7 +6,6 @@ import threading
 import time
 from types import SimpleNamespace
 
-from PyQt6.QtCore import QCoreApplication, QThread
 import pytest
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
@@ -21,8 +20,8 @@ from openhcs.agent.dto.execution import ArtifactPlanInspection
 from openhcs.mcp.execution import (
     McpMainThreadDispatcher, McpQueuedCallNotStartedError, McpTransportExecutor,
 )
-from pyqt_reactive.services.ui_thread_dispatch import (
-    UiThreadDispatchError, UiThreadDispatcherClosedError, UiThreadDispatchTimeoutError,
+from formbridge.services.main_thread_dispatch import (
+    MainThreadDispatcherClosedError, MainThreadDispatchTimeoutError,
 )
 from openhcs.mcp.server import build_server
 from python_introspect import to_jsonable
@@ -52,7 +51,6 @@ class AffineInspectionService:
 
     def inspect(self, request):
         assert threading.current_thread() is threading.main_thread()
-        assert QThread.currentThread() == QCoreApplication.instance().thread()
         self.calls.append((request, self.request_identity.get()))
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
@@ -236,7 +234,7 @@ def test_not_started_dispatch_is_cancelled_without_invoking_callback():
 def test_callback_timeout_after_side_effect_is_not_prestart_cancellation(queued):
     executor = McpTransportExecutor()
     calls = []
-    original = UiThreadDispatchTimeoutError("Callback timed out after its side effect.")
+    original = MainThreadDispatchTimeoutError("Callback timed out after its side effect.")
 
     def callback():
         calls.append("side-effect")
@@ -246,7 +244,7 @@ def test_callback_timeout_after_side_effect_is_not_prestart_cancellation(queued)
         return await asyncio.to_thread(executor.dispatcher.call, callback)
 
     try:
-        with pytest.raises(UiThreadDispatchTimeoutError) as caught:
+        with pytest.raises(MainThreadDispatchTimeoutError) as caught:
             if queued:
                 executor.run(exercise)
             else:
@@ -264,7 +262,7 @@ def test_closed_dispatcher_rejects_without_invocation():
     executor.dispatcher.close()
 
     async def exercise():
-        with pytest.raises(UiThreadDispatcherClosedError):
+        with pytest.raises(MainThreadDispatcherClosedError):
             await executor.dispatcher.invoke(lambda: calls.append("forbidden"))
 
     try:
@@ -274,14 +272,15 @@ def test_closed_dispatcher_rejects_without_invocation():
         executor.close()
 
 
-def test_headless_absence_does_not_authorize_worker_affinity(monkeypatch):
-    monkeypatch.setattr(QCoreApplication, "instance", lambda: None)
+def test_worker_call_never_runs_on_the_worker_thread():
     dispatcher = McpMainThreadDispatcher()
     calls = []
 
     async def exercise():
-        with pytest.raises(UiThreadDispatchError, match="No Qt application"):
-            await asyncio.to_thread(dispatcher.call, lambda: calls.append("forbidden"))
+        with pytest.raises(McpQueuedCallNotStartedError):
+            await asyncio.to_thread(
+                dispatcher.call, lambda: calls.append("forbidden"), timeout_ms=20
+            )
 
     try:
         asyncio.run(exercise())
@@ -362,7 +361,7 @@ def serve_stdio_inspection_fixture(*, work_seconds=2.4):
 def test_resident_continuous_connections_keep_affinity_and_wire_progress(
     unix_socket_dir, work_seconds, idle_seconds, connection_count,
 ):
-    from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
+    from formbridge.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevSocketSession
     from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
     import io
