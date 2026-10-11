@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from openhcs.core.selection import SelectedItems
 from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
 from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
@@ -35,7 +36,6 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeService,
 )
 from openhcs.core.plate_image_inventory import PlateFileKind
-from openhcs.core.selection import SelectedAllSelectionMode
 
 
 @dataclass(frozen=True, slots=True)
@@ -290,7 +290,7 @@ class SelectedPlateService:
             UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
                 surface_id=PlateManagerStateSurfaceIdentityDeclaration.require_value(),
-                selection_mode=SelectedAllSelectionMode.SELECTED.value,
+                selection_mode=SelectedItems.name,
             ),
             connection,
         )

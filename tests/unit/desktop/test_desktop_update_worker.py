@@ -45,8 +45,8 @@ class _ProgressProbe:
     def __init__(
         self,
         *,
-        action: desktop_update_worker.DesktopUpdateProgressAction = (
-            desktop_update_worker.DesktopUpdateProgressAction.EXIT
+        action: type[desktop_update_worker.DesktopUpdateFailureResponse] = (
+            desktop_update_worker.ExitAfterFailedUpdate
         ),
     ) -> None:
         self.action = action
@@ -638,7 +638,7 @@ def test_worker_relaunches_and_preserves_session_after_update_failure(
 ) -> None:
     calls = []
     progress = _ProgressProbe(
-        action=desktop_update_worker.DesktopUpdateProgressAction.REOPEN
+        action=desktop_update_worker.ReopenAfterFailedUpdate
     )
     monkeypatch.setattr(
         desktop_update_worker.DesktopUpdateProgressWindow,
@@ -811,7 +811,7 @@ def test_unexpected_orchestration_exception_uses_visible_recovery_boundary(
     tmp_path: Path,
 ) -> None:
     progress = _ProgressProbe(
-        action=desktop_update_worker.DesktopUpdateProgressAction.REOPEN
+        action=desktop_update_worker.ReopenAfterFailedUpdate
     )
     error_file = tmp_path / "update-error.txt"
     arguments = desktop_update_worker.parse_arguments(_worker_arguments(tmp_path))

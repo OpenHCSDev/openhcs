@@ -5,13 +5,13 @@ from __future__ import annotations
 import hashlib
 from dataclasses import replace
 
+from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiCodeDocumentSummary,
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
@@ -35,7 +35,6 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.agent.dto.session import DatasetRowState
 from openhcs.authoring.session.dataset_document import (
     AllDatasetDocumentScope,
@@ -217,10 +216,10 @@ class PlateManagerOrchestratorCodeDocumentProvider(
 
     def read(self, request: UiCodeDocumentRequest) -> UiCodeDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.SELECTED
+            SelectedItems
         )
         if (
-            selection_mode == UiCodeDocumentSelectionMode.SELECTED.value
+            selection_mode == SelectedItems.name
             and not self._manager.get_selected_items()
         ):
             return self._document_error(
@@ -238,7 +237,7 @@ class PlateManagerOrchestratorCodeDocumentProvider(
             )
         try:
             context = self._manager.dataset_document(
-                SelectedAllSelectionMode(selection_mode)
+                SelectionScope.named(selection_mode)
             )
         except Exception as exc:
             return self._document_error(
@@ -315,7 +314,7 @@ class PlateManagerOrchestratorCodeDocumentProvider(
             operations = self._manager.code_document_operations(
                 DatasetDocumentScope.from_carrier(
                     request,
-                    default=SelectedAllSelectionMode.ALL,
+                    default=AllItems,
                 )
             )
             result = self._execution_service.validate_source(request.source, operations)
@@ -372,7 +371,7 @@ class PlateManagerOrchestratorCodeDocumentProvider(
         errors: tuple[AgentError, ...],
     ) -> UiCodeDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.SELECTED
+            SelectedItems
         )
         return UiCodeDocument(
             schema_version=SCHEMA_VERSION,
@@ -441,8 +440,7 @@ class PlateManagerStateSurfaceProvider(
                 .lower(),
             )
             for row in view.rows
-            if SelectedAllSelectionMode(selection_mode) is SelectedAllSelectionMode.ALL
-            or row.selected
+            if SelectionScope.named(selection_mode).keeps(row.selected)
         )
         return UiPlateManagerState(
             schema_version=SCHEMA_VERSION,
@@ -468,7 +466,7 @@ class PlateManagerStateSurfaceProvider(
 
     def read(self, request: UiStateSurfaceRequest) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         try:
             state = self._project(selection_mode)
@@ -488,7 +486,7 @@ class PlateManagerStateSurfaceProvider(
         return self._document_from_state(state)
 
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
-        state = self._project(UiCodeDocumentSelectionMode.ALL.value)
+        state = self._project(AllItems.name)
         rows = state.rows
         return (
             UiLiveOverviewSection(
@@ -563,7 +561,7 @@ class PlateManagerStateSurfaceProvider(
         errors: tuple[AgentError, ...],
     ) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         state = UiPlateManagerState(
             schema_version=SCHEMA_VERSION,
@@ -660,8 +658,8 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
             widget_id=self.identity.widget_id,
             readable=True,
             supported_selection_modes=(
-                UiCodeDocumentSelectionMode.SELECTED.value,
-                UiCodeDocumentSelectionMode.ALL.value,
+                SelectedItems.name,
+                AllItems.name,
             ),
             current_selection_count=sum(
                 entry.subject_id in selected_plate_ids for entry in all_entries
@@ -671,7 +669,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
 
     def read(self, request: UiStateSurfaceRequest) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         try:
             state = self._project_state(selection_mode)
@@ -732,19 +730,17 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
     def _project_state(self, selection_mode: str) -> UiLiveMeasurementsState:
         all_entries = self._manager.session.live_measurements.semantic_entries()
         selected_plate_ids = self._selected_plate_ids()
-        mode = UiCodeDocumentSelectionMode(selection_mode)
-        entries = (
-            all_entries
-            if mode is UiCodeDocumentSelectionMode.ALL
-            else tuple(
-                entry for entry in all_entries if entry.subject_id in selected_plate_ids
-            )
+        scope = SelectionScope.named(selection_mode)
+        entries = tuple(
+            entry
+            for entry in all_entries
+            if scope.keeps(entry.subject_id in selected_plate_ids)
         )
         entry_states = tuple(self._entry_state(entry) for entry in entries)
         return UiLiveMeasurementsState(
             schema_version=SCHEMA_VERSION,
             summary=self.summary(),
-            selection_mode=mode.value,
+            selection_mode=scope.name,
             selected_scope_ids=self._manager.selection_scope_ids(),
             object_state_token=ObjectStateRegistry.get_token(),
             retained_entry_count=len(all_entries),
@@ -791,7 +787,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         errors: tuple[AgentError, ...],
     ) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         state = UiLiveMeasurementsState(
             schema_version=SCHEMA_VERSION,

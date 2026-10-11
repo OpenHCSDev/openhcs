@@ -16,12 +16,12 @@ from PyQt6.QtCore import Qt
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 import openhcs.processing.backends.cellprofiler as cellprofiler_backend
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConfirmationRequirement,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentId,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiStateSurfaceId,
     UiStateSurfaceRequest,
     UiWindowNavigateRequest,
@@ -76,7 +76,6 @@ from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.core.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
@@ -172,11 +171,11 @@ def _bridge(manager) -> UiAgentBridgeService:
     )
 
 
-def _apply(bridge, source: str, *, selection_mode=UiCodeDocumentSelectionMode.ALL):
+def _apply(bridge, source: str, *, selection_mode=AllItems):
     document = bridge.get_document(
         UiCodeDocumentRequest(
             document_id=UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value,
-            selection_mode=selection_mode.value,
+            selection_mode=selection_mode.name,
         )
     )
     return bridge.apply_document(
@@ -729,7 +728,7 @@ def test_restart_restores_a_missing_dataset_without_initializing_it(tmp_path) ->
         assert isinstance(outcome, DesktopRestartSucceeded)
         assert orchestrator.state is OrchestratorState.CREATED
         assert not orchestrator.is_initialized()
-        restored = gui.plate_manager.dataset_document(SelectedAllSelectionMode.ALL)
+        restored = gui.plate_manager.dataset_document(AllItems)
         assert restored.payload.plate_paths == (scope_id,)
         assert restored.payload.per_plate_configs == payload.per_plate_configs
         assert restored.payload.pipeline_data == payload.pipeline_data
@@ -758,7 +757,7 @@ def test_a_missing_dataset_declaration_stays_editable_until_initialization(
         assert orchestrator.state is OrchestratorState.CREATED
         assert not orchestrator.is_initialized()
         rendered = render_dataset_document(
-            session, (scope_id,), selection_mode=SelectedAllSelectionMode.ALL
+            session, (scope_id,), selection_mode=AllItems
         )
         assert rendered.payload.plate_paths == (scope_id,)
         with pytest.raises(FileNotFoundError, match="unavailable-plate"):
@@ -951,7 +950,7 @@ def test_selected_code_document_replaces_only_the_selected_pipeline(
                 [selected],
                 {selected: [FunctionStep(name="New selected")]},
             ),
-            selection_mode=UiCodeDocumentSelectionMode.SELECTED,
+            selection_mode=SelectedItems,
         )
 
         assert result.applied
@@ -1044,7 +1043,7 @@ def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -
 
 def _render(session, *scope_ids):
     return render_dataset_document(
-        session, tuple(scope_ids), selection_mode=SelectedAllSelectionMode.ALL
+        session, tuple(scope_ids), selection_mode=AllItems
     )
 
 
@@ -1268,7 +1267,7 @@ def test_dataset_document_edits_during_a_run_and_recovers_after_its_failure(
         state = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+                selection_mode=AllItems.name,
             )
         )
 
@@ -1312,7 +1311,7 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
             document = bridge.get_document(
                 UiCodeDocumentRequest(
                     document_id="window_code_document:pipeline_editor",
-                    selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+                    selection_mode=SelectedItems.name,
                 )
             )
             return bridge.apply_document(

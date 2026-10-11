@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.session import DatasetRowState
 
 import inspect
@@ -629,7 +630,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
             sha256="abc",
             current_revision_token="rev-1",
             current_snapshot=None,
-            selection_mode=request.resolved_selection_mode("selected"),
+            selection_mode=request.resolved_selection_mode(SelectedItems),
             selected_scope_ids=(),
         )
 
@@ -650,7 +651,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
             UiPlateManagerState(
                 schema_version=SCHEMA_VERSION,
                 summary=summary,
-                selection_mode=request.resolved_selection_mode("all"),
+                selection_mode=request.resolved_selection_mode(AllItems),
                 selected_scope_ids=(PLATE_SCOPE_ID,),
                 object_state_token=1,
                 manager_execution_state="idle",

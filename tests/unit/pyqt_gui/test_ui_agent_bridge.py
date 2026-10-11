@@ -56,6 +56,7 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
 from zmqruntime import DataControlPortPairAuthority, EndpointApplication
 from zmqruntime.config import TransportMode
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationStatusRequest,
@@ -67,7 +68,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentApplyRequest,
     UiCodeDocumentId,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiCodeDocumentValidationRequest,
     UiObjectStateFieldFilter,
     UiObjectStateScopeListRequest,
@@ -219,7 +219,6 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from tests.unit.pyqt_gui.session_harness import session_gui, session_port
 from openhcs.core.progress.types import (
@@ -238,8 +237,8 @@ DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
 PLATE_SCOPE_ID = "plate-1"
 DATASET_SCOPE_ID = "/tmp/openhcs-ui-bridge-test/plate-1"
 PLATE_NAME = "plate 1"
-ALL_SELECTION_MODE = UiCodeDocumentSelectionMode.ALL.value
-SELECTED_SELECTION_MODE = UiCodeDocumentSelectionMode.SELECTED.value
+ALL_SELECTION_MODE = AllItems.name
+SELECTED_SELECTION_MODE = SelectedItems.name
 BRIDGE_INSTANCE_ID = "bridge-test"
 BRIDGE_AUTH_TOKEN = "secret-token"
 VALID_SOURCE = (
@@ -3631,11 +3630,7 @@ class FakePlateManager:
         return tuple(self.selected)
 
     def dataset_document(self, selection_mode) -> FakeCodeDocumentContext:
-        scope_ids = (
-            self.plate_scope_ids
-            if selection_mode is SelectedAllSelectionMode.ALL
-            else self.selected
-        )
+        scope_ids = selection_mode.pick(tuple(self.selected), tuple(self.plate_scope_ids))
         return FakeCodeDocumentContext(
             source=VALID_SOURCE, selected_scope_ids=tuple(scope_ids)
         )

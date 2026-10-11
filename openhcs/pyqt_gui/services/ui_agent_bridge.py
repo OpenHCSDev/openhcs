@@ -161,7 +161,7 @@ from openhcs.pyqt_gui.services.ui_bridge_registry import (
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
     PlateManagerCodeNamespace,
-    PlateManagerCodeNamespaceField,
+    PlateManagerDocumentAssignments,
     PlateManagerOrchestratorCodePayload,
 )
 
@@ -171,15 +171,19 @@ if TYPE_CHECKING:
 
 UiBridgeObservedResultT = TypeVar("UiBridgeObservedResultT", bound=AgentResultEnvelope)
 
+_ORCHESTRATOR_CODE_DOCUMENT_EXAMPLE = PlateManagerDocumentAssignments(
+    plate_paths="['/path/to/plate']",
+    global_config="GlobalPipelineConfig(...)",
+    per_plate_configs="{'/path/to/plate': PipelineConfig(...)}",
+    pipeline_data="{'/path/to/plate': [FunctionStep(...), ...]}",
+)
 ORCHESTRATOR_CODE_DOCUMENT_PAYLOAD_HINT = (
     "Use the plate-manager orchestrator code document shape: "
-    f"{PlateManagerCodeNamespaceField.PLATE_PATHS.value} = ['/path/to/plate']; "
-    f"{PlateManagerCodeNamespaceField.GLOBAL_CONFIG.value} = "
-    "GlobalPipelineConfig(...); "
-    f"{PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS.value} = "
-    "{'/path/to/plate': PipelineConfig(...)}; "
-    f"{PlateManagerCodeNamespaceField.PIPELINE_DATA.value} = "
-    "{'/path/to/plate': [FunctionStep(...), ...]}. "
+    + "; ".join(
+        f"{name} = {getattr(_ORCHESTRATOR_CODE_DOCUMENT_EXAMPLE, name)}"
+        for name in PlateManagerDocumentAssignments.names()
+    )
+    + ". "
     f"Read {PlateManagerOrchestratorCodeDocumentIdentity.require_value()} "
     "for the current template."
 )
@@ -331,7 +335,7 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
             self._error("unsafe_assignment", "Only one named assignment is allowed.")
             return
         target = node.targets[0]
-        if target.id in PlateManagerCodeNamespaceField.allowed_assignment_names():
+        if target.id in PlateManagerDocumentAssignments.names():
             self.visit(node.value)
             return
         if target.id in self._helper_bindings:

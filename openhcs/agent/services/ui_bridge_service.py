@@ -29,6 +29,7 @@ from zmqruntime.config import (
     TransportMode,
 )
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.session import SessionEventBatch, SessionEventsRequest
 from openhcs.agent.dto.ui_bridge import (
@@ -60,7 +61,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentCatalog,
     UiCodeDocumentIdentity,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiCodeDocumentSummary,
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
@@ -580,7 +580,7 @@ class UiBridgeGetDocumentOperation(UiCodeDocumentOperation):
             current_revision_token=None,
             current_snapshot=None,
             selection_mode=request.resolved_selection_mode(
-                UiCodeDocumentSelectionMode.SELECTED
+                SelectedItems
             ),
             selected_scope_ids=(),
             errors=errors,
@@ -606,7 +606,7 @@ class UiBridgeGetStateSurfaceOperation(UiStateSurfaceOperation):
             payload_schema="openhcs.ui.unavailable_state_surface.v1",
             payload={},
             selection_mode=request.resolved_selection_mode(
-                UiCodeDocumentSelectionMode.ALL
+                AllItems
             ),
             selected_scope_ids=(),
             current_revision_token=None,

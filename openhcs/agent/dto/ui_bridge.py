@@ -40,6 +40,7 @@ from zmqruntime.config import (
     TransportMode,
 )
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 from openhcs.agent.dto.common import (
     AgentDataclassCliRequest,
@@ -100,9 +101,6 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from openhcs.agent.ui_bridge_identities import (
     UiWidgetIdentityDeclaration as UiWidgetIdentityDeclaration,
-)
-from openhcs.core.selection import (
-    SelectedAllSelectionMode as UiCodeDocumentSelectionMode,
 )
 from openhcs.core.selection import (
     SelectedScopeIdsArgument,
@@ -680,7 +678,7 @@ class UiCodeDocumentRequest(
         cls,
         *,
         document_id: str,
-        selection_mode: str = UiCodeDocumentSelectionMode.SELECTED.value,
+        selection_mode: str = SelectedItems.name,
         clean: bool = True,
     ) -> "UiCodeDocumentRequest":
         return cls(
@@ -709,7 +707,7 @@ class UiStateSurfaceRequest(
         cls,
         *,
         surface_id: str = PlateManagerStateSurfaceIdentityDeclaration.require_value(),
-        selection_mode: str = UiCodeDocumentSelectionMode.ALL.value,
+        selection_mode: str = AllItems.name,
         base_revision_token: str | None = None,
     ) -> "UiStateSurfaceRequest":
         return cls(
@@ -2405,7 +2403,7 @@ class UiCodeDocumentApplyRequest(
         document_id: str,
         source: str,
         base_revision_token: str,
-        selection_mode: str = UiCodeDocumentSelectionMode.SELECTED.value,
+        selection_mode: str = SelectedItems.name,
         selected_scope_ids: tuple[str, ...] = (),
         require_confirmation: bool = True,
         snapshot_label: str | None = None,
