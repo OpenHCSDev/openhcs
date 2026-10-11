@@ -12,12 +12,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Mapping
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Mapping, Self
 from uuid import uuid4
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping, to_jsonable
+from python_introspect import dataclass_from_mapping, project_dataclass, to_jsonable
+from zmqruntime.messages import TypedWireMessage
 import numpy as np
 
 from openhcs.core.artifacts import (
@@ -28,6 +28,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
+from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -41,257 +42,160 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.progress import (
-    DeclaredProgressContextPayload,
+    ProgressContextPayload,
     ProgressEvent,
     ProgressExecutionContext,
-    ProgressPhase,
     ProgressStatus,
     emit_event,
+)
+from openhcs.core.progress.types import (
+    ErrorProgressStatus,
+    PatternGroupProgressPhase,
+    StartedProgressStatus,
+    SuccessProgressStatus,
 )
 from openhcs.core.vfs_protocol import FileManagerLike
 
 if TYPE_CHECKING:
-    from openhcs.core.debug_views import DebugViewModel
     from openhcs.core.pipeline.compiler import CompiledRuntimeEnvironmentPlan
     from openhcs.core.runtime_stores import RuntimeValueStore
 
 
-class DebugEventType(Enum):
-    """Runtime boundary represented by one debug event."""
+class DebugCommandType(ABC, metaclass=AutoRegisterMeta):
+    """One user-facing debug/test-mode command; each command is a subclass.
 
-    BEFORE_INVOCATION = "before_invocation"
-    AFTER_INVOCATION = "after_invocation"
-    EXCEPTION = "exception"
+    ``name`` is the command's wire spelling. A command owns what it does to a
+    paused persistent worker.
+    """
 
-
-class DebugCommandType(Enum):
-    """User-facing debug/test-mode command."""
-
-    TOGGLE = "toggle"
-    STEP = "step"
-    RUN = "run"
-    RUN_TO_PAUSE = "run_to_pause"
-    RESTART = "restart"
-    CHOOSE_SOURCE_GROUP = "choose_source_group"
-    RANDOM_SOURCE_GROUP = "random_source_group"
-    STOP = "stop"
-
-
-class DebugCommandDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one debug command."""
-
-    __registry_key__ = "command_type"
+    __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[DebugCommandType, type["DebugCommandDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["DebugCommandType"]]] = {}
 
-    command_type: ClassVar[DebugCommandType | None] = None
-    advances_one_boundary: ClassVar[bool] = False
+    name: ClassVar[str | None] = None
 
     @classmethod
-    def require_command_type(cls) -> DebugCommandType:
-        if cls.command_type is None:
-            raise TypeError(f"{cls.__name__} does not declare a debug command.")
-        return cls.command_type
+    def apply_to_worker(cls, controller: "DebugPausedWorkerController") -> None:
+        """Leave the worker paused at its current boundary."""
 
-    @classmethod
-    def for_command_type(
-        cls,
-        command_type: DebugCommandType,
-    ) -> type["DebugCommandDeclarationBase"]:
-        return cls.__registry__[command_type]
+        controller.pause()
 
 
 class AdvancesOneDebugBoundary:
     """Trait for debug commands that release exactly one boundary."""
 
-    advances_one_boundary: ClassVar[bool] = True
+    @classmethod
+    def apply_to_worker(cls, controller: "DebugPausedWorkerController") -> None:
+        controller.release_one_boundary()
 
 
-class ToggleDebugCommand(DebugCommandDeclarationBase):
-    command_type = DebugCommandType.TOGGLE
+class ToggleDebugCommand(DebugCommandType):
+    name = "toggle"
 
 
-class StepDebugCommand(AdvancesOneDebugBoundary, DebugCommandDeclarationBase):
-    command_type = DebugCommandType.STEP
+class StepDebugCommand(AdvancesOneDebugBoundary, DebugCommandType):
+    name = "step"
 
 
-class RunDebugCommand(DebugCommandDeclarationBase):
-    command_type = DebugCommandType.RUN
+class RunDebugCommand(DebugCommandType):
+    name = "run"
+
+    @classmethod
+    def apply_to_worker(cls, controller: "DebugPausedWorkerController") -> None:
+        controller.run_continuously()
 
 
-class RunToPauseDebugCommand(AdvancesOneDebugBoundary, DebugCommandDeclarationBase):
-    command_type = DebugCommandType.RUN_TO_PAUSE
+class RunToPauseDebugCommand(AdvancesOneDebugBoundary, DebugCommandType):
+    name = "run_to_pause"
 
 
-class RestartDebugCommand(AdvancesOneDebugBoundary, DebugCommandDeclarationBase):
-    command_type = DebugCommandType.RESTART
+class RestartDebugCommand(AdvancesOneDebugBoundary, DebugCommandType):
+    name = "restart"
 
 
-class ChooseSourceGroupDebugCommand(DebugCommandDeclarationBase):
-    command_type = DebugCommandType.CHOOSE_SOURCE_GROUP
+class ChooseSourceGroupDebugCommand(DebugCommandType):
+    name = "choose_source_group"
 
 
-class RandomSourceGroupDebugCommand(DebugCommandDeclarationBase):
-    command_type = DebugCommandType.RANDOM_SOURCE_GROUP
+class RandomSourceGroupDebugCommand(DebugCommandType):
+    name = "random_source_group"
 
 
-class StopDebugCommand(DebugCommandDeclarationBase):
-    command_type = DebugCommandType.STOP
+class StopDebugCommand(DebugCommandType):
+    name = "stop"
+
+    @classmethod
+    def apply_to_worker(cls, controller: "DebugPausedWorkerController") -> None:
+        controller.stop()
 
 
-class DebugBoundaryOutcome(str, Enum):
-    """Runtime outcome represented by one debug boundary event."""
+class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
+    """Which runtime boundary a debug event reports; each boundary is a subclass.
 
-    STARTED = "started"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    ``name`` is the boundary's wire spelling.
+    """
 
-
-class DebugTimelineNodeState(str, Enum):
-    """Debugger timeline state derived from a debug boundary event."""
-
-    PENDING = "pending"
-    STARTED = "started"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
-
-class DebugBoundaryEventDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one debug event type."""
-
-    __registry_key__ = "event_type"
+    __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[DebugEventType, type["DebugBoundaryEventDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["DebugBoundary"]]] = {}
 
-    event_type: ClassVar[DebugEventType | None] = None
-    progress_status: ClassVar[ProgressStatus]
-    boundary_outcome: ClassVar[DebugBoundaryOutcome]
-    timeline_node_state: ClassVar[DebugTimelineNodeState]
+    name: ClassVar[str | None] = None
+    progress_status: ClassVar[type[ProgressStatus]]
     reports_output_artifacts: ClassVar[bool] = False
-
-    @classmethod
-    def require_event_type(cls) -> DebugEventType:
-        if cls.event_type is None:
-            raise TypeError(f"{cls.__name__} does not declare a debug event type.")
-        return cls.event_type
-
-    @classmethod
-    def for_event_type(
-        cls,
-        event_type: DebugEventType,
-    ) -> type["DebugBoundaryEventDeclarationBase"]:
-        return cls.__registry__[event_type]
-
-
-class StartedDebugBoundary:
-    """Trait for before-invocation debug boundary semantics."""
-
-    progress_status: ClassVar[ProgressStatus] = ProgressStatus.STARTED
-    boundary_outcome: ClassVar[DebugBoundaryOutcome] = DebugBoundaryOutcome.STARTED
-    timeline_node_state: ClassVar[DebugTimelineNodeState] = (
-        DebugTimelineNodeState.STARTED
-    )
-
-
-class CompletedDebugBoundary:
-    """Trait for completed debug boundary semantics."""
-
-    progress_status: ClassVar[ProgressStatus] = ProgressStatus.SUCCESS
-    boundary_outcome: ClassVar[DebugBoundaryOutcome] = DebugBoundaryOutcome.COMPLETED
-    timeline_node_state: ClassVar[DebugTimelineNodeState] = (
-        DebugTimelineNodeState.COMPLETED
-    )
-
-
-class FailedDebugBoundary:
-    """Trait for failed debug boundary semantics."""
-
-    progress_status: ClassVar[ProgressStatus] = ProgressStatus.ERROR
-    boundary_outcome: ClassVar[DebugBoundaryOutcome] = DebugBoundaryOutcome.FAILED
-    timeline_node_state: ClassVar[DebugTimelineNodeState] = (
-        DebugTimelineNodeState.FAILED
-    )
+    carries_exception: ClassVar[bool] = False
 
 
 class ReportsOutputArtifactsDebugBoundary:
-    """Trait for boundary events that can report produced artifacts."""
+    """Trait for boundaries that report the artifacts the invocation produced."""
 
     reports_output_artifacts: ClassVar[bool] = True
 
 
-class BeforeInvocationDebugBoundary(
-    StartedDebugBoundary,
-    DebugBoundaryEventDeclarationBase,
-):
-    event_type = DebugEventType.BEFORE_INVOCATION
+class BeforeInvocationDebugBoundary(DebugBoundary):
+    name = "before_invocation"
+    progress_status = StartedProgressStatus
 
 
-class AfterInvocationDebugBoundary(
-    ReportsOutputArtifactsDebugBoundary,
-    CompletedDebugBoundary,
-    DebugBoundaryEventDeclarationBase,
-):
-    event_type = DebugEventType.AFTER_INVOCATION
+class AfterInvocationDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBoundary):
+    name = "after_invocation"
+    progress_status = SuccessProgressStatus
 
 
-class ExceptionDebugBoundary(
-    ReportsOutputArtifactsDebugBoundary,
-    FailedDebugBoundary,
-    DebugBoundaryEventDeclarationBase,
-):
-    event_type = DebugEventType.EXCEPTION
+class ExceptionDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBoundary):
+    name = "exception"
+    progress_status = ErrorProgressStatus
+    carries_exception = True
 
 
-class DebugControlMessageType(Enum):
-    """OpenHCS-specific debug control requests sent over the ZMQ control socket."""
+class DebugWorkerState(ABC, metaclass=AutoRegisterMeta):
+    """Where one persistent debug worker stands; each state is a subclass."""
 
-    READ_SNAPSHOT = "openhcs_debug_read_snapshot"
-    WORKER_COMMAND = "openhcs_debug_worker_command"
-    EXPORT_ARTIFACT = "openhcs_debug_export_artifact"
-    INSPECT_RUNTIME = "openhcs_debug_inspect_runtime"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["DebugWorkerState"]]] = {}
+
+    name: ClassVar[str | None] = None
 
 
-class DebugPausedWorkerState(Enum):
-    """Lifecycle state for one persistent debug worker controller."""
+class RunningDebugWorker(DebugWorkerState):
+    name = "running"
 
-    RUNNING = "running"
-    PAUSED = "paused"
-    STOPPED = "stopped"
+
+class PausedDebugWorker(DebugWorkerState):
+    name = "paused"
+
+
+class StoppedDebugWorker(DebugWorkerState):
+    name = "stopped"
 
 
 @dataclass(frozen=True, slots=True)
 class DebugPausedWorkerStatus:
-    """Serializable status for a paused persistent debug worker."""
+    """Status of a paused persistent debug worker."""
 
     debug_session_id: str
-    state: DebugPausedWorkerState
+    state: type[DebugWorkerState]
     cursor: DebugCursor | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "debug_session_id": self.debug_session_id,
-            "state": self.state.value,
-            "cursor": (
-                None
-                if self.cursor is None
-                else to_jsonable(self.cursor)
-            ),
-        }
-
-    @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> "DebugPausedWorkerStatus":
-        cursor = payload.get("cursor")
-        return cls(
-            debug_session_id=str(payload["debug_session_id"]),
-            state=DebugPausedWorkerState(str(payload["state"])),
-            cursor=(
-                None if cursor is None else dataclass_from_mapping(DebugCursor, cursor)
-            ),
-        )
 
     @classmethod
     def from_controller(
@@ -305,31 +209,39 @@ class DebugPausedWorkerStatus:
         )
 
 
-class DebugReplayMode(Enum):
-    """How debug replay should reuse already prepared execution state."""
+class DebugReplayMode(ABC, metaclass=AutoRegisterMeta):
+    """How a debug replay reuses prepared execution state; each mode is a subclass."""
 
-    COLD = "cold"
-    WARM_ARTIFACT = "warm_artifact"
-    PERSISTENT_PAUSED_WORKER = "persistent_paused_worker"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["DebugReplayMode"]]] = {}
 
-    @property
-    def retains_compile_artifact(self) -> bool:
-        return self is not DebugReplayMode.COLD
+    name: ClassVar[str | None] = None
+    retains_compile_artifact: ClassVar[bool] = True
+    keeps_worker_paused: ClassVar[bool] = False
+    """The worker stays alive between commands, paused at invocation boundaries."""
+
+
+class ColdReplay(DebugReplayMode):
+    name = "cold"
+    retains_compile_artifact = False
+
+
+class WarmArtifactReplay(DebugReplayMode):
+    name = "warm_artifact"
+
+
+class PersistentPausedWorkerReplay(DebugReplayMode):
+    name = "persistent_paused_worker"
+    keeps_worker_paused = True
 
 
 @dataclass(frozen=True, slots=True)
 class DebugCommand:
     """Typed GUI command for a debug/test-mode session."""
 
-    command_type: DebugCommandType
+    command_type: type[DebugCommandType]
     debug_session_id: str | None = None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.command_type, DebugCommandType):
-            raise TypeError(
-                "DebugCommand.command_type must be DebugCommandType, "
-                f"got {type(self.command_type).__name__}."
-            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -397,7 +309,7 @@ class DebugCursor:
 class DebugArtifactRef:
     """Reference to a debug artifact or preview payload."""
 
-    kind: ArtifactType
+    kind: type[ArtifactType]
     name: str
     cursor: DebugCursor
     storage_ref: str
@@ -459,53 +371,8 @@ class DebugArtifactRef:
             dtype=dtype,
         )
 
-    def to_json_dict(self) -> dict[str, Any]:
-        return {
-            "kind": self.kind.value,
-            "name": self.name,
-            "cursor": to_jsonable(self.cursor),
-            "storage_ref": self.storage_ref,
-            "storage_backend": self.storage_backend,
-            "preview_ref": self.preview_ref,
-            "shape": self.shape,
-            "dtype": self.dtype,
-            "identity": None if self.identity is None else self.identity.to_json_dict(),
-            "content_digest": self.content_digest,
-        }
-
-    @classmethod
-    def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugArtifactRef":
-        shape = data.get("shape")
-        return cls(
-            kind=ArtifactType.coerce(data["kind"]),
-            name=str(data["name"]),
-            cursor=dataclass_from_mapping(DebugCursor, data["cursor"]),
-            storage_ref=str(data["storage_ref"]),
-            storage_backend=data.get("storage_backend"),
-            preview_ref=data.get("preview_ref"),
-            shape=None if shape is None else tuple(int(value) for value in shape),
-            dtype=data.get("dtype"),
-            identity=(
-                None
-                if data.get("identity") is None
-                else DebugArtifactIdentity.from_json_dict(data["identity"])
-            ),
-            content_digest=data.get("content_digest"),
-        )
-
     def with_content_digest(self, digest: str | None) -> "DebugArtifactRef":
-        return DebugArtifactRef(
-            kind=self.kind,
-            name=self.name,
-            cursor=self.cursor,
-            storage_ref=self.storage_ref,
-            storage_backend=self.storage_backend,
-            preview_ref=self.preview_ref,
-            shape=self.shape,
-            dtype=self.dtype,
-            identity=self.identity,
-            content_digest=digest,
-        )
+        return replace(self, content_digest=digest)
 
 
 @dataclass(frozen=True, slots=True)
@@ -513,7 +380,7 @@ class DebugArtifactIdentity:
     """Stable logical identity for matching debug artifacts across replay runs."""
 
     name: str
-    kind: ArtifactType
+    kind: type[ArtifactType]
     group_keys: tuple[str | None, ...] = (None,)
     producer_step_index: str | None = None
     producer_step_scope_id: str | None = None
@@ -566,30 +433,6 @@ class DebugArtifactIdentity:
             sort_keys=True,
         )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-    def to_json_dict(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "kind": self.kind.value,
-            "group_keys": list(self.group_keys),
-            "producer_step_index": self.producer_step_index,
-            "producer_step_scope_id": self.producer_step_scope_id,
-            "producer_step_name": self.producer_step_name,
-            "settings_digest": self.settings_digest,
-        }
-
-    @classmethod
-    def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugArtifactIdentity":
-        return cls(
-            name=str(data["name"]),
-            kind=ArtifactType.coerce(data["kind"]),
-            group_keys=tuple(data.get("group_keys", (None,))),
-            producer_step_index=data.get("producer_step_index"),
-            producer_step_scope_id=data.get("producer_step_scope_id"),
-            producer_step_name=data.get("producer_step_name"),
-            settings_digest=data.get("settings_digest"),
-        )
-
 
 @dataclass(frozen=True, slots=True)
 class DebugArtifactRefProjection:
@@ -817,14 +660,6 @@ class DebugInvocationParameter:
             for name, value in sorted(kwargs.items(), key=lambda item: str(item[0]))
         )
 
-    def to_json_dict(self) -> dict[str, str]:
-        return to_jsonable(self)
-
-    @classmethod
-    def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugInvocationParameter":
-        return cls(name=str(data["name"]), value_repr=str(data["value_repr"]))
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DebugBoundaryState(ABC, metaclass=AutoRegisterMeta):
     """Common cursor/artifact state shared by debug events and snapshots."""
@@ -856,75 +691,26 @@ class DebugSnapshot(DebugBoundaryState):
     snapshot_id: str
     source_paths: tuple[str, ...] = ()
 
-    def to_json_dict(self) -> dict[str, Any]:
-        return {
-            "snapshot_id": self.snapshot_id,
-            "cursor": to_jsonable(self.cursor),
-            "step_name": self.step_name,
-            "callable_name": self.callable_name,
-            "axis_id": self.axis_id,
-            "source_paths": list(self.source_paths),
-            "input_artifact_refs": [
-                ref.to_json_dict() for ref in self.input_artifact_refs
-            ],
-            "output_artifact_refs": [
-                ref.to_json_dict() for ref in self.output_artifact_refs
-            ],
-            "preview_refs": [ref.to_json_dict() for ref in self.preview_refs],
-            "measurement_refs": [ref.to_json_dict() for ref in self.measurement_refs],
-            "relationship_refs": [ref.to_json_dict() for ref in self.relationship_refs],
-            "timing_seconds": self.timing_seconds,
-            "exception": self.exception,
-            "invocation_parameters": [
-                parameter.to_json_dict() for parameter in self.invocation_parameters
-            ],
-        }
+
+@dataclass(frozen=True, slots=True)
+class DebugControlResponse:
+    """A successful debug control response: ``status: ok`` beside its fields."""
+
+    def to_control_response(self) -> dict[str, Any]:
+        return {"status": "ok", **to_jsonable(self)}
 
     @classmethod
-    def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugSnapshot":
-        return cls(
-            snapshot_id=str(data["snapshot_id"]),
-            cursor=dataclass_from_mapping(DebugCursor, data["cursor"]),
-            step_name=str(data["step_name"]),
-            callable_name=data.get("callable_name"),
-            axis_id=data.get("axis_id"),
-            source_paths=tuple(str(path) for path in data.get("source_paths", ())),
-            input_artifact_refs=tuple(
-                DebugArtifactRef.from_json_dict(ref)
-                for ref in data.get("input_artifact_refs", ())
-            ),
-            output_artifact_refs=tuple(
-                DebugArtifactRef.from_json_dict(ref)
-                for ref in data.get("output_artifact_refs", ())
-            ),
-            preview_refs=tuple(
-                DebugArtifactRef.from_json_dict(ref)
-                for ref in data.get("preview_refs", ())
-            ),
-            measurement_refs=tuple(
-                DebugArtifactRef.from_json_dict(ref)
-                for ref in data.get("measurement_refs", ())
-            ),
-            relationship_refs=tuple(
-                DebugArtifactRef.from_json_dict(ref)
-                for ref in data.get("relationship_refs", ())
-            ),
-            timing_seconds=data.get("timing_seconds"),
-            exception=data.get("exception"),
-            invocation_parameters=tuple(
-                DebugInvocationParameter.from_json_dict(parameter)
-                for parameter in data.get("invocation_parameters", ())
-            ),
+    def from_control_response(cls, payload: Mapping[str, Any]) -> Self:
+        if payload.get("status") != "ok":
+            raise RuntimeError(str(payload.get("error") or payload))
+        return dataclass_from_mapping(
+            cls, {key: value for key, value in payload.items() if key != "status"}
         )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class DebugSessionRequest(ABC, metaclass=AutoRegisterMeta):
+class DebugSessionRequest(ABC):
     """Base request carrying a non-empty debug session id."""
-
-    __registry_key__ = "request_kind"
-    __skip_if_no_key__ = True
-    request_kind: ClassVar[str | None] = None
 
     debug_session_id: str
 
@@ -942,10 +728,10 @@ class DebugSessionRequest(ABC, metaclass=AutoRegisterMeta):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugSnapshotReadRequest(DebugSessionRequest):
+class DebugSnapshotReadRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for reading one debug snapshot from the server."""
 
-    request_kind: ClassVar[str] = "snapshot_read"
+    wire_type: ClassVar[str] = "openhcs_debug_read_snapshot"
 
     snapshot_id: str
     snapshot_store_ref: str
@@ -961,90 +747,17 @@ class DebugSnapshotReadRequest(DebugSessionRequest):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugSnapshotReadControlPayload:
-    """Wire payload for one debug snapshot read control request."""
-
-    debug_session_id: str
-    snapshot_id: str
-    snapshot_store_ref: str
-    snapshot_store_backend: str | None = None
-    message_type: DebugControlMessageType = DebugControlMessageType.READ_SNAPSHOT
-
-    @classmethod
-    def from_request(
-        cls,
-        request: DebugSnapshotReadRequest,
-    ) -> "DebugSnapshotReadControlPayload":
-        return cls(
-            debug_session_id=request.debug_session_id,
-            snapshot_id=request.snapshot_id,
-            snapshot_store_ref=request.snapshot_store_ref,
-            snapshot_store_backend=request.snapshot_store_backend,
-        )
-
-    @classmethod
-    def from_dict(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugSnapshotReadControlPayload":
-        message_type = DebugControlMessageType(str(payload["type"]))
-        if message_type is not DebugControlMessageType.READ_SNAPSHOT:
-            raise ValueError(
-                f"Unsupported debug snapshot read control type: {message_type.value!r}."
-            )
-        return cls(
-            message_type=message_type,
-            debug_session_id=str(payload["debug_session_id"]),
-            snapshot_id=str(payload["snapshot_id"]),
-            snapshot_store_ref=str(payload["snapshot_store_ref"]),
-            snapshot_store_backend=payload.get("snapshot_store_backend"),
-        )
-
-    def to_request(self) -> DebugSnapshotReadRequest:
-        return DebugSnapshotReadRequest(
-            debug_session_id=self.debug_session_id,
-            snapshot_id=self.snapshot_id,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.message_type.value,
-            "debug_session_id": self.debug_session_id,
-            "snapshot_id": self.snapshot_id,
-            "snapshot_store_ref": self.snapshot_store_ref,
-            "snapshot_store_backend": self.snapshot_store_backend,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class DebugSnapshotReadResponse:
+class DebugSnapshotReadResponse(DebugControlResponse):
     """Control-channel response carrying snapshot metadata only."""
 
     snapshot: DebugSnapshot
 
-    def to_control_response(self) -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "snapshot": self.snapshot.to_json_dict(),
-        }
-
-    @classmethod
-    def from_control_response(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugSnapshotReadResponse":
-        if payload.get("status") != "ok":
-            raise RuntimeError(str(payload.get("error") or payload))
-        return cls(snapshot=DebugSnapshot.from_json_dict(payload["snapshot"]))
-
 
 @dataclass(frozen=True, slots=True)
-class DebugArtifactExportRequest(DebugSessionRequest):
+class DebugArtifactExportRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for server-side artifact export/materialization."""
 
-    request_kind: ClassVar[str] = "artifact_export"
+    wire_type: ClassVar[str] = "openhcs_debug_export_artifact"
 
     artifact_ref: DebugArtifactRef
     export_root: str
@@ -1060,160 +773,24 @@ class DebugArtifactExportRequest(DebugSessionRequest):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugArtifactExportControlPayload:
-    """Wire payload for server-side artifact export/materialization."""
-
-    debug_session_id: str
-    artifact_ref: DebugArtifactRef
-    export_root: str
-    snapshot_store_ref: str | None = None
-    snapshot_store_backend: str | None = None
-    message_type: DebugControlMessageType = DebugControlMessageType.EXPORT_ARTIFACT
-
-    @classmethod
-    def from_request(
-        cls,
-        request: DebugArtifactExportRequest,
-    ) -> "DebugArtifactExportControlPayload":
-        return cls(
-            debug_session_id=request.debug_session_id,
-            artifact_ref=request.artifact_ref,
-            export_root=request.export_root,
-            snapshot_store_ref=request.snapshot_store_ref,
-            snapshot_store_backend=request.snapshot_store_backend,
-        )
-
-    @classmethod
-    def from_dict(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugArtifactExportControlPayload":
-        message_type = DebugControlMessageType(str(payload["type"]))
-        if message_type is not DebugControlMessageType.EXPORT_ARTIFACT:
-            raise ValueError(
-                f"Unsupported debug artifact export type: {message_type.value!r}."
-            )
-        return cls(
-            message_type=message_type,
-            debug_session_id=str(payload["debug_session_id"]),
-            artifact_ref=DebugArtifactRef.from_json_dict(payload["artifact_ref"]),
-            export_root=str(payload["export_root"]),
-            snapshot_store_ref=payload.get("snapshot_store_ref"),
-            snapshot_store_backend=payload.get("snapshot_store_backend"),
-        )
-
-    def to_request(self) -> DebugArtifactExportRequest:
-        return DebugArtifactExportRequest(
-            debug_session_id=self.debug_session_id,
-            artifact_ref=self.artifact_ref,
-            export_root=self.export_root,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.message_type.value,
-            "debug_session_id": self.debug_session_id,
-            "artifact_ref": self.artifact_ref.to_json_dict(),
-            "export_root": self.export_root,
-            "snapshot_store_ref": self.snapshot_store_ref,
-            "snapshot_store_backend": self.snapshot_store_backend,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class DebugArtifactExportResponse:
+class DebugArtifactExportResponse(DebugControlResponse):
     """Control-channel response containing the server-side export path."""
 
     exported_ref: str
 
-    def to_control_response(self) -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "exported_ref": self.exported_ref,
-        }
-
-    @classmethod
-    def from_control_response(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugArtifactExportResponse":
-        if payload.get("status") != "ok":
-            raise RuntimeError(str(payload.get("error") or payload))
-        return cls(exported_ref=str(payload["exported_ref"]))
-
 
 @dataclass(frozen=True, slots=True)
-class DebugRuntimeInspectionRequest(DebugSessionRequest):
+class DebugRuntimeInspectionRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for a paused worker runtime inspection view."""
 
-    request_kind: ClassVar[str] = "runtime_inspection"
+    wire_type: ClassVar[str] = "openhcs_debug_inspect_runtime"
 
 
 @dataclass(frozen=True, slots=True)
-class DebugRuntimeInspectionControlPayload:
-    """Wire payload for live runtime inspection requests."""
-
-    debug_session_id: str
-    message_type: DebugControlMessageType = DebugControlMessageType.INSPECT_RUNTIME
-
-    @classmethod
-    def from_request(
-        cls,
-        request: DebugRuntimeInspectionRequest,
-    ) -> "DebugRuntimeInspectionControlPayload":
-        return cls(debug_session_id=request.debug_session_id)
-
-    @classmethod
-    def from_dict(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugRuntimeInspectionControlPayload":
-        message_type = DebugControlMessageType(str(payload["type"]))
-        if message_type is not DebugControlMessageType.INSPECT_RUNTIME:
-            raise ValueError(
-                "DebugRuntimeInspectionControlPayload requires "
-                f"{DebugControlMessageType.INSPECT_RUNTIME.value}, got "
-                f"{message_type.value}."
-            )
-        return cls(
-            message_type=message_type,
-            debug_session_id=str(payload["debug_session_id"]),
-        )
-
-    def to_request(self) -> DebugRuntimeInspectionRequest:
-        return DebugRuntimeInspectionRequest(debug_session_id=self.debug_session_id)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.message_type.value,
-            "debug_session_id": self.debug_session_id,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class DebugRuntimeInspectionResponse:
+class DebugRuntimeInspectionResponse(DebugControlResponse):
     """Control-channel response containing a renderer-independent debug view."""
 
-    view_model: "DebugViewModel"
-
-    def to_control_response(self) -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "view_model": self.view_model.to_json_dict(),
-        }
-
-    @classmethod
-    def from_control_response(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugRuntimeInspectionResponse":
-        if payload.get("status") != "ok":
-            raise RuntimeError(str(payload.get("error") or payload))
-        from openhcs.core.debug_views import DebugViewModel
-
-        return cls(view_model=DebugViewModel.from_json_dict(payload["view_model"]))
+    view_model: DebugViewModel
 
 
 @dataclass(frozen=True, slots=True)
@@ -1595,90 +1172,19 @@ class DebugArtifactHydrationContext:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugWorkerCommandRequest(DebugSessionRequest):
+class DebugWorkerCommandRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for a persistent paused debug worker."""
 
-    request_kind: ClassVar[str] = "worker_command"
+    wire_type: ClassVar[str] = "openhcs_debug_worker_command"
 
-    command_type: DebugCommandType
-
-    def __post_init__(self) -> None:
-        DebugSessionRequest.__post_init__(self)
-        if not isinstance(self.command_type, DebugCommandType):
-            raise TypeError(
-                "DebugWorkerCommandRequest.command_type must be DebugCommandType, "
-                f"got {type(self.command_type).__name__}."
-            )
+    command_type: type[DebugCommandType]
 
 
 @dataclass(frozen=True, slots=True)
-class DebugWorkerCommandControlPayload:
-    """Wire payload for one persistent debug-worker command."""
-
-    debug_session_id: str
-    command_type: DebugCommandType
-    message_type: DebugControlMessageType = DebugControlMessageType.WORKER_COMMAND
-
-    @classmethod
-    def from_request(
-        cls,
-        request: DebugWorkerCommandRequest,
-    ) -> "DebugWorkerCommandControlPayload":
-        return cls(
-            debug_session_id=request.debug_session_id,
-            command_type=request.command_type,
-        )
-
-    @classmethod
-    def from_dict(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugWorkerCommandControlPayload":
-        message_type = DebugControlMessageType(str(payload["type"]))
-        if message_type is not DebugControlMessageType.WORKER_COMMAND:
-            raise ValueError(
-                f"Unsupported debug worker control type: {message_type.value!r}."
-            )
-        return cls(
-            message_type=message_type,
-            debug_session_id=str(payload["debug_session_id"]),
-            command_type=DebugCommandType(str(payload["command_type"])),
-        )
-
-    def to_request(self) -> DebugWorkerCommandRequest:
-        return DebugWorkerCommandRequest(
-            debug_session_id=self.debug_session_id,
-            command_type=self.command_type,
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.message_type.value,
-            "debug_session_id": self.debug_session_id,
-            "command_type": self.command_type.value,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class DebugWorkerCommandResponse:
+class DebugWorkerCommandResponse(DebugControlResponse):
     """Control-channel response for a persistent debug-worker command."""
 
-    status: DebugPausedWorkerStatus
-
-    def to_control_response(self) -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "worker": self.status.to_dict(),
-        }
-
-    @classmethod
-    def from_control_response(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "DebugWorkerCommandResponse":
-        if payload.get("status") != "ok":
-            raise RuntimeError(str(payload.get("error") or payload))
-        return cls(status=DebugPausedWorkerStatus.from_dict(payload["worker"]))
+    worker: DebugPausedWorkerStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -1687,7 +1193,7 @@ class DebugEvent(DebugBoundaryState):
 
     boundary_kind: ClassVar[str] = "event"
 
-    event_type: DebugEventType
+    event_type: type[DebugBoundary]
     traceback_text: str | None = None
     timestamp: float = field(default_factory=time.time)
 
@@ -1695,7 +1201,7 @@ class DebugEvent(DebugBoundaryState):
     def for_invocation(
         cls,
         *,
-        event_type: DebugEventType,
+        event_type: type[DebugBoundary],
         cursor: DebugCursor,
         step_name: str,
         callable_name: str | None,
@@ -1706,19 +1212,17 @@ class DebugEvent(DebugBoundaryState):
         timing_seconds: float | None = None,
         invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
     ) -> "DebugEvent":
-        if event_type is DebugEventType.EXCEPTION and exception is None:
-            raise ValueError("Exception debug events require an exception.")
-        if event_type is not DebugEventType.EXCEPTION and exception is not None:
-            raise ValueError("Only exception debug events can carry an exception.")
-
-        event_declaration = DebugBoundaryEventDeclarationBase.for_event_type(event_type)
+        if event_type.carries_exception != (exception is not None):
+            raise ValueError(
+                f"{event_type.name!r} debug events "
+                f"{'require' if event_type.carries_exception else 'cannot carry'} "
+                "an exception."
+            )
         reported_output_artifacts = (
-            output_artifacts.refs if event_declaration.reports_output_artifacts else ()
+            output_artifacts.refs if event_type.reports_output_artifacts else ()
         )
         event_ref_projection = (
-            output_artifacts
-            if event_declaration.reports_output_artifacts
-            else input_artifacts
+            output_artifacts if event_type.reports_output_artifacts else input_artifacts
         )
         exception_text = None
         traceback_text = None
@@ -1744,25 +1248,11 @@ class DebugEvent(DebugBoundaryState):
     def to_snapshot(self, *, snapshot_id: str) -> DebugSnapshot:
         """Build a metadata-only snapshot for this runtime event."""
 
-        return DebugSnapshot(
-            snapshot_id=snapshot_id,
-            cursor=self.cursor,
-            step_name=self.step_name,
-            callable_name=self.callable_name,
-            axis_id=self.axis_id,
-            timing_seconds=self.timing_seconds,
-            input_artifact_refs=self.input_artifact_refs,
-            output_artifact_refs=self.output_artifact_refs,
-            preview_refs=self.preview_refs,
-            measurement_refs=self.measurement_refs,
-            relationship_refs=self.relationship_refs,
-            exception=self.exception,
-            invocation_parameters=self.invocation_parameters,
-        )
+        return project_dataclass(DebugSnapshot, self, snapshot_id=snapshot_id)
 
 
 @dataclass(frozen=True, slots=True)
-class DebugProgressContext(DeclaredProgressContextPayload):
+class DebugProgressContext(ProgressContextPayload):
     """Small debug context intended for ProgressEvent.context transport."""
 
     context_key: ClassVar[str] = "debug"
@@ -1770,7 +1260,7 @@ class DebugProgressContext(DeclaredProgressContextPayload):
     debug_session_id: str
     snapshot_id: str | None
     cursor: DebugCursor
-    event_type: DebugEventType
+    event_type: type[DebugBoundary]
     snapshot_store_ref: str | None = None
     snapshot_store_backend: str | None = None
 
@@ -1799,8 +1289,6 @@ class DebugProgressContext(DeclaredProgressContextPayload):
 @dataclass(frozen=True, slots=True)
 class DebugProgressEventRequest(DebugSessionRequest):
     """Request for one lightweight ProgressEvent announcing debug state."""
-
-    request_kind: ClassVar[str] = "progress_event"
 
     debug_event: DebugEvent
     progress_context: ProgressExecutionContext
@@ -1834,14 +1322,12 @@ class DebugProgressEventRequest(DebugSessionRequest):
         return self.progress_context.event(
             axis_id=self.debug_event.axis_id,
             step_name=self.debug_event.step_name,
-            phase=ProgressPhase.PATTERN_GROUP,
-            status=DebugBoundaryEventDeclarationBase.for_event_type(
-                self.debug_event.event_type
-            ).progress_status,
+            phase=PatternGroupProgressPhase,
+            status=self.debug_event.event_type.progress_status,
             percent=self.percent,
             completed=self.completed,
             total=self.total,
-            message=self.debug_event.event_type.value,
+            message=self.debug_event.event_type.name,
             context=self.debug_progress_context().to_context(),
             error=self.debug_event.exception,
             traceback=self.debug_event.traceback_text,
@@ -1856,7 +1342,7 @@ class DebugPausedWorkerController:
             raise ValueError("debug_session_id cannot be empty.")
         self.debug_session_id = debug_session_id
         self._condition = threading.Condition()
-        self._state = DebugPausedWorkerState.RUNNING
+        self._state = RunningDebugWorker
         self._cursor: DebugCursor | None = None
         self._context: DebugExecutionContext | None = None
         self._step_permits = 0
@@ -1875,51 +1361,56 @@ class DebugPausedWorkerController:
         with self._condition:
             if self._context is None:
                 raise RuntimeError("Debug worker context is not available.")
-            if self._state is not DebugPausedWorkerState.PAUSED:
+            if self._state is not PausedDebugWorker:
                 raise RuntimeError("Runtime inspection requires a paused debug worker.")
-            from openhcs.core.debug_views import DebugViewModel
+            from openhcs.core.debug_views import RuntimeValuesDebugViewSection
 
-            return DebugViewModel.from_runtime_value_store(
+            return RuntimeValuesDebugViewSection.view_model_for_store(
                 self._context.runtime_value_store,
                 title=f"Runtime Values ({self.debug_session_id[:8]})",
             )
 
-    def apply_command(self, command_type: DebugCommandType) -> DebugPausedWorkerStatus:
+    def apply_command(
+        self, command_type: type[DebugCommandType]
+    ) -> DebugPausedWorkerStatus:
         with self._condition:
-            if command_type is DebugCommandType.STOP:
-                self._state = DebugPausedWorkerState.STOPPED
-                self._condition.notify_all()
-            elif command_type is DebugCommandType.RUN:
-                self._continuous = True
-                self._state = DebugPausedWorkerState.RUNNING
-                self._condition.notify_all()
-            elif DebugCommandDeclarationBase.for_command_type(
-                command_type
-            ).advances_one_boundary:
-                self._continuous = False
-                self._step_permits += 1
-                self._state = DebugPausedWorkerState.RUNNING
-                self._condition.notify_all()
-            else:
-                self._state = DebugPausedWorkerState.PAUSED
+            command_type.apply_to_worker(self)
             return DebugPausedWorkerStatus.from_controller(self)
 
+    def pause(self) -> None:
+        self._state = PausedDebugWorker
+
+    def stop(self) -> None:
+        self._state = StoppedDebugWorker
+        self._condition.notify_all()
+
+    def run_continuously(self) -> None:
+        self._continuous = True
+        self._state = RunningDebugWorker
+        self._condition.notify_all()
+
+    def release_one_boundary(self) -> None:
+        self._continuous = False
+        self._step_permits += 1
+        self._state = RunningDebugWorker
+        self._condition.notify_all()
+
     def wait_at_boundary(self, event: DebugEvent) -> None:
-        if event.event_type is not DebugEventType.AFTER_INVOCATION:
+        if event.event_type is not AfterInvocationDebugBoundary:
             return
         with self._condition:
             self._cursor = event.cursor
             if self._continuous:
-                self._state = DebugPausedWorkerState.RUNNING
+                self._state = RunningDebugWorker
                 return
             if self._step_permits > 0:
                 self._step_permits -= 1
-                self._state = DebugPausedWorkerState.RUNNING
+                self._state = RunningDebugWorker
                 return
-            self._state = DebugPausedWorkerState.PAUSED
-            while self._state is DebugPausedWorkerState.PAUSED:
+            self._state = PausedDebugWorker
+            while self._state is PausedDebugWorker:
                 self._condition.wait()
-            if self._state is DebugPausedWorkerState.STOPPED:
+            if self._state is StoppedDebugWorker:
                 raise DebugWorkerStopped("Persistent debug worker was stopped.")
 
 
@@ -1958,7 +1449,7 @@ class DebugSession:
     execution_id: str | None = None
     subject_id: str | None = None
     axis_id: str | None = None
-    command_type: DebugCommandType | None = None
+    command_type: type[DebugCommandType] | None = None
     selected_source_group: str | None = None
     cursor: DebugCursor | None = None
     breakpoints: tuple[DebugCursor, ...] = ()
@@ -1973,7 +1464,7 @@ class DebugSession:
         execution_id: str | None = None,
         subject_id: str | None = None,
         axis_id: str | None = None,
-        command_type: DebugCommandType | None = None,
+        command_type: type[DebugCommandType] | None = None,
     ) -> "DebugSession":
         return cls(
             debug_session_id=str(uuid4()),
@@ -1983,20 +1474,8 @@ class DebugSession:
             command_type=command_type,
         )
 
-    def with_command(self, command_type: DebugCommandType) -> "DebugSession":
-        return DebugSession(
-            debug_session_id=self.debug_session_id,
-            execution_id=self.execution_id,
-            subject_id=self.subject_id,
-            axis_id=self.axis_id,
-            command_type=command_type,
-            selected_source_group=self.selected_source_group,
-            cursor=self.cursor,
-            breakpoints=self.breakpoints,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-            dirty_from_cursor=self.dirty_from_cursor,
-        )
+    def with_command(self, command_type: type[DebugCommandType]) -> "DebugSession":
+        return replace(self, command_type=command_type)
 
     def with_snapshot_store(
         self,
@@ -2005,51 +1484,20 @@ class DebugSession:
         snapshot_store_backend: str | None,
         axis_id: str | None = None,
     ) -> "DebugSession":
-        return DebugSession(
-            debug_session_id=self.debug_session_id,
-            execution_id=self.execution_id,
-            subject_id=self.subject_id,
+        return replace(
+            self,
             axis_id=self.axis_id if axis_id is None else axis_id,
-            command_type=self.command_type,
-            selected_source_group=self.selected_source_group,
-            cursor=self.cursor,
-            breakpoints=self.breakpoints,
             snapshot_store_ref=snapshot_store_ref,
             snapshot_store_backend=snapshot_store_backend,
-            dirty_from_cursor=self.dirty_from_cursor,
         )
 
     def with_cursor(self, cursor: DebugCursor) -> "DebugSession":
-        return DebugSession(
-            debug_session_id=self.debug_session_id,
-            execution_id=self.execution_id,
-            subject_id=self.subject_id,
-            axis_id=self.axis_id,
-            command_type=self.command_type,
-            selected_source_group=self.selected_source_group,
-            cursor=cursor,
-            breakpoints=self.breakpoints,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-            dirty_from_cursor=self.dirty_from_cursor,
-        )
+        return replace(self, cursor=cursor)
 
     def mark_dirty_from_cursor(self) -> "DebugSession":
         if self.cursor is None:
             return self
-        return DebugSession(
-            debug_session_id=self.debug_session_id,
-            execution_id=self.execution_id,
-            subject_id=self.subject_id,
-            axis_id=self.axis_id,
-            command_type=self.command_type,
-            selected_source_group=self.selected_source_group,
-            cursor=self.cursor,
-            breakpoints=self.breakpoints,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-            dirty_from_cursor=self.cursor,
-        )
+        return replace(self, dirty_from_cursor=self.cursor)
 
 
 @dataclass(frozen=True, slots=True)
@@ -2060,7 +1508,7 @@ class DebugTerminalSummary:
     subject_id: str
     terminal_status: str
     cursor: DebugCursor | None = None
-    command_type: DebugCommandType | None = None
+    command_type: type[DebugCommandType] | None = None
     axis_id: str | None = None
     snapshot_id: str | None = None
     snapshot_store_ref: str | None = None
@@ -2079,15 +1527,10 @@ class DebugTerminalSummary:
     ) -> "DebugTerminalSummary":
         if session.subject_id is None:
             raise ValueError("DebugTerminalSummary requires session.subject_id.")
-        return cls(
-            debug_session_id=session.debug_session_id,
-            subject_id=session.subject_id,
+        return project_dataclass(
+            cls,
+            session,
             terminal_status=terminal_status,
-            cursor=session.cursor,
-            command_type=session.command_type,
-            axis_id=session.axis_id,
-            snapshot_store_ref=session.snapshot_store_ref,
-            snapshot_store_backend=session.snapshot_store_backend,
             completed_at_unix=completed_at_unix,
         )
 
@@ -2099,21 +1542,20 @@ class DebugTerminalSummary:
         snapshot_store_ref: str | None,
         snapshot_store_backend: str | None,
     ) -> "DebugTerminalSummary":
-        return DebugTerminalSummary(
-            debug_session_id=self.debug_session_id,
-            subject_id=self.subject_id,
-            terminal_status=self.terminal_status,
-            cursor=self.cursor if snapshot is None else snapshot.cursor,
-            command_type=self.command_type,
-            axis_id=self.axis_id if snapshot is None else snapshot.axis_id,
+        summary = replace(
+            self,
             snapshot_id=snapshot_id,
             snapshot_store_ref=snapshot_store_ref,
             snapshot_store_backend=snapshot_store_backend,
-            step_name=self.step_name if snapshot is None else snapshot.step_name,
-            callable_name=(
-                self.callable_name if snapshot is None else snapshot.callable_name
-            ),
-            completed_at_unix=self.completed_at_unix,
+        )
+        if snapshot is None:
+            return summary
+        return replace(
+            summary,
+            cursor=snapshot.cursor,
+            axis_id=snapshot.axis_id,
+            step_name=snapshot.step_name,
+            callable_name=snapshot.callable_name,
         )
 
 
@@ -2126,51 +1568,30 @@ class DebugExecutionConfig:
     debug_session_id: str
     snapshot_store_ref: str | None = None
     snapshot_store_backend: str | None = None
-    command_type: DebugCommandType = DebugCommandType.RUN
+    command_type: type[DebugCommandType] = RunDebugCommand
     selected_source_group: str | None = None
     pause_step_indices: tuple[int, ...] = ()
     start_step_index: int = 0
     start_after_invocation_key: str | None = None
-    replay_mode: DebugReplayMode = DebugReplayMode.COLD
+    replay_mode: type[DebugReplayMode] = ColdReplay
 
     def __post_init__(self) -> None:
         if not self.debug_session_id:
             raise ValueError("DebugExecutionConfig.debug_session_id cannot be empty.")
-        if not isinstance(self.command_type, DebugCommandType):
-            self.command_type = DebugCommandType(str(self.command_type))
-        self.pause_step_indices = tuple(int(index) for index in self.pause_step_indices)
-        if not isinstance(self.replay_mode, DebugReplayMode):
-            self.replay_mode = DebugReplayMode(str(self.replay_mode))
-        self.start_step_index = int(self.start_step_index)
         if self.start_step_index < 0:
             raise ValueError("start_step_index cannot be negative.")
 
     def to_config_params(self) -> dict[str, Any]:
-        return {
-            self.CONFIG_PARAMS_KEY: {
-                "debug_session_id": self.debug_session_id,
-                "snapshot_store_ref": self.snapshot_store_ref,
-                "snapshot_store_backend": self.snapshot_store_backend,
-                "command_type": self.command_type.value,
-                "selected_source_group": self.selected_source_group,
-                "pause_step_indices": list(self.pause_step_indices),
-                "start_step_index": self.start_step_index,
-                "start_after_invocation_key": self.start_after_invocation_key,
-                "replay_mode": self.replay_mode.value,
-            }
-        }
+        return {self.CONFIG_PARAMS_KEY: to_jsonable(self)}
 
     def compile_cache_config_params(self) -> dict[str, Any]:
         """Return debug config params containing only compile-relevant state."""
 
-        return DebugExecutionConfig(
-            debug_session_id=self.debug_session_id,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-            command_type=DebugCommandType.RUN,
-            selected_source_group=self.selected_source_group,
-            pause_step_indices=self.pause_step_indices,
-            replay_mode=self.replay_mode,
+        return replace(
+            self,
+            command_type=RunDebugCommand,
+            start_step_index=0,
+            start_after_invocation_key=None,
         ).to_config_params()
 
     @classmethod
@@ -2191,26 +1612,7 @@ class DebugExecutionConfig:
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, Any]) -> "DebugExecutionConfig":
-        if not isinstance(payload, Mapping):
-            raise TypeError(
-                "debug_execution config must be a mapping, "
-                f"got {type(payload).__name__}."
-            )
-        return cls(
-            debug_session_id=str(payload["debug_session_id"]),
-            snapshot_store_ref=payload.get("snapshot_store_ref"),
-            snapshot_store_backend=payload.get("snapshot_store_backend"),
-            command_type=DebugCommandType(
-                payload.get("command_type", DebugCommandType.RUN.value)
-            ),
-            selected_source_group=payload.get("selected_source_group"),
-            pause_step_indices=tuple(payload.get("pause_step_indices", ())),
-            start_step_index=int(payload.get("start_step_index", 0)),
-            start_after_invocation_key=payload.get("start_after_invocation_key"),
-            replay_mode=DebugReplayMode(
-                payload.get("replay_mode", DebugReplayMode.COLD.value)
-            ),
-        )
+        return dataclass_from_mapping(cls, payload)
 
 
 class DebugInvocationExecutionStrategy(ABC, metaclass=AutoRegisterMeta):
@@ -2219,10 +1621,10 @@ class DebugInvocationExecutionStrategy(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "command_type"
     __skip_if_no_key__ = True
     __registry__: ClassVar[
-        dict[DebugCommandType, type["DebugInvocationExecutionStrategy"]]
+        dict[type[DebugCommandType], type["DebugInvocationExecutionStrategy"]]
     ] = {}
 
-    command_type: ClassVar[DebugCommandType | None] = None
+    command_type: ClassVar[type[DebugCommandType] | None] = None
 
     def __init__(self, config: DebugExecutionConfig | None = None) -> None:
         self.config = config
@@ -2254,7 +1656,7 @@ class NeverStopDebugInvocationExecutionStrategy(DebugInvocationExecutionStrategy
 class StepDebugInvocationExecutionStrategy(DebugInvocationExecutionStrategy):
     """Execute exactly one compiled invocation for the debug STEP command."""
 
-    command_type = DebugCommandType.STEP
+    command_type = StepDebugCommand
 
     def __init__(self, config: DebugExecutionConfig | None = None) -> None:
         super().__init__(config)
@@ -2271,7 +1673,7 @@ class StepDebugInvocationExecutionStrategy(DebugInvocationExecutionStrategy):
         return True
 
     def should_stop_after_invocation(self, event: DebugEvent) -> bool:
-        if event.event_type is not DebugEventType.AFTER_INVOCATION:
+        if event.event_type is not AfterInvocationDebugBoundary:
             return False
         self._executed_invocations += 1
         return self._executed_invocations >= 1
@@ -2282,9 +1684,11 @@ class DebugStepStopStrategy(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "command_type"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[DebugCommandType, type["DebugStepStopStrategy"]]] = {}
+    __registry__: ClassVar[
+        dict[type[DebugCommandType], type["DebugStepStopStrategy"]]
+    ] = {}
 
-    command_type: ClassVar[DebugCommandType | None] = None
+    command_type: ClassVar[type[DebugCommandType] | None] = None
 
     def __init__(self, config: DebugExecutionConfig | None = None) -> None:
         self.config = config
@@ -2326,7 +1730,7 @@ class NeverStopDebugStepStrategy(DebugStepStopStrategy):
 class StepDebugStepStopStrategy(DebugStepStopStrategy):
     """Stop after one completed step."""
 
-    command_type = DebugCommandType.STEP
+    command_type = StepDebugCommand
 
     def should_stop_after_step(
         self,
@@ -2343,7 +1747,7 @@ class StepDebugStepStopStrategy(DebugStepStopStrategy):
 class RunToPauseDebugStepStopStrategy(DebugStepStopStrategy):
     """Stop when a completed step is marked as a debug pause boundary."""
 
-    command_type = DebugCommandType.RUN_TO_PAUSE
+    command_type = RunToPauseDebugCommand
 
     def should_stop_after_step(
         self,
@@ -2523,7 +1927,7 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         invocation_strategy = DebugInvocationExecutionStrategy.for_config(self.config)
         pause_controller = (
             DebugPausedWorkerRegistry.controller_for(self.config.debug_session_id)
-            if self.config.replay_mode is DebugReplayMode.PERSISTENT_PAUSED_WORKER
+            if self.config.replay_mode.keeps_worker_paused
             else None
         )
         if pause_controller is not None:
@@ -2598,7 +2002,7 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         return [] if not available_axis_ids else [available_axis_ids[0]]
 
     def compile_worker_count(self, configured_num_workers: int) -> int:
-        if self.config.replay_mode is DebugReplayMode.PERSISTENT_PAUSED_WORKER:
+        if self.config.replay_mode.keeps_worker_paused:
             return 1
         return configured_num_workers
 
@@ -2606,7 +2010,7 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         self,
         runtime_environment: "CompiledRuntimeEnvironmentPlan",
     ) -> "CompiledRuntimeEnvironmentPlan":
-        if self.config.replay_mode is not DebugReplayMode.PERSISTENT_PAUSED_WORKER:
+        if not self.config.replay_mode.keeps_worker_paused:
             return runtime_environment
         return runtime_environment.with_execution_shape(
             use_threading=True,
@@ -2790,23 +2194,12 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
         return self.invocation_strategy.should_stop_after_invocation(event)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class DebugStoreManifest:
-    """Serializable manifest for local filesystem/VFS-backed debug snapshots."""
+    """The snapshots one debug session's store holds."""
 
     debug_session_id: str
-    snapshots: Mapping[str, DebugSnapshot] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
-
-    def __post_init__(self) -> None:
-        self.snapshots = MappingProxyType(dict(self.snapshots))
-
-    def to_json_dict(self) -> dict[str, Any]:
-        return {
-            "debug_session_id": self.debug_session_id,
-            "snapshot_ids": sorted(self.snapshots),
-        }
+    snapshot_ids: tuple[str, ...] = ()
 
 
 class DebugSnapshotStore(ABC, metaclass=AutoRegisterMeta):
@@ -2838,12 +2231,7 @@ class DebugSnapshotStore(ABC, metaclass=AutoRegisterMeta):
     def manifest(self) -> DebugStoreManifest:
         return DebugStoreManifest(
             debug_session_id=self.debug_session_id,
-            snapshots=MappingProxyType(
-                {
-                    snapshot_id: self.read_snapshot(snapshot_id)
-                    for snapshot_id in self.list_snapshot_ids()
-                }
-            ),
+            snapshot_ids=tuple(sorted(self.list_snapshot_ids())),
         )
 
     @abstractmethod
@@ -2892,15 +2280,16 @@ class LocalDebugSnapshotStore(DebugSnapshotStore):
         self.session_path.mkdir(parents=True, exist_ok=True)
         path = self.snapshot_path(snapshot.snapshot_id)
         path.write_text(
-            json.dumps(snapshot.to_json_dict(), indent=2, sort_keys=True),
+            json.dumps(to_jsonable(snapshot), indent=2, sort_keys=True),
             encoding="utf-8",
         )
         self.write_manifest()
         return path
 
     def read_snapshot(self, snapshot_id: str) -> DebugSnapshot:
-        return DebugSnapshot.from_json_dict(
-            json.loads(self.snapshot_path(snapshot_id).read_text(encoding="utf-8"))
+        return dataclass_from_mapping(
+            DebugSnapshot,
+            json.loads(self.snapshot_path(snapshot_id).read_text(encoding="utf-8")),
         )
 
     def list_snapshot_ids(self) -> tuple[str, ...]:
@@ -2915,7 +2304,7 @@ class LocalDebugSnapshotStore(DebugSnapshotStore):
     def write_manifest(self) -> Path:
         self.session_path.mkdir(parents=True, exist_ok=True)
         self.manifest_path.write_text(
-            json.dumps(self.manifest().to_json_dict(), indent=2, sort_keys=True),
+            json.dumps(to_jsonable(self.manifest()), indent=2, sort_keys=True),
             encoding="utf-8",
         )
         return self.manifest_path
@@ -2951,7 +2340,7 @@ class FileManagerDebugSnapshotStore(DebugSnapshotStore):
         ).snapshot_with_content_digests(snapshot)
         self.filemanager.ensure_directory(self.session_path, self.backend)
         path = self.snapshot_path(snapshot.snapshot_id)
-        self.filemanager.save(snapshot.to_json_dict(), path, self.backend)
+        self.filemanager.save(to_jsonable(snapshot), path, self.backend)
         self.write_manifest()
         return path
 
@@ -2962,12 +2351,7 @@ class FileManagerDebugSnapshotStore(DebugSnapshotStore):
         )
         if isinstance(payload, str):
             payload = json.loads(payload)
-        if not isinstance(payload, Mapping):
-            raise TypeError(
-                "Debug snapshot store payload must be a mapping or JSON string, "
-                f"got {type(payload).__name__}."
-            )
-        return DebugSnapshot.from_json_dict(payload)
+        return dataclass_from_mapping(DebugSnapshot, payload)
 
     def list_snapshot_ids(self) -> tuple[str, ...]:
         if not self.filemanager.exists(self.session_path, self.backend):
@@ -2988,7 +2372,7 @@ class FileManagerDebugSnapshotStore(DebugSnapshotStore):
     def write_manifest(self) -> str:
         self.filemanager.ensure_directory(self.session_path, self.backend)
         self.filemanager.save(
-            self.manifest().to_json_dict(),
+            to_jsonable(self.manifest()),
             self.manifest_path,
             self.backend,
         )

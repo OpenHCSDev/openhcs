@@ -47,11 +47,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     validate_dataset_scoped_contexts,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressExecutionContext,
-    ProgressPhase,
-)
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
@@ -90,6 +86,11 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    RunningProgressPhase,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+)
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
@@ -878,9 +879,9 @@ def test_plate_scope_progress_stays_live_until_materialization_completes() -> No
         heartbeat_interval_seconds=0.001,
     )
 
-    assert events[0].phase is ProgressPhase.STEP_STARTED
-    assert events[-1].phase is ProgressPhase.STEP_COMPLETED
-    assert any(event.phase is ProgressPhase.RUNNING for event in events[1:-1])
+    assert events[0].phase is StepStartedProgressPhase
+    assert events[-1].phase is StepCompletedProgressPhase
+    assert any(event.phase is RunningProgressPhase for event in events[1:-1])
     assert all(event.axis_id == "" for event in events)
     assert all(event.step_name == "export" for event in events)
     assert events[0].completed == 1
@@ -954,7 +955,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert table.well_id == "A01"
     assert observation.contexts[0].outputs.runtime_export_paths == (table.path,)
     events = list(progress_queue.events)
-    assert events[-1].phase is ProgressPhase.STEP_COMPLETED
+    assert events[-1].phase is StepCompletedProgressPhase
 
 
 def test_plate_scope_image_set_policy_includes_compiled_group_component() -> None:

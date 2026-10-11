@@ -6,6 +6,8 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from python_introspect import project_dataclass
+
 from openhcs.authoring.session.compilation import DatasetPipelineRequest, run_blocking
 from openhcs.authoring.session.events import StatusReported
 from openhcs.core.debug import (
@@ -17,6 +19,7 @@ from openhcs.core.debug import (
     DebugReplayMode,
 )
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
+from openhcs.core.debug import WarmArtifactReplay
 
 if TYPE_CHECKING:
     from openhcs.authoring.session.session import Session
@@ -31,26 +34,16 @@ class DebugRunRequest:
     debug_session_id: str
     snapshot_store_ref: str
     snapshot_store_backend: str | None
-    command_type: DebugCommandType
+    command_type: type[DebugCommandType]
     pause_step_indices: tuple[int, ...]
     selected_source_group: str | None
-    replay_mode: DebugReplayMode = DebugReplayMode.WARM_ARTIFACT
+    replay_mode: type[DebugReplayMode] = WarmArtifactReplay
     start_step_index: int = 0
     start_after_invocation_key: str | None = None
 
     @property
     def execution_config(self) -> DebugExecutionConfig:
-        return DebugExecutionConfig(
-            debug_session_id=self.debug_session_id,
-            snapshot_store_ref=self.snapshot_store_ref,
-            snapshot_store_backend=self.snapshot_store_backend,
-            command_type=self.command_type,
-            selected_source_group=self.selected_source_group,
-            pause_step_indices=self.pause_step_indices,
-            start_step_index=self.start_step_index,
-            start_after_invocation_key=self.start_after_invocation_key,
-            replay_mode=self.replay_mode,
-        )
+        return project_dataclass(DebugExecutionConfig, self)
 
     @property
     def compile_config_params(self) -> dict:
@@ -110,18 +103,18 @@ class DebugRuns:
         self,
         *,
         debug_session_id: str,
-        command_type: DebugCommandType,
+        command_type: type[DebugCommandType],
     ) -> DebugPausedWorkerStatus:
         client = self._session.client.require_client()
         status = await run_blocking(
             lambda: client.send_debug_worker_command(
                 debug_session_id=debug_session_id,
                 command_type=command_type,
-            ).status
+            ).worker
         )
         self._session.publish(
             StatusReported(
-                f"Debug worker {status.state.value} for session {debug_session_id[:8]}"
+                f"Debug worker {status.state.name} for session {debug_session_id[:8]}"
             )
         )
         return status

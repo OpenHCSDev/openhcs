@@ -505,10 +505,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         self,
         request_context: ZMQExecutionContext,
     ):
-        from openhcs.core.debug import (
-            DebugPausedWorkerRegistry,
-            DebugReplayMode,
-        )
+        from openhcs.core.debug import DebugPausedWorkerRegistry
 
         auxiliary_params = request_context.auxiliary_params
         environment = ZMQOrchestratorEnvironmentRequest(
@@ -609,8 +606,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         finally:
             if (
                 debug_execution_config is not None
-                and debug_execution_config.replay_mode
-                is DebugReplayMode.PERSISTENT_PAUSED_WORKER
+                and debug_execution_config.replay_mode.keeps_worker_paused
             ):
                 DebugPausedWorkerRegistry.remove(
                     debug_execution_config.debug_session_id

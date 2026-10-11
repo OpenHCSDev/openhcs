@@ -9,7 +9,7 @@ from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineDebugToolbarWidgetIdentity,
 )
-from openhcs.core.debug import DebugCommand, DebugCommandType
+from openhcs.core.debug import DebugCommandType
 from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
@@ -120,13 +120,13 @@ class DebugToolbarWidget(QWidget):
         return panel
 
     @property
-    def buttons(self) -> dict[DebugCommandType, QPushButton]:
+    def buttons(self) -> dict[type[DebugCommandType], QPushButton]:
         """Return command-keyed access derived from the action-id button store."""
 
         return {
-            identity: self._buttons_by_id[identity.value]
-            for identity in DebugCommandType
-            if identity.value in self._buttons_by_id
+            command: self._buttons_by_id[command.name]
+            for command in DebugCommandType.__registry__.values()
+            if command.name in self._buttons_by_id
         }
 
     @property
@@ -136,15 +136,7 @@ class DebugToolbarWidget(QWidget):
         return self._buttons_by_id.get(DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value)
 
     def emit_debug_command(self, action_id: str) -> None:
-        declaration = PipelineDebugActionDeclarationBase.for_action_id(action_id)
-        identity = declaration.require_identity()
-        if isinstance(identity, DebugCommandType):
-            self.command_requested.emit(DebugCommand(identity))
-            return
-        if isinstance(identity, DebugToolbarAuxiliaryAction):
-            self.runtime_inspection_requested.emit()
-            return
-        raise TypeError(f"Unsupported debug toolbar action identity: {identity!r}")
+        PipelineDebugActionDeclarationBase.for_action_id(action_id).emit_from(self)
 
     def set_debug_session_context(self, context: PipelineDebugSessionContext) -> None:
         """Project toolbar controls from the current PipelineEditor debug context."""
@@ -168,8 +160,8 @@ class DebugToolbarWidget(QWidget):
             button.setToolTip(tooltip)
             button.setEnabled(model.enabled)
 
-    def command_enabled(self, command_type: DebugCommandType) -> bool:
-        model = self._action_models.get(command_type.value)
+    def command_enabled(self, command_type: type[DebugCommandType]) -> bool:
+        model = self._action_models.get(command_type.name)
         if model is None:
             raise ValueError(
                 f"Debug command is not exposed by the toolbar: {command_type}"

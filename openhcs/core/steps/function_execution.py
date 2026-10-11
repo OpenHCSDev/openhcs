@@ -30,7 +30,6 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
-from openhcs.core.progress import ProgressPhase, ProgressStatus
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
@@ -57,6 +56,10 @@ from openhcs.core.steps.function_runtime import (
     _process_single_pattern_group,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    RunningProgressStatus,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import FilenameParser
@@ -1033,8 +1036,8 @@ class FunctionStepExecutor:
         runtime.emit(
             axis_id=self.plan.axis_id,
             step_name=self.plan.step_name,
-            phase=ProgressPhase.PATTERN_GROUP,
-            status=ProgressStatus.RUNNING,
+            phase=PatternGroupProgressPhase,
+            status=RunningProgressStatus,
             completed=completed_groups,
             total=total_groups,
             percent=(completed_groups / total_groups) * 100.0,

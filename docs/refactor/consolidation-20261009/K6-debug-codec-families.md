@@ -60,3 +60,18 @@ Re-measured at `84e7a2904`. L2 already deleted `serialization/json.py` and `Debu
 ## Done when
 
 The guards pass; the library PRs (python-introspect 0.2.6, zmqruntime 0.6.1) are open with tests green and pinned by submodule; the touched test files pass one per process; the structural ratchet and NRA show no regressions.
+
+## Outcome and corrections
+
+Library PRs: python-introspect #20 (0.2.6), ZMQRuntime #30 (0.6.1); the submodules point at their branch heads.
+
+Corrections to the plan above:
+
+- **Section and table kinds keep a string on the wire.** `DebugViewSection.kind` and `DebugViewTable.projection` hold the declaration's registry `name`, not the class: the view model is decoded by MCP clients that never import the runtime-heavy `debug_views`, whose classes fill the registry. The GUI looks a declaration up by that key. `DebugViewModel.from_debug_snapshot` and `from_runtime_value_store` moved to `debug_views` (`snapshot_view_model`, `RuntimeValuesDebugViewSection.view_model_for_store`), so the module that builds a view is the one that registers its sections.
+- **Family names.** `DebugEventType` became `DebugBoundary` (members `BeforeInvocationDebugBoundary`, …); `DebugCommandType` kept its name as the family base, merged with `DebugCommandDeclarationBase`, and each command owns `apply_to_worker` (the controller's `if`/`elif` over commands is deleted); `DebugPausedWorkerState` became `DebugWorkerState`; `DebugReplayMode` members own `retains_compile_artifact` and `keeps_worker_paused`.
+- **Deleted as dead, not converted.** `DebugBoundaryOutcome`, `DebugTimelineNodeState`, `DebugTimelineNode`, `DebugRuntimeProjection.timeline` and `node_state_for_cursor` had no production reader. The `DebugSessionRequest` registry (`request_kind`) was never read.
+- **Control requests are the wire messages.** The four `*ControlPayload` classes are deleted; each request subclasses zmqruntime's `TypedWireMessage` with its `wire_type`; the four responses share one `DebugControlResponse` envelope. `DebugWorkerCommandResponse.status` is renamed `worker` (its field collided with the envelope's `status`).
+- **`DebugStoreManifest`** is `debug_session_id` plus `snapshot_ids`, the shape it was written as; it no longer reads every snapshot to list ids.
+- **`_json_safe_cell`** in live measurements (renamed `_preview_cell`) stays: it bounds and stringifies arbitrary measurement cells for display, which `to_jsonable` deliberately does not.
+
+Out of scope, found here (no open surface owns them; recorded for the session lead): GUI debug enums `DebugActionPlacement`, `DebugToolbarAuxiliaryAction` (`pyqt_gui/widgets/shared/services/pipeline_debug_actions.py`) and `DebugSessionPhase` (`core/debug_session_projection.py`); `CompiledArtifactInspectionControlPayload` (`core/artifact_inspection.py`) restates its request like the deleted debug payloads; numpy JSON projections in `core/plate_image_inventory.py` and `napari_roi_manager/_dataclasses.py`.

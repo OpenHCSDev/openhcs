@@ -193,7 +193,7 @@ class DebugSessionPanelText:
             cursor = context.terminal_summary.cursor
             command_type = context.terminal_summary.command_type
 
-        command_text = "" if command_type is None else f" / {command_type.value}"
+        command_text = "" if command_type is None else f" / {command_type.name}"
         if cursor is None:
             return cls(
                 title=phase_declaration.title,

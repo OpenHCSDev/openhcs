@@ -17,6 +17,10 @@ import time
 from pathlib import Path
 
 import pytest
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
 
 WORKTREE = Path(__file__).resolve().parents[2]
 PYTHON = Path(sys.executable)
@@ -403,7 +407,7 @@ def _require_stale_rejection(operation):
 def _spawned_custom_task(payload, execution_id, subject_id):
     """Run actual registered declarations and emit through the initialized queue."""
     import numpy as np
-    from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
+    from openhcs.core.progress import ProgressExecutionContext
 
     _assert_payload(payload, "reference")
     values = np.arange(6, dtype=np.uint16).reshape(2, 3)
@@ -412,9 +416,10 @@ def _spawned_custom_task(payload, execution_id, subject_id):
         np.testing.assert_array_equal(reference.resolve()(values), values)
         owner = reference.metadata.artifact_outputs[0].measurement_feature_owner
         results.append(owner.make_row(2.5))
-    emit(execution_id=execution_id, subject_id=subject_id, axis_id="synthetic",
-         step_name="custom", phase=ProgressPhase.STEP_COMPLETED,
-         status=ProgressStatus.SUCCESS, percent=100)
+    ProgressExecutionContext(execution_id, subject_id).emit(
+        axis_id="synthetic", step_name="custom", phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus, percent=100.0, completed=1, total=1,
+    )
     return os.getpid(), tuple(results)
 
 
@@ -539,11 +544,11 @@ def _spawn(path):
             assert type(row) is helpers[4]
             assert row == helpers[5]
         progress = queue.get(timeout=5)
-        assert progress["execution_id"] == context.execution_id
-        assert progress["subject_id"] == context.subject_id
-        assert progress["pid"] == pid
-        assert progress["status"] == "success"
-        assert progress["percent"] == 100
+        assert progress.execution_id == context.execution_id
+        assert progress.subject_id == context.subject_id
+        assert progress.pid == pid
+        assert progress.status is SuccessProgressStatus
+        assert progress.percent == 100
         print(f"spawned custom revision/progress/rows: worker {pid}", flush=True)
     finally:
         queue.close()

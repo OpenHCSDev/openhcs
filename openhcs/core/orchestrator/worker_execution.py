@@ -52,9 +52,7 @@ from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPo
 from openhcs.core.progress import (
     ProgressContextPayload,
     ProgressEvent,
-    ProgressPhase,
     ProgressQueue,
-    ProgressStatus,
     set_progress_queue,
 )
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
@@ -69,6 +67,18 @@ from openhcs.core.steps.function_artifact_materialization import (
     preview_reused_step_outputs,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.progress.types import (
+    AxisCompletedProgressPhase,
+    AxisErrorProgressPhase,
+    AxisStartedProgressPhase,
+    CancelledProgressPhase,
+    CancelledProgressStatus,
+    ErrorProgressStatus,
+    StartedProgressStatus,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+    SuccessProgressStatus,
+)
 
 logger = logging.getLogger(__name__)
 PIPELINE_PROGRESS_STEP_NAME = "pipeline"
@@ -1262,8 +1272,8 @@ class PooledWorkerLaneRunner:
         lane_context.emit(
             axis_id=lane_context.owned_partition_values[0],
             step_name=PIPELINE_PROGRESS_STEP_NAME,
-            phase=ProgressPhase.AXIS_ERROR,
-            status=ProgressStatus.ERROR,
+            phase=AxisErrorProgressPhase,
+            status=ErrorProgressStatus,
             completed=0,
             total=len(pipeline_definition),
             percent=0.0,
@@ -1295,8 +1305,8 @@ def _execute_axis_with_sequential_combinations(
     lane_context.emit(
         axis_id=axis_id,
         step_name=PIPELINE_PROGRESS_STEP_NAME,
-        phase=ProgressPhase.AXIS_STARTED,
-        status=ProgressStatus.STARTED,
+        phase=AxisStartedProgressPhase,
+        status=StartedProgressStatus,
         completed=0,
         total=total_steps,
         percent=0.0,
@@ -1357,14 +1367,14 @@ def _execute_axis_with_sequential_combinations(
                 axis_id=axis_id,
                 step_name=PIPELINE_PROGRESS_STEP_NAME,
                 phase=(
-                    ProgressPhase.CANCELLED
+                    CancelledProgressPhase
                     if result.is_cancelled()
-                    else ProgressPhase.AXIS_ERROR
+                    else AxisErrorProgressPhase
                 ),
                 status=(
-                    ProgressStatus.CANCELLED
+                    CancelledProgressStatus
                     if result.is_cancelled()
-                    else ProgressStatus.ERROR
+                    else ErrorProgressStatus
                 ),
                 completed=0,
                 total=total_steps,
@@ -1382,8 +1392,8 @@ def _execute_axis_with_sequential_combinations(
     lane_context.emit(
         axis_id=axis_id,
         step_name=PIPELINE_PROGRESS_STEP_NAME,
-        phase=ProgressPhase.AXIS_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=AxisCompletedProgressPhase,
+        status=SuccessProgressStatus,
         completed=completed_axis_steps,
         total=total_steps,
         percent=(completed_axis_steps / total_steps) * 100.0,
@@ -1535,8 +1545,8 @@ def _execute_single_axis_static(
                     lane_context.emit(
                         axis_id=axis_id,
                         step_name=step_name,
-                        phase=ProgressPhase.STEP_COMPLETED,
-                        status=ProgressStatus.SUCCESS,
+                        phase=StepCompletedProgressPhase,
+                        status=SuccessProgressStatus,
                         completed=step_index + 1,
                         total=total_steps,
                         percent=((step_index + 1) / total_steps) * 100.0,
@@ -1548,8 +1558,8 @@ def _execute_single_axis_static(
             lane_context.emit(
                 axis_id=axis_id,
                 step_name=step_name,
-                phase=ProgressPhase.STEP_STARTED,
-                status=ProgressStatus.STARTED,
+                phase=StepStartedProgressPhase,
+                status=StartedProgressStatus,
                 completed=step_index,
                 total=total_steps,
                 percent=(step_index / total_steps) * 100.0,
@@ -1569,8 +1579,8 @@ def _execute_single_axis_static(
             lane_context.emit(
                 axis_id=axis_id,
                 step_name=step_name,
-                phase=ProgressPhase.STEP_COMPLETED,
-                status=ProgressStatus.SUCCESS,
+                phase=StepCompletedProgressPhase,
+                status=SuccessProgressStatus,
                 completed=step_index + 1,
                 total=total_steps,
                 percent=((step_index + 1) / total_steps) * 100.0,

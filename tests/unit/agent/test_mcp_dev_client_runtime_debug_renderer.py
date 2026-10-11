@@ -5,13 +5,7 @@ from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
     RuntimeDebugInspectionResult,
 )
-from openhcs.core.debug_views import (
-    DebugViewModel,
-    DebugViewSection,
-    DebugViewSectionKind,
-    DebugViewTable,
-    DebugViewTableProjection,
-)
+from openhcs.core.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser, _calls_from_args
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
@@ -21,6 +15,11 @@ from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity,
     McpDevToolBatchResponse,
     McpDevToolResult,
+)
+from openhcs.core.debug_views import (
+    ErrorDebugViewSection,
+    RuntimeValueRecordsDebugViewTable,
+    RuntimeValuesDebugViewSection,
 )
 
 DEBUG_SESSION_ID = "debug-session-renderer"
@@ -44,7 +43,7 @@ def _runtime_debug_response() -> McpDevToolBatchResponse:
             title="Paused worker values",
             sections=(
                 DebugViewSection(
-                    kind=DebugViewSectionKind.RUNTIME_VALUES,
+                    kind=RuntimeValuesDebugViewSection.name,
                     title="Runtime Values",
                     table=DebugViewTable(
                         columns=("key", "location", "value_type"),
@@ -53,11 +52,11 @@ def _runtime_debug_response() -> McpDevToolBatchResponse:
                             ("image-b", "/memory/image-b.npy", "ImageArray"),
                             ("labels", "/memory/labels.npy", "ObjectLabelSet"),
                         ),
-                        projection=DebugViewTableProjection.RUNTIME_VALUE_RECORDS,
+                        projection=RuntimeValueRecordsDebugViewTable.name,
                     ),
                 ),
                 DebugViewSection(
-                    kind=DebugViewSectionKind.ERROR,
+                    kind=ErrorDebugViewSection.name,
                     title="Worker note",
                     text="Worker failure details are available for inspection.",
                 ),

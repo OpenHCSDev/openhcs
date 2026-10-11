@@ -7,7 +7,6 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from dataclasses import replace as dataclass_replace
-from enum import Enum
 from collections.abc import Mapping
 from typing import Any, ClassVar, Self
 
@@ -18,428 +17,227 @@ from zmqruntime.messages import TaskProgress
 from .exceptions import ProgressError
 
 # =============================================================================
-# ProgressPhase Enum - Unifies TaskPhase + AxisPhase
+# Progress vocabulary: channels, phases and statuses are class families
 # =============================================================================
 
 
-class ProgressPhase(Enum):
-    """Progress phases - unified phase vocabulary.
+class ProgressChannel(ABC, metaclass=AutoRegisterMeta):
+    """A semantic progress stream; each channel is a subclass.
 
-    Extends ZMQRuntime's TaskPhase with OpenHCS-specific phases.
+    ``name`` is the channel's spelling at the wire and UI boundary.
     """
 
-    # Generic phases (from TaskPhase)
-    INIT = "init"
-    QUEUED = "queued"
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-
-    # Compilation phases
-    COMPILE = "compile"
-
-    # Execution phases
-    AXIS_STARTED = "axis_started"
-    STEP_STARTED = "step_started"
-    STEP_COMPLETED = "step_completed"
-    PATTERN_GROUP = "pattern_group"
-    AXIS_COMPLETED = "axis_completed"
-    VIEWER_SETTLEMENT = "viewer_settlement"
-
-    # Error phases
-    AXIS_ERROR = "axis_error"
-
-    def __str__(self):
-        """String representation for logging."""
-        return self.value
-
-
-class ProgressChannelRole(Enum):
-    """Nominal role for semantic progress channels."""
-
-    CONTROL = "control"
-    EXECUTION = "execution"
-
-
-class ProgressChannel(Enum):
-    """Semantic channel for phase-specific progress streams."""
-
-    INIT = "init"
-    COMPILE = "compile"
-    PIPELINE = "pipeline"
-    STEP = "step"
-
-    def __str__(self):
-        return self.value
-
-
-# =============================================================================
-# ProgressStatus Enum - Unifies TaskStatus + AxisStatus
-# =============================================================================
-
-
-class ProgressStatus(Enum):
-    """Progress status - unified status vocabulary.
-
-    Extends ZMQRuntime's TaskStatus with OpenHCS-specific statuses.
-    """
-
-    # Generic statuses (from TaskStatus)
-    PENDING = "pending"
-    STARTED = "started"
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-
-    # OpenHCS-specific statuses
-    ERROR = "error"
-    QUEUED = "queued"
-
-    def __str__(self):
-        """String representation for logging."""
-        return self.value
-
-
-class ProgressChannelDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one progress channel."""
-
-    __registry_key__ = "progress_channel"
+    __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[ProgressChannel, type["ProgressChannelDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["ProgressChannel"]]] = {}
 
-    progress_channel: ClassVar[ProgressChannel | None] = None
-    role: ClassVar[ProgressChannelRole]
-
-    @classmethod
-    def require_channel(cls) -> ProgressChannel:
-        if cls.progress_channel is None:
-            raise TypeError(f"{cls.__name__} does not declare a progress channel.")
-        return cls.progress_channel
-
-    @classmethod
-    def for_channel(
-        cls,
-        channel: ProgressChannel,
-    ) -> type["ProgressChannelDeclarationBase"]:
-        return cls.__registry__[channel]
+    name: ClassVar[str | None] = None
 
 
-class ControlProgressChannel:
-    """Trait for progress channels that control setup/compile lifecycle."""
-
-    role: ClassVar[ProgressChannelRole] = ProgressChannelRole.CONTROL
+class ExecutionProgressChannel(ProgressChannel):
+    """A channel carrying the execution tree (as opposed to setup and compile)."""
 
 
-class ExecutionProgressChannel:
-    """Trait for progress channels that represent execution lifecycle."""
-
-    role: ClassVar[ProgressChannelRole] = ProgressChannelRole.EXECUTION
+class InitProgressChannel(ProgressChannel):
+    name = "init"
 
 
-class InitProgressChannel(ControlProgressChannel, ProgressChannelDeclarationBase):
-    progress_channel = ProgressChannel.INIT
+class CompileProgressChannel(ProgressChannel):
+    name = "compile"
 
 
-class CompileProgressChannel(ControlProgressChannel, ProgressChannelDeclarationBase):
-    progress_channel = ProgressChannel.COMPILE
+class PipelineProgressChannel(ExecutionProgressChannel):
+    name = "pipeline"
 
 
-class PipelineProgressChannel(ExecutionProgressChannel, ProgressChannelDeclarationBase):
-    progress_channel = ProgressChannel.PIPELINE
-
-
-class StepProgressChannel(ExecutionProgressChannel, ProgressChannelDeclarationBase):
-    progress_channel = ProgressChannel.STEP
-
-
-class ProgressPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one progress phase."""
-
-    __registry_key__ = "phase"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[ProgressPhase, type["ProgressPhaseDeclarationBase"]]
-    ] = {}
-
-    phase: ClassVar[ProgressPhase | None] = None
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]]
-    is_terminal: ClassVar[bool] = False
-    is_failure: ClassVar[bool] = False
-    is_success_terminal: ClassVar[bool] = False
-
-    @classmethod
-    def require_phase(cls) -> ProgressPhase:
-        if cls.phase is None:
-            raise TypeError(f"{cls.__name__} does not declare a progress phase.")
-        return cls.phase
-
-    @classmethod
-    def for_phase(
-        cls,
-        phase: ProgressPhase,
-    ) -> type["ProgressPhaseDeclarationBase"]:
-        return cls.__registry__[phase]
-
-    @classmethod
-    def is_success_terminal_for_status(
-        cls,
-        status_declaration: type["ProgressStatusDeclarationBase"],
-    ) -> bool:
-        return cls.is_success_terminal
+class StepProgressChannel(ExecutionProgressChannel):
+    name = "step"
 
 
 class TerminalProgressEvent:
-    """Trait for progress declarations that close an event lifecycle."""
+    """Trait for phases and statuses that close an event lifecycle."""
 
     is_terminal: ClassVar[bool] = True
 
 
 class FailureProgressEvent(TerminalProgressEvent):
-    """Trait for terminal progress declarations that represent failure."""
+    """Trait for terminal phases and statuses that represent failure."""
 
     is_failure: ClassVar[bool] = True
 
 
 class SuccessTerminalProgressEvent(TerminalProgressEvent):
-    """Trait for progress declarations that represent successful completion."""
+    """Trait for phases and statuses that represent successful completion."""
 
     is_success_terminal: ClassVar[bool] = True
 
 
-class StatusTerminatedProgressPhase:
-    """Trait for phases whose terminal outcome is carried by event status."""
+class ProgressStatus(ABC, metaclass=AutoRegisterMeta):
+    """How the work an event reports on stands; each status is a subclass."""
 
-    @classmethod
-    def is_success_terminal_for_status(
-        cls,
-        status_declaration: type["ProgressStatusDeclarationBase"],
-    ) -> bool:
-        return status_declaration.is_success_terminal
-
-
-class InitChannelProgressPhase:
-    """Trait for progress phases carried on the init channel."""
-
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = InitProgressChannel
-
-
-class CompileChannelProgressPhase:
-    """Trait for progress phases carried on the compile channel."""
-
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = CompileProgressChannel
-
-
-class PipelineChannelProgressPhase:
-    """Trait for progress phases carried on the pipeline execution channel."""
-
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = PipelineProgressChannel
-
-
-class StepChannelProgressPhase:
-    """Trait for progress phases carried on the step execution channel."""
-
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = StepProgressChannel
-
-
-class InitProgressPhase(InitChannelProgressPhase, ProgressPhaseDeclarationBase):
-    phase = ProgressPhase.INIT
-
-
-class QueuedProgressPhase(PipelineChannelProgressPhase, ProgressPhaseDeclarationBase):
-    phase = ProgressPhase.QUEUED
-
-
-class RunningProgressPhase(PipelineChannelProgressPhase, ProgressPhaseDeclarationBase):
-    phase = ProgressPhase.RUNNING
-
-
-class SuccessProgressPhase(
-    SuccessTerminalProgressEvent,
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.SUCCESS
-
-
-class FailedProgressPhase(
-    FailureProgressEvent,
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.FAILED
-
-
-class CancelledProgressPhase(
-    FailureProgressEvent,
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.CANCELLED
-
-
-class CompileProgressPhase(
-    StatusTerminatedProgressPhase,
-    CompileChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.COMPILE
-
-
-class AxisStartedProgressPhase(
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.AXIS_STARTED
-
-
-class StepStartedProgressPhase(
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.STEP_STARTED
-
-
-class StepCompletedProgressPhase(
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.STEP_COMPLETED
-
-
-class PatternGroupProgressPhase(StepChannelProgressPhase, ProgressPhaseDeclarationBase):
-    phase = ProgressPhase.PATTERN_GROUP
-
-
-class AxisCompletedProgressPhase(
-    SuccessTerminalProgressEvent,
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.AXIS_COMPLETED
-
-
-class ViewerSettlementProgressPhase(
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    """Parent-observed progress while streamed viewer state is materialized."""
-
-    phase = ProgressPhase.VIEWER_SETTLEMENT
-
-
-class AxisErrorProgressPhase(
-    FailureProgressEvent,
-    PipelineChannelProgressPhase,
-    ProgressPhaseDeclarationBase,
-):
-    phase = ProgressPhase.AXIS_ERROR
-
-
-class ProgressStatusDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one progress status."""
-
-    __registry_key__ = "status"
+    __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[ProgressStatus, type["ProgressStatusDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["ProgressStatus"]]] = {}
 
-    status: ClassVar[ProgressStatus | None] = None
+    name: ClassVar[str | None] = None
+    is_terminal: ClassVar[bool] = False
+    is_failure: ClassVar[bool] = False
+    is_success_terminal: ClassVar[bool] = False
+
+
+class PendingProgressStatus(ProgressStatus):
+    name = "pending"
+
+
+class StartedProgressStatus(ProgressStatus):
+    name = "started"
+
+
+class RunningProgressStatus(ProgressStatus):
+    name = "running"
+
+
+class SuccessProgressStatus(SuccessTerminalProgressEvent, ProgressStatus):
+    name = "success"
+
+
+class FailedProgressStatus(FailureProgressEvent, ProgressStatus):
+    name = "failed"
+
+
+class CancelledProgressStatus(FailureProgressEvent, ProgressStatus):
+    name = "cancelled"
+
+
+class ErrorProgressStatus(FailureProgressEvent, ProgressStatus):
+    name = "error"
+
+
+class QueuedProgressStatus(ProgressStatus):
+    name = "queued"
+
+
+class ProgressPhase(ABC, metaclass=AutoRegisterMeta):
+    """Which lifecycle point an event reports; each phase is a subclass.
+
+    A phase owns the channel it is carried on and whether it ends the
+    lifecycle; ``name`` is its wire spelling.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["ProgressPhase"]]] = {}
+
+    name: ClassVar[str | None] = None
+    channel: ClassVar[type[ProgressChannel]]
     is_terminal: ClassVar[bool] = False
     is_failure: ClassVar[bool] = False
     is_success_terminal: ClassVar[bool] = False
 
     @classmethod
-    def require_status(cls) -> ProgressStatus:
-        if cls.status is None:
-            raise TypeError(f"{cls.__name__} does not declare a progress status.")
-        return cls.status
+    def is_execution(cls) -> bool:
+        """Whether this phase belongs to the execution tree."""
+        return issubclass(cls.channel, ExecutionProgressChannel)
 
     @classmethod
-    def for_status(
-        cls,
-        status: ProgressStatus,
-    ) -> type["ProgressStatusDeclarationBase"]:
-        return cls.__registry__[status]
+    def ends_successfully_with(cls, status: type[ProgressStatus]) -> bool:
+        """Whether an event in this phase with ``status`` completed successfully."""
+        del status
+        return cls.is_success_terminal
 
 
-class PendingProgressStatus(ProgressStatusDeclarationBase):
-    status = ProgressStatus.PENDING
+class StatusTerminatedProgressPhase:
+    """Trait for phases whose terminal outcome is carried by the event status."""
+
+    @classmethod
+    def ends_successfully_with(cls, status: type[ProgressStatus]) -> bool:
+        return status.is_success_terminal
 
 
-class StartedProgressStatus(ProgressStatusDeclarationBase):
-    status = ProgressStatus.STARTED
+class InitChannelProgressPhase:
+    channel: ClassVar[type[ProgressChannel]] = InitProgressChannel
 
 
-class RunningProgressStatus(ProgressStatusDeclarationBase):
-    status = ProgressStatus.RUNNING
+class CompileChannelProgressPhase:
+    channel: ClassVar[type[ProgressChannel]] = CompileProgressChannel
 
 
-class SuccessProgressStatus(
-    SuccessTerminalProgressEvent,
-    ProgressStatusDeclarationBase,
+class PipelineChannelProgressPhase:
+    channel: ClassVar[type[ProgressChannel]] = PipelineProgressChannel
+
+
+class StepChannelProgressPhase:
+    channel: ClassVar[type[ProgressChannel]] = StepProgressChannel
+
+
+class InitProgressPhase(InitChannelProgressPhase, ProgressPhase):
+    name = "init"
+
+
+class QueuedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    name = "queued"
+
+
+class RunningProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    name = "running"
+
+
+class SuccessProgressPhase(
+    SuccessTerminalProgressEvent, PipelineChannelProgressPhase, ProgressPhase
 ):
-    status = ProgressStatus.SUCCESS
+    name = "success"
 
 
-class FailedProgressStatus(FailureProgressEvent, ProgressStatusDeclarationBase):
-    status = ProgressStatus.FAILED
+class FailedProgressPhase(FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase):
+    name = "failed"
 
 
-class CancelledProgressStatus(FailureProgressEvent, ProgressStatusDeclarationBase):
-    status = ProgressStatus.CANCELLED
+class CancelledProgressPhase(
+    FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+):
+    name = "cancelled"
 
 
-class ErrorProgressStatus(FailureProgressEvent, ProgressStatusDeclarationBase):
-    status = ProgressStatus.ERROR
+class CompileProgressPhase(
+    StatusTerminatedProgressPhase, CompileChannelProgressPhase, ProgressPhase
+):
+    name = "compile"
 
 
-class QueuedProgressStatus(ProgressStatusDeclarationBase):
-    status = ProgressStatus.QUEUED
+class AxisStartedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    name = "axis_started"
 
 
-def phase_channel(phase: ProgressPhase) -> ProgressChannel:
-    """Classify phase to semantic channel."""
-    return ProgressPhaseDeclarationBase.for_phase(phase).progress_channel.require_channel()
+class StepStartedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    name = "step_started"
 
 
-def progress_channel_role(channel: ProgressChannel) -> ProgressChannelRole:
-    """Return the nominal role for a progress channel."""
-    return ProgressChannelDeclarationBase.for_channel(channel).role
+class StepCompletedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    name = "step_completed"
 
 
-def is_terminal_event(event: "ProgressEvent") -> bool:
-    """True when the event is terminal."""
-    return is_failure_event(event) or is_success_terminal_event(event)
+class PatternGroupProgressPhase(StepChannelProgressPhase, ProgressPhase):
+    name = "pattern_group"
 
 
-def is_execution_phase(phase: ProgressPhase) -> bool:
-    """True when phase belongs to execution tree."""
-    return progress_channel_role(phase_channel(phase)) is ProgressChannelRole.EXECUTION
+class AxisCompletedProgressPhase(
+    SuccessTerminalProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+):
+    name = "axis_completed"
 
 
-def is_failure_event(event: "ProgressEvent") -> bool:
-    """True when event represents a failure state."""
-    return (
-        ProgressPhaseDeclarationBase.for_phase(event.phase).is_failure
-        or ProgressStatusDeclarationBase.for_status(event.status).is_failure
-    )
+class ViewerSettlementProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+    """Parent-observed progress while streamed viewer state is materialized."""
+
+    name = "viewer_settlement"
 
 
-def is_success_terminal_event(event: "ProgressEvent") -> bool:
-    """True when event represents successful terminal completion."""
-    return ProgressPhaseDeclarationBase.for_phase(
-        event.phase
-    ).is_success_terminal_for_status(
-        ProgressStatusDeclarationBase.for_status(event.status)
-    )
+class AxisErrorProgressPhase(
+    FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+):
+    name = "axis_error"
 
 
-# =============================================================================
 # =============================================================================
 # ProgressEvent: one declaration, encoded and decoded by its fields
 # =============================================================================
@@ -463,8 +261,8 @@ class ProgressEvent(TaskProgress):
     the declared fields, so encoding and decoding read this declaration.
     """
 
-    phase: ProgressPhase
-    status: ProgressStatus
+    phase: type[ProgressPhase]
+    status: type[ProgressStatus]
     subject_id: str
     axis_id: str
     step_name: str
@@ -496,13 +294,29 @@ class ProgressEvent(TaskProgress):
             partition_values=partition_values,
         )
 
+    @property
+    def channel(self) -> type[ProgressChannel]:
+        return self.phase.channel
+
+    def is_failure(self) -> bool:
+        """Whether the phase or the status reports a failure."""
+        return self.phase.is_failure or self.status.is_failure
+
+    def is_success_terminal(self) -> bool:
+        """Whether the event reports successful completion."""
+        return self.phase.ends_successfully_with(self.status)
+
     def is_complete(self) -> bool:
-        """Whether the event is in a terminal phase or status."""
-        return is_terminal_event(self)
+        """Whether the event closes its lifecycle, by failure or success."""
+        return self.is_failure() or self.is_success_terminal()
 
 
 class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
-    """One typed entry of ``ProgressEvent.context``, stored under its key."""
+    """One typed entry of ``ProgressEvent.context``, stored under its key.
+
+    Members are dataclasses: the wire body is the declared fields, encoded by
+    ``to_jsonable`` and decoded by ``dataclass_from_mapping``.
+    """
 
     __registry_key__ = "context_key"
     __skip_if_no_key__ = True
@@ -511,17 +325,8 @@ class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
     context_key: ClassVar[str | None] = None
     malformed_error: ClassVar[type[ValueError]] = ValueError
 
-    @abstractmethod
-    def context_body(self) -> dict[str, Any]:
-        """This payload's wire body."""
-
-    @classmethod
-    @abstractmethod
-    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
-        """Decode this payload's wire body."""
-
     def to_context(self) -> dict[str, Any]:
-        return {self.context_key: self.context_body()}
+        return self.context_of(self)
 
     @classmethod
     def from_context(cls, context: Mapping[str, Any] | None) -> Self | None:
@@ -532,29 +337,23 @@ class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
         body = context[cls.context_key]
         if not isinstance(body, Mapping):
             raise cls.malformed_error(f"{cls.context_key!r} must be a mapping.")
-        return cls.from_context_body(body)
+        try:
+            return dataclass_from_mapping(cls, body)
+        except (TypeError, ValueError) as error:
+            raise cls.malformed_error(
+                f"Malformed {cls.context_key!r} progress context: {error}"
+            ) from error
 
     @staticmethod
     def context_of(*payloads: "ProgressContextPayload | None") -> dict[str, Any] | None:
         """The event context carrying these payloads."""
 
         context = {
-            payload.context_key: payload.context_body()
+            payload.context_key: to_jsonable(payload)
             for payload in payloads
             if payload is not None
         }
         return context or None
-
-
-class DeclaredProgressContextPayload(ProgressContextPayload):
-    """A payload whose wire body is its declared dataclass fields."""
-
-    def context_body(self) -> dict[str, Any]:
-        return dict(to_jsonable(self))
-
-    @classmethod
-    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
-        return dataclass_from_mapping(cls, body)
 
 
 class ProgressQueue(ABC):

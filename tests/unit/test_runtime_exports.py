@@ -39,6 +39,10 @@ from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.materialization.core import ColumnarCsvOutput
+from python_introspect import (
+    dataclass_from_mapping,
+    to_jsonable,
+)
 
 
 def test_export_observation_uses_saved_writer_shape_without_reading_csv(
@@ -49,7 +53,7 @@ def test_export_observation_uses_saved_writer_shape_without_reading_csv(
     output = ColumnarCsvOutput(path=str(path), content=rows).rendered()
     path.write_bytes(output.content)
     location = RuntimeArtifactLocation.from_output(output, "disk")
-    location = RuntimeArtifactLocation.from_dict(location.to_dict())
+    location = dataclass_from_mapping(RuntimeArtifactLocation, to_jsonable(location))
     record = _stored_measurements_record(rows=rows)
     saved = StepExecutionObservation(
         {RuntimeArtifactAddress.from_record(record): (location,)},

@@ -17,12 +17,11 @@ from zmqruntime.progress import (
 )
 
 from .types import (
+    CompileProgressChannel,
+    PipelineProgressChannel,
     ProgressChannel,
     ProgressEvent,
-    ProgressPhase,
-    is_failure_event,
-    is_success_terminal_event,
-    phase_channel,
+    QueuedProgressPhase,
 )
 
 
@@ -39,7 +38,7 @@ class SubjectRuntimeState(ABC, metaclass=AutoRegisterMeta):
     state_name: ClassVar[str | None] = None
     is_terminal: ClassVar[bool] = False
     is_active: ClassVar[bool] = False
-    default_channel: ClassVar[ProgressChannel | None] = None
+    default_channel: ClassVar[type[ProgressChannel] | None] = None
     status_label: ClassVar[str] = ""
     count_label: ClassVar[str] = ""
     count_sort_order: ClassVar[int] = 0
@@ -48,7 +47,7 @@ class SubjectRuntimeState(ABC, metaclass=AutoRegisterMeta):
     def state_channel_from_events(
         cls,
         events: Iterable[ProgressEvent],
-    ) -> ProgressChannel | None:
+    ) -> type[ProgressChannel] | None:
         del events
         return cls.default_channel
 
@@ -145,7 +144,7 @@ class QueuedSubjectRuntimeState(
 
 class CompilingSubjectRuntimeState(SubjectRuntimeState):
     state_name = "compiling"
-    default_channel = ProgressChannel.COMPILE
+    default_channel = CompileProgressChannel
     status_label = "⏳ Compiling"
     count_label = "⏳ {count} compiling"
     count_sort_order = 10
@@ -161,7 +160,7 @@ class CompilingSubjectRuntimeState(SubjectRuntimeState):
 
 class CompiledSubjectRuntimeState(SubjectRuntimeState):
     state_name = "compiled"
-    default_channel = ProgressChannel.COMPILE
+    default_channel = CompileProgressChannel
     status_label = "✅ Compiled"
     count_label = "✓ {count} compiled"
     count_sort_order = 30
@@ -173,7 +172,7 @@ class CompiledSubjectRuntimeState(SubjectRuntimeState):
 
 class ExecutingSubjectRuntimeState(SubjectRuntimeState):
     state_name = "executing"
-    default_channel = ProgressChannel.PIPELINE
+    default_channel = PipelineProgressChannel
     status_label = "⚙️ Executing"
     count_label = "⚙️ {count} executing"
     count_sort_order = 20
@@ -188,7 +187,7 @@ class CompleteSubjectRuntimeState(
     TerminalSubjectRuntimeState, SubjectRuntimeState
 ):
     state_name = "complete"
-    default_channel = ProgressChannel.PIPELINE
+    default_channel = PipelineProgressChannel
     status_label = "✅ Complete"
     count_label = "✅ {count} complete"
     count_sort_order = 40
@@ -206,15 +205,15 @@ class FailedSubjectRuntimeState(
     def state_channel_from_events(
         cls,
         events: Iterable[ProgressEvent],
-    ) -> ProgressChannel | None:
+    ) -> type[ProgressChannel] | None:
         latest_failure_event = max(
-            (event for event in events if is_failure_event(event)),
+            (event for event in events if event.is_failure()),
             key=lambda event: event.timestamp,
             default=None,
         )
         if latest_failure_event is None:
             return cls.default_channel
-        return phase_channel(latest_failure_event.phase)
+        return latest_failure_event.channel
 
     @classmethod
     def percent_from_generic_projection(
@@ -229,7 +228,7 @@ class FailedSubjectRuntimeState(
 
     @classmethod
     def status_label_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
-        if subject.state_channel is ProgressChannel.COMPILE:
+        if subject.state_channel is CompileProgressChannel:
             return "❌ Compile Failed"
         return cls.status_label
 
@@ -279,7 +278,7 @@ class SubjectRuntimeProjection:
     percent: float
     axis_progress: Tuple[AxisRuntimeProjection, ...]
     latest_timestamp: float
-    state_channel: ProgressChannel | None = None
+    state_channel: type[ProgressChannel] | None = None
     queue_position: int | None = None
 
     @classmethod
@@ -287,7 +286,7 @@ class SubjectRuntimeProjection:
         cls,
         generic_subject: GenericSubjectProjection[type[SubjectRuntimeState]],
         *,
-        state_channel: ProgressChannel | None = None,
+        state_channel: type[ProgressChannel] | None = None,
     ) -> "SubjectRuntimeProjection":
         axis_progress = tuple(
             AxisRuntimeProjection.from_generic_axis(axis)
@@ -502,6 +501,9 @@ class ExecutionRuntimeProjection:
 class _OpenHCSProjectionAdapter(
     ProgressProjectionAdapterABC[ProgressEvent, SubjectRuntimeState]
 ):
+    compile_channel = CompileProgressChannel.name
+    pipeline_channel = PipelineProgressChannel.name
+
     def subject_id(self, event: ProgressEvent) -> str:
         return event.subject_id
 
@@ -518,7 +520,7 @@ class _OpenHCSProjectionAdapter(
         return event.timestamp
 
     def channel(self, event: ProgressEvent) -> str:
-        return phase_channel(event.phase).value
+        return event.channel.name
 
     def known_axes(self, events: Iterable[ProgressEvent]) -> List[str]:
         axes: set[str] = set()
@@ -528,10 +530,10 @@ class _OpenHCSProjectionAdapter(
         return sorted(axes)
 
     def is_failure_event(self, event: ProgressEvent) -> bool:
-        return is_failure_event(event)
+        return event.is_failure()
 
     def is_success_terminal_event(self, event: ProgressEvent) -> bool:
-        return is_success_terminal_event(event)
+        return event.is_success_terminal()
 
     def state_idle(self) -> type[SubjectRuntimeState]:
         return IdleSubjectRuntimeState
@@ -541,7 +543,7 @@ class _OpenHCSProjectionAdapter(
         events: Sequence[ProgressEvent],
     ) -> type[SubjectRuntimeState]:
         if any(
-            event.worker_assignments is not None or event.phase is ProgressPhase.QUEUED
+            event.worker_assignments is not None or event.phase is QueuedProgressPhase
             for event in events
         ):
             return QueuedSubjectRuntimeState

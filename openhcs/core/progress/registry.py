@@ -12,7 +12,7 @@ from zmqruntime.progress import (
 )
 from zmqruntime.subscription import SubscriptionABC
 
-from .types import ProgressChannel, ProgressEvent, is_terminal_event, phase_channel
+from .types import ProgressChannel, ProgressEvent
 
 
 class ProgressRegistry:
@@ -36,18 +36,18 @@ class ProgressRegistry:
         self._retention_seconds = 60.0
         self._event_registry: LatestEventRegistry[
             ProgressEvent,
-            tuple[str, str, ProgressChannel],
+            tuple[str, str, type[ProgressChannel]],
         ] = LatestEventRegistry(
             key_builder=self._event_key,
-            is_terminal=is_terminal_event,
+            is_terminal=ProgressEvent.is_complete,
             timestamp_of=lambda event: event.timestamp,
             retention_seconds=self._retention_seconds,
         )
         self._initialized = True
 
     @staticmethod
-    def _event_key(event: ProgressEvent) -> tuple[str, str, ProgressChannel]:
-        return (event.subject_id, event.axis_id, phase_channel(event.phase))
+    def _event_key(event: ProgressEvent) -> tuple[str, str, type[ProgressChannel]]:
+        return (event.subject_id, event.axis_id, event.channel)
 
     def register_event(self, execution_id: str, event: ProgressEvent) -> bool:
         return self._event_registry.register_event(execution_id, event)

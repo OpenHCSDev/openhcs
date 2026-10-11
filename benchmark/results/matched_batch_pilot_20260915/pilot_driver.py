@@ -43,7 +43,7 @@ from openhcs.core.runtime_execution_validation import (
     runtime_artifact_execution_failures,
 )
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress.types import ProgressEvent, ProgressPhase
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.interop.cellprofiler.measurement_dialect import (
     cellprofiler_runtime_equivalence_policy,
@@ -65,6 +65,7 @@ from objectstate.lazy_factory import (
 from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
 from zmqruntime import DataControlPortPairAuthority, TransportMode
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.progress.types import AxisStartedProgressPhase
 
 ROOT = Path(sys.argv[1]).resolve()
 ROOT.mkdir(parents=True, exist_ok=True)
@@ -248,7 +249,7 @@ try:
             axis_started = min(
                 event.timestamp
                 for event in current_events
-                if event.phase is ProgressPhase.AXIS_STARTED
+                if event.phase is AxisStartedProgressPhase
             )
             probe_receipt = {
                 "repetition": repetition,
@@ -297,7 +298,7 @@ try:
             axis_started = min(
                 event.timestamp
                 for event in current_events
-                if event.phase is ProgressPhase.AXIS_STARTED
+                if event.phase is AxisStartedProgressPhase
             )
             row = {
                 "repetition": repetition,

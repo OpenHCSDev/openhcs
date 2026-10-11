@@ -98,10 +98,13 @@ from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.partition_filter import PartitionFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
-from openhcs.core.progress import ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
 from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.progress.types import (
+    CompileProgressPhase,
+    RunningProgressStatus,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -902,7 +905,7 @@ class PipelineCompiler:
                 available_values,
             )
             logger.info(
-                f"Partition filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.value}) "
+                f"Partition filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.name}) "
                 f"→ {len(resolved_values)} partition values to process: {resolved_values}"
             )
             resolved_axis_filter = (
@@ -1457,8 +1460,8 @@ class PipelineCompiler:
         orchestrator.progress_context().emit(
             axis_id=axis_id,
             step_name="compilation",
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.RUNNING,
+            phase=CompileProgressPhase,
+            status=RunningProgressStatus,
             completed=completed,
             total=total,
             percent=(completed / total) * 100.0,

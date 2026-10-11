@@ -413,7 +413,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             plate_scope_id=summary.subject_id,
             terminal_status=summary.terminal_status,
             command_type=(
-                None if summary.command_type is None else summary.command_type.value
+                None if summary.command_type is None else summary.command_type.name
             ),
             axis_id=summary.axis_id,
             snapshot_id=summary.snapshot_id,
@@ -448,7 +448,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
                 step_name=identity.step_name,
             ),
             cursor=cursor_state,
-            event_type=frame.event_type.value,
+            event_type=frame.event_type.name,
             step_name=frame.step_name,
             callable_name=frame.callable_name,
             snapshot_id=frame.snapshot_id,

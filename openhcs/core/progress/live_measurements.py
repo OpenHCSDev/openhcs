@@ -84,7 +84,7 @@ class LiveMeasurementTablePreview:
         all_columns = _ordered_columns(table=table, rows=row_preview.rows)
         columns = all_columns[:column_limit]
         preview_rows = tuple(
-            {column: _json_safe_cell(row.get(column)) for column in columns}
+            {column: _preview_cell(row.get(column)) for column in columns}
             for row in row_preview.rows
         )
         return cls(
@@ -98,44 +98,6 @@ class LiveMeasurementTablePreview:
             object_name=table.subject.object_name,
             source_image_name=table.source_image_name,
         )
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "LiveMeasurementTablePreview":
-        try:
-            return cls(
-                address=RuntimeArtifactAddress.from_dict(data["address"]),
-                columns=tuple(str(column) for column in data.get("columns", ())),
-                rows=tuple(_decode_row_mapping(row) for row in data.get("rows", ())),
-                row_count=int(data.get("row_count", 0)),
-                truncated_rows=bool(data.get("truncated_rows", False)),
-                truncated_columns=bool(data.get("truncated_columns", False)),
-                materialized_locations=tuple(
-                    RuntimeArtifactLocation.from_dict(location)
-                    for raw_location in data.get("materialized_locations", ())
-                    for location in (_require_mapping(raw_location),)
-                ),
-                object_name=_optional_string(data.get("object_name")),
-                source_image_name=_optional_string(data.get("source_image_name")),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise LiveMeasurementPayloadError(
-                f"Malformed live measurement table preview: {exc}"
-            ) from exc
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "address": self.address.to_dict(),
-            "columns": list(self.columns),
-            "rows": [dict(row) for row in self.rows],
-            "row_count": self.row_count,
-            "truncated_rows": self.truncated_rows,
-            "truncated_columns": self.truncated_columns,
-            "materialized_locations": [
-                location.to_dict() for location in self.materialized_locations
-            ],
-            "object_name": self.object_name,
-            "source_image_name": self.source_image_name,
-        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,34 +147,6 @@ class LiveMeasurementProgressPayload(ProgressContextPayload):
             preview_count=len(previews),
             truncated_previews=len(previews) > preview_limit,
         )
-
-    @classmethod
-    def from_context_body(
-        cls,
-        data: Mapping[str, Any],
-    ) -> "LiveMeasurementProgressPayload":
-        raw_previews = data.get("previews")
-        if not isinstance(raw_previews, Sequence) or isinstance(
-            raw_previews, (str, bytes, bytearray)
-        ):
-            raise LiveMeasurementPayloadError(
-                "Live measurement payload field 'previews' must be a sequence."
-            )
-        return cls(
-            previews=tuple(
-                LiveMeasurementTablePreview.from_dict(_require_mapping(raw_preview))
-                for raw_preview in raw_previews
-            ),
-            preview_count=int(data.get("preview_count", len(raw_previews))),
-            truncated_previews=bool(data.get("truncated_previews", False)),
-        )
-
-    def context_body(self) -> dict[str, Any]:
-        return {
-            "previews": [preview.to_dict() for preview in self.previews],
-            "preview_count": self.preview_count,
-            "truncated_previews": self.truncated_previews,
-        }
 
 
 def _measurement_row_preview(
@@ -319,33 +253,21 @@ def _ordered_columns(
     return tuple(ordered)
 
 
-def _json_safe_cell(value: Any) -> Any:
+def _preview_cell(value: Any) -> Any:
     if value is None or isinstance(value, (bool, int, str)):
         return value
     if isinstance(value, float):
         return value if math.isfinite(value) else str(value)
     if isinstance(value, np.generic):
-        return _json_safe_cell(value.item())
+        return _preview_cell(value.item())
     if isinstance(value, Mapping):
-        return {str(key): _json_safe_cell(item) for key, item in value.items()}
+        return {str(key): _preview_cell(item) for key, item in value.items()}
     if _is_row_sequence(value):
-        return [_json_safe_cell(item) for item in value]
+        return [_preview_cell(item) for item in value]
     text = repr(value)
     if len(text) > MAX_CELL_TEXT_LENGTH:
         return f"{text[:MAX_CELL_TEXT_LENGTH]}..."
     return text
-
-
-def _decode_row_mapping(value: Any) -> Mapping[str, Any]:
-    return dict(_require_mapping(value))
-
-
-def _require_mapping(value: Any) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
-        raise LiveMeasurementPayloadError(
-            f"Expected live measurement preview mapping, got {type(value).__name__}."
-        )
-    return value
 
 
 def _is_row_sequence(value: Any) -> bool:
@@ -361,9 +283,3 @@ def _is_vector(value: Any) -> bool:
     if isinstance(value, np.ndarray):
         return value.ndim > 0
     return isinstance(value, Sequence)
-
-
-def _optional_string(value: Any) -> str | None:
-    if value is None:
-        return None
-    return str(value)

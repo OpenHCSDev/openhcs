@@ -1,23 +1,24 @@
 import pytest
 
 from openhcs.core.debug import (
+    AfterInvocationDebugBoundary,
+    BeforeInvocationDebugBoundary,
+    DebugBoundary,
     DebugCursor,
-    DebugEventType,
     DebugProgressContext,
     DebugSession,
     DebugSnapshot,
     DebugTerminalSummary,
-    DebugTimelineNodeState,
 )
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     DebugProgressRecord,
     RuntimeProjectionBuilder,
     RuntimeProjectionSource,
+)
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    StartedProgressStatus,
 )
 
 
@@ -31,8 +32,8 @@ def _event(
         subject_id="/tmp/plate",
         axis_id="A01",
         step_name="segment",
-        phase=ProgressPhase.PATTERN_GROUP,
-        status=ProgressStatus.STARTED,
+        phase=PatternGroupProgressPhase,
+        status=StartedProgressStatus,
         percent=50.0,
         completed=1,
         total=2,
@@ -53,7 +54,7 @@ def _cursor() -> DebugCursor:
 
 def _debug_context(
     *,
-    event_type: DebugEventType = DebugEventType.BEFORE_INVOCATION,
+    event_type: type[DebugBoundary] = BeforeInvocationDebugBoundary,
 ) -> dict:
     return DebugProgressContext(
         debug_session_id="debug-1",
@@ -85,7 +86,7 @@ def test_debug_progress_record_fails_loudly_for_malformed_debug_context() -> Non
 
 def test_runtime_projection_builder_projects_debug_records_from_same_snapshot() -> None:
     event = _event(
-        context=_debug_context(event_type=DebugEventType.AFTER_INVOCATION),
+        context=_debug_context(event_type=AfterInvocationDebugBoundary),
         timestamp=2.0,
     )
     session = DebugSession(
@@ -117,10 +118,7 @@ def test_runtime_projection_builder_projects_debug_records_from_same_snapshot() 
     assert bundle.debug.current_frame.snapshot_id == "snapshot-1"
     assert bundle.debug.current_frame.step_name == "snapshot segment"
     assert bundle.debug.current_frame.callable_name == "segment_callable"
-    assert (
-        bundle.debug.node_state_for_cursor(cursor=_cursor())
-        is DebugTimelineNodeState.COMPLETED
-    )
+    assert bundle.debug.current_frame.event_type is AfterInvocationDebugBoundary
 
 
 def test_terminal_debug_projection_keeps_last_frame_without_active_frame() -> None:

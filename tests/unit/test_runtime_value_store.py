@@ -75,6 +75,10 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBi
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from python_introspect import (
+    dataclass_from_mapping,
+    to_jsonable,
+)
 
 
 def _runtime_input_edge(
@@ -289,7 +293,7 @@ def test_runtime_artifact_address_round_trips_fixed_component_values():
         value_type="MeasurementTable",
     )
 
-    restored = RuntimeArtifactAddress.from_dict(address.to_dict())
+    restored = dataclass_from_mapping(RuntimeArtifactAddress, to_jsonable(address))
 
     assert restored == address
     assert restored.key.scope.fixed_component_values == scope.fixed_component_values

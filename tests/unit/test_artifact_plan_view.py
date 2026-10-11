@@ -45,11 +45,7 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputProjectionKey,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_artifact_values import ArtifactKey
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
@@ -67,6 +63,10 @@ from openhcs.runtime.zmq_compilation import (
 from openhcs.runtime.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
+)
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
 )
 
 
@@ -165,8 +165,8 @@ def _progress_event() -> ProgressEvent:
         subject_id="/plates/one",
         axis_id="A01",
         step_name="Transform",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         completed=1,
         total=1,

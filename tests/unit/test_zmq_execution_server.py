@@ -32,12 +32,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeExecutionObservation,
     RuntimeObservationMode,
 )
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressExecutionContext,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionOutcomeExport,
 )
@@ -55,6 +50,10 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQRuntimeObservationExportScope,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    RunningProgressPhase,
+    RunningProgressStatus,
+)
 
 
 def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> None:
@@ -535,8 +534,8 @@ def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> 
     parent = progress_context.event(
         axis_id="",
         step_name="ExportToDatabase",
-        phase=ProgressPhase.RUNNING,
-        status=ProgressStatus.RUNNING,
+        phase=RunningProgressPhase,
+        status=RunningProgressStatus,
         completed=32, total=33, percent=(32 / 33) * 100.0,
     )
     server._enqueue_progress(parent)

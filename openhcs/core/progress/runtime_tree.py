@@ -9,14 +9,7 @@ from typing import Callable, ClassVar, Dict, List, Mapping, Optional, Sequence
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.progress import (
-    ProgressChannel,
-    ProgressEvent,
-    is_failure_event,
-    is_success_terminal_event,
-    phase_channel,
-    progress_channel_role,
-)
+from openhcs.core.progress import ProgressChannel, ProgressEvent
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     SubjectRuntimeIdentity,
@@ -30,10 +23,15 @@ from openhcs.core.progress.projection import (
     FailedSubjectRuntimeState,
     build_execution_runtime_projection,
 )
-from openhcs.core.progress.types import ProgressChannelRole
 from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
     MostDerivedContextStrategyMixin,
+)
+from openhcs.core.progress.types import (
+    CompileProgressChannel,
+    InitProgressChannel,
+    PipelineProgressChannel,
+    StepProgressChannel,
 )
 
 
@@ -446,7 +444,7 @@ class FailedEventStatus(ActiveEventStatus):
     strategy_key = "failed"
 
     def matches(self, context: RuntimeTreeEventStatusContext) -> bool:
-        return context.event is not None and is_failure_event(context.event)
+        return context.event is not None and context.event.is_failure()
 
     def status_percent_state(
         self,
@@ -461,7 +459,7 @@ class SuccessTerminalEventStatus(ActiveEventStatus):
     strategy_key = "success_terminal"
 
     def matches(self, context: RuntimeTreeEventStatusContext) -> bool:
-        return context.event is not None and is_success_terminal_event(context.event)
+        return context.event is not None and context.event.is_success_terminal()
 
     def status_percent_state(
         self,
@@ -533,7 +531,7 @@ class FailedStepStatus(ActiveStepStatus):
     strategy_key = "failed"
 
     def matches(self, context: RuntimeTreeStepStatusContext) -> bool:
-        return context.step_event is not None and is_failure_event(context.step_event)
+        return context.step_event is not None and context.step_event.is_failure()
 
     def step_name_status_percent(
         self,
@@ -561,16 +559,14 @@ class RuntimeTreeExecutionModeContext:
     @property
     def has_compile_event(self) -> bool:
         return any(
-            phase_channel(event.phase) is ProgressChannel.COMPILE
+            event.channel is CompileProgressChannel
             for event in self.events
         )
 
     @property
     def has_execution_event(self) -> bool:
         return any(
-            progress_channel_role(phase_channel(event.phase))
-            is ProgressChannelRole.EXECUTION
-            for event in self.events
+            event.phase.is_execution() for event in self.events
         )
 
 
@@ -810,8 +806,7 @@ class RuntimeTreeProjectionBuilder:
                     (
                         event.percent
                         for event in events
-                        if progress_channel_role(phase_channel(event.phase))
-                        is ProgressChannelRole.EXECUTION
+                        if event.phase.is_execution()
                     ),
                     default=0.0,
                 )
@@ -902,18 +897,18 @@ class RuntimeTreeProjectionBuilder:
         channels = self._partition_events_by_channel(events)
         pipeline_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[ProgressChannel.PIPELINE]
+            for event in channels[PipelineProgressChannel]
             if event.axis_id
         }
         step_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[ProgressChannel.STEP]
+            for event in channels[StepProgressChannel]
             if event.axis_id
         }
 
         worker_nodes: List[RuntimeTreeNode] = []
         execution_started = any(
-            phase_channel(event.phase) == ProgressChannel.INIT for event in events
+            event.channel is InitProgressChannel for event in events
         )
         for worker_slot, axis_ids in sorted(assignments.items()):
             partition_nodes = [
@@ -957,7 +952,7 @@ class RuntimeTreeProjectionBuilder:
         channels = self._partition_events_by_channel(events)
         compile_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[ProgressChannel.COMPILE]
+            for event in channels[CompileProgressChannel]
             if event.axis_id
         }
         known_axis_ids = list(known_partition_values.get((execution_id, subject_id), []))
@@ -1001,12 +996,12 @@ class RuntimeTreeProjectionBuilder:
     @staticmethod
     def _partition_events_by_channel(
         events: Sequence[ProgressEvent],
-    ) -> Mapping[ProgressChannel, List[ProgressEvent]]:
-        partitioned: defaultdict[ProgressChannel, List[ProgressEvent]] = defaultdict(
+    ) -> Mapping[type[ProgressChannel], List[ProgressEvent]]:
+        partitioned: defaultdict[type[ProgressChannel], List[ProgressEvent]] = defaultdict(
             list
         )
         for event in events:
-            partitioned[phase_channel(event.phase)].append(event)
+            partitioned[event.channel].append(event)
         return partitioned
 
     def _build_partition_node(
