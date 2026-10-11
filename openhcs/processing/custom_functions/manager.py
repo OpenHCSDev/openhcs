@@ -113,7 +113,9 @@ class CustomFunctionManager:
     def source_path_for_name(storage_dir: Path, function_name: str) -> Path:
         """Own source naming for both admission and actual persistence."""
         if not function_name.isidentifier() or function_name.startswith("_"):
-            raise ValidationError("Custom function name must be a public Python identifier.")
+            raise ValidationError(
+                "Custom function name must be a public Python identifier."
+            )
         return storage_dir / f"{function_name}.py"
 
     def __init__(self, *, create_storage: bool = True):
@@ -154,11 +156,18 @@ class CustomFunctionManager:
         """
         if persist and write_admission is not None:
             if expected_function_name is None:
-                raise ValueError("Write admission requires an explicit custom function name.")
+                raise ValueError(
+                    "Write admission requires an explicit custom function name."
+                )
             write_admission(self.storage_dir)
-            write_admission(self.source_path_for_name(self.storage_dir, expected_function_name))
+            write_admission(
+                self.source_path_for_name(self.storage_dir, expected_function_name)
+            )
         metadata = self._prepare_source(code)
-        if expected_function_name is not None and metadata.original_name != expected_function_name:
+        if (
+            expected_function_name is not None
+            and metadata.original_name != expected_function_name
+        ):
             raise ValidationError(
                 f"Prepared declaration {metadata.original_name!r} does not match "
                 f"admitted function {expected_function_name!r}."
@@ -207,7 +216,9 @@ class CustomFunctionManager:
         sources = tuple(
             CustomFunctionSource(
                 function_name=source_path.stem,
-                content_sha256=CustomFunctionSource.content_digest(source_path.read_bytes()),
+                content_sha256=CustomFunctionSource.content_digest(
+                    source_path.read_bytes()
+                ),
             )
             for source_path in sorted(self.storage_dir.glob("*.py"))
         )
@@ -489,7 +500,9 @@ class CustomFunctionManager:
     ) -> "FunctionMetadata":
         """Validate and project one source without mutating runtime or disk state."""
 
-        from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
+        from openhcs.processing.backends.lib_registry.openhcs_registry import (
+            OpenHCSRegistry,
+        )
 
         validation_result = validate_code(code)
         if not validation_result.is_valid:

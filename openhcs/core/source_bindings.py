@@ -644,7 +644,9 @@ class SourceSelector:
     This filters candidates; it does not assign the output identity.
     """
 
-    metadata: Annotated[tuple[MetadataSelector, ...], FieldLabel("Select Metadata")] = ()
+    metadata: Annotated[
+        tuple[MetadataSelector, ...], FieldLabel("Select Metadata")
+    ] = ()
     """Exact metadata field/value pairs required on selected sources, e.g. Well=A01.
 
     This filters candidates; pairing sources into sets uses the match plan.
@@ -707,12 +709,15 @@ class SourceSelector:
             any(
                 source_metadata_values_equal(value, selector.value)
                 for metadata in candidates
-                for value in source_component_metadata_values(metadata, selector.component)
+                for value in source_component_metadata_values(
+                    metadata, selector.component
+                )
             )
             for selector in self.components
         ) and all(
             any(
-                value is not None and source_metadata_values_equal(value, selector.value)
+                value is not None
+                and source_metadata_values_equal(value, selector.value)
                 for metadata in candidates
                 for value in (semantic_source_metadata_value(metadata, selector.field),)
             )
@@ -723,12 +728,12 @@ class SourceSelector:
         """Apply the same selectors to identities carried by current pixels."""
         identities = provenance.represented_source_identities
         return (
-            (not self.filters or self.path_filters_match(
+            not self.filters
+            or self.path_filters_match(
                 tuple(path for identity in identities for path in identity.filter_paths)
-            ))
-            and self.metadata_candidates_match(
-                tuple(identity.component_metadata or {} for identity in identities)
             )
+        ) and self.metadata_candidates_match(
+            tuple(identity.component_metadata or {} for identity in identities)
         )
 
 
@@ -1142,24 +1147,32 @@ class NamedSourceBinding(SourceAssignmentBase):
         metadata = payload.metadata
         provenance = metadata.source_provenance
         if not provenance.has_values:
-            raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
+            raise ValueError(
+                f"STEP_INPUT binding {self.alias!r} requires source provenance."
+            )
 
         if not provenance.source_plane_count:
             if not self.selector.matches_provenance(provenance):
-                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+                raise ValueError(
+                    f"STEP_INPUT binding {self.alias!r} selects no current planes."
+                )
             selected = payload
         else:
             named_planes = provenance.source_plane_selection(self.alias)
             candidate_planes = (
                 range(provenance.source_plane_count)
-                if named_planes is None else named_planes
+                if named_planes is None
+                else named_planes
             )
             selection = tuple(
-                index for index in candidate_planes
+                index
+                for index in candidate_planes
                 if self.selector.matches_provenance(provenance.for_source_plane(index))
             )
             if not selection:
-                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+                raise ValueError(
+                    f"STEP_INPUT binding {self.alias!r} selects no current planes."
+                )
             selected = metadata.project_source_planes(payload, selection)
         return self.apply_loaded_payload(selected, source_context=None)
 
@@ -1180,11 +1193,10 @@ class NamedSourceBinding(SourceAssignmentBase):
         """Convert declared RGB channels using the source intensity domain."""
         import numpy as np
 
-
-        normalized = metadata.payload_with(data).normalize_intensity_payload(dtype=np.float32,)
-        rgb = np.moveaxis(
-            np.asarray(normalized.data), channel_axis, -1
-        )[..., :3]
+        normalized = metadata.payload_with(data).normalize_intensity_payload(
+            dtype=np.float32,
+        )
+        rgb = np.moveaxis(np.asarray(normalized.data), channel_axis, -1)[..., :3]
         if np.all(rgb == rgb[..., :1]):
             return np.ascontiguousarray(rgb[..., 0])
 
@@ -1216,9 +1228,7 @@ class NamedSourceBinding(SourceAssignmentBase):
             values.extend(source_component_metadata_values(metadata, component))
         return tuple(dict.fromkeys(values))
 
-    def _declared_component_values(
-        self, component: type[Axis]
-    ) -> tuple[str, ...]:
+    def _declared_component_values(self, component: type[Axis]) -> tuple[str, ...]:
         """Resolve exact identity values before selector-derived coordinates."""
         for declarations in (self.component_identity, self.selector.components):
             values = tuple(
@@ -1242,7 +1252,9 @@ class NamedSourceBinding(SourceAssignmentBase):
             for values in (self._declared_component_values(component),)
             if values
         }
-        if realized_source_metadata is None or len(domains) == len(AxisFamily.active().axes):
+        if realized_source_metadata is None or len(domains) == len(
+            AxisFamily.active().axes
+        ):
             return domains
         realized: dict[type[Axis], list[str]] = {}
         for metadata in realized_source_metadata:
@@ -2318,7 +2330,8 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         return cls(
             bindings=(
                 config.binding_declarations
-                if selected_bindings is None else selected_bindings
+                if selected_bindings is None
+                else selected_bindings
             ),
             metadata_rules=config.metadata_rule_declarations,
             match_plan=config.match_plan,
@@ -2345,18 +2358,23 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             and any(contract.accepts_implicit_main_flow_input for contract in contracts)
             else ()
         )
-        source_specs = tuple(dict.fromkeys((
-            *implicit_specs,
-            *(
-                spec
-                for contract in contracts
-                for spec in contract.artifact_inputs
-                if config.declares_artifact_ref(spec.ref())
-                or available_artifacts.by_name_and_artifact_type(
-                    spec.name, spec.artifact_type
-                ) is not None
-            ),
-        )))
+        source_specs = tuple(
+            dict.fromkeys(
+                (
+                    *implicit_specs,
+                    *(
+                        spec
+                        for contract in contracts
+                        for spec in contract.artifact_inputs
+                        if config.declares_artifact_ref(spec.ref())
+                        or available_artifacts.by_name_and_artifact_type(
+                            spec.name, spec.artifact_type
+                        )
+                        is not None
+                    ),
+                )
+            )
+        )
         if not source_specs:
             return cls.empty()
         bindings = config.bindings_for_artifact_specs(source_specs, available_artifacts)
@@ -2529,7 +2547,6 @@ def _coerce_component(value: Any, field_name: str) -> type[Axis]:
         return AxisFamily.active().require(value)
     except TypeError as error:
         raise TypeError(f"{field_name}: {error}") from error
-
 
 
 def _require_name(value: str, field_name: str) -> None:

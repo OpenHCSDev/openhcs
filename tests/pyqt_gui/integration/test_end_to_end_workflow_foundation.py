@@ -232,7 +232,9 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
                 ),
             ),
             setup_modifications=(
-                FieldModificationSpec(("step_partition_filter_config", "partition_filter"), 5),
+                FieldModificationSpec(
+                    ("step_partition_filter_config", "partition_filter"), 5
+                ),
             ),
             field_to_test=FieldModificationSpec(
                 ("path_planning_config", "partition_filter"), 99
@@ -245,7 +247,9 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
                         ("napari_streaming_config", "partition_filter"),
                         ("fiji_streaming_config", "partition_filter"),
                     ),
-                    excluded_source_paths=(("path_planning_config", "partition_filter"),),
+                    excluded_source_paths=(
+                        ("path_planning_config", "partition_filter"),
+                    ),
                 ),
             ),
         ),

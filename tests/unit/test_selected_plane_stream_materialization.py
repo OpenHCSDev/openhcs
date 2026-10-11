@@ -99,7 +99,9 @@ def _source_stack(axis, component=Microscopy.Channel.name):
 )
 def test_public_selected_checkpoint_materializes_and_streams_without_storage_axes(
     axis,
-    output_type, artifact_name, dtype,
+    output_type,
+    artifact_name,
+    dtype,
     tmp_path,
     monkeypatch,
 ):
@@ -165,11 +167,10 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
             request.source.metadata.component_metadata_for_item(path, 0)["channel"] == 2
         )
         assert payload.metadata.source_image_names == ("FITC",)
-        assert (
-            payload.metadata.source_path
-            == "/input/A01_s001_w2_z001_t001.tif"
+        assert payload.metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
+        assert payload.metadata.source_voxel_spacing == SourceVoxelSpacing(
+            (1.3556, 1.3556)
         )
-        assert payload.metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
     finally:
         viewer.cleanup()
 
@@ -238,9 +239,7 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
     )
     assert calls == ["observe", "reverse", "declaration"]
     assert payload.metadata.source_image_names == ("FITC", "DAPI")
-    assert payload.metadata.retained_plane_component_values() == {
-        "channel": ("2", "1")
-    }
+    assert payload.metadata.retained_plane_component_values() == {"channel": ("2", "1")}
     np.testing.assert_array_equal(np.asarray(payload), selected.data)
 
 
@@ -262,11 +261,13 @@ def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits()
         pass
 
     source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING)
-    pixels = np.full((1, 7, 8), .75, dtype=np.float32)
+    pixels = np.full((1, 7, 8), 0.75, dtype=np.float32)
     response = DeclaredResponse(pixels, (1,))
     calls.clear()
     payload = ImageArtifactType.contextualize_output(
-        source, response, None,
+        source,
+        response,
+        None,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
         ),
@@ -291,11 +292,27 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         image=source, labels=labels, plane_projection=projection
     ).payload()
     summary = NeuriteOutgrowthSummary(
-        **{field.name: 0 for field in fields(NeuriteOutgrowthSummary) if field.name != "coordinate_unit"},
+        **{
+            field.name: 0
+            for field in fields(NeuriteOutgrowthSummary)
+            if field.name != "coordinate_unit"
+        },
         coordinate_unit=SourceVoxelSpacingUnit.MICROMETERS,
     )
     cell = NeuriteOutgrowthCellResult(
-        1, 1, SourceVoxelSpacingUnit.MICROMETERS, 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 0.0, False
+        1,
+        1,
+        SourceVoxelSpacingUnit.MICROMETERS,
+        0.0,
+        0,
+        0.0,
+        0.0,
+        0.0,
+        0,
+        0.0,
+        1.0,
+        0.0,
+        False,
     )
     selected = ImageArtifactType.contextualize_output(
         source,
@@ -324,8 +341,10 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         ),
         *NeuriteAdmissionPlanes(
             np.asarray(source)[1].astype(np.float32),
-            labels[1] > 0, labels[1] > 0,
-            np.asarray(source)[1].astype(np.float32), labels[1] > 0,
+            labels[1] > 0,
+            labels[1] > 0,
+            np.asarray(source)[1].astype(np.float32),
+            labels[1] > 0,
             np.asarray(source)[1].astype(np.float32),
         ).selected_outputs(1),
         *NeuriteOwnershipPlanes(labels[1], labels[1], labels[1]).selected_outputs(1),
@@ -362,7 +381,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         output_dir=tmp_path / "images",
     )
     for output, value in zip(plans, values, strict=True):
-        value = (ImageArtifactType if output is None else output.artifact_type).contextualize_output(
+        value = (
+            ImageArtifactType if output is None else output.artifact_type
+        ).contextualize_output(
             source,
             value,
             output,
@@ -386,13 +407,16 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
 
     monkeypatch.setattr(filemanager, "save_batch", capture_stream)
     try:
-        PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
+        PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(
+            filemanager, plan, context
+        )
         materializations = runtime_artifact_materializations(plan, context)
         assert {item.output_plan.name for item in materializations} == set(
             specs.names()
         )
         assert len(materializations) == 12 + len(
-            NeuriteAdmissionPlanes.artifact_specs() + NeuriteOwnershipPlanes.artifact_specs()
+            NeuriteAdmissionPlanes.artifact_specs()
+            + NeuriteOwnershipPlanes.artifact_specs()
         )
         for item in materializations:
             outputs = item.outputs(plan, context)
@@ -404,7 +428,8 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             if paths[0].endswith(".checkpoint.tif")
         ]
         assert len(checkpoints) == 5 + len(
-            NeuriteAdmissionPlanes.artifact_specs() + NeuriteOwnershipPlanes.artifact_specs()
+            NeuriteAdmissionPlanes.artifact_specs()
+            + NeuriteOwnershipPlanes.artifact_specs()
         )
         for (data,), (path,), request in checkpoints:
             assert (
