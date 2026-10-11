@@ -70,7 +70,7 @@ Reading:
 - Branches recover about half of N1's loss. The rest follows the pairing: a junction no longer resolved as a crossing is classed by the branch ring instead.
 - "Added trace" is the route pixels.
 
-Checks: `tests/unit/test_neurite_outgrowth.py` and `tests/unit/test_n1_neurite_crossing_guards.py`, 117 passed. Structural ratchet (`openhcs`, `scripts`, `benchmark`): exit 0; `CellProfilerNeuriteEngineProfile` excess 38 → 37. nra-r1: no increase. PARITY_PLACEHOLDER
+Checks: `tests/unit/test_neurite_outgrowth.py` and `tests/unit/test_n1_neurite_crossing_guards.py`, 117 passed. Structural ratchet (`openhcs`, `scripts`, `benchmark`): exit 0; `CellProfilerNeuriteEngineProfile` excess 38 → 37. nra-r1: no increase. Official30 parity under flock: passed (1 passed in 1230 s).
 
 Evidence and scripts are under `.claude/n1b/` in the worktree (untracked): `run_fields.py`, `compare.py`, `route_probe.py`, `pair_probe.py`, `pair_angles.py`, `groups.py`, and the crops in `crops/`.
 
