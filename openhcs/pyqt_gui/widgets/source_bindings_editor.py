@@ -99,13 +99,13 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
+    FromFileName,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
+    PathIsImage,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSetPairing,
     PairByMetadata,
     PairByOrder,
@@ -1287,10 +1287,7 @@ class SourceBindingsEditorWidget(
         try:
             self.source_filters_controller.append(
                 clause
-                or SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.IS_IMAGE,
-                )
+                or SourceFilterClause(SourceFileName, PathIsImage)
             )
         finally:
             self._updating_ui = False
@@ -1332,7 +1329,7 @@ class SourceBindingsEditorWidget(
             self.metadata_rules_controller.append(
                 rule
                 or MetadataExtractionRule(
-                    source=MetadataSource.FILE_NAME,
+                    source=FromFileName,
                     pattern=r"(?P<field>.+)",
                 )
             )

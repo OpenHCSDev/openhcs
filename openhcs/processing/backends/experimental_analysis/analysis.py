@@ -23,7 +23,6 @@ from typing import Optional
 
 from openhcs.domains.microscopy.config import NormalizationMethod
 from openhcs.processing.backends.experimental_analysis.layout_rows import (
-    ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,
 )
 from openhcs.processing.backends.experimental_analysis.result_formats import ExperimentalResultFormatStrategy
@@ -99,9 +98,7 @@ def is_well_tuple(item) -> bool:
 
 def result_format_strategy(scope: object) -> ExperimentalResultFormatStrategy:
     """Resolve one declared workbook scope through the nominal strategy root."""
-    return ExperimentalResultFormatStrategy.for_enum_member(
-        ExperimentalAnalysisScope.coerce(scope)
-    )
+    return ExperimentalResultFormatStrategy.for_scope(scope)
 
 
 def read_results(results_path: str, scope: Optional[str] = None) -> pd.DataFrame:

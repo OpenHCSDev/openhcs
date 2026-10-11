@@ -15,8 +15,9 @@ from metaclass_registry import AutoRegisterMeta
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from objectstate.value_semantics import semantic_values_equal
 
+from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.selection import SelectedAllSelectionMode, SelectedScopeIdsCarrier
+from openhcs.core.selection import SelectedScopeIdsCarrier
 from objectstate import retain_only_authored_paths
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -35,7 +36,7 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "mode"
     __skip_if_no_key__ = True
 
-    mode: ClassVar[SelectedAllSelectionMode | None] = None
+    mode: ClassVar[type[SelectionScope] | None] = None
     selected_scope_ids: tuple[str, ...] = ()
 
     @classmethod
@@ -43,10 +44,9 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
         cls,
         carrier: SelectedScopeIdsCarrier,
         *,
-        default: SelectedAllSelectionMode = SelectedAllSelectionMode.SELECTED,
+        default: type[SelectionScope] = SelectedItems,
     ) -> "DatasetDocumentScope":
-        mode = SelectedAllSelectionMode(carrier.resolved_selection_mode(default))
-        return cls.__registry__[mode](selected_scope_ids=tuple(carrier.selected_scope_ids))
+        return cls.__registry__[carrier.selection_scope(default)](selected_scope_ids=tuple(carrier.selected_scope_ids))
 
     def require_payload_scope(self, scope_ids: tuple[str, ...]) -> None:
         if self.selected_scope_ids and frozenset(scope_ids) != frozenset(
@@ -71,7 +71,7 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
 class SelectedDatasetDocumentScope(DatasetDocumentScope):
     """Upsert the selected datasets; keep every other dataset."""
 
-    mode = SelectedAllSelectionMode.SELECTED
+    mode = SelectedItems
 
     def commits_global_draft(self, state: ObjectState | None) -> bool:
         return False
@@ -84,7 +84,7 @@ class SelectedDatasetDocumentScope(DatasetDocumentScope):
 class AllDatasetDocumentScope(DatasetDocumentScope):
     """Make the dataset list exactly the document's."""
 
-    mode = SelectedAllSelectionMode.ALL
+    mode = AllItems
 
     def commits_global_draft(self, state: ObjectState | None) -> bool:
         return bool(state and state.dirty_fields)
@@ -125,7 +125,7 @@ def render_dataset_document(
     session: "Session",
     scope_ids: tuple[str, ...],
     *,
-    selection_mode: SelectedAllSelectionMode,
+    selection_mode: type[SelectionScope],
 ) -> DatasetDocument:
     payload = PlateManagerCodeDocumentAuthority.from_values(
         plate_paths=list(scope_ids),
@@ -140,7 +140,7 @@ def render_dataset_document(
     return DatasetDocument(
         source=PlateManagerCodeDocumentAuthority.render(payload),
         payload=payload,
-        selection_mode=selection_mode.value,
+        selection_mode=selection_mode.name,
         selected_scope_ids=tuple(scope_ids),
     )
 

@@ -369,17 +369,12 @@ class VirtualWorkspaceSourceProjection:
 
     def files_for_projection_role(
         self,
-        projection_role: SourceProjectionRole,
+        projection_role: type[SourceProjectionRole],
         *,
         axis_id: str | None = None,
     ) -> tuple[str, ...]:
         """Return source files belonging to one exact declared projection role."""
 
-        role = (
-            projection_role
-            if isinstance(projection_role, SourceProjectionRole)
-            else SourceProjectionRole(projection_role)
-        )
         return tuple(
             self._loadable_virtual_path(virtual_path)
             for virtual_path in self.relative_virtual_paths()
@@ -390,7 +385,7 @@ class VirtualWorkspaceSourceProjection:
                     self._loadable_virtual_path(virtual_path),
                 )
             ).projection_role
-            is role
+            is projection_role
         )
 
     def source_occurrences_for_binding(

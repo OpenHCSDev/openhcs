@@ -21,6 +21,8 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
     SourceProjectionRole,
 )
 from openhcs.core.source_matching import (
@@ -41,7 +43,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from python_introspect import to_jsonable
-from openhcs.core.source_path_identity import source_path_posix
+from openhcs.core.source_path_identity import absolute_source_path, source_path_posix
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 
@@ -240,7 +242,7 @@ class SourceDatasetIdentity:
     def for_root(cls, root: str | Path) -> "SourceDatasetIdentity":
         """Return the exact collection identity for one submitted source root."""
 
-        return cls(Path(root).resolve(strict=False).as_uri())
+        return cls(absolute_source_path(root).as_uri())
 
 
 @dataclass(frozen=True, slots=True)
@@ -256,7 +258,7 @@ class SourcePlaneStoreIdentity:
     def __post_init__(self) -> None:
         container_paths = tuple(
             sorted(
-                {Path(path).resolve(strict=False) for path in self.container_paths},
+                {absolute_source_path(path) for path in self.container_paths},
                 key=str,
             )
         )
@@ -436,7 +438,7 @@ class SourcePlaneDataset:
     diagnostics: tuple[SourceDatasetDiagnostic, ...] = ()
 
     def __post_init__(self) -> None:
-        root = Path(self.root).resolve(strict=False)
+        root = absolute_source_path(self.root)
         if not isinstance(self.identity, SourceDatasetIdentity):
             raise TypeError(
                 "SourcePlaneDataset.identity must be SourceDatasetIdentity."
@@ -476,7 +478,7 @@ class SourcePlaneDataset:
 
         if not datasets:
             raise ValueError("SourcePlaneDataset.aggregate requires datasets.")
-        roots = {dataset.root.resolve(strict=False) for dataset in datasets}
+        roots = {dataset.root for dataset in datasets}
         if len(roots) != 1:
             raise SourceDatasetConflictError(
                 "Source stores cannot aggregate across different collection roots."
@@ -597,7 +599,7 @@ class SourcePlaneDataset:
 class SourceProjection:
     """Nominal root for typed source projections."""
 
-    projection_role: ClassVar[SourceProjectionRole]
+    projection_role: ClassVar[type[SourceProjectionRole]]
     address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
     source_alias: str | None
@@ -725,7 +727,7 @@ declared_optional_payload_field = lru_cache(maxsize=None)(
 class SourcePlaneProjection(SourceProjection):
     """One canonical primary plane mapped to one source pixel reference."""
 
-    projection_role: ClassVar[SourceProjectionRole] = SourceProjectionRole.PRIMARY_PLANE
+    projection_role: ClassVar[type[SourceProjectionRole]] = PrimaryPlaneRole
     artifact_kind: ClassVar[type[ArtifactType]] = ImageArtifactType
 
     address: OpenHCSPlaneAddress
@@ -766,9 +768,7 @@ class SourcePlaneProjection(SourceProjection):
 class SourceArtifactProjection(SourceProjection):
     """One typed source artifact attached to a source-set execution address."""
 
-    projection_role: ClassVar[SourceProjectionRole] = (
-        SourceProjectionRole.SOURCE_ARTIFACT
-    )
+    projection_role: ClassVar[type[SourceProjectionRole]] = SourceArtifactRole
 
     address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
@@ -968,7 +968,7 @@ class SourceProjectionSet:
             tuple(
                 projection
                 for projection in self.projections
-                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+                if projection.projection_role is PrimaryPlaneRole
             ),
         )
 
@@ -981,7 +981,7 @@ class SourceProjectionSet:
             tuple(
                 projection
                 for projection in self.projections
-                if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+                if projection.projection_role is SourceArtifactRole
             ),
         )
 
@@ -1358,7 +1358,7 @@ class SourceProjectionMetadataSerializer:
             "virtual_path": path,
             "address": projection.serialized_address(),
             "ref": projection.ref.to_workspace_mapping(),
-            "projection_role": projection.projection_role.value,
+            "projection_role": projection.projection_role.name,
         }
         if projection.source_alias is not None:
             payload["source_alias"] = projection.source_alias
@@ -1409,7 +1409,7 @@ def _normalize_projection(projection: SourceProjection) -> None:
     ):
         raise TypeError("Source projection address must be OpenHCSPlaneAddress.")
     if projection.address is None and (
-        projection.projection_role is not SourceProjectionRole.SOURCE_ARTIFACT
+        projection.projection_role is not SourceArtifactRole
         or projection.execution_scope is None
     ):
         raise TypeError(

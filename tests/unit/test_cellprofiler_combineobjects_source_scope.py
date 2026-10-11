@@ -10,7 +10,7 @@ import numpy as np
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -27,7 +27,10 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerGroupScope,
 )
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
@@ -81,7 +84,7 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
             NamedSourceBinding(
                 alias=source.name,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         ),
     )
@@ -91,7 +94,7 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Site],
             group_by=Microscopy.Channel,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=source_bindings,
     )

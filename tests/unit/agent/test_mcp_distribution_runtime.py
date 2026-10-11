@@ -9,9 +9,9 @@ from pathlib import Path
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.runtime_platform import (
-    AgentRuntimePlatformAuthority,
-    AgentRuntimePlatformKey,
-    LinuxAgentRuntimePlatformAuthority,
+    AgentRuntimePlatform,
+    LinuxRuntimePlatform,
+    WindowsRuntimePlatform,
 )
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
@@ -53,9 +53,9 @@ def test_windows_descriptor_default_uses_local_application_data(
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", raising=False)
     monkeypatch.setenv("LOCALAPPDATA", str(local_application_data))
     monkeypatch.setattr(
-        AgentRuntimePlatformKey,
-        "current",
-        classmethod(lambda cls: cls.WINDOWS),
+        AgentRuntimePlatform,
+        "current_type",
+        staticmethod(lambda: WindowsRuntimePlatform),
     )
 
     descriptor_dirs = UiBridgeDescriptorDirectoryAuthority.descriptor_dirs()
@@ -65,12 +65,8 @@ def test_windows_descriptor_default_uses_local_application_data(
     ).resolve(strict=False)
 
 
-def test_linux_platform_authority_is_registered_under_linux_key():
-    authority = AgentRuntimePlatformAuthority.for_enum_member(
-        AgentRuntimePlatformKey.LINUX
-    )
-
-    assert isinstance(authority, LinuxAgentRuntimePlatformAuthority)
+def test_linux_platform_is_registered_under_its_name():
+    assert AgentRuntimePlatform.__registry__["linux"] is LinuxRuntimePlatform
 
 
 def test_linux_platform_authority_projects_only_declared_graphical_environment(
@@ -84,7 +80,7 @@ def test_linux_platform_authority_projects_only_declared_graphical_environment(
         b"XDG_RUNTIME_DIR=/run/user/1000\0PATH=/usr/bin\0"
         b"OPENHCS_CPU_ONLY=true\0SECRET_TOKEN=do-not-forward\0"
     )
-    authority = LinuxAgentRuntimePlatformAuthority()
+    authority = LinuxRuntimePlatform()
     monkeypatch.setattr(authority, "proc_root", tmp_path)
 
     environment = authority.graphical_process_environment(
@@ -103,7 +99,7 @@ def test_linux_platform_authority_projects_only_declared_graphical_environment(
 
 
 def test_posix_platform_authority_preserves_declared_temporary_root():
-    authority = LinuxAgentRuntimePlatformAuthority()
+    authority = LinuxRuntimePlatform()
 
     environment = authority.project_child_process_environment(
         {
@@ -122,7 +118,7 @@ def test_posix_platform_authority_preserves_declared_temporary_root():
 
 
 def test_linux_platform_authority_owns_graphical_session_availability():
-    authority = LinuxAgentRuntimePlatformAuthority()
+    authority = LinuxRuntimePlatform()
 
     assert authority.graphical_session_available({"DISPLAY": ":7"}) is True
     assert (
@@ -141,16 +137,14 @@ def test_descriptor_reader_uses_cross_platform_process_and_permission_authority(
     descriptor_path = tmp_path / "ui_bridge_windows.json"
     _write_descriptor(descriptor_path)
     descriptor_path.chmod(0o644)
-    windows_authority = AgentRuntimePlatformAuthority.for_enum_member(
-        AgentRuntimePlatformKey.WINDOWS
-    )
+    windows_authority = WindowsRuntimePlatform()
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "current",
         classmethod(lambda cls: windows_authority),
     )
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda pid: 1.0 if pid == os.getpid() else None),
     )

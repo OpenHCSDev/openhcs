@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
 from openhcs.core.execution_state import (
-    TerminalExecutionStatus,
+    TerminalExecutionStatus, ExecutionCompleted,
     parse_terminal_status,
 )
 
@@ -16,11 +16,11 @@ class ExecutionBatchMember:
     """All runtime facts owned for one plate in the current batch."""
 
     execution_id: str | None = None
-    terminal_status: TerminalExecutionStatus | None = None
+    terminal_status: type[TerminalExecutionStatus] | None = None
     superseded: bool = False
 
     @property
-    def current_terminal_status(self) -> TerminalExecutionStatus | None:
+    def current_terminal_status(self) -> type[TerminalExecutionStatus] | None:
         """Current row activity, distinct from this member's batch outcome."""
         return None if self.superseded else self.terminal_status
 
@@ -33,7 +33,7 @@ class ExecutionBatchMember:
 
     def with_terminal_status(
         self,
-        status: str | TerminalExecutionStatus,
+        status: str | type[TerminalExecutionStatus],
     ) -> ExecutionBatchMember:
         return replace(self, terminal_status=parse_terminal_status(status))
 
@@ -66,7 +66,7 @@ class ExecutionBatchRuntime:
     def mark_terminal(
         self,
         plate_path: str,
-        status: str | TerminalExecutionStatus,
+        status: str | type[TerminalExecutionStatus],
     ) -> None:
         member = self._require_batch_member(plate_path)
         self._members_by_plate[plate_path] = member.with_terminal_status(status)
@@ -85,7 +85,7 @@ class ExecutionBatchRuntime:
             if member.active
         )
 
-    def terminal_status(self, plate_path: str) -> TerminalExecutionStatus | None:
+    def terminal_status(self, plate_path: str) -> type[TerminalExecutionStatus] | None:
         member = self._members_by_plate.get(plate_path)
         return None if member is None else member.current_terminal_status
 
@@ -134,7 +134,7 @@ class ExecutionBatchRuntime:
     def terminal_counts(self) -> tuple[int, int]:
         statuses = tuple(status for _plate_path, status in self.terminal_items())
         completed = sum(
-            1 for status in statuses if status is TerminalExecutionStatus.COMPLETE
+            1 for status in statuses if status is ExecutionCompleted
         )
         failed = sum(1 for status in statuses if status.counts_as_failed)
         return completed, failed

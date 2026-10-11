@@ -5,22 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from openhcs.core.debug_session_projection import (
-    DebugPauseBoundaryState,
     DebugSessionPhase,
-    DebugSessionPhaseDeclarationBase,
     DebugSessionProjectionContext,
-    DebugSessionTargetState,
+    PendingExecutionDebugSessionPhase,
 )
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     DebugActionDisabledReason,
-    DebugActionPlacement,
+    DebugToolbarPlacement,
     PipelineDebugActionDeclarationBase,
 )
-
-PipelineDebugTargetState = DebugSessionTargetState
-PipelineDebugSessionPhase = DebugSessionPhase
-PipelineDebugPauseBoundaryState = DebugPauseBoundaryState
-PipelineDebugSessionContext = DebugSessionProjectionContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,10 +24,10 @@ class DebugActionRenderModel:
     action_id: str
     label: str
     tooltip: str
-    placement: DebugActionPlacement
+    placement: type[DebugToolbarPlacement]
     enabled: bool
     disabled_reason: DebugActionDisabledReason | None
-    phase: DebugSessionPhase
+    phase: type[DebugSessionPhase]
     side_effects: tuple[str, ...]
     confirmation_required: bool
     requires_active_debug_session: bool
@@ -63,7 +56,7 @@ class DebugToolbarActionProjector:
         declaration: type[PipelineDebugActionDeclarationBase],
         context: DebugSessionProjectionContext,
     ) -> DebugActionRenderModel:
-        phase = cls.phase(context)
+        phase = context.phase
         disabled_reason = cls.disabled_reason(declaration, context)
         return DebugActionRenderModel(
             declaration=declaration,
@@ -164,11 +157,7 @@ class DebugToolbarActionProjector:
         cls,
         context: DebugSessionProjectionContext,
     ) -> bool:
-        return context.phase is DebugSessionPhase.PENDING_EXECUTION
-
-    @classmethod
-    def phase(cls, context: DebugSessionProjectionContext) -> DebugSessionPhase:
-        return context.phase
+        return context.phase is PendingExecutionDebugSessionPhase
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,7 +171,7 @@ class DebugSessionPanelText:
     def from_context(
         cls, context: DebugSessionProjectionContext
     ) -> "DebugSessionPanelText":
-        phase_declaration = DebugSessionPhaseDeclarationBase.for_context(context)
+        phase_declaration = context.phase
         cursor = None
         command_type = None
         active_session = context.active_session
@@ -221,8 +210,4 @@ __all__ = (
     "DebugActionRenderModel",
     "DebugSessionPanelText",
     "DebugToolbarActionProjector",
-    "PipelineDebugPauseBoundaryState",
-    "PipelineDebugSessionContext",
-    "PipelineDebugSessionPhase",
-    "PipelineDebugTargetState",
 )

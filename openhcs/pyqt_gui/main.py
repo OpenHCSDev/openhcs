@@ -44,6 +44,7 @@ from pyqt_reactive.widgets.shared.dock_layout import DockLayoutStore, DockPane
 from pyqt_reactive.widgets.system_monitor import SystemMonitorWidget
 from zmqruntime import EndpointConnectionCancelledError
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.services.endpoint_function_catalog_service import (
     ZMQFunctionCatalogService,
 )
@@ -67,7 +68,6 @@ from openhcs.authoring.session.events import (
 )
 from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.agent.dto.common import AgentError
 from openhcs.authoring.session.operations.application import (
     CheckForUpdates,
@@ -85,7 +85,8 @@ from openhcs.desktop.update import (
     DesktopRestartSession,
     DesktopRuntimeEnvironment,
     DesktopUpdateCheckFailure,
-    DesktopUpdateCheckOrigin,
+    ExplicitUpdateCheck,
+    StartupUpdateCheck,
     DesktopUpdateCheckResult,
     DesktopUpdateDialogPresenter,
     DesktopUpdateError,
@@ -1073,11 +1074,11 @@ class OpenHCSMainWindow(QMainWindow):
 
     def load_orchestrator_configuration(self) -> None:
         """Open the dataset code document for the selected datasets."""
-        self.plate_manager_widget.show_dataset_code(SelectedAllSelectionMode.SELECTED)
+        self.plate_manager_widget.show_dataset_code(SelectedItems)
 
     def save_orchestrator_configuration(self) -> None:
         """Open the dataset code document with every dataset, for export."""
-        self.plate_manager_widget.show_dataset_code(SelectedAllSelectionMode.ALL)
+        self.plate_manager_widget.show_dataset_code(AllItems)
 
     def show_configuration(self):
         """Open the registered application configuration window."""
@@ -1415,7 +1416,7 @@ class OpenHCSMainWindow(QMainWindow):
     def check_for_updates(self) -> None:
         """Start an explicit, asynchronous stable-release check."""
         if not self.desktop_update_service.check_for_updates(
-            DesktopUpdateCheckOrigin.EXPLICIT
+            ExplicitUpdateCheck
         ):
             return
         self.check_for_updates_action.setEnabled(False)
@@ -1427,7 +1428,7 @@ class OpenHCSMainWindow(QMainWindow):
         if not self.runtime_context.ui_config.check_for_updates_on_startup:
             return
         if self.desktop_update_service.check_for_updates(
-            DesktopUpdateCheckOrigin.STARTUP
+            StartupUpdateCheck
         ):
             self.check_for_updates_action.setEnabled(False)
 
@@ -1438,7 +1439,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.check_for_updates_action.setEnabled(True)
         update = result.update
         if not update.update_available:
-            if result.origin is DesktopUpdateCheckOrigin.EXPLICIT:
+            if result.origin is ExplicitUpdateCheck:
                 self.status_message.emit("OpenHCS is up to date")
                 self.desktop_update_presenter.show_up_to_date(update)
             return
@@ -1484,7 +1485,7 @@ class OpenHCSMainWindow(QMainWindow):
 
     def _on_update_check_failed(self, failure: DesktopUpdateCheckFailure) -> None:
         self.check_for_updates_action.setEnabled(True)
-        if failure.origin is DesktopUpdateCheckOrigin.STARTUP:
+        if failure.origin.quiet:
             logger.warning(
                 "Startup OpenHCS update check failed: %s",
                 failure.message,

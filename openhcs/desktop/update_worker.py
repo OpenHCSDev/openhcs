@@ -39,11 +39,25 @@ class DesktopUpdateProgressMode(Enum):
     COMPLETE = "determinate"
 
 
-class DesktopUpdateProgressAction(Enum):
-    """Closed failure response axis sent from the progress UI to orchestration."""
+class DesktopUpdateFailureResponse(ABC):
+    """The user's answer to a failed update, sent from the progress UI."""
 
-    REOPEN = "reopen"
-    EXIT = "exit"
+    @staticmethod
+    @abstractmethod
+    def follow(reopen: Callable[[], None]) -> None:
+        """Carry out this answer; ``reopen`` restarts the saved session."""
+
+
+class ReopenAfterFailedUpdate(DesktopUpdateFailureResponse):
+    @staticmethod
+    def follow(reopen: Callable[[], None]) -> None:
+        reopen()
+
+
+class ExitAfterFailedUpdate(DesktopUpdateFailureResponse):
+    @staticmethod
+    def follow(reopen: Callable[[], None]) -> None:
+        return None
 
 
 class DesktopUpdateProgressUnavailable(RuntimeError):
@@ -136,7 +150,7 @@ class DesktopUpdateProgressReporterABC(ABC):
         """Present one line emitted by the active update command."""
 
     @abstractmethod
-    def failure(self, message: str) -> DesktopUpdateProgressAction:
+    def failure(self, message: str) -> type[DesktopUpdateFailureResponse]:
         """Present a failure and return the user's declared recovery action."""
 
     @abstractmethod
@@ -610,7 +624,7 @@ class DesktopUpdateProgressWindow(DesktopUpdateProgressReporterABC):
 
         self._tk = tk
         self._events: queue.Queue[DesktopUpdateProgressEventABC] = queue.Queue()
-        self._actions: queue.Queue[DesktopUpdateProgressAction] = queue.Queue()
+        self._actions: queue.Queue[type[DesktopUpdateFailureResponse]] = queue.Queue()
         self._theme = theme
         self._completed = False
         self._failed = False
@@ -746,13 +760,13 @@ class DesktopUpdateProgressWindow(DesktopUpdateProgressReporterABC):
             button_frame,
             text="Reopen OpenHCS",
             style="OpenHCS.TButton",
-            command=lambda: self._finish_with(DesktopUpdateProgressAction.REOPEN),
+            command=lambda: self._finish_with(ReopenAfterFailedUpdate),
         )
         self._exit_button = ttk.Button(
             button_frame,
             text="Exit",
             style="OpenHCS.TButton",
-            command=lambda: self._finish_with(DesktopUpdateProgressAction.EXIT),
+            command=lambda: self._finish_with(ExitAfterFailedUpdate),
         )
         self._root.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -762,7 +776,7 @@ class DesktopUpdateProgressWindow(DesktopUpdateProgressReporterABC):
     def output(self, message: str) -> None:
         self._events.put(DesktopUpdateOutputEvent(message))
 
-    def failure(self, message: str) -> DesktopUpdateProgressAction:
+    def failure(self, message: str) -> type[DesktopUpdateFailureResponse]:
         self._events.put(DesktopUpdateFailureEvent(message))
         return self._actions.get()
 
@@ -786,7 +800,7 @@ class DesktopUpdateProgressWindow(DesktopUpdateProgressReporterABC):
         self._root.after(40, self._poll_events)
         self._root.mainloop()
         if worker.is_alive():
-            self._actions.put(DesktopUpdateProgressAction.EXIT)
+            self._actions.put(ExitAfterFailedUpdate)
         worker.join(timeout=5)
         if worker.is_alive() or results.empty():
             return 1
@@ -850,13 +864,13 @@ class DesktopUpdateProgressWindow(DesktopUpdateProgressReporterABC):
             event.apply(self)
         self._root.after(40, self._poll_events)
 
-    def _finish_with(self, action: DesktopUpdateProgressAction) -> None:
+    def _finish_with(self, action: type[DesktopUpdateFailureResponse]) -> None:
         self._actions.put(action)
         self._root.destroy()
 
     def _on_close(self) -> None:
         if self._failed:
-            self._finish_with(DesktopUpdateProgressAction.EXIT)
+            self._finish_with(ExitAfterFailedUpdate)
         elif self._completed:
             self._root.destroy()
         else:
@@ -914,19 +928,23 @@ def _recover_from_failure(
     restart_executable: str | None = None,
 ) -> None:
     _write_update_error(arguments.error_file, error_message)
-    action = progress.failure(error_message)
-    if not reopen_available or action is not DesktopUpdateProgressAction.REOPEN:
+    response = progress.failure(error_message)
+    if not reopen_available:
         return
-    restart_error = _restart_saved_session(
-        arguments,
-        launch_spec=launch_spec,
-        restart_executable=restart_executable,
-    )
-    if restart_error is not None:
-        _write_update_error(
-            arguments.error_file,
-            f"{error_message}\n\n{restart_error}",
+
+    def reopen() -> None:
+        restart_error = _restart_saved_session(
+            arguments,
+            launch_spec=launch_spec,
+            restart_executable=restart_executable,
         )
+        if restart_error is not None:
+            _write_update_error(
+                arguments.error_file,
+                f"{error_message}\n\n{restart_error}",
+            )
+
+    response.follow(reopen)
 
 
 def _perform_update_transaction(

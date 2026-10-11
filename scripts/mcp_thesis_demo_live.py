@@ -75,6 +75,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config_cache import ConfigCacheSpec, save_config_sync
+from openhcs.ui.shared.plate_manager_code_document import PlateManagerDocumentAssignments
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.mcp.dev_client_core import (
     DEFAULT_CALL_TIMEOUT_SECONDS,
@@ -1215,7 +1216,7 @@ def demo_source(
 from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.axes import Ungrouped
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -1228,7 +1229,7 @@ from openhcs.core.config import (
     LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -1357,7 +1358,7 @@ pipeline_data = {{
                 }}),
             name='Secondary Enhancement',
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START
+                input_source=ReadPipelineStart
             )
         ),
         FunctionStep(
@@ -1390,7 +1391,7 @@ pipeline_data = {{
                 default_dtype_conversion=DtypeConversion.UINT8
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
-                variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX
+                variable_size_handling=PadToMaxSize
             )
         )
     ]
@@ -1966,8 +1967,9 @@ def assert_applied_document_state(
 ) -> dict[str, Any]:
     namespace: dict[str, object] = {}
     exec(compile(source, str(ctx.source_path), "exec"), namespace)
-    per_plate_configs = namespace["per_plate_configs"]
-    pipeline_data = namespace["pipeline_data"]
+    assignments = PlateManagerDocumentAssignments.from_namespace(namespace)
+    per_plate_configs = assignments.per_plate_configs
+    pipeline_data = assignments.pipeline_data
     if not isinstance(per_plate_configs, dict) or not isinstance(pipeline_data, dict):
         raise RehearsalFailure(
             "Applied document did not reconstruct pipeline mappings."

@@ -28,7 +28,7 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     TiffStackOptions,
 )
-from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+from openhcs.processing.materialization.options import NameByArtifactName
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ _TEMPLATE_MATCH_OUTPUTS = (
         ImageArtifactType,
         materialization=MaterializationSpec(
             TiffStackOptions(
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME
+                filename_identity=NameByArtifactName
             )
         ),
     ),
@@ -141,7 +141,7 @@ _TEMPLATE_MATCH_OUTPUTS = (
         materialization=MaterializationSpec(
             CsvOptions(
                 filename_suffix="_mtm_matches.csv",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
                 fields=[field.name for field in fields(TemplateMatchCsvRow)],
                 row_unpacker=_mtm_row_unpacker,
             )

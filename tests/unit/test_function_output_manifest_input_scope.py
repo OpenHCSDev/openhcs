@@ -27,7 +27,7 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -253,7 +253,7 @@ def test_foreign_artifact_inputs_do_not_filter_lifecycle_producer(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id=dependency_scope,
         ),
@@ -339,7 +339,7 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="align",
         ),
@@ -440,7 +440,7 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="color_to_gray",
         ),
@@ -498,7 +498,7 @@ def test_storage_backed_input_does_not_reclassify_lifecycle_output(
     stored_input = ArtifactSpec.input("StoredLabels", ObjectLabelsArtifactType)
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="artifact_producer",
         ),
@@ -578,7 +578,7 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="artifact_producer",
         ),
@@ -621,8 +621,13 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
 
 def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
     from openhcs.core.source_bindings import (
-        CompiledSourceBindingPlan, ComponentSelector, NamedSourceBinding,
-        SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceSelector,
+        CompiledSourceBindingPlan,
+        ComponentSelector,
+        NamedSourceBinding,
+        SourceFileName,
+        SourceFilterClause,
+        SourceSelector,
+        TextContains,
     )
     from openhcs.core.source_matching import SourceImageSetIdentityPolicy
     from openhcs.core.source_metadata import SourceFilterPathMetadata
@@ -656,7 +661,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
     bindings = CompiledSourceBindingPlan(bindings=(NamedSourceBinding(
         alias="OrigStain1",
         selector=SourceSelector(filters=(SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "N_R",
+            SourceFileName, TextContains, "N_R",
         ),)),
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     ),))
@@ -670,7 +675,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
     assert tuple(record.component_values["site"] for record in selected) == (1, 2)
     wrong_binding = replace(bindings, bindings=(replace(
         bindings.bindings[0], selector=SourceSelector(filters=(SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "absent",
+            SourceFileName, TextContains, "absent",
         ),)),
     ),))
     assert index.source_binding_members(

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from abc import ABC
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import ClassVar
 
+from metaclass_registry import AutoRegisterMeta
 from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
 
@@ -26,43 +27,55 @@ from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pip
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
 
-class CellProfilerPipelineStage(Enum):
-    """Tutorial-stage semantics encoded in CellProfiler pipeline filenames."""
+class CellProfilerPipelineStage(ABC, metaclass=AutoRegisterMeta):
+    """Tutorial stage a CellProfiler pipeline filename declares.
 
-    START = 0
-    FINAL = 1
-    UNLABELED = 2
+    Each stage is a subclass; registration order is the order pipelines of a
+    folder are listed in.
+    """
 
-    @classmethod
-    def from_path(cls, cppipe_path: Path) -> "CellProfilerPipelineStage":
-        tokens = tuple(
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[CellProfilerPipelineStage]]] = {}
+
+    name: ClassVar[str | None] = None
+    filename_token: ClassVar[str | None] = None
+    """Filename token naming this stage; ``None`` for the unlabelled stage."""
+    chosen_when_unique: ClassVar[bool] = False
+    """A folder's only pipeline of this stage is its default pipeline."""
+
+    @staticmethod
+    def of(cppipe_path: Path) -> type[CellProfilerPipelineStage]:
+        tokens = {
             token.casefold()
-            for token in (
-                cppipe_path.stem.replace("-", "_").replace(" ", "_").split("_")
-            )
+            for token in cppipe_path.stem.replace("-", "_").replace(" ", "_").split("_")
             if token
+        }
+        stages = tuple(CellProfilerPipelineStage.__registry__.values())
+        return next(
+            (stage for stage in stages if stage.filename_token in tokens),
+            UnlabeledCellProfilerPipeline,
         )
-        if "start" in tokens:
-            return cls.START
-        if "final" in tokens:
-            return cls.FINAL
-        return cls.UNLABELED
-
-
-class CellProfilerPipelineFileKind(Enum):
-    """Nominal file categories considered during `.cppipe` discovery."""
-
-    PIPELINE = "pipeline"
-    APPLEDOUBLE_SIDECAR = "appledouble_sidecar"
-    OTHER = "other"
 
     @classmethod
-    def from_path(cls, path: Path) -> "CellProfilerPipelineFileKind":
-        if path.suffix != ".cppipe":
-            return cls.OTHER
-        if AppleDoubleResourceForkFilename.matches(path.name):
-            return cls.APPLEDOUBLE_SIDECAR
-        return cls.PIPELINE
+    def rank(cls) -> int:
+        return tuple(CellProfilerPipelineStage.__registry__.values()).index(cls)
+
+
+class StartCellProfilerPipeline(CellProfilerPipelineStage):
+    name = "start"
+    filename_token = "start"
+
+
+class FinalCellProfilerPipeline(CellProfilerPipelineStage):
+    name = "final"
+    filename_token = "final"
+    chosen_when_unique = True
+
+
+class UnlabeledCellProfilerPipeline(CellProfilerPipelineStage):
+    name = "unlabeled"
+    chosen_when_unique = True
 
 
 class AppleDoubleResourceForkFilename:
@@ -80,24 +93,24 @@ class CellProfilerPipelineFile:
     """Visible `.cppipe` file with ordering semantics for one source folder."""
 
     path: Path
-    stage: CellProfilerPipelineStage
+    stage: type[CellProfilerPipelineStage]
 
     @classmethod
     def from_path(cls, cppipe_path: Path) -> "CellProfilerPipelineFile":
         return cls(
             path=cppipe_path,
-            stage=CellProfilerPipelineStage.from_path(cppipe_path),
+            stage=CellProfilerPipelineStage.of(cppipe_path),
         )
 
     @property
     def sort_key(self) -> tuple[int, str]:
-        return (self.stage.value, self.path.name.casefold())
+        return (self.stage.rank(), self.path.name.casefold())
 
     @staticmethod
     def is_visible_cppipe(cppipe_path: Path) -> bool:
-        return (
-            CellProfilerPipelineFileKind.from_path(cppipe_path)
-            is CellProfilerPipelineFileKind.PIPELINE
+        """A ``.cppipe`` file that is not a macOS AppleDouble sidecar."""
+        return cppipe_path.suffix == ".cppipe" and not (
+            AppleDoubleResourceForkFilename.matches(cppipe_path.name)
         )
 
 
@@ -188,23 +201,18 @@ class CellProfilerPlateWorkspacePreparer:
         if same_named_cppipe in candidates:
             return same_named_cppipe
 
-        final_pipelines = tuple(
-            path
-            for path in candidates
-            if CellProfilerPipelineStage.from_path(path)
-            is CellProfilerPipelineStage.FINAL
-        )
-        if len(final_pipelines) == 1:
-            return final_pipelines[0]
-
-        unlabeled_pipelines = tuple(
-            path
-            for path in candidates
-            if CellProfilerPipelineStage.from_path(path)
-            is CellProfilerPipelineStage.UNLABELED
-        )
-        if len(unlabeled_pipelines) == 1:
-            return unlabeled_pipelines[0]
+        for stage in (
+            stage
+            for stage in CellProfilerPipelineStage.__registry__.values()
+            if stage.chosen_when_unique
+        ):
+            staged = tuple(
+                path
+                for path in candidates
+                if CellProfilerPipelineStage.of(path) is stage
+            )
+            if len(staged) == 1:
+                return staged[0]
 
         return candidates[0]
 

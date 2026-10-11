@@ -99,7 +99,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowNavigateResult,
     UiWindowOperationRequest,
     UiWindowSemanticCarrier,
-    UiWindowSemanticMarker,
     UiWindowSnapshotRequest,
     UiWindowSnapshotResult,
     UiWindowSummary,
@@ -371,7 +370,7 @@ class WindowCatalogProjectionABC(
         error_dialogs = tuple(
             window
             for window in windows
-            if UiWindowSemanticMarker.ERROR_DIALOG.value in window.semantic_markers
+            if window.error_dialog
         )
         return (
             UiLiveOverviewSection(
@@ -401,9 +400,7 @@ class WindowCatalogProjectionABC(
 
     @staticmethod
     def _overview_window_item(window: UiWindowSummary) -> UiLiveOverviewItem:
-        is_error_dialog = (
-            UiWindowSemanticMarker.ERROR_DIALOG.value in window.semantic_markers
-        )
+        is_error_dialog = window.error_dialog
         return UiLiveOverviewItem(
             label=window.title,
             status=window.window_kind,
@@ -1188,7 +1185,7 @@ class QtTopLevelWindowProjection(
             visible=widget.isVisible(),
             focusable=True,
             manager_scope=None,
-            semantic_markers=self._semantic_markers(widget),
+            error_dialog=self._is_error_dialog(widget),
         )
 
     def _projected_top_level_widgets(self) -> tuple[QWidget, ...]:
@@ -1230,13 +1227,11 @@ class QtTopLevelWindowProjection(
         return type(widget).__name__
 
     @staticmethod
-    def _semantic_markers(widget: QWidget) -> tuple[str, ...]:
-        if (
+    def _is_error_dialog(widget: QWidget) -> bool:
+        return (
             isinstance(widget, QMessageBox)
             and widget.icon() is QMessageBox.Icon.Critical
-        ):
-            return (UiWindowSemanticMarker.ERROR_DIALOG.value,)
-        return ()
+        )
 
 
 class UiWindowSnapshotResultFactory:

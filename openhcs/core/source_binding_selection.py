@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -22,7 +21,10 @@ from openhcs.core.source_bindings import (
     PairByMetadata,
     PairByOrder,
     SourceSetPairing,
-    SourceSetRole,
+    FromPipelineStart,
+    FromStepInput,
+    MatchedSource,
+    SourceBindingOrigin,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -536,7 +538,7 @@ class SourceBindingCandidateMatcher:
         return tuple(
             binding
             for binding in resolvable_bindings
-            if binding.source_set_role is SourceSetRole.MATCHED
+            if binding.source_set_role is MatchedSource
         )
 
     @staticmethod
@@ -600,19 +602,11 @@ class SourceBindingCandidateMatcher:
         )
 
 
-class SourceAnchorSelectionStatus(str, Enum):
-    """Outcome of source-bound execution-anchor resolution."""
-
-    SELECTED = "selected"
-    DEFERRED_TO_RUNTIME = "deferred_to_runtime"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceAnchorPatternSelection:
     """Resolved source-compatible anchors plus the authority that owns them."""
 
     patterns: tuple[SourceCandidatePath, ...]
-    status: SourceAnchorSelectionStatus
     reason: str
 
     @classmethod
@@ -622,11 +616,7 @@ class SourceAnchorPatternSelection:
         *,
         reason: str = "source selectors resolved at anchor boundary",
     ) -> "SourceAnchorPatternSelection":
-        return cls(
-            patterns=tuple(patterns),
-            status=SourceAnchorSelectionStatus.SELECTED,
-            reason=reason,
-        )
+        return cls(patterns=tuple(patterns), reason=reason)
 
     @classmethod
     def deferred_to_runtime(
@@ -635,15 +625,7 @@ class SourceAnchorPatternSelection:
         *,
         reason: str,
     ) -> "SourceAnchorPatternSelection":
-        return cls(
-            patterns=tuple(patterns),
-            status=SourceAnchorSelectionStatus.DEFERRED_TO_RUNTIME,
-            reason=reason,
-        )
-
-    @property
-    def owns_runtime_resolution(self) -> bool:
-        return self.status is SourceAnchorSelectionStatus.DEFERRED_TO_RUNTIME
+        return cls(patterns=tuple(patterns), reason=reason)
 
 
 @dataclass(frozen=True, slots=True)
@@ -661,19 +643,12 @@ class SourceWorkspaceAnchorNarrowing:
         )
 
 
-class SourceBindingMatchResolutionStatus(str, Enum):
-    """Outcome of matching one anchor pattern to source-binding aliases."""
-
-    MATCHED = "matched"
-    DEFERRED_TO_RUNTIME = "deferred_to_runtime"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceBindingMatchResolution:
     """Alias match result for one source-bound anchor pattern."""
 
-    status: SourceBindingMatchResolutionStatus
     binding: NamedSourceBinding | None
+    """The one matching binding; none when resolution is deferred to runtime."""
     reason: str
 
     @classmethod
@@ -682,7 +657,6 @@ class SourceBindingMatchResolution:
         binding: NamedSourceBinding,
     ) -> "SourceBindingMatchResolution":
         return cls(
-            status=SourceBindingMatchResolutionStatus.MATCHED,
             binding=binding,
             reason="exactly one selector binding matched the anchor",
         )
@@ -694,7 +668,6 @@ class SourceBindingMatchResolution:
         reason: str,
     ) -> "SourceBindingMatchResolution":
         return cls(
-            status=SourceBindingMatchResolutionStatus.DEFERRED_TO_RUNTIME,
             binding=None,
             reason=reason,
         )
@@ -708,7 +681,7 @@ class SourceBindingMatchResolution:
 
     @property
     def owns_runtime_resolution(self) -> bool:
-        return self.status is SourceBindingMatchResolutionStatus.DEFERRED_TO_RUNTIME
+        return self.binding is None
 
 
 class SourceBoundAnchorPatternPolicy(
@@ -1157,7 +1130,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         return tuple(
             binding
             for binding in self.bindings
-            if binding.source_set_role is SourceSetRole.MATCHED
+            if binding.source_set_role is MatchedSource
         )
 
     @classmethod
@@ -1604,10 +1577,11 @@ class SourceUniverseRuntimeState:
 class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     """Plan-artifact request for source-binding runtime universe resolution."""
 
-    __registry_key__ = "universe_request_kind"
+    __registry_key__ = "origin"
     __skip_if_no_key__ = True
 
-    universe_request_kind: ClassVar[str | None] = None
+    origin: ClassVar[type[SourceBindingOrigin] | None] = None
+    """The binding origin whose source universe this request resolves."""
     context: "ProcessingContext"
     plan: "CompiledStepPlan"
     matching_files: tuple[str, ...]
@@ -1760,7 +1734,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def for_binding(cls, binding: NamedSourceBinding) -> type[SourceUniverseRequest]:
         """Select the already registered owner of a binding's origin."""
-        return cls.__registry__[binding.origin.value]
+        return cls.__registry__[binding.origin]
 
     def runtime_universe_state(self) -> SourceUniverseRuntimeState:
         """Return cached source-universe state for this request."""
@@ -1906,7 +1880,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 class StepInputSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the current step input."""
 
-    universe_request_kind = "step_input"
+    origin = FromStepInput
 
     @classmethod
     def source_artifact_payload(
@@ -1941,7 +1915,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the pipeline start."""
 
-    universe_request_kind = "pipeline_start"
+    origin = FromPipelineStart
 
     def contribute_runtime_state(
         self,

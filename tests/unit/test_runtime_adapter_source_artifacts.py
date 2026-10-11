@@ -20,11 +20,12 @@ from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjecto
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     PairByOrder,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageIdentity
@@ -75,7 +76,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         source_path: Path,
         *,
         artifact_kind=ImageArtifactType,
-        projection_role=SourceProjectionRole.PRIMARY_PLANE,
+        projection_role=PrimaryPlaneRole,
     ) -> NamedSourceBinding:
         return NamedSourceBinding(
             alias=alias,
@@ -84,8 +85,8 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             selector=SourceSelector(
                 filters=(
                     SourceFilterClause(
-                        SourceFilterSubject.FILE,
-                        SourceFilterMatchType.EQUALS,
+                        SourceFileName,
+                        TextEquals,
                         source_path.name,
                     ),
                 )
@@ -96,13 +97,13 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     illumination_binding = binding(
         "Illumination",
         illumination_path,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
     labels_binding = binding(
         "Labels",
         labels_path,
         artifact_kind=ObjectLabelsArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
     source_bindings = SourceBindingsConfig(
         bindings=(

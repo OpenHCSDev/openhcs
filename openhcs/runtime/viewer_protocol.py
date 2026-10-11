@@ -35,6 +35,7 @@ from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (
+    WireView,
     ControlRequestHeader,
     ControlMessageType,
     EndpointApplicationCompatibility,
@@ -120,36 +121,58 @@ _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
 
 
-class ViewerSettlePhase(str, Enum):
-    """Lifecycle phase for incremental viewer settlement."""
+class ViewerSettlePhase(ABC, metaclass=AutoRegisterMeta):
+    """Where one viewer's incremental settlement stands.
 
-    RUNNING = "running"
-    COMPLETE = "complete"
-    FAILED = "failed"
+    Each phase is a subclass; ``name`` is its wire spelling.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[ViewerSettlePhase]]] = {}
+
+    name: ClassVar[str | None] = None
+    running: ClassVar[bool] = False
+    """Display work is still queued or active."""
+    settled: ClassVar[bool] = False
+    """Every queued update is displayed."""
+    failed: ClassVar[bool] = False
+    """Display work failed; settlement will not complete."""
+    idle_completion_percent: ClassVar[float] = 0.0
+    """Completion reported when there were no updates to settle."""
+
+    @classmethod
+    def validate(cls, progress: "ViewerSettleProgress") -> None:
+        """Reject progress this phase cannot report."""
 
 
-class ViewerSettleField(str, Enum):
-    """Wire fields owned by viewer-settlement progress replies."""
-
-    PHASE = "settle_phase"
-    COMPLETED_UPDATE_COUNT = "completed_update_count"
-    TOTAL_UPDATE_COUNT = "total_update_count"
-    ACTIVE_ROUTE = "active_route"
-    ACTIVE_ROUTE_WORK_UNIT_COUNT = "active_route_work_unit_count"
-    ACTIVE_ROUTE_WORK_UNIT_ACTIVE = "active_route_work_unit_active"
-    PROCESSED_INTAKE_ITEM_COUNT = "processed_intake_item_count"
-    INTAKE_ITEM_ACTIVE = "intake_item_active"
+class SettlementRunning(ViewerSettlePhase):
+    name = "running"
+    running = True
 
 
-class ViewerPayloadSummaryField(str, Enum):
-    """Viewer payload-summary response fields."""
+class SettlementComplete(ViewerSettlePhase):
+    name = "complete"
+    settled = True
+    idle_completion_percent = 100.0
 
-    SHAPE = "shape"
-    NONZERO_COUNT = "nonzero_count"
-    NONZERO_MIN_COORDINATE = "nonzero_min_coordinate"
-    NONZERO_MAX_COORDINATE = "nonzero_max_coordinate"
-    NONZERO_EXAMPLE_COORDINATES = "nonzero_example_coordinates"
-    NONZERO_COORDINATE_OMISSION_REASON = "nonzero_coordinate_omission_reason"
+    @classmethod
+    def validate(cls, progress: "ViewerSettleProgress") -> None:
+        if progress.intake_item_active:
+            raise ValueError("Completed settlement cannot have active intake.")
+        if (
+            progress.completed_update_count != progress.total_update_count
+            or progress.routing
+        ):
+            raise ValueError(
+                "Completed viewer settlement must have no active route and all "
+                "updates completed."
+            )
+
+
+class SettlementFailed(ViewerSettlePhase):
+    name = "failed"
+    failed = True
 
 
 class ViewerFieldAbsent:
@@ -661,10 +684,13 @@ class ViewerControlResponse:
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerSettleProgress:
-    """Typed progress for one viewer's incremental settlement cycle."""
+class ViewerSettleProgress(WireView):
+    """Typed progress for one viewer's incremental settlement cycle.
 
-    phase: ViewerSettlePhase
+    It travels as declared fields beside the control reply's header.
+    """
+
+    phase: type[ViewerSettlePhase]
     completed_update_count: int
     total_update_count: int
     active_route: str | None = None
@@ -672,6 +698,11 @@ class ViewerSettleProgress:
     active_route_work_unit_active: bool = False
     processed_intake_item_count: int = 0
     intake_item_active: bool = False
+
+    @property
+    def routing(self) -> bool:
+        """An update is being routed to a layer."""
+        return self.active_route is not None
 
     def __post_init__(self) -> None:
         if (
@@ -681,8 +712,6 @@ class ViewerSettleProgress:
             raise ValueError("Viewer processed intake count must be non-negative.")
         if type(self.intake_item_active) is not bool:
             raise TypeError("Viewer intake activity must be boolean.")
-        if self.phase is ViewerSettlePhase.COMPLETE and self.intake_item_active:
-            raise ValueError("Completed settlement cannot have active intake.")
         if (
             type(self.completed_update_count) is not int
             or type(self.total_update_count) is not int
@@ -692,14 +721,6 @@ class ViewerSettleProgress:
         ):
             raise ValueError(
                 "Viewer settle progress counts must satisfy 0 <= completed <= total."
-            )
-        if self.phase is ViewerSettlePhase.COMPLETE and (
-            self.completed_update_count != self.total_update_count
-            or self.active_route is not None
-        ):
-            raise ValueError(
-                "Completed viewer settlement must have no active route and all "
-                "updates completed."
             )
         if self.active_route is not None and not isinstance(self.active_route, str):
             raise TypeError("Viewer settle active_route must be a string or None.")
@@ -720,13 +741,14 @@ class ViewerSettleProgress:
             raise ValueError(
                 "Viewer settle active work-unit state requires an active route."
             )
+        self.phase.validate(self)
 
     @classmethod
     def complete(cls, total_update_count: int = 0) -> "ViewerSettleProgress":
         """Return terminal successful settlement progress."""
 
         return cls(
-            phase=ViewerSettlePhase.COMPLETE,
+            phase=SettlementComplete,
             completed_update_count=total_update_count,
             total_update_count=total_update_count,
         )
@@ -751,60 +773,7 @@ class ViewerSettleProgress:
     def completion_percent(self) -> float:
         if self.total_update_count:
             return 100.0 * self.completed_update_count / self.total_update_count
-        return 100.0 if self.phase is ViewerSettlePhase.COMPLETE else 0.0
-
-    @classmethod
-    def from_response(
-        cls,
-        response: ViewerControlResponse,
-    ) -> "ViewerSettleProgress":
-        """Parse exact settlement progress from a control response."""
-
-        payload = response.payload
-        active_route_value = payload[ViewerSettleField.ACTIVE_ROUTE.value]
-        active_work_unit_value = payload[
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_ACTIVE.value
-        ]
-        if type(active_work_unit_value) is not bool:
-            raise TypeError("Viewer settle active work-unit state must be boolean.")
-        return cls(
-            phase=ViewerSettlePhase(str(payload[ViewerSettleField.PHASE.value])),
-            completed_update_count=int(
-                payload[ViewerSettleField.COMPLETED_UPDATE_COUNT.value]
-            ),
-            total_update_count=int(payload[ViewerSettleField.TOTAL_UPDATE_COUNT.value]),
-            active_route=(
-                None if active_route_value is None else str(active_route_value)
-            ),
-            active_route_work_unit_count=int(
-                payload[ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value]
-            ),
-            active_route_work_unit_active=active_work_unit_value,
-            processed_intake_item_count=cast(int, payload[
-                ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value
-            ]),
-            intake_item_active=payload[ViewerSettleField.INTAKE_ITEM_ACTIVE.value],
-        )
-
-    def to_wire_mapping(self) -> dict[str, object]:
-        """Return exact fields for a viewer control reply."""
-
-        return {
-            ViewerSettleField.PHASE.value: self.phase.value,
-            ViewerSettleField.COMPLETED_UPDATE_COUNT.value: (
-                self.completed_update_count
-            ),
-            ViewerSettleField.TOTAL_UPDATE_COUNT.value: self.total_update_count,
-            ViewerSettleField.ACTIVE_ROUTE.value: self.active_route,
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value: (
-                self.active_route_work_unit_count
-            ),
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_ACTIVE.value: (
-                self.active_route_work_unit_active
-            ),
-            ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value: self.processed_intake_item_count,
-            ViewerSettleField.INTAKE_ITEM_ACTIVE.value: self.intake_item_active,
-        }
+        return self.phase.idle_completion_percent
 
 
 class ViewerComponentValueOrdering:
@@ -947,19 +916,32 @@ class ViewerProcessPlatform(Enum):
         )
 
 
-class ViewerLaunchContextMode(Enum):
-    """Provenance and availability of one detached viewer launch session."""
+class ViewerLaunchSession(ABC):
+    """Where a detached viewer's graphical session comes from; each source is a subclass."""
 
-    INHERITED_GRAPHICAL_SESSION = "inherited_graphical_session"
-    PROJECTED_GRAPHICAL_SESSION = "projected_graphical_session"
-    HEADLESS = "headless"
+    graphical: ClassVar[bool] = True
+    """A graphical session is available to the child process."""
+
+
+class InheritedGraphicalSession(ViewerLaunchSession):
+    """The launching process already owns a GUI session."""
+
+
+class ProjectedGraphicalSession(ViewerLaunchSession):
+    """A graphical environment validated by its owner is carried to the child."""
+
+
+class HeadlessSession(ViewerLaunchSession):
+    """No graphical session is available."""
+
+    graphical = False
 
 
 @dataclass(frozen=True, slots=True)
 class ViewerLaunchContext:
     """Typed graphical-session context consumed by detached viewer launch."""
 
-    mode: ViewerLaunchContextMode
+    session: type[ViewerLaunchSession]
     environment_overlay: Mapping[str, str] = field(default_factory=dict)
     environment_unset_keys: tuple[str, ...] = ()
 
@@ -978,7 +960,7 @@ class ViewerLaunchContext:
     @classmethod
     def inherited_graphical_session(cls) -> "ViewerLaunchContext":
         """Declare that the launching process already owns a GUI session."""
-        return cls(ViewerLaunchContextMode.INHERITED_GRAPHICAL_SESSION)
+        return cls(InheritedGraphicalSession)
 
     @classmethod
     def projected_graphical_session(
@@ -994,7 +976,7 @@ class ViewerLaunchContext:
             environment_overlay.pop("QT_QPA_PLATFORM")
             environment_unset_keys = ("QT_QPA_PLATFORM",)
         return cls(
-            ViewerLaunchContextMode.PROJECTED_GRAPHICAL_SESSION,
+            ProjectedGraphicalSession,
             environment_overlay,
             environment_unset_keys,
         )
@@ -1002,11 +984,11 @@ class ViewerLaunchContext:
     @classmethod
     def headless(cls) -> "ViewerLaunchContext":
         """Declare that no authoritative graphical session is available."""
-        return cls(ViewerLaunchContextMode.HEADLESS)
+        return cls(HeadlessSession)
 
     @property
     def graphical_session_available(self) -> bool:
-        return self.mode is not ViewerLaunchContextMode.HEADLESS
+        return self.session.graphical
 
     def child_environment(
         self,
@@ -1032,15 +1014,6 @@ class ViewerGraphicalSessionUnavailableError(RuntimeError):
             f"Cannot launch detached {self.viewer_family.display_name} viewer on port "
             f"{self.port}: no authoritative graphical session is available."
         )
-
-
-class NapariLayerKind(Enum):
-    """Napari layer creation families used by streaming display."""
-
-    IMAGE = "image"
-    SHAPES = "shapes"
-    POINTS = "points"
-    LABELS = "labels"
 
 
 class FijiPayloadKind(Enum):
@@ -1584,44 +1557,93 @@ class ViewerControlPingMode(Enum):
         )
 
 
-class ViewerLifecycleMode(Enum):
-    """Runtime ownership state for a managed viewer."""
+class ViewerLifecycle(ABC):
+    """Who holds a managed viewer right now; each holder is a subclass."""
 
-    STOPPED = "stopped"
-    CONNECTED_EXTERNAL = "connected_external"
-    OWNED_PROCESS = "owned_process"
-
-
-@dataclass(slots=True)
-class ViewerLifecycleState:
-    """Nominal lifecycle state for viewer process managers."""
-
-    mode: ViewerLifecycleMode = ViewerLifecycleMode.STOPPED
+    active: ClassVar[bool] = True
+    """A viewer is expected to answer on the port."""
+    owns_process: ClassVar[bool] = False
+    """This manager launched the viewer process and must stop it."""
 
     @classmethod
-    def stopped(cls) -> "ViewerLifecycleState":
-        return cls()
+    @abstractmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        """Whether the viewer still runs; stops the viewer when it does not."""
 
-    @property
-    def is_active(self) -> bool:
-        return self.mode is not ViewerLifecycleMode.STOPPED
+    @classmethod
+    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+        """Discard only resources owned by an incomplete bootstrap attempt."""
 
-    @property
-    def is_connected_external(self) -> bool:
-        return self.mode is ViewerLifecycleMode.CONNECTED_EXTERNAL
+        from zmqruntime import ViewerStateManager
 
-    @property
-    def is_owned_process(self) -> bool:
-        return self.mode is ViewerLifecycleMode.OWNED_PROCESS
+        manager = ViewerStateManager.get_instance()
+        port = viewer.required_port
+        if manager.get_viewer(viewer.viewer_family.wire_value, port) is viewer:
+            manager.release_viewer(
+                viewer.viewer_family.wire_value, port, stop=True, force=True,
+            )
+            return
+        if cls.owns_process or viewer.has_process:
+            viewer.force_stop()
+            return
+        viewer.lifecycle = ViewerStopped
 
-    def mark_connected_external(self) -> None:
-        self.mode = ViewerLifecycleMode.CONNECTED_EXTERNAL
 
-    def mark_owned_process(self) -> None:
-        self.mode = ViewerLifecycleMode.OWNED_PROCESS
+class ViewerStopped(ViewerLifecycle):
+    active = False
 
-    def mark_stopped(self) -> None:
-        self.mode = ViewerLifecycleMode.STOPPED
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        return False
+
+
+class ViewerConnectedExternal(ViewerLifecycle):
+    """Connected to a viewer some other process launched."""
+
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        if viewer.check_connected_viewer():
+            return True
+        logging.getLogger(type(viewer).__module__).debug(
+            "%s viewer on port %s is no longer responsive",
+            viewer.viewer_process_label,
+            viewer.port,
+        )
+        viewer.lifecycle = ViewerStopped
+        return False
+
+    @classmethod
+    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+        viewer.cleanup_viewer_client()
+        viewer.lifecycle = ViewerStopped
+
+
+class ViewerOwnedProcess(ViewerLifecycle):
+    """Running a viewer process this manager launched."""
+
+    owns_process = True
+
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        log = logging.getLogger(type(viewer).__module__)
+        try:
+            alive = viewer.process_alive()
+        except Exception as error:
+            log.warning(
+                "Error checking %s process status: %s",
+                viewer.viewer_process_label,
+                error,
+            )
+            viewer.lifecycle = ViewerStopped
+            return False
+        if not alive:
+            log.debug(
+                "%s process on port %s is no longer alive",
+                viewer.viewer_process_label,
+                viewer.port,
+            )
+            viewer.lifecycle = ViewerStopped
+        return alive
 
 
 @dataclass(frozen=True, slots=True)
@@ -1755,7 +1777,7 @@ class ManagedViewerLifecycleMixin(
     __key_extractor__ = staticmethod(viewer_lifecycle_registry_key)
     __skip_if_no_key__ = True
 
-    __registry__: ClassVar[dict[str, type["ManagedViewerLifecycleMixin"]]]
+    __registry__: ClassVar[dict[str, type[ManagedViewerLifecycleMixin]]]
     viewer_registry_key: ClassVar[str | None] = None
     viewer_process_label: ClassVar[str] = "viewer"
     detached_server_entrypoint: ClassVar[DetachedViewerServerEntrypointSpec]
@@ -1781,7 +1803,18 @@ class ManagedViewerLifecycleMixin(
             transport=runtime_config.transport_endpoint,
             config=runtime_config.transport_config,
         )
-        self.lifecycle_state: ViewerLifecycleState = ViewerLifecycleState.stopped()
+        self.lifecycle: type[ViewerLifecycle] = ViewerStopped
+
+    @property
+    def has_process(self) -> bool:
+        """This manager holds a launched viewer process."""
+        return self.process is not None
+
+    def process_alive(self) -> bool:
+        """Whether this manager's launched viewer process is still alive."""
+        if self.process is None:
+            return False
+        return endpoint_process(self.process).is_alive()
 
     @property
     def required_port(self) -> int:
@@ -1827,7 +1860,7 @@ class ManagedViewerLifecycleMixin(
         with self._lock:
             port = self.required_port
             self.prepare_fresh_viewer_start()
-            if self.lifecycle_state.is_active:
+            if self.lifecycle.active:
                 logger.warning("%s viewer is already running.", self.viewer_process_label)
                 return
             logger.info(
@@ -1838,7 +1871,7 @@ class ManagedViewerLifecycleMixin(
             )
             self.process = self.launch_detached_viewer()
             if self.owned_viewer_process_is_alive():
-                self.lifecycle_state.mark_owned_process()
+                self.lifecycle = ViewerOwnedProcess
                 logger.info(
                     "🔬 VISUALIZER: %s viewer process started (PID: %s)",
                     self.viewer_process_label,
@@ -1869,7 +1902,7 @@ class ManagedViewerLifecycleMixin(
                     "🔬 VISUALIZER: Force killing %s viewer process",
                     self.viewer_process_label,
                 )
-            self.lifecycle_state.mark_stopped()
+            self.lifecycle = ViewerStopped
 
     def stop(self, timeout: float = 5.0) -> None:
         self.stop_viewer()
@@ -2074,37 +2107,12 @@ class ManagedViewerLifecycleMixin(
                         self.viewer_process_label,
                     )
             self.runtime_endpoint.force_release_addresses()
-            self.lifecycle_state.mark_stopped()
+            self.lifecycle = ViewerStopped
 
     def rollback_failed_bootstrap(self) -> None:
         """Discard only resources owned by an incomplete bootstrap attempt."""
 
-        lifecycle_state = self.lifecycle_state
-        if lifecycle_state.is_connected_external:
-            self.cleanup_viewer_client()
-            lifecycle_state.mark_stopped()
-            return
-
-        from zmqruntime import ViewerStateManager
-
-        manager = ViewerStateManager.get_instance()
-        managed_viewer = manager.get_viewer(
-            self.viewer_family.wire_value,
-            self.required_port,
-        )
-        if managed_viewer is self:
-            manager.release_viewer(
-                self.viewer_family.wire_value,
-                self.required_port,
-                stop=True,
-                force=True,
-            )
-            return
-
-        if lifecycle_state.is_owned_process or self.process is not None:
-            self.force_stop()
-            return
-        lifecycle_state.mark_stopped()
+        self.lifecycle.rollback_failed_bootstrap(self)
 
     def start(self, detached: bool = True) -> subprocess.Popen[bytes]:
         self.start_viewer_now()
@@ -2185,7 +2193,7 @@ class ManagedViewerLifecycleMixin(
                     message_type=ViewerControlMessageType.SETTLE.value,
                     timeout=timeout,
                 ).send()
-                progress = ViewerSettleProgress.from_response(response)
+                progress = ViewerSettleProgress.from_dict(response.payload)
                 if progress_callback is not None:
                     progress_callback(progress)
             except Exception as error:
@@ -2196,14 +2204,14 @@ class ManagedViewerLifecycleMixin(
                 )
                 return False
 
-            if not response.succeeded() or progress.phase is ViewerSettlePhase.FAILED:
+            if not response.succeeded() or progress.phase.failed:
                 logger.warning(
                     "%s viewer settlement failed: %s",
                     self.viewer_process_label,
                     response.payload,
                 )
                 return False
-            if progress.phase is ViewerSettlePhase.COMPLETE:
+            if progress.phase.settled:
                 logger.info(
                     "%s viewer settled %d/%d layer updates",
                     self.viewer_process_label,
@@ -2265,43 +2273,7 @@ class ManagedViewerLifecycleMixin(
 
     @property
     def is_running(self) -> bool:
-        lifecycle_state = self.lifecycle_state
-        if not lifecycle_state.is_active:
-            return False
-
-        if lifecycle_state.is_connected_external:
-            if not self.check_connected_viewer():
-                logging.getLogger(self.__class__.__module__).debug(
-                    "%s viewer on port %s is no longer responsive",
-                    self.viewer_process_label,
-                    self.port,
-                )
-                lifecycle_state.mark_stopped()
-                return False
-            return True
-
-        if self.process is None:
-            lifecycle_state.mark_stopped()
-            return False
-
-        try:
-            alive = endpoint_process(self.process).is_alive()
-            if not alive:
-                logging.getLogger(self.__class__.__module__).debug(
-                    "%s process on port %s is no longer alive",
-                    self.viewer_process_label,
-                    self.port,
-                )
-                lifecycle_state.mark_stopped()
-            return alive
-        except Exception as error:
-            logging.getLogger(self.__class__.__module__).warning(
-                "Error checking %s process status: %s",
-                self.viewer_process_label,
-                error,
-            )
-            lifecycle_state.mark_stopped()
-            return False
+        return self.lifecycle.is_running(self)
 
 
 @dataclass(frozen=True, slots=True)

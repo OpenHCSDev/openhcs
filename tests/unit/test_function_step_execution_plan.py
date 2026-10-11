@@ -38,10 +38,7 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import (
-    StepInputDependency,
-    StepInputDependencyKind,
-)
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )
@@ -74,7 +71,7 @@ def _compiled_plan(**overrides):
         output_dir=Path("/tmp/output"),
         variable_components=(Microscopy.Site,),
         group_by=None,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="plate::functionstep_1",
         ),
@@ -133,7 +130,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert plan.step_scope_id == "plate::functionstep_2"
     assert plan.execution_group_scope.keys == ("2",)
     assert plan.variable_components == (Microscopy.Site,)
-    assert plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
+    assert isinstance(plan.main_input_dependency, StepOutputInput)
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
     assert plan.source_binding_plan == CompiledSourceBindingPlan()
     assert plan.device_id_for(plan.input_memory_type) is None

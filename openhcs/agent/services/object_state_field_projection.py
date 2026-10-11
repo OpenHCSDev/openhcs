@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import ClassVar
 
-from metaclass_registry import AutoRegisterMeta
 from python_introspect import JsonValue, project_dataclass
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiObjectStateFieldFilter,
+    SemanticFields,
     UiObjectStateFieldListQuery,
     UiObjectStateFieldListResult,
     UiObjectStateFieldPathIndex,
@@ -20,94 +17,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldSummary,
     UiObjectStateScopeCatalog,
 )
-
-
-class ObjectStateFieldFilterDeclaration(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic predicate for one agent-facing ObjectState filter."""
-
-    __registry_key__ = "field_filter"
-    __skip_if_no_key__ = True
-
-    field_filter: ClassVar[UiObjectStateFieldFilter | None] = None
-
-    @classmethod
-    @abstractmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        raise NotImplementedError
-
-    @classmethod
-    def declaration_for(
-        cls,
-        field_filter: UiObjectStateFieldFilter,
-    ) -> type["ObjectStateFieldFilterDeclaration"]:
-        try:
-            return cls.__registry__[field_filter]
-        except KeyError as exc:
-            raise ValueError(
-                f"Unsupported ObjectState field filter: {field_filter.value}"
-            ) from exc
-
-    @classmethod
-    def matches_filter(
-        cls,
-        field_filter: UiObjectStateFieldFilter,
-        field: UiObjectStateFieldSummary,
-    ) -> bool:
-        return cls.declaration_for(field_filter).matches(field)
-
-
-class AllObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.ALL
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        del field
-        return True
-
-
-class DirtyObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.DIRTY
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        return field.dirty
-
-
-class DefaultDiffObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.DEFAULT_DIFF
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        return field.signature_diff
-
-
-class InheritedObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.INHERITED
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        return field.inherited_value
-
-
-class RawResolvedObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.RAW_RESOLVED
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        return field.raw_value_is_none != field.resolved_value_is_none
-
-
-class SemanticObjectStateFieldFilter(ObjectStateFieldFilterDeclaration):
-    field_filter = UiObjectStateFieldFilter.SEMANTIC
-
-    @classmethod
-    def matches(cls, field: UiObjectStateFieldSummary) -> bool:
-        return (
-            field.dirty
-            or field.signature_diff
-            or field.inherited_value
-            or RawResolvedObjectStateFieldFilter.matches(field)
-        )
 
 
 class ObjectStateFieldListProjector:
@@ -152,17 +61,11 @@ class ObjectStateFieldListProjector:
                     and field_path in container_field_paths
                 ):
                     continue
-                if not query.include_clean_fields and not (
-                    ObjectStateFieldFilterDeclaration.matches_filter(
-                        UiObjectStateFieldFilter.SEMANTIC,
-                        field,
-                    )
+                if not query.include_clean_fields and not SemanticFields.matches(
+                    field
                 ):
                     continue
-                if not ObjectStateFieldFilterDeclaration.matches_filter(
-                    query.field_filter,
-                    field,
-                ):
+                if not query.field_filter.matches(field):
                     continue
                 matched_field_count += 1
                 if remaining_offset:
@@ -197,7 +100,7 @@ class ObjectStateFieldListProjector:
             requested_scope_ids=query.scope_ids,
             field_paths=query.field_paths,
             field_path_contains=query.field_path_contains,
-            field_filter=query.field_filter.value,
+            field_filter=query.field_filter,
             include_container_fields=query.include_container_fields,
             matched_scope_count=len(matched_scopes),
             matched_field_count=matched_field_count,

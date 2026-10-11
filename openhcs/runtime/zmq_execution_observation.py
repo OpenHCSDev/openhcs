@@ -10,6 +10,7 @@ from pathlib import Path
 
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import (
+    AxisSucceeded,
     ExecutionResult,
     RuntimeExecutionObservation,
     ExecutionStatus,
@@ -52,7 +53,7 @@ def _axis_membership_failures(
 class ZMQExecutionAxisOutcome:
     """Small per-axis result retained without worker runtime values."""
 
-    status: ExecutionStatus
+    status: type[ExecutionStatus]
     failed_combination: str | None = None
     error_message: str | None = None
 
@@ -130,7 +131,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     @property
     def successful_axis_count(self) -> int:
         return sum(
-            outcome.status is ExecutionStatus.SUCCESS
+            outcome.status.succeeded
             for outcome in self.outcomes_by_axis.values()
         )
 
@@ -140,9 +141,9 @@ class ZMQRuntimeExecutionOutcomeExport:
             self.outcomes_by_axis,
         )
         unsuccessful = {
-            axis_id: outcome.status.value
+            axis_id: outcome.status.name
             for axis_id, outcome in self.outcomes_by_axis.items()
-            if outcome.status is not ExecutionStatus.SUCCESS
+            if outcome.status is not AxisSucceeded
         }
         failures = list(membership_failures)
         if unsuccessful:

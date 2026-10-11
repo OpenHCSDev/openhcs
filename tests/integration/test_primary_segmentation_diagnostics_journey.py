@@ -112,7 +112,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CompileInspectionInput,
         InProcessCompileInspectionGateway,
     )
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
     from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
     from openhcs.core.config import (
@@ -121,17 +121,17 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         LazySourceBindingsConfig,
         PipelineConfig,
     )
-    from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+    from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_object_labels import object_label_dense_array
     from openhcs.core.source_bindings import (
         ComponentSelector,
         NamedSourceBinding,
+        SourceFileName,
         SourceFilterClause,
-        SourceFilterMatchType,
-        SourceFilterSubject,
         SourceSelector,
+        TextContains,
     )
     from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.source_image_provenance import SourceImageProvenance
@@ -175,7 +175,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Site],
                 group_by=Ungrouped,
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=StepSourceBindingsConfig(enabled=True),
         )
@@ -232,8 +232,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
                         selector=SourceSelector(
                             filters=(
                                 SourceFilterClause(
-                                    subject=SourceFilterSubject.FILE,
-                                    match_type=SourceFilterMatchType.CONTAINS,
+                                    subject=SourceFileName,
+                                    match_type=TextContains,
                                     value="DNA",
                                 ),
                             )
@@ -294,7 +294,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="primary-diagnostics-synthetic",

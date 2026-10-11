@@ -101,7 +101,8 @@ from openhcs.processing.materialization import (
     ImageFileOptions,
     JsonOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     PointROIOptions,
     ROIOptions,
     TiffStackOptions,
@@ -190,7 +191,7 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".labels.tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         payload,
@@ -264,7 +265,7 @@ def test_image_file_materialization_densifies_sparse_named_object_labels() -> No
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".labels.tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         payload,
@@ -536,7 +537,7 @@ def test_materialization_spec_candidate_paths_follow_registered_writers() -> Non
 def test_materialization_spec_declares_filename_identity() -> None:
     assert tiff_stack().uses_source_identity_filename()
     assert not tiff_stack(
-        TiffStackOptions(filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME)
+        TiffStackOptions(filename_identity=NameByArtifactName)
     ).uses_source_identity_filename()
 
 
@@ -576,7 +577,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
     )
     spec = MaterializationSpec(
         ImageFileOptions(
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
             relative_path_template="frame-{index:04d}.png",
         )
     )
@@ -2560,7 +2561,6 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     tmp_path, intrinsic
 ):
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.processing.materialization.options import MaterializedFilenameIdentity
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.image_file_serialization import TiffImageFileFormat
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -2610,7 +2610,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     manager = FileManager({"disk": DiskStorageBackend()})
     spec = MaterializationSpec(ImageFileOptions(
         filename_suffix=".tif",
-        filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+        filename_identity=NameBySourceIdentity,
     ))
     batch = prepare_materialization(
         spec,

@@ -66,7 +66,7 @@ from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     ROIOptions,
     SpatialGraphROIOptions,
     SWCOptions,
@@ -1076,7 +1076,7 @@ NEURITE_OBJECT_LABEL_MATERIALIZATION = MaterializationSpec(
     ROIOptions(),
     ImageFileOptions(
         filename_suffix=".labels.tif",
-        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+        filename_identity=NameByArtifactName,
     ),
 )
 

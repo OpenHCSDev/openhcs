@@ -94,5 +94,5 @@ def test_deleted_core_names_stay_absent_from_openhcs() -> None:
 
 def test_deleted_core_members_stay_absent() -> None:
     assert "step_type" not in {field.name for field in fields(CompiledStepPlan)}
-    assert "PENDING" not in ExecutionStatus.__members__
+    assert "pending" not in ExecutionStatus.__registry__
     assert not hasattr(function_contracts, "validate_artifact_input_parameter_bindings")

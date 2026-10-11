@@ -6,9 +6,10 @@ from openhcs.agent.dto.functions import (
     FunctionArtifactSpec,
     FunctionCatalogEntry,
     FunctionDetail,
-    FunctionParameterSource,
     FunctionParameterSpec,
     FunctionRuntimeContractSummary,
+    SuppliedFromArtifactInput,
+    SuppliedFromPrimaryInput,
 )
 from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldHelpRequest,
@@ -141,7 +142,7 @@ def test_object_state_field_help_describes_structured_callable_values():
                         annotation="ndarray",
                         default_repr=None,
                         required=False,
-                        supplied_by=FunctionParameterSource.PRIMARY_INPUT,
+                        supplied_by=SuppliedFromPrimaryInput,
                     ),
                     FunctionParameterSpec(
                         name="min_cell_area",
@@ -329,14 +330,14 @@ def test_object_state_field_help_describes_runtime_supplied_function_parameter()
                         annotation="ndarray",
                         default_repr=None,
                         required=False,
-                        supplied_by=FunctionParameterSource.PRIMARY_INPUT,
+                        supplied_by=SuppliedFromPrimaryInput,
                     ),
                     FunctionParameterSpec(
                         name="grid_dimensions",
                         annotation="tuple[int, int]",
                         default_repr=None,
                         required=False,
-                        supplied_by=FunctionParameterSource.ARTIFACT_INPUT,
+                        supplied_by=SuppliedFromArtifactInput,
                     ),
                     FunctionParameterSpec(
                         name="overlap_ratio",

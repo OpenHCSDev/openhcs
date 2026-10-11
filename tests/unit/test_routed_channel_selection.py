@@ -9,7 +9,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -90,9 +90,9 @@ def test_grouped_consumer_requires_its_channel_in_previous_main_flow(
             func=identity,
             processing_config=LazyProcessingConfig(
                 input_source=(
-                    InputSource.PIPELINE_START
+                    ReadPipelineStart
                     if restart_from_source
-                    else InputSource.PREVIOUS_STEP
+                    else ReadPreviousStep
                 )
             ),
         ),
