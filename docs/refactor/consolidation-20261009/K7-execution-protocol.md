@@ -27,7 +27,7 @@ Re-measured at this head. G7 replaced part of K7 (see Already done); the other t
 - **Phase types** (`core/context/processing_context.py`). `ProcessingContext` is the base (`require_axis_id`, `require_parameter_name`). `CompilingContext` is the only mutable phase; `freeze()` returns a `CompiledContext`, which rejects every attribute assignment and is what bundles, transport and workers carry. `CompiledContext.executing(lane)` starts one execution: `ExecutingContext` adds the runtime value store, the four runtime caches, the debug sink, the lane runtime, completed outputs and the per-step value scope, and still rejects assignment to compiled facts. A worker lane builds one per compiled context it executes; the parent builds one per compiled context per `execute_compiled_bundle` call, merges worker observations into it, runs dataset-scoped steps and post-execute hooks on it, and returns them as `BundleExecutionResults.executed_contexts` (the ZMQ observation export reads them there, not from the bundle). Deleted: `_is_frozen`, `is_frozen()`, the six compiler checks and the worker check, `bind_execution_runtime`, `reset_completed_step_outputs`, `inject_plan`, `visualizer_config` (always `None`) and the `core.context` re-export.
 - **One result family** (`core/orchestrator/execution_result.py`). `ExecutionResult` ABC with `ExecutionSucceeded`, and `ExecutionStopped` (owns `error_message`, `failed_combination`, `progress_phase`, `progress_status`, `at_combination`) with `ExecutionFailed` and `ExecutionCancelled` (`stops_lane`). Deleted: `ExecutionStatus`, `is_error`, `is_cancelled`, the three constructors, and `ZMQExecutionAxisOutcome` (the outcome export stores `result.without_runtime_observation()`; schema version 5). `RuntimeObservationMode` is a family: `OmitRuntimeRecords`, `MergeAllRuntimeRecords`, `MergeDatasetInputRecords` (E1's names), each owning `retain_records`.
 
-Production (Python under `openhcs/`): see the PR status line. The net is small because three families replace three encodings one for one; the deletions are the predicates, re-packs and checks, the additions are the variant classes.
+Production (Python under `openhcs/`): −1331 +1248. The net is small because three families replace three encodings one for one; the deletions are the predicates, re-packs and checks, the additions are the variant classes.
 
 ## Deletion certificates
 
@@ -82,10 +82,8 @@ Tests take the new constructors (`tests/context_support.py` builds phase context
 
 The guards pass; touched tests pass; official30 is 30/30; the structural ratchet and nra-r1 show zero regressions.
 
-## Progress
+## Outcome
 
-- [x] Receipt.
-- [x] ExecutionResult and RuntimeObservationMode families (`ExecutionSucceeded`/`ExecutionFailed`/`ExecutionCancelled`; `OmitRuntimeRecords`/`MergeAllRuntimeRecords`/`MergeDatasetInputRecords`; `ZMQExecutionAxisOutcome` deleted, outcome export stores results without records).
-- [ ] ComponentGroupScope variants, plan `group_scope` field, compose split.
-- [ ] Context phase types.
-- [ ] Guards, tests, ratchet, parity, PR.
+- Scope predicate reads outside the family: 48 before, 0 after (AST scan). `is None` checks on a scope's component in the compiler: 2 before, 0 after.
+- Production (Python under `openhcs/`): −1331 +1248. Tests: −1462 +1684 (the guard file, the context helper and wider import blocks).
+- Structural ratchet (`openhcs`, `scripts`, `benchmark`) and nra-r1 against `d597aa224`: no increase.
