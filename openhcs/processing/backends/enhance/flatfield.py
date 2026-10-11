@@ -68,7 +68,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
         if source.shape != (self.observation_count, *self.data.shape):
             raise ValueError("A fitted field must retain the source spatial grid.")
         self.validate_observation_domain(source)
-        metadata = source.metadata.collapse_leading_plane_axis()
+        metadata = ImagePayload.of(source).metadata.collapse_leading_plane_axis()
         # Model parameters are not unit-interval input pixels. Contributor source
         # dtypes/identities remain in provenance, not on the fitted field's range.
         metadata = metadata.replace_fields(
