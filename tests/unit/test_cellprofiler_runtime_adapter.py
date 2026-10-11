@@ -31,7 +31,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config import DtypeConfig, StepSourceBindingsConfig
 from openhcs.core.function_patterns import (
     MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
@@ -117,7 +117,6 @@ from openhcs.core.source_bindings import (
     SourceProjectionRole,
     SourceSelector,
 )
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,

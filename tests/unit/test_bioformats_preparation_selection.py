@@ -13,6 +13,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
+    SourceBindingsConfig,
 )
 from openhcs.core.image_file_serialization import TiffImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -25,7 +26,6 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.config import SourceBindingsConfig
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsJavaAdapter
 from tests.unit.bioformats_fixture import bioformats_filemanager

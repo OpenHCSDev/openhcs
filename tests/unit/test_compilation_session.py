@@ -23,6 +23,8 @@ from openhcs.core.config import (
     PipelineConfig,
     ProcessingConfig,
     StepMaterializationConfig,
+    EMPTY_SOURCE_BINDINGS,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
@@ -49,7 +51,6 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceSelector,
 )
-from openhcs.core.config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

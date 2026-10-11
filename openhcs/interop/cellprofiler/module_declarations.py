@@ -27,12 +27,15 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepSourceBindingsConfig,
+    SourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     ArtifactInputPlan,
 )
-from openhcs.core.config import SourceBindingsConfig
 from openhcs.interop.cellprofiler.module_artifact_contracts import (
     CellProfilerModuleArtifactContracts,
 )

@@ -38,6 +38,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
@@ -61,7 +62,6 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting

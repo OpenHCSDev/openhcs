@@ -35,6 +35,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazyPartitionFilterConfig,
     PipelineConfig,
+    LazySourceBindingsConfig,
 )
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -44,7 +45,6 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.config import LazySourceBindingsConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

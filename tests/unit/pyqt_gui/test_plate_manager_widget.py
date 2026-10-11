@@ -61,6 +61,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     PipelineConfig,
     PartitionFilterConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
@@ -83,7 +84,6 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceSelector,
 )
-from openhcs.core.config import LazyStepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.desktop.update import (
     DesktopRestartSession,

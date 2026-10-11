@@ -22,7 +22,12 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.config import PipelineConfig, ProcessingConfig
+from openhcs.core.config import (
+    PipelineConfig,
+    ProcessingConfig,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
@@ -39,7 +44,6 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceProjectionRole,
 )
-from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.module_declarations import (

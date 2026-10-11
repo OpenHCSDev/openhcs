@@ -27,6 +27,9 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     PipelineConfig,
+    EMPTY_SOURCE_BINDINGS,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_binding_selection import (
@@ -57,11 +60,6 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     SourceSetRole,
     source_binding_group_keys_for_group_by,
-)
-from openhcs.core.config import (
-    EMPTY_SOURCE_BINDINGS,
-    SourceBindingsConfig,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,

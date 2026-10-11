@@ -96,6 +96,7 @@ from openhcs.core.config import (
     MultiprocessingStartMethod,
     NapariStreamingConfig,
     PipelineConfig,
+    LazySourceBindingsConfig,
 )
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
@@ -108,7 +109,6 @@ from openhcs.core.source_bindings import (
     SourceFilterClause,
     SourceSelector,
 )
-from openhcs.core.config import LazySourceBindingsConfig
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core import virtual_workspace_metadata as metadata_module

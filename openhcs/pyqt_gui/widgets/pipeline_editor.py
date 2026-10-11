@@ -71,14 +71,18 @@ from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
 from openhcs.authoring.session.session import Session
 from openhcs.authoring.session.views import PipelineStepsView
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, ProcessingConfig
+from openhcs.core.config import (
+    PipelineConfig,
+    ProcessingConfig,
+    SourceBindingsConfig,
+    source_bindings_defaults_to_base,
+)
 from openhcs.core.debug import DebugCursor
 from openhcs.core.debug_session_projection import DebugSessionProjectionContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.debug_projection import DebugRuntimeProjection
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.config import SourceBindingsConfig, source_bindings_defaults_to_base
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,

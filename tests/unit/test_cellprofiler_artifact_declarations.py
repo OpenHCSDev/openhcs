@@ -33,7 +33,11 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -55,7 +59,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
 )
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,

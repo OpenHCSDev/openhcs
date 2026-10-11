@@ -25,6 +25,8 @@ from openhcs.core.config import (
     LazyVFSConfig,
     MaterializationBackend,
     PipelineConfig,
+    LazySourceBindingsConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -38,7 +40,6 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.config import LazySourceBindingsConfig, LazyStepSourceBindingsConfig
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.plane_stores import (

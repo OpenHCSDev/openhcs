@@ -17,7 +17,11 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import GlobalPipelineConfig, LazyProcessingConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    LazyProcessingConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
@@ -27,7 +31,6 @@ from openhcs.core.pipeline.path_planner import (
 )
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,

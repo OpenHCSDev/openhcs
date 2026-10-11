@@ -43,7 +43,13 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepMaterializationConfig,
+    EMPTY_SOURCE_BINDINGS,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
@@ -101,11 +107,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingOrigin,
     SourceProjectionRole,
-)
-from openhcs.core.config import (
-    EMPTY_SOURCE_BINDINGS,
-    SourceBindingsConfig,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.step_dependencies import StepInputDependencyKind

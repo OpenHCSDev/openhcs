@@ -51,6 +51,8 @@ from openhcs.core.config import (
     LazyPartitionFilterConfig,
     MaterializationBackend,
     PipelineConfig,
+    LazySourceBindingsConfig,
+    source_bindings_defaults_to_base,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -77,10 +79,6 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
-)
-from openhcs.core.config import (
-    LazySourceBindingsConfig,
-    source_bindings_defaults_to_base,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline

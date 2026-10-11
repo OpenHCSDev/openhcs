@@ -28,7 +28,12 @@ from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig, ProcessingConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    ProcessingConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
@@ -65,7 +70,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
 )
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.analyst_export import (
     CPASQLiteRenderer,

@@ -32,6 +32,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.invocation_artifacts import (
@@ -60,7 +61,6 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     PairByOrder,
 )
-from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
