@@ -130,17 +130,15 @@ class DatasetWorkflowOperation(SessionOperation):
     @classmethod
     def failed_for_row(cls, row: DatasetRowState) -> bool:
         """Whether ``row`` shows this step failed."""
-        if row.terminal_status is not None:
-            try:
-                terminal_status = TerminalExecutionStatus.named(row.terminal_status)
-            except ValueError:
-                terminal_status = None
-            if terminal_status is not None and terminal_status.counts_as_failed:
-                return True
+        failed_terminal_statuses = {
+            name
+            for name, status in TerminalExecutionStatus.__registry__.items()
+            if status.counts_as_failed
+        }
+        failed_states = {state.name for state in cls.failed_orchestrator_states}
         return (
-            row.orchestrator_state is not None
-            and OrchestratorState.named(row.orchestrator_state)
-            in cls.failed_orchestrator_states
+            row.terminal_status in failed_terminal_statuses
+            or row.orchestrator_state in failed_states
         )
 
 
@@ -365,11 +363,7 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
 
     @classmethod
     def terminal_for_row(cls, row: DatasetRowState) -> bool:
-        return (
-            row.execution_active is False
-            and row.queue_position is None
-            and row.terminal_status is not None
-        )
+        return row.execution_active is False and row.queued is False and row.has_terminal_status
 
     @classmethod
     def resolved(cls, session) -> type[SessionOperation]:

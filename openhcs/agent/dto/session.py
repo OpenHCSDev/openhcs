@@ -158,6 +158,14 @@ class DatasetRowState:
     """The dataset's latest finished ordinary execution (its evidence id)."""
     scope_accent_color: str | None = None
 
+    @property
+    def queued(self) -> bool:
+        return self.queue_position is not None
+
+    @property
+    def has_terminal_status(self) -> bool:
+        return self.terminal_status is not None
+
 
 @dataclass(frozen=True, slots=True)
 class DatasetListState:
