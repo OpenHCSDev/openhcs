@@ -40,7 +40,6 @@ from openhcs.runtime.viewer_component_system import (
     ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
-    NapariLayerKind,
     ViewerComponentValueOrdering,
     ViewerSettlePhase,
     SettlementComplete,
@@ -868,101 +867,55 @@ class NapariAggregateAxisBindingBuilder:
         ))
 
 
-NapariLayerCreator: TypeAlias = Callable[
-    [NapariViewerLayerCreator, LayerData, str, Mapping[str, LayerKwargValue]],
-    NapariLayerHandle,
-]
-NapariLayerCreationLogger: TypeAlias = Callable[
-    [NapariLayerKind, str, LayerData],
-    None,
-]
+class NapariLayerKind(ABC):
+    """One napari layer type a stream route is displayed as; each is a subclass."""
 
+    name: ClassVar[str]
+    """Napari's name for the layer type."""
+    adder: ClassVar[str]
+    """The ``napari.Viewer`` method that creates the layer."""
+    holds_items: ClassVar[bool] = False
+    """The layer's data is a sequence of items (shapes, points), not an array."""
 
-def _log_created_layer(
-    layer_kind: NapariLayerKind,
-    layer_name: str,
-    data: LayerData,
-) -> None:
-    del data
-    logger.info(
-        "🔬 NAPARI PROCESS: Created %s layer %s",
-        layer_kind.value,
-        layer_name,
-    )
-
-
-def _log_created_item_layer(
-    layer_kind: NapariLayerKind,
-    layer_name: str,
-    data: LayerData,
-) -> None:
-    logger.info(
-        "🔬 NAPARI PROCESS: Created %s layer %s with %d %s",
-        layer_kind.value,
-        layer_name,
-        len(data),
-        layer_kind.value,
-    )
-
-
-def _complete_layer_kind_mapping(
-    mapping: Mapping[NapariLayerKind, NapariLayerCreator],
-) -> Mapping[NapariLayerKind, NapariLayerCreator]:
-    missing = set(NapariLayerKind) - set(mapping)
-    if missing:
-        raise ValueError(f"Missing Napari layer creators for {missing!r}.")
-    return mapping
-
-
-def _complete_layer_log_mapping(
-    mapping: Mapping[NapariLayerKind, NapariLayerCreationLogger],
-) -> Mapping[NapariLayerKind, NapariLayerCreationLogger]:
-    missing = set(NapariLayerKind) - set(mapping)
-    if missing:
-        raise ValueError(f"Missing Napari layer loggers for {missing!r}.")
-    return mapping
-
-
-NAPARI_LAYER_CREATORS = _complete_layer_kind_mapping(
-    {
-        NapariLayerKind.IMAGE: (
-            lambda viewer, data, layer_name, layer_kwargs: viewer.add_image(
-                data,
-                name=layer_name,
-                **dict(layer_kwargs),
+    @classmethod
+    def create(
+        cls,
+        viewer: NapariViewerLayerCreator,
+        data: LayerData,
+        layer_name: str,
+        layer_kwargs: Mapping[str, LayerKwargValue],
+    ) -> NapariLayerHandle:
+        layer = getattr(viewer, cls.adder)(data, name=layer_name, **dict(layer_kwargs))
+        if cls.holds_items:
+            logger.info(
+                "🔬 NAPARI PROCESS: Created %s layer %s with %d %s",
+                cls.name, layer_name, len(data), cls.name,
             )
-        ),
-        NapariLayerKind.SHAPES: (
-            lambda viewer, data, layer_name, layer_kwargs: viewer.add_shapes(
-                data,
-                name=layer_name,
-                **dict(layer_kwargs),
-            )
-        ),
-        NapariLayerKind.POINTS: (
-            lambda viewer, data, layer_name, layer_kwargs: viewer.add_points(
-                data,
-                name=layer_name,
-                **dict(layer_kwargs),
-            )
-        ),
-        NapariLayerKind.LABELS: (
-            lambda viewer, data, layer_name, layer_kwargs: viewer.add_labels(
-                data,
-                name=layer_name,
-                **dict(layer_kwargs),
-            )
-        ),
-    }
-)
-NAPARI_LAYER_CREATED_LOGGERS = _complete_layer_log_mapping(
-    {
-        NapariLayerKind.IMAGE: _log_created_layer,
-        NapariLayerKind.SHAPES: _log_created_item_layer,
-        NapariLayerKind.POINTS: _log_created_item_layer,
-        NapariLayerKind.LABELS: _log_created_layer,
-    }
-)
+        else:
+            logger.info("🔬 NAPARI PROCESS: Created %s layer %s", cls.name, layer_name)
+        return layer
+
+
+class NapariImageLayer(NapariLayerKind):
+    name = "image"
+    adder = "add_image"
+
+
+class NapariShapesLayer(NapariLayerKind):
+    name = "shapes"
+    adder = "add_shapes"
+    holds_items = True
+
+
+class NapariPointsLayer(NapariLayerKind):
+    name = "points"
+    adder = "add_points"
+    holds_items = True
+
+
+class NapariLabelsLayer(NapariLayerKind):
+    name = "labels"
+    adder = "add_labels"
 
 
 class NapariImageLayerPresentationPolicy(ABC):
@@ -1104,7 +1057,7 @@ class NapariLayerUpdates:
     def create_or_update(
         self,
         *,
-        layer_kind: NapariLayerKind,
+        layer_kind: type[NapariLayerKind],
         viewer: NapariViewerLayerCreator,
         layers: dict[str, NapariLayerHandle],
         route_key: str,
@@ -1116,12 +1069,7 @@ class NapariLayerUpdates:
             viewer,
             self._existing_layer(viewer=viewer, layers=layers, route_key=route_key),
         )
-        new_layer = NAPARI_LAYER_CREATORS[layer_kind](
-            viewer,
-            data,
-            layer_name,
-            layer_kwargs,
-        )
+        new_layer = layer_kind.create(viewer, data, layer_name, layer_kwargs)
         self.mount(
             viewer=viewer,
             layers=layers,
@@ -1129,7 +1077,6 @@ class NapariLayerUpdates:
             layer=new_layer,
             selection=selection,
         )
-        NAPARI_LAYER_CREATED_LOGGERS[layer_kind](layer_kind, layer_name, data)
         return new_layer
 
     def mount(

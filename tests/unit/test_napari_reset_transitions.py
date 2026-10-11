@@ -21,7 +21,7 @@ from openhcs.core.config import (
     NapariDimensionMode,
     NapariDisplayConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.napari_streaming_handlers import (
@@ -129,7 +129,7 @@ def enqueue(
         colour_mode=NapariDimensionMode.LAYER,
         stack_mode=(NapariDimensionMode.STACK if z_domain else NapariDimensionMode.LAYER),
         time_mode=NapariDimensionMode.LAYER,
-        variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
+        variable_size_handling=PadToMaxSize,
     )
     semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(

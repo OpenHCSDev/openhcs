@@ -83,7 +83,6 @@ from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.runtime.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,
-    NapariVariableSizeHandling,
 )
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
@@ -97,6 +96,9 @@ from openhcs.runtime.viewer_control_actions import (
     ViewerServerPort,
 )
 from openhcs.runtime.napari_streaming_handlers import (
+    NapariImageLayer,
+    NapariLayerKind,
+    NapariPointsLayer,
     DimensionLabelMap,
     LayerData,
     LayerKwargValue,
@@ -160,7 +162,6 @@ from openhcs.runtime.viewer_measurements import (
 )
 from python_introspect import to_jsonable
 from openhcs.runtime.viewer_protocol import (
-    NapariLayerKind,
     NapariViewerServerRequest,
     OpenHCSViewerServerABC,
     OpenHCSViewerControlMessageType,
@@ -929,136 +930,6 @@ class NapariLayerRoute(ViewerComponentAxisSemantics):
     )
 
 
-class NapariVariableSizeDisplayStrategy(
-    EnumKeyedStrategyMixin[NapariVariableSizeHandling],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Apply one declared variable-size policy at routing and display time."""
-
-    __enum_member_attr__ = "variable_size_handling"
-
-    variable_size_handling: ClassVar[NapariVariableSizeHandling]
-
-    def routing_context(
-        self,
-        context: NapariStreamLayerContext,
-    ) -> NapariStreamLayerContext:
-        """Return the effective route context for one streamed payload."""
-
-        return context
-
-    @abstractmethod
-    def materialize_layer_items(
-        self,
-        layer_items: list[NapariStreamLayerItem],
-        *,
-        route_key: str,
-    ) -> list[NapariStreamLayerItem]:
-        """Return image items that can share one native Napari layer."""
-
-
-class NapariPadToMaxDisplayStrategy(NapariVariableSizeDisplayStrategy):
-    """Keep one component route and pad its images to a common shape."""
-
-    variable_size_handling = NapariVariableSizeHandling.PAD_TO_MAX
-
-    def materialize_layer_items(
-        self,
-        layer_items: list[NapariStreamLayerItem],
-        *,
-        route_key: str,
-    ) -> list[NapariStreamLayerItem]:
-        shapes = {item.data.shape for item in layer_items}
-        if len(shapes) > 1:
-            logger.info(
-                "🔬 NAPARI PROCESS: Images in layer %s have different shapes - "
-                "padding to max size",
-                route_key,
-            )
-            max_shape = tuple(
-                max(shape[axis] for shape in shapes)
-                for axis in range(len(layer_items[0].data.shape))
-            )
-            for item_index, item in enumerate(layer_items):
-                if item.data.shape == max_shape:
-                    continue
-                pad_width = tuple(
-                    (0, maximum - current)
-                    for current, maximum in zip(
-                        item.data.shape,
-                        max_shape,
-                        strict=True,
-                    )
-                )
-                layer_items[item_index] = replace(
-                    item,
-                    data=np.pad(
-                        item.data,
-                        pad_width,
-                        mode="constant",
-                        constant_values=0,
-                    ),
-                )
-                logger.debug(
-                    "🔬 NAPARI PROCESS: Padded image from %s to %s",
-                    item.data.shape,
-                    max_shape,
-                )
-        return layer_items
-
-
-class NapariSeparateLayersDisplayStrategy(NapariVariableSizeDisplayStrategy):
-    """Give each partition-axis value its own route and keep native shapes."""
-
-    variable_size_handling = NapariVariableSizeHandling.SEPARATE_LAYERS
-
-    def routing_context(
-        self,
-        context: NapariStreamLayerContext,
-    ) -> NapariStreamLayerContext:
-        if context.address.stream_layer_data_type is not StreamingDataType.IMAGE:
-            return context
-
-        partition_components = context.layout.names_with_role(PartitionAxis)
-        for component in partition_components:
-            ViewerComponentCoordinates.required_value(
-                context.address.components,
-                component,
-                context="Napari separate-layer routing",
-            )
-        layered = context.layout.components_in(NapariSlots.Layer)
-        if all(component in layered for component in partition_components):
-            return context
-        return replace(
-            context,
-            layout=context.layout.with_modes(
-                {
-                    **context.layout.component_modes,
-                    **{
-                        component: NapariSlots.Layer.wire_value
-                        for component in partition_components
-                    },
-                }
-            ),
-        )
-
-    def materialize_layer_items(
-        self,
-        layer_items: list[NapariStreamLayerItem],
-        *,
-        route_key: str,
-    ) -> list[NapariStreamLayerItem]:
-        shapes = {item.data.shape for item in layer_items}
-        if len(shapes) > 1:
-            raise ValueError(
-                "Napari separate-layer route "
-                f"{route_key!r} still contains mixed image shapes: "
-                f"{sorted(shapes)!r}."
-            )
-        return layer_items
-
-
 class NapariComponentAwareDisplayCoordinator:
     """Route loaded payload data into debounced Napari layer updates."""
 
@@ -1102,9 +973,11 @@ class NapariComponentAwareDisplayCoordinator:
         stream_layer_context: NapariStreamLayerContext,
         server: "NapariViewerServer",
     ) -> NapariLayerRoute:
-        effective_context = NapariVariableSizeDisplayStrategy.for_enum_member(
-            stream_layer_context.display_config.variable_size_handling
-        ).routing_context(stream_layer_context)
+        effective_context = (
+            stream_layer_context.display_config.variable_size_handling.routing_context(
+                stream_layer_context
+            )
+        )
         payload_layout_role = NapariImagePayloadLayoutRole.for_stream_layer_context(
             effective_context,
         )
@@ -1482,15 +1355,38 @@ class NapariLayerTitles:
         return f"{title} [{StreamProducerDisplayNameAuthority.disambiguation_label(producer)}]"
 
 
-class NapariDimensionLabelRouteSource(str, Enum):
-    """Provenance for the dimension-label route currently applied to Napari."""
+class NapariDimensionLabelRouteSource(ABC):
+    """Why a route owns Napari's dimension labels; each reason is a subclass."""
 
-    SELECTED_OPENHCS_LAYER = "selected_openhcs_layer"
-    UPDATED_OPENHCS_LAYER = "updated_openhcs_layer"
-    ACTIVE_STREAM_ROUTE = "active_stream_layer_context"
-    COMPATIBLE_STREAM_ROUTE = "compatible_stream_layer_context"
-    ACTIVE_NON_OPENHCS_LAYER = "active_non_openhcs_layer"
-    MISSING = "missing"
+    description: ClassVar[str]
+    """The reason as logged."""
+    unresolved: ClassVar[bool] = False
+    """No route could be chosen from the viewer's context."""
+
+
+class SelectedOpenHCSLayerRoute(NapariDimensionLabelRouteSource):
+    description = "selected OpenHCS layer"
+
+
+class UpdatedOpenHCSLayerRoute(NapariDimensionLabelRouteSource):
+    description = "updated OpenHCS layer"
+
+
+class ActiveStreamRoute(NapariDimensionLabelRouteSource):
+    description = "active stream layer context"
+
+
+class CompatibleStreamRoute(NapariDimensionLabelRouteSource):
+    description = "compatible stream layer context"
+
+
+class ActiveNonOpenHCSLayerRoute(NapariDimensionLabelRouteSource):
+    description = "active non-OpenHCS layer"
+
+
+class MissingRoute(NapariDimensionLabelRouteSource):
+    description = "missing"
+    unresolved = True
 
 
 @dataclass(frozen=True)
@@ -1498,7 +1394,7 @@ class NapariDimensionLabelRouteResolution:
     """Resolved dimension-label route plus the reason it was selected."""
 
     route_key: str | None
-    source: NapariDimensionLabelRouteSource
+    source: type[NapariDimensionLabelRouteSource]
 
 
 class NapariDimensionLabelStore:
@@ -1613,7 +1509,7 @@ class NapariDimensionLabelRouteResolver:
             if selected_route_key is None:
                 return NapariDimensionLabelRouteResolution(
                     route_key=None,
-                    source=NapariDimensionLabelRouteSource.ACTIVE_NON_OPENHCS_LAYER,
+                    source=ActiveNonOpenHCSLayerRoute,
                 )
 
         if self._route_matches_viewer_context(
@@ -1623,7 +1519,7 @@ class NapariDimensionLabelRouteResolver:
         ):
             return NapariDimensionLabelRouteResolution(
                 route_key=updated_route_key,
-                source=NapariDimensionLabelRouteSource.UPDATED_OPENHCS_LAYER,
+                source=UpdatedOpenHCSLayerRoute,
             )
 
         if selected_route_key is not None:
@@ -1634,26 +1530,26 @@ class NapariDimensionLabelRouteResolver:
             ):
                 return NapariDimensionLabelRouteResolution(
                     route_key=selected_route_key,
-                    source=NapariDimensionLabelRouteSource.SELECTED_OPENHCS_LAYER,
+                    source=SelectedOpenHCSLayerRoute,
                 )
 
         route_key = self.server.layer_route_state.active_dimension_label_route
         if self._route_matches_viewer_context(route_key, viewer_ndim, current_step):
             return NapariDimensionLabelRouteResolution(
                 route_key=route_key,
-                source=NapariDimensionLabelRouteSource.ACTIVE_STREAM_ROUTE,
+                source=ActiveStreamRoute,
             )
 
         route_key = self._latest_compatible_route(viewer_ndim, current_step)
         if route_key is not None:
             return NapariDimensionLabelRouteResolution(
                 route_key=route_key,
-                source=NapariDimensionLabelRouteSource.COMPATIBLE_STREAM_ROUTE,
+                source=CompatibleStreamRoute,
             )
 
         return NapariDimensionLabelRouteResolution(
             route_key=None,
-            source=NapariDimensionLabelRouteSource.MISSING,
+            source=MissingRoute,
         )
 
     def _route_key_for_layer(self, active_layer: NapariLayerHandle) -> str | None:
@@ -1735,7 +1631,7 @@ class NapariDimensionLabelOverlayController:
 
         self._connect_handlers()
         resolution = self.route_resolver.resolve(layer_key)
-        if resolution.source is NapariDimensionLabelRouteSource.MISSING:
+        if resolution.source.unresolved:
             state = self.server.layer_route_state.dimension_state_for(layer_key)
             if self._apply_axis_labels(layer_key, state):
                 self.server.layer_route_state.set_active_dimension_label_route(
@@ -1752,7 +1648,7 @@ class NapariDimensionLabelOverlayController:
         logger.info(
             "🔬 NAPARI PROCESS: Active dimension label route resolved to %s (%s)",
             resolution.route_key,
-            resolution.source.value,
+            resolution.source.description,
         )
 
     def _connect_handlers(self) -> None:
@@ -1863,7 +1759,7 @@ class NapariLayerDisplayRequest:
     def create_or_update_layer(
         self,
         *,
-        layer_kind: NapariLayerKind,
+        layer_kind: type[NapariLayerKind],
         data: LayerData,
         layer_kwargs: Mapping[str, LayerKwargValue],
     ) -> NapariLayerHandle:
@@ -2103,9 +1999,7 @@ class NapariImageLayerDisplayHandler(
                 f"Layer {presentation.route_key} contains mixed-rank image payloads: "
                 f"{sorted(set(shapes))}"
             )
-        layer_items = NapariVariableSizeDisplayStrategy.for_enum_member(
-            request.display_config.variable_size_handling
-        ).materialize_layer_items(
+        layer_items = request.display_config.variable_size_handling.materialize_layer_items(
             layer_items,
             route_key=presentation.route_key,
         )
@@ -2149,7 +2043,7 @@ class NapariImageLayerDisplayHandler(
         )
 
         request.create_or_update_layer(
-            layer_kind=NapariLayerKind.IMAGE,
+            layer_kind=NapariImageLayer,
             data=stacked_data,
             layer_kwargs=layer_kwargs,
         )
@@ -2436,7 +2330,7 @@ class NapariPointsLayerDisplayHandler(
         if axis_labels is not None:
             layer_kwargs["axis_labels"] = axis_labels
         request.create_or_update_layer(
-            layer_kind=NapariLayerKind.POINTS,
+            layer_kind=NapariPointsLayer,
             data=points_data,
             layer_kwargs=layer_kwargs,
         )

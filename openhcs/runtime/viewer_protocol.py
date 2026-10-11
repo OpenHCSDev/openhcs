@@ -922,19 +922,32 @@ class ViewerProcessPlatform(Enum):
         )
 
 
-class ViewerLaunchContextMode(Enum):
-    """Provenance and availability of one detached viewer launch session."""
+class ViewerLaunchSession(ABC):
+    """Where a detached viewer's graphical session comes from; each source is a subclass."""
 
-    INHERITED_GRAPHICAL_SESSION = "inherited_graphical_session"
-    PROJECTED_GRAPHICAL_SESSION = "projected_graphical_session"
-    HEADLESS = "headless"
+    graphical: ClassVar[bool] = True
+    """A graphical session is available to the child process."""
+
+
+class InheritedGraphicalSession(ViewerLaunchSession):
+    """The launching process already owns a GUI session."""
+
+
+class ProjectedGraphicalSession(ViewerLaunchSession):
+    """A graphical environment validated by its owner is carried to the child."""
+
+
+class HeadlessSession(ViewerLaunchSession):
+    """No graphical session is available."""
+
+    graphical = False
 
 
 @dataclass(frozen=True, slots=True)
 class ViewerLaunchContext:
     """Typed graphical-session context consumed by detached viewer launch."""
 
-    mode: ViewerLaunchContextMode
+    session: type[ViewerLaunchSession]
     environment_overlay: Mapping[str, str] = field(default_factory=dict)
     environment_unset_keys: tuple[str, ...] = ()
 
@@ -953,7 +966,7 @@ class ViewerLaunchContext:
     @classmethod
     def inherited_graphical_session(cls) -> "ViewerLaunchContext":
         """Declare that the launching process already owns a GUI session."""
-        return cls(ViewerLaunchContextMode.INHERITED_GRAPHICAL_SESSION)
+        return cls(InheritedGraphicalSession)
 
     @classmethod
     def projected_graphical_session(
@@ -969,7 +982,7 @@ class ViewerLaunchContext:
             environment_overlay.pop("QT_QPA_PLATFORM")
             environment_unset_keys = ("QT_QPA_PLATFORM",)
         return cls(
-            ViewerLaunchContextMode.PROJECTED_GRAPHICAL_SESSION,
+            ProjectedGraphicalSession,
             environment_overlay,
             environment_unset_keys,
         )
@@ -977,11 +990,11 @@ class ViewerLaunchContext:
     @classmethod
     def headless(cls) -> "ViewerLaunchContext":
         """Declare that no authoritative graphical session is available."""
-        return cls(ViewerLaunchContextMode.HEADLESS)
+        return cls(HeadlessSession)
 
     @property
     def graphical_session_available(self) -> bool:
-        return self.mode is not ViewerLaunchContextMode.HEADLESS
+        return self.session.graphical
 
     def child_environment(
         self,
@@ -1007,15 +1020,6 @@ class ViewerGraphicalSessionUnavailableError(RuntimeError):
             f"Cannot launch detached {self.viewer_family.display_name} viewer on port "
             f"{self.port}: no authoritative graphical session is available."
         )
-
-
-class NapariLayerKind(Enum):
-    """Napari layer creation families used by streaming display."""
-
-    IMAGE = "image"
-    SHAPES = "shapes"
-    POINTS = "points"
-    LABELS = "labels"
 
 
 class FijiPayloadKind(Enum):
@@ -1559,44 +1563,96 @@ class ViewerControlPingMode(Enum):
         )
 
 
-class ViewerLifecycleMode(Enum):
-    """Runtime ownership state for a managed viewer."""
+class ViewerLifecycle(ABC):
+    """Who holds a managed viewer right now; each holder is a subclass."""
 
-    STOPPED = "stopped"
-    CONNECTED_EXTERNAL = "connected_external"
-    OWNED_PROCESS = "owned_process"
-
-
-@dataclass(slots=True)
-class ViewerLifecycleState:
-    """Nominal lifecycle state for viewer process managers."""
-
-    mode: ViewerLifecycleMode = ViewerLifecycleMode.STOPPED
+    active: ClassVar[bool] = True
+    """A viewer is expected to answer on the port."""
+    owns_process: ClassVar[bool] = False
+    """This manager launched the viewer process and must stop it."""
 
     @classmethod
-    def stopped(cls) -> "ViewerLifecycleState":
-        return cls()
+    @abstractmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        """Whether the viewer still runs; stops the viewer when it does not."""
 
-    @property
-    def is_active(self) -> bool:
-        return self.mode is not ViewerLifecycleMode.STOPPED
+    @classmethod
+    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+        """Discard only resources owned by an incomplete bootstrap attempt."""
 
-    @property
-    def is_connected_external(self) -> bool:
-        return self.mode is ViewerLifecycleMode.CONNECTED_EXTERNAL
+        from zmqruntime import ViewerStateManager
 
-    @property
-    def is_owned_process(self) -> bool:
-        return self.mode is ViewerLifecycleMode.OWNED_PROCESS
+        manager = ViewerStateManager.get_instance()
+        port = viewer.required_port
+        if manager.get_viewer(viewer.viewer_family.wire_value, port) is viewer:
+            manager.release_viewer(
+                viewer.viewer_family.wire_value, port, stop=True, force=True,
+            )
+            return
+        if cls.owns_process or viewer.process is not None:
+            viewer.force_stop()
+            return
+        viewer.lifecycle = ViewerStopped
 
-    def mark_connected_external(self) -> None:
-        self.mode = ViewerLifecycleMode.CONNECTED_EXTERNAL
 
-    def mark_owned_process(self) -> None:
-        self.mode = ViewerLifecycleMode.OWNED_PROCESS
+class ViewerStopped(ViewerLifecycle):
+    active = False
 
-    def mark_stopped(self) -> None:
-        self.mode = ViewerLifecycleMode.STOPPED
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        return False
+
+
+class ViewerConnectedExternal(ViewerLifecycle):
+    """Connected to a viewer some other process launched."""
+
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        if viewer.check_connected_viewer():
+            return True
+        logging.getLogger(type(viewer).__module__).debug(
+            "%s viewer on port %s is no longer responsive",
+            viewer.viewer_process_label,
+            viewer.port,
+        )
+        viewer.lifecycle = ViewerStopped
+        return False
+
+    @classmethod
+    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+        viewer.cleanup_viewer_client()
+        viewer.lifecycle = ViewerStopped
+
+
+class ViewerOwnedProcess(ViewerLifecycle):
+    """Running a viewer process this manager launched."""
+
+    owns_process = True
+
+    @classmethod
+    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+        log = logging.getLogger(type(viewer).__module__)
+        if viewer.process is None:
+            viewer.lifecycle = ViewerStopped
+            return False
+        try:
+            alive = endpoint_process(viewer.process).is_alive()
+        except Exception as error:
+            log.warning(
+                "Error checking %s process status: %s",
+                viewer.viewer_process_label,
+                error,
+            )
+            viewer.lifecycle = ViewerStopped
+            return False
+        if not alive:
+            log.debug(
+                "%s process on port %s is no longer alive",
+                viewer.viewer_process_label,
+                viewer.port,
+            )
+            viewer.lifecycle = ViewerStopped
+        return alive
 
 
 @dataclass(frozen=True, slots=True)
@@ -1756,7 +1812,7 @@ class ManagedViewerLifecycleMixin(
             transport=runtime_config.transport_endpoint,
             config=runtime_config.transport_config,
         )
-        self.lifecycle_state: ViewerLifecycleState = ViewerLifecycleState.stopped()
+        self.lifecycle: type[ViewerLifecycle] = ViewerStopped
 
     @property
     def required_port(self) -> int:
@@ -1802,7 +1858,7 @@ class ManagedViewerLifecycleMixin(
         with self._lock:
             port = self.required_port
             self.prepare_fresh_viewer_start()
-            if self.lifecycle_state.is_active:
+            if self.lifecycle.active:
                 logger.warning("%s viewer is already running.", self.viewer_process_label)
                 return
             logger.info(
@@ -1813,7 +1869,7 @@ class ManagedViewerLifecycleMixin(
             )
             self.process = self.launch_detached_viewer()
             if self.owned_viewer_process_is_alive():
-                self.lifecycle_state.mark_owned_process()
+                self.lifecycle = ViewerOwnedProcess
                 logger.info(
                     "🔬 VISUALIZER: %s viewer process started (PID: %s)",
                     self.viewer_process_label,
@@ -1844,7 +1900,7 @@ class ManagedViewerLifecycleMixin(
                     "🔬 VISUALIZER: Force killing %s viewer process",
                     self.viewer_process_label,
                 )
-            self.lifecycle_state.mark_stopped()
+            self.lifecycle = ViewerStopped
 
     def stop(self, timeout: float = 5.0) -> None:
         self.stop_viewer()
@@ -2049,37 +2105,12 @@ class ManagedViewerLifecycleMixin(
                         self.viewer_process_label,
                     )
             self.runtime_endpoint.force_release_addresses()
-            self.lifecycle_state.mark_stopped()
+            self.lifecycle = ViewerStopped
 
     def rollback_failed_bootstrap(self) -> None:
         """Discard only resources owned by an incomplete bootstrap attempt."""
 
-        lifecycle_state = self.lifecycle_state
-        if lifecycle_state.is_connected_external:
-            self.cleanup_viewer_client()
-            lifecycle_state.mark_stopped()
-            return
-
-        from zmqruntime import ViewerStateManager
-
-        manager = ViewerStateManager.get_instance()
-        managed_viewer = manager.get_viewer(
-            self.viewer_family.wire_value,
-            self.required_port,
-        )
-        if managed_viewer is self:
-            manager.release_viewer(
-                self.viewer_family.wire_value,
-                self.required_port,
-                stop=True,
-                force=True,
-            )
-            return
-
-        if lifecycle_state.is_owned_process or self.process is not None:
-            self.force_stop()
-            return
-        lifecycle_state.mark_stopped()
+        self.lifecycle.rollback_failed_bootstrap(self)
 
     def start(self, detached: bool = True) -> subprocess.Popen[bytes]:
         self.start_viewer_now()
@@ -2240,43 +2271,7 @@ class ManagedViewerLifecycleMixin(
 
     @property
     def is_running(self) -> bool:
-        lifecycle_state = self.lifecycle_state
-        if not lifecycle_state.is_active:
-            return False
-
-        if lifecycle_state.is_connected_external:
-            if not self.check_connected_viewer():
-                logging.getLogger(self.__class__.__module__).debug(
-                    "%s viewer on port %s is no longer responsive",
-                    self.viewer_process_label,
-                    self.port,
-                )
-                lifecycle_state.mark_stopped()
-                return False
-            return True
-
-        if self.process is None:
-            lifecycle_state.mark_stopped()
-            return False
-
-        try:
-            alive = endpoint_process(self.process).is_alive()
-            if not alive:
-                logging.getLogger(self.__class__.__module__).debug(
-                    "%s process on port %s is no longer alive",
-                    self.viewer_process_label,
-                    self.port,
-                )
-                lifecycle_state.mark_stopped()
-            return alive
-        except Exception as error:
-            logging.getLogger(self.__class__.__module__).warning(
-                "Error checking %s process status: %s",
-                self.viewer_process_label,
-                error,
-            )
-            lifecycle_state.mark_stopped()
-            return False
+        return self.lifecycle.is_running(self)
 
 
 @dataclass(frozen=True, slots=True)

@@ -30,6 +30,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_protocol import (
+    ViewerConnectedExternal,
     NapariViewerServerRequest,
     ViewerControlResponse,
     ViewerControlMessageRequest,
@@ -273,7 +274,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
             ), persistent=False, viewer_family=NapariViewer,
         ),
     )
-    client.lifecycle_state.mark_connected_external()
+    client.lifecycle = ViewerConnectedExternal
     observations = []
     client_worker = ThreadPoolExecutor(max_workers=1)
     late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"

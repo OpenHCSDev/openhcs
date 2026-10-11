@@ -27,6 +27,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.viewer_protocol import (
+    ViewerConnectedExternal,
     DetachedViewerLaunchLog,
     DetachedViewerLaunchRequest,
     DetachedViewerPythonArguments,
@@ -451,7 +452,7 @@ def test_managed_viewer_lifecycle_reads_state_through_typed_control_request(
 
     monkeypatch.setattr(ViewerControlMessageRequest, "send", send)
     viewer = StateViewer()
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
 
     observed = viewer.read_viewer_state(timeout=7.5)
 
@@ -539,7 +540,7 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
     )
     monkeypatch.setattr(viewer_protocol.time, "sleep", lambda _seconds: None)
     viewer = ProgressViewer()
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     observed_progress = []
 
     assert viewer.settle_viewer_state(
@@ -590,7 +591,7 @@ def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
             viewer_family=NapariViewer,
         )
     )
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     monotonic_values = iter((0.0, 0.0, 1.1))
     monkeypatch.setattr(ViewerControlMessageRequest, "send", lambda _request: response)
     monkeypatch.setattr(
@@ -1097,12 +1098,12 @@ def test_managed_viewer_lifecycle_uses_nominal_state_for_external_viewer():
     viewer = ExternalViewer()
     assert not viewer.is_running
 
-    viewer.lifecycle_state.mark_connected_external()
+    viewer.lifecycle = ViewerConnectedExternal
     assert viewer.is_running
 
     viewer.connected = False
     assert not viewer.is_running
-    assert not viewer.lifecycle_state.is_active
+    assert not viewer.lifecycle.active
 
 
 def test_prepare_fresh_viewer_start_releases_endpoint_after_shutdown_ack():

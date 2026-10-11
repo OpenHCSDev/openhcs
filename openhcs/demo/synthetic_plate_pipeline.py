@@ -13,7 +13,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     PipelineConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,
@@ -102,7 +102,7 @@ step_8 = FunctionStep(
     ),
     name="Cell Counting",
     napari_streaming_config=LazyNapariStreamingConfig(
-        variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX
+        variable_size_handling=PadToMaxSize
     ),
 )
 pipeline_steps.append(step_8)
