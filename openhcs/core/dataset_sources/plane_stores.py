@@ -20,6 +20,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_matching import merge_source_metadata
+from openhcs.core.source_path_identity import absolute_source_path
 from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_projection import (
     SourceCandidate,
@@ -100,7 +101,7 @@ class SourcePlaneStoreAdapter(ABC, metaclass=AutoRegisterMeta):
         cls, root: str | Path, *, source_bindings: SourceBindingsConfig | None = None
     ) -> SourcePlaneDataset:
         """Aggregate every registered store's planes under ``root``."""
-        root_path = Path(root).resolve(strict=False)
+        root_path = absolute_source_path(root)
         if not root_path.exists():
             raise PlaneStoreUnavailableError(
                 f"Plane-store collection does not exist: {root_path}"

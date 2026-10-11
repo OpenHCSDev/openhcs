@@ -4,7 +4,7 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import ProcessingConfig
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -44,7 +44,7 @@ def test_processing_config_preserves_resolved_input_source() -> None:
     inherited = ProcessingConfig(
         variable_components=[Microscopy.Channel],
         group_by=Microscopy.Site,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     config = _processing_config(
         correct_illumination_apply,

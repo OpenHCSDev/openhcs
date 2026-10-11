@@ -29,7 +29,7 @@ from openhcs.core.processing_contracts import (
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 
 
@@ -42,7 +42,7 @@ def _fitted_field_output(name: str) -> ArtifactSpec:
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         viewer_streaming=OnDemandStreaming,

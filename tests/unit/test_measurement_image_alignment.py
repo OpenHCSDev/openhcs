@@ -15,6 +15,8 @@ from openhcs.core.measurement_image_alignment import (
 )
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageReferenceDomain,
+    ObjectLabelsReference,
+    SourceImageReference,
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
@@ -45,9 +47,7 @@ from openhcs.core.runtime_image_values import PlainImagePayload
 @dataclass(frozen=True, slots=True)
 class _MeasurementImageSource(MeasurementImageAlignmentSource):
     payload: object
-    reference_domain: MeasurementImageReferenceDomain = (
-        MeasurementImageReferenceDomain.SOURCE_IMAGE
-    )
+    reference_domain: type[MeasurementImageReferenceDomain] = SourceImageReference
     source_aliases: tuple[str, ...] = ()
 
     @property
@@ -55,7 +55,7 @@ class _MeasurementImageSource(MeasurementImageAlignmentSource):
         return self.payload
 
     @property
-    def alignment_reference_domain(self) -> MeasurementImageReferenceDomain:
+    def alignment_reference_domain(self) -> type[MeasurementImageReferenceDomain]:
         return self.reference_domain
 
     @property
@@ -202,7 +202,7 @@ def test_payload_scoped_labels_reject_non_runtime_image_plane_axis() -> None:
 def test_object_reference_requires_nominal_label_payload() -> None:
     source = _MeasurementImageSource(
         np.ones((4, 5), dtype=np.float32),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="requires an ObjectLabelValue"):
@@ -220,7 +220,7 @@ def test_object_reference_uses_declared_source_spatial_adapter() -> None:
     )
     source = _MeasurementImageSource(
         image,
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     aligned = source.object_label_alignment_request(labels).aligned().image
@@ -254,7 +254,7 @@ def test_object_reference_preserves_nominal_image_payload_context() -> None:
                 plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             ),
         ),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     aligned = source.object_label_alignment_request(labels).aligned().image
@@ -318,7 +318,7 @@ def test_object_reference_projects_declared_runtime_slice_only_with_context() ->
     )
     source = _MeasurementImageSource(
         np.ones((4, 5), dtype=np.float32),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
@@ -342,7 +342,7 @@ def test_object_reference_projects_declared_single_runtime_slice() -> None:
     )
     source = _MeasurementImageSource(
         np.ones((4, 5), dtype=np.float32),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     prepared = PreparedMeasurementObjectLabels.from_source(
@@ -376,7 +376,7 @@ def test_object_reference_projects_image_with_declared_single_runtime_slice() ->
                 plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             ),
         ),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     prepared = PreparedMeasurementObjectLabels.from_source(
@@ -399,7 +399,7 @@ def test_object_reference_projects_local_singleton_in_wider_runtime_scope() -> N
     )
     source = _MeasurementImageSource(
         np.ones((4, 5), dtype=np.float32),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     prepared = PreparedMeasurementObjectLabels.from_source(
@@ -433,7 +433,7 @@ def test_projected_payload_domain_is_not_projected_twice() -> None:
     )
     source = _MeasurementImageSource(
         np.ones((4, 5), dtype=np.float32),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
@@ -620,7 +620,7 @@ def test_object_reference_replaces_unrelated_aligned_image_stack() -> None:
     )
     source = _MeasurementImageSource(
         image,
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     prepared = PreparedMeasurementObjectLabels.from_source(

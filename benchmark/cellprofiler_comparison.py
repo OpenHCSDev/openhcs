@@ -38,6 +38,7 @@ from benchmark.runner import (
     run_cellprofiler_cppipe_parity,
 )
 from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
+from openhcs.interop.cellprofiler.module_settings import SettingUnmapped
 from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 from benchmark.equivalence.outputs import image_paths, table_paths
 
@@ -271,7 +272,7 @@ class ModuleCoverageArtifacts:
                 unmapped_cppipe_setting_row_count=sum(
                     1
                     for setting in report.cppipe_settings
-                    if setting.coverage.value == "unmapped"
+                    if setting.coverage is SettingUnmapped
                 ),
                 supported_absorbed_processing_modules=(
                     coverage.supported_absorbed_processing_modules
@@ -304,7 +305,7 @@ class ModuleCoverageArtifacts:
                     module_num=setting.module_num,
                     setting_name=setting.setting_name,
                     normalized_setting_name=setting.normalized_setting_name,
-                    coverage=setting.coverage.value,
+                    coverage=setting.coverage.name,
                     value=setting.value,
                 )
                 for setting in report.cppipe_settings

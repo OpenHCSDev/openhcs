@@ -37,7 +37,7 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,
     get_all_image_paths,
@@ -794,8 +794,7 @@ class FunctionStepExecutor:
         if source_files is None:
             source_projection = self.context.runtime_source_workspace_projections.projection_if_available()
             if (
-                plan.main_input_dependency.kind
-                is StepInputDependencyKind.PIPELINE_START
+                isinstance(plan.main_input_dependency, PipelineStartInput)
                 and source_projection is not None
             ):
                 source_files = source_projection.pipeline_start_files(

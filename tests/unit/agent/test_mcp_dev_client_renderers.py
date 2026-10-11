@@ -14,6 +14,8 @@ from openhcs.agent.dto.session import DatasetRowState
 import enum
 import types
 import typing
+
+from metaclass_registry import AutoRegisterMeta
 from dataclasses import MISSING, fields, is_dataclass
 
 import pytest
@@ -42,6 +44,11 @@ def sample_value(hint, depth: int):
     if origin in (typing.Union, types.UnionType):
         members = [arg for arg in typing.get_args(hint) if arg is not type(None)]
         return sample_value(members[0], depth)
+    if origin is type:
+        (family,) = typing.get_args(hint)
+        if isinstance(family, AutoRegisterMeta):
+            # A family-valued field holds one of the family's member classes.
+            return next(iter(family.__registry__.values()))
     if origin is tuple:
         args = typing.get_args(hint)
         if depth >= MAX_DEPTH or not args:

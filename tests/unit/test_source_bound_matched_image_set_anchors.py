@@ -32,19 +32,19 @@ from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingMatchDimension,
-    SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
-    SourceBindingOrigin,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
     SourceSelector,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection, WorkspaceSourceProjections,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
 )
@@ -134,7 +134,7 @@ def _source_bindings() -> tuple[NamedSourceBinding, ...]:
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, channel),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in SOURCE_ALIASES
@@ -254,7 +254,7 @@ def _filter_source_anchors(
         axis_id="A01",
         step_index=0,
         step_name="MeasureImages",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             tuple(binding.component_identity[0].value for binding in compiled_bindings),
@@ -423,7 +423,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         axis_id="A01",
         step_index=0,
         step_name="GroupedMeasurements",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("2", "1"),
@@ -483,7 +483,7 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
         axis_id="A01",
         step_index=0,
         step_name="NeuronBodies",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,)),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("2",),
@@ -556,7 +556,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, channel),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (("OrigStain1", "1"), ("OrigStain2", "2"))
@@ -589,7 +589,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
         axis_id="A01",
         step_index=0,
         step_name="Align",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
             match_plan=PairByOrder(),
@@ -661,7 +661,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
             selector=SourceSelector(
                 filters=(),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (("OrigStain1", "1"), ("OrigStain2", "2"))
@@ -711,7 +711,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         axis_id="A01",
         step_index=0,
         step_name="Align",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
             match_plan=PairByOrder(),

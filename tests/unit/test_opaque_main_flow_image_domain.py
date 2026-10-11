@@ -20,7 +20,7 @@ from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBun
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.payload_axes import PayloadAxes
@@ -208,7 +208,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         context.runtime_image_stack_cache.clear()
     consumer_plan = replace(
         plan, step_index=1, step_scope_id="whole-consumer", input_dir=tmp_path,
-        main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id),
+        main_input_dependency=StepOutputInput(source_step_index=0, source_step_scope_id=plan.step_scope_id),
     )
     consumer = PatternGroupExecutionRequest(
         context=context, execution_plan=consumer_plan, compiled_group=pattern.default_group,
@@ -368,7 +368,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     def consumer_for(compiled):
         consumer_plan = replace(plan, step_index=1, step_scope_id="mixed-consumer", input_dir=tmp_path,
             compiled_function_pattern=compiled,
-            main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id))
+            main_input_dependency=StepOutputInput(source_step_index=0, source_step_scope_id=plan.step_scope_id))
         consumer = PatternGroupExecutionRequest(context=context,
             execution_plan=consumer_plan,
             compiled_group=compiled.default_group,

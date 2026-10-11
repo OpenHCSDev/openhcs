@@ -155,7 +155,7 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
     )
     from openhcs.runtime.viewer_protocol import (
         ViewerControlResponse,
-        ViewerSettlePhase,
+        SettlementRunning,
         ViewerSettleProgress,
     )
 
@@ -209,8 +209,8 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
             {"type": "settle"}, OperationDeadline.after_milliseconds(2000, operation="settlement observation"),
         )))
         response = pickle.loads(socket.recv())
-        progress = ViewerSettleProgress.from_response(ViewerControlResponse(response))
-        assert progress.phase is ViewerSettlePhase.RUNNING
+        progress = ViewerSettleProgress.from_dict(response)
+        assert progress.phase is SettlementRunning
         assert progress.completed_update_count == 0
         assert progress.active_route == "large-shapes"
         assert progress.active_route_work_unit_count == 0

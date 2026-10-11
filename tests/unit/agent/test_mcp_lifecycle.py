@@ -18,7 +18,9 @@ from openhcs.mcp.lifecycle import (
     McpInstallationPointerSnapshot,
     McpLifecycleConfigurationError,
     McpProcessLifecycle,
-    McpProcessRecoveryReason,
+    InstallationChanged,
+    ProcessCurrent,
+    SourceChanged,
 )
 import openhcs.mcp.server as server
 
@@ -44,13 +46,13 @@ def test_source_change_requires_client_owned_reconnect():
     current = lifecycle.recovery_status(source_changed=False)
     changed = lifecycle.recovery_status(source_changed=True)
 
-    assert current.reason is McpProcessRecoveryReason.CURRENT
+    assert current.reason is ProcessCurrent
     assert current.restart_required is False
     assert current.restart_command == ()
     assert current.reconnect_owner is None
     assert current.retry_after_reconnect is False
 
-    assert changed.reason is McpProcessRecoveryReason.SOURCE_CHANGED
+    assert changed.reason is SourceChanged
     assert changed.restart_command == (
         sys.executable,
         "-m",
@@ -79,7 +81,7 @@ def test_installer_generation_change_uses_stable_launch_command(tmp_path):
     pointer.write_text("launch environment-b\n", encoding="utf-8")
     changed = lifecycle.recovery_status(source_changed=False)
 
-    assert changed.reason is McpProcessRecoveryReason.INSTALLATION_CHANGED
+    assert changed.reason is InstallationChanged
     assert changed.installation_pointer_path == str(pointer)
     assert changed.installation_pointer_changed_since_import is True
     assert changed.installation_pointer_available is True
@@ -108,7 +110,7 @@ def test_deleted_installation_pointer_fails_closed_without_false_auto_recovery(
     pointer.unlink()
     changed = lifecycle.recovery_status(source_changed=False)
 
-    assert changed.reason is McpProcessRecoveryReason.INSTALLATION_CHANGED
+    assert changed.reason is InstallationChanged
     assert changed.installation_pointer_changed_since_import is True
     assert changed.installation_pointer_available is False
     assert changed.restart_command == (str(stable_launcher), "mcp")
@@ -206,7 +208,7 @@ def test_deleted_environment_source_remains_health_reportable(monkeypatch, tmp_p
 
     assert stale_paths == (old_environment_source,)
     assert server._mcp_server_current_source_mtime_ns() is None
-    assert recovery.reason is McpProcessRecoveryReason.SOURCE_CHANGED
+    assert recovery.reason is SourceChanged
     assert recovery.restart_required is True
     assert recovery.retry_after_reconnect is True
 

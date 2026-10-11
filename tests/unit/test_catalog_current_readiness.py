@@ -225,10 +225,10 @@ def test_midprojection_change_rebuilds_both_views_before_ready(
     preparation.ensure_started().result(timeout=2)
     assert preparation.observe(handle()).outcome is Outcome.READY
     assert service.projections_current()
-    from openhcs.agent.services.function_catalog_service import SignatureView
+    from openhcs.agent.services.function_catalog_service import FullSignature
 
     current = RegistryService._metadata_cache["probe:declaration"]
-    assert (current, SignatureView.FULL) in calls
+    assert (current, FullSignature) in calls
     assert all(projection.metadata is current for projection in service._projections)
     for compact in (False, True):
         assert service.catalog(compact_signatures=compact).items

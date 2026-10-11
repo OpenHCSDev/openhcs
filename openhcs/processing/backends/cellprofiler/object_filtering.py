@@ -3,7 +3,7 @@
 from __future__ import annotations
 from openhcs.interop.cellprofiler.measurement_lookup import (
     CellProfilerMeasurementFeature,
-    CellProfilerMeasurementFeatureKind,
+    child_count_feature_child_name,
 )
 from openhcs.interop.cellprofiler.setting_names import (
     RepeatedSettingSequence,
@@ -1412,12 +1412,10 @@ class FilterObjectsSelectionRequest:
         ):
             return self.measurement_values
 
-        feature = CellProfilerMeasurementFeature.parse(feature_name)
-        if (
-            feature is not None
-            and feature.kind is CellProfilerMeasurementFeatureKind.CHILD_COUNT
-        ):
-            return self.child_count_measurement_values(feature)
+        if child_count_feature_child_name(feature_name) is not None:
+            return self.child_count_measurement_values(
+                CellProfilerMeasurementFeature.parse(feature_name)
+            )
         if not self.measurement_tables:
             raise ValueError(
                 "FilterObjects measurement feature "

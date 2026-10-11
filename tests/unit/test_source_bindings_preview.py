@@ -2,17 +2,19 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
 from openhcs.core.source_bindings import (
+    FromFileName,
+    FromPipelineStart,
     ImagePlaneSource,
     MetadataExtractionRule,
-    MetadataSource,
     MetadataSelector,
     NamedSourceBinding,
     PairByOrder,
-    SourceBindingOrigin,
+    PathIsTif,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source_bindings_preview import (
@@ -54,8 +56,8 @@ def test_source_bindings_preview_reuses_typed_filter_and_order_matching(tmp_path
     source_bindings = SourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.EXTENSION,
-                SourceFilterMatchType.IS_TIF,
+                SourceExtension,
+                PathIsTif,
             ),
         ),
         bindings=(
@@ -64,26 +66,26 @@ def test_source_bindings_preview_reuses_typed_filter_and_order_matching(tmp_path
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "DNA",
                         ),
                     ),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
             NamedSourceBinding(
                 alias="GFP",
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "GFP",
                         ),
                     ),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
         match_plan=PairByOrder(),
@@ -124,7 +126,7 @@ def test_source_inventory_uses_declared_image_plane_sources(tmp_path):
         image_plane_sources=(ImagePlaneSource(uri=str(source_path)),),
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=r"(?P<well>A\d{2})_(?P<site>s\d+)_(?P<channel>DNA)\.tif",
             ),
         ),
@@ -134,7 +136,7 @@ def test_source_inventory_uses_declared_image_plane_sources(tmp_path):
                 selector=SourceSelector(
                     metadata=(MetadataSelector("channel", "DNA"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
     )
@@ -168,12 +170,12 @@ def test_source_inventory_from_paths_applies_source_filters(tmp_path):
     source_bindings = SourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.EXTENSION,
-                SourceFilterMatchType.IS_TIF,
+                SourceExtension,
+                PathIsTif,
             ),
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         ),
@@ -200,7 +202,7 @@ def test_source_inventory_and_preview_use_resolved_step_override(tmp_path):
         bindings=(
             NamedSourceBinding(
                 alias="DNA",
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
     )
@@ -208,15 +210,15 @@ def test_source_inventory_and_preview_use_resolved_step_override(tmp_path):
         enabled=True,
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "GFP",
             ),
         ),
         bindings=(
             NamedSourceBinding(
                 alias="GFP",
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
     )
@@ -251,13 +253,13 @@ def test_source_binding_preview_reports_required_alias_without_matches():
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "DNA",
                         ),
                     ),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
     )
@@ -284,8 +286,8 @@ def test_source_inventory_from_filemanager_uses_vfs_file_listing():
     source_bindings = SourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         ),

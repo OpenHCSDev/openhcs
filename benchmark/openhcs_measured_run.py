@@ -48,7 +48,7 @@ from openhcs.runtime.zmq_execution_observation import (
 )
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 
 from .timing import (
@@ -381,7 +381,7 @@ def retain_measured_openhcs_completion(
         )
     if (
         auxiliary_params.runtime_observation_export_scope
-        is ZMQRuntimeObservationExportScope.OUTCOMES
+        is ExportRuntimeOutcomes
     ):
         observation_export = ZMQRuntimeExecutionOutcomeExport.read(
             observation_export_path

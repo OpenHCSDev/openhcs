@@ -5,9 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from openhcs.core.selection import SelectedItems
 from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
 from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
+    OutputPlateRoot,
     PlateInspectionDefaults,
     PlatePathInspectionRequest,
     SelectedPlateFileQueryRequest,
@@ -35,7 +37,6 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeService,
 )
 from openhcs.core.plate_image_inventory import PlateFileKind
-from openhcs.core.selection import SelectedAllSelectionMode
 
 
 @dataclass(frozen=True, slots=True)
@@ -290,7 +291,7 @@ class SelectedPlateService:
             UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
                 surface_id=PlateManagerStateSurfaceIdentityDeclaration.require_value(),
-                selection_mode=SelectedAllSelectionMode.SELECTED.value,
+                selection_mode=SelectedItems.name,
             ),
             connection,
         )
@@ -321,34 +322,19 @@ class SelectedPlateService:
         self,
         selected_plate: SelectedPlateStateResolution,
         *,
-        target: SelectedPlateFileQueryTarget,
+        target: type[SelectedPlateFileQueryTarget],
         source_format: str,
     ) -> tuple[SelectedPlateTargetRoot | None, AgentError | None]:
         state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
         plate_root = selected_plate.plate_root
         if plate_root is None:
             raise RuntimeError("Selected row plate_root was validated as a string.")
-        selected_row = selected_plate.selected_plate or {}
-        if target is SelectedPlateFileQueryTarget.OUTPUT:
-            output_root = selected_row.get("output_root")
-            if not isinstance(output_root, str) or not output_root:
-                return None, AgentError(
-                    code="ui_selected_plate_output_root_unavailable",
-                    message=(
-                        "The selected PlateManager row does not expose an "
-                        "output_root."
-                    ),
-                    hint=(
-                        "Call openhcs_ui_get_state_surface(surface_id="
-                        f"{state_surface_id!r}) to inspect source/output plate "
-                        "relationships."
-                    ),
-                )
-            plate_root = output_root
-        elif target is SelectedPlateFileQueryTarget.SOURCE:
-            source_root = selected_row.get("source_root")
-            if isinstance(source_root, str) and source_root:
-                plate_root = source_root
+        resolved_root, error = target.plate_root(
+            selected_plate.selected_plate or {}, plate_root, state_surface_id
+        )
+        if error is not None:
+            return None, error
+        plate_root = resolved_root
         return (
             SelectedPlateTargetRoot(
                 plate_root=plate_root,
@@ -487,11 +473,11 @@ class SelectedPlateService:
     def stream_context_plate_root(
         selected_plate: SelectedPlateStateResolution,
         *,
-        target: SelectedPlateFileQueryTarget,
+        target: type[SelectedPlateFileQueryTarget],
         kind: PlateFileKind | None,
     ) -> str | None:
         if (
-            target is not SelectedPlateFileQueryTarget.OUTPUT
+            target is not OutputPlateRoot
             or kind is not PlateFileKind.RESULT
         ):
             return None

@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, fields
 from enum import Enum
 from typing import Any, ClassVar
 
+from metaclass_registry import AutoRegisterMeta
 from zmqruntime.messages import MessageFields
 
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import (
+    OrchestratorCompleted,
+    OrchestratorExecFailed,
+    OrchestratorReady,
+    OrchestratorState,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +69,7 @@ class ExecutionOutputSummary:
 class ExecutionCompletionPayload:
     """One typed terminal result passed from polling through UI presentation."""
 
-    status: TerminalExecutionStatus
+    status: type[TerminalExecutionStatus]
     execution_id: str | None
     results: Mapping[str, Any]
     output_dataset: ExecutionOutputSummary
@@ -80,7 +87,7 @@ class ExecutionCompletionPayload:
     @classmethod
     def completed(
         cls,
-        status: TerminalExecutionStatus,
+        status: type[TerminalExecutionStatus],
         execution_id: str | None,
         execution_payload: Mapping[str, Any],
     ) -> ExecutionCompletionPayload:
@@ -100,7 +107,7 @@ class ExecutionCompletionPayload:
     @classmethod
     def failed(
         cls,
-        status: TerminalExecutionStatus,
+        status: type[TerminalExecutionStatus],
         execution_id: str | None,
         execution_payload: Mapping[str, Any],
     ) -> ExecutionCompletionPayload:
@@ -118,7 +125,7 @@ class ExecutionCompletionPayload:
     @classmethod
     def cancelled(
         cls,
-        status: TerminalExecutionStatus,
+        status: type[TerminalExecutionStatus],
         execution_id: str | None,
         execution_payload: Mapping[str, Any],
     ) -> ExecutionCompletionPayload:
@@ -230,98 +237,87 @@ class ManagerExecutionState(str, Enum):
         return next_state, requested_force
 
 
-class TerminalExecutionStatus(str, Enum):
-    """Terminal workflow status shared by UI, MCP, and dev-client polling."""
+class TerminalExecutionStatus(ABC, metaclass=AutoRegisterMeta):
+    """Terminal workflow status shared by UI, MCP, and dev-client polling.
 
-    counts_as_failed: bool
-    orchestrator_state: OrchestratorState
-    status_prefix: str
-    emit_failure: bool
-    auto_add_output_dataset: bool
-    serialized_aliases: frozenset[str]
+    Each status is a subclass; ``name`` is its spelling on the wire, and
+    ``serialized_aliases`` are other runtime spellings it is read from.
+    """
 
-    COMPLETE = (
-        "complete",
-        False,
-        OrchestratorState.COMPLETED,
-        "✅ Complete",
-        False,
-        True,
-        frozenset(),
-        ExecutionCompletionPayload.completed,
-    )
-    FAILED = (
-        "failed",
-        True,
-        OrchestratorState.EXEC_FAILED,
-        "❌ Exec Failed",
-        True,
-        False,
-        frozenset({"error"}),
-        ExecutionCompletionPayload.failed,
-    )
-    CANCELLED = (
-        "cancelled",
-        True,
-        OrchestratorState.READY,
-        "✗ Cancelled",
-        False,
-        False,
-        frozenset(),
-        ExecutionCompletionPayload.cancelled,
-    )
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    def __new__(
-        cls,
-        value: str,
-        counts_as_failed: bool,
-        orchestrator_state: OrchestratorState,
-        status_prefix: str,
-        emit_failure: bool,
-        auto_add_output_dataset: bool,
-        serialized_aliases: frozenset[str],
-        completion_factory: Callable[
-            [TerminalExecutionStatus, str | None, Mapping[str, Any]],
-            ExecutionCompletionPayload,
-        ],
-    ):
-        obj = str.__new__(cls, value)
-        obj._value_ = value
-        obj.counts_as_failed = counts_as_failed
-        obj.orchestrator_state = orchestrator_state
-        obj.status_prefix = status_prefix
-        obj.emit_failure = emit_failure
-        obj.auto_add_output_dataset = auto_add_output_dataset
-        obj.serialized_aliases = serialized_aliases
-        obj._completion_factory = completion_factory
-        return obj
+    name: ClassVar[str | None] = None
+    counts_as_failed: ClassVar[bool]
+    orchestrator_state: ClassVar[type[OrchestratorState]]
+    status_prefix: ClassVar[str]
+    emit_failure: ClassVar[bool]
+    auto_add_output_dataset: ClassVar[bool]
+    serialized_aliases: ClassVar[frozenset[str]] = frozenset()
+
+    @staticmethod
+    def named(value: str) -> type[TerminalExecutionStatus]:
+        """The status spelled ``value`` or one of its aliases."""
+        for status in TerminalExecutionStatus.__registry__.values():
+            if value == status.name or value in status.serialized_aliases:
+                return status
+        raise ValueError(f"{value!r} is not a terminal execution status.")
 
     @classmethod
-    def _missing_(cls, value: object) -> TerminalExecutionStatus | None:
-        return next(
-            (
-                status
-                for status in cls
-                if isinstance(value, str) and value in status.serialized_aliases
-            ),
-            None,
-        )
-
+    @abstractmethod
     def completion_payload(
-        self,
+        cls,
         *,
         execution_id: str | None,
         execution_payload: Mapping[str, Any],
     ) -> ExecutionCompletionPayload:
-        """Decode this member's runtime payload into the canonical terminal result."""
+        """Decode this status's runtime payload into the terminal result."""
 
-        return self._completion_factory(self, execution_id, execution_payload)
+
+class ExecutionCompleted(TerminalExecutionStatus):
+    name = "complete"
+    counts_as_failed = False
+    orchestrator_state = OrchestratorCompleted
+    status_prefix = "✅ Complete"
+    emit_failure = False
+    auto_add_output_dataset = True
+
+    @classmethod
+    def completion_payload(cls, *, execution_id, execution_payload):
+        return ExecutionCompletionPayload.completed(cls, execution_id, execution_payload)
+
+
+class ExecutionFailed(TerminalExecutionStatus):
+    name = "failed"
+    counts_as_failed = True
+    orchestrator_state = OrchestratorExecFailed
+    status_prefix = "❌ Exec Failed"
+    emit_failure = True
+    auto_add_output_dataset = False
+    serialized_aliases = frozenset({"error"})
+
+    @classmethod
+    def completion_payload(cls, *, execution_id, execution_payload):
+        return ExecutionCompletionPayload.failed(cls, execution_id, execution_payload)
+
+
+class ExecutionCancelled(TerminalExecutionStatus):
+    name = "cancelled"
+    counts_as_failed = True
+    orchestrator_state = OrchestratorReady
+    status_prefix = "✗ Cancelled"
+    emit_failure = False
+    auto_add_output_dataset = False
+
+    @classmethod
+    def completion_payload(cls, *, execution_id, execution_payload):
+        return ExecutionCompletionPayload.cancelled(cls, execution_id, execution_payload)
 
 
 def parse_terminal_status(
-    status: str | TerminalExecutionStatus,
-) -> TerminalExecutionStatus:
-    """Return the canonical terminal status for a UI/runtime status value."""
-    if isinstance(status, TerminalExecutionStatus):
+    status: str | type[TerminalExecutionStatus],
+) -> type[TerminalExecutionStatus]:
+    """Return the terminal status for a UI/runtime status value."""
+    if isinstance(status, type):
         return status
-    return TerminalExecutionStatus(status)
+    return TerminalExecutionStatus.named(status)

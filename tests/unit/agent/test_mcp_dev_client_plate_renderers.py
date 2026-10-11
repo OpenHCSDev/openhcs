@@ -30,7 +30,8 @@ from openhcs.agent.dto.plate import (
     PlateInspectionValueSource,
     PlatePathInspectionResult,
     SelectedPlateFileQueryResult,
-    SelectedPlateFileQueryTarget,
+    OutputPlateRoot,
+    SelectedRowRoot,
     SelectedPlateFileStreamResult,
     SelectedPlateImageInspectionResult,
     SelectedPlateImageSampleResult,
@@ -302,8 +303,8 @@ def test_stream_bounds_paths_and_suggests_viewer_commands():
 @pytest.mark.parametrize(
     "target,command",
     [
-        (SelectedPlateFileQueryTarget.SELECTED, "Next: selected-plate-sample A01_w2.tif"),
-        (SelectedPlateFileQueryTarget.OUTPUT, "Next: selected-plate-sample --target output A01_w2.tif"),
+        (SelectedRowRoot, "Next: selected-plate-sample A01_w2.tif"),
+        (OutputPlateRoot, "Next: selected-plate-sample --target output A01_w2.tif"),
     ],
 )
 def test_selected_plate_images_render_the_nested_inspection(target, command):
@@ -313,7 +314,7 @@ def test_selected_plate_images_render_the_nested_inspection(target, command):
             target=target, inspection=inspection(),
         )
     )
-    assert text.startswith(f"Selected plate: plate-a root=/plates/a target={target.value}\nPlate: /plates/a")
+    assert text.startswith(f"Selected plate: plate-a root=/plates/a target={target.name}\nPlate: /plates/a")
     assert command in text
     assert "sample-plate-image" not in text
     assert text.count("plate_parse_failures") == 1
@@ -344,7 +345,7 @@ def test_selected_plate_sample_and_stream_keep_target_context_on_failure():
     sample_text = render(
         SelectedPlateImageSampleResult(
             schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
-            target=SelectedPlateFileQueryTarget.OUTPUT, image_path="a.tif", errors=(error,),
+            target=OutputPlateRoot, image_path="a.tif", errors=(error,),
         )
     )
     assert sample_text.startswith(
@@ -362,7 +363,7 @@ def test_selected_plate_sample_and_stream_keep_target_context_on_failure():
     nested = render(
         SelectedPlateFileStreamResult(
             schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
-            target=SelectedPlateFileQueryTarget.OUTPUT,
+            target=OutputPlateRoot,
             stream=stream(warnings=(AgentWarning("viewer_slow", "slow start"),)),
         )
     )

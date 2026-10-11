@@ -1,5 +1,6 @@
 """Default retained image artifacts keep their declared output role identity."""
 
+from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import replace
 from pathlib import Path
 import json
@@ -151,7 +152,7 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
 ))
 def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_path, purpose):
     from openhcs.processing.materialization import (
-        ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
+        ImageFileOptions, MaterializationSpec,
         TerminalMaterializationSpec, materialization_outputs,
     )
 
@@ -159,8 +160,8 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
         filename_suffix=".tif",
         relative_path_template=("authored/plane_{index}.tif" if purpose.endswith("template") else None),
         filename_identity=(
-            MaterializedFilenameIdentity.ARTIFACT_NAME if purpose.endswith("artifact")
-            else MaterializedFilenameIdentity.SOURCE_IDENTITY
+            NameByArtifactName if purpose.endswith("artifact")
+            else NameBySourceIdentity
         ),
     )
     spec = (

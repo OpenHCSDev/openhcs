@@ -7,7 +7,6 @@ import pytest
 from scripts import build_hosted_mcp_plugin as plugin_builder
 from scripts.build_hosted_mcp_plugin import (
     build_hosted_plugin,
-    normalize_authentication_mode,
     normalize_registered_app_id,
     validate_plugin_relative_path,
     validate_public_https_url,
@@ -203,15 +202,9 @@ def test_plugin_build_requires_the_validated_hosted_registry(monkeypatch, tmp_pa
         _build(tmp_path)
 
 
-def test_authentication_mode_uses_hosted_server_authority():
-    assert normalize_authentication_mode("public_read_only").value == (
-        "public_read_only"
-    )
-    assert normalize_authentication_mode("oauth_introspection").value == (
-        "oauth_introspection"
-    )
+def test_unknown_authentication_mode_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="authentication mode"):
-        normalize_authentication_mode("oauth")
+        _build(tmp_path, authentication_mode="oauth")
 
 
 @pytest.mark.parametrize(

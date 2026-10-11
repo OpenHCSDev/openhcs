@@ -5,10 +5,6 @@ from __future__ import annotations
 from typing import Optional
 
 from openhcs.constants.constants import OrchestratorState
-from openhcs.core.debug_session_projection import (
-    DebugSessionPhase,
-    DebugSessionPhaseDeclarationBase,
-)
 from openhcs.core.progress.projection import SubjectRuntimeProjection
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
@@ -19,22 +15,14 @@ class PlateStatusPresenter:
     """Render deterministic plate status text from execution + orchestrator signals."""
 
     @classmethod
-    def build_debug_status_prefix(
-        cls,
-        *,
-        debug_phase: DebugSessionPhase,
-    ) -> str:
-        return DebugSessionPhaseDeclarationBase.for_phase(debug_phase).status_prefix
-
-    @classmethod
     def build_status_prefix(
         cls,
         *,
-        orchestrator_state: Optional[OrchestratorState],
+        orchestrator_state: Optional[type[OrchestratorState]],
         is_init_pending: bool,
         is_compile_pending: bool,
         is_execution_active: bool,
-        terminal_status: Optional[TerminalExecutionStatus],
+        terminal_status: Optional[type[TerminalExecutionStatus]],
         runtime_projection: Optional[SubjectRuntimeProjection],
     ) -> str:
         # Runtime projection is canonical whenever present.

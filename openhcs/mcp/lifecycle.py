@@ -9,6 +9,7 @@ the client can reconnect through to select the current installation.
 
 from __future__ import annotations
 
+from abc import ABC
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import errno
@@ -17,7 +18,10 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+from typing import ClassVar
 import stat
+
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.mcp.bootstrap import (
     MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE,
@@ -51,28 +55,49 @@ class McpLifecycleConfigurationError(ValueError):
     """The launcher supplied an invalid local MCP lifecycle contract."""
 
 
-class McpProcessRecoveryReason(str, Enum):
-    """Why the running MCP process must be replaced."""
+class McpProcessRecoveryReason(ABC, metaclass=AutoRegisterMeta):
+    """Why the running MCP process must be replaced, or that it need not be.
 
-    CURRENT = "current"
-    SOURCE_CHANGED = "source_changed"
-    INSTALLATION_CHANGED = "installation_changed"
-    SOURCE_AND_INSTALLATION_CHANGED = "source_and_installation_changed"
+    Each reason is a subclass; ``name`` is its spelling in MCP results.
+    """
 
-    @classmethod
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    restart_required: ClassVar[bool] = True
+    """The running process no longer matches its source or installation."""
+
+    @staticmethod
     def from_drift(
-        cls,
         *,
         source_changed: bool,
         installation_changed: bool,
-    ) -> "McpProcessRecoveryReason":
+    ) -> type[McpProcessRecoveryReason]:
         if source_changed and installation_changed:
-            return cls.SOURCE_AND_INSTALLATION_CHANGED
+            return SourceAndInstallationChanged
         if source_changed:
-            return cls.SOURCE_CHANGED
+            return SourceChanged
         if installation_changed:
-            return cls.INSTALLATION_CHANGED
-        return cls.CURRENT
+            return InstallationChanged
+        return ProcessCurrent
+
+
+class ProcessCurrent(McpProcessRecoveryReason):
+    name = "current"
+    restart_required = False
+
+
+class SourceChanged(McpProcessRecoveryReason):
+    name = "source_changed"
+
+
+class InstallationChanged(McpProcessRecoveryReason):
+    name = "installation_changed"
+
+
+class SourceAndInstallationChanged(McpProcessRecoveryReason):
+    name = "source_and_installation_changed"
 
 
 class McpReconnectOwner(str, Enum):
@@ -148,7 +173,7 @@ class McpInstallationPointerSnapshot:
 class McpProcessRecoveryStatus:
     """One current recovery decision for the running local MCP process."""
 
-    reason: McpProcessRecoveryReason
+    reason: type[McpProcessRecoveryReason]
     installation_pointer_path: str | None
     installation_pointer_changed_since_import: bool
     installation_pointer_available: bool | None
@@ -276,7 +301,7 @@ class McpProcessLifecycle:
             source_changed=source_changed,
             installation_changed=installation_changed,
         )
-        restart_required = reason is not McpProcessRecoveryReason.CURRENT
+        restart_required = reason.restart_required
         command_is_stable = self.stable_launch_command is not None
         restart_command = (
             self.stable_launch_command

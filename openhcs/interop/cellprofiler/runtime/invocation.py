@@ -15,6 +15,7 @@ from openhcs.core.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
     MeasurementImageReferenceDomain,
     PreparedMeasurementObjectLabels,
+    SourceImageReference,
 )
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_adapters import (
@@ -433,9 +434,6 @@ class CellProfilerSourceImagePair:
         }
 
 
-CellProfilerMeasurementImageDomain = MeasurementImageReferenceDomain
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CellProfilerMeasurementImage(
     CellProfilerSourceIdentityMixin,
@@ -452,18 +450,18 @@ class CellProfilerMeasurementImage(
     payload: RuntimeCallableArgument
     source_aliases: tuple[str, ...] = ()
     align_to_labels: bool = True
-    reference_domain: CellProfilerMeasurementImageDomain = (
-        CellProfilerMeasurementImageDomain.SOURCE_IMAGE
-    )
+    reference_domain: type[MeasurementImageReferenceDomain] = SourceImageReference
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "payload", owned_runtime_value(self.payload))
         self.validate_source_identity()
-        if not isinstance(self.reference_domain, CellProfilerMeasurementImageDomain):
+        if not (
+            isinstance(self.reference_domain, type)
+            and issubclass(self.reference_domain, MeasurementImageReferenceDomain)
+        ):
             raise TypeError(
-                "CellProfilerMeasurementImage.reference_domain must be "
-                "CellProfilerMeasurementImageDomain, got "
-                f"{type(self.reference_domain).__name__}."
+                "CellProfilerMeasurementImage.reference_domain must be a "
+                f"MeasurementImageReferenceDomain class, got {self.reference_domain!r}."
             )
         object.__setattr__(
             self, "payload", self.execution_mode.executable_payload(self.payload)
@@ -475,10 +473,7 @@ class CellProfilerMeasurementImage(
         sources: tuple["CellProfilerMeasurementImage", ...],
     ) -> ImagePayloadMetadataCompositionMode:
         """Return source metadata topology declared by measurement reference domains."""
-        if all(
-            source.reference_domain is CellProfilerMeasurementImageDomain.OBJECT_LABELS
-            for source in sources
-        ):
+        if all(source.reference_domain.bundles_source_metadata for source in sources):
             return ImagePayloadMetadataCompositionMode.BUNDLE
         return ImagePayloadMetadataCompositionMode.STACK
 
@@ -488,7 +483,7 @@ class CellProfilerMeasurementImage(
         return self.payload
 
     @property
-    def alignment_reference_domain(self) -> CellProfilerMeasurementImageDomain:
+    def alignment_reference_domain(self) -> type[MeasurementImageReferenceDomain]:
         """Return the reference domain that owns alignment shape decisions."""
         return self.reference_domain
 

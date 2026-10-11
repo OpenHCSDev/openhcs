@@ -12,10 +12,12 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     MetadataSelector,
     NamedSourceBinding,
+    SourceDirectory,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContainsRegex,
+    TextEquals,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_projection import SourceCandidate
@@ -74,19 +76,19 @@ def test_binding_directory_regex_and_or_group_use_the_same_owner(
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.DIRECTORY,
-                    SourceFilterMatchType.CONTAINS_REGEX,
+                    SourceDirectory,
+                    TextContainsRegex,
                     r"(?:^|/)selected$",
                 ),
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.EQUALS,
+                    SourceFileName,
+                    TextEquals,
                     "a.czi",
                     any_group=0,
                 ),
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.EQUALS,
+                    SourceFileName,
+                    TextEquals,
                     "b.czi",
                     any_group=0,
                 ),
@@ -141,8 +143,8 @@ def test_decoded_companion_filters_do_not_replace_exact_entrypoint_identity(tmp_
     selector = SourceSelector(
         filters=(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 companion.name,
             ),
         )
@@ -179,8 +181,8 @@ def test_unrestricted_alias_keeps_union_without_erasing_other_alias_filters(tmp_
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.EQUALS,
+                    SourceFileName,
+                    TextEquals,
                     "selected.czi",
                 ),
             )

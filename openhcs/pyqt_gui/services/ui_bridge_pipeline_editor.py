@@ -5,12 +5,12 @@ from __future__ import annotations
 import hashlib
 from dataclasses import replace
 
+from openhcs.core.selection import AllItems, SelectionScope
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiActionIdentity,
     UiActionInvokeRequest,
     UiActionSummary,
-    UiCodeDocumentSelectionMode,
     UiDebugActionState,
     UiDebugCursorState,
     UiDebugRuntimeFrameState,
@@ -225,7 +225,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
 
     def read(self, request: UiStateSurfaceRequest) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         try:
             state = self._state()
@@ -310,7 +310,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             manager_execution_state=context.manager_execution_state.value,
             initialized=False if target is None else target.initialized,
             compiled=False if target is None else target.compiled,
-            phase=DebugToolbarActionProjector.phase(context).value,
+            phase=context.phase.name,
             active_session_id=None if session is None else session.debug_session_id,
             execution_id=None if session is None else session.execution_id,
             axis_id=None if session is None else session.axis_id,
@@ -375,7 +375,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
         return UiDebugActionState(
             action_id=model.action_id,
             label=model.label,
-            placement=model.placement.value,
+            placement=model.placement.name,
             enabled=model.enabled,
             side_effects=model.side_effects,
             confirmation_required=model.confirmation_required,
@@ -559,7 +559,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
         errors: tuple[AgentError, ...],
     ) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         state = UiPipelineDebugSessionState(
             schema_version=SCHEMA_VERSION,
@@ -644,7 +644,7 @@ class PipelineEditorStateSurfaceProvider(UiStateSurfaceProviderABC):
 
     def read(self, request: UiStateSurfaceRequest) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         try:
             state = self._state(selection_mode=selection_mode)
@@ -676,9 +676,8 @@ class PipelineEditorStateSurfaceProvider(UiStateSurfaceProviderABC):
         view = PipelineStepsView.state_of(
             self._manager.session, self._manager.current_plate, selected
         )
-        steps = view.steps
-        if selection_mode == UiCodeDocumentSelectionMode.SELECTED.value:
-            steps = tuple(step for step in steps if step.selected)
+        scope = SelectionScope.named(selection_mode)
+        steps = tuple(step for step in view.steps if scope.keeps(step.selected))
         return UiPipelineEditorState(
             schema_version=SCHEMA_VERSION,
             summary=self.summary(),
@@ -733,7 +732,7 @@ class PipelineEditorStateSurfaceProvider(UiStateSurfaceProviderABC):
         errors: tuple[AgentError, ...],
     ) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         state = UiPipelineEditorState(
             schema_version=SCHEMA_VERSION,

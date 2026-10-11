@@ -31,18 +31,23 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_matching import source_filters_match
 from openhcs.core.source_bindings import (
+    BroadcastSource,
     ComponentSelector,
+    FromFileName,
+    FromPipelineStart,
     ImagePlaneSource,
-    MetadataSource,
+    MatchedSource,
     NamedSourceBinding,
-    SourceBindingDeclarationsMixin,
     PairByMetadata,
-    SourceBindingOrigin,
+    PathIsImage,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
+    SourceBindingDeclarationsMixin,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
-    SourceSetRole,
+    TextContains,
+    TextContainsRegex,
+    TextDoesNotContain,
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import (
@@ -218,7 +223,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
                     alias="Mask",
                     artifact_kind=ObjectLabelsArtifactType,
                     required=False,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                     load_as_mask=True,
                     source_channel_axis=-1,
                     source_channel_counts=frozenset({3}),
@@ -375,9 +380,9 @@ def test_images_setup_preserves_pipeline_owned_embedded_planes() -> None:
         ),
     )
 
-    assert config.source_filters[0].match_type is SourceFilterMatchType.IS_IMAGE
-    assert config.source_filters[1].subject is SourceFilterSubject.FILE
-    assert config.source_filters[1].match_type is SourceFilterMatchType.CONTAINS_REGEX
+    assert config.source_filters[0].match_type is PathIsImage
+    assert config.source_filters[1].subject is SourceFileName
+    assert config.source_filters[1].match_type is TextContainsRegex
     assert config.source_filters[1].value == "A01"
     assert config.image_plane_sources[0].uri == "/data/A01.npy"
     assert config.image_plane_sources[0].index == "2"
@@ -446,8 +451,8 @@ def test_names_and_types_keeps_metadata_presence_out_of_path_filters() -> None:
 
     assert config.bindings[0].selector.filters == (
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "dapi",
         ),
     )
@@ -480,7 +485,7 @@ def test_metadata_setup_contributes_path_rules_and_imported_tables() -> None:
     config = _fold_setup_modules(metadata)
 
     assert len(config.metadata_rules) == 1
-    assert config.metadata_rules[0].source is MetadataSource.FILE_NAME
+    assert config.metadata_rules[0].source is FromFileName
     assert "Well" in config.metadata_rules[0].pattern
     assert config.metadata_rules[0].filters[0].value == "DNA"
     assert config.imported_metadata_tables[0].location == "metadata/plate.csv"
@@ -720,13 +725,13 @@ def test_names_and_types_contributes_typed_bindings_and_metadata_match_plan() ->
     illumination = config.binding_for_alias("DAPIillum")
 
     assert dapi.artifact_kind is ImageArtifactType
-    assert dapi.origin is SourceBindingOrigin.PIPELINE_START
+    assert dapi.origin is FromPipelineStart
     assert dapi.selector.metadata[0].field == "channel"
     assert dapi.selector.metadata[0].value == "1"
     assert illumination.artifact_kind is ImageArtifactType
-    assert illumination.origin is SourceBindingOrigin.PIPELINE_START
-    assert illumination.source_set_role is SourceSetRole.MATCHED
-    assert illumination.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert illumination.origin is FromPipelineStart
+    assert illumination.source_set_role is MatchedSource
+    assert illumination.projection_role is SourceArtifactRole
     assert isinstance(config.match_plan, PairByMetadata)
     assert config.match_plan.dimensions[0].field_for_alias("DAPI") == "folder"
     assert (
@@ -755,10 +760,10 @@ def test_names_and_types_parses_declared_single_image_as_broadcast_member() -> N
     dapi = config.binding_for_alias("DAPI")
     flatfield = config.binding_for_alias("Flatfield")
 
-    assert dapi.source_set_role is SourceSetRole.MATCHED
-    assert dapi.projection_role is SourceProjectionRole.PRIMARY_PLANE
-    assert flatfield.source_set_role is SourceSetRole.BROADCAST
-    assert flatfield.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert dapi.source_set_role is MatchedSource
+    assert dapi.projection_role is PrimaryPlaneRole
+    assert flatfield.source_set_role is BroadcastSource
+    assert flatfield.projection_role is SourceArtifactRole
     assert flatfield.explicit_source == ImagePlaneSource(
         uri="file:/data/flatfield.tif",
         series="2",
@@ -869,8 +874,8 @@ def test_names_and_types_contributes_payload_loading_semantics(
     assert mask.artifact_kind is ImageArtifactType
     assert mask.load_as_mask is True
     assert objects.artifact_kind is ObjectLabelsArtifactType
-    assert objects.source_set_role is SourceSetRole.MATCHED
-    assert objects.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert objects.source_set_role is MatchedSource
+    assert objects.projection_role is SourceArtifactRole
 
 
 def test_monochrome_source_normalizes_before_collapsing_rgb_channels() -> None:
@@ -997,15 +1002,15 @@ def test_load_images_contributes_binding_filters_metadata_and_grouping() -> None
     config = _fold_setup_modules(module)
     binding = config.binding_for_alias("DNA")
 
-    assert binding.origin is SourceBindingOrigin.PIPELINE_START
-    assert binding.selector.filters[0].subject is SourceFilterSubject.FILE
-    assert binding.selector.filters[0].match_type is SourceFilterMatchType.CONTAINS
+    assert binding.origin is FromPipelineStart
+    assert binding.selector.filters[0].subject is SourceFileName
+    assert binding.selector.filters[0].match_type is TextContains
     assert binding.selector.filters[0].value == "Channel2"
     assert (
-        binding.selector.filters[1].match_type is SourceFilterMatchType.DOES_NOT_CONTAIN
+        binding.selector.filters[1].match_type is TextDoesNotContain
     )
     assert binding.selector.filters[1].value == "ILLUM"
-    assert config.metadata_rules[0].source is MetadataSource.FILE_NAME
+    assert config.metadata_rules[0].source is FromFileName
     assert config.metadata_rules[0].pattern == (
         r"^.*-(?P<WellRow>.+)-(?P<WellCol>[0-9]{2})"
     )
@@ -1056,7 +1061,7 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
     config = _fold_setup_modules(images, names, groups)
 
     assert tuple(binding.alias for binding in config.bindings) == ("DNA",)
-    assert config.source_filters[0].match_type is SourceFilterMatchType.IS_IMAGE
+    assert config.source_filters[0].match_type is PathIsImage
     assert config.grouping_metadata_fields == ("Well",)
     assert all(
         CellProfilerModule.require_module(module.name).emits_function_step() is False

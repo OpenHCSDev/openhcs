@@ -35,10 +35,15 @@ from openhcs.core.function_reference import (
     RegistryFunctionReference,
 )
 from openhcs.agent.dto.ui_bridge import (
+    ActionRejected,
+    OperationCompleted,
+    OperationFailed,
+    OperationNotFound,
+    OperationRunning,
+    OperationUnavailable,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
@@ -161,7 +166,7 @@ from openhcs.pyqt_gui.services.ui_bridge_registry import (
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
     PlateManagerCodeNamespace,
-    PlateManagerCodeNamespaceField,
+    PlateManagerDocumentAssignments,
     PlateManagerOrchestratorCodePayload,
 )
 
@@ -171,15 +176,19 @@ if TYPE_CHECKING:
 
 UiBridgeObservedResultT = TypeVar("UiBridgeObservedResultT", bound=AgentResultEnvelope)
 
+_ORCHESTRATOR_CODE_DOCUMENT_EXAMPLE = PlateManagerDocumentAssignments(
+    plate_paths="['/path/to/plate']",
+    global_config="GlobalPipelineConfig(...)",
+    per_plate_configs="{'/path/to/plate': PipelineConfig(...)}",
+    pipeline_data="{'/path/to/plate': [FunctionStep(...), ...]}",
+)
 ORCHESTRATOR_CODE_DOCUMENT_PAYLOAD_HINT = (
     "Use the plate-manager orchestrator code document shape: "
-    f"{PlateManagerCodeNamespaceField.PLATE_PATHS.value} = ['/path/to/plate']; "
-    f"{PlateManagerCodeNamespaceField.GLOBAL_CONFIG.value} = "
-    "GlobalPipelineConfig(...); "
-    f"{PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS.value} = "
-    "{'/path/to/plate': PipelineConfig(...)}; "
-    f"{PlateManagerCodeNamespaceField.PIPELINE_DATA.value} = "
-    "{'/path/to/plate': [FunctionStep(...), ...]}. "
+    + "; ".join(
+        f"{name} = {getattr(_ORCHESTRATOR_CODE_DOCUMENT_EXAMPLE, name)}"
+        for name in PlateManagerDocumentAssignments.names()
+    )
+    + ". "
     f"Read {PlateManagerOrchestratorCodeDocumentIdentity.require_value()} "
     "for the current template."
 )
@@ -331,7 +340,7 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
             self._error("unsafe_assignment", "Only one named assignment is allowed.")
             return
         target = node.targets[0]
-        if target.id in PlateManagerCodeNamespaceField.allowed_assignment_names():
+        if target.id in PlateManagerDocumentAssignments.names():
             self.visit(node.value)
             return
         if target.id in self._helper_bindings:
@@ -701,7 +710,7 @@ class UiBridgeMutationGate:
         try:
             self._tracker.complete(
                 operation.identity.operation_id,
-                status=UiBridgeOperationStatus.COMPLETED,
+                status=OperationCompleted,
                 outcome=operation_type.outcome(result),
                 errors=result.errors,
                 warnings=result.warnings,
@@ -718,7 +727,7 @@ class UiBridgeMutationGate:
         try:
             self._tracker.complete(
                 operation.identity.operation_id,
-                status=UiBridgeOperationStatus.FAILED,
+                status=OperationFailed,
                 outcome="error",
                 errors=(
                     AgentError.from_exception("ui_bridge_operation_failed", exception),
@@ -751,7 +760,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
                     target_id=target_id,
                 ),
             ),
-            status=UiBridgeOperationStatus.RUNNING.value,
+            status=OperationRunning.name,
             started_at_unix=time.time(),
         )
         with self._lock:
@@ -762,7 +771,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         self,
         operation_id: str,
         *,
-        status: UiBridgeOperationStatus,
+        status: type[UiBridgeOperationStatus],
         outcome: str | None,
         errors: tuple[AgentError, ...] = (),
         warnings: tuple[AgentWarning, ...] = (),
@@ -772,7 +781,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
             operation = self._operations[operation_id]
             completed = replace(
                 operation,
-                status=status.value,
+                status=status.name,
                 completed_at_unix=time.time(),
                 outcome=outcome,
                 errors=errors,
@@ -797,9 +806,9 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         return self.complete(
             operation_id,
             status=(
-                UiBridgeOperationStatus.FAILED
+                OperationFailed
                 if result.errors
-                else UiBridgeOperationStatus.COMPLETED
+                else OperationCompleted
             ),
             outcome="error" if result.errors else contract.success_outcome,
             errors=result.errors,
@@ -816,7 +825,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         )
         return self.complete(
             operation_id,
-            status=UiBridgeOperationStatus.FAILED,
+            status=OperationFailed,
             outcome="error",
             errors=(AgentError.from_exception(contract.failure_error_code, error),),
         )
@@ -855,7 +864,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
                 operation_id=operation_id,
                 route=UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
             ),
-            status=UiBridgeOperationStatus.NOT_FOUND.value,
+            status=OperationNotFound.name,
             started_at_unix=0.0,
             completed_at_unix=0.0,
             outcome="not_found",
@@ -874,10 +883,8 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
         operations = self.operations()
         status_counts = {
-            status: sum(
-                1 for operation in operations if operation.status == status.value
-            )
-            for status in UiBridgeOperationStatus
+            status: sum(1 for operation in operations if operation.status == status.name)
+            for status in (OperationRunning, OperationFailed, OperationCompleted)
         }
         recent_operations = tuple(reversed(operations[-5:]))
         return (
@@ -885,25 +892,25 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
                 section_id=self.overview_identity.section_id,
                 title=self.overview_identity.title,
                 summary=(
-                    f"{status_counts[UiBridgeOperationStatus.RUNNING]} running, "
-                    f"{status_counts[UiBridgeOperationStatus.FAILED]} failed, "
-                    f"{status_counts[UiBridgeOperationStatus.COMPLETED]} completed"
+                    f"{status_counts[OperationRunning]} running, "
+                    f"{status_counts[OperationFailed]} failed, "
+                    f"{status_counts[OperationCompleted]} completed"
                 ),
                 metrics=(
                     UiLiveOverviewMetric(
-                        key=UiBridgeOperationStatus.RUNNING.value,
+                        key=OperationRunning.name,
                         label="Running",
-                        value=str(status_counts[UiBridgeOperationStatus.RUNNING]),
+                        value=str(status_counts[OperationRunning]),
                     ),
                     UiLiveOverviewMetric(
-                        key=UiBridgeOperationStatus.FAILED.value,
+                        key=OperationFailed.name,
                         label="Failed",
-                        value=str(status_counts[UiBridgeOperationStatus.FAILED]),
+                        value=str(status_counts[OperationFailed]),
                     ),
                     UiLiveOverviewMetric(
-                        key=UiBridgeOperationStatus.COMPLETED.value,
+                        key=OperationCompleted.name,
                         label="Completed",
-                        value=str(status_counts[UiBridgeOperationStatus.COMPLETED]),
+                        value=str(status_counts[OperationCompleted]),
                     ),
                 ),
                 items=tuple(
@@ -919,11 +926,13 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         )
 
     @staticmethod
-    def _operation_status(operation: UiBridgeOperationRef) -> UiBridgeOperationStatus:
+    def _operation_status(
+        operation: UiBridgeOperationRef,
+    ) -> type[UiBridgeOperationStatus]:
         try:
-            return UiBridgeOperationStatus(operation.status)
+            return UiBridgeOperationStatus.named(operation.status)
         except ValueError:
-            return UiBridgeOperationStatus.UNAVAILABLE
+            return OperationUnavailable
 
     @classmethod
     def _operation_severity(cls, operation: UiBridgeOperationRef) -> str:
@@ -1873,7 +1882,7 @@ class UiAgentBridgeService(UiBridgeOperationServer):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.REJECTED.value,
+            status=ActionRejected,
             receipt=UiMutationReceipt.rejected_for(request.request_token),
             target_scope_ids=request.selected_scope_ids,
             selection_revision_token=request.observed_selection_revision_token,
