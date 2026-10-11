@@ -49,6 +49,28 @@ Protocol and codec:
 
 Production (Python under `openhcs/`): −2733 +2036.
 
+## Deletion certificates
+
+| Deleted | Certificate |
+|---|---|
+| `WellFilterConfig`, `StepWellFilterConfig`, `WellFilterMode`, `well_filter`, `well_filter_mode`, `well_filter_config`, `auto_add_output_plate_to_plate_manager`, the `well_filter` ZMQ auxiliary key, the manifest `well_filter` keys | **contract** (no backwards compatibility; G7-Q1) |
+| `plate_id`/`plate_path`/`owned_wells`/`total_wells` and the other runtime names | **contract** (renamed in lockstep; runtime state reset) |
+| `ProgressEventPayload`, `create_event`, module `emit`, `ProgressEvent.to_dict`/`from_dict`, `ProgressIdentity.from_transport_fields`, `ProgressExecutionContext.from_transport_fields`/`to_transport_fields`/`from_value` | **derived** (the L2 codec over `ProgressEvent`'s declaration; `project_dataclass` for `identity`) |
+| The 21 tag literals, both command decoders, both reply readers, the unknown-message branches, `(slot, process, connection)` tuples | **derived** (the `WorkerCommand`/`WorkerReply` families and `WorkerProcess`) |
+| `WorkerAssignmentPlan.owned_wells`, the field-by-field `lane_context`, the identity copies in 8 emits, the debug sink request and sinks, the profiling arguments | **derived** (`WorkerLaneExecutionContext.event_fields`, `project_dataclass` of the plan) |
+| `PlateRuntimeState` enum, `for_state`, `require_state` | **derived** (the `SubjectRuntimeState` registry) |
+| `is_progress_context`, `to/from_progress_context`, `runtime_artifact_context_for_records`, `live_measurement_context_for_records`, the two key constants | **derived** (`ProgressContextPayload` registry and `context_of`) |
+| `ZMQCompilationResult.compiled_axis_ids` field and the two recomputed copies | **derived** (properties of the bundle) |
+| `ProgressValidationError`, `ProgressRegistrationError` | **unused** |
+| `f"{axis_name}_filter"` pattern-discovery kwargs | **derived** (explicit `partition_values=`; the only producer passed the partition axis's filter) |
+
+**Tests-only** (behaviour the interface admits that no test exercises):
+- A fork lane that raises `BaseException` (KeyboardInterrupt, SystemExit) no longer sends an error reply before exiting; the parent now reports "exited without a result" with the exit code. Only `Exception` paths are tested.
+- A worker failure now carries the exception's text and traceback, not the pickled exception object; the parent only ever formatted it as text, but an exception class that pickles differently than it prints is not tested.
+- A prepared worker's failure message names its process slot (`prepared_N`) rather than the lane slot.
+- Profiling moved into `execute_worker_lane`, so thread-pool and process-pool lanes now profile too when `OPENHCS_WORKER_PROFILE_DIR` is set; tests cover inline and fork lanes and the policy, not pool lanes.
+- Untested by the suite in general: partition axes other than microscopy's well (beyond the remote-sensing witness, which runs direct, not over ZMQ), worker counts above 2 with prepared workers, spawn and forkserver start methods with prepared workers.
+
 ## Persisted state
 
 | Store | Class | At cutover |
