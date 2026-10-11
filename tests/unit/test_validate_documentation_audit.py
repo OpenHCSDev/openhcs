@@ -26,6 +26,15 @@ def test_repository_paths_retain_the_full_jsonl_suffix():
     )
 
 
+def test_repository_paths_match_whole_paths_only():
+    target = "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md"
+    matches = [
+        match.group("target")
+        for match in REPOSITORY_SOURCE_PATH.finditer(f'"source_path": "{target}"')
+    ]
+    assert matches == [target]
+
+
 def _entry(
     path: str,
     source: bytes = b"Index\n=====\n",

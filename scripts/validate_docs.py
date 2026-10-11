@@ -65,7 +65,8 @@ PYTHON_DIRECTIVE = re.compile(
 MARKDOWN_FENCE = re.compile(r"^\s*```(?:python|py)\s*$", re.IGNORECASE)
 LITERAL_INCLUDE = re.compile(r"^\s*\.\.\s+literalinclude::\s+(?P<target>\S+)\s*$")
 REPOSITORY_SOURCE_PATH = re.compile(
-    r"(?P<target>(?:benchmark|docs|external|openhcs|scripts)/[A-Za-z0-9_.\-/]+"
+    r"(?<![A-Za-z0-9_.\-/])"
+    r"(?P<target>(?:benchmark|docs|external|openhcs|packaging|scripts)/[A-Za-z0-9_.\-/]+"
     r"\.(?:jsonl|json|md|py|rst|toml|yaml|yml))(?![A-Za-z0-9_])"
 )
 EXTERNAL_URL = re.compile(r"https?://\S+")
