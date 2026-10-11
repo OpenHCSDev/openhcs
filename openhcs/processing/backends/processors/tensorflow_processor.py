@@ -11,7 +11,8 @@ from typing import List, Optional, Tuple
 from arraybridge import MemoryType
 from arraybridge.array_operations import ArrayOperations
 
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import tensorflow as tensorflow_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs

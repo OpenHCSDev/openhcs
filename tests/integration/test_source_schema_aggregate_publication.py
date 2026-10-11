@@ -20,7 +20,8 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     InProcessCompileInspectionGateway,
 )
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
+from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,

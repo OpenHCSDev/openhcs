@@ -14,12 +14,10 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
     compose_aligned_image_payload,
 )
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
-    GroupLineageSourceRelation,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -121,11 +119,11 @@ def _named_carrier() -> tuple[AlignedImageStack, np.ndarray, np.ndarray]:
             (
                 AlignedImageSliceContext.main_flow(
                     "mCherry",
-                    artifact_kind=ImageArtifactType.require_value(),
+                    artifact_kind=ImageArtifactType.value,
                 ),
                 AlignedImageSliceContext.main_flow(
                     "GFP",
-                    artifact_kind=ImageArtifactType.require_value(),
+                    artifact_kind=ImageArtifactType.value,
                 ),
             ),
         ),
@@ -161,7 +159,7 @@ def _single_output_bundle(name: str, payload: np.ndarray) -> ImageOutputBundle:
         (
             AlignedImageSliceContext.main_flow(
                 name,
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
         ),
     )
@@ -319,7 +317,7 @@ def test_non_main_context_does_not_match_main_flow_artifact_ref() -> None:
                 output_kind="artifact",
                 output_key="mCherry",
                 projection_key="mCherry",
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
         ),
     )
@@ -343,7 +341,7 @@ def test_runtime_binding_rejects_missing_exact_carrier_ref() -> None:
 def test_aligned_carrier_rejects_duplicate_exact_context() -> None:
     context = AlignedImageSliceContext.main_flow(
         "mCherry",
-        artifact_kind=ImageArtifactType.require_value(),
+        artifact_kind=ImageArtifactType.value,
     )
     carrier = AlignedImageStack(
         (
@@ -388,11 +386,11 @@ def test_generic_aligned_composition_rejects_conflicting_exact_contexts() -> Non
         (
             AlignedImageSliceContext.main_flow(
                 "DNA",
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
             AlignedImageSliceContext.main_flow(
                 "Protein",
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
         ),
     )
@@ -413,7 +411,7 @@ def test_named_output_transformation_preserves_base_carrier_for_later_exact_inpu
         (
             AlignedImageSliceContext.main_flow(
                 "mCherry",
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
         ),
     )

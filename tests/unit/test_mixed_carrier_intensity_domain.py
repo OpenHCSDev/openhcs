@@ -217,7 +217,8 @@ def test_proof_invalidation_preserves_the_current_numerical_domain(normalized):
 
 @pytest.mark.parametrize('normalized', (False, True))
 def test_cellprofiler_registered_image_input_owner_enters_normalized_domain(normalized):
-    from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+    from openhcs.core.artifacts.specs import ArtifactSpec
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
 
     raw = source(np.full((2, 3), 128, dtype=np.uint8))

@@ -10,10 +10,7 @@ from typing import cast, TYPE_CHECKING
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.measurement_row_materialization import (
     measurement_row_has_object_identity,
 )

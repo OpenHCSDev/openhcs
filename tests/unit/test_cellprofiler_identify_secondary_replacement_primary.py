@@ -9,11 +9,10 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

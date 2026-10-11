@@ -8,7 +8,8 @@ import pytest
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_image_values import ImagePayloadMetadata

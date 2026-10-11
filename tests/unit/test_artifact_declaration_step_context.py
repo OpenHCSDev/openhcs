@@ -3,13 +3,9 @@
 from dataclasses import fields
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import (

@@ -12,12 +12,10 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,

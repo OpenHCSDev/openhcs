@@ -8,16 +8,14 @@ from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from collections.abc import Callable
 from dataclasses import replace
 from enum import Enum
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputStackBroadcastSourceRelation,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily

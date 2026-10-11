@@ -6,12 +6,9 @@ from enum import Enum
 from typing import Callable, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import public_names_from_objects, set_signature_analysis_target
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
-)
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,

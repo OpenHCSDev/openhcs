@@ -4,12 +4,10 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.relations import (
     InputStackBroadcastSourceRelation,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract

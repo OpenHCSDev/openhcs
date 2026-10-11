@@ -1,6 +1,7 @@
 from dataclasses import replace
 
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.runtime_adapters import RuntimeAdapterSpec
 

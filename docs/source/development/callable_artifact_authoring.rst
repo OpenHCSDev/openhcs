@@ -128,11 +128,13 @@ The dataclass owns the row schema, including the empty-row case.
    import numpy as np
 
    from openhcs.core.memory import numpy
-   from openhcs.core.artifacts import (
-       ImageArtifactType, MainFlowStackOutputSpec,
+   from openhcs.core.artifacts.kinds import (
+       ImageArtifactType,
        MeasurementsArtifactType,
-       ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
+       ObjectLabelsArtifactType,
    )
+   from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
+   from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
    from openhcs.core.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
    )
@@ -282,10 +284,13 @@ This declaration block is for an operation that already produces labels and
 
    from dataclasses import dataclass
 
-   from openhcs.core.artifacts import (
-       ImageArtifactType, MainFlowStackOutputSpec, MeasurementsArtifactType,
-       ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
+   from openhcs.core.artifacts.kinds import (
+       ImageArtifactType,
+       MeasurementsArtifactType,
+       ObjectLabelsArtifactType,
    )
+   from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
+   from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
    from openhcs.core.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
    )
@@ -432,7 +437,8 @@ as its own custom-function source:
    import numpy as np
 
    from openhcs.core.memory import numpy
-   from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
+   from openhcs.core.artifacts.specs import ArtifactSpec
+   from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
    from openhcs.core.pipeline.function_contracts import artifact_inputs
    from openhcs.core.runtime_object_labels import ObjectLabelValue
    from openhcs.core.processing_contracts import Pure2DContract
@@ -494,8 +500,10 @@ runtime axis, not biological object counts or an inferred well identity:
    from dataclasses import dataclass
    from typing import cast
 
-   from openhcs.core.artifacts import (
-       ArtifactSpec, MeasurementsArtifactType, SpecialArtifactType,
+   from openhcs.core.artifacts.specs import ArtifactSpec
+   from openhcs.core.artifacts.kinds import (
+       MeasurementsArtifactType,
+       SpecialArtifactType,
    )
    from openhcs.core.callable_contract import FunctionStepExecutionScope
    from openhcs.core.measurement_row_materialization import (

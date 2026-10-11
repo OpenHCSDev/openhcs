@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.core.equivalence.measurement_features import (
+    RuntimeMeasurementFactCounterMapping,
+)
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import cast, ClassVar
@@ -14,7 +18,7 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeMeasurementFactList,
     RuntimeMeasurementFacts,
     RuntimeRequiredMeasurementKeys,
@@ -51,9 +55,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 from benchmark.equivalence.row_identity import (
     RuntimeObjectMeasurementRowIdentity,
-)
-from openhcs.core.equivalence.measurement_facts import (
-    RuntimeMeasurementFactCounterMapping,
 )
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (

@@ -18,14 +18,10 @@ from openhcs.core.artifact_inspection import (
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan

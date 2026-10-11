@@ -15,11 +15,10 @@ from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
-from openhcs.core.artifacts import (
-    ImageArtifactType,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.config import StepSourceBindingsConfig

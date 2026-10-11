@@ -30,14 +30,16 @@ from arraybridge import MemoryType
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
     ArtifactOutputPlan,
+    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecAccumulator,
     ArtifactSpecCollection,
-    ArtifactSpecRef,
 )
 from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 from openhcs.core.callable_contract import (

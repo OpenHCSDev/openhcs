@@ -19,7 +19,8 @@ from skimage import exposure, filters
 from skimage import morphology as morph
 from skimage import transform as trans
 
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation

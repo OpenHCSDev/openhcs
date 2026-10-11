@@ -11,11 +11,8 @@ import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import (
     GlobalPipelineConfig,

@@ -21,7 +21,7 @@ from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.axes import StackAxis
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.runtime.viewer_display import NapariDisplaySettings, NapariSlots
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.runtime_image_values import (

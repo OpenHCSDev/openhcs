@@ -9,11 +9,8 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    MetadataArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import MetadataArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_patterns import (

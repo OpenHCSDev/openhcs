@@ -17,12 +17,8 @@ import MTM
 import numpy as np
 from python_introspect import set_signature_analysis_target
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    MainFlowStackOutputSpec,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput

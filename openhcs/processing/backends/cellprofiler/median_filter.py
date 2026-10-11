@@ -10,7 +10,7 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
 from python_introspect import public_names_from_objects

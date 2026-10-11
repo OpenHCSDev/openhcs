@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.agent.dto.execution import ArtifactPlanInspection
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_labels import object_label_dense_array

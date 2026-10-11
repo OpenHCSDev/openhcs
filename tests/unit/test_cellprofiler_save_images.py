@@ -10,17 +10,15 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    MaterializedImageCopy,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import MaterializedImageCopy
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     MaterializationSourceIdentityRelation,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
@@ -80,6 +78,8 @@ from polystore.memory import MemoryStorageBackend
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -487,7 +487,7 @@ def test_save_images_converts_and_materializes_through_registered_image_formats(
         converted,
         "/analysis/SaveImages.pkl",
         filemanager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
     expected_suffix = SaveImagesFileFormat[
         "TIFF" if format_literal == "tiff" else format_literal.upper()
@@ -517,7 +517,7 @@ def test_save_images_projects_declared_singleton_runtime_slice() -> None:
         payload,
         "/analysis/SaveImages.pkl",
         filemanager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/exports/Saved_result.png"
@@ -556,7 +556,7 @@ def test_save_images_preserves_metadata_backreferences_in_relative_paths() -> No
         payload,
         "/analysis/SaveImages.pkl",
         filemanager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == ("/analysis/Sequence1/GFPHistone-0007_result.png")
@@ -596,7 +596,7 @@ def test_save_images_projects_dynamic_path_metadata_for_each_runtime_slice() -> 
         payload,
         "/analysis/SaveImages.pkl",
         filemanager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/Sequence1/GFPHistone-0001_result.png"
@@ -646,7 +646,7 @@ def test_save_images_projects_sequential_numbers_from_materialization_order() ->
         payload,
         "/analysis/SaveImages.pkl",
         filemanager,
-        ("memory",),
+        ("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/CroppedFlyImage0001RGB.tiff"
@@ -702,7 +702,7 @@ def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution()
         "/analysis/SaveImages.pkl",
         filemanager,
         ("memory",),
-        context=context,
+        context=context, output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/A01/CroppedFlyImage0001RGB.tiff"
@@ -957,7 +957,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         (source_slices).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((3, 2, 2, 3), dtype=np.uint8),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
@@ -1032,7 +1032,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         (source_slices).project_declared_source((output_plan.source_context_source()).name),
         complete_output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
@@ -1075,7 +1075,7 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source_payload,
         source_payload,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=plane_count,
@@ -1123,7 +1123,7 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         (source_payload).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((2, 2, 3), dtype=np.uint8),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
@@ -1160,7 +1160,7 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         (source_payload).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((2, 2, 2), dtype=np.uint8),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -1195,7 +1195,7 @@ def test_image_output_context_accepts_exact_loaded_derived_artifact() -> None:
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source_payload,
         np.ones((2, 2), dtype=np.uint8),
-        output_plan,
+        output_plan or MAIN_FLOW,
         None,
     )
 

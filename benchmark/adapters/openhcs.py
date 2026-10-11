@@ -50,6 +50,7 @@ from openhcs.core.config import (
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from benchmark.equivalence.report import RuntimeEquivalenceReport
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.native_shape_rows import shape_rows_on_their_labels
 from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
@@ -506,6 +507,13 @@ class OpenHCSAdapter(ToolAdapter):
                 else:
                     reference_snapshot = RuntimeOutputSnapshot.from_output_root(
                         equivalence_reference
+                    )
+                    reference_snapshot = RuntimeOutputSnapshot(
+                        tables=tuple(
+                            shape_rows_on_their_labels(table)
+                            for table in reference_snapshot.tables
+                        ),
+                        images=reference_snapshot.images,
                     )
                     if not request.compare_image_outputs:
                         reference_snapshot = RuntimeOutputSnapshot(

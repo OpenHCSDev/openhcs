@@ -19,7 +19,9 @@ from openhcs.core.artifact_inspection import (
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan

@@ -13,7 +13,7 @@ import numpy as np
 from numba import njit
 
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

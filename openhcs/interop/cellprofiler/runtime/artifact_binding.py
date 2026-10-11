@@ -7,10 +7,9 @@ from dataclasses import dataclass, replace
 import inspect
 from typing import cast, get_origin
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.plans import ArtifactSpecRef
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,

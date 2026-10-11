@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )

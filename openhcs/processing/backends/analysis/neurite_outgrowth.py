@@ -24,17 +24,18 @@ from skimage.graph import MCP_Geometric
 from skimage.measure import regionprops
 from skimage.segmentation import expand_labels
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    QaCheckpoint,
-    ArtifactSpec,
-    ArtifactViewerStreaming,
-    ImageArtifactType,
-    MainFlowPlaneProjectionOutputSpec,
-    MeasurementsArtifactType,
     ObjectArtifactMemberSubjectRelation,
-    ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowPlaneProjectionOutputSpec
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
@@ -1095,7 +1096,7 @@ CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "cell_bodies",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
-    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    viewer_streaming=OnDemandStreaming,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -1118,7 +1119,7 @@ NEURITE_LABELS_OUTPUT = ArtifactSpec.output(
     "neurite_outgrowth",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
-    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    viewer_streaming=OnDemandStreaming,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -1130,7 +1131,7 @@ NUCLEI_OUTPUT = ArtifactSpec.output(
     "nuclei",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
-    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    viewer_streaming=OnDemandStreaming,
 )
 NEURONAL_CELL_BODY_SUMMARY_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_summary",
@@ -1142,7 +1143,7 @@ NEURONAL_CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_bodies",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
-    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    viewer_streaming=OnDemandStreaming,
 )
 NEURONAL_CELL_BODY_MEASUREMENTS_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_measurements",
@@ -1181,7 +1182,7 @@ def _neurite_qa_checkpoint_output(name: str) -> ArtifactSpec:
         materialization=MaterializationSpec(
             ImageFileOptions(filename_suffix=f"_{name}.checkpoint.tif")
         ),
-        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+        viewer_streaming=OnDemandStreaming,
     )
 
 

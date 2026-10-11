@@ -7,7 +7,7 @@ from polystore.bioformats_storage import BioFormatsPlaneRef
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.source_bindings import ComponentSelector

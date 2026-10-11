@@ -6,14 +6,15 @@ import inspect
 import numpy as np
 
 from openhcs.core.aligned_image_payload import AlignedImageStack
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,

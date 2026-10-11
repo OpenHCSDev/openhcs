@@ -9,7 +9,7 @@ import pytest
 from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.config import ConfigPatch, ConfigSchemaRequest
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PathPlanningConfig,

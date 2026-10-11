@@ -30,6 +30,15 @@ class SourceProjectedImageOutput(
     ) -> RuntimeArrayData:
         """Validate and attach the source context declared by this result."""
 
+    def contextualized_output(
+        self,
+        kind: object,
+        source: object,
+        target: object,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> object:
+        return kind.contextualize_projected_image(source, self, target, plane_projection)
+
 
 class SourcePlaneSelectionImageOutput(SourceProjectedImageOutput):
     """A projection that retains an exact ordered subset of source planes."""

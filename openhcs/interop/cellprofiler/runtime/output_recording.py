@@ -10,11 +10,9 @@ from graphlib import TopologicalSorter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, cast
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
     ArtifactTypeValue,
@@ -111,7 +109,7 @@ class CellProfilerOutputRecorder(
         if len(artifact_types) != 1:
             raise TypeError(
                 "CellProfiler main-flow outputs require one exact artifact type; "
-                f"got {tuple(sorted(kind.require_value() for kind in artifact_types))!r}."
+                f"got {tuple(sorted(kind.value for kind in artifact_types))!r}."
             )
         (artifact_type,) = artifact_types
         return cls.for_artifact_type(artifact_type)

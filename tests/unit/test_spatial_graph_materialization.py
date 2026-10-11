@@ -1,5 +1,5 @@
 
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 import numpy as np
 import pytest
 
@@ -10,14 +10,16 @@ from polystore.napari_stream import NapariStreamingBackend
 from polystore.roi import PolylineShape
 from polystore.roi_converters import NapariROIConverter
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
-    ObjectArtifactMemberSubjectRelation,
-    ObjectArtifactSubjectBinding,
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    ObjectArtifactMemberSubjectRelation,
+    ObjectArtifactSubjectBinding,
 )
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -40,6 +42,8 @@ from openhcs.processing.materialization import (
     materialization_outputs,
     registered_materialization_option_types,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _edge(
@@ -102,7 +106,7 @@ def _outputs(graph: SpatialGraph):
         MaterializationSpec(SWCOptions(), SpatialGraphROIOptions()),
         data=graph,
         path="/tmp/A01_neurite_graph_step3.roi.zip",
-        filemanager=filemanager,
+        filemanager=filemanager, output_plan=materialization_output_plan()
     )
 
 
@@ -128,11 +132,11 @@ def test_pixel_analysis_graph_roi_preserves_original_acquisition_calibration() -
         source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
     )
     graph = SpatialGraphArtifactType.contextualize_output(
-        acquisition.payload_with(np.zeros((8, 8), dtype=np.uint8)), graph, None, None
+        acquisition.payload_with(np.zeros((8, 8), dtype=np.uint8)), graph, MAIN_FLOW, None
     )
     (output,) = materialization_outputs(
         MaterializationSpec(SpatialGraphROIOptions()), data=graph,
-        path="/engineering/pixel-graph.roi.zip", filemanager=FileManager({"memory": MemoryStorageBackend()}),
+        path="/engineering/pixel-graph.roi.zip", filemanager=FileManager({"memory": MemoryStorageBackend()}), output_plan=materialization_output_plan()
     )
     restored = ROIArchiveSourceMetadata.decode(output.content)
     assert restored.source_voxel_spacing == acquisition.source_voxel_spacing
@@ -213,7 +217,7 @@ def test_spatial_graph_output_context_projects_declared_source_plane() -> None:
         artifact_type=SpatialGraphArtifactType,
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(source, graph, output_plan, None)
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(source, graph, output_plan or MAIN_FLOW, None)
 
     assert contextualized.source_path == "/tmp/smi312.tif"
     assert contextualized.source_component_metadata["channel"] == "4"
@@ -350,7 +354,7 @@ def test_swc_reader_writer_round_trip_preserves_structure_types(tmp_path) -> Non
         MaterializationSpec(SWCOptions()),
         data=restored,
         path="/tmp/typed-neurites.roi.zip",
-        filemanager=FileManager({"memory": MemoryStorageBackend()}),
+        filemanager=FileManager({"memory": MemoryStorageBackend()}), output_plan=materialization_output_plan()
     )[0]
 
     assert swc_output.content.splitlines()[2:] == [

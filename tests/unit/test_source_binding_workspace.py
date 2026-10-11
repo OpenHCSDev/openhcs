@@ -10,7 +10,7 @@ import pytest
 import tifffile
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec

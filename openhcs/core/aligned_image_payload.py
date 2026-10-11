@@ -17,7 +17,8 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecRef
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.memory import (
     MemoryType,
     convert_memory,
@@ -1076,7 +1077,7 @@ class AlignedImageSliceContext:
         return (
             self.output_kind == self.MAIN_FLOW_OUTPUT_KIND
             and self.output_key == artifact_ref.name
-            and self.artifact_kind == artifact_ref.artifact_type.require_value()
+            and self.artifact_kind == artifact_ref.artifact_type.value
         )
 
     def __post_init__(self) -> None:
@@ -1174,6 +1175,9 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
 
     def map_slices(self, transform: Any) -> "ImagePayloadSliceStack":
         return self.with_slices(tuple(transform(image_slice) for image_slice in self.slices))
+
+    def stored_slices(self) -> tuple[Any, ...]:
+        return self.slices
 
     def output_slices(self) -> tuple[Any, ...]:
         return tuple(output for output, _context in self.projected_output_slices())

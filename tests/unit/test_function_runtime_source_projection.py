@@ -24,12 +24,13 @@ from openhcs.core.aligned_image_payload import (
     ImagePayloadBundleContext,
     stack_image_payloads,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactOutputPlan,
-    ArtifactSpec,
     GroupLineageSourceRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -2472,7 +2473,7 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
 def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from openhcs.core.artifacts import NoMainFlowOutput
+    from openhcs.core.artifacts.payloads import NoMainFlowOutput
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
@@ -2615,7 +2616,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
 
 
 def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -> None:
-    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionScope,
         FunctionCoreExecutor,

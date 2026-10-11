@@ -12,12 +12,8 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (

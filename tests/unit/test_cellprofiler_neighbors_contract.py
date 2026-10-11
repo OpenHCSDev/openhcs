@@ -11,10 +11,9 @@ from typing import get_type_hints
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
 )
@@ -411,7 +410,7 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
 
 
 def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() -> None:
-    from openhcs.core.artifacts import MeasurementsArtifactType
+    from openhcs.core.artifacts.kinds import MeasurementsArtifactType
     from openhcs.processing.backends.cellprofiler.relationships import (
         relate_objects_with_saved_children,
     )

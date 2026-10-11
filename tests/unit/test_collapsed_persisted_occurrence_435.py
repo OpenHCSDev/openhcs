@@ -14,11 +14,8 @@ from polystore.memory import MemoryStorageBackend
 
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
