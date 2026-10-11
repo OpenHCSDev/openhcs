@@ -134,7 +134,7 @@ from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.main import OpenHCSMainWindow
-    from openhcs.pyqt_gui.services.main_window_workflows import MainWindowDockPane
+    from pyqt_reactive.widgets.shared.dock_layout import DockPane
 
 
 WindowRouteCollection: TypeAlias = (
@@ -541,7 +541,7 @@ class FocusableWindowRouteMixin(ABC):
 class EmbeddedWindowRoute:
     """Focusable embedded widget route owned by the main window layout."""
 
-    pane: "MainWindowDockPane"
+    pane: "DockPane"
 
     @property
     def identity(self) -> UiWindowIdentity:

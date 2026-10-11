@@ -5,8 +5,6 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from PyQt6.QtCore import QEvent, Qt
-from PyQt6.QtGui import QAction, QKeyEvent
 
 from openhcs.core.config_cache import ConfigCacheSpec
 from openhcs.pyqt_gui import config as config_module
@@ -22,9 +20,6 @@ from openhcs.pyqt_gui.config import (
     load_cached_ui_config_sync,
     load_cached_ui_execution_endpoint_sync,
     save_ui_config_sync,
-)
-from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowShortcutLifecycle,
 )
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from tests.unit.pyqt_gui.session_harness import (
@@ -169,86 +164,6 @@ def test_agent_bridge_config_rejects_invalid_declared_values() -> None:
 def test_shortcut_config_rejects_noncanonical_qt_sequences() -> None:
     with pytest.raises(ValueError, match="show_plate_manager"):
         ShortcutConfig(show_plate_manager="NoSuchKey")
-
-
-def test_shortcut_lifecycle_rebinds_live_qactions(qapp) -> None:
-    action = QAction("Plate Manager")
-    lifecycle = MainWindowShortcutLifecycle(qapp)
-    lifecycle.bind_menu_action(
-        lambda config: config.show_plate_manager,
-        action,
-    )
-
-    try:
-        lifecycle.apply(
-            replace(
-                ShortcutConfig(),
-                show_plate_manager="Ctrl+1",
-            )
-        )
-        assert action.shortcut().toString() == "Ctrl+1"
-
-        lifecycle.apply(
-            replace(
-                ShortcutConfig(),
-                show_plate_manager="Alt+2",
-            )
-        )
-        assert action.shortcut().toString() == "Alt+2"
-    finally:
-        lifecycle.close()
-
-
-def test_shortcut_lifecycle_rejects_duplicates_before_rebinding(qapp) -> None:
-    first = QAction("First")
-    second = QAction("Second")
-    lifecycle = MainWindowShortcutLifecycle(qapp)
-    lifecycle.bind_menu_action(lambda config: config.show_plate_manager, first)
-    lifecycle.bind_menu_action(lambda config: config.show_pipeline_editor, second)
-    lifecycle.apply(ShortcutConfig())
-    original = (first.shortcut().toString(), second.shortcut().toString())
-
-    try:
-        with pytest.raises(ValueError, match="must be unique"):
-            lifecycle.apply(
-                replace(
-                    ShortcutConfig(),
-                    show_plate_manager="Ctrl+1",
-                    show_pipeline_editor="Ctrl+1",
-                )
-            )
-
-        assert (first.shortcut().toString(), second.shortcut().toString()) == original
-    finally:
-        lifecycle.close()
-
-
-def test_time_travel_shortcut_accepts_any_configured_qt_key(qapp) -> None:
-    calls: list[str] = []
-    lifecycle = MainWindowShortcutLifecycle(qapp)
-    lifecycle.bind_time_travel_command(
-        lambda config: config.time_travel_back,
-        "Back",
-        lambda: calls.append("back"),
-    )
-
-    try:
-        lifecycle.apply(
-            replace(
-                ShortcutConfig(),
-                time_travel_back="Ctrl+B",
-            )
-        )
-        event = QKeyEvent(
-            QEvent.Type.KeyPress,
-            Qt.Key.Key_B,
-            Qt.KeyboardModifier.ControlModifier,
-        )
-
-        assert lifecycle._event_filter.eventFilter(None, event) is True
-        assert calls == ["back"]
-    finally:
-        lifecycle.close()
 
 
 def test_ui_config_reaches_the_session_progress_interval_and_transport() -> None:

@@ -29,6 +29,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from pyqt_reactive.animation import WindowFlashOverlay
+from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.zmq_server_scan_service import (
     EndpointObservationSnapshot,
@@ -38,6 +39,7 @@ from pyqt_reactive.widgets import (
     StatusState,
 )
 from pyqt_reactive.widgets.editors.simple_code_editor import QScintillaCodeEditorDialog
+from pyqt_reactive.widgets.shared.dock_layout import DockLayoutStore, DockPane
 from pyqt_reactive.widgets.system_monitor import SystemMonitorWidget
 from zmqruntime import EndpointConnectionCancelledError
 
@@ -76,7 +78,7 @@ from openhcs.pyqt_gui.session_rendering import (
     OperationPresenter,
     QtSessionEventRelay,
 )
-from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
+from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, ShortcutConfig, UIConfig
 from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import (
     DesktopRestartSession,
@@ -92,12 +94,9 @@ from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockLayoutStore,
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
     MainWindowLifecycleWorkflow,
     MainWindowPipelineActions,
-    MainWindowShortcutLifecycle,
     MainWindowTimeTravelWorkflow,
     MainWindowUiBridgeLifecycle,
     build_main_window_specs,
@@ -258,13 +257,16 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         self.embedded_widgets = MainWindowEmbeddedWidgets()
-        self.dock_layout_store = MainWindowDockLayoutStore.for_current_application()
+        self.dock_layout_store = DockLayoutStore.for_application(
+            state_key="main_window/dock_layout_state",
+            state_version=2,
+        )
         self.floating_windows: dict[str, QWidget] = {}
         self.ui_bridge_lifecycle = MainWindowUiBridgeLifecycle()
         application = QApplication.instance()
         if application is None:
             raise RuntimeError("OpenHCSMainWindow requires an active QApplication.")
-        self.shortcut_lifecycle = MainWindowShortcutLifecycle(application)
+        self.shortcut_lifecycle = ShortcutLifecycle[ShortcutConfig](application)
 
         # Declarative window specs
         self.window_specs = self._get_window_specs()
@@ -470,7 +472,7 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         self.system_monitor = self.service_adapter.create_system_monitor_widget()
-        system_monitor_pane = MainWindowDockPane.create(
+        system_monitor_pane = DockPane.create(
             main_window=self,
             window_id=SystemMonitorWindowIdentity.require_value(),
             title=SystemMonitorWindowIdentity.require_title(),
@@ -500,7 +502,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.plate_manager_widget = self.service_adapter.create_plate_manager_widget(
             self.session
         )
-        plate_manager_pane = MainWindowDockPane.create(
+        plate_manager_pane = DockPane.create(
             main_window=self,
             window_id=PlateManagerWidgetIdentity.require_value(),
             title=PlateManagerWidgetIdentity.require_title(),
@@ -522,7 +524,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.session.bind_endpoint_observations(
             lambda: self.zmq_manager_widget.endpoint_snapshot
         )
-        zmq_manager_pane = MainWindowDockPane.create(
+        zmq_manager_pane = DockPane.create(
             main_window=self,
             window_id=ZmqServerManagerWindowIdentity.require_value(),
             title=ZmqServerManagerWindowIdentity.require_title(),
@@ -535,7 +537,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.pipeline_editor_widget = (
             self.service_adapter.create_pipeline_editor_widget(self.session)
         )
-        pipeline_editor_pane = MainWindowDockPane.create(
+        pipeline_editor_pane = DockPane.create(
             main_window=self,
             window_id=PipelineEditorWidgetIdentity.require_value(),
             title=PipelineEditorWidgetIdentity.require_title(),
@@ -646,7 +648,7 @@ class OpenHCSMainWindow(QMainWindow):
         """Show plate manager by default."""
         # Plate Manager and Pipeline Editor are now embedded in the main window
         # Just ensure they're visible (in case they were hidden)
-        self.embedded_widgets.show_defaults()
+        self.embedded_widgets.ensure_all_visible()
 
         # Log viewer is still a separate window (on-demand)
 
@@ -1031,17 +1033,17 @@ class OpenHCSMainWindow(QMainWindow):
         def time_travel_to_head():
             time_travel_workflow.to_head()
 
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_back,
             "Step back in history",
             time_travel_back,
         )
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_forward,
             "Step forward in history",
             time_travel_forward,
         )
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_to_head,
             "Return to history head",
             time_travel_to_head,

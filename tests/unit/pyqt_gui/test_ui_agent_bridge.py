@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pyqt_reactive.widgets.shared.dock_layout import DockPane
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -163,7 +164,6 @@ from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
 )
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
@@ -490,7 +490,7 @@ class FakeEmbeddedWindowWidgets(MainWindowEmbeddedWidgets):
             dock_widget.setObjectName(window_id)
             dock_widget.setWidget(widget)
             self.register(
-                MainWindowDockPane(
+                DockPane(
                     window_id=window_id,
                     title=title,
                     widget=widget,
@@ -989,7 +989,7 @@ def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
     main_window = QMainWindow()
     main_window.session = BridgeSessions.get()
     embedded_widgets = MainWindowEmbeddedWidgets()
-    pipeline_pane = MainWindowDockPane.create(
+    pipeline_pane = DockPane.create(
         main_window=main_window,
         window_id=OpenHCSUiWindowId.pipeline_editor,
         title="Pipeline Editor",
@@ -1050,7 +1050,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
     embedded_widgets = MainWindowEmbeddedWidgets()
     embedded_scope_id = "test_main_window_embedded_scope"
     embedded_widget = QWidget()
-    embedded_pane = MainWindowDockPane.create(
+    embedded_pane = DockPane.create(
         main_window=main_window,
         window_id=embedded_scope_id,
         title="Embedded",
