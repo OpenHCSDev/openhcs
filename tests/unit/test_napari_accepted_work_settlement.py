@@ -30,10 +30,13 @@ from openhcs.runtime.napari_viewer_server import (
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_protocol import (
+    ViewerConnectedExternal,
     NapariViewerServerRequest,
     ViewerControlResponse,
     ViewerControlMessageRequest,
-    ViewerSettlePhase,
+    SettlementComplete,
+    SettlementFailed,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.core.streaming_config_declarations import NapariViewer
@@ -140,7 +143,7 @@ def image_item():
 
 def settle(receiver):
     response = NapariControlAction.for_message_type("settle").handle(receiver, {})
-    return response, ViewerSettleProgress.from_response(ViewerControlResponse(response))
+    return response, ViewerSettleProgress.from_dict(response)
 
 
 def saved_roi_item(tmp_path):
@@ -176,28 +179,28 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     assert not receiver.layer_route_state.layer_pending_updates
     response, progress = settle(receiver)
     assert response["status"] == "error"
-    assert progress.phase is ViewerSettlePhase.FAILED
+    assert progress.phase is SettlementFailed
     assert "channel" in response["message"]
 
     # A new accepted batch starts the next existing settlement cycle. The
     # previous failed cycle must not become a permanent unrelated failure.
     assert wire_receiver(image_item())["status"] == "success"
-    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
+    admitted = ViewerSettleProgress.from_dict(
         NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
-    ))
-    assert admitted.phase is ViewerSettlePhase.RUNNING
+    )
+    assert admitted.phase is SettlementRunning
     assert admitted.total_update_count == 0
     receiver.process_accepted_stream_messages()
     settle(receiver)
     qtbot.waitUntil(
-        lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING, timeout=5000
+        lambda: settle(receiver)[1].phase is not SettlementRunning, timeout=5000
     )
-    assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
+    assert settle(receiver)[1].phase is SettlementComplete
     assert len(receiver.viewer.layers) == 1
 
 
 def test_previous_complete_cannot_settle_new_accepted_work(receiver):
-    assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
+    assert settle(receiver)[1].phase is SettlementComplete
     assert (
         receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()[
             "status"
@@ -205,10 +208,10 @@ def test_previous_complete_cannot_settle_new_accepted_work(receiver):
         == "success"
     )
     assert not receiver.accepted_stream_batches.empty()
-    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
+    admitted = ViewerSettleProgress.from_dict(
         NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
-    ))
-    assert admitted.phase is ViewerSettlePhase.RUNNING
+    )
+    assert admitted.phase is SettlementRunning
     assert admitted.total_update_count == 0
 
 
@@ -271,7 +274,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
             ), persistent=False, viewer_family=NapariViewer,
         ),
     )
-    client.lifecycle_state.mark_connected_external()
+    client.lifecycle = ViewerConnectedExternal
     observations = []
     client_worker = ThreadPoolExecutor(max_workers=1)
     late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
@@ -308,11 +311,11 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
                 pass  # The caller's original observation budget expired.
             expired_after = time.perf_counter() - started
             started = time.perf_counter()
-            progress = ViewerSettleProgress.from_response(ViewerControlMessageRequest(
+            progress = ViewerSettleProgress.from_dict((ViewerControlMessageRequest(
                 client.runtime_endpoint, "settle", timeout=2,
-            ).send())
+            ).send()).payload)
             control_observation.append((native_layer, expired_after, time.perf_counter() - started, progress))
-            assert progress.phase is ViewerSettlePhase.RUNNING
+            assert progress.phase is SettlementRunning
         client_started.append(time.perf_counter())
         return client.settle_viewer_state(
             progress_callback=lambda progress: observations.append((time.perf_counter(), progress)),
@@ -322,16 +325,16 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         control.send(pickle.dumps(ViewerControlMessageRequest(
             client.runtime_endpoint, "settle", timeout=2,
         ).to_wire_mapping()))
-        return ViewerSettleProgress.from_response(ViewerControlResponse(
+        return ViewerSettleProgress.from_dict(
             pickle.loads(control.recv())
-        ))
+        )
 
     try:
         started = time.perf_counter()
         first = (receiver.layer_route_state.existing_settlement_progress()
                  if late_observer else observe())
         elapsed = time.perf_counter() - started
-        assert first.phase is ViewerSettlePhase.RUNNING
+        assert first.phase is SettlementRunning
         assert first.completed_update_count == first.total_update_count == 0
         cycle = receiver.layer_route_state.layer_settlement
         assert cycle.awaiting_updates
@@ -371,7 +374,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
                   "original navigation applied after observation expiry")
         assert final.processed_intake_item_count == (len(item) if isinstance(item, list) else 1) + 1
         awaiting = [(t, p) for t, p in observations
-                    if p.phase is ViewerSettlePhase.RUNNING and p.total_update_count == 0]
+                    if p.phase is SettlementRunning and p.total_update_count == 0]
         awaiting_seconds = (awaiting[-1][0] - awaiting[0][0]) if awaiting else 0
         receiver.viewer.screenshot(path=str(tmp_path / "native-settlement.png"))
         first_reply_seconds = observations[0][0] - client_started[0] if late_observer else elapsed
@@ -431,10 +434,10 @@ def test_pre_route_failure_survives_later_batch_before_settlement(
     receiver.process_accepted_stream_messages()
     settle(receiver)
     qtbot.waitUntil(
-        lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING, timeout=5000
+        lambda: settle(receiver)[1].phase is not SettlementRunning, timeout=5000
     )
     response, progress = settle(receiver)
-    assert progress.phase is ViewerSettlePhase.FAILED
+    assert progress.phase is SettlementFailed
     assert "channel" in response["message"]
     assert len(receiver.viewer.layers) == 1
 
@@ -448,7 +451,7 @@ def test_clear_state_discards_pre_route_failure(receiver, tmp_path):
     )
     receiver.process_accepted_stream_messages()
     receiver.clear_stream_state()
-    assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
+    assert settle(receiver)[1].phase is SettlementComplete
     assert receiver.layer_route_state.update_failure_message() is None
 
 
@@ -464,7 +467,7 @@ def test_active_settlement_rejects_admission_without_retaining_copies(
         == "success"
     )
     receiver.process_accepted_stream_messages()
-    assert settle(receiver)[1].phase is ViewerSettlePhase.RUNNING
+    assert settle(receiver)[1].phase is SettlementRunning
     settlement = receiver.layer_route_state.layer_settlement
     original_accept = receiver._accept_single_image
     copied_arrays = []

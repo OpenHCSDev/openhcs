@@ -20,21 +20,21 @@ from openhcs.core.config import (
     NapariDisplayConfig,
     NapariDimensionMode,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize, SeparateLayers
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.viewer_protocol import (
-    NapariLayerKind,
     ViewerControlResponseField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerShapePayloadProjection,
     ViewerProtocolStatus,
-    ViewerSettlePhase,
+    SettlementFailed,
+    SettlementRunning,
     ViewerSettleProgress,
     ViewerControlResponse,
     ViewerStateControlOptions,
@@ -43,6 +43,9 @@ from openhcs.runtime.viewer_protocol import (
 from openhcs.runtime.napari_viewer_server import NapariViewerServer
 from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 from openhcs.runtime.napari_streaming_handlers import (
+    NapariImageLayer,
+    NapariPointsLayer,
+    NapariShapesLayer,
     NapariAggregateAxisBinding,
     NapariAggregateAxisBindingBuilder,
     NapariAggregateAxisBindingSet,
@@ -76,7 +79,6 @@ from openhcs.runtime.viewer_component_system import (
     ViewerRouteComponentValueTracker,
 )
 from openhcs.runtime.viewer_protocol import (
-    NapariLayerKind,
     ViewerComponentValueOrdering,
     ViewerControlResponse,
     ViewerControlResponseField,
@@ -85,7 +87,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerProtocolStatus,
-    ViewerSettlePhase,
     ViewerSettleProgress,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
@@ -1313,7 +1314,7 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
     authority = NapariLayerUpdates()
 
     first = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-nuclei",
@@ -1327,7 +1328,7 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         },
     )
     second = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-nuclei",
@@ -1374,7 +1375,7 @@ def test_napari_layer_update_authority_preserves_user_selected_layer():
     authority = NapariLayerUpdates()
 
     new_layer = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-overlay",
@@ -1396,7 +1397,7 @@ def test_napari_layer_update_authority_transfers_active_replaced_layer():
     authority = NapariLayerUpdates()
 
     first = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-nuclei",
@@ -1409,7 +1410,7 @@ def test_napari_layer_update_authority_transfers_active_replaced_layer():
     )
     viewer.layers.selection.active = first
     second = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-nuclei",
@@ -1432,7 +1433,7 @@ def test_napari_layer_update_authority_marks_color_images_as_rgb():
 
     image = np.zeros((2, 16, 16, 3), dtype=np.uint8)
     layer = authority.create_or_update(
-        layer_kind=NapariLayerKind.IMAGE,
+        layer_kind=NapariImageLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-overlay",
@@ -4459,7 +4460,7 @@ def test_napari_layer_update_authority_declares_shapes_and_points_kwargs():
     authority = NapariLayerUpdates()
 
     shapes = authority.create_or_update(
-        layer_kind=NapariLayerKind.SHAPES,
+        layer_kind=NapariShapesLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-rois",
@@ -4474,7 +4475,7 @@ def test_napari_layer_update_authority_declares_shapes_and_points_kwargs():
         },
     )
     points = authority.create_or_update(
-        layer_kind=NapariLayerKind.POINTS,
+        layer_kind=NapariPointsLayer,
         viewer=viewer,
         layers=layers,
         route_key="route-spots",
@@ -4837,15 +4838,13 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
     padded_server = _stream(
         replace(
             NapariDisplayConfig(),
-            variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
+            variable_size_handling=PadToMaxSize,
         )
     )
     assert len(padded_server.layer_route_state.layer_pending_updates) == 1
     padded_route = padded_server.display_pipeline.scheduled[-1][2]
     padded_items = (
-        napari_viewer_server.NapariVariableSizeDisplayStrategy.for_enum_member(
-            padded_route.display_config.variable_size_handling
-        ).materialize_layer_items(
+        padded_route.display_config.variable_size_handling.materialize_layer_items(
             padded_server.layer_route_state.pending_update_for(
                 padded_route.route_key
             ).items,
@@ -4859,7 +4858,7 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
     separate_server = _stream(
         replace(
             NapariDisplayConfig(),
-            variable_size_handling=NapariVariableSizeHandling.SEPARATE_LAYERS,
+            variable_size_handling=SeparateLayers,
         )
     )
     assert len(separate_server.layer_route_state.layer_pending_updates) == 2
@@ -4907,7 +4906,7 @@ def test_napari_configured_colormap_reaches_native_layer_and_invalid_name_fails(
     try:
         with pytest.raises((KeyError, ValueError)):
             NapariLayerUpdates().create_or_update(
-                layer_kind=NapariLayerKind.IMAGE,
+                layer_kind=NapariImageLayer,
                 viewer=viewer,
                 layers={},
                 route_key="invalid-colormap",
@@ -5029,7 +5028,7 @@ def test_napari_settle_rejects_recorded_layer_update_failure():
             update,
         )
     failed_progress = pipeline.settlement_progress()
-    assert failed_progress.phase is ViewerSettlePhase.FAILED
+    assert failed_progress.phase is SettlementFailed
     assert (
         server.layer_route_state.update_failure_message()
         == "failed-route: invalid payload axis"
@@ -5085,25 +5084,23 @@ def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
     action = napari_viewer_server.NapariControlAction.for_message_type("settle")
 
     first_response = ViewerControlResponse(action.handle(server, {}))
-    first_progress = ViewerSettleProgress.from_response(first_response)
-    assert first_progress.phase is ViewerSettlePhase.RUNNING
+    first_progress = ViewerSettleProgress.from_dict(first_response.payload)
+    assert first_progress.phase is SettlementRunning
     assert first_progress.completed_update_count == 0
     assert first_progress.total_update_count == 2
     assert first_progress.active_route == "first-route"
     assert len(callbacks) == 1
 
     callbacks.pop(0)()
-    middle_progress = ViewerSettleProgress.from_response(
-        ViewerControlResponse(action.handle(server, {}))
-    )
-    assert middle_progress.phase is ViewerSettlePhase.RUNNING
+    middle_progress = ViewerSettleProgress.from_dict(action.handle(server, {}))
+    assert middle_progress.phase is SettlementRunning
     assert middle_progress.completed_update_count == 1
     assert middle_progress.active_route == "second-route"
     assert len(callbacks) == 1
 
     callbacks.pop(0)()
     final_response = ViewerControlResponse(action.handle(server, {}))
-    final_progress = ViewerSettleProgress.from_response(final_response)
+    final_progress = ViewerSettleProgress.from_dict(final_response.payload)
     assert final_response.succeeded()
     assert final_progress == ViewerSettleProgress.complete(2)
     assert callbacks == []
@@ -5158,30 +5155,22 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
     monkeypatch.setattr(napari_viewer_server, "QTimer", DeferredQtTimer)
     action = napari_viewer_server.NapariControlAction.for_message_type("settle")
 
-    initial = ViewerSettleProgress.from_response(
-        ViewerControlResponse(action.handle(server, {}))
-    )
+    initial = ViewerSettleProgress.from_dict(action.handle(server, {}))
     assert initial.active_route == route_key
     assert initial.active_route_work_unit_count == 0
 
     callbacks.pop(0)()
-    after_first = ViewerSettleProgress.from_response(
-        ViewerControlResponse(action.handle(server, {}))
-    )
+    after_first = ViewerSettleProgress.from_dict(action.handle(server, {}))
     assert after_first.completed_update_count == 0
     assert after_first.active_route_work_unit_count == 1
 
     callbacks.pop(0)()
-    after_second = ViewerSettleProgress.from_response(
-        ViewerControlResponse(action.handle(server, {}))
-    )
+    after_second = ViewerSettleProgress.from_dict(action.handle(server, {}))
     assert after_second.completed_update_count == 0
     assert after_second.active_route_work_unit_count == 2
 
     callbacks.pop(0)()
-    final = ViewerSettleProgress.from_response(
-        ViewerControlResponse(action.handle(server, {}))
-    )
+    final = ViewerSettleProgress.from_dict(action.handle(server, {}))
     assert final == ViewerSettleProgress.complete(1)
     assert callbacks == []
 
@@ -5212,7 +5201,7 @@ def test_napari_scheduled_update_retains_failure_without_escaping_qt_callback():
     pipeline.execute_scheduled_layer_update(route_key, update)
 
     failed_progress = pipeline.settlement_progress()
-    assert failed_progress.phase is ViewerSettlePhase.FAILED
+    assert failed_progress.phase is SettlementFailed
     assert (
         server.layer_route_state.update_failure_message()
         == "failed-scheduled-route: invalid scheduled processor route"

@@ -120,7 +120,7 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeWidgetTreeOperation,
 )
 from openhcs.agent.services.ui_bridge_transport import UiBridgeControlClient
-from openhcs.runtime.viewer_protocol import ViewerLaunchContextMode
+from openhcs.runtime.viewer_protocol import HeadlessSession, ProjectedGraphicalSession
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
 
@@ -896,7 +896,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
 
     launch_context = UiBridgeService(path_policy=object()).viewer_launch_context()
 
-    assert launch_context.mode is ViewerLaunchContextMode.PROJECTED_GRAPHICAL_SESSION
+    assert launch_context.session is ProjectedGraphicalSession
     assert launch_context.environment_overlay == {
         "DISPLAY": ":19",
         "XDG_RUNTIME_DIR": "/run/user/1000",
@@ -1172,7 +1172,7 @@ def test_descriptor_resolver_reports_ambiguous_live_descriptors(monkeypatch, tmp
         first_bridge_id,
         second_bridge_id,
     }
-    assert launch_context.mode is ViewerLaunchContextMode.HEADLESS
+    assert launch_context.session is HeadlessSession
 
 
 def test_descriptor_resolver_reports_live_descriptors_for_missing_instance(

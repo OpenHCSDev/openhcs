@@ -1228,7 +1228,7 @@ from openhcs.core.config import (
     LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -1390,7 +1390,7 @@ pipeline_data = {{
                 default_dtype_conversion=DtypeConversion.UINT8
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
-                variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX
+                variable_size_handling=PadToMaxSize
             )
         )
     ]

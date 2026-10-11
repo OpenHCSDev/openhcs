@@ -27,7 +27,7 @@ from openhcs.core.config import (
     Backend,
     ZarrConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.core.config import (
     LazyStepMaterializationConfig,
@@ -360,7 +360,7 @@ def create_test_pipeline(
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
                 port=ports.napari[2],
-                variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
+                variable_size_handling=PadToMaxSize,
                 enabled=enable_napari,
             ),
             fiji_streaming_config=LazyFijiStreamingConfig(
