@@ -3987,7 +3987,8 @@ def _write_point_roi_zip(
     if missing:
         raise ValueError(f"Point measurement fields are missing: {sorted(missing)!r}.")
     provenance = payload.source_provenance.with_common_scalar_identity_from_planes()
-    if not provenance.names_a_path_for_every_source_plane():
+    source_planes = provenance.source_image_provenance_planes
+    if not (provenance.source_identity.has_path() or source_planes.names_every_path()):
         raise ValueError(
             "Point ROI ZIP requires a source-image path or exact paths for every "
             "source plane."
