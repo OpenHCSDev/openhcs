@@ -5878,26 +5878,46 @@ class SplitOrMergeIntensityMethod(Enum):
     CLOSEST_POINT = "closest_point"
 
 
-class SplitOrMergeInputTopology(Enum):
-    """Exact public callable ABI selected by SplitOrMergeObjects settings."""
+class SplitOrMergeInputTopology(ABC, metaclass=AutoRegisterMeta):
+    """Exact public callable ABI selected by SplitOrMergeObjects settings.
 
-    LABELS_ONLY = "split_or_merge_objects"
-    GUIDE_IMAGE = "split_or_merge_objects_with_guide_image"
-    PARENT_OBJECTS = "split_or_merge_objects_per_parent"
+    Each topology is a subclass keyed by the function it runs.
+    """
 
-    @classmethod
+    __registry_key__ = "function_name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SplitOrMergeInputTopology"]]] = {}
+
+    function_name: ClassVar[str | None] = None
+    uses_guide_image: ClassVar[bool] = False
+    uses_parent_objects: ClassVar[bool] = False
+
+    @staticmethod
     def from_values(
-        cls,
         *,
         operation: SplitOrMergeOperation,
         merge_method: SplitOrMergeMergeMethod,
         use_guide_image: bool,
-    ) -> "SplitOrMergeInputTopology":
+    ) -> type["SplitOrMergeInputTopology"]:
         if operation is SplitOrMergeOperation.SPLIT:
-            return cls.LABELS_ONLY
+            return SplitOrMergeLabelsOnly
         if merge_method is SplitOrMergeMergeMethod.PER_PARENT:
-            return cls.PARENT_OBJECTS
-        return cls.GUIDE_IMAGE if use_guide_image else cls.LABELS_ONLY
+            return SplitOrMergePerParent
+        return SplitOrMergeWithGuideImage if use_guide_image else SplitOrMergeLabelsOnly
+
+
+class SplitOrMergeLabelsOnly(SplitOrMergeInputTopology):
+    function_name = "split_or_merge_objects"
+
+
+class SplitOrMergeWithGuideImage(SplitOrMergeInputTopology):
+    function_name = "split_or_merge_objects_with_guide_image"
+    uses_guide_image = True
+
+
+class SplitOrMergePerParent(SplitOrMergeInputTopology):
+    function_name = "split_or_merge_objects_per_parent"
+    uses_parent_objects = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -7243,7 +7263,9 @@ class SplitOrMergeObjectsModule(
     )
 
     @classmethod
-    def input_topology(cls, module: "ModuleBlock") -> SplitOrMergeInputTopology:
+    def input_topology(
+        cls, module: "ModuleBlock"
+    ) -> type[SplitOrMergeInputTopology]:
         return SplitOrMergeInputTopology.from_values(
             operation=coerce_cellprofiler_enum(
                 SplitOrMergeOperation,
@@ -7276,9 +7298,8 @@ class SplitOrMergeObjectsModule(
         return tuple(
             binding
             for binding in bindings
-            if topology is SplitOrMergeInputTopology.GUIDE_IMAGE
-            or binding is not cls.guide_image_binding
-            if topology is SplitOrMergeInputTopology.PARENT_OBJECTS
+            if topology.uses_guide_image or binding is not cls.guide_image_binding
+            if topology.uses_parent_objects
             or binding is not cls.parent_objects_binding
         )
 
@@ -7329,7 +7350,7 @@ class SplitOrMergeObjectsModule(
         source_bindings: "StepSourceBindingsConfig",
     ) -> Callable[..., object]:
         del contract, source_bindings
-        return cls.require_callable(cls.input_topology(module).value)
+        return cls.require_callable(cls.input_topology(module).function_name)
 
     @classmethod
     def finalize_module_blocks_for_invocation(
@@ -7342,10 +7363,10 @@ class SplitOrMergeObjectsModule(
         )
         for block in blocks:
             topology = cls.input_topology(block)
-            if invocation.contract.function_name != topology.value:
+            if invocation.contract.function_name != topology.function_name:
                 raise ValueError(
                     f"{cls.module_name} callable {invocation.contract.function_name!r} "
-                    f"does not match declared input topology {topology.name}."
+                    f"does not match declared input topology {topology.__name__}."
                 )
         return blocks
 

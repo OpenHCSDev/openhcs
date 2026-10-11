@@ -13,7 +13,6 @@ from openhcs.processing.backends.experimental_analysis.analysis import (
     write_values_heat_map,
 )
 from openhcs.processing.backends.experimental_analysis.layout_rows import (
-    ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,
 )
 from openhcs.processing.backends.experimental_analysis.result_formats import (
@@ -39,25 +38,17 @@ def test_experimental_layout_row_role_classifies_well_rows() -> None:
     assert ExperimentalLayoutRowRole("wells_12").specific_replicate == 12
 
 
-def test_experimental_analysis_scope_coerces_public_scope_values() -> None:
-    assert ExperimentalAnalysisScope.coerce("EDDU_CX5") is ExperimentalAnalysisScope.CX5
-    assert (
-        ExperimentalAnalysisScope.coerce("EDDU_metaxpress")
-        is ExperimentalAnalysisScope.METAXPRESS
-    )
-
-
 def test_experimental_analysis_scope_selects_nominal_result_format() -> None:
     assert isinstance(
-        ExperimentalResultFormatStrategy.for_enum_member(ExperimentalAnalysisScope.CX5),
+        ExperimentalResultFormatStrategy.for_scope("EDDU_CX5"),
         CX5ExperimentalResultFormat,
     )
     assert isinstance(
-        ExperimentalResultFormatStrategy.for_enum_member(
-            ExperimentalAnalysisScope.METAXPRESS
-        ),
+        ExperimentalResultFormatStrategy.for_scope("EDDU_metaxpress"),
         MetaXpressExperimentalResultFormat,
     )
+    with pytest.raises(ValueError, match="not known"):
+        ExperimentalResultFormatStrategy.for_scope("EDDU_unknown")
 
 
 def test_cx5_result_format_owns_rawdata_sheet(monkeypatch) -> None:

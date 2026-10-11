@@ -389,7 +389,7 @@ class ObjectArtifactOutputModule(
         from openhcs.core.runtime_measurements import MeasurementRowAxisField
         from openhcs.core.runtime_tabular_values import FieldSpec
         from openhcs.interop.cellprofiler.measurement_lookup import (
-            CellProfilerMeasurementFeature,
+            ObjectCountFeatureName,
         )
 
         row_batches = []
@@ -399,9 +399,7 @@ class ObjectArtifactOutputModule(
                 object_name=object_spec.name,
                 domain_scope=request.object_label_output_domain_scope(),
             )
-            count_feature = CellProfilerMeasurementFeature.object_count(
-                object_spec.name
-            ).name
+            count_feature = ObjectCountFeatureName.feature(object_spec.name).name
             label_plane_domains = location_rows.label_plane_domains()
             count_fields = (
                 FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
@@ -520,7 +518,6 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
 
         from openhcs.interop.cellprofiler.measurement_lookup import (
             CellProfilerMeasurementFeature,
-            CellProfilerMeasurementFeatureKind,
         )
 
         return tuple(
@@ -529,11 +526,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 for binding in cls.measurement_feature_setting_bindings()
                 for feature_name in binding.feature_names(module)
                 for feature in (CellProfilerMeasurementFeature.parse(feature_name),)
-                if (
-                    feature is not None
-                    and feature.kind
-                    is not CellProfilerMeasurementFeatureKind.OBJECT_COUNT
-                )
+                if feature is not None and feature.kind.needs_prior_measurement_rows
             )
         )
 

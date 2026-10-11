@@ -70,7 +70,9 @@ from openhcs.interop.cellprofiler.pipeline_import import (
 )
 from openhcs.processing.backends.cellprofiler.grid import (
     DefineGridManualModule,
+    AutomaticGrid,
     DefineGridVariant,
+    ManualGrid,
 )
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
@@ -1597,19 +1599,19 @@ def test_relate_objects_measurements_depend_on_declared_relationship_output() ->
     (
         (
             DefineGridManualModule.DefinitionMethod.manual,
-            DefineGridVariant.MANUAL,
+            ManualGrid,
             ("Brightfield", ImageArtifactType),
         ),
         (
             DefineGridManualModule.DefinitionMethod.automatic,
-            DefineGridVariant.AUTOMATIC,
+            AutomaticGrid,
             ("Guides", ObjectLabelsArtifactType),
         ),
     ),
 )
 def test_define_grid_declares_its_exact_geometry_source(
     definition_method: DefineGridManualModule.DefinitionMethod,
-    variant: DefineGridVariant,
+    variant: type[DefineGridVariant],
     expected_source: tuple[str, type],
 ) -> None:
     current_image = ArtifactSpec.input("Brightfield", ImageArtifactType)
@@ -1627,7 +1629,7 @@ def test_define_grid_declares_its_exact_geometry_source(
     contract = DefineGridManualModule.callable_contract(
         module=module,
         invocation_key=FunctionInvocationKey(
-            function_name=variant.value,
+            function_name=variant.function_name,
             group_key=DEFAULT_GROUP_KEY,
             position=0,
         ),

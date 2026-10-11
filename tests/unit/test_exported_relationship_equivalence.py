@@ -349,13 +349,10 @@ def test_child_count_parser_and_core_declaration_share_original_grammar(
     feature: str, identity: str | None
 ) -> None:
     from openhcs.interop.cellprofiler.measurement_lookup import ChildCountFeatureDeclaration
-    from openhcs.interop.cellprofiler.measurement_lookup import (
-        CellProfilerChildCountFeatureParser,
-    )
+    from openhcs.interop.cellprofiler.measurement_lookup import ChildCountFeatureName
 
     assert ChildCountFeatureDeclaration.from_feature_name(feature) == identity
-    parsed = CellProfilerChildCountFeatureParser().parse_feature(feature)
-    assert (None if parsed is None else parsed.object_name) == identity
+    assert ChildCountFeatureName.object_name_in(feature) == identity
 
 
 @pytest.mark.parametrize("swapped", (False, True))

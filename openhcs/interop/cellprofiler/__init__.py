@@ -11,11 +11,11 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
     cellprofiler_runtime_equivalence_policy,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (
-    CellProfilerChildCountFeatureParser,
     CellProfilerMeasurementFeature,
     CellProfilerMeasurementFeatureKind,
-    CellProfilerMeasurementFeatureParser,
-    CellProfilerObjectCountFeatureParser,
+    ChildCountFeatureName,
+    ObjectCountFeatureName,
+    OtherFeatureName,
     child_count_feature_child_name,
     count_feature_object_name,
 )
@@ -31,7 +31,6 @@ from openhcs.interop.cellprofiler.parser import (
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,
-    CellProfilerMeasurementImageDomain,
     CellProfilerSliceAlignedValues,
 )
 from openhcs.interop.cellprofiler.setting_names import (
