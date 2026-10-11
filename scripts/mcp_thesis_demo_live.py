@@ -75,6 +75,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config_cache import ConfigCacheSpec, save_config_sync
+from openhcs.ui.shared.plate_manager_code_document import PlateManagerDocumentAssignments
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.mcp.dev_client_core import (
     DEFAULT_CALL_TIMEOUT_SECONDS,
@@ -1966,8 +1967,9 @@ def assert_applied_document_state(
 ) -> dict[str, Any]:
     namespace: dict[str, object] = {}
     exec(compile(source, str(ctx.source_path), "exec"), namespace)
-    per_plate_configs = namespace["per_plate_configs"]
-    pipeline_data = namespace["pipeline_data"]
+    assignments = PlateManagerDocumentAssignments.from_namespace(namespace)
+    per_plate_configs = assignments.per_plate_configs
+    pipeline_data = assignments.pipeline_data
     if not isinstance(per_plate_configs, dict) or not isinstance(pipeline_data, dict):
         raise RehearsalFailure(
             "Applied document did not reconstruct pipeline mappings."
