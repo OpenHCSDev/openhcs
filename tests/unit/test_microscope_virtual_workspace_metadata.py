@@ -278,9 +278,9 @@ def test_workspace_registration_reuses_owner_and_refreshes_changed_mapping(tmp_p
     manager = FileManager({})
     DatasetSource._register_virtual_workspace_backend(tmp_path, manager)
     owner = manager.registry[Backend.VIRTUAL_WORKSPACE.value]
-    alias = tmp_path / "plate-alias"
-    alias.symlink_to(tmp_path, target_is_directory=True)
-    DatasetSource._register_virtual_workspace_backend(alias, manager)
+    (tmp_path / "sub").mkdir()
+    same_root = tmp_path / "sub" / ".."
+    DatasetSource._register_virtual_workspace_backend(same_root, manager)
     assert manager.registry[Backend.VIRTUAL_WORKSPACE.value] is owner
     assert owner._resolve_ref("image.tif").backend_address == "first.tif"
 

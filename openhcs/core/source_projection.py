@@ -41,7 +41,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from python_introspect import to_jsonable
-from openhcs.core.source_path_identity import source_path_posix
+from openhcs.core.source_path_identity import absolute_source_path, source_path_posix
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 
@@ -240,7 +240,7 @@ class SourceDatasetIdentity:
     def for_root(cls, root: str | Path) -> "SourceDatasetIdentity":
         """Return the exact collection identity for one submitted source root."""
 
-        return cls(Path(root).resolve(strict=False).as_uri())
+        return cls(absolute_source_path(root).as_uri())
 
 
 @dataclass(frozen=True, slots=True)
@@ -256,7 +256,7 @@ class SourcePlaneStoreIdentity:
     def __post_init__(self) -> None:
         container_paths = tuple(
             sorted(
-                {Path(path).resolve(strict=False) for path in self.container_paths},
+                {absolute_source_path(path) for path in self.container_paths},
                 key=str,
             )
         )
@@ -436,7 +436,7 @@ class SourcePlaneDataset:
     diagnostics: tuple[SourceDatasetDiagnostic, ...] = ()
 
     def __post_init__(self) -> None:
-        root = Path(self.root).resolve(strict=False)
+        root = absolute_source_path(self.root)
         if not isinstance(self.identity, SourceDatasetIdentity):
             raise TypeError(
                 "SourcePlaneDataset.identity must be SourceDatasetIdentity."
@@ -476,7 +476,7 @@ class SourcePlaneDataset:
 
         if not datasets:
             raise ValueError("SourcePlaneDataset.aggregate requires datasets.")
-        roots = {dataset.root.resolve(strict=False) for dataset in datasets}
+        roots = {dataset.root for dataset in datasets}
         if len(roots) != 1:
             raise SourceDatasetConflictError(
                 "Source stores cannot aggregate across different collection roots."

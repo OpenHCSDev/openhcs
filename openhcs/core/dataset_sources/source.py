@@ -24,6 +24,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.axes import Axis
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.discovery import domain_registry_config
+from openhcs.core.source_path_identity import absolute_source_path
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     MetadataHandler,
@@ -360,17 +361,17 @@ class DatasetSource(
 
         from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
-        resolved_root = Path(dataset_root).resolve()
+        root = absolute_source_path(dataset_root)
         registered = filemanager.registry.get(Backend.VIRTUAL_WORKSPACE.value)
         if (
             isinstance(registered, VirtualWorkspaceBackend)
-            and registered.plate_root.resolve() == resolved_root
+            and absolute_source_path(registered.plate_root) == root
             and registered.metadata_config == METADATA_CONFIG
         ):
             return
 
         backend = VirtualWorkspaceBackend(
-            plate_root=resolved_root, metadata_config=METADATA_CONFIG
+            plate_root=root, metadata_config=METADATA_CONFIG
         )
         filemanager.register_backend(Backend.VIRTUAL_WORKSPACE.value, backend)
         logger.info(f"Registered virtual workspace backend for {dataset_root}")
