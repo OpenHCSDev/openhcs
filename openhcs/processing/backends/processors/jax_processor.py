@@ -1,38 +1,30 @@
-"""
-JAX Image Processor Implementation
+"""JAX processor registrations.
 
-This module implements the ImageProcessorInterface using JAX as the backend.
-It leverages GPU acceleration for image processing operations.
-
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy: All functions are pure and stateless
-- Clause 88 — No Inferred Capabilities: Explicit JAX dependency
-- Clause 106-A — Declared Memory Types: All methods specify JAX arrays
+Shared operations are written once in ``image_stack_operations``; this module
+registers them for JAX and holds the JAX-specific algorithms.
 """
 
 from __future__ import annotations
 
-import logging
-from abc import abstractmethod
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from metaclass_registry import AutoRegisterMeta
+from arraybridge import MemoryType
+from arraybridge.array_operations import ArrayOperations
 
-# Import JAX as an optional dependency
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
-from openhcs.core.lazy_gpu_imports import jax
+from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import jax as jax_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     StackProjectionMethod,
 )
-from openhcs.utils.import_utils import optional_import_placeholder
 
-jnp = optional_import_placeholder("jax.numpy") if jax else None
-lax = jax.lax if jax else None
+jax = optional_import_placeholder("jax")
+jnp = optional_import_placeholder("jax.numpy")
+lax = optional_import_placeholder("jax.lax")
 
-logger = logging.getLogger(__name__)
+OPERATIONS = ArrayOperations.for_memory(MemoryType.JAX)
 
 
 @jax_func
@@ -50,56 +42,9 @@ def create_linear_weight_mask(
     Returns:
         2D JAX weight mask of shape (height, width)
     """
-    # The compiler will ensure this function is only called when JAX is available
-    # No need to check for JAX availability here
-
-    margin_y = int(jnp.floor(height * margin_ratio))
-    margin_x = int(jnp.floor(width * margin_ratio))
-
-    weight_h = jnp.ones(height, dtype=jnp.float32)
-    if margin_y > 0:
-        ramp_top = jnp.linspace(0, 1, margin_y, endpoint=False)
-        ramp_bottom = jnp.linspace(1, 0, margin_y, endpoint=False)
-        weight_h = weight_h.at[:margin_y].set(ramp_top)
-        weight_h = weight_h.at[-margin_y:].set(ramp_bottom)
-
-    weight_x = jnp.ones(width, dtype=jnp.float32)
-    if margin_x > 0:
-        ramp_left = jnp.linspace(0, 1, margin_x, endpoint=False)
-        ramp_right = jnp.linspace(1, 0, margin_x, endpoint=False)
-        weight_x = weight_x.at[:margin_x].set(ramp_left)
-        weight_x = weight_x.at[-margin_x:].set(ramp_right)
-
-    # Create 2D weight mask using outer product
-    weight_mask = jnp.outer(weight_h, weight_x)
-
-    return weight_mask
-
-
-def _validate_3d_array(array: Any, name: str = "input") -> None:
-    """
-    Validate that the input is a 3D JAX array.
-
-    Args:
-        array: Array to validate
-        name: Name of the array for error messages
-
-    Raises:
-        TypeError: If the array is not a JAX array
-        ValueError: If the array is not 3D
-        ImportError: If JAX is not available
-    """
-    # The compiler will ensure this function is only called when JAX is available
-    # No need to check for JAX availability here
-
-    if not isinstance(array, jnp.ndarray):
-        raise TypeError(
-            f"{name} must be a JAX array, got {type(array)}. "
-            f"No automatic conversion is performed to maintain explicit contracts."
-        )
-
-    if array.ndim != 3:
-        raise ValueError(f"{name} must be a 3D array, got {array.ndim}D")
+    return operations.linear_weight_mask(
+        OPERATIONS, height, width, margin_ratio, ramp_endpoint=False
+    )
 
 
 @jax_func
@@ -191,7 +136,7 @@ def sharpen(
     Returns:
         Sharpened 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Store original dtype
     dtype = image.dtype
@@ -255,7 +200,7 @@ def percentile_normalize(
     Returns:
         Normalized 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently
     result_list = []
@@ -332,7 +277,7 @@ def stack_percentile_normalize(
     Returns:
         Normalized 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     # Calculate global percentiles across the entire stack
     p_low = jnp.percentile(stack, low_percentile)
@@ -366,52 +311,7 @@ def create_composite(
     Returns:
         Composite 3D JAX array of shape (1, Y, X)
     """
-    # Validate input is 3D array
-    _validate_3d_array(stack)
-
-    n_slices, height, width = stack.shape
-
-    # Default weights if none provided
-    if weights is None:
-        # Equal weights for all slices
-        weights = [1.0 / n_slices] * n_slices
-    elif isinstance(weights, (list, tuple)):
-        # Convert tuple to list if needed
-        weights = list(weights)
-        if len(weights) != n_slices:
-            raise ValueError(
-                f"Number of weights ({len(weights)}) must match number of slices ({n_slices})"
-            )
-    else:
-        raise TypeError(
-            f"weights must be a list of values or None, got {type(weights)}: {weights}"
-        )
-
-    # Normalize weights to sum to 1
-    weight_sum = sum(weights)
-    if weight_sum == 0:
-        raise ValueError("Sum of weights cannot be zero")
-    normalized_weights = [w / weight_sum for w in weights]
-
-    # Convert weights to JAX array for efficient computation
-    # CRITICAL: Use float32 for weights to preserve fractional values, not stack.dtype
-    weights_array = jnp.array(normalized_weights, dtype=jnp.float32)
-
-    # Reshape weights for broadcasting: (N, 1, 1) to multiply with (N, Y, X)
-    weights_array = weights_array.reshape(n_slices, 1, 1)
-
-    # Create composite by weighted sum along the first axis
-    # Convert stack to float32 for computation to avoid precision loss
-    stack_float = stack.astype(jnp.float32)
-    weighted_stack = stack_float * weights_array
-    composite_slice = jnp.sum(
-        weighted_stack, axis=0, keepdims=True
-    )  # Keep as (1, Y, X)
-
-    # Convert back to original dtype
-    composite_slice = composite_slice.astype(stack.dtype)
-
-    return composite_slice
+    return operations.weighted_composite(OPERATIONS, stack, weights)
 
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
@@ -430,36 +330,7 @@ def apply_mask(image: "jnp.ndarray", mask: "jnp.ndarray") -> "jnp.ndarray":
     Returns:
         Masked 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
-
-    # Handle 2D mask (apply to each Z-slice)
-    if isinstance(mask, jnp.ndarray) and mask.ndim == 2:
-        if mask.shape != image.shape[1:]:
-            raise ValueError(
-                f"2D mask shape {mask.shape} doesn't match image slice shape {image.shape[1:]}"
-            )
-
-        # Apply 2D mask to each Z-slice
-        result_list = []
-        for z in range(image.shape[0]):
-            result_list.append(image[z].astype(jnp.float32) * mask.astype(jnp.float32))
-
-        result = jnp.stack(result_list, axis=0)
-        return result.astype(image.dtype)
-
-    # Handle 3D mask
-    if isinstance(mask, jnp.ndarray) and mask.ndim == 3:
-        if mask.shape != image.shape:
-            raise ValueError(
-                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
-            )
-
-        # Apply 3D mask directly
-        masked = image.astype(jnp.float32) * mask.astype(jnp.float32)
-        return masked.astype(image.dtype)
-
-    # If we get here, the mask is neither 2D nor 3D JAX array
-    raise TypeError(f"mask must be a 2D or 3D JAX array, got {type(mask)}")
+    return operations.apply_mask(OPERATIONS, image, mask)
 
 
 @jax_func
@@ -476,11 +347,7 @@ def create_weight_mask(
     Returns:
         2D JAX weight mask of shape (Y, X)
     """
-    if not isinstance(shape, tuple) or len(shape) != 2:
-        raise TypeError("shape must be a tuple of (height, width)")
-
-    height, width = shape
-    return create_linear_weight_mask(height, width, margin_ratio)
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
 
 
 @jax_func
@@ -494,11 +361,7 @@ def max_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
     Returns:
         3D JAX array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create max projection
-    projection_2d = jnp.max(stack, axis=0)
-    return jnp.expand_dims(projection_2d, axis=0)
+    return operations.max_projection(OPERATIONS, stack)
 
 
 @jax_func
@@ -512,11 +375,7 @@ def mean_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
     Returns:
         3D JAX array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create mean projection
-    projection_2d = jnp.mean(stack.astype(jnp.float32), axis=0).astype(stack.dtype)
-    return jnp.expand_dims(projection_2d, axis=0)
+    return operations.mean_projection(OPERATIONS, stack)
 
 
 @jax_func
@@ -541,7 +400,7 @@ def stack_equalize_histogram(
     Returns:
         Equalized 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     # Remember input dtype to preserve it
     input_dtype = stack.dtype
@@ -591,33 +450,6 @@ def stack_equalize_histogram(
         return equalized_stack.astype(input_dtype)
 
 
-class JaxStackProjectionStrategy(
-    EnumKeyedStrategyMixin[StackProjectionMethod],
-    metaclass=AutoRegisterMeta,
-):
-    __enum_member_attr__ = "method"
-
-    """JAX stack-projection dispatch owner."""
-
-    @abstractmethod
-    def apply(self, stack: "jnp.ndarray") -> "jnp.ndarray":
-        """Apply this projection method."""
-
-
-class JaxMaxStackProjectionStrategy(JaxStackProjectionStrategy):
-    method = StackProjectionMethod.MAX
-
-    def apply(self, stack: "jnp.ndarray") -> "jnp.ndarray":
-        return max_projection(stack)
-
-
-class JaxMeanStackProjectionStrategy(JaxStackProjectionStrategy):
-    method = StackProjectionMethod.MEAN
-
-    def apply(self, stack: "jnp.ndarray") -> "jnp.ndarray":
-        return mean_projection(stack)
-
-
 @jax_func
 def create_projection(
     stack: "jnp.ndarray",
@@ -628,14 +460,12 @@ def create_projection(
 
     Args:
         stack: 3D JAX array of shape (Z, Y, X)
-        method: Projection method (max_projection, mean_projection)
+        method: Projection method served by ``image_stack_operations.StackProjection``
 
     Returns:
         3D JAX array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    return JaxStackProjectionStrategy.for_enum_member(method).apply(stack)
+    return operations.create_projection(OPERATIONS, stack, method)
 
 
 @jax_func
@@ -656,7 +486,7 @@ def tophat(
     Returns:
         Filtered 3D JAX array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently
     result_list = []
