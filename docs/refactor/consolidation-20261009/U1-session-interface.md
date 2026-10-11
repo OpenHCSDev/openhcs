@@ -88,7 +88,7 @@ Measured against `origin/main` (`89b8fdbff`, Python plus the MCP contract fixtur
 Corrections to the plan above:
 
 - **MCP tools are derived, not subclassed.** `SessionOperation` does not subclass `AgentCapabilityDeclaration` (that import cycles through the DTOs); `capabilities.py` derives one `openhcs_<operation_id>` capability per `HeadlessOperation`. The guard checks the derivation is total.
-- **The headless journey runs a real execution server**, not a fake client; it and the GUI journey live in `tests/integration/test_session_journey.py`.
+- **The headless journey runs a real execution server**, not a fake client; it lives in `tests/integration/test_session_journey.py`; the GUI journey, which needs the GUI extras and a Qt platform, lives in `tests/pyqt_gui/test_session_gui_journey.py`.
 - **The pipeline editor keeps `displayed_steps`**, a render projection of `PipelineStepsView`, never written back; the guard allows it.
 - **500 ms polling advice remains on the UI bridge** (`recommended_poll_interval_ms`): bridge events belong to U2. The session's own event stream is push (`openhcs_session_events`).
 - **The session package loads PyQt6 transitively** through `pyqt_reactive.protocols`; the guard checks direct imports. Owner: U4 (library moves).
