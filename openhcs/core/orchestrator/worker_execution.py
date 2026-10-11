@@ -33,6 +33,7 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
+    MergeAllRuntimeRecords,
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.cancellation import (
@@ -690,7 +691,7 @@ class ExecuteInheritedLane(AnsweredWorkerCommand):
 
     lane_axis_context_keys: list[tuple[str, list[str]]]
     lane_context: WorkerLaneExecutionContext
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
 
     def run(self, connection: Any) -> Dict[str, ExecutionResult]:
         execution_bundle = ForkInheritedWorkerExecutionState.require_current()
@@ -1286,7 +1287,7 @@ def _execute_axis_with_sequential_combinations(
     pipeline_definition: List[AbstractStep],
     axis_contexts: TransportAxisContexts,
     lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
+    runtime_observation_mode: type[RuntimeObservationMode],
     cancellation: ExecutionCancellationSignal | None = None,
     release_axis_resources: bool = True,
 ) -> ExecutionResult:
@@ -1463,7 +1464,7 @@ def _execute_single_axis_static(
     *,
     context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
-    runtime_observation_mode: RuntimeObservationMode = RuntimeObservationMode.MERGE_INTO_PARENT,
+    runtime_observation_mode: type[RuntimeObservationMode] = MergeAllRuntimeRecords,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
 
@@ -1487,7 +1488,7 @@ def _execute_single_axis_static(
     # original retention contract. Ordinary execution can retire dead inputs
     # only after the step's output/progress consumers have completed.
     release_consumed = (
-        runtime_observation_mode is not RuntimeObservationMode.MERGE_INTO_PARENT
+        not runtime_observation_mode.returns_every_record
         and isinstance(lane_context.debug_execution_policy, NoOpDebugExecutionPolicy)
         and not any(
             plan.visualize or plan.streaming_configs
@@ -1635,7 +1636,7 @@ def execute_worker_lane(
     pipeline_definition: List[AbstractStep],
     lane_axis_contexts: WorkerLaneAxisContexts,
     lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
+    runtime_observation_mode: type[RuntimeObservationMode],
     cancellation: ExecutionCancellationSignal | None = None,
     release_axis_resources: bool = True,
 ) -> Dict[str, ExecutionResult]:

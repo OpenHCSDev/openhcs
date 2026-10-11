@@ -211,7 +211,6 @@ __all__ = lazy_exports(
             "UiCodeDocumentId",
             "UiCodeDocumentOptionalBaseRevision",
             "UiCodeDocumentRequest",
-            "UiCodeDocumentSelectionMode",
             "UiCodeDocumentSummary",
             "UiCodeDocumentValidationRequest",
             "UiCodeDocumentValidationResult",

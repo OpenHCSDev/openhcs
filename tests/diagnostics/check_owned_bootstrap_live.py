@@ -315,7 +315,7 @@ def run(args) -> None:
                 assert registered.functions[0].function_id in {entry.function_id for entry in page.items}
                 save()
             from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
-                                             LazyVFSConfig, MaterializationBackend,
+                                             LazyVFSConfig, MaterializeToDisk,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
             from openhcs.core.pipeline_document import PipelineDocumentCodec
             from openhcs.core.steps.function_step import FunctionStep
@@ -335,7 +335,7 @@ def run(args) -> None:
                 pipeline_config=PipelineConfig(num_workers=1, use_threading=True,
                     dataset_source=BioFormatsHandler,
                     path_planning_config=LazyPathPlanningConfig(global_output_folder=owned/'outputs'),
-                    vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK)),
+                    vfs_config=LazyVFSConfig(materialization_backend=MaterializeToDisk)),
                 pipeline_steps=steps,
             )
             source = PipelineDocumentCodec.render(document)

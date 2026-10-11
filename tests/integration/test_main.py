@@ -464,9 +464,9 @@ def _create_pipeline_config(test_config: TestConfig) -> GlobalPipelineConfig:
     # For OMERO tests, use omero_local backend for materialization
     # For other tests, use the configured backend
     if test_config.is_omero:
-        materialization_backend = MaterializationBackend("omero_local")
+        materialization_backend = MaterializationBackend.__registry__["omero_local"]
     else:
-        materialization_backend = MaterializationBackend(test_config.backend_config)
+        materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
     return GlobalPipelineConfig(
         num_workers=CONSTANTS.DEFAULT_WORKERS,
@@ -525,9 +525,9 @@ def _initialize_orchestrator(
     # For OMERO tests, use omero_local backend for materialization
     # For other tests, use the configured backend
     if test_config.is_omero:
-        materialization_backend = MaterializationBackend("omero_local")
+        materialization_backend = MaterializationBackend.__registry__["omero_local"]
     else:
-        materialization_backend = MaterializationBackend(test_config.backend_config)
+        materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
     # Create PipelineConfig with lazy configs for proper hierarchical inheritance
     pipeline_config = PipelineConfig(
@@ -784,9 +784,9 @@ def _execute_pipeline_with_mode(
         # For OMERO tests, use omero_local backend for materialization
         # For other tests, use the configured backend
         if test_config.is_omero:
-            materialization_backend = MaterializationBackend("omero_local")
+            materialization_backend = MaterializationBackend.__registry__["omero_local"]
         else:
-            materialization_backend = MaterializationBackend(test_config.backend_config)
+            materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
         # Create pipeline config with lazy configs
         from openhcs.core.config import (

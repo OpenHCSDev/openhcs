@@ -1,4 +1,4 @@
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorCompiled, OrchestratorExecFailed
 from openhcs.core.progress.projection import (
     SubjectRuntimeIdentity,
     SubjectRuntimeProjection,
@@ -7,7 +7,7 @@ from openhcs.core.progress.projection import (
     CompilingSubjectRuntimeState,
 )
 from openhcs.core.execution_state import (
-    TerminalExecutionStatus,
+    ExecutionFailed,
 )
 from openhcs.authoring.session.dataset_status import (
     PlateStatusPresenter,
@@ -31,11 +31,11 @@ def _runtime_plate(
 
 def test_runtime_projection_is_canonical_over_local_flags():
     prefix = PlateStatusPresenter.build_status_prefix(
-        orchestrator_state=OrchestratorState.EXEC_FAILED,
+        orchestrator_state=OrchestratorExecFailed,
         is_init_pending=True,
         is_compile_pending=True,
         is_execution_active=False,
-        terminal_status=TerminalExecutionStatus.FAILED,
+        terminal_status=ExecutionFailed,
         runtime_projection=_runtime_plate(CompilingSubjectRuntimeState, 42.0),
     )
 
@@ -73,7 +73,7 @@ def test_pending_status_when_active_without_runtime_or_queue():
 
 def test_orchestrator_fallback_for_idle_case():
     prefix = PlateStatusPresenter.build_status_prefix(
-        orchestrator_state=OrchestratorState.COMPILED,
+        orchestrator_state=OrchestratorCompiled,
         is_init_pending=False,
         is_compile_pending=False,
         is_execution_active=False,
@@ -88,5 +88,5 @@ def test_status_presenter_has_no_parallel_state_label_tables():
     assert not hasattr(PlateStatusPresenter, "TERMINAL_LABELS")
     assert not hasattr(PlateStatusPresenter, "ORCHESTRATOR_LABELS")
 
-    assert TerminalExecutionStatus.FAILED.status_prefix == "❌ Exec Failed"
-    assert OrchestratorState.COMPILED.status_prefix == "✓ Compiled"
+    assert ExecutionFailed.status_prefix == "❌ Exec Failed"
+    assert OrchestratorCompiled.status_prefix == "✓ Compiled"

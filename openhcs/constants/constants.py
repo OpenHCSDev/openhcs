@@ -6,7 +6,10 @@ These constants are governed by various doctrinal clauses.
 """
 
 from enum import Enum
-from typing import Set
+from abc import ABC
+from typing import ClassVar, Set
+
+from metaclass_registry import AutoRegisterMeta
 
 from arraybridge.types import (
     CPU_MEMORY_TYPES as CPU_MEMORY_TYPES,
@@ -47,68 +50,94 @@ from arraybridge.types import (
 from polystore.constants import Backend
 
 
-class OrchestratorState(Enum):
-    """Simple orchestrator state tracking - no complex state machine."""
+class OrchestratorState(ABC, metaclass=AutoRegisterMeta):
+    """One lifecycle state of a dataset's orchestrator.
 
-    has_completed_initialization: bool
-    skips_initialization: bool
-    allows_execution: bool
-    status_prefix: str
+    Each state is a subclass declaring what it allows; ``name`` is its spelling
+    on the wire and in status text.
+    """
 
-    CREATED = ("created", False, False, False, "")  # Object exists, not initialized
-    READY = ("ready", True, True, False, "✓ Init")  # Initialized, ready for compilation
-    COMPILED = ("compiled", True, True, True, "✓ Compiled")  # Compilation complete
-    EXECUTING = (
-        "executing",
-        True,
-        False,
-        False,
-        "🔄 Executing",
-    )  # Execution in progress
-    COMPLETED = (
-        "completed",
-        True,
-        True,
-        True,
-        "✅ Complete",
-    )  # Execution completed successfully
-    INIT_FAILED = (
-        "init_failed",
-        False,
-        False,
-        False,
-        "❌ Init Failed",
-    )  # Initialization failed
-    COMPILE_FAILED = (
-        "compile_failed",
-        True,
-        False,
-        False,
-        "❌ Compile Failed",
-    )  # Compilation failed
-    EXEC_FAILED = (
-        "exec_failed",
-        True,
-        False,
-        False,
-        "❌ Exec Failed",
-    )  # Execution failed
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    def __new__(
-        cls,
-        value: str,
-        has_completed_initialization: bool,
-        skips_initialization: bool,
-        allows_execution: bool,
-        status_prefix: str,
-    ):
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.has_completed_initialization = has_completed_initialization
-        obj.skips_initialization = skips_initialization
-        obj.allows_execution = allows_execution
-        obj.status_prefix = status_prefix
-        return obj
+    name: ClassVar[str | None] = None
+    has_completed_initialization: ClassVar[bool]
+    skips_initialization: ClassVar[bool]
+    allows_execution: ClassVar[bool]
+    status_prefix: ClassVar[str]
+
+    @staticmethod
+    def named(name: str) -> type["OrchestratorState"] | None:
+        """The state spelled ``name``, or ``None`` for an unknown spelling."""
+        return OrchestratorState.__registry__.get(name)
+
+
+class OrchestratorCreated(OrchestratorState):
+    """The orchestrator exists and is not initialized."""
+
+    name = "created"
+    has_completed_initialization = False
+    skips_initialization = False
+    allows_execution = False
+    status_prefix = ""
+
+
+class OrchestratorReady(OrchestratorState):
+    """Initialized and ready for compilation."""
+
+    name = "ready"
+    has_completed_initialization = True
+    skips_initialization = True
+    allows_execution = False
+    status_prefix = "✓ Init"
+
+
+class OrchestratorCompiled(OrchestratorState):
+    name = "compiled"
+    has_completed_initialization = True
+    skips_initialization = True
+    allows_execution = True
+    status_prefix = "✓ Compiled"
+
+
+class OrchestratorExecuting(OrchestratorState):
+    name = "executing"
+    has_completed_initialization = True
+    skips_initialization = False
+    allows_execution = False
+    status_prefix = "🔄 Executing"
+
+
+class OrchestratorCompleted(OrchestratorState):
+    name = "completed"
+    has_completed_initialization = True
+    skips_initialization = True
+    allows_execution = True
+    status_prefix = "✅ Complete"
+
+
+class OrchestratorInitFailed(OrchestratorState):
+    name = "init_failed"
+    has_completed_initialization = False
+    skips_initialization = False
+    allows_execution = False
+    status_prefix = "❌ Init Failed"
+
+
+class OrchestratorCompileFailed(OrchestratorState):
+    name = "compile_failed"
+    has_completed_initialization = True
+    skips_initialization = False
+    allows_execution = False
+    status_prefix = "❌ Compile Failed"
+
+
+class OrchestratorExecFailed(OrchestratorState):
+    name = "exec_failed"
+    has_completed_initialization = True
+    skips_initialization = False
+    allows_execution = False
+    status_prefix = "❌ Exec Failed"
 
 
 # I/O-related constants

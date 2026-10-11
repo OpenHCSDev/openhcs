@@ -10,7 +10,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
-    MaterializationBackend,
+    MaterializeAuto, MaterializeToDisk,
     PathPlanningConfig,
     VFSConfig,
 )
@@ -27,7 +27,7 @@ def _pipeline_config(
     return SimpleNamespace(
         vfs_config=VFSConfig(
             read_backend=Backend.DISK,
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
         path_planning_config=path_planning_config,
     )
@@ -220,7 +220,7 @@ def test_auto_backend_admission_is_shared_and_new_submission_is_fresh():
     config = _pipeline_config()
     config.vfs_config = VFSConfig(
         read_backend=Backend.AUTO,
-        materialization_backend=MaterializationBackend.AUTO,
+        materialization_backend=MaterializeAuto,
     )
 
     def new_submission():
@@ -243,7 +243,7 @@ def test_auto_backend_admission_is_shared_and_new_submission_is_fresh():
         assert context.step_plans[0].write_backend == "virtual_workspace"
     assert requests == [(input_dir, filemanager)]
     source_backend = "zarr"
-    assert planner.resolve_backend(MaterializationBackend.AUTO) == "virtual_workspace"
+    assert planner.resolve_backend(MaterializeAuto.backend) == "virtual_workspace"
     assert new_submission().resolve_backend(Backend.AUTO) == "zarr"
     assert requests == [(input_dir, filemanager), (input_dir, filemanager)]
 
@@ -252,7 +252,7 @@ def test_unused_materialization_auto_does_not_query_source():
     config = _pipeline_config(path_planning_config=PathPlanningConfig(partition_filter=0))
     config.vfs_config = VFSConfig(
         read_backend=Backend.DISK,
-        materialization_backend=MaterializationBackend.AUTO,
+        materialization_backend=MaterializeAuto,
     )
     planner = MaterializationFlagPlanner(
         pipeline_config=config,

@@ -21,7 +21,7 @@ from polystore.zarr_batch import (
     ZarrBatchLayout,
 )
 
-from openhcs.constants.constants import Backend, OrchestratorState
+from openhcs.constants.constants import Backend, OrchestratorCreated
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
@@ -406,7 +406,7 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     else:
         orchestrator.apply_pipeline_config(replacement)
 
-    assert orchestrator.state is OrchestratorState.CREATED
+    assert orchestrator.state is OrchestratorCreated
     assert not orchestrator.is_initialized()
     assert orchestrator.microscope_handler is None
     assert orchestrator.get_effective_config().source_bindings_config == edited_bindings

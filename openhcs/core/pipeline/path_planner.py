@@ -1798,7 +1798,7 @@ class PathPlannerMaterializationStage:
 
         return InputConversionPlan(
             output_dir=output_dir,
-            backend=self.planner.vfs.materialization_backend.value,
+            backend=self.planner.vfs.materialization_backend.backend.value,
             uses_virtual_workspace=False,
             original_subdir=input_dir.name,
         )
@@ -1821,7 +1821,7 @@ class PathPlannerMaterializationStage:
         )
         self.planner.plans[step_index].materialized_output = MaterializedOutputPlan(
             output_dir=materialized_output_dir,
-            backend=self.planner.vfs.materialization_backend.value,
+            backend=self.planner.vfs.materialization_backend.backend.value,
             dataset_root=str(materialized_dataset_root),
             sub_dir=materialization_config.sub_dir,
             analysis_results_dir=str(

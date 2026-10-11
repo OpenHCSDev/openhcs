@@ -44,7 +44,7 @@ from openhcs.core.config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
@@ -325,7 +325,7 @@ class OpenHCSAdapter(ToolAdapter):
             ),
             vfs_config=replace(
                 self.global_config.vfs_config,
-                materialization_backend=MaterializationBackend.DISK,
+                materialization_backend=MaterializeToDisk,
             ),
             compilation_debug_config=compilation_debug_config,
             materialize_runtime_artifacts=request.materialize_runtime_artifacts,

@@ -37,7 +37,7 @@ from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 from openhcs.authoring.session.step_scopes import StepEditorScope
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorCompiled, OrchestratorReady
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.axes import Ungrouped
 from openhcs.core.config import (
@@ -105,7 +105,7 @@ def editor_gui(tmp_path, *, initialized: bool = True):
     with session_gui() as gui:
         (scope_id,) = add_datasets(gui.session, tmp_path, "plate")
         if initialized:
-            gui.session.set_dataset_state(scope_id, OrchestratorState.READY)
+            gui.session.set_dataset_state(scope_id, OrchestratorReady)
         gui.settle()
         yield EditorGui(gui, scope_id)
 
@@ -1308,7 +1308,7 @@ def test_debug_toolbar_follows_the_current_dataset_compilation(tmp_path) -> None
         assert toolbar.command_enabled(StepDebugCommand) is False
 
         harness.session.compiled[harness.scope_id] = _compiled(harness.scope_id)
-        harness.session.set_dataset_state(harness.scope_id, OrchestratorState.COMPILED)
+        harness.session.set_dataset_state(harness.scope_id, OrchestratorCompiled)
         harness.gui.settle()
         assert toolbar.command_enabled(StepDebugCommand) is True
 

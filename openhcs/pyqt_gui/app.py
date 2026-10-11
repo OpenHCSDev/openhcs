@@ -8,7 +8,6 @@ manages global configuration and services.
 import logging
 import sys
 from collections.abc import Callable
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from objectstate import spawn_thread_with_context
@@ -30,13 +29,64 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class MainWindowStartupReadinessState(Enum):
-    """Closed lifecycle for the initialized main-window paint boundary."""
+class StartupReadinessState:
+    """One state of the main-window readiness boundary; each owns its transitions.
 
-    WAITING_DEFERRED_INITIALIZATION = "waiting_deferred_initialization"
-    WAITING_INITIALIZED_PAINT = "waiting_initialized_paint"
-    PAINT_COMPLETION_QUEUED = "paint_completion_queued"
-    FINISHED = "finished"
+    The base answers every event by staying put.
+    """
+
+    @staticmethod
+    def deferred_initialization_complete(readiness: "MainWindowStartupReadiness") -> None:
+        return None
+
+    @staticmethod
+    def painted(readiness: "MainWindowStartupReadiness") -> None:
+        return None
+
+    @staticmethod
+    def report_painted_ready(readiness: "MainWindowStartupReadiness") -> None:
+        return None
+
+    @staticmethod
+    def fail(readiness: "MainWindowStartupReadiness", error: BaseException) -> None:
+        readiness._finish()
+        if readiness._on_failure is not None:
+            readiness._on_failure(error)
+
+
+class WaitingForDeferredInitialization(StartupReadinessState):
+    @staticmethod
+    def deferred_initialization_complete(readiness: "MainWindowStartupReadiness") -> None:
+        readiness._state = WaitingForInitializedPaint
+        readiness._main_window.update()
+
+
+class WaitingForInitializedPaint(StartupReadinessState):
+    @staticmethod
+    def painted(readiness: "MainWindowStartupReadiness") -> None:
+        readiness._state = PaintCompletionQueued
+        QtCore.QTimer.singleShot(0, readiness._report_painted_ready)
+
+
+class PaintCompletionQueued(StartupReadinessState):
+    @staticmethod
+    def report_painted_ready(readiness: "MainWindowStartupReadiness") -> None:
+        readiness._finish()
+        logger.info("OpenHCS main window painted and ready")
+        if readiness._on_ready is None:
+            return
+        try:
+            readiness._on_ready()
+        except Exception as error:
+            if readiness._on_failure is None:
+                raise
+            readiness._on_failure(error)
+
+
+class StartupReadinessFinished(StartupReadinessState):
+    @staticmethod
+    def fail(readiness: "MainWindowStartupReadiness", error: BaseException) -> None:
+        return None
 
 
 class MainWindowStartupReadiness(QtCore.QObject):
@@ -53,56 +103,30 @@ class MainWindowStartupReadiness(QtCore.QObject):
         self._main_window = main_window
         self._on_ready = on_ready
         self._on_failure = on_failure
-        self._state = MainWindowStartupReadinessState.WAITING_DEFERRED_INITIALIZATION
+        self._state: type[StartupReadinessState] = WaitingForDeferredInitialization
         main_window.installEventFilter(self)
 
     def deferred_initialization_complete(self) -> None:
         """Arm readiness for the first paint containing deferred UI state."""
-        if (
-            self._state
-            is not MainWindowStartupReadinessState.WAITING_DEFERRED_INITIALIZATION
-        ):
-            return
-        self._state = MainWindowStartupReadinessState.WAITING_INITIALIZED_PAINT
-        self._main_window.update()
+        self._state.deferred_initialization_complete(self)
 
     def fail(self, error: BaseException) -> None:
         """Terminate the readiness boundary with its originating failure."""
-        if self._state is MainWindowStartupReadinessState.FINISHED:
-            return
-        self._finish()
-        if self._on_failure is not None:
-            self._on_failure(error)
+        self._state.fail(self, error)
 
     def eventFilter(self, watched, event) -> bool:  # noqa: N802
         if watched is self._main_window and event.type() == QtCore.QEvent.Type.Close:
             self._finish()
             return super().eventFilter(watched, event)
-        if (
-            watched is self._main_window
-            and self._state is MainWindowStartupReadinessState.WAITING_INITIALIZED_PAINT
-            and event.type() == QtCore.QEvent.Type.Paint
-        ):
-            self._state = MainWindowStartupReadinessState.PAINT_COMPLETION_QUEUED
-            QtCore.QTimer.singleShot(0, self._report_painted_ready)
+        if watched is self._main_window and event.type() == QtCore.QEvent.Type.Paint:
+            self._state.painted(self)
         return super().eventFilter(watched, event)
 
     def _report_painted_ready(self) -> None:
-        if self._state is not MainWindowStartupReadinessState.PAINT_COMPLETION_QUEUED:
-            return
-        self._finish()
-        logger.info("OpenHCS main window painted and ready")
-        if self._on_ready is None:
-            return
-        try:
-            self._on_ready()
-        except Exception as error:
-            if self._on_failure is None:
-                raise
-            self._on_failure(error)
+        self._state.report_painted_ready(self)
 
     def _finish(self) -> None:
-        self._state = MainWindowStartupReadinessState.FINISHED
+        self._state = StartupReadinessFinished
         self._main_window.removeEventFilter(self)
         self.deleteLater()
 

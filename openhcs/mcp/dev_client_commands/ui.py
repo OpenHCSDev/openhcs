@@ -12,6 +12,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
 )
 
+from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.agent.dto.session import (
     DatasetRowState,
     SessionEventBatch,
@@ -40,7 +41,6 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
 )
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
@@ -106,8 +106,8 @@ class StateSurfaceCommandSpec(CapabilityBackedCommandSpec):
         )
         parser.add_argument(
             "--selection-mode",
-            choices=tuple(mode.value for mode in SelectedAllSelectionMode),
-            default=SelectedAllSelectionMode.ALL.value,
+            choices=tuple(SelectionScope.__registry__),
+            default=AllItems.name,
         )
         parser.add_argument("--base-revision-token")
         add_ui_connection_options(parser)
@@ -189,8 +189,8 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             "--wait-selection-mode",
             "--poll-selection-mode",
             dest="poll_selection_mode",
-            choices=tuple(mode.value for mode in SelectedAllSelectionMode),
-            default=SelectedAllSelectionMode.SELECTED.value,
+            choices=tuple(SelectionScope.__registry__),
+            default=SelectedItems.name,
             help=(f"Selection mode used while waiting on {state_surface_id}."),
         )
         parser.add_argument(

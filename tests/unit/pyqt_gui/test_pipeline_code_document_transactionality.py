@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import pytest
 
 from openhcs.authoring.session.events import PipelineChanged
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorReady
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.pyqt_gui.session_harness import add_datasets, session_gui
 
@@ -18,7 +18,7 @@ def _editor(tmp_path):
 
     with session_gui() as gui:
         (scope_id,) = add_datasets(gui.session, tmp_path, "plate")
-        gui.session.set_dataset_state(scope_id, OrchestratorState.READY)
+        gui.session.set_dataset_state(scope_id, OrchestratorReady)
         gui.settle()
         changes = []
         gui.session.subscribe(

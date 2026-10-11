@@ -17,7 +17,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig, LazyNapariStreamingConfig, LazyPathPlanningConfig,
     LazyProcessingConfig,
 )
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
@@ -67,7 +67,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
     )).execution_bundle
     outcomes = PipelineOrchestrator(source, pipeline_config=config).initialize().execute_compiled_bundle(
         execution_bundle=bundle, max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id='engineering620-registered',

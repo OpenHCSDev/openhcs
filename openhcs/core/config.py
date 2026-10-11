@@ -125,13 +125,44 @@ ZarrChunkStrategy = _polystore_config.ZarrChunkStrategy
 TiffCompression = _polystore_config.TiffCompression
 
 
-class MaterializationBackend(Enum):
-    """Available backends for materialization (persistent storage only)."""
+class MaterializationBackend(ABC, metaclass=AutoRegisterMeta):
+    """A persistent storage backend materialization may write to.
 
-    AUTO = "auto"
-    ZARR = "zarr"
-    DISK = "disk"
-    OMERO_LOCAL = "omero_local"
+    Each choice declares its PolyStore ``backend``; ``name`` is its spelling in
+    forms and on the wire.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["MaterializationBackend"]]] = {}
+
+    name: ClassVar[str | None] = None
+    backend: ClassVar[Backend]
+    writes_zarr: ClassVar[bool] = False
+    """Outputs are a Zarr store, which needs a Zarr config and converted inputs."""
+
+
+class MaterializeAuto(MaterializationBackend):
+    """Use the dataset source's primary backend."""
+
+    name = "auto"
+    backend = Backend.AUTO
+
+
+class MaterializeToZarr(MaterializationBackend):
+    name = "zarr"
+    backend = Backend.ZARR
+    writes_zarr = True
+
+
+class MaterializeToDisk(MaterializationBackend):
+    name = "disk"
+    backend = Backend.DISK
+
+
+class MaterializeToOmeroLocal(MaterializationBackend):
+    name = "omero_local"
+    backend = Backend.OMERO_LOCAL
 
 
 class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
@@ -481,8 +512,10 @@ class VFSConfig(AnnotatedDataclassValidationMixin):
     """
 
     materialization_backend: Annotated[
-        MaterializationBackend, abbreviation("materialize")
-    ] = MaterializationBackend.DISK
+        type[MaterializationBackend],
+        abbreviation("materialize"),
+        RegisteredClassChoices(MaterializationBackend),
+    ] = MaterializeToDisk
     """Persistent backend used by compiled main-flow and artifact materialization plans.
 
     This setting selects how requested outputs are stored; it does not itself

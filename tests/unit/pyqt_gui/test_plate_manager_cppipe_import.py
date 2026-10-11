@@ -7,6 +7,7 @@ from pathlib import Path
 from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt
 
+from openhcs.constants.constants import OrchestratorReady
 from openhcs.agent.dto.session import DatasetRootsRequest
 from openhcs.authoring.session.datasets import dataset_scope_ids
 from openhcs.authoring.session.operations.datasets import (
@@ -178,7 +179,7 @@ def test_config_window_edits_the_logical_pipeline_scope(tmp_path, monkeypatch) -
     with session_gui() as gui:
         gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
         orchestrator = gui.session.orchestrator(scope_id)
-        orchestrator._state = type(orchestrator.state).READY
+        orchestrator._state = OrchestratorReady
         gui.session.refresh()
         gui.settle()
         emissions = []

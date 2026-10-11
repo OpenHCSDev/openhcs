@@ -6,7 +6,7 @@ import pytest
 
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
-    ExecutionStatus,
+    AxisFailed,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
@@ -61,7 +61,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
     assert restored.execution_id == "execution-1"
     assert restored.axis_count == 2
     assert restored.successful_axis_count == 1
-    assert restored.outcomes_by_axis["B01"].status is ExecutionStatus.ERROR
+    assert restored.outcomes_by_axis["B01"].status is AxisFailed
     assert restored.outcomes_by_axis["B01"].failed_combination == "field-2"
     assert restored.exports is not None
     assert restored.exports.output_files == (declared_output,)

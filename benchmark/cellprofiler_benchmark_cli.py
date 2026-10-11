@@ -173,6 +173,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
     ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         from openhcs.runtime.zmq_execution_signature import (
+            ExportRuntimeValues,
             ZMQRuntimeObservationExportScope,
         )
 
@@ -197,8 +198,8 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         parser.add_argument("--pipeline-name")
         parser.add_argument(
             "--observation-scope",
-            choices=tuple(scope.value for scope in ZMQRuntimeObservationExportScope),
-            default=ZMQRuntimeObservationExportScope.VALUES.value,
+            choices=tuple(ZMQRuntimeObservationExportScope.__registry__),
+            default=ExportRuntimeValues.name,
             help="Retain full runtime values or outcome-only execution evidence.",
         )
         parser.add_argument("--host", default="localhost")
@@ -280,7 +281,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             runtime_observation_export_path=str(
                 MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(output_dir)
             ),
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.named(
                 args.observation_scope
             ),
             submit_timeout_ms=args.submit_timeout_ms,

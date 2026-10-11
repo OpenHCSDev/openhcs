@@ -15,7 +15,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyStepMaterializationConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     VFSConfig,
 )
@@ -111,7 +111,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
         pipeline_config=SimpleNamespace(
             vfs_config=VFSConfig(
                 read_backend=Backend.DISK,
-                materialization_backend=MaterializationBackend.DISK,
+                materialization_backend=MaterializeToDisk,
             ),
             path_planning_config=effective_config.path_planning_config,
         ),
