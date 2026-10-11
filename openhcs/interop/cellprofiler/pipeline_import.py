@@ -192,7 +192,7 @@ def cellprofiler_terminal_artifact_specs(
             for spec in later_unit.contract.artifact_outputs
         )
         for spec in unit.contract.artifact_outputs:
-            if spec.sidecar_role is not None and spec.sidecar_role.inspection_only:
+            if spec.is_inspection_only():
                 continue
             input_ref = spec.ref().for_plan_type(ArtifactInputPlan)
             if input_ref in later_input_refs or input_ref in later_output_refs:

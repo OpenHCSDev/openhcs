@@ -464,19 +464,18 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
 
     def _bind_catalog_key(self, node: ast.Call) -> None:
         """Admit ``get_function('<key>')`` only for a key the catalog owns."""
-        if (
-            self._function_catalog is None
-            or node.keywords
-            or len(node.args) != 1
-            or not isinstance(node.args[0], ast.Constant)
-            or not isinstance(node.args[0].value, str)
-        ):
-            self._error(
-                "unsafe_call",
-                "Registry lookups take one literal catalog function id.",
-            )
+        match node:
+            case ast.Call(args=[ast.Constant(value=str() as key)], keywords=[]):
+                pass
+            case _:
+                self._error(
+                    "unsafe_call",
+                    "Registry lookups take one literal catalog function id.",
+                )
+                return
+        if self._function_catalog is None:
+            self._error("unsafe_call", "Registry lookups need a function catalog.")
             return
-        key = node.args[0].value
         if key in self.catalog_key_bindings:
             return
         try:

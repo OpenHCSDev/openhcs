@@ -23,6 +23,7 @@ from zmqruntime.viewer_protocol import ViewerWireMapping, ViewerWirePayload, Vie
 
 from openhcs.core.axes import (
     Axis,
+    AxisFamily,
     AxisRole,
     AxisValueKind,
     ColourAxis,
@@ -137,6 +138,11 @@ class DeclaredAxes:
     @classmethod
     def of(cls, axes: Sequence[type[Axis]]) -> "DeclaredAxes":
         return cls(tuple(DeclaredAxis.of(axis) for axis in axes))
+
+    @classmethod
+    def active(cls) -> "DeclaredAxes":
+        """The declarations of the active axis family."""
+        return cls.of(AxisFamily.active().axes)
 
     @classmethod
     def from_wire(cls, payload: object) -> "DeclaredAxes":

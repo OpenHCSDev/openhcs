@@ -2469,6 +2469,10 @@ class ArtifactSpec:
         """Distinguish a runtime argument from a context-only artifact identity."""
         return self.parameter_name is not None
 
+    def is_inspection_only(self) -> bool:
+        """Whether this is a QA sidecar rather than a processing result."""
+        return self.sidecar_role is not None and self.sidecar_role.inspection_only
+
     def __post_init__(self) -> None:
         if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
             raise TypeError(
