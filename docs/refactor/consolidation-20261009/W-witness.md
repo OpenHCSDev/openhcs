@@ -75,7 +75,7 @@ Not a microscopy assumption, recorded for its owner: the napari viewer refuses Q
 
 ## Tests
 
-Run one file per process. The guards (`test_axis_family_guards.py` 10, `test_g7_runtime_protocol_guards.py` 5, `test_dataset_source_guards.py` 5) and the witness (`test_axis_family_witness.py`: 13 pass, `zmq+napari` skipped without a display and passing under a private Xvnc display). 84 unit files touching the renamed code; 12 integration files. Failures that also fail on `origin/main` (same tests, same errors) are not regressions; they are listed in the PR body.
+Run one file per process. The guards (`test_axis_family_guards.py` 10, `test_g7_runtime_protocol_guards.py` 5, `test_dataset_source_guards.py` 5) and the witness (`test_axis_family_witness.py`: 13 pass, `zmq+napari` skipped without a display and passing under a private Xvnc display). 84 unit files touching the renamed code; 12 integration files; official30 parity (30/30). Failures that also fail on `origin/main` (same tests, same errors) are not regressions; they are listed in the PR body.
 
 ## New-case experiments
 
