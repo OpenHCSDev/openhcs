@@ -35,12 +35,14 @@ pycodify 0.2.0:
 - Deleted: `FallbackFormatter` (unformattable values raise `TypeError`), the placeholder-instance substitution, the lazy `hasattr` probes; `init=False` fields are skipped. `frozenset`, `bytes` and `complex` get exact formatters.
 
 ObjectState 2.1.0 (adds a module and a `pycodify` dependency; removes only private debug branches):
-- `objectstate.codegen`: `LazyDataclassFormatter` (raw values, explicitly-set fields, clean-mode omission) and `lazy_field_needs_source(current, default, context)` for owners such as `FunctionStep` that format lazy-config fields.
+- `objectstate.codegen`: `LazyResolutionFormatter` for every `LazyResolutionDataclass` (raw values; clean mode writes fields whose raw value differs from the field default), refined by `LazyDataclassFormatter` (constructor-set fields), and `field_needs_source(current, default, context)` for owners such as `FunctionStep` that format lazy-config fields.
 - The field-name-gated debug branches are deleted; docstring examples renamed to `partition_filter`.
 
 OpenHCS:
 - Deleted: `openhcs/core/python_source_literal.py`, `openhcs/serialization/source_path_factoring.py`, `NameMappingLookup`, `EnumMemberFormatter`, `AxisDeclarationFormatter`, `OpenHCSImportableTypeFormatter`, `PythonSourceLiteralFormatter`, `OpenHCSPathFormatter`, the six LazyDataclass classes and `FunctionStepCleanModeFieldPolicy`, the `repr` catch in `OpenHCSCallableFormatter`.
 - `FunctionReference` subclasses pycodify's `PythonSourceLiteral`; the six document callers call `generate_python_source`.
+
+**Found by the round-trip test.** Base configs that inherit through `None` (`StepPartitionFilterConfig`, `PathPlanningConfig`, the streaming configs and 5 others) are `LazyResolutionDataclass` but not `LazyDataclass`; pycodify's generic dataclass formatter wrote their *resolved* values in full mode, so a saved `GlobalPipelineConfig` stopped inheriting (for example `step_partition_filter_config.partition_filter_mode` was baked to `IncludePartitions`). Fixed by `LazyResolutionFormatter`.
 
 ## Persisted state
 
@@ -65,6 +67,10 @@ Saved `.py` pipelines and configs are durable. Output that loaded before still l
 - A new nested enum or axis class in a config: today it needs an OpenHCS formatter at a priority above pycodify's broken one. After: nothing.
 - A new value type that owns its source spelling: today it subclasses an OpenHCS ABC with three methods. After: one `source_fragment` method on pycodify's ABC.
 - A second application persisting ObjectState configs as source: today it must copy 170 lines out of OpenHCS. After: `import objectstate.codegen`.
+
+## Release order
+
+pycodify 0.2.0, then ObjectState 2.1.0 (depends on `pycodify>=0.2.0,<0.3`), then the OpenHCS repin (`pycodify>=0.2.0,<0.3`, `objectstate>=2.1,<3`).
 
 ## Done when
 
