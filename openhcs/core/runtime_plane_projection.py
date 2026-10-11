@@ -116,7 +116,7 @@ class RuntimeSliceIndexedValue(RuntimeSliceProjectableValue):
         """Return the value represented by one runtime-slice index."""
 
     def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> object:
-        if context.axis is not RuntimeSlicePlaneAxis:
+        if not context.axis.one_plane_per_runtime_slice:
             return self
         return self.project_runtime_slice(context.require_plane_index())
 
@@ -148,7 +148,7 @@ class RuntimeSliceIdentityProjectableValue(RuntimeSliceProjectableValue):
     def identity_projected_value(
         self, context: "RuntimePlaneAxisValueProjection"
     ) -> object:
-        if context.axis is not RuntimeSlicePlaneAxis:
+        if not context.axis.one_plane_per_runtime_slice:
             return self
         return self.with_runtime_slice_identity(
             slice_index=context.require_plane_index(),
@@ -416,49 +416,41 @@ class RuntimePlaneAxisProjector(ABC):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimePlaneProjection(RuntimePlaneAxisProjector):
-    """Preserve a runtime stack or select one explicitly proven plane."""
+class RuntimePlaneProjection(RuntimePlaneAxisProjector, ABC):
+    """Which planes of a runtime stack an execution scope works on.
 
-    plane_index: int | None = None
+    ``WholeStackProjection`` keeps the stack; ``StackPlaneSelection`` selects
+    one explicitly proven plane.
+    """
+
     plane_count: int | None = None
+
+    selects_one_plane: ClassVar[bool]
 
     def __post_init__(self) -> None:
         if self.plane_count is None:
-            plane_count = None
-        else:
-            plane_count = int(self.plane_count)
-            if plane_count <= 0:
-                raise ValueError(
-                    "Runtime-plane projection plane_count must be positive."
-                )
-            object.__setattr__(self, "plane_count", plane_count)
-        if self.plane_index is None:
             return
-        plane_index = int(self.plane_index)
-        if plane_index < 0:
-            raise ValueError("Runtime-plane projection plane_index cannot be negative.")
-        if plane_count is not None and plane_index >= plane_count:
-            raise ValueError(
-                "Runtime-plane projection plane_index must be within plane_count: "
-                f"index {plane_index}, count {plane_count}."
-            )
-        object.__setattr__(self, "plane_index", plane_index)
+        plane_count = int(self.plane_count)
+        if plane_count <= 0:
+            raise ValueError("Runtime-plane projection plane_count must be positive.")
+        object.__setattr__(self, "plane_count", plane_count)
 
-    @classmethod
-    def stack(cls, plane_count: int | None = None) -> "RuntimePlaneProjection":
+    @staticmethod
+    def stack(plane_count: int | None = None) -> "WholeStackProjection":
         """Preserve runtime-slice stacks for stack-scoped execution."""
-        return cls(plane_count=plane_count)
+        return WholeStackProjection(plane_count=plane_count)
 
-    @classmethod
+    @staticmethod
     def selected(
-        cls, plane_index: int, plane_count: int | None = None
-    ) -> "RuntimePlaneProjection":
+        plane_index: int, plane_count: int | None = None
+    ) -> "StackPlaneSelection":
         """Select one runtime-slice plane from an explicit projection proof."""
-        return cls(plane_index=plane_index, plane_count=plane_count)
+        return StackPlaneSelection(plane_count=plane_count, plane_index=plane_index)
 
-    def runtime_slice_plane_index(self) -> int | None:
-        """Return selected runtime-slice plane, or None when stacks are preserved."""
-        return self.plane_index
+    @property
+    def preserves_complete_axis(self) -> bool:
+        """Whether this projection keeps every plane instead of selecting one."""
+        return not self.selects_one_plane
 
     def runtime_slice_axis_size(self) -> int | None:
         """Return the grouped runtime-slice axis size when known."""
@@ -466,13 +458,53 @@ class RuntimePlaneProjection(RuntimePlaneAxisProjector):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
-    """Projection of values that explicitly carry a declared runtime plane axis."""
+class WholeStackProjection(RuntimePlaneProjection):
+    """Keep every plane of the runtime stack."""
+
+    selects_one_plane = False
+
+    def runtime_slice_plane_index(self) -> None:
+        return None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StackPlaneSelection(RuntimePlaneProjection):
+    """Select one plane of the runtime stack."""
+
+    plane_index: int
+
+    selects_one_plane = True
+
+    def __post_init__(self) -> None:
+        RuntimePlaneProjection.__post_init__(self)
+        plane_index = int(self.plane_index)
+        if plane_index < 0:
+            raise ValueError("Runtime-plane projection plane_index cannot be negative.")
+        if self.plane_count is not None and plane_index >= self.plane_count:
+            raise ValueError(
+                "Runtime-plane projection plane_index must be within plane_count: "
+                f"index {plane_index}, count {self.plane_count}."
+            )
+        object.__setattr__(self, "plane_index", plane_index)
+
+    def runtime_slice_plane_index(self) -> int:
+        return self.plane_index
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
+    """Projection of values that explicitly carry a declared runtime plane axis.
+
+    ``WholeAxisProjection`` keeps every plane of the axis;
+    ``SelectedPlaneProjection`` selects one.
+    """
 
     axis: type[RuntimePlaneAxis]
     source_aliases: tuple[str, ...]
-    plane_index: int | None
     axis_size: int
+
+    preserves_complete_axis: ClassVar[bool]
+    """Whether this projection keeps every plane instead of selecting one."""
 
     def __post_init__(self) -> None:
         axis = RuntimePlaneAxis.require_member(self.axis)
@@ -491,18 +523,40 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
             raise ValueError(
                 "RuntimePlaneAxisValueProjection.axis_size must be positive."
             )
-        plane_index = self.plane_index
-        if plane_index is not None:
-            plane_index = int(plane_index)
-            if plane_index < 0 or plane_index >= axis_size:
-                raise ValueError(
-                    "RuntimePlaneAxisValueProjection.plane_index must be within "
-                    f"axis_size: index {plane_index}, size {axis_size}."
-                )
         object.__setattr__(self, "axis", axis)
         object.__setattr__(self, "source_aliases", source_aliases)
         object.__setattr__(self, "axis_size", axis_size)
-        object.__setattr__(self, "plane_index", plane_index)
+
+    @property
+    def selects_one_plane(self) -> bool:
+        """Whether this projection selects one plane of its axis."""
+        return not self.preserves_complete_axis
+
+    @abstractmethod
+    def selected_planes(self) -> tuple[int, ...]:
+        """Return the plane indices of the axis this projection keeps."""
+
+    def selects_same_planes(self, other: "RuntimePlaneAxisValueProjection") -> bool:
+        """Whether ``other`` keeps or selects the same planes the same way."""
+        return (
+            self.preserves_complete_axis == other.preserves_complete_axis
+            and self.selected_planes() == other.selected_planes()
+        )
+
+    @staticmethod
+    def for_plane(
+        *,
+        axis: type[RuntimePlaneAxis],
+        plane_index: int | None,
+        axis_size: int,
+        source_aliases: tuple[str, ...] = (),
+    ) -> "RuntimePlaneAxisValueProjection":
+        """Build from a resolver's answer: an index selects, ``None`` keeps the axis."""
+        if plane_index is None:
+            return WholeAxisProjection(axis, tuple(source_aliases), axis_size)
+        return SelectedPlaneProjection(
+            axis, tuple(source_aliases), axis_size, plane_index
+        )
 
     @classmethod
     def from_source_declaration(
@@ -542,7 +596,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         axis_size = axis.axis_size(projector, source_aliases)
         if axis_size is None:
             return None
-        return cls(
+        return cls.for_plane(
             axis=axis,
             source_aliases=source_aliases,
             plane_index=axis.plane_index(projector, source_aliases),
@@ -590,11 +644,8 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         source_aliases: tuple[str, ...] = (),
     ) -> "RuntimePlaneAxisValueProjection":
         """Return a projection whose explicit plane proof is already resolved."""
-        return cls(
-            axis=axis,
-            source_aliases=tuple(source_aliases),
-            plane_index=plane_index,
-            axis_size=axis_size,
+        return SelectedPlaneProjection(
+            axis, tuple(source_aliases), axis_size, plane_index
         )
 
     @classmethod
@@ -607,17 +658,12 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     ) -> "RuntimePlaneAxisValueProjection":
         """Declare a complete runtime axis without selecting one plane."""
 
-        return cls(
-            axis=axis,
-            source_aliases=tuple(source_aliases),
-            plane_index=None,
-            axis_size=axis_size,
-        )
+        return WholeAxisProjection(axis, tuple(source_aliases), axis_size)
 
     def selected_plane(self, plane_index: int) -> "RuntimePlaneAxisValueProjection":
         """Select one plane while preserving this declaration's exact axis."""
 
-        return type(self).from_selected_plane(
+        return self.from_selected_plane(
             axis=self.axis,
             source_aliases=self.source_aliases,
             plane_index=plane_index,
@@ -629,11 +675,6 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     ) -> "RuntimePlaneAxisValueProjection":
         """Select the projection carried into one runtime-slice invocation."""
         return self.selected_plane(slice_index)
-
-    @property
-    def preserves_complete_axis(self) -> bool:
-        """Whether this projection keeps every plane instead of selecting one."""
-        return self.plane_index is None
 
     @staticmethod
     def require_axis_size(
@@ -658,7 +699,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         value_name: str,
     ) -> "RuntimePlaneAxisValueProjection":
         """Require the runtime-slice axis, declared with ``slice_count`` planes."""
-        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
+        if projection is None or not projection.axis.one_plane_per_runtime_slice:
             raise ValueError(
                 f"{value_name} requires an exact runtime slice projection."
             )
@@ -669,21 +710,13 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
             )
         return projection
 
+    @abstractmethod
     def require_plane_index(self) -> int:
         """Return the selected plane index required by a projected invocation."""
 
-        if self.plane_index is None:
-            raise ValueError(
-                "Runtime plane projection requires an explicitly selected plane."
-            )
-        return self.plane_index
-
+    @abstractmethod
     def require_complete_axis(self, *, value_name: str) -> Self:
         """Require that this declaration preserves every input plane."""
-
-        if self.plane_index is not None:
-            raise ValueError(f"{value_name} requires a complete input stack projection.")
-        return self
 
     @classmethod
     def require_complete_projection(
@@ -721,3 +754,60 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
             raise RuntimeError(
                 f"Runtime plane-axis projection produced an out-of-range plane index {plane_index} for shape {shape!r}."
             )
+
+
+@dataclass(frozen=True, slots=True)
+class WholeAxisProjection(RuntimePlaneAxisValueProjection):
+    """Keep every plane of the declared axis."""
+
+    preserves_complete_axis = True
+
+    @classmethod
+    def preserve(
+        cls,
+        *,
+        axis: type[RuntimePlaneAxis],
+        axis_size: int,
+        source_aliases: tuple[str, ...] = (),
+    ) -> Self:
+        return cls(axis, tuple(source_aliases), axis_size)
+
+    def selected_planes(self) -> tuple[int, ...]:
+        return tuple(range(self.axis_size))
+
+    def require_plane_index(self) -> int:
+        raise ValueError(
+            "Runtime plane projection requires an explicitly selected plane."
+        )
+
+    def require_complete_axis(self, *, value_name: str) -> Self:
+        del value_name
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class SelectedPlaneProjection(RuntimePlaneAxisValueProjection):
+    """Select one plane of the declared axis."""
+
+    plane_index: int
+
+    preserves_complete_axis = False
+
+    def __post_init__(self) -> None:
+        RuntimePlaneAxisValueProjection.__post_init__(self)
+        plane_index = int(self.plane_index)
+        if plane_index < 0 or plane_index >= self.axis_size:
+            raise ValueError(
+                "RuntimePlaneAxisValueProjection.plane_index must be within "
+                f"axis_size: index {plane_index}, size {self.axis_size}."
+            )
+        object.__setattr__(self, "plane_index", plane_index)
+
+    def selected_planes(self) -> tuple[int, ...]:
+        return (self.plane_index,)
+
+    def require_plane_index(self) -> int:
+        return self.plane_index
+
+    def require_complete_axis(self, *, value_name: str) -> Self:
+        raise ValueError(f"{value_name} requires a complete input stack projection.")

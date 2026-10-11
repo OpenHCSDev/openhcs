@@ -1169,7 +1169,7 @@ class Pure2DContract(ProcessingContract):
         return (
             not request.execution_mode.per_plane
             or request.plane_projection is None
-            or request.plane_projection.plane_index is not None
+            or request.plane_projection.selects_one_plane
         )
 
     @classmethod

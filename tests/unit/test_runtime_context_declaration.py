@@ -148,7 +148,7 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
         artifact_inputs=artifacts[0],
         artifact_outputs=artifacts[1],
         group_key=None,
-        plane_projection=RuntimePlaneProjection(),
+        plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=np.zeros((2, 3)),
         source_memory_type="numpy",
     )

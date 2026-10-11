@@ -182,7 +182,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         if aggregate:
             payload = ImageArtifactType.contextualize_output(
                 source_stack, pixels.copy(), output_plan,
-                RuntimePlaneAxisValueProjection(RuntimeSlicePlaneAxis, (), None, 4),
+                RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=4),
             )
         if aggregate:
             execution_scope = RuntimeExecutionAxisScope.from_raw(

@@ -1,5 +1,6 @@
 """Ordinary saved-image streaming must reach the strict receiver with owned axes."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from dataclasses import replace
 from hashlib import sha256
 from multiprocessing.shared_memory import SharedMemory
@@ -114,7 +115,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
                 SharedMemory(name=name)
 
 
-@pytest.mark.parametrize("axis", (None, *RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", (NoPlaneAxis, *RuntimePlaneAxis.leading_axes()))
 def test_public_declared_saved_image_reaches_strict_receiver(
     tmp_path, receiver_transport, axis
 ):
@@ -126,7 +127,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
         plane_axis=axis,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes()
-            if axis is None
+            if not axis.leads_data
             else SourceImageProvenancePlanes.from_components(
                 paths=(projection.image_metadata.source_path,),
                 component_metadata=(
@@ -136,7 +137,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
         ),
     )
     image_format = ImageFileFormat.require_path(path)
-    pixels = expected if axis is None else expected[None]
+    pixels = expected if not axis.leads_data else expected[None]
     image = metadata.payload_with(pixels)
     image_format.write(path, image)
     projection = replace(

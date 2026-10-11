@@ -145,7 +145,7 @@ class MeasurementImageLabelAlignmentRequest:
             SourceBindingPlaneAxis,
             self.source_aliases,
         )
-        if projection is None or projection.plane_index is None:
+        if projection is None or projection.preserves_complete_axis:
             return self
         image = self.image
         if isinstance(image, AlignedImageStack):
@@ -192,7 +192,7 @@ class MeasurementImageLabelAlignmentRequest:
         )
         if runtime_projection is None:
             return self
-        if runtime_projection.plane_index is None:
+        if runtime_projection.preserves_complete_axis:
             if declared_projection.axis_size != 1:
                 return self
             projection = declared_projection.selected_plane(0)

@@ -277,7 +277,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
             projector,
             RuntimeSlicePlaneAxis,
         )
-        if projection.plane_index is None and projection.axis_size != 1:
+        if projection.preserves_complete_axis and projection.axis_size != 1:
             raise ValueError(
                 "Payload-scoped object-label measurement lookup requires one "
                 "selected runtime slice, but the invocation preserves "
@@ -291,8 +291,9 @@ class PayloadLabelScope(ObjectLabelDomainScope):
         labels: "ObjectLabelValue",
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
-        plane_index = projection.plane_index
-        return (0,) if plane_index is None else (plane_index,)
+        if projection.selects_one_plane:
+            return projection.selected_planes()
+        return (0,)
 
     @classmethod
     def required_measurement_axis_values(
@@ -455,10 +456,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         labels: "ObjectLabelValue",
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
-        plane_index = projection.plane_index
-        if plane_index is not None:
-            return (plane_index,)
-        return tuple(range(projection.axis_size))
+        return projection.selected_planes()
 
     @classmethod
     def measurement_planes(
@@ -475,9 +473,8 @@ class PlaneLabelScope(ObjectLabelDomainScope):
                 "Plane-scoped object-label measurement requires an exact runtime "
                 "plane projection."
             )
-        plane_index = projection.plane_index
         plane_count = labels.declared_plane_count()
-        if plane_index is not None:
+        if projection.selects_one_plane:
             if plane_count is not None:
                 raise ValueError(
                     "Grouped plane-scoped object labels must already be projected "

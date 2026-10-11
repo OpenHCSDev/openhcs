@@ -708,7 +708,7 @@ class ImagePayloadMetadata(
                 "invocation supplied no plane projection: "
                 f"{declared_axis.name!r}."
             )
-        if plane_projection is not None and plane_projection.plane_index is None:
+        if plane_projection is not None and plane_projection.preserves_complete_axis:
             for owner_name, metadata in (
                 ("source", source_metadata),
                 ("output", output_metadata),
@@ -820,7 +820,7 @@ class ImagePayloadMetadata(
         planes = self.source_image_provenance_planes
         if (
             plane_projection is not None
-            and plane_projection.plane_index is None
+            and plane_projection.preserves_complete_axis
             and plane_projection.axis_size > 1
             and not self.plane_axis.leads_data
         ):
@@ -1898,7 +1898,7 @@ def preserved_image_plane_projection(
         )
         if (
             invocation_projection is not None
-            and invocation_projection.plane_index is not None
+            and invocation_projection.selects_one_plane
         ):
             return None
         payload_projection = RuntimeSliceProjection.preserved_context_for_value(value)
@@ -1916,7 +1916,7 @@ def preserved_image_plane_projection(
             f"the leading dimension, got shape {shape!r}."
         )
     axis_size = shape[0]
-    return RuntimePlaneAxisValueProjection(
+    return RuntimePlaneAxisValueProjection.for_plane(
         axis=SourceBindingPlaneAxis,
         source_aliases=source_aliases,
         plane_index=value.metadata.source_provenance.source_alias_plane_index(

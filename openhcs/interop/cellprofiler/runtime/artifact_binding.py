@@ -538,7 +538,7 @@ class RuntimeInputBindingRequest:
         )
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
             and runtime_projection.axis_size == slice_count
         ):
             return cast(

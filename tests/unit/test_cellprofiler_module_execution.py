@@ -1288,7 +1288,7 @@ def test_track_objects_special_input_binds_full_stack_labels_for_pure_3d() -> No
                     embryos_spec,
                 ),
             ),
-            plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+            plane_projection=RuntimePlaneProjection.selected(1, 2),
         ),
         kwargs={},
         current_image=np.zeros((2, 2, 2), dtype=np.float32),
@@ -2137,7 +2137,7 @@ def test_special_object_label_payload_uses_runtime_plane_selection() -> None:
         callable_contract=contract,
         objects={spec.name: objects},
         artifact_input_edges=(_artifact_input_edge_for_test(spec),),
-        plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+        plane_projection=RuntimePlaneProjection.selected(1, 2),
     )
     current_image = np.zeros((4, 4), dtype=np.float32)
     request = RuntimeInputBindingRequest(
@@ -2213,7 +2213,7 @@ def test_measure_object_neighbors_derives_same_object_topology_from_artifact_ide
             callable_contract=contract,
             objects={cells_spec.name: objects},
             artifact_input_edges=(_artifact_input_edge_for_test(cells_spec),),
-            plane_projection=RuntimePlaneProjection(plane_index=0, plane_count=1),
+            plane_projection=RuntimePlaneProjection.selected(0, 1),
         ),
         kwargs={},
         current_image=np.zeros((1, 1), dtype=np.float32),
@@ -2269,7 +2269,7 @@ def test_relateobjects_special_inputs_project_object_labels_to_current_plane() -
                     for spec in input_specs
                 )
             ),
-            plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+            plane_projection=RuntimePlaneProjection.selected(1, 2),
         ),
         kwargs={},
         current_image=np.zeros((2, 2), dtype=np.float32),
@@ -2328,7 +2328,7 @@ def test_relateobjects_special_inputs_leave_runtime_slice_index_to_executor() ->
                     for spec in input_specs
                 )
             ),
-            plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+            plane_projection=RuntimePlaneProjection.selected(1, 2),
         ),
         kwargs={},
         current_image=np.zeros((2, 2), dtype=np.float32),
@@ -2461,7 +2461,7 @@ def test_relateobjects_runtime_slice_axis_leaves_slice_index_to_executor() -> No
                     for spec in input_specs
                 )
             ),
-            plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+            plane_projection=RuntimePlaneProjection.selected(1, 2),
         ),
         kwargs={},
         current_image=np.zeros((2, 2), dtype=np.float32),
@@ -2518,7 +2518,7 @@ def test_relateobjects_scalar_source_name_does_not_create_source_axis() -> None:
                     for spec in input_specs
                 )
             ),
-            plane_projection=RuntimePlaneProjection(plane_index=1, plane_count=2),
+            plane_projection=RuntimePlaneProjection.selected(1, 2),
         ),
         kwargs={},
         current_image=np.zeros((2, 2), dtype=np.float32),
@@ -4991,7 +4991,7 @@ def test_object_row_binding_honors_authoritative_singleton_runtime_projection(
     if preserved:
         image = bound_labels.measurement_reference_image()
         projection = bound_labels.declared_plane_projection()
-        assert projection is not None and projection.plane_index is None
+        assert projection is not None and projection.preserves_complete_axis
         measurement_values = RuntimeSliceAlignedValues((np.asarray([0.25]),))
         projected = RuntimeSliceProjection.kwargs_for_slice(
             {"object_labels": (bound_labels,), "measurement_values": measurement_values},
@@ -18727,7 +18727,7 @@ def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeyp
             _artifact_input_edge_for_test(object_spec),
         ),
         artifact_output_bindings=((output_spec, _artifact_output_plan(output_spec)),),
-        plane_projection=RuntimePlaneProjection(plane_index=0, plane_count=2),
+        plane_projection=RuntimePlaneProjection.selected(0, 2),
     )
     executor = _module_executor(_compiled_callable_contract(
         MeasureObjectIntensityModule.require_callable(),

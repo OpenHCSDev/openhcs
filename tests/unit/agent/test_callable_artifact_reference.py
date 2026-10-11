@@ -467,9 +467,8 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
         for plane in range(1 if plane_count is None else plane_count)
     )
     projection = (
-        None if plane_count is None else RuntimePlaneAxisValueProjection(
-            axis=RuntimeSlicePlaneAxis, source_aliases=(),
-            plane_index=None, axis_size=plane_count,
+        None if plane_count is None else RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimeSlicePlaneAxis, axis_size=plane_count,
         )
     )
     label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, MAIN_FLOW, projection)

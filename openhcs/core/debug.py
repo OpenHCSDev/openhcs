@@ -625,7 +625,7 @@ class DebugInvocationParameter:
         if projection is not None:
             plane_coordinate = (
                 "preserved"
-                if projection.plane_index is None
+                if projection.preserves_complete_axis
                 else str(projection.plane_index)
             )
             projection_facts = (

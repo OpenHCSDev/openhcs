@@ -73,7 +73,7 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
     selection = fixture.select_volume_fixture_planes_v2(source_volume, indices)
     projected = ImageArtifactType.contextualize_output(
         source_volume, selection, output_plan(fixture.SELECTED_VOLUME),
-        RuntimePlaneAxisValueProjection(RuntimeSlicePlaneAxis, (), None, 3),
+        RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3),
     )
     expected = original_pixels[list(selected_indices)]
     source_metadata = source_volume.metadata
@@ -85,7 +85,7 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
     np.testing.assert_array_equal(projected.data, expected)
     assert projected.metadata.source_provenance == expected_provenance
     assert projected.metadata.plane_axis is RuntimeSlicePlaneAxis
-    projection = RuntimePlaneAxisValueProjection(RuntimeSlicePlaneAxis, (), None, len(selected_indices))
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=len(selected_indices))
     for _ in range(2):
         image, labels, rows = fixture.inspect_volume_fixture_v2(projected)
         contextual_image = ImageArtifactType.contextualize_output(
@@ -129,7 +129,7 @@ def test_projection_owner_rejects_invalid_selection(source_volume, indices):
 def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     empty = source_volume.metadata.payload_with(np.zeros((3, 8, 9), dtype=np.uint16))
     image, labels, rows = fixture.inspect_volume_fixture_v2(empty)
-    projection = RuntimePlaneAxisValueProjection(RuntimeSlicePlaneAxis, (), None, 3)
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3)
     contextual = ObjectLabelsArtifactType.contextualize_output(
         image, labels, output_plan(fixture.VOLUME_LABELS), projection,
     )

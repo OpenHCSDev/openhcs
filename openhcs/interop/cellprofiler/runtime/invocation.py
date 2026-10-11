@@ -511,7 +511,7 @@ class CellProfilerMeasurementImage(
                 if (
                     aligned_projection is None
                     or aligned_projection.axis is not plane_projection.axis
-                    or aligned_projection.plane_index != plane_projection.plane_index
+                    or not aligned_projection.selects_same_planes(plane_projection)
                     or aligned_projection.axis_size != plane_projection.axis_size
                 ):
                     raise ValueError(

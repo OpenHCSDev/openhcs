@@ -325,7 +325,7 @@ class MeasurementLabelSliceAxisSelection:
             )
         )
         full_axis_values = tuple(range(self.plane_projection.axis_size))
-        selects_one_plane = self.plane_projection.plane_index is not None
+        selects_one_plane = self.plane_projection.selects_one_plane
         missing_values = tuple(
             value for value in required_values if value not in observed_values
         )

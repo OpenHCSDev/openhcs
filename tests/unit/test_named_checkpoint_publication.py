@@ -56,7 +56,7 @@ class SyntheticAggregateField(SourceProjectedImageOutput):
         return replace(self, data=data)
 
     def resolve_source_context(self, source, projection):
-        assert projection is not None and projection.plane_index is None
+        assert projection is not None and projection.preserves_complete_axis
         assert projection.axis_size == 24
         return source.metadata.collapse_leading_plane_axis().payload_with(self.data, None)
 

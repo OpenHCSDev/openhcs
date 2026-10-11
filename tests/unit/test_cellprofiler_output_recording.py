@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from types import SimpleNamespace
@@ -170,7 +171,7 @@ def test_relationship_recording_uses_exact_artifact_relation() -> None:
 @pytest.mark.parametrize(
     ("plane_projection", "output_shape", "expected_plane_axis"),
     (
-        (None, (4, 5, 3), None),
+        (None, (4, 5, 3), NoPlaneAxis),
         (
             RuntimePlaneAxisValueProjection.preserve(
                 axis=RuntimeSlicePlaneAxis,

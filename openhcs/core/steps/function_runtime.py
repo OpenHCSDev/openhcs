@@ -1718,7 +1718,7 @@ class FunctionCoreExecutor:
         projection = RuntimePlaneAxisValueProjection.from_projector(
             request.plane_projection, RuntimeSlicePlaneAxis, (),
         )
-        if projection is not None and projection.plane_index is not None:
+        if projection is not None and projection.selects_one_plane:
             payload = RuntimeSliceProjection.value_for_slice(payload, projection)
         return payload
 

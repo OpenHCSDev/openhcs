@@ -811,7 +811,7 @@ class CellProfilerModuleExecutor:
                     ),
                 )
                 if runtime_projection is not None
-                and runtime_projection.plane_index is not None
+                and runtime_projection.selects_one_plane
                 else None
             )
             source_names = []
@@ -1274,7 +1274,7 @@ class CellProfilerModuleExecutor:
         current_runtime_payload = current_image
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
         ):
             current_runtime_payload = cast(
                 RuntimeCallableArgument,
@@ -1290,7 +1290,7 @@ class CellProfilerModuleExecutor:
             )
             if (
                 runtime_projection is not None
-                and runtime_projection.plane_index is not None
+                and runtime_projection.selects_one_plane
                 and current_image_payload.metadata.plane_axis
                 is runtime_projection.axis
             ):
@@ -1485,7 +1485,7 @@ class CellProfilerModuleExecutor:
         )
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
         ):
             runtime_kwargs = cast(
                 dict[str, RuntimeCallableArgument],

@@ -1,6 +1,7 @@
 """Saved label admission retains declared runtime axes, never guessed Z axes."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import WholeAxisProjection
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
@@ -219,7 +220,7 @@ class PairedSourceAdmission:
             raise ValueError("Paired projection accepts at most two source planes.")
 
 
-class PairedSourceProjection(PairedSourceAdmission, RuntimePlaneAxisValueProjection):
+class PairedSourceProjection(PairedSourceAdmission, WholeAxisProjection):
     """An independent projection leaf using the unchanged source constructor."""
 
 

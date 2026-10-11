@@ -102,7 +102,7 @@ def measurement_source_image_name_for_slice(
                 "RuntimePlaneAxisValueProjection or None, got "
                 f"{type(plane_projection).__name__}."
             )
-        if plane_projection.plane_index is not None:
+        if plane_projection.selects_one_plane:
             raise ValueError(
                 "Measurement row source projection requires a preserved runtime "
                 "plane axis, not a preselected plane."

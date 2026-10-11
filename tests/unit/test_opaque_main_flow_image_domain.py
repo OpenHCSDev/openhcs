@@ -108,9 +108,9 @@ def test_declared_runtime_axis_retains_its_exact_count(count):
 
 
 @pytest.mark.parametrize("named", [False, True])
-@pytest.mark.parametrize("axis", [None, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
+@pytest.mark.parametrize("axis", [NoPlaneAxis, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
 def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
-    shape = (3, 4, 5) if axis is None else (1, 4, 5)
+    shape = (3, 4, 5) if not axis.leads_data else (1, 4, 5)
     payload = ImagePayloadMetadata(plane_axis=axis).payload_with(np.ones(shape, dtype=np.float32))
     context = AlignedImageSliceContext.main_flow("Image")
     value = (ImageOutputBundle if named else AlignedImageStack)((payload,), (context,))
@@ -164,12 +164,12 @@ class _MemoryFiles:
 
 
 @pytest.mark.parametrize("cache_hit", [False, True])
-@pytest.mark.parametrize("axis", [None, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
+@pytest.mark.parametrize("axis", [NoPlaneAxis, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
 @pytest.mark.parametrize("shape", [(4, 5), (4, 5, 3), (3, 4, 5), (1, 4, 5)])
 def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monkeypatch, cache_hit, axis, shape, raw_named=False):
     pixels = np.arange(np.prod(shape), dtype=np.float32).reshape(shape)
     channel_axis = -1 if shape == (4, 5, 3) else None
-    if axis is not None:
+    if axis.leads_data:
         pixels = pixels[None]
         channel_axis = 3 if channel_axis is not None else None
     mask = np.ones(pixels.shape[:-1] if channel_axis is not None else pixels.shape, dtype=bool)
@@ -180,7 +180,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         axes=PayloadAxes.colour_samples(channel_axis), plane_axis=axis,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes.from_components(paths=(path,), component_metadata=(components,))
-            if axis is not None else SourceImageProvenancePlanes()
+            if axis.leads_data else SourceImageProvenancePlanes()
         ),
     )
     payload = pixels if raw_named else metadata.payload_with(pixels, mask)
@@ -197,7 +197,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     producer = replace(producer, pattern_group_info="whole")
     output = (
         ImageOutputBundle((payload,), (AlignedImageSliceContext.main_flow("WholeImage"),))
-        if axis is not None or raw_named else payload
+        if axis.leads_data or raw_named else payload
     )
     records = producer._save_outputs(output, [path])
     manifest = step_output_manifest(context)
@@ -220,10 +220,10 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     loaded = consumer.load_input_stack()[1]
     # A member saved without a plane axis is a one-member runtime-slice cohort,
     # exactly as it is when several members match.
-    expected_pixels = pixels if axis is not None else pixels[None]
-    expected_mask = mask if axis is not None or mask is None else mask[None]
+    expected_pixels = pixels if axis.leads_data else pixels[None]
+    expected_mask = mask if axis.leads_data or mask is None else mask[None]
     assert loaded.data.shape == expected_pixels.shape
-    assert loaded.metadata.plane_axis is (axis or RuntimeSlicePlaneAxis)
+    assert loaded.metadata.plane_axis is axis.axis_when_stacked()
     np.testing.assert_array_equal(loaded.data, expected_pixels)
     np.testing.assert_array_equal(loaded.mask, expected_mask)
     assert not np.shares_memory(loaded.data, pixels)
@@ -253,7 +253,7 @@ def test_mixed_named_outputs_retain_each_original_axis_before_projection(runtime
     assert bundle.copy_projected_output_stack(
         projected, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
     ) is None
-    assert [bundle.plane_axis_for_output_context(context) for _payload, context in projected] == [RuntimeSlicePlaneAxis] * runtime_count + [None]
+    assert [bundle.plane_axis_for_output_context(context) for _payload, context in projected] == [RuntimeSlicePlaneAxis] * runtime_count + [NoPlaneAxis]
 
 
 def test_passed_through_record_preserves_collapsed_and_filename_coordinates(tmp_path):
@@ -288,7 +288,7 @@ def test_duplicate_physical_path_rejects_contradictory_whole_axis(tmp_path):
 @pytest.mark.parametrize("shape", [(4, 5), (4, 5, 3), (3, 4, 5), (1, 4, 5)])
 def test_named_raw_image_actual_save_and_reload_retains_opaque_domain(tmp_path, monkeypatch, cache_hit, shape):
     test_save_and_next_load_preserve_domain_and_independent_cache(
-        tmp_path, monkeypatch, cache_hit, None, shape, raw_named=True,
+        tmp_path, monkeypatch, cache_hit, NoPlaneAxis, shape, raw_named=True,
     )
 
 
@@ -297,7 +297,7 @@ def test_record_axis_survives_replace_and_pickle(tmp_path):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
     plan = replace(_runtime().execution_plan, output_dir=tmp_path)
-    for axis in (None, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis):
+    for axis in (NoPlaneAxis, RuntimeSlicePlaneAxis, SourceBindingPlaneAxis):
         record = ProducedOutputSemantics.from_output(
             plan, tmp_path / "A01_s001_w1_z001_t001.tif",
             FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
@@ -363,7 +363,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     manifest = step_output_manifest(context)
     manifest.record_outputs(plan, records)
     assert tuple(r.output_path for r in records) == tuple(r.output_path for r in old_records)
-    assert [r.main_flow_plane_axis for r in records] == [RuntimeSlicePlaneAxis, None]
+    assert [r.main_flow_plane_axis for r in records] == [RuntimeSlicePlaneAxis, NoPlaneAxis]
     assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in records), memory_type=MEMORY_TYPE_NUMPY) is None
 
     def consumer_for(compiled):

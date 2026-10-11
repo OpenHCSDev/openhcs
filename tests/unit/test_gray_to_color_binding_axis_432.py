@@ -92,7 +92,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     assert request.execution_mode is AlignedStackExecution
     assert request.plane_projection.axis is RuntimeSlicePlaneAxis
     assert request.plane_projection.axis_size == 1
-    assert request.plane_projection.plane_index is None
+    assert request.plane_projection.preserves_complete_axis
     assert request.payload.slices[0].metadata.plane_axis is SourceBindingPlaneAxis
     assert request.payload.slices[0].metadata.source_image_names == ("FITC",)
     execution = executor._invocation_request(

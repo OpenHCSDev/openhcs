@@ -825,8 +825,10 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
         RuntimePlaneProjection.stack(2), payload, "numpy",
     )
     adapter = executor.runtime_adapter_request(payload)
-    adapter = replace(adapter, plane_projection=RuntimePlaneProjection(
-        plane_index=plane_index, plane_count=2,
+    adapter = replace(adapter, plane_projection=(
+        RuntimePlaneProjection.stack(2)
+        if plane_index is None
+        else RuntimePlaneProjection.selected(plane_index, 2)
     ))
 
     def forbidden_original_read(*args, **kwargs):

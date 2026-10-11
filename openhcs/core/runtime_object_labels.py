@@ -754,7 +754,7 @@ class ObjectLabelValue(
         del output
         return (
             plane_projection is not None
-            and plane_projection.plane_index is None
+            and plane_projection.preserves_complete_axis
             and not self.metadata.plane_axis.leads_data
             and not self.metadata.persists_whole_image()
             and np.ndim(object_label_dense_array(self)) >= 3
@@ -769,7 +769,7 @@ class ObjectLabelValue(
         source_metadata = self.metadata
         if source_metadata.persists_whole_image():
             return source_metadata.derive_payload(self, output, plane_projection=None)
-        if plane_projection is None or plane_projection.plane_index is not None:
+        if plane_projection is None or plane_projection.selects_one_plane:
             return source_metadata.derive_payload(
                 self, output, plane_projection=plane_projection,
             )

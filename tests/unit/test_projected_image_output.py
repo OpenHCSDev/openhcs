@@ -42,8 +42,8 @@ def test_selected_output_requires_complete_projection(selected_plane):
     projection = (
         None
         if selected_plane is None
-        else RuntimePlaneAxisValueProjection(
-            RuntimeSlicePlaneAxis, (), selected_plane, 2
+        else RuntimePlaneAxisValueProjection.from_selected_plane(
+            axis=RuntimeSlicePlaneAxis, plane_index=selected_plane, axis_size=2
         )
     )
     with pytest.raises(ValueError, match="complete input stack projection"):
@@ -52,8 +52,8 @@ def test_selected_output_requires_complete_projection(selected_plane):
 
 def test_selected_output_rejects_out_of_range_source_plane():
     output = SelectedPlaneImageOutput(np.zeros((1, 3, 4)), (2,))
-    projection = RuntimePlaneAxisValueProjection(
-        RuntimeSlicePlaneAxis, (), None, 2
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimeSlicePlaneAxis, axis_size=2
     )
     with pytest.raises(ValueError, match="outside the input stack"):
         output.resolve_source_context(np.zeros((2, 3, 4)), projection)

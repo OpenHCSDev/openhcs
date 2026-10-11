@@ -298,7 +298,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 self,
                 source_metadata.source_image_names,
             )
-            if source_projection.plane_index is not None:
+            if source_projection.selects_one_plane:
                 projected = cast(
                     RuntimeArrayData,
                     RuntimeSliceProjection.value_for_slice(
@@ -314,7 +314,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             RuntimeSlicePlaneAxis,
             (),
         )
-        if runtime_projection is None or runtime_projection.plane_index is None:
+        if runtime_projection is None or runtime_projection.preserves_complete_axis:
             return cast(
                 RuntimeArrayData, RuntimeSliceProjection.full_stack_value(projected),
             )

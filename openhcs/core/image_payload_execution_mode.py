@@ -137,7 +137,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 "Aligned runtime batch execution requires a compiled runtime-slice "
                 "projection."
             )
-        if projection.plane_index is not None:
+        if projection.selects_one_plane:
             raise ValueError(
                 "Aligned runtime batch execution received an image after its "
                 "runtime-slice projection was already selected."
@@ -209,7 +209,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 f"{owner} aligned image execution requires "
                 f"RuntimeSlicePlaneAxis, got {projection.axis!r}."
             )
-        if projection.plane_index is not None:
+        if projection.selects_one_plane:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{owner} received an AlignedImageStack after the compiled "
                 "runtime-slice projection already selected plane "
