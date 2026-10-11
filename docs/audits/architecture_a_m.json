@@ -338,7 +338,7 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
+        "sha256": "c1446fdf475503848a62086d13bc3e809dadd4958c3f763ea0347264bab5647d",
         "role": "Implements run_datasets (reserve, reset, connect, compile all, submit each with compile_artifact_id) and the endpoint status binding."
       },
       {
@@ -362,6 +362,7 @@
     ],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against the later B6 changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/batch_workflow_service.rst in full and compared it against the changed authorities: the deleted openhcs/pyqt_gui batch workflow, compile batch, components, client service and execution-state modules and their tests (replaced by openhcs/authoring/session), openhcs/pyqt_gui/main.py, test_main_zmq_window_routing.py, endpoint_function_catalog_service.py, zmqruntime client.py and test_concurrent_initialization_progress.py; checked CompileDatasets availability, DatasetPipelineRequest/CompiledDataset, BatchSubmitWaitEngine, run_datasets ordering and compile_artifact_id submission, ExecutionProgress listener and interval rebuild, and the endpoint status binding against the session package. The page text is accurate; the record now points at the session owners.",
@@ -434,7 +435,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "3297b0e54ad3a349d35b613bd7d406e92c974320e12723be80dcfc0a90be2116",
+        "sha256": "e9f346e25a9fbb1ec7edf9e6e19c6d51c7d2000347ee61ef41b3017244322589",
         "role": "Defines the executable Official30 import, execution, equivalence, and viewer evidence boundary."
       },
       {
@@ -458,6 +459,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/cellprofiler_interop.rst against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/cellprofiler_interop.rst against B6's later changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/pipeline/compilation_session.py, tests/unit/test_cellprofiler_artifact_declarations.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/cellprofiler_interop.rst against the later B6 changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/pipeline/compilation_session.py, tests/unit/test_cellprofiler_artifact_declarations.py, tests/integration/test_cellprofiler_official30_zmq.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/cellprofiler_interop.rst in full and compared it against the changed authorities: pipeline_import.py, module_declarations.py, module_artifact_declarations.py, test_cellprofiler_artifact_declarations.py, the Official30 integration test, test_cellprofiler_pipeline_import.py and benchmark/cellprofiler_reference_exports.py; replaced the removed StepSnapshot with ResolvedPipelineDefinition and confirmed the import flow, interactive-module rejection, InputSource members, FunctionStepExecutionScope.PLATE, the provider's named methods, the CPA SQLite/properties route and CellProfilerReferenceExportPlan against current source.",
@@ -2118,7 +2120,7 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
+        "sha256": "c1446fdf475503848a62086d13bc3e809dadd4958c3f763ea0347264bab5647d",
         "role": "Defines the headless Session whose datasets and pipelines live in the MCP process's ObjectState and whose events clients follow."
       },
       {
@@ -2228,7 +2230,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "4025c591644e29f3df61e476ecae2143690e014336ea9f889aadeff4e692445e",
+        "sha256": "2e0de28a96c57ee150e28fbbed28d876507e9281075a03f729838f3ca3610966",
         "role": "Owns the installed openhcs-benchmark execution, report and list-cases command surface."
       }
     ],
@@ -2243,6 +2245,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/authoring/session/session.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/server.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against the later B6 changes to openhcs/agent/capabilities.py, openhcs/mcp/server.py, openhcs/mcp/execution.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/mcp_distribution.rst in full and compared it against the changed authorities: openhcs/agent/capabilities.py, openhcs/mcp/server.py, stdio.py, context.py, http.py, client_registration.py, dev_client*.py, the deleted openhcs/desktop_deployment.py and desktop_installation.py (moved to openhcs.desktop in 73a2aece2), ui_bridge_windows.py, synthetic-plate and benchmark control owners and tests; verified every named symbol by grep, traced McpTransportExecutor, the binder's dispatcher path, SessionJourney.run_source and skill synchronisation; corrected the PyQt/threading, session-execution, desktop-deployment, client-registration and finalisation passages.",
@@ -2388,7 +2391,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "3297b0e54ad3a349d35b613bd7d406e92c974320e12723be80dcfc0a90be2116",
+        "sha256": "e9f346e25a9fbb1ec7edf9e6e19c6d51c7d2000347ee61ef41b3017244322589",
         "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases, plus Fiji variant tests."
       },
       {
@@ -2417,6 +2420,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against B6's later changes to openhcs/core/equivalence/keys.py, openhcs/core/equivalence/measurement_features.py, openhcs/core/measurement_dialect.py, benchmark/control_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against the later B6 changes to openhcs/core/equivalence/keys.py, openhcs/core/equivalence/measurement_features.py, openhcs/core/measurement_dialect.py, benchmark/adapters/openhcs.py, benchmark/openhcs_measured_run.py, benchmark/control_service.py, tests/integration/test_cellprofiler_official30_zmq.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/measurement_equivalence_system.rst in full and compared it against the changed authorities: openhcs/core/equivalence/policy.py and keys.py, the deleted openhcs/core/equivalence/report.py (moved to benchmark/equivalence in f16177ed7), benchmark/adapters/openhcs.py, openhcs_measured_run.py, timing.py, control_service.py, openhcs/runtime/zmq_execution_observation.py, measured_run_receipt.py, the Official30 manifest and integration test, reference exports and their tests; corrected the dialect name, the comparison-package boundary, archived-export readability, the session-based finalisation path and the additive-total rule.",
