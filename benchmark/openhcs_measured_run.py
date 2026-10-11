@@ -134,7 +134,12 @@ class _ZMQProgressTimingObserver:
     compile_completed_at: float | None = None
     execution_started_at: float | None = None
     execution_completed_at: float | None = None
-    last_progress_monotonic: float = field(default_factory=time.monotonic)
+    last_progress_monotonic: float | None = None
+    """Monotonic time of the latest progress; None until a run is submitted.
+
+    Starting the execution server is not execution: its client owns the
+    startup readiness timeout, so silence is measured from begin_run.
+    """
     last_progress_phase: str = ""
     last_progress_status: str = ""
     on_event: Callable[[Mapping[str, Any]], None] | None = None
@@ -217,6 +222,8 @@ class _ZMQProgressTimingObserver:
 
     def inactivity_seconds(self, *, observed_at: float | None = None) -> float:
         """Return elapsed monotonic time since the latest server progress event."""
+        if self.last_progress_monotonic is None:
+            return 0.0
         current = time.monotonic() if observed_at is None else observed_at
         return max(0.0, current - self.last_progress_monotonic)
 
