@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from itertools import product
-
 import json
 import os
 import shutil
@@ -404,7 +402,7 @@ def _assert_napari_state_matches_runtime(
             runtime_artifact_viewer_component_identity(values)
             for values in layer.component_values
         ) == Counter(
-            runtime_artifact_viewer_component_identity(payload["components"])
+            runtime_artifact_viewer_component_identity(payload.components)
             for payload in layer.payload_summaries
         )
         assert all(component in layer.axis_labels for component in layer.stack_axes)
@@ -416,59 +414,44 @@ def _assert_napari_state_matches_runtime(
             assert layer.data_shape[axis_index] == len(component_values)
 
     for expected in runtime_observation.expectation.artifact_viewer:
-        # One producer identity can legitimately back both its native image
-        # layer and its derived shapes overlay; the payload expectation below
-        # compares ndarray summaries, so match the image layer.
-        matching_layers = tuple(
+        # One producer identity can back both its native image layer and its
+        # derived shapes overlay. The producer's expected payloads are every
+        # payload it streamed, so compare against all of its layers' payloads.
+        producer_layers = tuple(
             layer
             for layer in state.layers
             if expected.producer_identity in layer.producer_identities
-            and StreamingDataType.IMAGE.value in layer.data_types
         )
-        assert len(matching_layers) == 1
-        layer = matching_layers[0]
+        image_layers = tuple(
+            layer
+            for layer in producer_layers
+            if StreamingDataType.IMAGE.value in layer.data_types
+        )
+        assert len(image_layers) == 1
+        layer = image_layers[0]
         assert layer.mounted
-        # The presentation may aggregate a varying component axis (e.g. site)
-        # into one layer item. That item represents both the aggregate payload
-        # itself and each per-coordinate payload it covers, so the actual
-        # identity set is the union of the summary's own identity and every
-        # expanded per-coordinate identity.
-        actual_payloads: list[RuntimeArtifactViewerPayloadExpectation] = []
-        for payload in layer.payload_summaries:
-            aggregates = payload.get("aggregate_component_values") or {}
-            varying_axes = tuple(aggregates.items())
-
-            def summary_identity(components) -> RuntimeArtifactViewerPayloadExpectation:
-                return RuntimeArtifactViewerPayloadExpectation(
-                    components=runtime_artifact_viewer_component_identity(components),
-                    source_spatial_domain=SourceSpatialDomain.from_viewer_wire_mapping(
-                        payload,
-                        source_label="official30 Napari payload summary",
-                    ),
-                )
-
-            actual_payloads.append(summary_identity(payload["components"]))
-            axes_values = [values for _, values in varying_axes]
-            for combination in product(*axes_values):
-                expanded = dict(payload["components"])
-                expanded.update(
-                    {
-                        component: value
-                        for (component, _), value in zip(
-                            varying_axes, combination, strict=True
-                        )
-                    }
-                )
-                actual_payloads.append(summary_identity(expanded))
+        actual_payloads = tuple(
+            RuntimeArtifactViewerPayloadExpectation(
+                components=runtime_artifact_viewer_component_identity(
+                    payload.components
+                ),
+                source_spatial_domain=SourceSpatialDomain.from_viewer_wire_mapping(
+                    payload.to_wire_mapping(),
+                    source_label="official30 Napari payload summary",
+                ),
+            )
+            for producer_layer in producer_layers
+            for payload in producer_layer.payload_summaries
+        )
         assert Counter(payload.identity_key for payload in actual_payloads) == Counter(
             payload.identity_key for payload in expected.payloads
         )
 
-        payload_paths = tuple(payload["path"] for payload in layer.payload_summaries)
+        payload_paths = tuple(payload.path for payload in layer.payload_summaries)
         assert all(isinstance(path, str) and path for path in payload_paths)
 
         payload_data_types = tuple(
-            dict.fromkeys(payload["data_type"] for payload in layer.payload_summaries)
+            dict.fromkeys(payload.data_type for payload in layer.payload_summaries)
         )
         assert len(payload_data_types) == 1
         assert layer.data_types == payload_data_types
