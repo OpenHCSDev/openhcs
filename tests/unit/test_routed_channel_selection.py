@@ -2,7 +2,6 @@
 
 from openhcs.core.progress import ProgressExecutionContext
 from multiprocessing import SimpleQueue
-from contextlib import nullcontext
 
 import numpy as np
 import pytest
@@ -100,14 +99,12 @@ def test_grouped_consumer_requires_its_channel_in_previous_main_flow(
         FunctionStep(func={str(requested_channel): identity}),
     ]
     missing_channel = requested_channel == 2 and not restart_from_source
-    outcome = (
-        pytest.raises(ValueError, match="No components match")
-        if missing_channel
-        else nullcontext()
-    )
-    with outcome:
-        result = _execute_steps(channel_plate, steps, tmp_path / "output")
-    if not missing_channel:
+    result = _execute_steps(channel_plate, steps, tmp_path / "output")
+    if missing_channel:
+        # The axis fails with the step's error; the worker returns it as a result.
+        assert not result["A01"].is_success()
+        assert "No components match" in result["A01"].error_message
+    else:
         assert result["A01"].is_success(), result["A01"].error_message
         outputs = tuple((tmp_path / "output/plate_openhcs/images").glob("*.tif*"))
         assert len(outputs) == 1
