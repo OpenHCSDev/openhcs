@@ -114,7 +114,9 @@ def _command(
 
 
 def _environment(tmp_path: Path) -> dict[str, str]:
-    environment = {**os.environ, "PYTHONPATH": str(REPOSITORY_ROOT)}
+    # The CLI child imports benchmark and openhcs from the same installation as
+    # this test process; a checkout path would shadow an installed candidate.
+    environment = dict(os.environ)
     environment.setdefault("XDG_DATA_HOME", str(tmp_path / "xdg"))
     environment.pop("DISPLAY", None)
     return environment
