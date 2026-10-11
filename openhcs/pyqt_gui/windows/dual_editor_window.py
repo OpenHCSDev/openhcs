@@ -1292,12 +1292,12 @@ def step_function_scope(scope_id: str) -> FunctionScopeRef | None:
         scope = StepEditorScope.parse(scope_id)
     except ValueError:
         return None
-    if not scope.is_function_scope or ScopeKey(scope.child_scope_id).depth != 1:
-        return None
-    return FunctionScopeRef(
-        owner_scope_id=scope.step_scope_id,
-        function_token=scope.child_scope_id,
-    )
+    if scope.is_function_scope and ScopeKey(scope.child_scope_id).depth == 1:
+        return FunctionScopeRef(
+            owner_scope_id=scope.step_scope_id,
+            function_token=scope.child_scope_id,
+        )
+    return None
 
 
 def select_step_editor_tab_after_time_travel(
