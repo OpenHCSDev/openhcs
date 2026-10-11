@@ -175,17 +175,6 @@ class SettlementFailed(ViewerSettlePhase):
     failed = True
 
 
-class ViewerPayloadSummaryField(str, Enum):
-    """Viewer payload-summary response fields."""
-
-    SHAPE = "shape"
-    NONZERO_COUNT = "nonzero_count"
-    NONZERO_MIN_COORDINATE = "nonzero_min_coordinate"
-    NONZERO_MAX_COORDINATE = "nonzero_max_coordinate"
-    NONZERO_EXAMPLE_COORDINATES = "nonzero_example_coordinates"
-    NONZERO_COORDINATE_OMISSION_REASON = "nonzero_coordinate_omission_reason"
-
-
 class ViewerFieldAbsent:
     """An omitted protocol field, distinct from JSON null, false and zero."""
 

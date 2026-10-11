@@ -185,7 +185,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerNavigationControlOptions,
     ViewerPayloadField,
     ViewerPayloadProjectionOptions,
-    ViewerPayloadSummaryField,
     ViewerPayloadSummary,
     ViewerArrayValueSummary,
     ViewerPayloadRecord,
@@ -4324,7 +4323,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             summary.update(cls.array_summary(data))
         elif isinstance(data, (list, tuple)):
             summary["item_count"] = len(data)
-            summary[ViewerPayloadSummaryField.NONZERO_COUNT.value] = len(data)
+            summary["nonzero_count"] = len(data)
             summary.update(cls.shape_payload_summary(data))
         return cls.payload_summary_type.from_wire_mapping(summary)
 
@@ -4380,12 +4379,12 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
     def array_summary(cls, array: np.ndarray) -> dict[str, NapariWireValue]:
         nonzero_count = int(np.count_nonzero(array))
         summary: dict[str, NapariWireValue] = {
-            ViewerPayloadSummaryField.SHAPE.value: tuple(
+            "shape": tuple(
                 int(axis) for axis in array.shape
             ),
             "dtype": str(array.dtype),
             "size": int(array.size),
-            ViewerPayloadSummaryField.NONZERO_COUNT.value: nonzero_count,
+            "nonzero_count": nonzero_count,
         }
         summary.update(
             cls.nonzero_coordinate_summary(
@@ -4409,7 +4408,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
 
         if nonzero_count > cls.MAX_NONZERO_COORDINATE_PROJECTION_COUNT:
             return {
-                ViewerPayloadSummaryField.NONZERO_COORDINATE_OMISSION_REASON.value: (
+                "nonzero_coordinate_omission_reason": (
                     "nonzero count exceeds bounded coordinate projection limit "
                     f"{cls.MAX_NONZERO_COORDINATE_PROJECTION_COUNT}"
                 )
@@ -4418,7 +4417,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
         coordinates = np.argwhere(array != 0)
         if nonzero_count == 0:
             return {
-                ViewerPayloadSummaryField.NONZERO_EXAMPLE_COORDINATES.value: (),
+                "nonzero_example_coordinates": (),
             }
 
         example_count = min(
@@ -4432,13 +4431,13 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             dtype=np.int64,
         )
         return {
-            ViewerPayloadSummaryField.NONZERO_MIN_COORDINATE.value: tuple(
+            "nonzero_min_coordinate": tuple(
                 int(value) for value in coordinates.min(axis=0)
             ),
-            ViewerPayloadSummaryField.NONZERO_MAX_COORDINATE.value: tuple(
+            "nonzero_max_coordinate": tuple(
                 int(value) for value in coordinates.max(axis=0)
             ),
-            ViewerPayloadSummaryField.NONZERO_EXAMPLE_COORDINATES.value: tuple(
+            "nonzero_example_coordinates": tuple(
                 tuple(int(value) for value in coordinates[index])
                 for index in example_indices
             ),
@@ -4771,11 +4770,11 @@ class NapariViewerPayloadProjection(
         summary.update(
             {
                 "dtype": str(sample.dtype),
-                ViewerPayloadSummaryField.SHAPE.value: tuple(
+                "shape": tuple(
                     int(axis_size) for axis_size in sample.shape
                 ),
                 "size": int(sample.size),
-                ViewerPayloadSummaryField.NONZERO_COUNT.value: int(
+                "nonzero_count": int(
                     np.count_nonzero(sample)
                 ),
             }
