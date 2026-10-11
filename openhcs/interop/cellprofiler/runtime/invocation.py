@@ -36,14 +36,12 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
-    RuntimeSliceAlignedValueSet,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.axes import ColourAxis
 from openhcs.core.runtime_image_values import as_runtime_value
 from openhcs.core.runtime_image_values import owned_runtime_value
 
@@ -221,54 +219,7 @@ class CellProfilerSourceIdentityMixin:
         cls, payload: RuntimeCallableArgument
     ) -> tuple[SourceImageProvenance, ...]:
         """Read the declared runtime source roster without projecting image pixels."""
-        if isinstance(payload, AlignedImageStack):
-            return tuple(
-                cls.scalar_source_provenance(value) for value in payload.slices
-            )
-        if isinstance(payload, RuntimeSliceAlignedValueSet):
-            return tuple(cls.scalar_source_provenance(value) for value in payload.values)
-        count = RuntimeSliceProjection.slice_count_from_values((payload,))
-        metadata = as_runtime_value(payload).image_metadata
-        provenance = metadata.source_provenance
-        if count is None:
-            return (provenance,)
-        if metadata.axis_position(ColourAxis) == 0:
-            raise ValueError(
-                "Image metadata cannot declare the same leading axis as both "
-                "plane and channel."
-            )
-        return tuple(provenance.for_source_plane(index) for index in range(count))
-
-    @staticmethod
-    def scalar_source_provenance(
-        payload: RuntimeCallableArgument,
-    ) -> SourceImageProvenance:
-        """Collapse an inner image bundle's source topology at its actual read epoch."""
-        if not isinstance(payload, AlignedImageStack):
-            return payload.metadata.source_provenance
-        metadata = tuple(value.metadata for value in payload.slices)
-        provenances = tuple(
-            (
-                fields.source_provenance.for_source_plane(0)
-                if not fields.plane_axis.leads_data
-                and fields.source_provenance.source_plane_count == 1
-                else fields.source_provenance
-            )
-            for fields in metadata
-        )
-        preserve_topology = (
-            len(metadata) == 1
-            and metadata[0].plane_axis.one_plane_per_source_binding
-        )
-        scalar_sources = tuple(fields.source_provenance for fields in metadata)
-        provenance = SourceImageProvenance.bundle(
-            provenances,
-            scalar_sources=scalar_sources,
-            preserve_single_topology=preserve_topology,
-        )
-        return (
-            provenance.with_runtime_planes_as_contributors().with_common_scalar_identity_from_planes()
-        )
+        return as_runtime_value(payload).slice_source_provenances()
 
     @classmethod
     def source_metadata_composition_mode(
@@ -547,6 +498,11 @@ class CellProfilerMeasurementImage(
         plane_projector: RuntimePlaneAxisProjector | None = None,
     ) -> PreparedMeasurementObjectLabels:
         """Prepare object labels according to this measurement image contract."""
+        if not isinstance(label_payload, ObjectLabelValue):
+            raise TypeError(
+                "CellProfiler object measurement requires ObjectLabelValue labels, "
+                f"got {type(label_payload).__name__}."
+            )
         return PreparedMeasurementObjectLabels.from_request(
             self.object_label_alignment_request(
                 label_payload,

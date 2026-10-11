@@ -46,6 +46,26 @@ class RuntimeSliceProjectableValue(ABC):
         """Return the array a writer stores for this value; only images unwrap."""
         return self
 
+    def scalar_source_provenance(self) -> "SourceImageProvenance":
+        """Return the source provenance of this value read as one runtime slice."""
+        return self.image_metadata.source_provenance
+
+    def slice_source_provenances(self) -> "tuple[SourceImageProvenance, ...]":
+        """Return the source provenance of each runtime slice, without reading pixels."""
+        from openhcs.core.axes import ColourAxis
+
+        count = self.runtime_slice_count()
+        metadata = self.image_metadata
+        provenance = metadata.source_provenance
+        if count is None:
+            return (provenance,)
+        if metadata.axis_position(ColourAxis) == 0:
+            raise ValueError(
+                "Image metadata cannot declare the same leading axis as both "
+                "plane and channel."
+            )
+        return tuple(provenance.for_source_plane(index) for index in range(count))
+
     @abstractmethod
     def value_for_slice(
         self, context: "RuntimePlaneAxisValueProjection"

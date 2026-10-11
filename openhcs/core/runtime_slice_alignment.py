@@ -117,6 +117,9 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
     def alignment_slices(self) -> tuple[SliceValueT, ...]:
         return self.values
 
+    def slice_source_provenances(self) -> tuple[Any, ...]:
+        return tuple(value.scalar_source_provenance() for value in self.values)
+
     def project_declared_source(
         self, source_image_name: str,
     ) -> "RuntimeSliceAlignedValues[Any]":

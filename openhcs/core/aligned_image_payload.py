@@ -47,6 +47,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
@@ -1403,6 +1404,34 @@ class AlignedImageStack(ImagePayloadSliceStack):
     def invocation_plane_axis(self) -> type[RuntimePlaneAxis]:
         """An aligned stack is invoked once per outer runtime slice."""
         return RuntimeSlicePlaneAxis
+
+    def slice_source_provenances(self) -> tuple[SourceImageProvenance, ...]:
+        return tuple(value.scalar_source_provenance() for value in self.slices)
+
+    def scalar_source_provenance(self) -> SourceImageProvenance:
+        """Collapse the inner image bundle's source topology into one slice's sources."""
+        metadata = tuple(value.metadata for value in self.slices)
+        provenances = tuple(
+            (
+                fields.source_provenance.for_source_plane(0)
+                if not fields.plane_axis.leads_data
+                and fields.source_provenance.source_plane_count == 1
+                else fields.source_provenance
+            )
+            for fields in metadata
+        )
+        provenance = SourceImageProvenance.bundle(
+            provenances,
+            scalar_sources=tuple(fields.source_provenance for fields in metadata),
+            preserve_single_topology=(
+                len(metadata) == 1
+                and metadata[0].plane_axis.one_plane_per_source_binding
+            ),
+        )
+        return (
+            provenance.with_runtime_planes_as_contributors()
+            .with_common_scalar_identity_from_planes()
+        )
 
     @property
     def keeps_own_source_context(self) -> bool:
