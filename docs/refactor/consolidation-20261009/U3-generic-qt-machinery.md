@@ -1,7 +1,7 @@
 # U3 + L4: Generic Qt machinery leaves OpenHCS
 
 **Head audited:** `openhcs` `main` at `84e7a2904` (#1193); `pyqt-reactive` `main` at `269e896` (0.4.0); `ObjectState` `main` at `c75a457` (1.3.1); `python-introspect` `main` at `4bb7d13` (0.2.5). **Rules:** [00-RULES.md](00-RULES.md). **Step 3** (U3 merges with L4, [04-ARCHITECTURE.md](04-ARCHITECTURE.md#the-ui-one-session-interface-thin-renderers-surfaces-u1-to-u5)).
-**Shared abstractions** ([02-SHARED-ABSTRACTIONS.md](02-SHARED-ABSTRACTIONS.md)). *Builds:* `objectstate.ScopeKey`, `objectstate.inspection`, view fields; pyqt-reactive's editable table, grid selector, time-travel widgets, config window, dock and shortcut layout, open `PathCacheKey` and `PathNameRole` families. *Uses:* `AutoRegisterMeta`, `IsomorphicDataclassRowPathPolicy`, `ObjectStateRegistry` subscriptions.
+**Shared abstractions** ([02-SHARED-ABSTRACTIONS.md](02-SHARED-ABSTRACTIONS.md)). *Builds:* `objectstate.ScopeKey`, `objectstate.inspection`; pyqt-reactive's editable table, grid selector, time-travel widgets, config window, dock and shortcut layout, open `PathCacheKey` and `PathNameRole` families. *Uses:* `AutoRegisterMeta`, `IsomorphicDataclassRowPathPolicy`, `ObjectStateRegistry` subscriptions.
 
 Nothing in this surface had landed before this file was written; there is no closure note.
 
@@ -30,51 +30,58 @@ Re-measured at `84e7a2904`:
 ## Target
 
 - **python-introspect 0.2.6:** `FieldLabel` and `declared_field_label` beside `AnnotationChoices`. `openhcs/core/field_label.py` is deleted.
-- **ObjectState:**
-  - `ScopeKey(str)` owns the scope grammar: `ScopeKey.of(*parts)`, `child(token)`, `parent`, `root`, `ancestors()`, `contains(other)`, `depth`, `last`, `parts`, and `SEPARATOR` (declared once). The registry normalises every scope id it stores or is asked for to a `ScopeKey`; every `::` operation in the three code bases calls it. It is a `str` subclass, so history documents and dict keys keep their encoding.
-  - `objectstate.inspection`: `FieldInspection` (raw and resolved value, dirty, signature diff, inherited, provenance, value and declared type names, the `*`/`_` markers) and `ScopeInspection` (field listing, history header). The UI bridge maps them to its DTOs; no rule is written twice.
-  - View fields: `Annotated[T, ViewField()]` on an ObjectState dataclass field keeps it out of snapshots, dirty detection and saved values. The image browser's selected wells and the dataset-list selection are the first consumers.
+- **ObjectState 1.4.0:**
+  - `ScopeKey(str)` owns the scope grammar: `ScopeKey.of(*parts)`, `child`, `parent`, `root`, `ancestors()`, `contains`, `strictly_contains`, `depth`, `last`, `parts`, and `SEPARATOR` (declared once). Registry keys are `ScopeKey`s; every `::` operation in the three code bases calls it (`get_root_from_scope_key` and `is_scope_affected`, which nothing called, are deleted). It is a `str` subclass, so history documents and dict keys keep their encoding.
+  - `objectstate.inspection`: `FieldInspection` (raw and resolved value, edit state, inheritance, provenance, type names) and `field_markers`/`state_markers`, the one owner of the `*`/`_` rule. The bridge's `ObjectStateFieldSemanticProjection` inherits `FieldInspection` and adds only its DTO projection.
+  - `retain_only_authored_paths` (moved from OpenHCS's serializer; it touches only lazy-dataclass metadata), `ObjectStateRegistry.MAIN_BRANCH` and `is_restoring_snapshot()` (pyqt-reactive read `_in_time_travel` privately).
   - `HistoryMigration` and `migration=` are deleted; a history whose `format_version` is not current is refused.
-- **pyqt-reactive:**
-  - `core/path_cache.py`: `PathCacheKey` is an open `AutoRegisterMeta` family whose stored key is the snake-case class name; the library declares `General`, `FileSelection`, `DirectorySelection`, `CodeEditor`. `PathNameRole` becomes a family (`DirectoryPathRole`, `FilePathRole`). The compatibility aliases and unused keys are deleted. OpenHCS declares `PlateImport(PathCacheKey)` beside its one use.
-  - `ManagerStatusController` owns one marquee timer for its lifetime and restarts it.
+- **pyqt-reactive 0.5.0:**
+  - `core/path_cache.py`: `PathCacheKey` is an open `AutoRegisterMeta` family whose stored key is the snake-case class name (`General`, `FileSelection`, `DirectorySelection`, `CodeEditor`); `PathNameRole` is a family (`DirectoryPathRole`, `FilePathRole`). The alias functions, unused keys and the pipeline/step/function roles are deleted. OpenHCS declares `PlateImport(PathCacheKey)` beside its one use.
+  - `ManagerStatusController` owns one marquee timer and restarts it (the header-timer leak).
   - `widgets/editable_table.py`: the editable table block, unchanged except the label lookup through `declared_field_label`.
-  - `widgets/grid_selector.py`: `GridSelectorWidget` over a `GridAddressing` protocol (`index`, `row_label`, `default_grid`); cell states, event targets and drag modes are class families.
-  - `widgets/time_travel.py` and `windows/snapshot_browser_window.py`: the widget, browser, navigation targets, `TimeTravelCommands`, the shortcut filter and the post-restore window navigator; hidden scopes and the child-scope owner are injected.
-  - `windows/config_window.py`: `ConfigWindow`, `ConfigEditSession`, `ConfigCodeDocumentDriver` over an injected render/parse protocol, `CodeEditorFormUpdater`, `ExternalCodeEditorPreference` (one environment variable name, read once).
-  - `widgets/shared/dock_layout.py`: dock pane, float controller, pane registry, layout store (key and version as parameters), shortcut lifecycle generic over the config type.
-  - `AbstractManagerWidget` stops reading `get_event_bus()`.
-- **OpenHCS keeps only declarations and domain glue:** `PlateImport`, a `GridAddressed`→`GridAddressing` adapter and the well naming, the hidden dataset-list scope and step-scope owner for time travel, the dual-editor tab choice, the code-document renderer, the window specs and dock topology, `ShortcutConfig`. `GlobalEventBus`, `GuiEventBusBroadcaster` and `get_event_bus` are deleted; `DualEditorWindow` subscribes to its pipeline ObjectState.
+  - `widgets/grid_selector.py`: `GridSelectorWidget` over a `GridAddressing` ABC; cell looks and event targets are class families. OpenHCS's `GridAxisAddressing` adapts the `GridAddressed` axis (the kernel cannot subclass a Qt-library ABC).
+  - `widgets/time_travel.py` (`TimeTravelCommands`, `TimeTravelWidget`), `windows/snapshot_browser_window.py`, `services/time_travel_navigation.py` (`TimeTravelNavigator`; `FieldPathTarget`/`FunctionTokenTarget` replace a kind string). OpenHCS supplies the hidden dataset-list scope, `step_function_scope` (through `StepEditorScope`, not a second `functionstep_` parser) and the dual-editor tab choice.
+  - `windows/config_window.py` (`ConfigWindow`, `ConfigEditSession`, `ConfigCodeDocumentDriver`, `ConfigDocumentFormat` ABC), `services/code_editor_form_updater.py`, and `use_external_code_editor()` reading `FormGenConfig.external_editor_env_var`. OpenHCS keeps `OpenHCSConfigWindow` (document format adapter over `ConfigDocumentAuthority`, global-config window id).
+  - `widgets/shared/dock_layout.py` (`DockPane`, `DockFloatController`, `DockPanes`, `DockLayoutStore`) and `services/application_shortcuts.py` (`ShortcutLifecycle[ConfigT]`). OpenHCS keeps the window specs, the dock topology and `MainWindowEmbeddedWidgets(DockPanes)` naming its panes.
+  - `AbstractManagerWidget` stops reading `get_event_bus()`; `PatternDataManager.extract_func_and_kwargs` raises on a malformed entry (recorded by U5).
+- **`GlobalEventBus` is deleted.** ObjectState already had the change subscriptions; what the bus restated were the session's own events. `DualEditorWindow.connect_session_events(session)` follows `PipelineChanged`/`PipelineImported` for its plate and `GlobalConfigChanged`, and follows its pipeline after a restore; `GuiEventBusBroadcaster` and `get_event_bus` are deleted.
+
+## Corrections to the plan
+
+- **View fields were not built.** At this head nothing needs a field excluded from history and dirty detection: U1 moved session state onto `Session`, the remaining widget view state (selection, current tab) has one owner each, and `ObjectState.metadata` contracts already hold state outside dirty detection. A mechanism without a consumer would be speculative; it belongs to the first surface with a consumer.
+- **The UI-bridge server and window introspection did not move** (see Reassigned): they speak the bridge DTOs and the `UiBridgeOperation` family, which U4 moves first.
+- The change subscription that replaces `GlobalEventBus` is the session's event log (U1), not a new ObjectState API.
 
 ## Persisted state
 
-- `path_cache.json` (runtime convenience): stored keys are derived from class names and equal the old enum values for the kept contexts (`plate_import`, `general`, `file_selection`, `directory_selection`, `code_editor`), so the file loads unchanged; entries for deleted contexts are ignored.
-- ObjectState history files (runtime state, reset on upgrade per U5): scope ids keep their `::` text. View fields are no longer written into snapshots.
+- `path_cache.json` (runtime convenience): stored keys are derived from class names and equal the old enum values for the kept contexts (`plate_import`, `general`, `file_selection`, `directory_selection`, `code_editor`), so the file loads unchanged.
+- ObjectState history files (runtime state, reset on upgrade per U5): scope ids keep their `::` text.
 - QSettings dock layout (`main_window/dock_layout_state`, version 2): key and version unchanged.
+- `OPENHCS_USE_EXTERNAL_EDITOR` keeps its name (OpenHCS's form config declares it).
 
 ## Guards
 
 `tests/unit/pyqt_gui/test_generic_qt_machinery_guards.py`:
-- `openhcs/core/path_cache.py`, `openhcs/core/field_label.py`, `time_travel_widget.py`, `snapshot_browser_window.py`, `time_travel_navigation.py`, `config_edit_session.py`, `config_window_code_document.py`, `code_editor_form_updater.py`, `gui_event_bus_broadcast.py` do not exist; no module under `openhcs/` defines `GlobalEventBus`, `get_event_bus`, `EditableTableController`, `CellEditor`, `PathCacheKey` (except subclasses), `MainWindowDockFloatController`, `MainWindowDockLayoutStore`, `TimeTravelShortcutEventFilter`, `AspectRatioContainer`.
-- No `"::"` string literal in `openhcs/`, `external/ObjectState/src` or `external/pyqt-reactive/src` outside `objectstate/scope_key.py`, except reStructuredText directives and the execution-id prefix.
-- `openhcs/core/xdg_paths.py` defines no `*legacy*`/`migrate_*` name.
-- pyqt-reactive: no `Enum` subclass in `core/path_cache.py`, `enhanced_path_widget.py` or `grid_selector.py`.
+- the ten moved modules do not exist; no module under `openhcs/` defines a moved name (`GlobalEventBus`, `get_event_bus`, `CellEditor`, `EditableTableController`, `MainWindowDockPane`, `MainWindowShortcutLifecycle`, `TimeTravelWidget`, `PlateViewWidget`, `ConfigEditSession`, `CodeEditorFormUpdater`, …);
+- no `::` scope literal (exactly `::`, or a string starting or ending with it) and no `SCOPE_SEGMENT_SEPARATOR` in `openhcs/`, `external/ObjectState/src` or `external/pyqt-reactive/src` outside `objectstate/scope_key.py`; three external spellings are exempt (the `local::` execution id, IPv6 `::1`, a reStructuredText directive regex);
+- `xdg_paths.py` defines no `*legacy*`/`migrate_*` name; the path, grid and time-travel library families define no `Enum`;
+- `OPENHCS_USE_EXTERNAL_EDITOR` is named only in `reactor_providers.py`; no `pyqt_gui` module appends a `*`/`_` marker by hand.
 
 ## Tests
 
-- Library: family tests for `PathCacheKey` (an application-declared context round-trips through the file) and `PathNameRole`; the marquee leak (repeated long messages leave one timer); `ScopeKey` grammar (including `/plate1` vs `/plate10`); `FieldInspection` over a lazy dataclass; view fields absent from snapshots and dirty state; moved editable-table, grid, time-travel, config-window and dock tests with stub domain adapters.
-- OpenHCS: the source-binding editor, config-window, dock, time-travel navigation and UI-bridge tests keep their behavioural assertions against the moved classes; tests of `GlobalEventBus` wiring are replaced by one dual-editor test driven by a pipeline ObjectState change.
+- Library: `test_path_name_roles.py` (an application-declared context round-trips through the file), the marquee leak (one timer after twenty long messages; fails without the fix), `test_scope_key.py` (`/plate1` vs `/plate10`), `test_inspection.py`, `test_authored_paths.py`, and moved tests for the editable table, grid selector, time travel, config window, dock layout, shortcuts and form updater with stub domain adapters.
+- OpenHCS: the source-binding editor, config-window, time-travel navigation, plate-manager, pipeline-editor and UI-bridge tests keep their assertions against the moved classes; the `GlobalEventBus` wiring tests are replaced by dual-editor tests driven by session events.
 
 ## New-case experiments
 
 - A new remembered dialog context: today an enum member in OpenHCS's copy or in the library. After: one `PathCacheKey` subclass where it is used.
 - A new editable record table in any pyqt-reactive application: today copy 1,320 lines out of OpenHCS. After: `EditableTableController(table, DataclassFieldColumns.of(Row), ...)`.
-- A non-microscopy grid (remote-sensing tiles): today the widget calls the microscopy-shaped `require_grid_axis()`. After: one `GridAddressing` adapter.
-- A new child-scope rule (`parent`, `is within`): today a hand-written `split("::")` at the call site. After: a `ScopeKey` method call.
+- A non-microscopy grid (remote-sensing tiles): today the widget calls the microscopy-shaped `require_grid_axis()`. After: one `GridAddressing` subclass.
+- A new child-scope rule (`parent`, `is within`): today a hand-written `split("::")`. After: a `ScopeKey` method call.
 
 ## Done when
 
-The guards pass; the three library PRs are open with their CI green; OpenHCS points its submodules at the library branch heads and its UI, source-binding editor, config-window, dock, time-travel and UI-bridge tests pass offscreen; the structural ratchet and NRA show no regression.
+The guards pass; the three library PRs are open; OpenHCS points its submodules at the library branch heads and its UI tests pass offscreen; the structural ratchet and NRA show no regression.
 
 ## Reassigned
 
@@ -84,4 +91,4 @@ The guards pass; the three library PRs are open with their CI green; OpenHCS poi
 | Bridge widget ids (`plate_manager`) and `WorkflowTerminalStateCriterion` (recorded by U2) | bridge descriptor vocabulary | U4, with the bridge |
 | `PyQtServiceAdapter.get_current_color_scheme` as a library protocol (recorded by U5) | called by pyqt-reactive `abstract_manager_widget.py:685` | U4 (service-adapter protocol in the toolkit-neutral tier) |
 | pyqt-reactive `PatternDataManager.extract_func_and_kwargs` returns `(None, {})` for a three-member tuple (recorded by U5) | `pattern_data_manager.py:120` | done here: it raises `TypeError` |
-| `QApplication` teardown segfault after the main window closes (recorded by U5) | 1 in 5 runs, no Python frame | not reproduced in this surface's offscreen runs; stays recorded under U4 (generic Qt lifecycle) |
+| `QApplication` teardown segfault after the main window closes (recorded by U5) | 1 in 5 runs, no Python frame | not investigated here; U4 (generic Qt lifecycle) |
