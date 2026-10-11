@@ -11,7 +11,7 @@ import pytest
 from objectstate import config_context
 
 from openhcs.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -745,8 +745,7 @@ RemoveHoles:[module_num:3|enabled:True]
             Microscopy.ZIndex
         ]
         assert (
-            pipeline_steps[1].processing_config.input_source
-            is InputSource.PREVIOUS_STEP
+            not pipeline_steps[1].processing_config.input_source.reads_pipeline_start
         )
     remove_holes_invocation = next(
         normalize_function_pattern(pipeline_steps[1].func).iter_items()
@@ -786,8 +785,7 @@ DilateObjects:[module_num:3|enabled:True]
     ]
     with config_context(pipeline_config):
         assert (
-            pipeline_steps[1].processing_config.input_source
-            is InputSource.PREVIOUS_STEP
+            not pipeline_steps[1].processing_config.input_source.reads_pipeline_start
         )
     dilate_invocation = next(
         normalize_function_pattern(pipeline_steps[1].func).iter_items()
@@ -1369,7 +1367,7 @@ MeasureObjectIntensity:[module_num:3|enabled:True]
     assert invocations[0].kwargs_dict["select_images_to_measure"] == ("DNA", "PH3")
     with config_context(pipeline_config):
         assert measurement_step.processing_config.group_by is Ungrouped
-        assert measurement_step.processing_config.input_source is InputSource.PIPELINE_START
+        assert measurement_step.processing_config.input_source.reads_pipeline_start
 
 
 def test_measurement_rosters_preserve_exact_subjects_across_public_transport() -> None:
@@ -1530,7 +1528,7 @@ MeasureObjectSizeShape:[module_num:5|enabled:True]
     )
     with config_context(config):
         assert measurement_step.processing_config.group_by is Ungrouped
-        assert measurement_step.processing_config.input_source is InputSource.PREVIOUS_STEP
+        assert not measurement_step.processing_config.input_source.reads_pipeline_start
 
 
 def test_mixed_source_and_produced_measurements_share_one_step() -> None:
@@ -1597,8 +1595,7 @@ MeasureObjectIntensityDistribution:[module_num:4|enabled:True]
     assert FunctionStepTransportAuthority.source_from_pipeline(reconstructed) == source
     with config_context(pipeline_config):
         assert (
-            measurement_steps[0].processing_config.input_source
-            is InputSource.PIPELINE_START
+            measurement_steps[0].processing_config.input_source.reads_pipeline_start
         )
 
 
@@ -1620,7 +1617,7 @@ def test_multi_image_source_contract_keeps_every_source_input_exact() -> None:
         step_index=13,
         source_bindings=source_bindings,
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     ).with_source_declarations(binding.input_spec() for binding in bindings)
     module = ModuleBlock(
         name="ImageMath",
@@ -1674,7 +1671,7 @@ def test_previous_step_lowering_enables_only_contract_selected_source_bindings()
     projected = _public_step_source_bindings(
         source_bindings,
         contract.artifact_inputs,
-        InputSource.PREVIOUS_STEP,
+        ReadPreviousStep,
     )
 
     assert projected.enabled is True

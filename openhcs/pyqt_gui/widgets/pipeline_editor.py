@@ -185,7 +185,7 @@ class StepProcessingTooltipSection:
             return "Group By: None"
         return f"Group By: {group_by.name}"
 
-    def input_source_line(self, input_source: InputSource) -> str:
+    def input_source_line(self, input_source: type[InputSource]) -> str:
         if not input_source:
             return "Input Source: None"
         return f"Input Source: {input_source.name}"

@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
@@ -322,7 +322,7 @@ def _resolved_step(
     source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
     group_by: type[GroupingDeclaration] = Microscopy.Channel,
     variable_components: tuple[type[Axis], ...] = (Microscopy.Site,),
-    input_source: InputSource = InputSource.PREVIOUS_STEP,
+    input_source: InputSource = ReadPreviousStep,
     processing_config: ProcessingConfig | None = None,
     step_materialization_config=None,
 ) -> AbstractStep:
@@ -624,7 +624,7 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
         ),
         group_by=Ungrouped,
         variable_components=(),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     (
         declarations,
@@ -878,7 +878,7 @@ def test_same_name_typed_artifacts_compile_through_producer_and_consumer_plans()
         func=produce_shared,
         group_by=Ungrouped,
         variable_components=(),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     (
         producer_declarations,
@@ -1187,7 +1187,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     processing_config = LazyProcessingConfig(
         variable_components=[Microscopy.Site],
         group_by=Microscopy.Channel,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     steps = (
         FunctionStep(
@@ -1257,7 +1257,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         step_name=steps[1].name,
         step_index=1,
         group_by=Microscopy.Channel,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     planner.artifact_context = consumer_context
     consumer_invocation = next(normalize_function_pattern(steps[1].func).iter_items())
@@ -1507,7 +1507,7 @@ def test_enabled_source_bindings_preserve_previous_step_main_flow():
             enabled=True,
             bindings=(NamedSourceBinding(alias="Input"),),
         ),
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
         main_flow_artifacts=ArtifactSpecCollection(
             (ArtifactSpec.input("Previous", ImageArtifactType),)
         ),
@@ -2680,7 +2680,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         source_bindings=source_bindings,
         group_by=Microscopy.Channel,
         variable_components=(Microscopy.Site,),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     execution_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
@@ -3395,7 +3395,7 @@ def test_resolved_pipeline_owns_invocation_aware_artifact_declarations():
         variable_components=(Microscopy.Site,),
         name="identify_cells",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
 
     pipeline = ResolvedPipelineDefinition(
@@ -3455,7 +3455,7 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
         variable_components=(Microscopy.Site,),
         name="FilterObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     input_component_scopes = PathPlannerComponentScopes(
         {
@@ -3596,7 +3596,7 @@ def test_artifact_managed_regular_pattern_uses_declared_owner_scope():
         variable_components=(Microscopy.Site,),
         name="IdentifyPrimaryObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
@@ -3652,7 +3652,7 @@ def test_artifact_managed_regular_pattern_unions_compatible_owner_scopes():
         variable_components=(Microscopy.Site,),
         name="RelateObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
@@ -3706,7 +3706,7 @@ def test_artifact_owner_variable_axis_projects_to_consumer_scope():
         variable_components=(Microscopy.Site,),
         name="MeasureObjectSizeShape",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
@@ -3760,7 +3760,7 @@ def test_non_dict_group_by_declares_dynamic_scope_without_plate_key_lookup():
         variable_components=(Microscopy.Site,),
         name="enhance",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
 
     source_scope = planner.execution_groups.get_execution_groups(
@@ -3782,7 +3782,7 @@ def test_non_dict_group_by_uses_dynamic_source_scope_for_pipeline_start():
         variable_components=(Microscopy.Site,),
         name="source_loaded_channel_callable",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
 
     source_scope = planner.execution_groups.get_execution_groups(
@@ -3883,7 +3883,7 @@ def test_non_dict_group_by_preserves_explicitly_collapsed_input_axis():
         variable_components=(Microscopy.Site,),
         name="measure_channel_named_artifacts_over_site_stack",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
 
     scope = planner.execution_groups.get_execution_groups(snapshot, input_scopes)
@@ -4024,7 +4024,7 @@ def test_non_dict_group_by_namespaces_artifact_outputs_with_dynamic_component():
         variable_components=(Microscopy.Site,),
         name="single_callable_channel_artifacts",
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
 
     maps = planner.artifacts.compile_plan_maps(
@@ -4065,7 +4065,7 @@ def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope
                 ),
             ),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
 
     scope = planner.execution_groups.get_execution_groups(
@@ -4127,7 +4127,7 @@ def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_pa
         source_bindings=StepSourceBindingsConfig(
             enabled=True, bindings=tuple(bindings)
         ),
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
 
     scope = planner.execution_groups.get_execution_groups(
@@ -4168,7 +4168,7 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
         variable_components=(Microscopy.Site,),
         name="bf_source_consumer",
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     source_contract = CallableContract.from_callable(lambda image: image)
     source_contract = replace(
@@ -4323,7 +4323,7 @@ def test_execution_anchor_ignores_source_artifact_lineage():
         ),
     )
     snapshot = _resolved_step(
-        source_bindings=source_bindings, input_source=InputSource.PIPELINE_START
+        source_bindings=source_bindings, input_source=ReadPipelineStart
     )
     source_contract = CallableContract.from_callable(lambda image: image)
     source_contract = replace(
@@ -4588,7 +4588,7 @@ def test_non_dict_group_by_ignores_source_binding_identity_for_other_components(
                 ),
             ),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
 
     scope = planner.execution_groups.get_execution_groups(
@@ -4613,7 +4613,7 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
         group_by=Microscopy.Channel,
         variable_components=(Microscopy.Site,),
         name="measure_after_channel_collapse",
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     artifact_maps = ArtifactPlanMaps(
         declarations=ArtifactGraph.empty(),
@@ -5095,7 +5095,7 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
             name=f"produce_{output_name}",
             func=produce,
             source_bindings=source_bindings,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         )
         execution_scope = planner.execution_groups.get_execution_groups(
             snapshot,
@@ -5795,7 +5795,7 @@ def test_main_input_dependency_uses_declared_artifact_producer_not_previous_step
 
     dependency = planner.steps.main_input_dependency(
         _resolved_step(
-            input_source=InputSource.PREVIOUS_STEP,
+            input_source=ReadPreviousStep,
             is_function_step=True,
             name="Identify",
         ),
@@ -5910,7 +5910,7 @@ def test_main_input_dependency_preserves_pipeline_start_edges():
     planner.steps = PathPlannerStepAssemblyStage(planner)
 
     dependency = planner.steps.main_input_dependency(
-        _resolved_step(input_source=InputSource.PIPELINE_START, is_function_step=False),
+        _resolved_step(input_source=ReadPipelineStart, is_function_step=False),
         1,
     )
 

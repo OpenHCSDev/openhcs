@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Union
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -317,7 +317,7 @@ def create_test_pipeline(
                 )
             ],
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START
+                input_source=ReadPipelineStart
             ),
         ),
         Step(name="CPU Assembly", func=assemble_stack_cpu),

@@ -94,9 +94,7 @@ class MaterializationFlagPlanner:
             if i == 0:
                 step_plan.read_backend = self.resolve_backend(vfs_config.read_backend)
             elif step_plan.read_backend is None:
-                from openhcs.core.steps.abstract import InputSource
-
-                if step.processing_config.input_source == InputSource.PIPELINE_START:
+                if step.processing_config.input_source.reads_pipeline_start:
                     if step_plans[0].input_conversion is not None:
                         step_plan.read_backend = Backend.ZARR.value
                         step_plan.input_dir = step_plans[0].input_conversion.output_dir

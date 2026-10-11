@@ -46,7 +46,6 @@ from openhcs.processing.materialization import (
     TerminalMaterializationSpec,
 )
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.config import StepSourceBindingsConfig
@@ -281,7 +280,7 @@ class ArtifactGraph:
 
         if (
             step_index == 0
-            or step.processing_config.input_source == InputSource.PIPELINE_START
+            or step.processing_config.input_source.reads_pipeline_start
         ):
             return PipelineStartInput()
 

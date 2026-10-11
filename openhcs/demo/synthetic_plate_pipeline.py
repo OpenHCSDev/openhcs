@@ -7,7 +7,7 @@ Generated: 2025-10-21 01:49:14.400609
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
@@ -71,7 +71,7 @@ pipeline_steps.append(step_4)
 step_5 = FunctionStep(
     func=(stack_percentile_normalize, {"low_percentile": 0.5, "high_percentile": 99.5}),
     name="Secondary Enhancement",
-    processing_config=LazyProcessingConfig(input_source=InputSource.PIPELINE_START),
+    processing_config=LazyProcessingConfig(input_source=ReadPipelineStart),
 )
 pipeline_steps.append(step_5)
 

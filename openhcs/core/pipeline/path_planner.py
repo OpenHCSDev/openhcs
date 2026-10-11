@@ -14,7 +14,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.axis_filter import StepAxisFilterSet
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
@@ -519,7 +518,7 @@ class PathPlannerExecutionGroups:
                     resolved_config=self.planner.session.global_config,
                 )
             )
-            if step.processing_config.input_source is InputSource.PIPELINE_START
+            if step.processing_config.input_source.reads_pipeline_start
             else ()
         )
         if source_keys:
@@ -2275,7 +2274,7 @@ class PathPlannerStepAssemblyStage:
     @staticmethod
     def input_source(step: AbstractStep) -> str:
         """Get input source string."""
-        if step.processing_config.input_source == InputSource.PIPELINE_START:
+        if step.processing_config.input_source.reads_pipeline_start:
             return "PIPELINE_START"
         return "PREVIOUS_STEP"
 

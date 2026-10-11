@@ -19,7 +19,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -98,7 +98,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 processing_config=LazyProcessingConfig(
                     variable_components=[Microscopy.ZIndex],
                     group_by=group_by,
-                    input_source=InputSource.PIPELINE_START,
+                    input_source=ReadPipelineStart,
                 ),
             )],
         )

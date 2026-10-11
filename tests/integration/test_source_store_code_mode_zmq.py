@@ -17,7 +17,7 @@ from zmqruntime.execution.responses import (
 )
 
 from openhcs.constants.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -130,7 +130,7 @@ def _source_step() -> FunctionStep:
         name="Normalize named source store",
         func=stack_percentile_normalize,
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=LazyStepSourceBindingsConfig(enabled=True),
     )

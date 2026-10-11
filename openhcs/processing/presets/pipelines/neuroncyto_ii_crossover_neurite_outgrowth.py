@@ -27,7 +27,7 @@ from pathlib import Path
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
@@ -168,7 +168,7 @@ def build_neuroncyto_ii_crossover_demo(
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=True,
@@ -267,7 +267,7 @@ def neuroncyto_ii_crossover_demo_contribution(
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=True,
@@ -283,7 +283,7 @@ def neuroncyto_ii_crossover_demo_contribution(
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PREVIOUS_STEP,
+            input_source=ReadPreviousStep,
         ),
         napari_streaming_config=compact_step.napari_streaming_config,
     )

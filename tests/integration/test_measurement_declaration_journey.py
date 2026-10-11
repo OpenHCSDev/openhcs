@@ -16,7 +16,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -203,7 +203,7 @@ def _step(func, name, kwargs):
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Site],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(enabled=True),
     )
@@ -324,7 +324,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
         ))
         measurement = document.pipeline_steps[-1]
         measurement.processing_config = replace(
-            measurement.processing_config, input_source=InputSource.PREVIOUS_STEP,
+            measurement.processing_config, input_source=ReadPreviousStep,
         )
     document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))

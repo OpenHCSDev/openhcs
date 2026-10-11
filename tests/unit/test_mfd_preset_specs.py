@@ -3,7 +3,6 @@ from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,
@@ -188,8 +187,8 @@ def test_stitch_specs_share_structure_and_vary_backend():
         ashlar_compute_tile_positions_gpu,
         {"stitch_alpha": 0.2},
     )
-    assert cpu_steps[3].processing_config.input_source == InputSource.PIPELINE_START
-    assert gpu_steps[3].processing_config.input_source == InputSource.PIPELINE_START
+    assert cpu_steps[3].processing_config.input_source.reads_pipeline_start
+    assert gpu_steps[3].processing_config.input_source.reads_pipeline_start
     assert cpu_steps[4].func is assemble_stack_cupy
     assert gpu_steps[4].func is assemble_stack_cupy
     assert cpu_steps[0].func["1"] == [

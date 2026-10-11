@@ -32,7 +32,7 @@ from benchmark.datasets.cache import (
     resolve_benchmark_path_root,
 )
 from openhcs.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts import (
     ArtifactType,
     ImageArtifactType,
@@ -348,7 +348,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
             func=align,
             name="Align",
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
         )
     ]

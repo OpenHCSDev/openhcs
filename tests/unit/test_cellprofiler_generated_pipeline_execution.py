@@ -11,7 +11,7 @@ import pytest
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -183,7 +183,7 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         ),
         name="CorrectIlluminationCalculate",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(enabled=True),
     )

@@ -13,7 +13,7 @@ import pytest
 from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -899,7 +899,7 @@ def test_group_artifact_context_reseeds_main_flow_from_exact_primary_bindings() 
     context = ArtifactDeclarationStepContext(
         source_bindings=StepSourceBindingsConfig(enabled=True, bindings=bindings),
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     ).with_source_declarations(binding.input_spec() for binding in bindings)
 
     scoped = CellProfilerModule._artifact_context_for_group(context, group_key="2")
@@ -994,7 +994,7 @@ def test_measure_image_quality_all_loaded_uses_only_primary_plane_bindings() -> 
                 enabled=True,
                 bindings=bindings,
             ),
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
             available_artifacts=ArtifactSpecCollection(source_specs),
             main_flow_artifacts=ArtifactSpecCollection(source_specs),
         ),

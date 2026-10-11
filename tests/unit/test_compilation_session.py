@@ -8,7 +8,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -268,7 +268,7 @@ def _resolved_step(
     step: FunctionStep,
     variable_components=(Microscopy.Site,),
     source_bindings=EMPTY_SOURCE_BINDINGS,
-    input_source: InputSource = InputSource.PREVIOUS_STEP,
+    input_source: InputSource = ReadPreviousStep,
 ) -> AbstractStep:
     step.source_bindings = source_bindings
     step.processing_config = ProcessingConfig(
@@ -663,7 +663,7 @@ def test_path_planner_activates_declared_source_binding_for_pipeline_start():
     snapshot = _resolved_step(
         step,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -702,7 +702,7 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(mon
             enabled=True,
             bindings=(binding,),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -768,7 +768,7 @@ def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow()
     snapshot = _resolved_step(
         step,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -853,7 +853,7 @@ def test_path_planner_preserves_metaxpress_primary_source_order(
             enabled=True,
             bindings=selected_bindings,
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     pipeline_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(bindings=pipeline_bindings)

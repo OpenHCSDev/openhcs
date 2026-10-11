@@ -3194,7 +3194,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.config import (
         LazyProcessingConfig,
         PipelineConfig,
@@ -3225,7 +3225,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     pipeline_start = LazyProcessingConfig(
         variable_components=[Microscopy.Site],
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     steps = [
         FunctionStep(

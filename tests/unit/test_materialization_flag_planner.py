@@ -2,7 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from openhcs.constants.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ObjectLabelsArtifactType,
@@ -33,7 +33,7 @@ def _pipeline_config(
     )
 
 
-def _step(input_source: InputSource = InputSource.PREVIOUS_STEP) -> SimpleNamespace:
+def _step(input_source: InputSource = ReadPreviousStep) -> SimpleNamespace:
     return SimpleNamespace(processing_config=SimpleNamespace(input_source=input_source))
 
 

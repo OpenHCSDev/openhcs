@@ -112,7 +112,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CompileInspectionInput,
         InProcessCompileInspectionGateway,
     )
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts import (
         ArtifactInputPlan,
         ArtifactOutputPlan,
@@ -179,7 +179,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Site],
                 group_by=Ungrouped,
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=StepSourceBindingsConfig(enabled=True),
         )

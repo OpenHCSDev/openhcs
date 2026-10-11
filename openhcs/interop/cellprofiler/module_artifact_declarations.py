@@ -12,7 +12,7 @@ from typing import (
     ClassVar,
 )
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -1234,7 +1234,7 @@ class ImageMeasurementInputModule(
         callable_contract: CallableContract,
         *,
         step_context: "ArtifactDeclarationStepContext",
-    ) -> InputSource:
+    ) -> type[InputSource]:
         """Keep original measurement images alongside produced image subjects."""
         produced_refs = frozenset(
             producer.spec.ref().for_plan_type(ArtifactInputPlan)
@@ -1245,7 +1245,7 @@ class ImageMeasurementInputModule(
             and step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
             for spec in callable_contract.artifact_inputs.of_artifact_type(ImageArtifactType)
         ):
-            return InputSource.PIPELINE_START
+            return ReadPipelineStart
         return super().input_source_for_contract(
             callable_contract,
             step_context=step_context,

@@ -1215,7 +1215,7 @@ def demo_source(
 from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.axes import Ungrouped
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -1357,7 +1357,7 @@ pipeline_data = {{
                 }}),
             name='Secondary Enhancement',
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START
+                input_source=ReadPipelineStart
             )
         ),
         FunctionStep(

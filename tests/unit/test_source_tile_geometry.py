@@ -474,9 +474,10 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
+    from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
+
     from openhcs.core.config import (
         GlobalPipelineConfig,
-        InputSource,
         LazyProcessingConfig,
         LazySourceBindingsConfig,
         LazyStepMaterializationConfig,
@@ -572,7 +573,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                     processing_config=LazyProcessingConfig(
                         variable_components=[Microscopy.Channel],
                         group_by=Ungrouped,
-                        input_source=InputSource.PREVIOUS_STEP,
+                        input_source=ReadPreviousStep,
                     ),
                 ),
             ]
@@ -684,7 +685,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         processing_config=LazyProcessingConfig(
                             variable_components=[Microscopy.Channel],
                             group_by=Ungrouped,
-                            input_source=InputSource.PIPELINE_START,
+                            input_source=ReadPipelineStart,
                         ),
                     )
                 ],

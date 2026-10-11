@@ -6,7 +6,6 @@ from polystore.base import ImageSamplingResult
 from polystore.bioformats_storage import BioFormatsPlaneRef
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import get_core_callable
@@ -168,23 +167,23 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     assert steps[0].processing_config.variable_components == [
         Microscopy.Channel
     ]
-    assert steps[0].processing_config.input_source is InputSource.PIPELINE_START
+    assert steps[0].processing_config.input_source.reads_pipeline_start
     assert steps[1].processing_config.variable_components == [
         Microscopy.Channel
     ]
-    assert steps[1].processing_config.input_source is InputSource.PREVIOUS_STEP
+    assert not steps[1].processing_config.input_source.reads_pipeline_start
     assert steps[2].processing_config.group_by is Ungrouped
     assert steps[2].processing_config.variable_components == [
         Microscopy.Channel
     ]
-    assert steps[2].processing_config.input_source is InputSource.PIPELINE_START
+    assert steps[2].processing_config.input_source.reads_pipeline_start
     assert steps[2].source_bindings.enabled is True
     assert [binding.alias for binding in steps[2].source_bindings.bindings] == ["Axon"]
     assert steps[3].processing_config.group_by is Ungrouped
     assert steps[3].processing_config.variable_components == [
         Microscopy.Channel
     ]
-    assert steps[3].processing_config.input_source is InputSource.PREVIOUS_STEP
+    assert not steps[3].processing_config.input_source.reads_pipeline_start
 
     count_kwargs = steps[1].func[1]
     assert count_kwargs["cell_body"].channel_index == 1

@@ -10,7 +10,7 @@ from typing import Any
 
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart
 from openhcs.core.config import LazyDtypeConfig, LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
@@ -56,7 +56,7 @@ class PresetStepBinding:
 
     name: str
     variable_components: tuple[Any, ...] = ()
-    input_source: InputSource | None = None
+    input_source: type[InputSource] | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -256,7 +256,7 @@ STITCH_STEP_TEMPLATES: tuple[PresetStepTemplate, ...] = (
     PresetStepTemplate(
         binding=PresetStepBinding(
             name="process_2",
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         func_factory_factory=lambda definition: (
             lambda: _channel_preprocess_func(include_channel_4=True)

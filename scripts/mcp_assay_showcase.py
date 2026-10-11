@@ -390,7 +390,7 @@ def _common_source_header(
 
 from pathlib import Path
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -490,7 +490,7 @@ def _pipeline_start_processing_config_source() -> str:
     """Render the ordinary pipeline-start processing declaration."""
 
     return """        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
 
@@ -499,7 +499,7 @@ def _z_stack_processing_config_source() -> str:
     """Render the pipeline-start declaration whose variable axis is Z."""
 
     return """        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
             variable_components=[Microscopy.ZIndex],
         ),
 """
@@ -600,7 +600,7 @@ def _dual_channel_source(plate_path: Path, output_path: Path) -> str:
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()
@@ -653,7 +653,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         ),
         FunctionStep(
@@ -667,7 +667,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Channel],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()
@@ -862,7 +862,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
             },
         ),
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
 """
         + _napari_streaming_config_source()

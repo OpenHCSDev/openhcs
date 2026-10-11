@@ -12,7 +12,7 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core import source_bindings as source_bindings_module
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -537,9 +537,9 @@ def test_pipeline_start_binding_groups_do_not_mutate_resolved_enabled_state():
         Microscopy.Channel,
     ) == ("1",)
     assert (
-        source_bindings.for_input_source(InputSource.PIPELINE_START) is source_bindings
+        source_bindings.for_input_source(ReadPipelineStart) is source_bindings
     )
-    assert source_bindings.for_input_source(InputSource.PREVIOUS_STEP).is_empty
+    assert source_bindings.for_input_source(ReadPreviousStep).is_empty
 
 
 def test_source_lineage_requires_its_declared_cursor_artifact() -> None:

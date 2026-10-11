@@ -19,7 +19,7 @@ from typing import (
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
 from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -937,7 +937,7 @@ class CellProfilerModule(
         callable_contract: CallableContract,
         *,
         step_context: ArtifactDeclarationStepContext,
-    ) -> InputSource:
+    ) -> type[InputSource]:
         """Resolve the main-flow anchor independently of auxiliary source inputs."""
         produced_refs = frozenset(
             producer.spec.ref().for_plan_type(ArtifactInputPlan)
@@ -948,13 +948,13 @@ class CellProfilerModule(
             and spec.ref() in produced_refs
             for spec in callable_contract.artifact_inputs
         ):
-            return InputSource.PREVIOUS_STEP
+            return ReadPreviousStep
         if any(
             step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
             for spec in callable_contract.artifact_inputs
         ):
-            return InputSource.PIPELINE_START
-        return InputSource.PREVIOUS_STEP
+            return ReadPipelineStart
+        return ReadPreviousStep
 
     @classmethod
     def processing_config(
@@ -978,7 +978,7 @@ class CellProfilerModule(
         if callable_contract.execution_scope is FunctionStepExecutionScope.PLATE:
             variable_components: tuple[type[Axis], ...] = ()
             group_by: type[GroupingDeclaration] | None = Ungrouped
-            input_source = InputSource.PREVIOUS_STEP
+            input_source = ReadPreviousStep
         else:
             family = AxisFamily.active()
             required_axes = tuple(

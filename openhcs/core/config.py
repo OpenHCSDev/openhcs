@@ -37,7 +37,7 @@ from openhcs.core.axes import (
     TimeAxis,
 )
 from metaclass_registry import AutoRegisterMeta
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from python_introspect import (
     AnnotatedDataclassValidationMixin,
     Enableable,
@@ -580,9 +580,9 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     selection. This field does not define the assembled stack axis.
     """
 
-    input_source: Annotated[InputSource, abbreviation("source")] = (
-        InputSource.PREVIOUS_STEP
-    )
+    input_source: Annotated[
+        type[InputSource], abbreviation("source"), RegisteredClassChoices(InputSource)
+    ] = ReadPreviousStep
     """Main-flow source: previous step or pipeline start.
 
     Additional named sources are callable artifact inputs satisfied through
@@ -997,7 +997,7 @@ class StepSourceBindingsConfig(
     enabled: bool = False
     """Whether this step uses source-binding resolution instead of the prior step image stack."""
 
-    def for_input_source(self, input_source: InputSource) -> Self:
+    def for_input_source(self, input_source: type[InputSource]) -> Self:
         """Return the source declarations active for one resolved input source."""
 
         if self.enabled is None:
@@ -1005,12 +1005,7 @@ class StepSourceBindingsConfig(
                 "StepSourceBindingsConfig.for_input_source requires "
                 "ObjectState-resolved enabled state."
             )
-        resolved_input_source = (
-            input_source
-            if isinstance(input_source, InputSource)
-            else InputSource(input_source)
-        )
-        if self.enabled or resolved_input_source is InputSource.PIPELINE_START:
+        if self.enabled or input_source.reads_pipeline_start:
             return self
         return type(self)()
 
