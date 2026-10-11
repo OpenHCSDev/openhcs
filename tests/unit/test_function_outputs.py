@@ -62,7 +62,7 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import NoMainFlowInput, StepOutputInput
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputPathRequest,
@@ -427,7 +427,7 @@ def function_step_plan(
         output_dir=Path("/tmp/output"),
         pipeline_position=pipeline_position,
         step_scope_id=f"step-scope-{pipeline_position}",
-        main_input_dependency=StepInputDependency.no_main_flow(),
+        main_input_dependency=NoMainFlowInput(),
         variable_components=variable_components,
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -574,7 +574,7 @@ def test_step_output_manifest_prefers_main_dependency_over_auxiliary_artifact_in
     )
 
     consumer = function_step_plan("Watershed")
-    consumer.main_input_dependency = StepInputDependency.step_output(
+    consumer.main_input_dependency = StepOutputInput(
         source_step_index=24,
         source_step_scope_id="main-producer",
     )

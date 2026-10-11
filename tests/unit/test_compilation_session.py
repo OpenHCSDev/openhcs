@@ -51,7 +51,12 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceSelector,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import (
+    PipelineStartInput,
+    StepInputDependency,
+    StepOutputInput,
+    UnresolvedStepInput,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
@@ -298,7 +303,7 @@ def _compile_source_plans_for_contract(
     session: CompilationSession,
     snapshot: AbstractStep,
     func,
-    main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
+    main_input_dependency: StepInputDependency = PipelineStartInput(),
 ):
     execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts((CallableContract.from_callable(func),), main_input_dependency, ArtifactDeclarationStepContext.empty().available_artifacts)
     fields = snapshot.source_bindings.metadata_fields_for_literal_types(
@@ -382,7 +387,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     )
 
     first_graph = session.pipeline.artifact_graphs[0]
-    assert first_graph.main_input_dependency == StepInputDependency.pipeline_start()
+    assert first_graph.main_input_dependency == PipelineStartInput()
     assert first_graph.source_binding_plan.bindings == (
         session.pipeline.steps[0].source_bindings.bindings[0],
     )
@@ -752,7 +757,7 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(mon
     )
 
     assert plan is not None
-    assert dependency_before_provider == StepInputDependency.unresolved()
+    assert dependency_before_provider == UnresolvedStepInput()
     assert session.plan(0).main_input_dependency == dependency_before_provider
     assert plan.contract.artifact_inputs.names() == ("DNA",)
 
@@ -810,7 +815,7 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
             session,
             snapshot,
             _previous_step_and_external_source,
-            StepInputDependency.step_output(
+            StepOutputInput(
                 source_step_index=0,
                 source_step_scope_id="plate::functionstep_0",
             ),

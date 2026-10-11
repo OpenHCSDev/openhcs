@@ -27,7 +27,7 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -253,7 +253,7 @@ def test_foreign_artifact_inputs_do_not_filter_lifecycle_producer(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id=dependency_scope,
         ),
@@ -339,7 +339,7 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="align",
         ),
@@ -436,7 +436,7 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="color_to_gray",
         ),
@@ -494,7 +494,7 @@ def test_storage_backed_input_does_not_reclassify_lifecycle_output(
     stored_input = ArtifactSpec.input("StoredLabels", ObjectLabelsArtifactType)
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="artifact_producer",
         ),
@@ -574,7 +574,7 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="artifact_producer",
         ),

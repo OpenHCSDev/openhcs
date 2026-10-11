@@ -50,7 +50,13 @@ from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import (
+    NoMainFlowInput,
+    PipelineStartInput,
+    StepInputDependency,
+    StepOutputInput,
+    UnresolvedStepInput,
+)
 from openhcs.core.steps.function_step import FunctionStep
 
 if TYPE_CHECKING:
@@ -240,7 +246,7 @@ class ArtifactGraph:
         field(default_factory=dict, repr=False)
     )
     main_input_dependency: StepInputDependency = field(
-        default_factory=StepInputDependency.unresolved
+        default_factory=UnresolvedStepInput
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
         default_factory=CompiledSourceBindingPlan
@@ -271,13 +277,13 @@ class ArtifactGraph:
             isinstance(step, FunctionStep)
             and execution_scope is FunctionStepExecutionScope.PLATE
         ):
-            return StepInputDependency.no_main_flow()
+            return NoMainFlowInput()
 
         if (
             step_index == 0
             or step.processing_config.input_source == InputSource.PIPELINE_START
         ):
-            return StepInputDependency.pipeline_start()
+            return PipelineStartInput()
 
         local_output_refs = frozenset(
             producer.spec.ref() for producer in self.producers
@@ -352,7 +358,7 @@ class ArtifactGraph:
                     f"Main-flow artifact producer step {producer_index} has no "
                     "compiled scope identity."
                 )
-            return StepInputDependency.step_output(
+            return StepOutputInput(
                 source_step_index=producer_index,
                 source_step_scope_id=producer_scope_id,
             )
@@ -367,7 +373,7 @@ class ArtifactGraph:
             return previous_dependency
 
         producer_scope_id = step_scope_ids[producer_index]
-        return StepInputDependency.step_output(
+        return StepOutputInput(
             source_step_index=producer_index,
             source_step_scope_id=producer_scope_id,
         )

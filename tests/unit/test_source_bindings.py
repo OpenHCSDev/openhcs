@@ -71,7 +71,6 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import (
-    SourceImageSetComponentRole,
     SourceImageSetIdentityPolicy,
 )
 from openhcs.core.source_metadata import (
@@ -130,14 +129,8 @@ def test_source_image_set_plane_members_are_exactly_the_step_stack_axes():
         frozenset((Microscopy.Site.name,))
     )
 
-    assert (
-        site_stack.role(Microscopy.Site)
-        is SourceImageSetComponentRole.IMAGE_PLANE_MEMBER
-    )
-    assert (
-        site_stack.role(Microscopy.Channel)
-        is SourceImageSetComponentRole.IMAGE_SET_AXIS
-    )
+    assert not site_stack.is_identity_component(Microscopy.Site)
+    assert site_stack.is_identity_component(Microscopy.Channel)
 
 
 def test_source_image_set_policy_uses_binding_and_source_stack_declarations():

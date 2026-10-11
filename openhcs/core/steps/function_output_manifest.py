@@ -22,7 +22,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataValue
 
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
@@ -359,9 +359,7 @@ class StepOutputManifestStore:
         plan: CompiledStepPlan,
     ) -> StepOutputManifestKey | None:
         dependency = plan.main_input_dependency
-        if dependency.kind is not StepInputDependencyKind.STEP_OUTPUT:
-            return None
-        if dependency.source_step_scope_id is None:
+        if not isinstance(dependency, StepOutputInput):
             return None
         return StepOutputManifestKey(dependency.source_step_scope_id, plan.axis_id)
 
@@ -566,10 +564,7 @@ class StepOutputManifestStore:
         plan: CompiledStepPlan,
     ) -> frozenset[tuple[str, str, str | None]]:
         dependency = plan.main_input_dependency
-        if (
-            dependency.kind is not StepInputDependencyKind.STEP_OUTPUT
-            or dependency.source_step_scope_id is None
-        ):
+        if not isinstance(dependency, StepOutputInput):
             return frozenset()
         producer_scope_id = dependency.source_step_scope_id
         return frozenset(

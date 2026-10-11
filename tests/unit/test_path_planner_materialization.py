@@ -108,8 +108,11 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.step_dependencies import StepInputDependency
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import (
+    NoMainFlowInput,
+    PipelineStartInput,
+    StepOutputInput,
+)
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_runtime import (
@@ -378,7 +381,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     declarations, pattern, _, contracts = _prepare_step_declarations(planner,
         snapshot, 3
     )
-    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, StepInputDependency.step_output(
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, StepOutputInput(
             source_step_index=2,
             source_step_scope_id="plate::functionstep_2",
         ), planner.artifact_context.available_artifacts)
@@ -629,7 +632,7 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
         callable_scope,
         contracts,
     ) = _prepare_step_declarations(planner, snapshot, 3)
-    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, StepInputDependency.no_main_flow(), planner.artifact_context.available_artifacts)
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, NoMainFlowInput(), planner.artifact_context.available_artifacts)
     maps = planner.artifacts.compile_plan_maps(
         snapshot,
         3,
@@ -651,7 +654,7 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
     )
     plan = planner.plans[3]
     plan.step_name = snapshot.name
-    plan.main_input_dependency = StepInputDependency.no_main_flow()
+    plan.main_input_dependency = NoMainFlowInput()
     plan.artifact_inputs = maps.inputs
     plan.artifact_outputs = maps.outputs
     plan.compiled_function_pattern = compiled
@@ -4179,7 +4182,7 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
         ),
     )
 
-    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
+    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), PipelineStartInput(), planner.artifact_context.available_artifacts)
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
     )
@@ -4331,7 +4334,7 @@ def test_execution_anchor_ignores_source_artifact_lineage():
         ),
     )
 
-    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
+    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), PipelineStartInput(), planner.artifact_context.available_artifacts)
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
     )
@@ -4625,7 +4628,7 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
     planner.steps.update_core_step_plan(
         snapshot,
         3,
-        StepInputDependency.step_output(
+        StepOutputInput(
             source_step_index=2,
             source_step_scope_id="plate::functionstep_2",
         ),
@@ -5742,7 +5745,7 @@ def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
         1,
     )
 
-    assert dependency.kind is StepInputDependencyKind.STEP_OUTPUT
+    assert isinstance(dependency, StepOutputInput)
     assert dependency.source_step_index == 0
     assert dependency.source_step_scope_id == "plate::functionstep_0"
 
@@ -5800,7 +5803,7 @@ def test_main_input_dependency_uses_declared_artifact_producer_not_previous_step
         declarations=declarations,
     )
 
-    assert dependency == StepInputDependency.step_output(
+    assert dependency == StepOutputInput(
         source_step_index=0,
         source_step_scope_id="plate::functionstep_0",
     )
@@ -5841,7 +5844,7 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
         ),
         is_grouped=False,
     )
-    source_dependency = StepInputDependency.step_output(
+    source_dependency = StepOutputInput(
         source_step_index=0,
         source_step_scope_id="plate::functionstep_0",
     )
@@ -5911,7 +5914,7 @@ def test_main_input_dependency_preserves_pipeline_start_edges():
         1,
     )
 
-    assert dependency.kind is StepInputDependencyKind.PIPELINE_START
+    assert isinstance(dependency, PipelineStartInput)
     input_dir, output_dir = planner.steps.step_io_dirs(dependency, 1)
     assert input_dir == Path("/data/plate1/images")
     assert output_dir == Path("/data/plate1_processed/images")

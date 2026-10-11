@@ -72,8 +72,10 @@ from openhcs.core.source_bindings import (
     source_binding_group_keys_for_group_by,
 )
 from openhcs.core.step_dependencies import (
+    NoMainFlowInput,
+    PipelineStartInput,
     StepInputDependency,
-    StepInputDependencyKind,
+    StepOutputInput,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
@@ -1851,18 +1853,11 @@ class PathPlannerValidationStage:
         for i in range(1, self.planner.session.step_count):
             curr = self.planner.session.pipeline.steps[i]
             dependency = self.planner.plans[i].main_input_dependency
-            if dependency.kind in (
-                StepInputDependencyKind.NO_MAIN_FLOW,
-                StepInputDependencyKind.PIPELINE_START,
-            ):
-                continue
-            if dependency.kind is not StepInputDependencyKind.STEP_OUTPUT:
+            if not dependency.is_resolved:
                 raise ValueError(f"Step {curr.name} has unresolved main input dependency.")
+            if not isinstance(dependency, StepOutputInput):
+                continue
             source_step_index = dependency.source_step_index
-            if source_step_index is None:
-                raise ValueError(
-                    f"Step {curr.name} main input dependency is missing source_step_index."
-                )
             curr_in = self.planner.plans[i].input_dir
             source_out = self.planner.plans[source_step_index].output_dir
             if curr_in != source_out:
@@ -2170,9 +2165,7 @@ class PathPlannerStepAssemblyStage:
         main_input_dependency: StepInputDependency,
     ) -> PathPlannerComponentScopes:
         """Return component scopes visible on a step's main-flow input branch."""
-        if main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START:
-            return PathPlannerComponentScopes.empty()
-        source_step_index = main_input_dependency.source_step_index
+        source_step_index = main_input_dependency.predecessor_step_index()
         if source_step_index is None:
             return PathPlannerComponentScopes.empty()
         return self.planner.main_flow_component_scopes.get(
@@ -2256,30 +2249,23 @@ class PathPlannerStepAssemblyStage:
     ) -> tuple[Path, Path]:
         """Resolve read/write directories for one step."""
         plan = self.planner.plans.get(step_index)
-        reads_from_pipeline_start = (
-            main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START
-        )
-        has_no_main_flow = (
-            main_input_dependency.kind is StepInputDependencyKind.NO_MAIN_FLOW
-        )
-
         if plan is not None and plan.input_dir is not None:
             input_dir = Path(plan.input_dir)
-        elif reads_from_pipeline_start:
+        elif isinstance(main_input_dependency, PipelineStartInput):
             input_dir = self.planner.initial_input
-        elif has_no_main_flow:
+        elif isinstance(main_input_dependency, NoMainFlowInput):
             input_dir = self.planner.paths.build_output_path()
         else:
-            source_step_index = main_input_dependency.source_step_index
+            source_step_index = main_input_dependency.predecessor_step_index()
             if source_step_index is None:
                 raise ValueError(
-                    f"Step {step_index} main input dependency is missing source_step_index."
+                    f"Step {step_index} main input dependency is unresolved."
                 )
             input_dir = Path(self.planner.plans[source_step_index].output_dir)
 
         if plan is not None and plan.output_dir is not None:
             output_dir = Path(plan.output_dir)
-        elif reads_from_pipeline_start or has_no_main_flow:
+        elif isinstance(main_input_dependency, PipelineStartInput | NoMainFlowInput):
             output_dir = self.planner.paths.build_output_path()
         else:
             output_dir = input_dir

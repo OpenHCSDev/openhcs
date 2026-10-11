@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -603,19 +602,11 @@ class SourceBindingCandidateMatcher:
         )
 
 
-class SourceAnchorSelectionStatus(str, Enum):
-    """Outcome of source-bound execution-anchor resolution."""
-
-    SELECTED = "selected"
-    DEFERRED_TO_RUNTIME = "deferred_to_runtime"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceAnchorPatternSelection:
     """Resolved source-compatible anchors plus the authority that owns them."""
 
     patterns: tuple[SourceCandidatePath, ...]
-    status: SourceAnchorSelectionStatus
     reason: str
 
     @classmethod
@@ -625,11 +616,7 @@ class SourceAnchorPatternSelection:
         *,
         reason: str = "source selectors resolved at anchor boundary",
     ) -> "SourceAnchorPatternSelection":
-        return cls(
-            patterns=tuple(patterns),
-            status=SourceAnchorSelectionStatus.SELECTED,
-            reason=reason,
-        )
+        return cls(patterns=tuple(patterns), reason=reason)
 
     @classmethod
     def deferred_to_runtime(
@@ -638,15 +625,7 @@ class SourceAnchorPatternSelection:
         *,
         reason: str,
     ) -> "SourceAnchorPatternSelection":
-        return cls(
-            patterns=tuple(patterns),
-            status=SourceAnchorSelectionStatus.DEFERRED_TO_RUNTIME,
-            reason=reason,
-        )
-
-    @property
-    def owns_runtime_resolution(self) -> bool:
-        return self.status is SourceAnchorSelectionStatus.DEFERRED_TO_RUNTIME
+        return cls(patterns=tuple(patterns), reason=reason)
 
 
 @dataclass(frozen=True, slots=True)
@@ -664,19 +643,12 @@ class SourceWorkspaceAnchorNarrowing:
         )
 
 
-class SourceBindingMatchResolutionStatus(str, Enum):
-    """Outcome of matching one anchor pattern to source-binding aliases."""
-
-    MATCHED = "matched"
-    DEFERRED_TO_RUNTIME = "deferred_to_runtime"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceBindingMatchResolution:
     """Alias match result for one source-bound anchor pattern."""
 
-    status: SourceBindingMatchResolutionStatus
     binding: NamedSourceBinding | None
+    """The one matching binding; none when resolution is deferred to runtime."""
     reason: str
 
     @classmethod
@@ -685,7 +657,6 @@ class SourceBindingMatchResolution:
         binding: NamedSourceBinding,
     ) -> "SourceBindingMatchResolution":
         return cls(
-            status=SourceBindingMatchResolutionStatus.MATCHED,
             binding=binding,
             reason="exactly one selector binding matched the anchor",
         )
@@ -697,7 +668,6 @@ class SourceBindingMatchResolution:
         reason: str,
     ) -> "SourceBindingMatchResolution":
         return cls(
-            status=SourceBindingMatchResolutionStatus.DEFERRED_TO_RUNTIME,
             binding=None,
             reason=reason,
         )
@@ -711,7 +681,7 @@ class SourceBindingMatchResolution:
 
     @property
     def owns_runtime_resolution(self) -> bool:
-        return self.status is SourceBindingMatchResolutionStatus.DEFERRED_TO_RUNTIME
+        return self.binding is None
 
 
 class SourceBoundAnchorPatternPolicy(

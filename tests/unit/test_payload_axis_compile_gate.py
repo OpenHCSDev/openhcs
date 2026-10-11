@@ -36,7 +36,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.processing.backends.cellprofiler.crop import crop
 from openhcs.domains.microscopy.axes import Microscopy
@@ -93,8 +93,8 @@ def test_crop_declares_payload_axis_preservation() -> None:
 
 
 def test_step_input_dependency_owns_ancestry_and_pipeline_start_proofs() -> None:
-    pipeline_start = StepInputDependency.pipeline_start()
-    step_output = StepInputDependency.step_output(
+    pipeline_start = PipelineStartInput()
+    step_output = StepOutputInput(
         source_step_index=3,
         source_step_scope_id="step-3",
     )
@@ -138,7 +138,7 @@ def _session(
         step_index=0,
         step_name="Convert colour",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,)),
         compiled_function_pattern=_compiled_pattern(),
     )
@@ -273,7 +273,7 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
         step_index=0,
         step_name="Grouped conversion",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=(grayscale_binding, rgb_binding),
         ),
@@ -368,7 +368,7 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
         step_name="Crop",
         axis_id="A01",
         step_scope_id="step-0",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=binding_plan,
         compiled_function_pattern=_compiled_pattern(crop_like),
     )
@@ -376,7 +376,7 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
         step_index=1,
         step_name="Convert colour",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="step-0",
         ),
@@ -409,7 +409,7 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
         step_name="First crop",
         axis_id="A01",
         step_scope_id="step-0",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=binding_plan,
         compiled_function_pattern=_compiled_pattern(crop_like),
     )
@@ -418,7 +418,7 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
         step_name="Second crop",
         axis_id="A01",
         step_scope_id="step-1",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="step-0",
         ),
@@ -428,7 +428,7 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
         step_index=2,
         step_name="Convert colour",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="step-1",
         ),
@@ -458,7 +458,7 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
         step_name="Unknown transform",
         axis_id="A01",
         step_scope_id="step-0",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=binding_plan,
         compiled_function_pattern=_compiled_pattern(unknown_transform),
     )
@@ -466,7 +466,7 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
         step_index=1,
         step_name="Convert colour",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="step-0",
         ),
@@ -509,9 +509,9 @@ def test_inherited_bindings_trace_exact_named_payload_axis_edges(
             axis_id="A01",
             step_scope_id=f"step-{index}",
             main_input_dependency=(
-                StepInputDependency.pipeline_start()
+                PipelineStartInput()
                 if index == 0
-                else StepInputDependency.step_output(
+                else StepOutputInput(
                     source_step_index=index - 1,
                     source_step_scope_id=f"step-{index - 1}",
                 )
@@ -561,7 +561,7 @@ def test_generic_main_flow_preservation_does_not_prove_payload_axis(
         step_name="Generic flow producer",
         axis_id="A01",
         step_scope_id="step-0",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=binding_plan,
         compiled_function_pattern=_compiled_pattern(generic_flow_preserver),
     )
@@ -569,7 +569,7 @@ def test_generic_main_flow_preservation_does_not_prove_payload_axis(
         step_index=1,
         step_name="Convert colour",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="step-0",
         ),
@@ -636,7 +636,7 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
         step_index=0,
         step_name="Unknown routed conversion",
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=(grayscale_binding, rgb_binding),
         ),

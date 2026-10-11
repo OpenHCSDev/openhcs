@@ -127,7 +127,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.step_dependencies import StepInputDependencyKind
+from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
@@ -679,8 +679,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 tuple(full_file_paths),
                 (
                     Backend.MEMORY
-                    if plan.main_input_dependency.kind
-                    is StepInputDependencyKind.STEP_OUTPUT
+                    if isinstance(plan.main_input_dependency, StepOutputInput)
                     else Backend(plan.read_backend)
                 ),
             ).load_images(context.filemanager, zarr_config=plan.zarr_config)
@@ -744,8 +743,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     ) -> list[str]:
         """Constrain grouped executions to files from the current component."""
         if (
-            self.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
+            isinstance(self.execution_plan.main_input_dependency, StepOutputInput)
             or self.compiled_group.runtime_domain
             is RuntimeInvocationDomain.ARTIFACT_MANAGED
         ):
@@ -781,8 +779,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         """Constrain the loaded main stack to declared image source bindings."""
 
         if (
-            self.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
+            isinstance(self.execution_plan.main_input_dependency, StepOutputInput)
         ):
             return matching_files
 
@@ -1679,8 +1676,9 @@ class FunctionCoreExecutor:
         if (
             binding is None
             or self.invocation.key.position != 0
-            or self.group_data.execution_plan.main_input_dependency.kind
-            is not StepInputDependencyKind.PIPELINE_START
+            or not isinstance(
+                self.group_data.execution_plan.main_input_dependency, PipelineStartInput
+            )
             or binding.origin is not FromPipelineStart
             or request.context is not self.group_data.context
         ):

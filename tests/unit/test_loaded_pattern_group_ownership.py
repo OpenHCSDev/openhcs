@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
@@ -535,7 +536,6 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
 
 def test_checkpoint_demand_follows_preserved_input_to_native_reader():
     from openhcs.constants.constants import Backend
-    from openhcs.core.step_dependencies import StepInputDependency
 
     request, _ = _stored_primary_fixture()
     source = replace(
@@ -551,7 +551,7 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
         step_index=1,
         step_scope_id="preserving",
         compiled_function_pattern=preserving_pattern,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="source"
         ),
     )
@@ -560,7 +560,7 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
         step_index=2,
         step_scope_id="native",
         compiled_function_pattern=compile_function_pattern(_identity, {}, {}),
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1, source_step_scope_id="preserving"
         ),
     )
@@ -576,7 +576,6 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
 @pytest.mark.parametrize("pattern_kind", ("unknown", "missing", "malformed"))
 def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
     from openhcs.constants.constants import Backend
-    from openhcs.core.step_dependencies import StepInputDependency
 
     request, _ = _stored_primary_fixture()
     source = replace(
@@ -598,7 +597,7 @@ def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
                 is_grouped=pattern_kind == "missing",
             )
         ),
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="source"
         ),
     )
@@ -608,7 +607,7 @@ def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
             source.requires_main_flow_checkpoint(plans)
     else:
         assert source.requires_main_flow_checkpoint(plans)
-    consumer.main_input_dependency = StepInputDependency.step_output(
+    consumer.main_input_dependency = StepOutputInput(
         source_step_index=99, source_step_scope_id="absent"
     )
     assert not source.requires_main_flow_checkpoint(plans)
@@ -618,7 +617,6 @@ def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
 
 def test_checkpoint_demand_propagates_only_through_preserved_outputs():
     from openhcs.constants.constants import Backend
-    from openhcs.core.step_dependencies import StepInputDependency
 
     request, _ = _stored_primary_fixture()
     source = replace(
@@ -632,7 +630,7 @@ def test_checkpoint_demand_propagates_only_through_preserved_outputs():
         step_index=1,
         step_scope_id="consumer",
         visualize=True,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="source"
         ),
     )
@@ -648,7 +646,6 @@ def test_checkpoint_demand_propagates_only_through_preserved_outputs():
 
 def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
     from openhcs.constants.constants import Backend
-    from openhcs.core.step_dependencies import StepInputDependency
 
     request, _ = _stored_primary_fixture(preserves_main_flow=True)
     first = replace(
@@ -656,7 +653,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
         step_index=1,
         step_scope_id="first",
         write_backend=Backend.MEMORY.value,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=2, source_step_scope_id="second"
         ),
     )
@@ -664,7 +661,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
         first,
         step_index=2,
         step_scope_id="second",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1, source_step_scope_id="first"
         ),
     )
@@ -674,7 +671,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
     second.streaming_configs = {"viewer": object()}
     assert first.requires_main_flow_checkpoint(plans)
     assert second.requires_main_flow_checkpoint(plans)
-    first.main_input_dependency = StepInputDependency.step_output(
+    first.main_input_dependency = StepOutputInput(
         source_step_index=1, source_step_scope_id="first"
     )
     assert not first.requires_main_flow_checkpoint({1: first})
@@ -682,7 +679,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
         first,
         step_index=0,
         step_scope_id="self",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="self"
         ),
     )
@@ -778,7 +775,6 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     from openhcs.core.memory.decorators import numpy as numpy_memory
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.step_dependencies import StepInputDependency
 
     request, paths, payload = _fixture()
     binding = NamedSourceBinding(alias="Raw", origin=FromPipelineStart)
@@ -805,7 +801,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
         ),
         source_bindings=bindings,
     )
-    request.execution_plan.main_input_dependency = StepInputDependency.pipeline_start()
+    request.execution_plan.main_input_dependency = PipelineStartInput()
     request.execution_plan.source_binding_plan = CompiledSourceBindingPlan(bindings=(binding,))
     request.execution_plan.compiled_function_pattern = pattern
     request = replace(request, compiled_group=pattern.default_group)
@@ -862,7 +858,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
 
     # A source role by itself cannot turn a predecessor's transformed pixels
     # into the original pipeline-start source.
-    request.execution_plan.main_input_dependency = StepInputDependency.step_output(
+    request.execution_plan.main_input_dependency = StepOutputInput(
         source_step_index=0, source_step_scope_id="predecessor",
     )
     assert edge.resolve_unstored_payload(executor, payload, request=adapter) is original

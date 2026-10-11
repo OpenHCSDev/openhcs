@@ -100,7 +100,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
 )
@@ -931,7 +931,7 @@ def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> Non
     )
     consumer = SimpleNamespace(
         axis_id="A14",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=3,
             source_step_scope_id="enhance",
         ),
@@ -1019,7 +1019,7 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     )
     consumer = SimpleNamespace(
         axis_id="A14",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="mask_image",
         ),
@@ -1097,7 +1097,7 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     )
     consumer = SimpleNamespace(
         axis_id="A14",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
@@ -1197,7 +1197,7 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=3,
             source_step_scope_id="crop_red",
         ),
@@ -1293,7 +1293,7 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=2,
             source_step_scope_id="image_set",
         ),
@@ -1354,7 +1354,7 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
 def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() -> None:
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
@@ -1382,7 +1382,7 @@ def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() ->
 def test_step_output_manifest_preserves_pipeline_start_source_bound_anchor() -> None:
     consumer = SimpleNamespace(
         axis_id="A14",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=(NamedSourceBinding(alias="OrigActin_Golgi_Membrane"),)
         ),
@@ -1410,7 +1410,7 @@ def test_step_output_manifest_preserves_pipeline_start_source_bound_anchor() -> 
 
 def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
     plan = SimpleNamespace(
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="mask_image",
         ),
@@ -1435,7 +1435,7 @@ def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
 def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
     plan = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="object_to_image",
         ),
@@ -1475,7 +1475,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         axis_id="A01",
         step_index=4,
         step_name="IdentifySecondaryObjects",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=3,
             source_step_scope_id="identify_primary",
         ),
@@ -1549,7 +1549,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         axis_id="A01",
         step_index=2,
         step_name="IdentifyPrimaryObjects",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="crop_green_red",
         ),
@@ -1624,7 +1624,7 @@ def test_artifact_managed_missing_output_context_is_an_error(
 def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> None:
     plan = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="crop",
         ),
@@ -1660,7 +1660,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
 
 def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
     plan = SimpleNamespace(
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
             component=Microscopy.Channel,
@@ -1741,7 +1741,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         axis_id="A01",
         step_index=0,
         step_name="SourceBoundAnchorFilter",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
@@ -1907,7 +1907,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         axis_id="A01",
         step_index=16,
         step_name="SaveImages",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("3",),
@@ -1965,7 +1965,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         axis_id="A01",
         step_index=0,
         step_name="ExactSourceInput",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
@@ -2019,7 +2019,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
         axis_id="A01",
         step_index=0,
         step_name="ExactSourceInput",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
@@ -2068,7 +2068,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
     )
     plan = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=bindings),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("MCP_DNA", "MCP_AGP"),
@@ -2185,7 +2185,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     executor = FunctionStepExecutor(context, 0)
     grouped_patterns = executor._prepare_groups(executor._detect_patterns())
 
-    assert executor.plan.main_input_dependency == StepInputDependency.pipeline_start()
+    assert executor.plan.main_input_dependency == PipelineStartInput()
     assert executor.plan.source_binding_plan.has_primary_content
     assert grouped_patterns == {
         "MCP_DNA": ("A01_s{iii}_w1_z001_t001.tif",),
@@ -2251,7 +2251,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
     )
     plan = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
         execution_group_value=None,
         execution_group_scope=ComponentGroupScope.ungrouped(),
@@ -3282,7 +3282,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
         component_value="1",
     )
 
-    assert consumer_plan.main_input_dependency == StepInputDependency.pipeline_start()
+    assert consumer_plan.main_input_dependency == PipelineStartInput()
     assert tuple(
         binding.alias
         for binding in consumer_plan.source_binding_plan.binding_declarations
@@ -3673,7 +3673,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
         execution_plan=SimpleNamespace(
             axis_id="A01",
             execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            main_input_dependency=StepInputDependency.pipeline_start(),
+            main_input_dependency=PipelineStartInput(),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
             variable_component_values=(Microscopy.Site.name,),
@@ -3769,7 +3769,7 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
             step_index=0,
             step_name="MetaXpress",
             axis_id="A01",
-            main_input_dependency=StepInputDependency.pipeline_start(),
+            main_input_dependency=PipelineStartInput(),
             source_binding_plan=selected_plan,
         ),
         compiled_group=compile_function_pattern(
@@ -3890,7 +3890,7 @@ def test_step_output_load_filter_skips_source_binding_filter() -> None:
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
     plan = SimpleNamespace(
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="mask_image",
         ),
@@ -3925,7 +3925,7 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
     plan = SimpleNamespace(
         axis_id="A01",
         execution_group_scope=ComponentGroupScope.ungrouped(),
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
     runtime = PatternGroupExecutionRequest(
@@ -4058,7 +4058,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         read_backend="memory",
         input_memory_type="numpy",
         variable_components=(),
-        main_input_dependency=StepInputDependency.pipeline_start(),
+        main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
     )
     context = SimpleNamespace(
@@ -4165,7 +4165,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         input_memory_type="numpy",
         variable_components=(Microscopy.ZIndex,),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="producer",
         ),
@@ -4238,7 +4238,7 @@ def test_artifact_managed_group_uses_compiler_group_without_filtering_anchor_fil
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
-            main_input_dependency=StepInputDependency.pipeline_start(),
+            main_input_dependency=PipelineStartInput(),
         ),
         component_value="1",
         context=SimpleNamespace(),
@@ -4262,7 +4262,7 @@ def test_step_output_group_does_not_reinterpret_producer_path_component() -> Non
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
-            main_input_dependency=StepInputDependency.step_output(
+            main_input_dependency=StepOutputInput(
                 source_step_index=4,
                 source_step_scope_id="object_to_image",
             ),
@@ -4312,7 +4312,7 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="correct_illumination",
         ),
@@ -4431,7 +4431,7 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=2,
             source_step_scope_id="align",
         ),
@@ -4500,7 +4500,7 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
@@ -4595,7 +4595,7 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
@@ -4666,7 +4666,7 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
@@ -4750,7 +4750,7 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
@@ -4818,7 +4818,7 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=2,
             source_step_scope_id="identify_primary",
         ),
@@ -4879,7 +4879,7 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=4,
             source_step_scope_id="correct_illumination_apply",
         ),
@@ -5628,7 +5628,7 @@ def qualified_producer_manifest(tmp_path):
     )
     consumer = SimpleNamespace(
         axis_id="A01",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="producer"
         ),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
@@ -5830,7 +5830,7 @@ def test_producer_loader_validates_ambiguity_before_cache(
         input_dir=Path("/memory"),
         input_memory_type="numpy",
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=0,
             source_step_scope_id="producer",
         ),

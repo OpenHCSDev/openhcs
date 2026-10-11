@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache
 from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
 
@@ -104,13 +103,6 @@ def _source_filters_match_cached(
     return all(any_group_matches.values())
 
 
-class SourceImageSetComponentRole(Enum):
-    """Semantic role of a source metadata component within an image set."""
-
-    IMAGE_SET_AXIS = "image_set_axis"
-    IMAGE_PLANE_MEMBER = "image_plane_member"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceImageSetIdentityPolicy:
     """Nominal policy for reducing source plane metadata to image-set identity."""
@@ -124,18 +116,12 @@ class SourceImageSetIdentityPolicy:
             frozenset(self.plane_member_components),
         )
 
-    def role(self, component: type[Axis]) -> SourceImageSetComponentRole:
-        """Return whether a component identifies the image set or a plane in it."""
-        if component in self.plane_member_components:
-            return SourceImageSetComponentRole.IMAGE_PLANE_MEMBER
-        return SourceImageSetComponentRole.IMAGE_SET_AXIS
-
     def identity_components(self) -> tuple[type[Axis], ...]:
         """Return generated source components that identify one image set."""
         return tuple(
             component
             for component in AxisFamily.active().axes
-            if self.role(component) is SourceImageSetComponentRole.IMAGE_SET_AXIS
+            if self.is_identity_component(component)
         )
 
     @classmethod
@@ -157,8 +143,8 @@ class SourceImageSetIdentityPolicy:
         return cls(frozenset(plane_member_components))
 
     def is_identity_component(self, component: type[Axis]) -> bool:
-        """Return whether a metadata component participates in image-set identity."""
-        return self.role(component) is SourceImageSetComponentRole.IMAGE_SET_AXIS
+        """Whether a component identifies the image set, not a plane within it."""
+        return component not in self.plane_member_components
 
     def including_source_bindings(
         self,
