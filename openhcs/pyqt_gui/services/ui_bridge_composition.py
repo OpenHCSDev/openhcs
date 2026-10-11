@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiAgentBridgeService,
@@ -18,13 +18,16 @@ from openhcs.pyqt_gui.services.ui_bridge_registry import (
 )
 
 
+if TYPE_CHECKING:
+    from openhcs.authoring.session.session import Session
+
+
 @dataclass(frozen=True, slots=True)
 class OpenHCSUiBridgeCompositionRoot:
     """Build a UI bridge service from registered provider sets."""
 
     provider_set: UiBridgeProviderSetABC
-    object_state_mutation_authorizer: Callable[[str], None]
-    snapshot_restore_authorizer: Callable[[], None]
+    session: "Session"
 
     @classmethod
     def for_main_window(cls, main_window) -> "OpenHCSUiBridgeCompositionRoot":
@@ -36,17 +39,12 @@ class OpenHCSUiBridgeCompositionRoot:
                     if provider_set_type.compose_for_main_window
                 )
             ),
-            (
-                main_window.session.require_definition_mutation_allowed_for_object_scope
-            ),
-            (
-                main_window.session.require_definition_mutation_allowed
-            ),
+            main_window.session,
         )
 
     def build_service(self) -> UiAgentBridgeService:
         snapshot_provider = UiObjectStateSnapshotProvider(
-            before_restore=self.snapshot_restore_authorizer,
+            before_restore=self.session.require_definition_mutation_allowed,
         )
         operation_tracker = UiBridgeOperationTracker()
         registry = UiBridgeSurfaceRegistry()
@@ -61,5 +59,8 @@ class OpenHCSUiBridgeCompositionRoot:
             registry=registry,
             snapshot_provider=snapshot_provider,
             operation_tracker=operation_tracker,
-            object_state_mutation_authorizer=(self.object_state_mutation_authorizer),
+            object_state_mutation_authorizer=(
+                self.session.require_definition_mutation_allowed_for_object_scope
+            ),
+            session=self.session,
         )

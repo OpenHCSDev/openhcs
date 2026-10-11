@@ -70,11 +70,8 @@ from openhcs.agent.dto.ui_bridge import (
     EMBEDDED_WINDOW_KIND,
     MANAGED_WINDOW_KIND,
     QT_TOP_LEVEL_WINDOW_KIND,
-    UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
-    UiActionInvokeResult,
     UiActionSummary,
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
@@ -119,6 +116,7 @@ from openhcs.agent.ui_bridge_identities import (
     ManagedWindowWidgetIdentity,
 )
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+    UiActionDispatch,
     UiActionProviderABC,
     UiActionProviderIdentity,
     UiLiveOverviewWidget,
@@ -2818,12 +2816,10 @@ class ManagedWindowActionProvider(UiActionProviderABC):
     """Action provider for generic WindowManager-managed form windows."""
 
     identity = MANAGED_WINDOW_ACTION_PROVIDER_IDENTITY
+    dispatch_error_code = "managed_window_action_failed"
 
-    def catalog(self) -> UiActionCatalog:
-        return UiActionCatalog(
-            schema_version=SCHEMA_VERSION,
-            actions=tuple(self.summary(action.value) for action in ManagedWindowAction),
-        )
+    def action_ids(self) -> tuple[str, ...]:
+        return tuple(action.value for action in ManagedWindowAction)
 
     def summary(self, action_id: str) -> UiActionSummary:
         action = self._action(action_id)
@@ -2845,60 +2841,15 @@ class ManagedWindowActionProvider(UiActionProviderABC):
             target_scope_ids=target_scope_ids,
         )
 
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
-        try:
-            action = self._action(request.action_id)
-            target_scope_id = self._single_target_scope_id(request)
-            window = self._target_window(target_scope_id, action)
-        except Exception as exc:
-            return self._invoke_error(
-                request,
-                AgentError.from_exception("managed_window_action_rejected", exc),
-            )
-
-        if action.confirmation_required and request.confirmation_is_required():
-            return self._invoke_error(
-                request,
-                AgentError(
-                    code="confirmation_required",
-                    message=(
-                        "Managed-window actions save, discard, or close UI state; "
-                        "set require_confirmation=False to dispatch one."
-                    ),
-                ),
-            )
-
-        try:
-            action.dispatch(window)
-        except Exception as exc:
-            return self._invoke_error(
-                request,
-                AgentError.from_exception("managed_window_action_failed", exc),
-            )
-
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=action.value,
-            ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
-            receipt=UiMutationReceipt.accepted_for(request.request_token),
-            target_scope_ids=request.selected_scope_ids,
-        )
+    def dispatch(self, request: UiActionInvokeRequest) -> UiActionDispatch:
+        action = self._action(request.action_id)
+        (target_scope_id,) = request.selected_scope_ids
+        action.dispatch(self._target_window(target_scope_id, action))
+        return UiActionDispatch()
 
     @staticmethod
     def _action(action_id: str) -> ManagedWindowAction:
         return ManagedWindowAction(action_id)
-
-    @staticmethod
-    def _single_target_scope_id(request: UiActionInvokeRequest) -> str:
-        target_scope_ids = request.selected_scope_ids
-        if len(target_scope_ids) != 1:
-            raise ValueError(
-                "Managed-window actions require exactly one target_scope_ids entry."
-            )
-        return target_scope_ids[0]
 
     @staticmethod
     def _target_window(
@@ -2933,22 +2884,6 @@ class ManagedWindowActionProvider(UiActionProviderABC):
             return False
         return action.is_supported(window.managed_window_action_capabilities())
 
-    def _invoke_error(
-        self,
-        request: UiActionInvokeRequest,
-        error: AgentError,
-    ) -> UiActionInvokeResult:
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=request.widget_id,
-                action_id=request.action_id,
-            ),
-            status=UiActionInvocationStatus.REJECTED.value,
-            receipt=UiMutationReceipt.rejected_for(request.request_token),
-            target_scope_ids=request.selected_scope_ids,
-            errors=(error,),
-        )
 
 
 @dataclass(frozen=True, slots=True)

@@ -18,6 +18,9 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeSummary,
     UiSemanticAddress,
 )
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeListObjectStateScopesOperation,
+)
 from openhcs.agent.services.object_state_field_help_service import (
     ObjectStateFieldHelpService,
 )
@@ -51,7 +54,8 @@ def test_object_state_field_help_projects_declaration_owned_enum_inputs() -> Non
     target_name = f"{EnumHelpConfig.__module__}.{EnumHelpConfig.__qualname__}"
 
     class _UiBridgeService:
-        def list_object_state_scopes(self, request, connection):
+        def invoke(self, operation, request, connection):
+            assert operation is UiBridgeListObjectStateScopesOperation
             assert connection == "ui-connection"
             assert request.field_paths == ("mode",)
             return UiObjectStateScopeCatalog(
@@ -168,7 +172,8 @@ def test_object_state_field_help_describes_structured_callable_values():
             )
 
     class _UiBridgeService:
-        def list_object_state_scopes(self, request, connection):
+        def invoke(self, operation, request, connection):
+            assert operation is UiBridgeListObjectStateScopesOperation
             assert connection == "ui-connection"
             assert request.include_field_values is True
             assert request.include_field_descriptions is True
@@ -353,7 +358,8 @@ def test_object_state_field_help_describes_runtime_supplied_function_parameter()
             )
 
     class _UiBridgeService:
-        def list_object_state_scopes(self, request, connection):
+        def invoke(self, operation, request, connection):
+            assert operation is UiBridgeListObjectStateScopesOperation
             assert connection == "ui-connection"
             assert request.include_field_values is True
             assert request.include_field_descriptions is True

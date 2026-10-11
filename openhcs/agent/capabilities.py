@@ -38,6 +38,7 @@ from openhcs.agent.dto.authoring import (
 from openhcs.agent.dto.common import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     SCHEMA_VERSION,
+    AgentDataclassCliRequest,
     RenderedSource,
 )
 from openhcs.agent.dto.config import (
@@ -80,6 +81,38 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.authoring.session.operations import HeadlessOperation, SessionOperation
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeApplyDocumentOperation,
+    UiBridgeCloseWindowOperation,
+    UiBridgeFocusWindowOperation,
+    UiBridgeGetDocumentOperation,
+    UiBridgeGetObjectStateFieldsOperation,
+    UiBridgeGetOperationStatusOperation,
+    UiBridgeGetStateSurfaceOperation,
+    UiBridgeInvokeActionOperation,
+    UiBridgeInvokeWidgetActionOperation,
+    UiBridgeListActionsOperation,
+    UiBridgeListBranchesOperation,
+    UiBridgeListDocumentsOperation,
+    UiBridgeListObjectStateScopesOperation,
+    UiBridgeListSnapshotsOperation,
+    UiBridgeListStateSurfacesOperation,
+    UiBridgeListWindowsOperation,
+    UiBridgeMutateObjectStateFieldOperation,
+    UiBridgeNavigateWindowOperation,
+    UiBridgeOperation,
+    UiBridgeRequestlessOperation,
+    UiBridgeRestoreSnapshotOperation,
+    UiBridgeSelectedPlateWorkflowOperation,
+    UiBridgeSessionEventsOperation,
+    UiBridgeSnapshotWindowOperation,
+    UiBridgeStatusOperation,
+    UiBridgeSwitchBranchOperation,
+    UiBridgeTimeTravelHeadOperation,
+    UiBridgeValidateDocumentOperation,
+    UiBridgeWaitForOperationReceiptOperation,
+    UiBridgeWidgetTreeOperation,
+)
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
@@ -130,53 +163,9 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationResult,
 )
 from openhcs.agent.dto.ui_bridge import (
-    UiActionCatalog,
-    UiActionInvokeRequest,
-    UiActionInvokeResult,
-    UiBranchCatalog,
-    UiBranchSwitchRequest,
     UiBridgeCatalog,
-    UiBridgeOperationRef,
-    UiBridgeOperationWaitRequest,
-    UiBridgeStatus,
-    UiCodeDocument,
-    UiCodeDocumentApplyRequest,
-    UiCodeDocumentApplyResult,
-    UiCodeDocumentCatalog,
-    UiCodeDocumentRequest,
-    UiCodeDocumentValidationRequest,
-    UiCodeDocumentValidationResult,
     UiObjectStateFieldHelpQuery,
     UiObjectStateFieldHelpResult,
-    UiObjectStateFieldListQuery,
-    UiObjectStateFieldListResult,
-    UiObjectStateFieldMutationRequest,
-    UiObjectStateFieldMutationResult,
-    UiObjectStateScopeCatalog,
-    UiObjectStateScopeListRequest,
-    UiSelectedPlateWorkflowRequest,
-    UiSelectedPlateWorkflowResult,
-    UiSnapshotCatalog,
-    UiSnapshotListRequest,
-    UiSnapshotRestoreRequest,
-    UiSnapshotRestoreResult,
-    UiStateSurfaceCatalog,
-    UiStateSurfaceDocument,
-    UiStateSurfaceRequest,
-    UiTimeTravelHeadRequest,
-    UiWidgetActionInvokeRequest,
-    UiWidgetActionInvokeResult,
-    UiWidgetTreeRequest,
-    UiWidgetTreeResult,
-    UiWindowCatalog,
-    UiWindowCloseRequest,
-    UiWindowCloseResult,
-    UiWindowFocusRequest,
-    UiWindowFocusResult,
-    UiWindowNavigateRequest,
-    UiWindowNavigateResult,
-    UiWindowSnapshotRequest,
-    UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
     ViewerWindowPolylineMeasurementRequest,
@@ -1163,16 +1152,6 @@ class AgentConfigPatchServiceInvocation(
     __slots__ = ()
 
 
-class AgentConnectionServiceInvocation(AgentUiConnectionMixin, AgentServiceInvocation):
-    __slots__ = ()
-
-
-class AgentConnectionScalarServiceInvocation(
-    AgentUiConnectionMixin,
-    AgentScalarInputMixin,
-    AgentServiceInvocation,
-):
-    __slots__ = ()
 
 
 class AgentConnectionRequestServiceInvocation(
@@ -1182,14 +1161,6 @@ class AgentConnectionRequestServiceInvocation(
 ):
     __slots__ = ()
 
-
-class AgentUiWidgetTreeServiceInvocation(
-    AgentUiConnectionMixin,
-    AgentCompactActionsProjectionMixin,
-    AgentFromFieldsInputMixin,
-    AgentServiceInvocation,
-):
-    __slots__ = ()
 
 
 class AgentViewerWindowConnectionServiceInvocation(
@@ -1680,8 +1651,52 @@ class HeadlessExecutionCapability(AgentCapabilityDeclaration):
     )
 
 
+@dataclass(frozen=True, slots=True)
+class UiBridgeOperationExecution(AgentCapabilityInvocation):
+    """Run one UI-bridge operation through the context's bridge service."""
+
+    operation: type[UiBridgeOperation]
+
+    def execute(self, context: object, *arguments: object) -> object:
+        *request, connection = arguments
+        return context.ui_bridge_service.invoke(self.operation, *request, connection)
+
+
+@dataclass(frozen=True, slots=True)
+class UiBridgeOperationInvocation(AgentUiConnectionMixin, UiBridgeOperationExecution):
+    """An operation that takes no request."""
+
+
+@dataclass(frozen=True, slots=True)
+class UiBridgeRequestOperationInvocation(
+    AgentUiConnectionMixin, AgentFromFieldsInputMixin, UiBridgeOperationExecution
+):
+    """An operation on the request built from its ``from_fields`` parameters."""
+
+
+@dataclass(frozen=True, slots=True)
+class UiBridgeDataclassRequestOperationInvocation(
+    AgentUiConnectionMixin, AgentDataclassInputMixin, UiBridgeOperationExecution
+):
+    """An operation on the dataclass request whose fields are its parameters."""
+
+
+@dataclass(frozen=True, slots=True)
+class UiBridgeWidgetTreeInvocation(
+    AgentUiConnectionMixin,
+    AgentCompactActionsProjectionMixin,
+    AgentFromFieldsInputMixin,
+    UiBridgeOperationExecution,
+):
+    """Widget-tree operation whose result is compacted for MCP."""
+
+
 class UiBridgeCapability(AgentCapabilityDeclaration):
-    """Capability that targets the running PyQt UI bridge."""
+    """Capability that targets the running PyQt UI bridge.
+
+    A subclass naming an ``operation`` takes its input, output, invocation and
+    requirements from that operation.
+    """
 
     exposition = AgentCapabilityExposition(
         workflow_group=CapabilityWorkflowGroup.UI_CONTROL,
@@ -1689,6 +1704,35 @@ class UiBridgeCapability(AgentCapabilityDeclaration):
         target_context=CapabilityTargetContext.UI_BRIDGE,
         visibility=CapabilityVisibility.STANDARD,
     )
+    operation: ClassVar[type[UiBridgeOperation]]
+    invocation_type: ClassVar[type[UiBridgeOperationExecution] | None] = None
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        operation = cls.__dict__.get("operation")
+        if operation is None:
+            return
+        cls.service = "ui_bridge"
+        cls.output_contract = operation.result_type
+        if issubclass(operation, UiBridgeRequestlessOperation):
+            cls.input_contract = None
+            cls.invocation = UiBridgeOperationInvocation(operation)
+        else:
+            cls.input_contract = operation.request_type
+            cls.invocation = (
+                cls.invocation_type
+                or (
+                    UiBridgeDataclassRequestOperationInvocation
+                    if issubclass(operation.request_type, AgentDataclassCliRequest)
+                    else UiBridgeRequestOperationInvocation
+                )
+            )(operation)
+        if "runtime_requirements" not in cls.__dict__:
+            cls.runtime_requirements = ("running_openhcs_ui_bridge",)
+        if "security_requirements" not in cls.__dict__:
+            cls.security_requirements = (
+                ("ui_bridge_auth_token",) if operation.requires_auth else ()
+            )
 
 
 class UiSelectedPlateCapability(UiBridgeCapability):
@@ -1876,7 +1920,6 @@ def _jsonable_agent_capability_registry(
 
 TOPIC_ID_INPUT = AgentScalarInputContract("topic_id", default_value="pipeline_model")
 SYMBOL_ID_INPUT = AgentScalarInputContract("symbol_id")
-OPERATION_ID_INPUT = AgentScalarInputContract("operation_id")
 
 
 class CapabilitiesResourceCapability(
@@ -3379,16 +3422,10 @@ class UiBridgeStatusCapability(UiBridgeCapability):
     cli_command = "ui-status"
     title = "Get UI bridge status"
     description = "Reports whether a local running OpenHCS PyQt UI bridge is reachable."
-    service = "ui_bridge"
+    operation = UiBridgeStatusOperation
     exposition = UiBridgeCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.DIAGNOSTIC,
         role=CapabilityRole.DIAGNOSTIC,
-    )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    output_contract = UiBridgeStatus
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.status(connection),
     )
 
 
@@ -3399,14 +3436,7 @@ class UiListCodeDocumentsCapability(UiCodeDocumentCapability):
     description = (
         "Lists UI code documents with identity.document_id values for follow-up calls."
     )
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    output_contract = UiCodeDocumentCatalog
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.list_documents(connection),
-    )
+    operation = UiBridgeListDocumentsOperation
 
 
 class UiListStateSurfacesCapability(UiSelectedPlateCapability):
@@ -3417,17 +3447,10 @@ class UiListStateSurfacesCapability(UiSelectedPlateCapability):
         "Lists pollable domain state surfaces, including workflow status and live "
         "measurement results, with identity.surface_id values for follow-up reads."
     )
-    service = "ui_bridge"
+    operation = UiBridgeListStateSurfacesOperation
     exposition = UiSelectedPlateCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.STATUS,
         role=CapabilityRole.PRIMARY,
-    )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    output_contract = UiStateSurfaceCatalog
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.list_state_surfaces(connection),
     )
 
 
@@ -3439,23 +3462,12 @@ class UiGetStateSurfaceCapability(UiSelectedPlateCapability):
         "Reads or polls one typed UI domain state surface such as plate-manager "
         "status rows or bounded live measurement tables."
     )
-    service = "ui_bridge"
+    operation = UiBridgeGetStateSurfaceOperation
     exposition = UiSelectedPlateCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.STATUS,
         role=CapabilityRole.PRIMARY,
     )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
     data_exposure = ("local_paths",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiStateSurfaceRequest
-    output_contract = UiStateSurfaceDocument
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.get_state_surface(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiListActionsCapability(UiSemanticActionCapability):
@@ -3463,14 +3475,7 @@ class UiListActionsCapability(UiSemanticActionCapability):
     cli_command = "actions"
     title = "List UI actions"
     description = "Lists invokable UI actions with identity.widget_id/action_id values."
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    output_contract = UiActionCatalog
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.list_actions(connection),
-    )
+    operation = UiBridgeListActionsOperation
 
 
 class UiInvokeActionCapability(UiSemanticActionCapability):
@@ -3479,23 +3484,12 @@ class UiInvokeActionCapability(UiSemanticActionCapability):
     title = "Invoke UI action"
     description = (
         "Dispatches one running-UI action using the selection_revision_token from "
-        f"{UiListActionsCapability.name}; workflow progress is polled through "
-        "related state surfaces."
+        f"{UiListActionsCapability.name}; follow the work it starts with "
+        "openhcs_ui_session_events from the returned event_sequence."
     )
-    service = "ui_bridge"
+    operation = UiBridgeInvokeActionOperation
     mutating = True
     side_effects = ("may_mutate_running_ui_state", "may_start_ui_workflow")
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiActionInvokeRequest
-    output_contract = UiActionInvokeResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.invoke_action(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiSelectedPlateWorkflowCapability(UiSelectedPlateCapability):
@@ -3507,24 +3501,13 @@ class UiSelectedPlateWorkflowCapability(UiSelectedPlateCapability):
         "selection through the UI bridge, preserving user-visible plate rows, "
         "ObjectState snapshots, selected state, and output-plate auto-add."
     )
-    service = "ui_bridge"
+    operation = UiBridgeSelectedPlateWorkflowOperation
     exposition = UiSelectedPlateCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.EXECUTION,
         role=CapabilityRole.PRIMARY,
     )
     mutating = True
     side_effects = ("may_mutate_running_ui_state", "may_start_ui_workflow")
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiSelectedPlateWorkflowRequest
-    output_contract = UiSelectedPlateWorkflowResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.selected_plate_workflow(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiListWindowsCapability(UiWindowCapability):
@@ -3532,34 +3515,16 @@ class UiListWindowsCapability(UiWindowCapability):
     cli_command = "windows"
     title = "List UI windows"
     description = "Lists visible/focusable UI windows with identity.window_id values."
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    output_contract = UiWindowCatalog
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.list_windows(connection),
-    )
+    operation = UiBridgeListWindowsOperation
 
 
 class UiFocusWindowCapability(UiWindowCapability):
     name = "openhcs_ui_focus_window"
     title = "Focus UI window"
     description = "Focuses one running UI window by stable window id or open ObjectState scope id."
-    service = "ui_bridge"
+    operation = UiBridgeFocusWindowOperation
     mutating = True
     side_effects = ("changes_running_ui_focus",)
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiWindowFocusRequest
-    output_contract = UiWindowFocusResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.focus_window(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiNavigateWindowCapability(UiWindowCapability):
@@ -3571,23 +3536,12 @@ class UiNavigateWindowCapability(UiWindowCapability):
         "the item_id from its current state surface. Using an ObjectState scope "
         "as window_id opens that scope's editor; it does not select a manager row."
     )
-    service = "ui_bridge"
+    operation = UiBridgeNavigateWindowOperation
     mutating = True
     side_effects = (
         "changes_running_ui_focus",
         "may_open_running_ui_window",
         "may_mutate_running_ui_state",
-    )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiWindowNavigateRequest
-    output_contract = UiWindowNavigateResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.navigate_window(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3597,20 +3551,9 @@ class UiCloseWindowCapability(UiWindowCapability):
     description = (
         "Requests a normal close for one visible UI bridge window by stable window id."
     )
-    service = "ui_bridge"
+    operation = UiBridgeCloseWindowOperation
     mutating = True
     side_effects = ("closes_running_ui_window",)
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiWindowCloseRequest
-    output_contract = UiWindowCloseResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.close_window(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiSnapshotWindowCapability(UiWindowCapability):
@@ -3625,21 +3568,11 @@ class UiSnapshotWindowCapability(UiWindowCapability):
         "no_flash requires an inactive baseline and observes target-window starts "
         "and paint frames across the bounded interval."
     )
-    service = "ui_bridge"
+    operation = UiBridgeSnapshotWindowOperation
     mutating = True
     side_effects = ("writes_agent_output_file",)
-    runtime_requirements = ("running_openhcs_ui_bridge",)
     data_exposure = ("ui_screenshot", "local_output_path")
     security_requirements = ("ui_bridge_auth_token", "agent_path_policy")
-    input_contract = UiWindowSnapshotRequest
-    output_contract = UiWindowSnapshotResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.snapshot_window(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiGetWidgetTreeCapability(UiWidgetFallbackCapability):
@@ -3651,8 +3584,8 @@ class UiGetWidgetTreeCapability(UiWidgetFallbackCapability):
         "UI window, including visible text, enabled state, clickable "
         "geometry, and action kinds for blind interaction."
     )
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
+    operation = UiBridgeWidgetTreeOperation
+    invocation_type = UiBridgeWidgetTreeInvocation
     data_exposure = (
         "ui_widget_tree",
         "ui_clickable_geometry",
@@ -3660,16 +3593,6 @@ class UiGetWidgetTreeCapability(UiWidgetFallbackCapability):
         "ui_widget_enabled_state",
         "ui_action_kinds",
         "object_state_resolved_value_previews",
-    )
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiWidgetTreeRequest
-    output_contract = UiWidgetTreeResult
-    invocation = AgentUiWidgetTreeServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.widget_tree(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3681,20 +3604,9 @@ class UiInvokeWidgetActionCapability(UiWidgetFallbackCapability):
         "Invokes one generic projected Qt widget action by window id, "
         "widget-tree path id, and action kind."
     )
-    service = "ui_bridge"
+    operation = UiBridgeInvokeWidgetActionOperation
     mutating = True
     side_effects = ("mutates_running_ui",)
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiWidgetActionInvokeRequest
-    output_contract = UiWidgetActionInvokeResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.invoke_widget_action(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiListObjectStateScopesCapability(UiObjectStateCapability):
@@ -3706,23 +3618,12 @@ class UiListObjectStateScopesCapability(UiObjectStateCapability):
         "Set scope_visibility.include_system_scopes=true to include global "
         "configuration and root system scopes."
     )
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
+    operation = UiBridgeListObjectStateScopesOperation
     data_exposure = (
         "object_state_scope_ids",
         "object_type_names",
         "object_state_field_markers",
         "object_state_resolved_value_previews",
-    )
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiObjectStateScopeListRequest
-    output_contract = UiObjectStateScopeCatalog
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.list_object_state_scopes(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3734,23 +3635,12 @@ class UiGetObjectStateFieldsCapability(UiObjectStateCapability):
         "Returns compact ObjectState field rows with raw/resolved previews, "
         "dirty/default markers, inheritance flags, and provenance."
     )
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
+    operation = UiBridgeGetObjectStateFieldsOperation
     data_exposure = (
         "object_state_scope_ids",
         "object_state_field_markers",
         "object_state_resolved_value_previews",
         "object_state_field_provenance",
-    )
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiObjectStateFieldListQuery
-    output_contract = UiObjectStateFieldListResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.get_object_state_fields(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3795,9 +3685,8 @@ class UiMutateObjectStateFieldCapability(UiObjectStateCapability):
         "running UI. Save/commit remains explicit through managed-window "
         "save actions so agents can observe dirty/default feedback first."
     )
-    service = "ui_bridge"
+    operation = UiBridgeMutateObjectStateFieldOperation
     mutating = True
-    runtime_requirements = ("running_openhcs_ui_bridge",)
     side_effects = ("mutates_object_state", "records_object_state_snapshot")
     data_exposure = (
         "object_state_scope_ids",
@@ -3805,16 +3694,6 @@ class UiMutateObjectStateFieldCapability(UiObjectStateCapability):
         "object_state_field_markers",
         "object_state_raw_value_previews",
         "object_state_resolved_value_previews",
-    )
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiObjectStateFieldMutationRequest
-    output_contract = UiObjectStateFieldMutationResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.mutate_object_state_field(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3828,19 +3707,8 @@ class UiGetCodeDocumentCapability(UiCodeDocumentCapability):
         "clean source; clean=False returns the full resolved pycodified "
         "object including defaults and inherited values."
     )
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
+    operation = UiBridgeGetDocumentOperation
     data_exposure = ("local_paths_in_source",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiCodeDocumentRequest
-    output_contract = UiCodeDocument
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.get_document(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiValidateCodeDocumentCapability(UiCodeDocumentCapability):
@@ -3848,19 +3716,8 @@ class UiValidateCodeDocumentCapability(UiCodeDocumentCapability):
     cli_command = "validate-code-document"
     title = "Validate UI code document"
     description = "Validates an edited UI code document through the bridge source policy without mutating UI state."
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
+    operation = UiBridgeValidateDocumentOperation
     data_exposure = ("local_paths_in_source",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiCodeDocumentValidationRequest
-    output_contract = UiCodeDocumentValidationResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.validate_document(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiApplyCodeDocumentCapability(UiCodeDocumentCapability):
@@ -3872,25 +3729,14 @@ class UiApplyCodeDocumentCapability(UiCodeDocumentCapability):
         "with revision protection, returning the resulting ObjectState snapshot, "
         "undo snapshot, and revision tokens."
     )
-    service = "ui_bridge"
+    operation = UiBridgeApplyDocumentOperation
     mutating = True
     side_effects = ("mutates_running_ui_state",)
-    runtime_requirements = ("running_openhcs_ui_bridge",)
     data_exposure = (
         "local_paths_in_source",
         "ui_revision_tokens",
         "object_state_snapshot_refs",
         "object_state_undo_targets",
-    )
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiCodeDocumentApplyRequest
-    output_contract = UiCodeDocumentApplyResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.apply_document(
-            request,
-            connection,
-        ),
     )
 
 
@@ -3898,18 +3744,7 @@ class UiListSnapshotsCapability(UiSnapshotCapability):
     name = "openhcs_ui_list_snapshots"
     title = "List UI snapshots"
     description = "Lists ObjectState snapshots visible to the running UI bridge."
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiSnapshotListRequest
-    output_contract = UiSnapshotCatalog
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.list_snapshots(
-            request,
-            connection,
-        ),
-    )
+    operation = UiBridgeListSnapshotsOperation
 
 
 class UiRestoreSnapshotCapability(UiSnapshotCapability):
@@ -3919,54 +3754,25 @@ class UiRestoreSnapshotCapability(UiSnapshotCapability):
         "Performs snapshot restoration by returning the running UI to a selected "
         "ObjectState snapshot through the bridge."
     )
-    service = "ui_bridge"
+    operation = UiBridgeRestoreSnapshotOperation
     mutating = True
     side_effects = ("mutates_running_ui_state", "time_travels_ui_state")
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiSnapshotRestoreRequest
-    output_contract = UiSnapshotRestoreResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.restore_snapshot(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiTimeTravelHeadCapability(UiSnapshotCapability):
     name = "openhcs_ui_time_travel_head"
     title = "Return UI to current head"
     description = "Returns the running UI from ObjectState time travel to the current branch head."
-    service = "ui_bridge"
+    operation = UiBridgeTimeTravelHeadOperation
     mutating = True
     side_effects = ("mutates_running_ui_state", "time_travels_ui_state")
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiTimeTravelHeadRequest
-    output_contract = UiSnapshotRestoreResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.time_travel_head(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiListBranchesCapability(UiSnapshotCapability):
     name = "openhcs_ui_list_branches"
     title = "List UI snapshot branches"
     description = "Lists ObjectState branches visible to the running UI bridge."
-    service = "ui_bridge"
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    output_contract = UiBranchCatalog
-    invocation = AgentConnectionServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, connection: service.list_branches(connection),
-    )
+    operation = UiBridgeListBranchesOperation
 
 
 class UiSwitchBranchCapability(UiSnapshotCapability):
@@ -3975,41 +3781,19 @@ class UiSwitchBranchCapability(UiSnapshotCapability):
     description = (
         "Switches the running UI to another ObjectState branch through the bridge."
     )
-    service = "ui_bridge"
+    operation = UiBridgeSwitchBranchOperation
     mutating = True
     side_effects = ("mutates_running_ui_state", "time_travels_ui_state")
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiBranchSwitchRequest
-    output_contract = UiSnapshotRestoreResult
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.switch_branch(
-            request,
-            connection,
-        ),
-    )
 
 
 class UiGetOperationStatusCapability(UiBridgeCapability):
     name = "openhcs_ui_get_operation_status"
     title = "Get UI bridge operation status"
     description = "Returns status for an active or recent running-UI bridge operation."
-    service = "ui_bridge"
+    operation = UiBridgeGetOperationStatusOperation
     exposition = UiBridgeCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.STATUS,
         role=CapabilityRole.DIAGNOSTIC,
-    )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = OPERATION_ID_INPUT
-    output_contract = UiBridgeOperationRef
-    invocation = AgentConnectionScalarServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, value, connection: service.get_operation_status(
-            value,
-            connection,
-        ),
     )
 
 
@@ -4023,21 +3807,26 @@ class UiWaitForOperationReceiptCapability(UiBridgeCapability):
         "only; it does not wait for a compile, run, viewer, or other domain workflow "
         "to finish. Read that workflow's authoritative state surface separately."
     )
-    service = "ui_bridge"
+    operation = UiBridgeWaitForOperationReceiptOperation
     exposition = UiBridgeCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.STATUS,
         role=CapabilityRole.PRIMARY,
     )
-    runtime_requirements = ("running_openhcs_ui_bridge",)
-    security_requirements = ("ui_bridge_auth_token",)
-    input_contract = UiBridgeOperationWaitRequest
-    output_contract = UiBridgeOperationRef
-    invocation = AgentConnectionRequestServiceInvocation(
-        service=lambda context: context.ui_bridge_service,
-        method=lambda service, request, connection: service.wait_for_operation_receipt(
-            request,
-            connection,
-        ),
+
+
+class UiSessionEventsCapability(ProgressAcknowledgedCapability, UiBridgeCapability):
+    name = "openhcs_ui_session_events"
+    title = "Running UI session events"
+    description = (
+        "Returns the running UI session's events published after after_sequence, "
+        "waiting up to timeout_seconds for the first one. UI actions return the "
+        "event_sequence they started at; pass it here instead of polling state "
+        "surfaces. Keep timeout_seconds below the connection timeout."
+    )
+    operation = UiBridgeSessionEventsOperation
+    exposition = UiBridgeCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS,
+        role=CapabilityRole.PRIMARY,
     )
 
 

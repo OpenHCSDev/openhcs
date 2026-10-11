@@ -12,7 +12,11 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
 )
 
-from openhcs.agent.dto.session import DatasetRowState
+from openhcs.agent.dto.session import (
+    DatasetRowState,
+    SessionEventBatch,
+    SessionEventsRequest,
+)
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvokeRequest,
@@ -29,7 +33,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiWidgetTreeRequest,
     UiWindowSnapshotRequest,
 )
-from openhcs.agent.services.ui_bridge_service import UiBridgeGatewayTimeoutError
+from openhcs.agent.services.ui_bridge_service import (
+    DEFAULT_UI_BRIDGE_TIMEOUT_MS,
+    UiBridgeGatewayTimeoutError,
+)
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
 )
@@ -73,6 +80,7 @@ from openhcs.mcp.dev_client_core import (
     workflow_poll_summary_result,
     workflow_poll_terminal_status,
     workflow_result_action_status,
+    workflow_result_event_sequence,
     workflow_result_operation_id,
     workflow_result_target_scope_ids,
     workflow_result_was_accepted,
@@ -187,7 +195,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             dest="poll_interval_seconds",
             type=float,
             default=DEFAULT_WORKFLOW_POLL_INTERVAL_SECONDS,
-            help="Advanced delay between workflow state checks.",
+            help="Advanced delay between bridge receipt checks.",
         )
         parser.add_argument(
             "--wait-timeout-seconds",
@@ -303,8 +311,8 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
                         session=session,
                         state_call=state_call,
                         timeout_seconds=timeout_seconds,
-                        poll_timeout_seconds=args.poll_timeout_seconds,
-                        poll_interval_seconds=args.poll_interval_seconds,
+                        args=args,
+                        events_after=workflow_result_event_sequence(workflow_result),
                         workflow=args.workflow,
                         target_scope_ids=target_scope_ids,
                         baseline=baseline,
@@ -342,18 +350,47 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         session: McpDevStdioSession,
         state_call: McpDevToolCall,
         timeout_seconds: float,
-        poll_timeout_seconds: float,
-        poll_interval_seconds: float,
+        args: argparse.Namespace,
+        events_after: int,
         workflow: str,
         target_scope_ids: tuple[str, ...],
         baseline: WorkflowPollBaseline | None,
         results: list[McpDevToolResult],
         transient_poll_error_count: int,
     ) -> tuple[WorkflowPollSummaryStatus, bool, int, int]:
-        """Poll the domain workflow only after its bridge receipt completes."""
+        """Re-read the workflow's state each time the session publishes events.
+
+        Starts after the bridge receipt completes; between reads it waits on
+        the running UI's session events instead of sleeping.
+        """
 
         policy = WorkflowStatePollPolicy.from_workflow_text(workflow)
-        poll_deadline = asyncio.get_running_loop().time() + poll_timeout_seconds
+        loop = asyncio.get_running_loop()
+        poll_deadline = loop.time() + args.poll_timeout_seconds
+
+        async def await_events(after_sequence: int) -> int:
+            connection_seconds = (args.timeout_ms or DEFAULT_UI_BRIDGE_TIMEOUT_MS) / 1000
+            wait_seconds = min(
+                max(poll_deadline - loop.time(), 0.0), 0.8 * connection_seconds
+            )
+            events = await call_mcp_tool(
+                session,
+                McpDevToolCall(
+                    agent_capabilities.ui_session_events.name,
+                    ui_request_tool_arguments(
+                        args,
+                        SessionEventsRequest(
+                            after_sequence=after_sequence,
+                            timeout_seconds=wait_seconds,
+                        ),
+                        timeout_ms=args.timeout_ms,
+                    ),
+                ),
+                timeout_seconds + wait_seconds,
+            )
+            batch = events.decoded_payload_as(SessionEventBatch)
+            return after_sequence if batch is None else batch.last_sequence
+
         poll_count = 0
         terminal_status: WorkflowPollSummaryStatus | None = None
         while True:
@@ -368,10 +405,10 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
                     UiBridgeGatewayTimeoutError.agent_error_code
                 ):
                     transient_poll_error_count += 1
-                    if asyncio.get_running_loop().time() >= poll_deadline:
+                    if loop.time() >= poll_deadline:
                         results.append(poll_result)
                         break
-                    await asyncio.sleep(poll_interval_seconds)
+                    events_after = await await_events(events_after)
                     continue
                 results.append(poll_result)
                 terminal_status = WorkflowPollSummaryStatus.FAILED
@@ -385,9 +422,9 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
                 )
                 if terminal_status is not None:
                     break
-            if asyncio.get_running_loop().time() >= poll_deadline:
+            if loop.time() >= poll_deadline:
                 break
-            await asyncio.sleep(poll_interval_seconds)
+            events_after = await await_events(events_after)
 
         status = terminal_status or WorkflowPollSummaryStatus.TIMEOUT
         return (

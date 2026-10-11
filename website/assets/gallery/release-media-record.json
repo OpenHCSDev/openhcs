@@ -456,7 +456,7 @@
       "publication_targets": [
         "documentation"
       ],
-      "proof": "The live Plate Manager surface is captured through its registered stable UI-bridge identity.",
+      "proof": "The live Datasets surface is captured through its registered stable UI-bridge identity.",
       "capture_target": {
         "kind": "ui_bridge_window",
         "human_review_required": false,

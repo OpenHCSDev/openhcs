@@ -42,6 +42,7 @@ from zmqruntime.config import (
 
 from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 from openhcs.agent.dto.common import (
+    AgentDataclassCliRequest,
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     AGENT_PARAMETER_PRODUCER_OUTPUT_CONTRACT_METADATA_KEY,
     AgentCliRequest,
@@ -1223,7 +1224,16 @@ class UiActionInvokeResult:
     target_scope_ids: tuple[str, ...] = ()
     selection_revision_token: str | None = None
     workflow_status_surface_ids: tuple[str, ...] = ()
-    recommended_poll_interval_ms: int = 500
+    event_sequence: int | None = field(
+        default=None,
+        metadata={
+            AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: (
+                "Session event sequence the action started at; read the work it "
+                "started with openhcs_ui_session_events(after_sequence=...). "
+                "None when the action started no session work."
+            ),
+        },
+    )
     errors: tuple[AgentError, ...] = ()
     warnings: tuple[AgentWarning, ...] = ()
 
@@ -2677,7 +2687,7 @@ class UiBridgeOperationIdentity:
 
 
 @dataclass(frozen=True, slots=True)
-class UiBridgeOperationStatusRequest:
+class UiBridgeOperationStatusRequest(AgentDataclassCliRequest):
     operation_id: str
 
 

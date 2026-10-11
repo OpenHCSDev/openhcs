@@ -2316,6 +2316,11 @@ def workflow_result_action_status(result: McpDevToolResult) -> str | None:
     return None if payload is None else payload.action_result.status
 
 
+def workflow_result_event_sequence(result: McpDevToolResult) -> int:
+    """The session event sequence the accepted workflow started at."""
+    return workflow_result_payload(result).action_result.event_sequence
+
+
 def workflow_result_operation_id(result: McpDevToolResult) -> str | None:
     payload = workflow_result_payload(result)
     if payload is None:

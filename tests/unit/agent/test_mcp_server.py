@@ -4,6 +4,7 @@ import importlib.util
 import inspect
 import json
 import logging
+import re
 import sys
 import time
 import tomllib
@@ -112,6 +113,19 @@ from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
+
+
+class _OperationMethodsBridgeService:
+    """Fake bridge service answering each operation from the method named for it."""
+
+    def invoke(self, operation, request=None, connection=None):
+        name = operation.name or re.sub(
+            r"(?<!^)(?=[A-Z])",
+            "_",
+            operation.__name__.removeprefix("UiBridge").removesuffix("Operation"),
+        ).lower()
+        answer = getattr(self, name)
+        return answer(connection) if request is None else answer(request, connection)
 
 def _direct_tool_text(result) -> str:
     """Return first text block from FastMCP structured or legacy direct calls."""
@@ -1201,7 +1215,7 @@ def test_mcp_ui_catalog_invocations_preserve_declared_identity(
     from python_introspect import dataclass_from_mapping
 
     context = SimpleNamespace(
-        ui_bridge_service=SimpleNamespace(**{method: lambda connection: catalog})
+        ui_bridge_service=SimpleNamespace(invoke=lambda operation, connection: catalog)
     )
     payload = to_jsonable(
         capability.invocation.execute(context, DEFAULT_UI_BRIDGE_CONNECTION_SPEC)
@@ -1258,7 +1272,7 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     if importlib.util.find_spec("mcp") is None:
         return
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.connections = []
             self.widget_tree_requests = []
@@ -2136,7 +2150,7 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
             inherited_value=True,
         )
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2261,7 +2275,7 @@ def test_mcp_list_object_state_scopes_filters_scope_ids(monkeypatch):
 
     monkeypatch.setattr(server, "_mcp_server_stale_source_paths", tuple)
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
             assert fields.timeout_ms == 1234
             return "ui-connection"
@@ -2333,7 +2347,7 @@ def test_mcp_describe_object_state_field_tool_projects_request(monkeypatch):
 
     monkeypatch.setattr(server, "_mcp_server_stale_source_paths", tuple)
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2438,7 +2452,7 @@ def test_mcp_describe_object_state_field_tool_infers_unique_scope(monkeypatch):
         f"{mcp_help_threshold_function.__qualname__}"
     )
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2556,7 +2570,7 @@ def test_mcp_describe_object_state_field_tool_reports_ambiguous_scope(monkeypatc
             last_changed=False,
         )
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2632,7 +2646,7 @@ def test_object_state_field_help_service_describes_function_parameter_target():
         f"{mcp_help_threshold_function.__qualname__}"
     )
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def list_object_state_scopes(self, request, connection):
             assert connection == "ui-connection"
             assert request.include_field_descriptions is True
@@ -2709,7 +2723,7 @@ def test_mcp_mutate_object_state_field_tool_projects_request(monkeypatch):
 
     monkeypatch.setattr(server, "_mcp_server_stale_source_paths", tuple)
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2800,7 +2814,7 @@ def test_mcp_object_state_field_search_filters_before_paging():
             inherited_value=False,
         )
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.requests = []
 
@@ -2893,7 +2907,7 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
 
     selected_plate_root = "/tmp/selected-plate"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.state_surface_request = None
             self.connection_fields = None
@@ -2990,7 +3004,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
     selected_plate_root = "/tmp/selected-plate"
     output_plate_root = "/tmp/selected-plate_openhcs"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
             return "ui-connection"
 
@@ -3084,7 +3098,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
     selected_plate_root = "/tmp/selected-plate"
     output_plate_root = "/tmp/selected-plate_openhcs"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.state_surface_request = None
 
@@ -3203,7 +3217,7 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
     selected_plate_root = "/tmp/selected-plate"
     output_plate_root = "/tmp/selected-plate_openhcs"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
             return "ui-connection"
 
@@ -3293,7 +3307,7 @@ def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
     selected_plate_root = "/tmp/selected-plate"
     selected_image_path = "./A01_s001_w1_z001_t001.tif"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.state_surface_request = None
 
@@ -3424,7 +3438,7 @@ def test_mcp_selected_plate_image_sample_auto_selects_first_inventory_record():
     selected_plate_root = "/tmp/selected-plate"
     selected_image_path = "./A01_s001_w1_z001_t001.tif"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
             return "ui-connection"
 
@@ -3533,7 +3547,7 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
     output_plate_root = "/tmp/selected-plate_openhcs"
     selected_image_path = "./A01_s001_w1_z001_t001.tif"
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
             return "ui-connection"
 
@@ -5640,7 +5654,7 @@ def _accepted_workflow_dev_result(
                     "target_scope_ids": list(target_scope_ids),
                     "selection_revision_token": None,
                     "workflow_status_surface_ids": ["plate_manager.state"],
-                    "recommended_poll_interval_ms": 500,
+                    "event_sequence": 7,
                     "errors": [],
                     "warnings": [],
                 },
@@ -5650,6 +5664,36 @@ def _accepted_workflow_dev_result(
             },
         ),
     )
+
+
+def _answering_session_events(dev_client, fake_call_tool):
+    """Answer the running UI's session-events waits; delegate every other call."""
+
+    async def call_tool(session, call, timeout_seconds):
+        if call.name != "openhcs_ui_session_events":
+            return await fake_call_tool(session, call, timeout_seconds)
+        after = call.arguments["after_sequence"]
+        return dev_client.McpDevToolResult(
+            tool=call.name,
+            mcp_error=False,
+            payloads=(
+                {
+                    "events": [
+                        {
+                            "sequence": after + 1,
+                            "kind": "dataset_state_changed",
+                            "scope_id": "scope-a",
+                            "message": "",
+                        }
+                    ],
+                    "last_sequence": after + 1,
+                    "errors": [],
+                    "schema_version": "test",
+                },
+            ),
+        )
+
+    return call_tool
 
 
 def _operation_receipt_dev_result(
@@ -5719,7 +5763,7 @@ def _rejected_workflow_dev_result(
                     "target_scope_ids": ["scope-a"],
                     "selection_revision_token": None,
                     "workflow_status_surface_ids": ["plate_manager.state"],
-                    "recommended_poll_interval_ms": 500,
+                    "event_sequence": 7,
                     "errors": [error],
                     "warnings": [],
                 },
@@ -6093,7 +6137,9 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6210,7 +6256,9 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     args = dev_client._build_parser().parse_args(
         (
@@ -6288,7 +6336,9 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
     args = dev_client._build_parser().parse_args(
         ("selected-workflow", "compile_datasets", "--wait")
     )
@@ -6353,7 +6403,9 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
             )
         return stale_state
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     args = dev_client._build_parser().parse_args(
         (
@@ -6432,7 +6484,9 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
             )
         return initialized_state
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     args = dev_client._build_parser().parse_args(
         (
@@ -6529,7 +6583,9 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6637,7 +6693,9 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6733,7 +6791,9 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6824,7 +6884,9 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6915,7 +6977,9 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
             ),
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -6995,7 +7059,9 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
             tool=call.name,
         )
 
-    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    monkeypatch.setattr(
+        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+    )
 
     parser = dev_client._build_parser()
     args = parser.parse_args(
@@ -7479,7 +7545,7 @@ def test_mcp_ui_snapshot_binding_projects_request_and_connection():
     if importlib.util.find_spec("mcp") is None:
         return
 
-    class _UiBridgeService:
+    class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
             self.connections = []
             self.snapshot_requests = []
