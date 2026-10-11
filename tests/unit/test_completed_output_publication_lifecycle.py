@@ -34,6 +34,10 @@ from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _facts(plate_root: Path) -> StepExecutionObservation:
@@ -56,7 +60,7 @@ def _facts(plate_root: Path) -> StepExecutionObservation:
 
 
 def _context(plate_root: Path, count: int) -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         axis_id="A01", filemanager=SimpleNamespace(exists=lambda *_args: False),
         step_plans={index: SimpleNamespace(
             compiled_function_pattern=None, execution_scope=FunctionStepExecutionScope.AXIS,
@@ -65,16 +69,15 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
             requires_main_flow_checkpoint=lambda _plans: False,
         ) for index in range(count)},
     )
-    context.dataset_root = plate_root
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, dataset_root=plate_root)
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _p: None,
             source_workspace_root=Path,
         ),
         source_bindings_still_required=lambda: None,
-    )
-    context.freeze()
+    ))
     return context
 
 
@@ -114,7 +117,6 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, m
         cancellation=signal, release_axis_resources=False,
     )
     assert type(result) is (ExecutionCancelled if cancel else ExecutionFailed)
-    assert not context.runtime_value_store.observed_values
     assert pixel_refs[0]() is None
     assert len(result.runtime_observation.contexts) == 1
     observation = result.runtime_observation.contexts[0]
@@ -122,7 +124,7 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, m
     assert observation.outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
     restored = pickle.loads(pickle.dumps(result))
     assert restored.runtime_observation.contexts[0].outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
-    parent = ProcessingContext(axis_id="A01")
+    parent = executing_context(axis_id="A01")
     restored.runtime_observation.merge_into({"A01": parent})
     assert parent.completed_step_outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
 
@@ -143,8 +145,11 @@ def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_p
         filemanager=context.filemanager,
     )
     assert direct.projection_if_available() is None
-    context.bind_execution_runtime(_lane())
-    assert authority.projection_if_available() is None
+    next_execution = context.executing(_lane())
+    assert (
+        next_execution.runtime_source_workspace_projections.projection_if_available()
+        is None
+    )
 
 
 def test_runtime_overlay_excludes_another_output_plate_and_other_context(tmp_path):
@@ -152,9 +157,11 @@ def test_runtime_overlay_excludes_another_output_plate_and_other_context(tmp_pat
     context.record_completed_step_outputs(_facts(tmp_path / "other-plate"))
     authority = context.runtime_source_workspace_projections
     assert authority.projection_if_available() is None
-    other = _context(tmp_path, 1)
-    other.microscope_handler = context.microscope_handler
-    other.filemanager = context.filemanager
+    other = with_facts(
+        _context(tmp_path, 1),
+        microscope_handler=context.microscope_handler,
+        filemanager=context.filemanager,
+    )
     assert authority.is_bound_to_context(context)
     assert not authority.is_bound_to_context(other)
 
@@ -177,9 +184,16 @@ def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(
     assert set(full.pipeline_start_files()) == {str(tmp_path / "images/A01.tif"), str(tmp_path / "images/A02.tif")}
     assert axis.pipeline_start_files() == (str(tmp_path / "images/A01.tif"),)
     # Another context shares declaration admission, never the completed facts.
-    other = _context(tmp_path, 1)
-    other.filemanager = context.filemanager
-    other.microscope_handler = context.microscope_handler
+    other = with_facts(
+        _context(tmp_path, 1),
+        filemanager=context.filemanager,
+        microscope_handler=context.microscope_handler,
+    )
     assert other.runtime_source_workspace_projections.projection_if_available() is None
-    context.reset_completed_step_outputs()
-    assert authority.projection_if_available(axis_id="A01") is None
+    # Nor does the next execution of the same compiled context.
+    assert (
+        context.executing().runtime_source_workspace_projections.projection_if_available(
+            axis_id="A01"
+        )
+        is None
+    )

@@ -68,6 +68,9 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 @contextmanager
@@ -183,7 +186,7 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
         artifact_outputs=OrderedDict(((output_plan.ref(), output_plan),)),
         compiled_function_pattern=pattern,
     )
-    context = ProcessingContext(step_plans={0: step_plan}, axis_id="A01")
+    context = executing_context(step_plans={0: step_plan}, axis_id="A01")
     bundle = CompiledExecutionBundle(
         pipeline_definition=(),
         runtime_contexts={"A01": context},

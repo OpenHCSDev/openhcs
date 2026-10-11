@@ -106,6 +106,9 @@ from tests.materialization_plans import output_plan as materialization_output_pl
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -573,7 +576,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-    context = ProcessingContext(filemanager=filemanager)
+    context = executing_context(filemanager=filemanager)
     with context.runtime_step_scope():
         bundle = export_to_spreadsheet(
             add_filename_prefix=False,

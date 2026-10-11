@@ -31,6 +31,9 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _identity(image):
@@ -50,7 +53,7 @@ def _fixture():
         variable_components=(Microscopy.Site,),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     request = PatternGroupExecutionRequest(
         context=context,
         execution_plan=plan,

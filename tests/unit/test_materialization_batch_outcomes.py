@@ -43,6 +43,9 @@ from openhcs.processing.materialization import (
 )
 from openhcs.processing.materialization.core import _WRITERS_BY_OPTIONS
 from tests.materialization_plans import output_plan as materialization_output_plan
+from tests.context_support import (
+    compiled_context,
+)
 
 
 class CsvOnlyMemoryBackend(MemoryStorageBackend):
@@ -137,30 +140,23 @@ class EmittedOutputStep(FunctionStep):
         return StepExecutionObservation(MappingProxyType({}), (self.path,))
 
 
-class FrozenWorkerContext(ProcessingContext):
-    def __init__(self):
-        super().__init__(
-            axis_id="A01",
-            filemanager=FileManager({"memory": MemoryStorageBackend()}),
-            step_plans={
-                0: CompiledStepPlan(
-                    step_index=0,
-                    step_name="Save",
-                    axis_id="A01",
-                    compiled_function_pattern=compile_function_pattern(
-                        admitted_graph(lambda image: image),
-                        {},
-                        {},
-                    ),
-                )
-            },
-        )
-        self.freeze()
-        self.released = False
-
-    def release_execution_image_cache(self):
-        super().release_execution_image_cache()
-        self.released = True
+def _compiled_worker_context():
+    return compiled_context(
+        axis_id="A01",
+        filemanager=FileManager({"memory": MemoryStorageBackend()}),
+        step_plans={
+            0: CompiledStepPlan(
+                step_index=0,
+                step_name="Save",
+                axis_id="A01",
+                compiled_function_pattern=compile_function_pattern(
+                    admitted_graph(lambda image: image),
+                    {},
+                    {},
+                ),
+            )
+        },
+    )
 
 
 @pytest.mark.parametrize("mode", tuple(RuntimeObservationMode.__subclasses__()))
@@ -170,7 +166,7 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
     import openhcs.core.orchestrator.worker_execution as worker
 
     path = tmp_path / "actual.csv"
-    context = FrozenWorkerContext()
+    context = _compiled_worker_context()
     lane = WorkerLaneExecutionContext(
         execution_id="execution",
         subject_id="plate",
@@ -197,7 +193,6 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
     )
     transported = pickle.loads(pickle.dumps(result))
 
-    assert context.released
     assert transported.is_success()
     assert transported.runtime_observation.contexts[0].outputs.runtime_export_paths == (path,)
     assert transported.runtime_observation.contexts[0].records == ()

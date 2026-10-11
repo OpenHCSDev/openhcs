@@ -125,6 +125,9 @@ from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
 from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_outputs=()):
@@ -1193,7 +1196,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         ),
     )
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

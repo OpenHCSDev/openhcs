@@ -27,6 +27,10 @@ from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.runtime_image_values import ImagePayload
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 SOURCE = "/source/A01_s001_w1_z001_t001.tif"
@@ -38,8 +42,8 @@ def _identity(image):
 
 def _runtime(tmp_path):
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-    context = ProcessingContext(axis_id="A01", filemanager=filemanager)
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01", filemanager=filemanager)
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     plan = CompiledStepPlan(
         step_index=0,
         step_name="OutputOwnership",

@@ -63,7 +63,7 @@ DELETED_NAMES = frozenset(
 
 
 def _concrete_subclasses(base: type) -> set[type]:
-    """Leaf members of a family, as their modules publish them."""
+    """Instantiable members of a family, as their modules publish them."""
     found: set[type] = set()
     pending = list(base.__subclasses__())
     while pending:
@@ -74,10 +74,6 @@ def _concrete_subclasses(base: type) -> set[type]:
             cls.__module__.startswith("openhcs.")
             and getattr(module, cls.__name__, None) is cls
             and not inspect.isabstract(cls)
-            and not any(
-                getattr(module, sub.__name__, None) is sub
-                for sub in cls.__subclasses__()
-            )
         ):
             found.add(cls)
     return found
@@ -131,7 +127,10 @@ def test_context_phases_and_results_are_the_declared_families() -> None:
         CompiledContext,
         ExecutingContext,
     }
-    assert _concrete_subclasses(ExecutionResult) == {
+    # ExecutionStopped is the shared base of the two stopped outcomes.
+    assert _concrete_subclasses(ExecutionResult) - {
+        execution_result.ExecutionStopped
+    } == {
         ExecutionSucceeded,
         ExecutionFailed,
         ExecutionCancelled,

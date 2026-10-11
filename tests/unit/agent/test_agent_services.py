@@ -125,6 +125,9 @@ from openhcs.core.progress.types import (
     CompileProgressPhase,
     RunningProgressStatus,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 def sample_processing_function(image, sigma: float = 1.0):
@@ -360,7 +363,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             paths_by_group={"A01": "/tmp/out/A01/objects.zarr"},
         )
         step_plan.artifact_outputs[output_plan.ref()] = output_plan
-        context = ProcessingContext(axis_id="A01")
+        context = executing_context(axis_id="A01")
         context.step_plans[0] = step_plan
         virtual_name = "A01_s001_w1_z001_t001.tif"
         full_virtual_path = str(request.plate / virtual_name)

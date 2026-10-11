@@ -100,6 +100,10 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
 from openhcs.processing.materialization import FileBundleOptions
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 AXIS_ID = "A01_s1"
 RUNTIME_IMAGE_FIELD = MeasurementRowAxisField.SLICE_INDEX.value
@@ -338,7 +342,7 @@ class _MetadataHandlerStub:
 
 
 def _export_context() -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={
             0: CompiledStepPlan(
                 step_index=0,
@@ -354,11 +358,11 @@ def _export_context() -> ProcessingContext:
         },
         filemanager=SimpleNamespace(exists=lambda *_args: False),
     )
-    context.dataset_root = Path("/")
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, dataset_root=Path("/"))
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         metadata_handler=_MetadataHandlerStub(),
         source_bindings_still_required=lambda: None,
-    )
+    ))
     return context
 
 
@@ -888,18 +892,18 @@ def _borrowed_source_export_fixture(
         }
     }
     context = _export_context()
-    context.dataset_root = tmp_path
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, dataset_root=tmp_path)
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_root=lambda _plate_path: tmp_path,
             source_workspace_metadata_document=lambda _plate_path: document,
         )
-    )
-    context.filemanager = SimpleNamespace(
+    ))
+    context = with_facts(context, filemanager=SimpleNamespace(
         exists=lambda *_args: False,
         source_path=lambda address, backend, *, base_path: address,
-    )
+    ))
     plan = CompiledSourceBindingPlan(
         bindings=(
             NamedSourceBinding(alias="DNA"),

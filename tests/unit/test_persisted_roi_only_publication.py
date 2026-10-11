@@ -46,6 +46,10 @@ from openhcs.processing.materialization.core import (
 from openhcs.processing.materialization.options import FileBundleOptions
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -70,11 +74,11 @@ def _publish_saved_step(context, plan, *, artifact_materializations=()):
 @pytest.fixture
 def publication_context(tmp_path):
     filemanager = FileManager({Backend.DISK.value: DiskStorageBackend()})
-    context = ProcessingContext(filemanager=filemanager)
-    context.metadata_cache = {}
-    context.microscope_handler = SimpleNamespace(
+    context = executing_context(filemanager=filemanager)
+    context = with_facts(context, metadata_cache={})
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         parser=SourceSchemaFilenameParser(), source_name="openhcsdata"
-    )
+    ))
     context.publication_audit = []
     return context
 
@@ -236,7 +240,7 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
     assert published["subdirectories"][destination]["source_projection"] == []
     # Final reconciliation has no runtime outcome/value to reconstruct. Its
     # destination comes from the same durable declaration the reader admitted.
-    publication_context.step_plans = {0: plan}
+    publication_context = with_facts(publication_context, step_plans={0: plan})
     owner = RuntimeArtifactMetadataTarget.from_plan(plan)
     reconciled = tuple(
         target.output_dir
@@ -255,12 +259,12 @@ def test_result_only_destination_saved_through_zarr_passthrough_publishes_comple
     """Zarr saves archives through disk passthrough; publication must still see them."""
     from polystore.zarr import ZarrStorageBackend
 
-    publication_context.filemanager = FileManager(
+    publication_context = with_facts(publication_context, filemanager=FileManager(
         {
             Backend.DISK.value: DiskStorageBackend(),
             Backend.ZARR.value: ZarrStorageBackend(),
         }
-    )
+    ))
     monkeypatch.setattr(
         "polystore.backend_registry.get_backend_instance",
         lambda key: publication_context.filemanager._get_backend(key),
@@ -270,7 +274,7 @@ def test_result_only_destination_saved_through_zarr_passthrough_publishes_comple
         publication_context, plate, "results", monkeypatch, backend=Backend.ZARR.value
     )
     plan = plan_for(plate, Backend.ZARR.value)
-    publication_context.step_plans = {0: plan}
+    publication_context = with_facts(publication_context, step_plans={0: plan})
     _publish_saved_step(publication_context, plan, artifact_materializations=(outcome,))
     OpenHCSMetadataTarget.finalize_completed_dataset({"A01": publication_context})
 
@@ -356,7 +360,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
         metadata_path, destination,
         SourceProjectionMetadataSerializer.projection_fields(((projection, virtual_path),)),
     )
-    publication_context.step_plans = {0: plan}
+    publication_context = with_facts(publication_context, step_plans={0: plan})
     OpenHCSMetadataTarget.finalize_completed_dataset({"A01": publication_context})
     reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][destination]
     assert reconciled[FIELDS.IMAGE_FILES] == [virtual_path]

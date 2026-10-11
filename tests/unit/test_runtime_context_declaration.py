@@ -34,6 +34,9 @@ from openhcs.processing.backends.cellprofiler.save_images import (
 from openhcs.core.processing_contracts import (
     Pure2DContract,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _inferred_context(image, *, context=None):
@@ -127,7 +130,7 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
 )
 def test_runtime_binding_consumes_captured_selection(func, parameter):
     pattern = compile_function_pattern(admitted_graph(func), {}, {})
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     artifacts = ({}, {})
     scope = PatternGroupData(
         matching_files=["input.tif"],
@@ -169,7 +172,7 @@ def test_save_images_variants_keep_independent_injection_declarations():
 
 
 def test_measurement_variant_keeps_real_axis_scoped_filename_context():
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01", "A02"))
     payload = ImagePayloadMetadata(source_path="/input/DNA.tif").payload_with(
         np.ones((2, 3), dtype=np.uint16)

@@ -57,6 +57,10 @@ from openhcs.core.progress.types import (
     RunningProgressPhase,
     RunningProgressStatus,
 )
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> None:
@@ -682,11 +686,11 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     previous.filemanager.ensure_directory(str(tmp_path), Backend.MEMORY.value)
     previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
     handler = OpenHCSDatasetSource(previous.filemanager)
-    context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
-    context.dataset_root = tmp_path
-    context.input_dir = tmp_path
-    context.microscope_handler = handler
-    transport = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01", filemanager=previous.filemanager)
+    context = with_facts(context, dataset_root=tmp_path)
+    context = with_facts(context, input_dir=tmp_path)
+    context = with_facts(context, microscope_handler=handler)
+    transport = executing_context(axis_id="A01")
     bundle = CompiledExecutionBundle(
         pipeline_definition=[],
         runtime_contexts={"A01": context},

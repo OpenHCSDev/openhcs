@@ -28,7 +28,10 @@ from openhcs.core.config import (
     EMPTY_SOURCE_BINDINGS,
     StepSourceBindingsConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    CompilingContext,
+    ProcessingContext,
+)
 from openhcs.core.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
@@ -60,6 +63,9 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 )
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _identity(image):
@@ -183,7 +189,7 @@ def test_nonsequential_axis_compilation_finishes_its_initial_session(monkeypatch
     context = SimpleNamespace(
         pipeline_sequential_mode=False,
         pipeline_sequential_combinations=None,
-        freeze=lambda: events.append("freeze"),
+        freeze=lambda: events.append("freeze") or context,
     )
     session = SimpleNamespace(context=context, global_config=GlobalPipelineConfig())
     request = SimpleNamespace(
@@ -318,7 +324,7 @@ def _compile_source_plans_for_contract(
 class _EffectiveConfigContextOrchestrator:
     def create_context(self, axis_id: str, *, resolved_config) -> ProcessingContext:
         del resolved_config
-        return ProcessingContext(axis_id=axis_id)
+        return CompilingContext(axis_id=axis_id)
 
 
 def test_axis_compilation_request_binds_post_execute_hooks_from_effective_config():

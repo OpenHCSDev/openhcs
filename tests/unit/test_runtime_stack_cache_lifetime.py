@@ -13,11 +13,14 @@ from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
+from tests.context_support import (
+    executing_context,
+)
 
 
 @pytest.mark.parametrize("context_owned", [False, True])
 def test_release_drops_all_cached_views_and_allows_reuse(context_owned: bool) -> None:
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     cache = (
         context.runtime_image_stack_cache if context_owned else RuntimeImageStackCache()
     )
@@ -45,7 +48,7 @@ def test_release_drops_all_cached_views_and_allows_reuse(context_owned: bool) ->
 def test_context_image_cache_release_preserves_runtime_artifacts_and_observations() -> (
     None
 ):
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     output_plan = ArtifactOutputPlan(
         name="retained_image",
         path="/memory/retained.pkl",

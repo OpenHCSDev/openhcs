@@ -97,13 +97,17 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     StepStartedProgressPhase,
 )
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
     class Counter:
         pass
 
-    context = ProcessingContext()
+    context = executing_context()
     with pytest.raises(RuntimeError, match="active FunctionStep"):
         context.runtime_step_value(Counter)
 
@@ -438,13 +442,13 @@ def _plate_context(
     axis_id: str,
     plans: tuple[CompiledStepPlan, ...],
 ) -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={plan.step_index: plan for plan in plans},
         axis_id=axis_id,
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
         post_execute_hooks=PostExecuteHook.bind_all(GlobalPipelineConfig()),
     )
-    context.microscope_handler = SimpleNamespace()
+    context = with_facts(context, microscope_handler=SimpleNamespace())
     return context
 
 
@@ -925,10 +929,10 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     plan.output_dir = tmp_path / "images"
     plan.analysis_results_dir = str(tmp_path / "analysis")
     context = _plate_context("A01", (plan,))
-    context.metadata_cache = {}
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, metadata_cache={})
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         parser=SourceSchemaFilenameParser(), source_name="test",
-    )
+    ))
     _record_measurements(
         context,
         name="prior_measurements",
@@ -1000,9 +1004,9 @@ def test_plate_scope_image_set_policy_includes_compiled_group_component() -> Non
         metadata_writer=True,
     )
     context = _plate_context("A01", (plan,))
-    context.source_image_set_identity_policy = SourceImageSetIdentityPolicy(
+    context = with_facts(context, source_image_set_identity_policy=SourceImageSetIdentityPolicy(
         frozenset((Microscopy.Channel,))
-    )
+    ))
     _record_measurements(
         context,
         name=measurement_spec.name,

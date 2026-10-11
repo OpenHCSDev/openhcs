@@ -43,6 +43,10 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionRequestBuilder,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    compiled_context,
+    executing_context,
+)
 
 
 def _execute_spawned_custom_invocation(
@@ -432,11 +436,10 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         step_index=0, step_name="Crop", axis_id="A01",
         compiled_function_pattern=pattern,
     )
-    context = ProcessingContext(
+    context = compiled_context(
         axis_id="A01", step_plans={0: plan},
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
     )
-    context.freeze()
     second_invocation = replace(
         invocation, kwargs=(("left_right_rectangle_positions", (2, 5)),),
     )
@@ -444,10 +447,9 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         pattern, groups=(replace(pattern.groups[0], invocations=(second_invocation,)),),
     )
     second_plan = replace(plan, axis_id="A02", compiled_function_pattern=second_pattern)
-    second_context = ProcessingContext(
+    second_context = compiled_context(
         axis_id="A02", step_plans={0: second_plan}, filemanager=context.filemanager,
     )
-    second_context.freeze()
     contexts = {"A01": context, "A02": second_context}
     bundle = CompiledExecutionBundle.from_runtime_contexts(
         pipeline_definition=(), runtime_contexts=contexts,
@@ -470,8 +472,6 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert second_transport_invocation.kwargs == second_invocation.kwargs
     assert plan.compiled_function_pattern is pattern
     assert invocation.contract.resolve_runtime_callable() is prepared_callable
-    assert transport_context.runtime_value_store is context.runtime_value_store
-    assert transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
     assert transport_context.filemanager is context.filemanager
     transport_plan.step_name = "Transport-only name"
     assert plan.step_name == "Crop"

@@ -17,7 +17,10 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    CompilingContext,
+    ProcessingContext,
+)
 from openhcs.core.function_patterns import (
     MainFlowInputProjection,
     CompiledFunctionGroup,
@@ -41,6 +44,9 @@ from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.processing.backends.cellprofiler.crop import crop
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 class _CarrierTestSession(SimpleNamespace):
@@ -143,7 +149,7 @@ def _session(
         source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,)),
         compiled_function_pattern=_compiled_pattern(),
     )
-    context = ProcessingContext(
+    context = CompilingContext(
         step_plans={0: plan},
         axis_id="A01",
         filemanager=FileManager(dict(storage_registry)),
@@ -285,7 +291,7 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
         compiled_function_pattern=pattern,
     )
     ensure_storage_registry()
-    context = ProcessingContext(
+    context = CompilingContext(
         step_plans={0: plan},
         axis_id="A01",
         filemanager=FileManager(dict(storage_registry)),
@@ -650,7 +656,7 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     ensure_storage_registry()
     session = _CarrierTestSession(
         plans={0: plan},
-        context=ProcessingContext(
+        context=CompilingContext(
             step_plans={0: plan},
             axis_id="A01",
             filemanager=FileManager(dict(storage_registry)),

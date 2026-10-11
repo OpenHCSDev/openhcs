@@ -88,6 +88,9 @@ from openhcs.processing.backends.cellprofiler.texture import MeasureTextureModul
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
 from openhcs.processing.backends.cellprofiler.morphology import MaskObjectsModule
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _module(
@@ -175,7 +178,7 @@ def _compiler_contracts(
             resolved_steps.append(resolved_step)
             step_states[index] = step_state
 
-        context = ProcessingContext(
+        context = executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

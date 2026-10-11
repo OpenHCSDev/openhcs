@@ -58,6 +58,9 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _neighbor_step() -> FunctionStep:
@@ -106,7 +109,7 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
     )
     snapshot = restored_step
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -142,7 +145,7 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
 def _compiled_neighbor_invocation():
     step = _reconstructed_neighbor_step()
     snapshot = step
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={
             0: CompiledStepPlan(
                 step_index=0,
@@ -367,7 +370,7 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
     )
     snapshots = tuple(step for index, step in enumerate(steps))
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,
@@ -511,7 +514,7 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
     )
     snapshots = tuple(step for index, step in enumerate(steps))
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

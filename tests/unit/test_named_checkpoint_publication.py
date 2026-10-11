@@ -100,12 +100,15 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
         step_materialization_config=LazyStepMaterializationConfig(enabled=True),
     )
     bundle = orchestrator.compile_pipelines([step])
+    contexts = {
+        key: context.executing() for key, context in bundle.runtime_contexts.items()
+    }
     observations = RuntimeExecutionObservation(contexts=tuple(
         RuntimeContextObservation(context_key=key, records=(), outputs=step.process(context, 0))
-        for key, context in bundle.runtime_contexts.items()
+        for key, context in contexts.items()
     ))
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        bundle.runtime_contexts, runtime_observations=(observations,)
+        contexts, runtime_observations=(observations,)
     )
     root = tmp_path / "source_out"
     metadata = json.loads((root / "openhcs_metadata.json").read_text())

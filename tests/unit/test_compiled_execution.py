@@ -56,6 +56,10 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
+from tests.context_support import (
+    compiled_context,
+    executing_context,
+)
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -73,8 +77,8 @@ def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
 
 
 def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch):
-    runtime_context = ProcessingContext(axis_id="A01")
-    resolved_context = ProcessingContext(axis_id="A01")
+    runtime_context = compiled_context(axis_id="A01")
+    resolved_context = compiled_context(axis_id="A01")
     resolver_calls = []
 
     def resolve_for_transport(contexts):
@@ -97,7 +101,7 @@ def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch
     assert bundle.runtime_contexts == {"A01": runtime_context}
     transport_context = bundle.transport_contexts["A01"]
     assert transport_context is not resolved_context
-    assert transport_context.runtime_value_store is resolved_context.runtime_value_store
+    assert transport_context.axis_id == resolved_context.axis_id
     assert transport_context.step_plans is not resolved_context.step_plans
     assert bundle.worker_assignments == {"worker_0": ["A01"]}
 
@@ -106,9 +110,9 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
     bundle = CompiledExecutionBundle(
         pipeline_definition=(),
         runtime_contexts={
-            "opaque-context-2": ProcessingContext(axis_id="B01"),
-            "opaque-context-1": ProcessingContext(axis_id="A01"),
-            "opaque-context-3": ProcessingContext(axis_id="A01"),
+            "opaque-context-2": compiled_context(axis_id="B01"),
+            "opaque-context-1": compiled_context(axis_id="A01"),
+            "opaque-context-3": compiled_context(axis_id="A01"),
         },
         transport_contexts={},
         worker_assignments={},
@@ -135,7 +139,7 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
     execution_scopes,
     expected_mode,
 ) -> None:
-    context = ProcessingContext(
+    context = executing_context(
         axis_id="A01",
         step_plans={
             index: SimpleNamespace(
@@ -176,7 +180,7 @@ def test_consolidation_does_not_require_parent_payload_records(
         artifact_type=MeasurementsArtifactType,
         materialization=spec_type(CsvOptions()) if spec_type is not None else None,
     )
-    context = ProcessingContext(
+    context = executing_context(
         axis_id="A01",
         post_execute_hooks=(
             AnalysisConsolidationHook(
@@ -229,7 +233,7 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
         path="/memory/image.npy",
         artifact_type=ImageArtifactType,
     )
-    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
+    contexts = [executing_context(axis_id=axis) for axis in ("A01", "A02", "A03")]
     payload_references = []
 
     def execute_axis(_pipeline, context, _lane, **_kwargs):
@@ -301,7 +305,7 @@ def test_runtime_execution_observation_merges_into_parent_contexts():
         path="/memory/measurements.pkl",
         backend="memory",
     )
-    parent_context = ProcessingContext(axis_id="A01")
+    parent_context = executing_context(axis_id="A01")
 
     RuntimeExecutionObservation(
         contexts=(
@@ -374,7 +378,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         execute_current_run,
     )
     monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
-    context = ProcessingContext(
+    context = executing_context(
         axis_id="A01",
         step_plans={
             0: SimpleNamespace(
@@ -412,14 +416,20 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
 ) -> None:
     cleaned = []
 
-    def fail_step(*_args, **_kwargs):
+    pixels = np.zeros((16, 16), dtype=np.uint16)
+    pixel_reference = weakref.ref(pixels)
+
+    def fail_step(_pipeline, context, *_args, **_kwargs):
+        context.runtime_image_stack_cache.store(
+            ("image",), memory_type="numpy", stack=pixels
+        )
         raise RuntimeError("step failure")
 
     def fail_reset() -> None:
         raise RuntimeError("reset failure")
 
     assignment = FrameworkDeviceAssignment.from_mapping({MemoryType.CUPY: 2})
-    context = ProcessingContext(
+    context = compiled_context(
         axis_id="A01",
         step_plans={
             0: SimpleNamespace(
@@ -428,12 +438,6 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
             )
         },
     )
-    pixels = np.zeros((16, 16), dtype=np.uint16)
-    pixel_reference = weakref.ref(pixels)
-    context.runtime_image_stack_cache.store(
-        ("image",), memory_type="numpy", stack=pixels
-    )
-    del pixels
     monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     monkeypatch.setattr(
         worker_execution,
@@ -465,6 +469,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
         )
 
     assert cleaned == [(MemoryType.CUPY, 2)]
+    del pixels
     assert pixel_reference() is None
 
 
@@ -476,7 +481,7 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
     release_process_resources,
 ):
     references = []
-    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
+    contexts = [executing_context(axis_id=axis) for axis in ("A01", "A02", "A03")]
 
     def execute_axis(_pipeline, context, _lane, **_kwargs):
         assert all(reference() is None for reference in references)
@@ -522,7 +527,7 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
     release_process_resources,
 ):
     references = []
-    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
+    contexts = [executing_context(axis_id=axis) for axis in ("A01", "A02", "A03")]
     output_plan = ArtifactOutputPlan(
         name="processed",
         path="/memory/processed.pkl",

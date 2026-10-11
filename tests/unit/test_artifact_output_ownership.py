@@ -36,6 +36,9 @@ from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
 )
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from tests.context_support import (
+    executing_context,
+)
 
 
 @pytest.mark.parametrize("invalid_policy", [None, False, ArtifactOutputPolicy])
@@ -385,7 +388,7 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
         ),
     )
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             axis_id="A01",
             step_plans={
                 0: CompiledStepPlan(

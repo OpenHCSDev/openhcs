@@ -74,6 +74,10 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _compiled_pattern(
@@ -107,22 +111,22 @@ def _streaming_context(
     step_plans: dict[int, CompiledStepPlan],
 ) -> ProcessingContext:
     ensure_storage_registry()
-    context = ProcessingContext(
+    context = executing_context(
         step_plans=step_plans,
         axis_id="A01",
         filemanager=FileManager(dict(storage_registry)),
     )
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         source_name="runtime_validation",
-    )
-    context.dataset_root = Path("/tmp/plate")
+    ))
+    context = with_facts(context, dataset_root=Path("/tmp/plate"))
     return context
 
 
 def test_runtime_execution_validation_detects_missing_artifact_kind() -> None:
     observation = RuntimeArtifactExecutionObservation.from_contexts(
-        {"A01": ProcessingContext(axis_id="A01")},
+        {"A01": executing_context(axis_id="A01")},
         runtime_observations=(),
     )
 
@@ -146,7 +150,7 @@ def test_runtime_execution_validation_detects_missing_artifact_kind() -> None:
 
 
 def test_runtime_execution_observation_reads_context_stores() -> None:
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.runtime_value_store.record(
         RuntimeValue(
             key=ArtifactKey(
@@ -182,7 +186,7 @@ def test_runtime_execution_observation_ignores_uncontracted_files(
     table_output.write_text("ObjectNumber,Area\n1,42\n", encoding="utf-8")
     image_output.write_bytes(b"not decoded by export observation")
 
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
 
     observation = RuntimeArtifactExecutionObservation.from_contexts(
         {"A01": context}, runtime_observations=()
@@ -208,7 +212,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
         artifact_type=MeasurementsArtifactType,
         materialization=materialization,
     )
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={
             0: CompiledStepPlan(
                 step_index=0,
@@ -233,7 +237,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
     )
 
     export = ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={"A01": context},
+        executed_contexts={"A01": context},
         execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
         runtime_observations=runtime_observations,
@@ -485,7 +489,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
     )
     pattern = _compiled_pattern(FunctionStepExecutionScope.PLATE)
     contexts = {
-        axis_id: ProcessingContext(
+        axis_id: executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -536,7 +540,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
 def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     tmp_path,
 ) -> None:
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.runtime_value_store.record(
         RuntimeValue(
             key=ArtifactKey(
@@ -560,7 +564,7 @@ def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
         backend="memory",
     )
     export = ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={"A01": context},
+        executed_contexts={"A01": context},
         execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
         runtime_observations=(),

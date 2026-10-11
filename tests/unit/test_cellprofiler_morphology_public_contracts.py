@@ -56,6 +56,9 @@ from openhcs.processing.backends.cellprofiler.morphology import (
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,7 +195,7 @@ def _compiled_contract(case: MorphologyPublicContractCase):
     steps = (producer_step, step)
     snapshots = tuple(current_step for index, current_step in enumerate(steps))
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

@@ -404,6 +404,10 @@ from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 from openhcs.core.artifacts.plans import MAIN_FLOW
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _compiled_callable_contract(
@@ -9678,8 +9682,8 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
 def _pattern_group_runtime_for_output_memory(
     output_memory_type: str,
 ) -> PatternGroupExecutionRequest:
-    context = ProcessingContext(axis_id="A01")
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01")
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     return PatternGroupExecutionRequest(
         context=context,
         compiled_group=compile_function_pattern(

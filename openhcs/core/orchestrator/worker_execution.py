@@ -1351,10 +1351,12 @@ def _execute_axis_with_sequential_combinations(
             )
         finally:
             # Required records and table projections now belong to the
-            # observation; the execution context and its stores end here.
+            # observation. This execution ends here: release its image cache
+            # and records now instead of waiting for the context to be collected.
+            context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((context,), owner=f"axis {axis_id}")
-            del context
+            context.runtime_value_store.clear()
         if observation.records or not observation.outputs.is_empty:
             runtime_observations.append(observation)
 

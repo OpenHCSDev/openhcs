@@ -2226,7 +2226,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     finally:
         set_progress_queue(None)
 
-    context = compilation.runtime_contexts["A01"]
+    context = compilation.runtime_contexts["A01"].executing()
     executor = FunctionStepExecutor(context, 0)
     grouped_patterns = executor._prepare_groups(executor._detect_patterns())
 

@@ -46,13 +46,16 @@ from openhcs.processing.backends.cellprofiler import (
     save_images,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _compilation_session_for_steps(
     steps: list[FunctionStep],
 ) -> CompilationSession:
     return CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

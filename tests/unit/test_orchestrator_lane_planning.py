@@ -80,6 +80,9 @@ from openhcs.core.progress.types import (
     SuccessProgressPhase,
     ViewerSettlementProgressPhase,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 PROGRESS_CONTEXT = ProgressExecutionContext(
     execution_id="exec",
@@ -209,7 +212,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
 
 
 def _compiled_context(axis_id: str) -> ProcessingContext:
-    return ProcessingContext(axis_id=axis_id)
+    return executing_context(axis_id=axis_id)
 
 
 def _runtime_environment(
@@ -1242,7 +1245,7 @@ def test_viewer_bootstrap_rolls_back_a_partially_acquired_viewer_set():
         ),
     )
 
-    def acquire(config, _visualizer_config):
+    def acquire(config):
         if config is second_config:
             raise RuntimeError("second viewer failed")
         return AcquiredViewer()
@@ -1250,7 +1253,6 @@ def test_viewer_bootstrap_rolls_back_a_partially_acquired_viewer_set():
     orchestrator = SimpleNamespace(get_or_create_visualizer=acquire)
     context = SimpleNamespace(
         required_visualizers=required_visualizers,
-        visualizer_config=None,
     )
 
     with pytest.raises(RuntimeError, match="second viewer failed"):
@@ -1279,11 +1281,10 @@ def test_viewer_bootstrap_rolls_back_after_post_launch_validation_failure(
         launch_message="Launching viewer",
     )
     orchestrator = SimpleNamespace(
-        get_or_create_visualizer=lambda _config, _visualizer_config: visualizer,
+        get_or_create_visualizer=lambda _config: visualizer,
     )
     context = SimpleNamespace(
         required_visualizers=(required_visualizer,),
-        visualizer_config=None,
     )
     monkeypatch.setattr(
         compiled_plate_execution_module,
