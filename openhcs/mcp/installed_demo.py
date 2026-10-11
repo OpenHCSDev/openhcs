@@ -610,7 +610,7 @@ def run_installed_demo(
     viewer_type = (
         None
         if viewer_payload is None or viewer_payload.viewer is None
-        else viewer_payload.viewer.viewer_type.wire_value
+        else viewer_payload.viewer.viewer_type.value
     )
     result = InstalledDemoResult(
         openhcs_version=distribution("openhcs").version,
