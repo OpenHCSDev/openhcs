@@ -2279,7 +2279,7 @@
       },
       {
         "path": "tests/unit/agent/test_knowledge_base_service.py",
-        "sha256": "ce4636580893a8736fd4607c6ed0f431d25c97e0c44e2b95912af3fc36b1d750",
+        "sha256": "b814db1827c3d4cc3dab479ef7e84c6c406f324ccaddee794690f3b387626411",
         "role": "Proves discovery and retrieval of the example corpus map and other maintained knowledge documents."
       }
     ],
@@ -2288,6 +2288,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guides/example_corpus_map.rst against B6's later changes to tests/unit/agent/test_knowledge_base_service.py: metadata documents are written only for backends that host local files (not virtual backends such as OMERO); the image-source guide test reads axis-family spellings. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/example_corpus_map.rst against B6's later changes to openhcs/processing/presets/pipelines/loose_operaphenix_neurite_outgrowth.py, tests/unit/agent/test_knowledge_base_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/example_corpus_map.rst against the later B6 changes to openhcs/processing/presets/pipelines/loose_operaphenix_neurite_outgrowth.py, openhcs/agent/capabilities.py, tests/unit/agent/test_knowledge_base_service.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/example_corpus_map.rst in full and compared it against the changed authorities: knowledge_base_service.py, mfd_specs.py, benchmark/datasets/manifest.py, test_knowledge_base_service.py; confirmed every repository path, the thirty scoped native reference rows, the four MFD wrapper modules, the cellprofiler_translation topic, the authoring-context and plate inspection tool names and the Native Example Source Index; replaced 'parity receipts' with 'parity evidence'.",

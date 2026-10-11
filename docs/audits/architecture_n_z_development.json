@@ -627,7 +627,7 @@
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "89405feaa9092caa7ac3699de649eca5516c7bc54a757a24ce881264c21af262",
+        "sha256": "fc6176fddfcddfa6801091ce0d861b3ed5ea57d06f07227ed634cc706436e91f",
         "role": "OpenHCSMetadataTarget declarations, typed projection persistence, and completed-plate deduplication across axes."
       },
       {
@@ -645,6 +645,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/pipeline_compilation_system.rst against B6's later changes to openhcs/core/steps/function_outputs.py: metadata documents are written only for backends that host local files (not virtual backends such as OMERO); the image-source guide test reads axis-family spellings. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pipeline_compilation_system.rst against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/processing/backends/lib_registry/registry_service.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/core/steps/function_outputs.py, tests/unit/test_compilation_session.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pipeline_compilation_system.rst against the later B6 changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/processing/backends/lib_registry/registry_service.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/core/steps/function_outputs.py, tests/unit/test_compilation_session.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/pipeline_compilation_system.rst in full and compared it against the changed authorities: pipeline/compiler.py, compilation_session.py, compiled_execution.py, context/processing_context.py, test_compiled_execution.py, compiled_plate_execution.py (renamed bundle_execution.py), steps/function_outputs.py, test_compilation_session.py, callable_contract.py, compiled_step_plan.py, framework_device_assignment.py; verified each named class/function exists (FunctionStepTransportAuthority, RegistryService.registered_callable, AxisCompilationRequest, CompiledRuntimeEnvironmentPlan, RuntimeArtifactBatch, OpenHCSMetadataTarget, FunctionStepExecutionScope AXIS/PLATE); rewrote the resolve-once, preparation, session and plan-inventory passages that named deleted StepSnapshot, prepare_compiled_context_callables and source load plans. Dropped the framework-device resolver/assignment files and test_framework_device_resolver.py as authorities since the page states only that bindings stay on step plans.",
@@ -3346,7 +3347,7 @@
       },
       {
         "path": "tests/unit/agent/test_knowledge_base_service.py",
-        "sha256": "ce4636580893a8736fd4607c6ed0f431d25c97e0c44e2b95912af3fc36b1d750",
+        "sha256": "b814db1827c3d4cc3dab479ef7e84c6c406f324ccaddee794690f3b387626411",
         "role": "Regression proof for document IDs, search, bounded reads, and section selection."
       },
       {
@@ -3358,6 +3359,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against B6's later changes to tests/unit/agent/test_knowledge_base_service.py: metadata documents are written only for backends that host local files (not virtual backends such as OMERO); the image-source guide test reads axis-family spellings. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against B6's later changes to tests/unit/agent/test_knowledge_base_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against the later B6 changes to openhcs/agent/capabilities.py, tests/unit/agent/test_knowledge_base_service.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/mcp_knowledge_base.rst in full and compared it against the changed authorities: knowledge_base_service.py (comparison-manifest parsing moved to openhcs.agent.knowledge_manifest_schema.ComparisonManifestSnapshot; per-case module inventories are now cached by source mtime), knowledge_manifest.py (comparison_manifest_type_for_root) and both test files. Confirmed the generated Python conversion is still recomputed per request and never stored (the new cache holds only module-name inventories), the 12,000 default bound, the four MCP surface names and dev-client commands with --limit, --max-chars and --section-id, the four document ids in mcp_knowledge_base_manifest.json, benchmark/manifests/official30_portable_axis1.json, the first-use capability names, and every cited documentation path; no page change was needed. Added openhcs/agent/capabilities.py for the surface names.",
