@@ -1,7 +1,7 @@
 """Materialization public API (writer-based)."""
 
-from openhcs.processing.materialization.constants import WriteMode
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.constants import WriteMode
+from openhcs.core.materialization.core import (
     BackendSaver,
     MaterializationBatch,
     MaterializationContext,
@@ -15,7 +15,7 @@ from openhcs.processing.materialization.core import (
     registered_materialization_option_types,
     tabular_field_names_from_materialization,
 )
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.options import (
     CsvOptions,
     FileBundleOptions,
     FileOutputOptions,
@@ -30,16 +30,16 @@ from openhcs.processing.materialization.options import (
     TextOptions,
     TiffStackOptions,
 )
-from openhcs.processing.materialization.path_scopes import (
+from openhcs.core.materialization.path_scopes import (
     ExecutionAxisMaterializationRelativePathScope,
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,
 )
-from openhcs.processing.materialization.persistence import (
+from openhcs.core.materialization.persistence import (
     StreamingOnlyMaterializationSpec,
     TerminalMaterializationSpec,
 )
-from openhcs.processing.materialization.presets import (
+from openhcs.core.materialization.presets import (
     csv_dataclass_materializer,
     csv_materializer,
     csv_only,

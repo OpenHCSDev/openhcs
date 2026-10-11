@@ -17,7 +17,7 @@ from openhcs.core.config import (
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
-from openhcs.processing.materialization import MaterializationSpec, ROIOptions
+from openhcs.core.materialization import MaterializationSpec, ROIOptions
 
 
 def _pipeline_config(

@@ -62,7 +62,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
     neurite_outgrowth_metaxpress_pixels,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     ImageFileOptions,
     ROIOptions,

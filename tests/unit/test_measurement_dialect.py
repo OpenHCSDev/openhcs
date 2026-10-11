@@ -26,7 +26,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.processing.materialization.core import _render_csv_rows
+from openhcs.core.materialization.core import _render_csv_rows
 
 
 class Survey(AxisFamily):

@@ -62,7 +62,7 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphNode,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     ImageFileOptions,
     MaterializationSpec,

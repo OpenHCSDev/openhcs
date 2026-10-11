@@ -17,7 +17,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     ROIOptions,
     materialize,

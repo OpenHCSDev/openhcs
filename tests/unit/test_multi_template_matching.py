@@ -23,8 +23,8 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     multi_template_crop_reference_channel,
     multi_template_crop_subset,
 )
-from openhcs.processing.materialization import materialization_outputs
-from openhcs.processing.materialization.options import NameByArtifactName
+from openhcs.core.materialization import materialization_outputs
+from openhcs.core.materialization.options import NameByArtifactName
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 

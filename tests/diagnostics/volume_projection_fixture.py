@@ -28,7 +28,7 @@ from openhcs.core.runtime_measurements import RuntimeMeasurementFeature, Runtime
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
+from openhcs.core.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 
 class VolumeProjectionFixtureFeature(RuntimeMeasurementFeature):

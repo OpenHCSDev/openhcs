@@ -27,7 +27,7 @@ from openhcs.core.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.processing.materialization import Output
+from openhcs.core.materialization import Output
 
 RuntimeArtifactViewerComponentIdentity = tuple[tuple[str, str], ...]
 

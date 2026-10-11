@@ -18,7 +18,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
-from openhcs.processing.materialization.path_scopes import (
+from openhcs.core.materialization.path_scopes import (
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,
 )
@@ -110,14 +110,14 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
         schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
     ) -> tuple[str, str]:
         """Derive header and complete CSV through this writer's format owner."""
-        from openhcs.processing.materialization.core import _render_csv_rows
+        from openhcs.core.materialization.core import _render_csv_rows
 
         columns, _headers = self.csv_schema(rows) if schema is None else schema
         return _render_csv_rows((), columns), self.render(rows)
 
     def render(self, data: Any) -> str:
         """Render through the existing CSV format owner."""
-        from openhcs.processing.materialization.core import _render_csv
+        from openhcs.core.materialization.core import _render_csv
 
         return _render_csv(data, self)
 

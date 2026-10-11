@@ -49,7 +49,7 @@ from polystore.streaming.receivers.napari.layer_key import build_route_key
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 from polystore.streaming.viewer_transport import ViewerStreamBackendKwargs
 from polystore.streaming_constants import StreamingDataType
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     BackendSaver,
     Output,
     ViewerStreamBackendCallKwargs,

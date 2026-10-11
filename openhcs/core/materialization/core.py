@@ -84,8 +84,8 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamViewerComponentMetadataProjector,
     StreamScopedDisplayConfig,
 )
-from openhcs.processing.materialization.constants import WriteMode
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.constants import WriteMode
+from openhcs.core.materialization.options import (
     CsvOptions,
     FileBundleOptions,
     FileOutputOptions,

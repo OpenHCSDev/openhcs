@@ -62,7 +62,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     Output,
     ViewerStreamBackendCallKwargs,
 )

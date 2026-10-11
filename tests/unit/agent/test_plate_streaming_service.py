@@ -36,7 +36,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     PointROIOptions,
     materialize,

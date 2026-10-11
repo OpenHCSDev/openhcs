@@ -45,7 +45,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 
 from openhcs.processing.custom_functions import manager as custom_manager
-from openhcs.processing.materialization import materialize
+from openhcs.core.materialization import materialize
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import load_rois_from_zip

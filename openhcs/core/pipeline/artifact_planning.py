@@ -42,7 +42,7 @@ from openhcs.core.invocation_artifacts import (
     callable_contract_artifact_declarations,
 )
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     ImageFileOptions,
     NameByArtifactName,
