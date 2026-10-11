@@ -136,7 +136,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
         completed_step_outputs=StepExecutionObservation.empty(),
-        plate_path=workspace_root,
+        dataset_root=workspace_root,
         filemanager=filemanager,
         microscope_handler=microscope_handler,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
@@ -295,7 +295,7 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
     cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
         completed_step_outputs=StepExecutionObservation.empty(),
-        plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
+        dataset_root=workspace_root, filemanager=filemanager, microscope_handler=microscope,
     )
     workspace = WorkspaceSourceProjections.from_context(context, cache=cache).projection_or_empty()
     paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
