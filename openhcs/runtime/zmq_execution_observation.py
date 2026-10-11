@@ -52,7 +52,7 @@ def _axis_membership_failures(
 class ZMQExecutionAxisOutcome:
     """Small per-axis result retained without worker runtime values."""
 
-    status: ExecutionStatus
+    status: type[ExecutionStatus]
     failed_combination: str | None = None
     error_message: str | None = None
 
@@ -130,7 +130,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     @property
     def successful_axis_count(self) -> int:
         return sum(
-            outcome.status is ExecutionStatus.SUCCESS
+            outcome.status.succeeded
             for outcome in self.outcomes_by_axis.values()
         )
 
@@ -140,9 +140,9 @@ class ZMQRuntimeExecutionOutcomeExport:
             self.outcomes_by_axis,
         )
         unsuccessful = {
-            axis_id: outcome.status.value
+            axis_id: outcome.status.name
             for axis_id, outcome in self.outcomes_by_axis.items()
-            if outcome.status is not ExecutionStatus.SUCCESS
+            if not outcome.status.succeeded
         }
         failures = list(membership_failures)
         if unsuccessful:

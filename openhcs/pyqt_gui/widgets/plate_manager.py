@@ -84,7 +84,7 @@ from openhcs.authoring.session.views import (
     output_relations,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorCreated
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
 )
@@ -355,7 +355,7 @@ class PlateManagerWidget(
     @override
     def _get_list_item_tooltip(self, item: DatasetRow) -> str:
         orchestrator = ObjectStateRegistry.get_object(item.scope_id)
-        return f"Status: {orchestrator.state.value}" if orchestrator else ""
+        return f"Status: {orchestrator.state.name}" if orchestrator else ""
 
     @override
     def _get_item_scope_id(self, item: DatasetRow, index: int) -> Optional[str]:
@@ -450,7 +450,7 @@ class PlateManagerWidget(
         orchestrator = ObjectStateRegistry.get_object(scope_id)
         if (
             orchestrator is not None
-            and orchestrator.state is not OrchestratorState.CREATED
+            and orchestrator.state is not OrchestratorCreated
         ):
             return orchestrator
         return None

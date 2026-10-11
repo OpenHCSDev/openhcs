@@ -12,7 +12,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.debug import DebugSession, DebugSnapshot, DebugTerminalSummary
 from openhcs.core.execution_state import (
     ManagerExecutionState,
-    TerminalExecutionStatus,
+    TerminalExecutionStatus, ExecutionCancelled, ExecutionCompleted, ExecutionFailed,
     parse_terminal_status,
 )
 
@@ -211,11 +211,11 @@ class ActiveDebugSessionPhase(DebugSessionPhaseDeclarationBase):
 class TerminalDebugSessionPhase(DebugSessionPhaseDeclarationBase):
     """Shared terminal debugger phase matching a terminal execution status."""
 
-    terminal_status: ClassVar[TerminalExecutionStatus | None] = None
+    terminal_status: ClassVar[type[TerminalExecutionStatus] | None] = None
     is_terminal = True
 
     @classmethod
-    def require_terminal_status(cls) -> TerminalExecutionStatus:
+    def require_terminal_status(cls) -> type[TerminalExecutionStatus]:
         if cls.terminal_status is None:
             raise TypeError(f"{cls.__name__} does not declare a terminal status.")
         return cls.terminal_status
@@ -242,7 +242,7 @@ class TerminalCompleteDebugSessionPhase(TerminalDebugSessionPhase):
     title = "Debug Complete"
     detail = "Last debug command completed."
     status_prefix = "Debug complete"
-    terminal_status = TerminalExecutionStatus.COMPLETE
+    terminal_status = ExecutionCompleted
 
 
 class TerminalFailedDebugSessionPhase(TerminalDebugSessionPhase):
@@ -251,7 +251,7 @@ class TerminalFailedDebugSessionPhase(TerminalDebugSessionPhase):
     title = "Debug Failed"
     detail = "Last debug command failed."
     status_prefix = "Debug failed"
-    terminal_status = TerminalExecutionStatus.FAILED
+    terminal_status = ExecutionFailed
 
 
 class TerminalCancelledDebugSessionPhase(TerminalDebugSessionPhase):
@@ -260,7 +260,7 @@ class TerminalCancelledDebugSessionPhase(TerminalDebugSessionPhase):
     title = "Debug Cancelled"
     detail = "Last debug command was cancelled."
     status_prefix = "Debug cancelled"
-    terminal_status = TerminalExecutionStatus.CANCELLED
+    terminal_status = ExecutionCancelled
 
 
 class ReadyDebugSessionPhase(DebugSessionPhaseDeclarationBase):

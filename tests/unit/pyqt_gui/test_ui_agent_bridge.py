@@ -120,7 +120,7 @@ from openhcs.authoring.session.operations.pipelines import (
 )
 from openhcs.authoring.session.session import CallerThread, Renderer, Session
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorExecuting, OrchestratorReady
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
@@ -3666,7 +3666,7 @@ def pipeline_gui(selected_steps: tuple[int, ...] = (0,), *, compiled: bool = Tru
     with session_gui() as gui:
         session = gui.session
         session.ensure_datasets((DATASET_SCOPE_ID,))
-        session.set_dataset_state(DATASET_SCOPE_ID, OrchestratorState.READY)
+        session.set_dataset_state(DATASET_SCOPE_ID, OrchestratorReady)
         session.set_pipeline(
             DATASET_SCOPE_ID,
             [
@@ -4085,7 +4085,7 @@ def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id(
 def test_plate_manager_state_terminal_status_overrides_stale_executing_state() -> None:
     with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
         session = gui.session
-        session.orchestrator(DATASET_SCOPE_ID)._state = OrchestratorState.EXECUTING
+        session.orchestrator(DATASET_SCOPE_ID)._state = OrchestratorExecuting
         session.batch.begin_batch((DATASET_SCOPE_ID,))
         session.batch.record_execution(DATASET_SCOPE_ID, "failed-execution")
         session.batch.mark_terminal(DATASET_SCOPE_ID, "failed")

@@ -118,7 +118,7 @@ class WorkerLaneExecutionPlan(ProgressExecutionContext):
 
     debug_execution_policy: DebugExecutionPolicy
     assignments: WorkerAssignmentPlan
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
 
     def active_lane_items(self) -> tuple[tuple[str, WorkerLaneAxisContexts], ...]:
         """Return worker lanes that own at least one axis context."""

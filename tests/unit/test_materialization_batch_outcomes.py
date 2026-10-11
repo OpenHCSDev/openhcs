@@ -159,7 +159,7 @@ class FrozenWorkerContext(ProcessingContext):
         self.released = True
 
 
-@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode))
+@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode.__subclasses__()))
 def test_worker_exports_actual_step_outcomes_after_resource_release(
     tmp_path, monkeypatch, mode
 ):

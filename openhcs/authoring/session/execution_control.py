@@ -10,10 +10,10 @@ from zmqruntime import EndpointShutdownMode
 from zmqruntime.shutdown import EndpointShutdownService
 
 from openhcs.authoring.session.events import ErrorReported
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorExecFailed
 from openhcs.core.execution_state import (
     ManagerExecutionState,
-    TerminalExecutionStatus,
+    ExecutionCancelled, ExecutionFailed,
 )
 
 if TYPE_CHECKING:
@@ -47,8 +47,8 @@ class ExecutionControl:
     async def handle_execution_failure(self) -> None:
         session = self._session
         for scope_id in tuple(session.batch.active_plates):
-            session.batch.mark_terminal(scope_id, TerminalExecutionStatus.FAILED)
-            session.set_dataset_state(scope_id, OrchestratorState.EXEC_FAILED)
+            session.batch.mark_terminal(scope_id, ExecutionFailed)
+            session.set_dataset_state(scope_id, OrchestratorExecFailed)
         session.execution_state = ManagerExecutionState.IDLE
         try:
             await session.client.disconnect()
@@ -92,7 +92,7 @@ class ExecutionControl:
         session = self._session
         for scope_id in session.batch.cancellable_plates():
             session.finish_dataset_execution(
-                TerminalExecutionStatus.CANCELLED.completion_payload(
+                ExecutionCancelled.completion_payload(
                     execution_id=session.batch.execution_id(scope_id),
                     execution_payload={},
                 ),

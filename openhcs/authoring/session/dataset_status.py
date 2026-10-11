@@ -30,11 +30,11 @@ class PlateStatusPresenter:
     def build_status_prefix(
         cls,
         *,
-        orchestrator_state: Optional[OrchestratorState],
+        orchestrator_state: Optional[type[OrchestratorState]],
         is_init_pending: bool,
         is_compile_pending: bool,
         is_execution_active: bool,
-        terminal_status: Optional[TerminalExecutionStatus],
+        terminal_status: Optional[type[TerminalExecutionStatus]],
         runtime_projection: Optional[SubjectRuntimeProjection],
     ) -> str:
         # Runtime projection is canonical whenever present.

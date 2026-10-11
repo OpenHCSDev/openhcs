@@ -72,7 +72,7 @@ from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
 )
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.core.execution_state import (
-    TerminalExecutionStatus,
+    ExecutionFailed,
 )
 
 ORCHESTRATOR_DOCUMENT_TITLE = "Plate manager orchestrator config"
@@ -549,7 +549,7 @@ class PlateManagerStateSurfaceProvider(
 
     @staticmethod
     def _overview_row_severity(row: DatasetRowState) -> UiLiveOverviewSeverity:
-        if row.terminal_status == TerminalExecutionStatus.FAILED.value:
+        if row.terminal_status == ExecutionFailed.name:
             return UiLiveOverviewSeverity.ERROR
         if row.execution_active or row.queue_position is not None:
             return UiLiveOverviewSeverity.WARNING

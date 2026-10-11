@@ -76,7 +76,7 @@ from openhcs.runtime.zmq_execution_client import (
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
@@ -2146,7 +2146,7 @@ def run_case_well_throughput(
     ).with_auxiliary_params(
         ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=observation_path,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+            runtime_observation_export_scope=ExportRuntimeOutcomes,
         )
     )
     progress_events: list[dict[str, Any]] = []

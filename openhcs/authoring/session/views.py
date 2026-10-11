@@ -294,10 +294,10 @@ class DatasetListView(SessionView):
             execution_active=activity.execution_active,
             status_prefix=activity.status_prefix,
             orchestrator_state=(
-                None if orchestrator_state is None else orchestrator_state.value
+                None if orchestrator_state is None else orchestrator_state.name
             ),
             execution_id=activity.execution_id,
-            terminal_status=None if terminal is None else terminal.value,
+            terminal_status=None if terminal is None else terminal.name,
             runtime_state=None if runtime is None else runtime.state.state_name,
             runtime_percent=None if runtime is None else runtime.percent,
             queue_position=None if runtime is None else runtime.queue_position,

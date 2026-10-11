@@ -56,7 +56,12 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
 from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import (
+    OrchestratorCompileFailed,
+    OrchestratorExecFailed,
+    OrchestratorInitFailed,
+    OrchestratorState,
+)
 from openhcs.core.execution_state import (
     ManagerExecutionState,
     TerminalExecutionStatus,
@@ -536,7 +541,7 @@ class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     workflow: ClassVar[UiSelectedPlateWorkflowKind]
-    failed_orchestrator_states: ClassVar[tuple[OrchestratorState, ...]] = ()
+    failed_orchestrator_states: ClassVar[tuple[type[OrchestratorState], ...]] = ()
     terminal_state_is_idempotent: ClassVar[bool] = False
 
     @classmethod
@@ -565,7 +570,7 @@ class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
 
 class InitWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.INIT
-    failed_orchestrator_states = (OrchestratorState.INIT_FAILED,)
+    failed_orchestrator_states = (OrchestratorInitFailed,)
     terminal_state_is_idempotent = True
 
     def terminal_for_row(self, row: DatasetRowState) -> bool:
@@ -574,7 +579,7 @@ class InitWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
 
 class CompileWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.COMPILE
-    failed_orchestrator_states = (OrchestratorState.COMPILE_FAILED,)
+    failed_orchestrator_states = (OrchestratorCompileFailed,)
 
     def terminal_for_row(self, row: DatasetRowState) -> bool:
         return row.compile_pending is False and row.compiled is True
@@ -582,7 +587,7 @@ class CompileWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
 
 class RunWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.RUN
-    failed_orchestrator_states = (OrchestratorState.EXEC_FAILED,)
+    failed_orchestrator_states = (OrchestratorExecFailed,)
 
     def terminal_for_row(self, row: DatasetRowState) -> bool:
         return (
@@ -2451,24 +2456,21 @@ def workflow_poll_target_rows(
 
 def terminal_execution_status(
     value: str | None,
-) -> TerminalExecutionStatus | None:
+) -> type[TerminalExecutionStatus] | None:
     if value is None:
         return None
     try:
-        return TerminalExecutionStatus(value)
+        return TerminalExecutionStatus.named(value)
     except ValueError:
         return None
 
 
 def parse_orchestrator_state(
     value: str | None,
-) -> OrchestratorState | None:
+) -> type[OrchestratorState] | None:
     if value is None:
         return None
-    try:
-        return OrchestratorState(value)
-    except ValueError:
-        return None
+    return OrchestratorState.named(value)
 
 
 def workflow_poll_summary_result(

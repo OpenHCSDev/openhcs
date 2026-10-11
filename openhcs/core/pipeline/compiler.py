@@ -22,7 +22,8 @@ from typing import (
 import dill as pickle
 
 from openhcs.constants.constants import (
-    OrchestratorState,
+    OrchestratorCompileFailed,
+    OrchestratorCompiled,
     READ_BACKEND,
     WRITE_BACKEND,
     Backend,
@@ -1477,7 +1478,7 @@ class PipelineCompiler:
         PipelineCompiler._log_path_planning_summary(compiled_contexts)
         logger.info("Stripping attributes from pipeline definition steps.")
         StepAttributeStripper.strip_step_attributes(pipeline_definition, {})
-        orchestrator._state = OrchestratorState.COMPILED
+        orchestrator._state = OrchestratorCompiled
         logger.info(
             f"Execution config: {effective_config.num_workers} workers configured for pipeline execution"
         )
@@ -1695,7 +1696,7 @@ class PipelineCompiler:
             )
             return execution_bundle
         except Exception as e:
-            orchestrator._state = OrchestratorState.COMPILE_FAILED
+            orchestrator._state = OrchestratorCompileFailed
             logger.error(f"Failed to compile pipelines: {e}")
             raise
 

@@ -125,7 +125,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         LazySourceBindingsConfig,
         PipelineConfig,
     )
-    from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+    from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_object_labels import object_label_dense_array
@@ -298,7 +298,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="primary-diagnostics-synthetic",

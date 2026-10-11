@@ -8,6 +8,7 @@ from objectstate.lazy_factory import PREVIEW_LABEL_REGISTRY
 from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.theming import ColorScheme
 
+from openhcs.constants.constants import OrchestratorReady
 from openhcs.core.artifacts import MeasurementsArtifactType
 from openhcs.core.config import NapariStreamingConfig
 from openhcs.core.debug import (
@@ -24,7 +25,7 @@ from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
-from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
+from openhcs.core.execution_state import ManagerExecutionState, ExecutionFailed
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
@@ -359,7 +360,7 @@ def debug_editor(tmp_path, monkeypatch, *, run_started_work: bool = False):
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
         orchestrator = session.orchestrator(scope_id)
-        orchestrator._state = type(orchestrator.state).READY
+        orchestrator._state = OrchestratorReady
         session.set_pipeline(
             scope_id,
             [
@@ -781,7 +782,7 @@ def test_session_reuses_the_persistent_paused_worker_across_commands(
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
         orchestrator = session.orchestrator(scope_id)
-        orchestrator._state = type(orchestrator.state).READY
+        orchestrator._state = OrchestratorReady
         compiled, submitted, worker_commands = [], [], []
 
         async def connect():
@@ -852,7 +853,7 @@ def test_dataset_completion_retires_its_debug_session(tmp_path) -> None:
         session.execution_state = ManagerExecutionState.RUNNING
 
         session.finish_dataset_execution(
-            TerminalExecutionStatus.FAILED.completion_payload(
+            ExecutionFailed.completion_payload(
                 execution_id="exec-1", execution_payload={}
             ),
             scope_id,
@@ -861,4 +862,4 @@ def test_dataset_completion_retires_its_debug_session(tmp_path) -> None:
         assert scope_id not in session.debug_sessions
         summary = session.debug_terminal_summaries[scope_id]
         assert summary.debug_session_id == debug_session.debug_session_id
-        assert summary.terminal_status == TerminalExecutionStatus.FAILED.value
+        assert summary.terminal_status == ExecutionFailed.name
