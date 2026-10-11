@@ -46,6 +46,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
@@ -396,7 +397,7 @@ def validate_bundle_execution(
     dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
     if (
         dataset_step_indexes
-        and not request.runtime_observation_mode.collects_records
+        and request.runtime_observation_mode is OmitRuntimeRecords
     ):
         raise ValueError(
             "Dataset-scoped FunctionSteps require a runtime observation mode "

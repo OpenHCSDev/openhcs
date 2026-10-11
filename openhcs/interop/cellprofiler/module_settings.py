@@ -56,7 +56,7 @@ class ModuleSettingRowRecord:
 class ModuleSettingCoverageRecord(ModuleSettingRowRecord):
     """Coverage status for one concrete CellProfiler setting row."""
 
-    status: type["ModuleSettingCoverageStatus"]
+    status: type[ModuleSettingCoverageStatus]
 
 
 class ModuleSettingCoverageStatus(ABC, metaclass=AutoRegisterMeta):
@@ -67,7 +67,7 @@ class ModuleSettingCoverageStatus(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["ModuleSettingCoverageStatus"]]] = {}
+    __registry__: ClassVar[dict[str, type[ModuleSettingCoverageStatus]]] = {}
 
     name: ClassVar[str | None] = None
     is_covered: ClassVar[bool] = True
@@ -79,7 +79,7 @@ class ModuleSettingCoverageStatus(ABC, metaclass=AutoRegisterMeta):
         *,
         unmapped_kwargs: Mapping[str, Any],
         ignored_setting_names: frozenset[str],
-    ) -> type["ModuleSettingCoverageStatus"]:
+    ) -> type[ModuleSettingCoverageStatus]:
         """Return the status of one setting row after binding."""
         if normalized_name not in unmapped_kwargs:
             return SettingBound

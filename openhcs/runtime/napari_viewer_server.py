@@ -4322,8 +4322,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
         if isinstance(data, np.ndarray):
             summary.update(cls.array_summary(data))
         elif isinstance(data, (list, tuple)):
-            summary["item_count"] = len(data)
-            summary["nonzero_count"] = len(data)
+            summary.update(item_count=len(data), nonzero_count=len(data))
             summary.update(cls.shape_payload_summary(data))
         return cls.payload_summary_type.from_wire_mapping(summary)
 

@@ -75,14 +75,14 @@ def configure_gui_logging(
     root_logger = logging.getLogger()
     previous_handlers = tuple(root_logger.handlers)
     root_logger.handlers = handlers
-    if not level.emits_records:
-        logging.disable(logging.CRITICAL)
-        root_logger.setLevel(level.logging_level)
-    else:
+    if level.emits_records:
         logging.disable(logging.NOTSET)
         root_logger.setLevel(level.logging_level)
         logging.getLogger("openhcs").setLevel(level.logging_level)
         logging.getLogger("PIL").setLevel(logging.WARNING)
+    else:
+        logging.disable(logging.CRITICAL)
+        root_logger.setLevel(level.logging_level)
 
     for handler in previous_handlers:
         if handler not in handlers and isinstance(handler, GuiLoggingHandler):

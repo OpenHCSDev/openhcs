@@ -341,7 +341,7 @@ class ViewerDisplaySettings(AnnotatedDataclassValidationMixin):
             ViewerDisplaySettings._viewer_settings.append(cls)
 
     @classmethod
-    def settings_type(cls) -> type["ViewerDisplaySettings"]:
+    def settings_type(cls) -> "type[ViewerDisplaySettings]":
         """The viewer settings class this class is or inherits."""
 
         return next(
@@ -379,7 +379,7 @@ class NapariVariableSizeHandling(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["NapariVariableSizeHandling"]]] = {}
+    __registry__: "ClassVar[dict[str, type[NapariVariableSizeHandling]]]" = {}
 
     name: ClassVar[str | None] = None
 

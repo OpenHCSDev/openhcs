@@ -659,7 +659,7 @@ class WatershedInvocationRequest:
 
     def execute(
         self,
-        runtime: type["WatershedRuntimeStrategy"],
+        runtime: type[WatershedRuntimeStrategy],
         special_inputs: tuple[object, ...] = (),
     ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, ObjectLabelValue]:
         """Apply this request through its declaration-owned runtime family."""

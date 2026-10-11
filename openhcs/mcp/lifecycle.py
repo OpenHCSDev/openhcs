@@ -73,7 +73,7 @@ class McpProcessRecoveryReason(ABC, metaclass=AutoRegisterMeta):
         *,
         source_changed: bool,
         installation_changed: bool,
-    ) -> type["McpProcessRecoveryReason"]:
+    ) -> type[McpProcessRecoveryReason]:
         if source_changed and installation_changed:
             return SourceAndInstallationChanged
         if source_changed:

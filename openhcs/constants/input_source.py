@@ -28,7 +28,7 @@ class InputSource(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["InputSource"]]] = {}
+    __registry__: ClassVar[dict[str, type[InputSource]]] = {}
 
     name: ClassVar[str | None] = None
     reads_pipeline_start: ClassVar[bool]

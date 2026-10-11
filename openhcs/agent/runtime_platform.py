@@ -25,7 +25,7 @@ class AgentRuntimePlatform(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
 
     @staticmethod
-    def current_type() -> type["AgentRuntimePlatform"]:
+    def current_type() -> type[AgentRuntimePlatform]:
         """Return the platform class of the running interpreter."""
         if sys.platform.startswith("win"):
             return WindowsRuntimePlatform

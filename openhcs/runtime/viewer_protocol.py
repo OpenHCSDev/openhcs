@@ -129,7 +129,7 @@ class ViewerSettlePhase(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["ViewerSettlePhase"]]] = {}
+    __registry__: ClassVar[dict[str, type[ViewerSettlePhase]]] = {}
 
     name: ClassVar[str | None] = None
     running: ClassVar[bool] = False
@@ -162,7 +162,7 @@ class SettlementComplete(ViewerSettlePhase):
             raise ValueError("Completed settlement cannot have active intake.")
         if (
             progress.completed_update_count != progress.total_update_count
-            or progress.active_route is not None
+            or progress.routing
         ):
             raise ValueError(
                 "Completed viewer settlement must have no active route and all "
@@ -698,6 +698,11 @@ class ViewerSettleProgress(WireView):
     active_route_work_unit_active: bool = False
     processed_intake_item_count: int = 0
     intake_item_active: bool = False
+
+    @property
+    def routing(self) -> bool:
+        """An update is being routed to a layer."""
+        return self.active_route is not None
 
     def __post_init__(self) -> None:
         if (
@@ -1578,7 +1583,7 @@ class ViewerLifecycle(ABC):
                 viewer.viewer_family.wire_value, port, stop=True, force=True,
             )
             return
-        if cls.owns_process or viewer.process is not None:
+        if cls.owns_process or viewer.has_process:
             viewer.force_stop()
             return
         viewer.lifecycle = ViewerStopped
@@ -1621,11 +1626,8 @@ class ViewerOwnedProcess(ViewerLifecycle):
     @classmethod
     def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
         log = logging.getLogger(type(viewer).__module__)
-        if viewer.process is None:
-            viewer.lifecycle = ViewerStopped
-            return False
         try:
-            alive = endpoint_process(viewer.process).is_alive()
+            alive = viewer.process_alive()
         except Exception as error:
             log.warning(
                 "Error checking %s process status: %s",
@@ -1775,7 +1777,7 @@ class ManagedViewerLifecycleMixin(
     __key_extractor__ = staticmethod(viewer_lifecycle_registry_key)
     __skip_if_no_key__ = True
 
-    __registry__: ClassVar[dict[str, type["ManagedViewerLifecycleMixin"]]]
+    __registry__: ClassVar[dict[str, type[ManagedViewerLifecycleMixin]]]
     viewer_registry_key: ClassVar[str | None] = None
     viewer_process_label: ClassVar[str] = "viewer"
     detached_server_entrypoint: ClassVar[DetachedViewerServerEntrypointSpec]
@@ -1802,6 +1804,17 @@ class ManagedViewerLifecycleMixin(
             config=runtime_config.transport_config,
         )
         self.lifecycle: type[ViewerLifecycle] = ViewerStopped
+
+    @property
+    def has_process(self) -> bool:
+        """This manager holds a launched viewer process."""
+        return self.process is not None
+
+    def process_alive(self) -> bool:
+        """Whether this manager's launched viewer process is still alive."""
+        if self.process is None:
+            return False
+        return endpoint_process(self.process).is_alive()
 
     @property
     def required_port(self) -> int:

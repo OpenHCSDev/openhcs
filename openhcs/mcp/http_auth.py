@@ -42,7 +42,7 @@ class McpHttpAuthenticationMode(ABC, metaclass=AutoRegisterMeta):
         """Project this mode into MCP tool security-scheme metadata."""
 
     @staticmethod
-    def named(name: str) -> type["McpHttpAuthenticationMode"]:
+    def named(name: str) -> type[McpHttpAuthenticationMode]:
         """Return the mode spelled ``name``."""
         mode = McpHttpAuthenticationMode.__registry__.get(name)
         if mode is None:
@@ -55,7 +55,7 @@ class McpHttpAuthenticationMode(ABC, metaclass=AutoRegisterMeta):
     @staticmethod
     def from_oauth_policy(
         oauth: "McpHttpOAuthSettings | None",
-    ) -> type["McpHttpAuthenticationMode"]:
+    ) -> type[McpHttpAuthenticationMode]:
         """Derive the mode from the materialized variant policy."""
         if oauth is None:
             return PublicReadOnlyAccess

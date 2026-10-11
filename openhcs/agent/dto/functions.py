@@ -374,18 +374,22 @@ class FunctionParameterSource(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     name: ClassVar[str | None] = None
-    agent_supplied: ClassVar[bool] = False
-    """The agent passes this parameter as a FunctionStep kwarg."""
-    runtime_description: ClassVar[str | None] = None
-    """Why the agent must not pass a runtime-supplied parameter."""
+    runtime_description: ClassVar[str] = ""
+    """Why the agent must not pass this parameter; empty when the agent passes it."""
 
 
 class SuppliedByAgent(FunctionParameterSource):
+    """The agent passes this parameter as a FunctionStep kwarg."""
+
     name = "agent"
-    agent_supplied = True
 
 
-class SuppliedFromPrimaryInput(FunctionParameterSource):
+class SuppliedAtRuntime(FunctionParameterSource):
+    """OpenHCS supplies this parameter during execution."""
+
+
+
+class SuppliedFromPrimaryInput(SuppliedAtRuntime):
     name = "runtime_primary_input"
     runtime_description = (
         "Supplied by OpenHCS from the FunctionStep input image payload; do not "
@@ -393,7 +397,7 @@ class SuppliedFromPrimaryInput(FunctionParameterSource):
     )
 
 
-class SuppliedFromArtifactInput(FunctionParameterSource):
+class SuppliedFromArtifactInput(SuppliedAtRuntime):
     name = "runtime_artifact_input"
     runtime_description = (
         "Supplied by OpenHCS from a declared artifact input during pipeline "
@@ -401,7 +405,7 @@ class SuppliedFromArtifactInput(FunctionParameterSource):
     )
 
 
-class SuppliedByRuntime(FunctionParameterSource):
+class SuppliedByRuntime(SuppliedAtRuntime):
     name = "runtime_parameter"
     runtime_description = (
         "Supplied by OpenHCS runtime execution infrastructure; do not pass this "
@@ -409,7 +413,7 @@ class SuppliedByRuntime(FunctionParameterSource):
     )
 
 
-class SuppliedAsRuntimeAdapter(FunctionParameterSource):
+class SuppliedAsRuntimeAdapter(SuppliedAtRuntime):
     name = "runtime_adapter"
     runtime_description = (
         "Supplied by OpenHCS as a runtime adapter object; do not pass this as a "

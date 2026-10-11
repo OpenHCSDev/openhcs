@@ -10,6 +10,7 @@ from pathlib import Path
 
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import (
+    AxisSucceeded,
     ExecutionResult,
     RuntimeExecutionObservation,
     ExecutionStatus,
@@ -142,7 +143,7 @@ class ZMQRuntimeExecutionOutcomeExport:
         unsuccessful = {
             axis_id: outcome.status.name
             for axis_id, outcome in self.outcomes_by_axis.items()
-            if not outcome.status.succeeded
+            if outcome.status is not AxisSucceeded
         }
         failures = list(membership_failures)
         if unsuccessful:

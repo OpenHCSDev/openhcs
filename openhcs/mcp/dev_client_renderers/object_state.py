@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from openhcs.agent.dto.ui_bridge import (
+    AllFields,
     UiCatalogPageMetadata,
     UiObjectStateFieldHelpResult,
     UiObjectStateFieldListResult,
@@ -254,7 +255,7 @@ class ObjectStateFieldRenderer(ObjectStatePresentation):
             filters.append("field_paths=" + ",".join(payload.field_paths))
         if payload.field_path_contains:
             filters.append("contains=" + ",".join(payload.field_path_contains))
-        if not payload.field_filter.keeps_every_field:
+        if payload.field_filter is not AllFields:
             filters.append(f"field_filter={payload.field_filter.name}")
         if payload.include_container_fields:
             filters.append("include_container_fields=True")

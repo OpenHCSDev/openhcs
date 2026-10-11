@@ -5886,7 +5886,7 @@ class SplitOrMergeInputTopology(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "function_name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SplitOrMergeInputTopology"]]] = {}
+    __registry__: ClassVar[dict[str, type[SplitOrMergeInputTopology]]] = {}
 
     function_name: ClassVar[str | None] = None
     uses_guide_image: ClassVar[bool] = False
@@ -5898,7 +5898,7 @@ class SplitOrMergeInputTopology(ABC, metaclass=AutoRegisterMeta):
         operation: SplitOrMergeOperation,
         merge_method: SplitOrMergeMergeMethod,
         use_guide_image: bool,
-    ) -> type["SplitOrMergeInputTopology"]:
+    ) -> type[SplitOrMergeInputTopology]:
         if operation is SplitOrMergeOperation.SPLIT:
             return SplitOrMergeLabelsOnly
         if merge_method is SplitOrMergeMergeMethod.PER_PARENT:

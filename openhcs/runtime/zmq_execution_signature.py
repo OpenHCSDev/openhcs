@@ -55,8 +55,12 @@ class ZMQRuntimeObservationExportScope(ABC, metaclass=AutoRegisterMeta):
     retains_runtime_values: ClassVar[bool]
     """Workers return their full runtime values for the export."""
 
+    @classmethod
+    def check_export_path(cls, export_path: object) -> None:
+        """Reject a request that lacks the export path this scope needs."""
+
     @staticmethod
-    def named(value: str) -> type["ZMQRuntimeObservationExportScope"]:
+    def named(value: str) -> type[ZMQRuntimeObservationExportScope]:
         scope = ZMQRuntimeObservationExportScope.__registry__.get(value)
         if scope is None:
             raise ValueError(f"Unknown runtime observation export scope: {value!r}.")
@@ -105,6 +109,11 @@ class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
     name = "outcomes"
     retains_runtime_values = False
 
+    @classmethod
+    def check_export_path(cls, export_path: object) -> None:
+        if export_path is None:
+            raise ValueError("Outcome observation requires an export path.")
+
     @staticmethod
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
@@ -138,11 +147,9 @@ class ZMQAuxiliaryExecutionParams:
     )
 
     def __post_init__(self) -> None:
-        if (
-            not self.runtime_observation_export_scope.retains_runtime_values
-            and self.runtime_observation_export_path is None
-        ):
-            raise ValueError("Outcome observation requires an export path.")
+        self.runtime_observation_export_scope.check_export_path(
+            self.runtime_observation_export_path
+        )
 
     def runtime_observation_mode_for(
         self,

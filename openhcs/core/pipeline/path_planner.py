@@ -71,10 +71,9 @@ from openhcs.core.source_bindings import (
     source_binding_group_keys_for_group_by,
 )
 from openhcs.core.step_dependencies import (
-    NoMainFlowInput,
-    PipelineStartInput,
     StepInputDependency,
     StepOutputInput,
+    UnresolvedStepInput,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
@@ -1852,7 +1851,7 @@ class PathPlannerValidationStage:
         for i in range(1, self.planner.session.step_count):
             curr = self.planner.session.pipeline.steps[i]
             dependency = self.planner.plans[i].main_input_dependency
-            if not dependency.is_resolved:
+            if isinstance(dependency, UnresolvedStepInput):
                 raise ValueError(f"Step {curr.name} has unresolved main input dependency.")
             if not isinstance(dependency, StepOutputInput):
                 continue
@@ -2250,24 +2249,15 @@ class PathPlannerStepAssemblyStage:
         plan = self.planner.plans.get(step_index)
         if plan is not None and plan.input_dir is not None:
             input_dir = Path(plan.input_dir)
-        elif isinstance(main_input_dependency, PipelineStartInput):
-            input_dir = self.planner.initial_input
-        elif isinstance(main_input_dependency, NoMainFlowInput):
-            input_dir = self.planner.paths.build_output_path()
         else:
-            source_step_index = main_input_dependency.predecessor_step_index()
-            if source_step_index is None:
-                raise ValueError(
-                    f"Step {step_index} main input dependency is unresolved."
-                )
-            input_dir = Path(self.planner.plans[source_step_index].output_dir)
+            input_dir = main_input_dependency.default_input_dir(self.planner)
 
         if plan is not None and plan.output_dir is not None:
             output_dir = Path(plan.output_dir)
-        elif isinstance(main_input_dependency, PipelineStartInput | NoMainFlowInput):
-            output_dir = self.planner.paths.build_output_path()
         else:
-            output_dir = input_dir
+            output_dir = main_input_dependency.default_output_dir(
+                self.planner, input_dir
+            )
 
         return input_dir, output_dir
 

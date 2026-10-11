@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import ClassVar
+from pathlib import Path
+from typing import TYPE_CHECKING, ClassVar
+
+if TYPE_CHECKING:
+    from openhcs.core.pipeline.path_planner import PathPlanner
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +36,16 @@ class StepInputDependency(ABC):
             f"{type(self).__name__}."
         )
 
+    def default_input_dir(self, planner: PathPlanner) -> Path:
+        """The directory the step reads when its plan names none."""
+
+        raise ValueError(f"Step main input dependency is unresolved: {self!r}.")
+
+    def default_output_dir(self, planner: PathPlanner, input_dir: Path) -> Path:
+        """The directory the step writes when its plan names none."""
+
+        return input_dir
+
 
 @dataclass(frozen=True, slots=True)
 class UnresolvedStepInput(StepInputDependency):
@@ -44,6 +58,12 @@ class UnresolvedStepInput(StepInputDependency):
 class NoMainFlowInput(StepInputDependency):
     """The step reads no main-flow image stack."""
 
+    def default_input_dir(self, planner: PathPlanner) -> Path:
+        return planner.paths.build_output_path()
+
+    def default_output_dir(self, planner: PathPlanner, input_dir: Path) -> Path:
+        return planner.paths.build_output_path()
+
 
 @dataclass(frozen=True, slots=True)
 class PipelineStartInput(StepInputDependency):
@@ -54,6 +74,12 @@ class PipelineStartInput(StepInputDependency):
 
     def require_pipeline_start(self) -> None:
         return None
+
+    def default_input_dir(self, planner: PathPlanner) -> Path:
+        return planner.initial_input
+
+    def default_output_dir(self, planner: PathPlanner, input_dir: Path) -> Path:
+        return planner.paths.build_output_path()
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,3 +95,6 @@ class StepOutputInput(StepInputDependency):
 
     def predecessor_step_index(self) -> int:
         return self.source_step_index
+
+    def default_input_dir(self, planner: PathPlanner) -> Path:
+        return Path(planner.plans[self.source_step_index].output_dir)

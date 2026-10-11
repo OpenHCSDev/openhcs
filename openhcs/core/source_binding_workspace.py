@@ -508,7 +508,7 @@ class SourceBindingProjectionStrategy(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "role"
     __skip_if_no_key__ = True
     __registry__: ClassVar[
-        dict[type[SourceProjectionRole], type["SourceBindingProjectionStrategy"]]
+        dict[type[SourceProjectionRole], type[SourceBindingProjectionStrategy]]
     ] = {}
 
     role: ClassVar[type[SourceProjectionRole] | None] = None
@@ -1193,9 +1193,7 @@ class SourceBindingWorkspaceProjector:
         projections: list[SourceProjection] = []
         for source_set in source_sets:
             well = self._source_set_well(source_set)
-            projection_indexes = {
-                role: 0 for role in SourceProjectionRole.__registry__.values()
-            }
+            projection_indexes = dict.fromkeys(SourceProjectionRole.__registry__.values(), 0)
             for binding in bindings:
                 candidate = source_set.candidates_by_alias.get(binding.alias)
                 if candidate is None:

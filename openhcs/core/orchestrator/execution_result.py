@@ -130,12 +130,8 @@ class RuntimeExecutionObservation:
 class RuntimeObservationMode(ABC):
     """Which worker runtime records are returned to the parent; each mode keeps its own."""
 
-    collects_records: ClassVar[bool] = True
-    returns_every_record: ClassVar[bool] = False
-    """Workers keep each record to the end, so consumed inputs are never released."""
-
     @staticmethod
-    def from_parent_requirement(required: bool) -> type["RuntimeObservationMode"]:
+    def from_parent_requirement(required: bool) -> "type[RuntimeObservationMode]":
         """Select the mode implied by compiled parent-side execution needs."""
 
         return MergeAllRuntimeRecords if required else OmitRuntimeRecords
@@ -143,7 +139,7 @@ class RuntimeObservationMode(ABC):
     @staticmethod
     def for_compiled_bundle(
         bundle: "CompiledExecutionBundle",
-    ) -> type["RuntimeObservationMode"]:
+    ) -> "type[RuntimeObservationMode]":
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
@@ -154,7 +150,7 @@ class RuntimeObservationMode(ABC):
     def including_parent_requirement(
         cls,
         required: bool,
-    ) -> type["RuntimeObservationMode"]:
+    ) -> "type[RuntimeObservationMode]":
         """Return this mode strengthened by an additional retention requirement."""
 
         return MergeAllRuntimeRecords if required else cls
@@ -169,9 +165,10 @@ class RuntimeObservationMode(ABC):
 
 
 class MergeAllRuntimeRecords(RuntimeObservationMode):
-    """Return every worker record to the parent."""
+    """Return every worker record to the parent.
 
-    returns_every_record = True
+    Workers keep each record to the end, so consumed inputs are never released.
+    """
 
     @staticmethod
     def retain_records(records, context):
@@ -215,8 +212,6 @@ class MergeDatasetInputRecords(RuntimeObservationMode):
 
 class OmitRuntimeRecords(RuntimeObservationMode):
     """Return no worker records."""
-
-    collects_records = False
 
     @staticmethod
     def retain_records(records, context):

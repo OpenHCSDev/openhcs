@@ -1209,9 +1209,8 @@ class Session:
         """Runtime observation export options for a run, under the access policy."""
 
         scope = export_scope
+        scope.check_export_path(export_path)
         if export_path is None:
-            if not scope.retains_runtime_values:
-                raise ValueError("Outcome observation requires an export path.")
             return None
         path = self.dataset_access.require_writable(Path(export_path))
         if path.exists():

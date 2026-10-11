@@ -192,12 +192,10 @@ class WorkflowPollSummaryStatus(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     name: ClassVar[str | None] = None
-    completed: ClassVar[bool] = False
 
 
 class PollCompleted(WorkflowPollSummaryStatus):
     name = "completed"
-    completed = True
 
 
 class PollFailed(WorkflowPollSummaryStatus):
@@ -671,7 +669,7 @@ class WorkflowPollSummary:
 
     @property
     def mcp_error(self) -> bool:
-        return not self.status.completed
+        return self.status is not PollCompleted
 
     def as_payload(self) -> dict[str, JsonValue]:
         payload: dict[str, JsonValue] = {

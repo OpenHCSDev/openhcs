@@ -1439,7 +1439,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.check_for_updates_action.setEnabled(True)
         update = result.update
         if not update.update_available:
-            if not result.origin.quiet:
+            if result.origin is ExplicitUpdateCheck:
                 self.status_message.emit("OpenHCS is up to date")
                 self.desktop_update_presenter.show_up_to_date(update)
             return

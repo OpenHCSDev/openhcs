@@ -404,7 +404,7 @@ class NapariLayerSettlementState:
         with self._lock:
             if self.updates is None:
                 return None
-            if not self.phase.running:
+            if self.phase is not SettlementRunning:
                 return None
             if self.active_route is not None:
                 raise RuntimeError(

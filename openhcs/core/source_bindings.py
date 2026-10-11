@@ -64,7 +64,7 @@ class SourceBindingOrigin(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SourceBindingOrigin"]]] = {}
+    __registry__: ClassVar[dict[str, type[SourceBindingOrigin]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -87,7 +87,7 @@ class SourceSetRole(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SourceSetRole"]]] = {}
+    __registry__: ClassVar[dict[str, type[SourceSetRole]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -110,7 +110,7 @@ class SourceProjectionRole(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SourceProjectionRole"]]] = {}
+    __registry__: ClassVar[dict[str, type[SourceProjectionRole]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -145,7 +145,7 @@ class MetadataSource(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["MetadataSource"]]] = {}
+    __registry__: ClassVar[dict[str, type[MetadataSource]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -181,7 +181,7 @@ class SourceFilterSubject(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SourceFilterSubject"]]] = {}
+    __registry__: ClassVar[dict[str, type[SourceFilterSubject]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -221,7 +221,7 @@ class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["SourceFilterMatchType"]]] = {}
+    __registry__: ClassVar[dict[str, type[SourceFilterMatchType]]] = {}
 
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
@@ -252,7 +252,7 @@ class TextMatchType(SourceFilterMatchType):
         return cls.compare(text, value)
 
     @classmethod
-    def negation(cls) -> type["TextMatchType"]:
+    def negation(cls) -> type[TextMatchType]:
         """The comparison that holds exactly when this one does not."""
 
         (negation,) = (

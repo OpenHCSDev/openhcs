@@ -50,8 +50,7 @@ class StartupReadinessState:
     @staticmethod
     def fail(readiness: "MainWindowStartupReadiness", error: BaseException) -> None:
         readiness._finish()
-        if readiness._on_failure is not None:
-            readiness._on_failure(error)
+        readiness._report_failure(error)
 
 
 class WaitingForDeferredInitialization(StartupReadinessState):
@@ -73,14 +72,7 @@ class PaintCompletionQueued(StartupReadinessState):
     def report_painted_ready(readiness: "MainWindowStartupReadiness") -> None:
         readiness._finish()
         logger.info("OpenHCS main window painted and ready")
-        if readiness._on_ready is None:
-            return
-        try:
-            readiness._on_ready()
-        except Exception as error:
-            if readiness._on_failure is None:
-                raise
-            readiness._on_failure(error)
+        readiness._report_ready()
 
 
 class StartupReadinessFinished(StartupReadinessState):
@@ -124,6 +116,20 @@ class MainWindowStartupReadiness(QtCore.QObject):
 
     def _report_painted_ready(self) -> None:
         self._state.report_painted_ready(self)
+
+    def _report_failure(self, error: BaseException) -> None:
+        if self._on_failure is not None:
+            self._on_failure(error)
+
+    def _report_ready(self) -> None:
+        if self._on_ready is None:
+            return
+        try:
+            self._on_ready()
+        except Exception as error:
+            if self._on_failure is None:
+                raise
+            self._on_failure(error)
 
     def _finish(self) -> None:
         self._state = StartupReadinessFinished

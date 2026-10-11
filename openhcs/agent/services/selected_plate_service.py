@@ -9,6 +9,7 @@ from openhcs.core.selection import SelectedItems
 from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
 from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
+    OutputPlateRoot,
     PlateInspectionDefaults,
     PlatePathInspectionRequest,
     SelectedPlateFileQueryRequest,
@@ -476,7 +477,7 @@ class SelectedPlateService:
         kind: PlateFileKind | None,
     ) -> str | None:
         if (
-            not target.streams_from_source_context
+            target is not OutputPlateRoot
             or kind is not PlateFileKind.RESULT
         ):
             return None

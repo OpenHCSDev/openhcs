@@ -29,6 +29,7 @@ from python_introspect import (
 
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
+    AllFields,
     UiCatalogPageMetadata,
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
@@ -421,7 +422,7 @@ class ObjectStateScopeProjectionService:
             )
         else:
             all_field_paths = tuple(sorted(state.parameters.keys()))
-        if not request.field_filter.keeps_every_field:
+        if request.field_filter is not AllFields:
             all_field_paths = tuple(
                 field_path
                 for field_path in all_field_paths

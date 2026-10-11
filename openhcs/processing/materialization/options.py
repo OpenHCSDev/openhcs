@@ -29,7 +29,7 @@ class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["MaterializedFilenameIdentity"]]] = {}
+    __registry__: ClassVar[dict[str, type[MaterializedFilenameIdentity]]] = {}
 
     name: ClassVar[str | None] = None
 

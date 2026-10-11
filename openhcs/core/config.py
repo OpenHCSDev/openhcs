@@ -134,12 +134,10 @@ class MaterializationBackend(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["MaterializationBackend"]]] = {}
+    __registry__: "ClassVar[dict[str, type[MaterializationBackend]]]" = {}
 
     name: ClassVar[str | None] = None
     backend: ClassVar[Backend]
-    writes_zarr: ClassVar[bool] = False
-    """Outputs are a Zarr store, which needs a Zarr config and converted inputs."""
 
 
 class MaterializeAuto(MaterializationBackend):
@@ -150,9 +148,10 @@ class MaterializeAuto(MaterializationBackend):
 
 
 class MaterializeToZarr(MaterializationBackend):
+    """Write a Zarr store, which needs a Zarr config and converted inputs."""
+
     name = "zarr"
     backend = Backend.ZARR
-    writes_zarr = True
 
 
 class MaterializeToDisk(MaterializationBackend):
@@ -174,7 +173,7 @@ class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["PartitionFilterMode"]]] = {}
+    __registry__: "ClassVar[dict[str, type[PartitionFilterMode]]]" = {}
 
     name: ClassVar[str | None] = None
     preview_prefix: ClassVar[str]
@@ -442,7 +441,7 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     """
 
     @classmethod
-    def partition_filter_inheritance_branch(cls) -> type["PartitionFilterConfig"]:
+    def partition_filter_inheritance_branch(cls) -> "type[PartitionFilterConfig]":
         """Return the nominal MRO branch that may supply inherited filters."""
         return cls
 
@@ -549,7 +548,7 @@ class DtypeConfig(
         return cls()
 
     @classmethod
-    def annotation_type(cls) -> type["DtypeConfig"]:
+    def annotation_type(cls) -> "type[DtypeConfig]":
         """Expose the inheritable config type on callable signatures."""
         return cls
 
@@ -1296,13 +1295,13 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     def config_type_for_viewer(
         cls,
         viewer_type: ViewerType,
-    ) -> type["StreamingConfig"]:
+    ) -> "type[StreamingConfig]":
         """Return the registered config declaration for one viewer."""
 
         return cls.__registry__[ViewerFamily.named(viewer_type)]
 
     @classmethod
-    def config_type_for_key(cls, config_key: str) -> type["StreamingConfig"]:
+    def config_type_for_key(cls, config_key: str) -> "type[StreamingConfig]":
         """Return the registered streaming config type for an ObjectState field key."""
         return cls.__registry__[ViewerFamily.for_config_key(config_key)]
 

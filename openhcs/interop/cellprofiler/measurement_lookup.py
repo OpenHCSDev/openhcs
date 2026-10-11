@@ -90,7 +90,7 @@ class CellProfilerMeasurementFeatureKind(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["CellProfilerMeasurementFeatureKind"]]] = {}
+    __registry__: ClassVar[dict[str, type[CellProfilerMeasurementFeatureKind]]] = {}
 
     name: ClassVar[str | None] = None
     needs_prior_measurement_rows: ClassVar[bool] = True

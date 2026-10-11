@@ -36,7 +36,7 @@ class CellProfilerPipelineStage(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["CellProfilerPipelineStage"]]] = {}
+    __registry__: ClassVar[dict[str, type[CellProfilerPipelineStage]]] = {}
 
     name: ClassVar[str | None] = None
     filename_token: ClassVar[str | None] = None
@@ -45,7 +45,7 @@ class CellProfilerPipelineStage(ABC, metaclass=AutoRegisterMeta):
     """A folder's only pipeline of this stage is its default pipeline."""
 
     @staticmethod
-    def of(cppipe_path: Path) -> type["CellProfilerPipelineStage"]:
+    def of(cppipe_path: Path) -> type[CellProfilerPipelineStage]:
         tokens = {
             token.casefold()
             for token in cppipe_path.stem.replace("-", "_").replace(" ", "_").split("_")
@@ -201,9 +201,11 @@ class CellProfilerPlateWorkspacePreparer:
         if same_named_cppipe in candidates:
             return same_named_cppipe
 
-        for stage in CellProfilerPipelineStage.__registry__.values():
-            if not stage.chosen_when_unique:
-                continue
+        for stage in (
+            stage
+            for stage in CellProfilerPipelineStage.__registry__.values()
+            if stage.chosen_when_unique
+        ):
             staged = tuple(
                 path
                 for path in candidates

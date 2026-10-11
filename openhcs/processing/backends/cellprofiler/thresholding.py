@@ -915,7 +915,7 @@ class ThresholdDiagnosticRequest:
     """Typed inputs for one CellProfiler threshold diagnostic measurement."""
 
     backend: "NumbaNumpyThresholdDiagnosticsBackendStrategy"
-    domain: type["ThresholdDiagnosticDomain"]
+    domain: type[ThresholdDiagnosticDomain]
     image: np.ndarray
     mask: np.ndarray | None
     binary_image: np.ndarray
@@ -961,12 +961,12 @@ class ThresholdDiagnosticDomain(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["ThresholdDiagnosticDomain"]]] = {}
+    __registry__: ClassVar[dict[str, type[ThresholdDiagnosticDomain]]] = {}
 
     name: ClassVar[str | None] = None
 
     @staticmethod
-    def of_rank(ndim: int) -> type["ThresholdDiagnosticDomain"]:
+    def of_rank(ndim: int) -> type[ThresholdDiagnosticDomain]:
         """Planar images use the 2-D path; every other rank is one image."""
         return PlanarThresholdDiagnostics if ndim == 2 else WholeImageThresholdDiagnostics
 

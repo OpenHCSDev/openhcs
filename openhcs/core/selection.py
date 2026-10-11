@@ -22,7 +22,7 @@ class SelectionScope(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
 
     @staticmethod
-    def named(name: str) -> type["SelectionScope"]:
+    def named(name: str) -> type[SelectionScope]:
         scope = SelectionScope.__registry__.get(name)
         if scope is None:
             raise ValueError(

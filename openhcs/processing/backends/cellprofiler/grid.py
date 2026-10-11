@@ -131,14 +131,14 @@ class DefineGridVariant(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "function_name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["DefineGridVariant"]]] = {}
+    __registry__: ClassVar[dict[str, type[DefineGridVariant]]] = {}
 
     function_name: ClassVar[str | None] = None
     requires_object_input: ClassVar[bool]
     """The variant derives the grid from object labels."""
 
     @staticmethod
-    def from_module(module: ModuleBlock) -> type["DefineGridVariant"]:
+    def from_module(module: ModuleBlock) -> type[DefineGridVariant]:
         method = DefineGridManualModule.DefinitionMethod.from_literal(
             _setting_value(
                 module,
@@ -153,7 +153,7 @@ class DefineGridVariant(ABC, metaclass=AutoRegisterMeta):
         )
 
     @staticmethod
-    def for_function(function_name: str) -> type["DefineGridVariant"]:
+    def for_function(function_name: str) -> type[DefineGridVariant]:
         return DefineGridVariant.__registry__[function_name]
 
 
@@ -204,7 +204,7 @@ def define_grid_bound_kwargs(
             )
         ),
     }
-    if not DefineGridVariant.from_module(module).requires_object_input:
+    if DefineGridVariant.from_module(module) is ManualGrid:
         first_x, first_y = _coordinate_pair(
             _setting_value(
                 module,
@@ -494,7 +494,7 @@ class DefineGridManualModule(
         """Bind scalar rows and the two coordinate-pair compound rows."""
 
         variant = DefineGridVariant.from_module(module)
-        if not variant.requires_object_input:
+        if variant is ManualGrid:
             manual_method = optional_setting_value(
                 module, cls.manual_definition_method_setting
             )
@@ -863,7 +863,7 @@ class SpatialGridDefinitionBase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def registered_definition_types(
         cls,
-    ) -> tuple[type["SpatialGridDefinitionBase"], ...]:
+    ) -> tuple[type[SpatialGridDefinitionBase], ...]:
         return tuple(cls.__registry__.values())
 
     def canonical_row_index(self, row: int) -> int:
@@ -1287,7 +1287,7 @@ class GridShapeContext(ABC, metaclass=AutoRegisterMeta):
     circle_diameter: int = 20
 
     @classmethod
-    def registered_context_types(cls) -> tuple[type["GridShapeContext"], ...]:
+    def registered_context_types(cls) -> tuple[type[GridShapeContext], ...]:
         return tuple(cls.__registry__.values())
 
 

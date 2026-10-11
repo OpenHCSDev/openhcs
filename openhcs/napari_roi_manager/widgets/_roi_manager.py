@@ -100,10 +100,9 @@ class RoiTableColumn(ABC, metaclass=AutoRegisterMeta):
 
     index: ClassVar[int | None] = None
     header: ClassVar[str]
-    editable: ClassVar[bool] = False
 
     @classmethod
-    def at(cls, section: int) -> type["RoiTableColumn"]:
+    def at(cls, section: int) -> type[RoiTableColumn]:
         return cls.__registry__[section]
 
     @staticmethod
@@ -119,7 +118,6 @@ class RoiTableColumn(ABC, metaclass=AutoRegisterMeta):
 class RoiNameColumn(RoiTableColumn):
     index = 0
     header = "name"
-    editable = True
 
     @staticmethod
     def values(layer: Shapes) -> list[str]:
@@ -208,7 +206,7 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
 
     def flags(self, index):
         flags = super().flags(index)
-        if index.isValid() and RoiTableColumn.at(index.column()).editable:
+        if index.isValid() and RoiTableColumn.at(index.column()) is RoiNameColumn:
             flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         return flags
 
@@ -217,7 +215,7 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             role != QtCore.Qt.ItemDataRole.EditRole
             or not index.isValid()
             or self._layer is None
-            or not RoiTableColumn.at(index.column()).editable
+            or RoiTableColumn.at(index.column()) is not RoiNameColumn
         ):
             return False
         names = RoiNameColumn.values(self._layer)

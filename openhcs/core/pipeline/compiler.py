@@ -287,7 +287,7 @@ class PipelineCompiler:
             return
 
         vfs_config = session.global_config.vfs_config
-        if not vfs_config.materialization_backend.writes_zarr:
+        if vfs_config.materialization_backend is not MaterializeToZarr:
             return
 
         available_backends = context.microscope_handler.available_backends(
@@ -507,7 +507,8 @@ class PipelineCompiler:
             session.plan(step_index).zarr_config = None
         if (
             not session.step_count
-            or not session.global_config.vfs_config.materialization_backend.writes_zarr
+            or session.global_config.vfs_config.materialization_backend
+            is not MaterializeToZarr
         ):
             return
         last_step_index = session.step_count - 1

@@ -171,7 +171,7 @@ class UiBridgeOperationStatus(ABC, metaclass=AutoRegisterMeta):
     live_overview_severity: ClassVar[str] = UiLiveOverviewSeverity.ERROR.value
 
     @staticmethod
-    def named(name: str) -> type["UiBridgeOperationStatus"]:
+    def named(name: str) -> type[UiBridgeOperationStatus]:
         """Return the state spelled ``name``; ``ValueError`` when unknown."""
 
         status = UiBridgeOperationStatus.__registry__.get(name)
@@ -327,10 +327,9 @@ class UiObjectStateFieldFilter(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     name: ClassVar[str | None] = None
-    keeps_every_field: ClassVar[bool] = False
 
     @staticmethod
-    def named(name: str) -> type["UiObjectStateFieldFilter"]:
+    def named(name: str) -> type[UiObjectStateFieldFilter]:
         field_filter = UiObjectStateFieldFilter.__registry__.get(name)
         if field_filter is None:
             raise ValueError(
@@ -347,7 +346,6 @@ class UiObjectStateFieldFilter(ABC, metaclass=AutoRegisterMeta):
 
 class AllFields(UiObjectStateFieldFilter):
     name = "all"
-    keeps_every_field = True
 
     @classmethod
     def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
@@ -391,11 +389,9 @@ class SemanticFields(UiObjectStateFieldFilter):
 
     @classmethod
     def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
-        return (
-            field.dirty
-            or field.signature_diff
-            or field.inherited_value
-            or RawResolvedFields.matches(field)
+        return any(
+            part.matches(field)
+            for part in (DirtyFields, DefaultDiffFields, InheritedFields, RawResolvedFields)
         )
 
 

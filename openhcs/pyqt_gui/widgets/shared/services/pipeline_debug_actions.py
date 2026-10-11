@@ -48,7 +48,7 @@ class DebugToolbarPlacement(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["DebugToolbarPlacement"]]] = {}
+    __registry__: ClassVar[dict[str, type[DebugToolbarPlacement]]] = {}
 
     name: ClassVar[str | None] = None
     shown: ClassVar[bool] = True
@@ -57,7 +57,7 @@ class DebugToolbarPlacement(ABC, metaclass=AutoRegisterMeta):
     """Position of this placement's button panel in the toolbar."""
 
     @classmethod
-    def panels(cls) -> tuple[type["DebugToolbarPlacement"], ...]:
+    def panels(cls) -> tuple[type[DebugToolbarPlacement], ...]:
         """The placements the toolbar renders as button panels, in order."""
 
         return tuple(
@@ -96,7 +96,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     __registry__: ClassVar[
         dict[
             type[DebugCommandType] | str,
-            type["PipelineDebugActionDeclarationBase"],
+            type[PipelineDebugActionDeclarationBase],
         ]
     ] = {}
     __registry_key__ = "identity"
@@ -131,7 +131,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return cls.toolbar_placement.shown
 
     @classmethod
-    def toolbar_actions(cls) -> tuple[type["PipelineDebugActionDeclarationBase"], ...]:
+    def toolbar_actions(cls) -> tuple[type[PipelineDebugActionDeclarationBase], ...]:
         return tuple(
             sorted(
                 (
@@ -150,7 +150,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_action_id(
         cls, action_id: str
-    ) -> type["PipelineDebugActionDeclarationBase"]:
+    ) -> type[PipelineDebugActionDeclarationBase]:
         for declaration in cls.__registry__.values():
             if declaration.action_id() == action_id:
                 return declaration
@@ -160,7 +160,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     def for_command_type(
         cls,
         command_type: type[DebugCommandType],
-    ) -> type["PipelineDebugCommandActionDeclaration"]:
+    ) -> type[PipelineDebugCommandActionDeclaration]:
         declaration = cls.__registry__.get(command_type)
         if declaration is None:
             raise ValueError(f"Unhandled debug command route: {command_type.name}")

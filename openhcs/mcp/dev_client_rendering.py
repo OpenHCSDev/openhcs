@@ -48,7 +48,7 @@ class WidgetTreeOutputFormat(ABC, metaclass=AutoRegisterMeta):
     """The request includes the nested tree and non-actionable branches."""
 
     @staticmethod
-    def named(name: str) -> type["WidgetTreeOutputFormat"]:
+    def named(name: str) -> type[WidgetTreeOutputFormat]:
         return WidgetTreeOutputFormat.__registry__[name]
 
 
@@ -270,7 +270,7 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
     """
 
     __registry__: ClassVar[
-        dict[McpDevOutputRendererKey, type["McpDevOutputRenderer"]]
+        dict[McpDevOutputRendererKey, type[McpDevOutputRenderer]]
     ] = {}
     __registry_key__ = "renderer_key"
     __key_extractor__ = mcp_dev_output_renderer_key
@@ -293,7 +293,7 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
     def for_output_contract(
         cls,
         output_contract: type | None,
-    ) -> type["McpDevOutputRenderer"] | None:
+    ) -> type[McpDevOutputRenderer] | None:
         if output_contract is None:
             return None
         from openhcs.mcp.dev_client_renderers import (

@@ -256,7 +256,7 @@ class TerminalExecutionStatus(ABC, metaclass=AutoRegisterMeta):
     serialized_aliases: ClassVar[frozenset[str]] = frozenset()
 
     @staticmethod
-    def named(value: str) -> type["TerminalExecutionStatus"]:
+    def named(value: str) -> type[TerminalExecutionStatus]:
         """The status spelled ``value`` or one of its aliases."""
         for status in TerminalExecutionStatus.__registry__.values():
             if value == status.name or value in status.serialized_aliases:

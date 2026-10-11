@@ -466,7 +466,7 @@ class ParameterDocumentationPolicy:
                 if self.should_document(
                     name, parameter, skip_keyword_bag=True, hidden_names=hidden_names
                 )
-                and supplied_by[name].agent_supplied
+                and issubclass(supplied_by[name], SuppliedByAgent)
             )
         )
         return sig.replace(parameters=visible_parameters)
@@ -488,7 +488,7 @@ class ParameterDocumentationPolicy:
                     name=name,
                     annotation=_format_annotation(parameter.annotation),
                     default_repr=_format_default(parameter.default),
-                    required=supplier.agent_supplied
+                    required=issubclass(supplier, SuppliedByAgent)
                     and parameter.default is inspect.Parameter.empty,
                     supplied_by=supplier,
                     description=self.parameter_description(
@@ -523,7 +523,7 @@ class ParameterDocumentationPolicy:
                 name
                 for name, parameter in sig.parameters.items()
                 if self.should_document(name, parameter, hidden_names=hidden_names)
-                and supplied_by[name].agent_supplied
+                and issubclass(supplied_by[name], SuppliedByAgent)
             )
         )
         runtime_names = (
@@ -595,7 +595,7 @@ class ParameterDocumentationPolicy:
         runtime_description = supplier.runtime_description
         if authored_description and runtime_description:
             return f"{authored_description.rstrip()} {runtime_description}"
-        return authored_description or runtime_description
+        return authored_description or runtime_description or None
 
 
 PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()

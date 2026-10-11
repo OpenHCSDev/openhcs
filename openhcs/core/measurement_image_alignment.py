@@ -740,7 +740,7 @@ class MeasurementImageReferenceDomain(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["MeasurementImageReferenceDomain"]]] = {}
+    __registry__: ClassVar[dict[str, type[MeasurementImageReferenceDomain]]] = {}
 
     name: ClassVar[str | None] = None
     labels_follow_image: ClassVar[bool]

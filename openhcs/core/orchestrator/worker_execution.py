@@ -1488,7 +1488,7 @@ def _execute_single_axis_static(
     # original retention contract. Ordinary execution can retire dead inputs
     # only after the step's output/progress consumers have completed.
     release_consumed = (
-        not runtime_observation_mode.returns_every_record
+        runtime_observation_mode is not MergeAllRuntimeRecords
         and isinstance(lane_context.debug_execution_policy, NoOpDebugExecutionPolicy)
         and not any(
             plan.visualize or plan.streaming_configs

@@ -964,7 +964,7 @@ def _lower_module_batch(
     ) == Counter(source_group_keys)
     has_unscoped_single_invocation = len(units) == 1 and not lineage_keys[0]
     follows_previous_main_flow = (
-        len(units) == 1 and not processing_config.input_source.reads_pipeline_start
+        len(units) == 1 and processing_config.input_source is ReadPreviousStep
     )
     public_pattern: FunctionPatternSyntax | None = None
     lowered_units = units

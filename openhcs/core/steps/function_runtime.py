@@ -127,7 +127,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
@@ -1676,9 +1676,8 @@ class FunctionCoreExecutor:
         if (
             binding is None
             or self.invocation.key.position != 0
-            or not isinstance(
-                self.group_data.execution_plan.main_input_dependency, PipelineStartInput
-            )
+            or not self.group_data.execution_plan.main_input_dependency
+            .uses_pipeline_start_anchors()
             or binding.origin is not FromPipelineStart
             or request.context is not self.group_data.context
         ):

@@ -20,6 +20,7 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.ui_bridge import (
+    AllFields,
     UiActionInvokeRequest,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentRequest,
@@ -56,6 +57,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolCall,
     McpDevToolResult,
+    PollCompleted,
     PollFailed,
     PollTimedOut,
     WorkflowPollBaseline,
@@ -433,7 +435,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         status = terminal_status or PollTimedOut
         return (
             status,
-            status.completed,
+            status is PollCompleted,
             poll_count,
             transient_poll_error_count,
         )
@@ -973,7 +975,7 @@ class ObjectStateFieldsCommandSpec(CapabilityBackedCommandSpec):
             field_path_contains=tuple(args.contains),
             include_system_scopes=args.include_system_scopes,
             include_clean_fields=(
-                UiObjectStateFieldFilter.named(args.field_filter).keeps_every_field
+                UiObjectStateFieldFilter.named(args.field_filter) is AllFields
             ),
             include_container_fields=args.include_container_fields,
             field_filter=args.field_filter,

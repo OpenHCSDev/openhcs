@@ -102,11 +102,9 @@ class SelectedPlateFileQueryTarget(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     is_selected_row_root: ClassVar[bool] = False
     """The query reads the selected row's own root, not a related plate."""
-    streams_from_source_context: ClassVar[bool] = False
-    """Streamed results resolve against the row's source plate."""
 
     @staticmethod
-    def named(name: str) -> type["SelectedPlateFileQueryTarget"]:
+    def named(name: str) -> type[SelectedPlateFileQueryTarget]:
         target = SelectedPlateFileQueryTarget.__registry__.get(name)
         if target is None:
             raise ValueError(
@@ -137,7 +135,6 @@ class SelectedRowRoot(SelectedPlateFileQueryTarget):
 
 class OutputPlateRoot(SelectedPlateFileQueryTarget):
     name = "output"
-    streams_from_source_context = True
 
     @classmethod
     def plate_root(cls, selected_row, plate_root, state_surface_id):
