@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Hashable, Iterable, Mapping, Sequence
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_metadata import (
@@ -26,58 +27,49 @@ ComponentGroupKey = str | None
 RuntimeFixedComponentValues = tuple[tuple[type[Axis], str], ...]
 
 
-@dataclass(frozen=True, slots=True)
-class ComponentGroupScope:
-    """One validated ungrouped, static, or runtime-discovered component scope."""
+class ComponentGroupScope(ABC):
+    """Which component groups one execution or artifact covers.
 
+    Each variant is a subclass: ``UngroupedScope`` (one default group),
+    ``DynamicGroupScope`` (groups of one axis discovered at run time),
+    ``StaticGroupScope`` (several groups named at compile time) and
+    ``SingleKeyScope`` (exactly one named group).
+    """
+
+    __slots__ = ()
+
+    component: type[Axis] | None
     keys: tuple[ComponentGroupKey, ...]
-    component: type[Axis] | None = None
+    has_compiled_keys: ClassVar[bool] = True
+    names_several_keys: ClassVar[bool] = False
 
-    def __post_init__(self) -> None:
-        if not self.keys:
-            raise ValueError("ComponentGroupScope.keys cannot be empty.")
-        if any(key is not None and not isinstance(key, str) for key in self.keys):
-            raise TypeError(
-                "ComponentGroupScope.keys must contain canonical strings or None."
-            )
-        if None in self.keys and self.keys != (None,):
+    @staticmethod
+    def of(
+        group_keys: Iterable[Hashable | None],
+        component: type[Axis] | None = None,
+    ) -> "ComponentGroupScope":
+        """Read a scope from its raw spelling: group keys plus a component."""
+
+        keys = tuple(
+            dict.fromkeys(ComponentGroupScope.normalize_key(key) for key in group_keys)
+        )
+        if component is None:
+            if keys not in ((), (None,)):
+                raise ValueError(
+                    "Concrete component-group keys require a component identity."
+                )
+            return UngroupedScope()
+        axis = AxisFamily.active().require(component)
+        if keys in ((), (None,)):
+            return DynamicGroupScope(axis)
+        if None in keys:
             raise ValueError(
                 "ComponentGroupScope may use None only as the sole dynamic or "
                 "ungrouped key."
             )
-        if self.component is not None and not is_axis(self.component):
-            raise TypeError("ComponentGroupScope.component must be a declared axis.")
-        if self.component is None and self.keys != (None,):
-            raise ValueError(
-                "Concrete component-group keys require a component identity."
-            )
-
-    @classmethod
-    def ungrouped(cls) -> "ComponentGroupScope":
-        return cls((None,))
-
-    @classmethod
-    def dynamic(
-        cls,
-        component: type[Axis],
-    ) -> "ComponentGroupScope":
-        """Declare a typed scope whose concrete keys are discovered at runtime."""
-
-        return cls((None,), component=component)
-
-    @classmethod
-    def from_raw(
-        cls,
-        group_keys: Iterable[Hashable | None],
-        *,
-        component: type[Axis] | None = None,
-    ) -> "ComponentGroupScope":
-        return cls(
-            tuple(cls.normalize_key(group_key) for group_key in group_keys),
-            component=(
-                None if component is None else AxisFamily.active().require(component)
-            ),
-        )
+        if len(keys) == 1:
+            return SingleKeyScope(axis, keys[0])
+        return StaticGroupScope(axis, keys)
 
     @staticmethod
     def normalize_key(key: Hashable | None) -> ComponentGroupKey:
@@ -85,67 +77,237 @@ class ComponentGroupScope:
             return None
         return str(key)
 
-    @property
-    def is_ungrouped(self) -> bool:
-        return self.component is None
-
-    @property
-    def is_grouped(self) -> bool:
-        return self.component is not None
-
-    @property
-    def is_dynamic(self) -> bool:
-        return self.component is not None and self.keys == (None,)
-
-    @property
-    def is_static(self) -> bool:
-        """Whether this grouped scope names its coordinates at compile time."""
-        return self.is_grouped and not self.is_dynamic
-
-    def excludes(self, other: "ComponentGroupScope") -> bool:
-        """Whether two static scopes of one component share no coordinate."""
-        if self.is_dynamic or other.is_dynamic:
-            return False
-        return set(self.keys).isdisjoint(other.keys)
-
     @classmethod
     def one_per_component(
         cls,
-        scopes: Iterable["ComponentGroupScope"],
+        scopes: Iterable[ComponentGroupScope],
         *,
         owner: str,
-    ) -> tuple["ComponentGroupScope", ...]:
-        """Normalize grouped scopes, allowing one consistent scope per component."""
-        by_component: dict[type[Axis], ComponentGroupScope] = {}
+    ) -> tuple[GroupedScope, ...]:
+        """Allow one consistent grouped scope per component."""
+        by_component: dict[type[Axis], GroupedScope] = {}
         for scope in scopes:
-            if scope.is_ungrouped:
-                raise ValueError(f"{owner} component scopes cannot be ungrouped.")
-            normalized = cls.from_raw(scope.keys, component=scope.component)
-            existing = by_component.get(scope.component)
-            if existing is not None and existing != normalized:
+            grouped = scope.require_grouped(owner)
+            existing = by_component.get(grouped.component)
+            if existing is not None and existing != grouped:
                 raise ValueError(
                     f"{owner} declares conflicting scopes for component "
-                    f"{scope.component.name!r}: {existing!r} and {normalized!r}."
+                    f"{grouped.component.name!r}: {existing!r} and {grouped!r}."
                 )
-            by_component[scope.component] = normalized
+            by_component[grouped.component] = grouped
         return tuple(by_component.values())
 
-    @property
-    def has_single_static_key(self) -> bool:
-        """Return whether this scope owns one exact compiler-known coordinate."""
+    @staticmethod
+    def union_compatible(
+        scopes: Sequence[ComponentGroupScope],
+    ) -> "ComponentGroupScope | None":
+        """Union scopes of one component; None when their components differ."""
 
-        return not self.is_ungrouped and not self.is_dynamic and len(self.keys) == 1
+        if not scopes:
+            return None
+        component = scopes[0].component
+        if any(scope.component is not component for scope in scopes[1:]):
+            return None
+        if not all(scope.has_compiled_keys for scope in scopes):
+            return DynamicGroupScope(component)
+        return ComponentGroupScope.of(
+            (key for scope in scopes for key in scope.keys),
+            component,
+        )
 
+    def missing_from(
+        self,
+        producer_scope: "ComponentGroupScope",
+    ) -> list[ComponentGroupKey]:
+        """Return this scope's keys the producer does not plan."""
+        return [key for key in self.keys if key not in producer_scope.keys]
+
+    def single_key(self) -> str | None:
+        """Return the one compiler-known coordinate of a single-key scope."""
+        return None
+
+    def require_single_key(self) -> str:
+        raise ValueError(
+            f"A single static component key is required, got {self!r}."
+        )
+
+    @abstractmethod
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
+        """Return this scope when it groups by a component, else nothing."""
+
+    def require_grouped(self, owner: str) -> "GroupedScope":
+        raise ValueError(f"{owner} component scopes cannot be ungrouped.")
+
+    def groups_by(self, component: type[Axis] | None) -> bool:
+        """Whether this scope groups by ``component``."""
+        return False
+
+    @abstractmethod
     def runtime_keys(
         self,
         discovered_keys: Iterable[Hashable | None],
     ) -> tuple[ComponentGroupKey, ...]:
         """Resolve concrete execution keys from this compiler-owned scope."""
 
-        if self.is_ungrouped:
-            return (None,)
-        if not self.is_dynamic:
-            return self.keys
+    @abstractmethod
+    def candidate_keys(
+        self, runtime_value: str | None
+    ) -> tuple[ComponentGroupKey, ...]:
+        """Return the keys one observed coordinate can execute under."""
+
+    @abstractmethod
+    def contains_runtime_key(self, key: Hashable | None) -> bool:
+        """Return whether one concrete invocation belongs to this scope."""
+
+    @abstractmethod
+    def contains_scope(self, required: "ComponentGroupScope") -> bool:
+        """Return whether every invocation in ``required`` is available here."""
+
+    def lies_within_keys(self, keys: tuple[str, ...]) -> bool:
+        """Whether every key of this scope is one of ``keys``."""
+        return False
+
+    @abstractmethod
+    def resolve_runtime_key(
+        self,
+        runtime_key: Hashable | None,
+    ) -> ComponentGroupKey:
+        """Resolve one concrete key against this compiler-owned scope."""
+
+    def select_runtime_key(
+        self,
+        runtime_key: Hashable | None,
+    ) -> ComponentGroupKey:
+        """Select one coordinate from this compiled scope for an invocation."""
+        return self.resolve_runtime_key(runtime_key)
+
+    def selectable_from(self, producer_scope: "ComponentGroupScope") -> bool:
+        """Whether a consumer may select this scope from ``producer_scope``."""
+        return producer_scope.contains_scope(self)
+
+    def owned_by(self, invocation_scope: "ComponentGroupScope") -> bool:
+        """Whether ``invocation_scope`` supplies the keys this scope selects."""
+        return True
+
+    def may_supply_key(self, component: type[Axis] | None, key: str) -> bool:
+        """Whether a source of this scope can feed group ``key`` of ``component``."""
+        return True
+
+    def shared_invocation_scope(self) -> "ComponentGroupScope":
+        """Scope of one callable applied across every group of this scope."""
+        return self
+
+    def excludes(self, other: "ComponentGroupScope") -> bool:
+        """Whether two compiled scopes of one component share no coordinate."""
+        return False
+
+    def keys_excluded_by(self, keys: tuple[str, ...]) -> bool:
+        return False
+
+    def admits_record_key(
+        self,
+        execution_component: type[Axis] | None,
+        component_key: ComponentGroupKey,
+        record_key: str | None,
+    ) -> bool:
+        """Whether a producer record under ``record_key`` serves ``component_key``."""
+        return True
+
+    def value_for_plane(
+        self,
+        metadata: Mapping[str, object] | None,
+        component: type[Axis],
+    ) -> str | None:
+        """Return this scope's coordinate for one projected stack plane."""
+        return self.select_runtime_key(None)
+
+    def output_lineage_scope(
+        self,
+        consumer_scope: "ComponentGroupScope",
+        consumer_variable_components: ComponentSet,
+    ) -> "ComponentGroupScope":
+        """Propagate this source scope through one consumer invocation."""
+        return consumer_scope
+
+
+@dataclass(frozen=True, slots=True)
+class UngroupedScope(ComponentGroupScope):
+    """One default group: the invocation is not split by any component."""
+
+    component: ClassVar[None] = None
+    keys: ClassVar[tuple[None]] = (None,)
+
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
+        return ()
+
+    def runtime_keys(self, discovered_keys):
+        return (None,)
+
+    def candidate_keys(self, runtime_value):
+        return (None,)
+
+    def contains_runtime_key(self, key):
+        return self.normalize_key(key) is None
+
+    def contains_scope(self, required):
+        return required == self
+
+    def resolve_runtime_key(self, runtime_key):
+        return None
+
+    def select_runtime_key(self, runtime_key):
+        return None
+
+
+@dataclass(frozen=True, slots=True)
+class GroupedScope(ComponentGroupScope):
+    """Groups split along one declared component axis."""
+
+    component: type[Axis]
+
+    def __post_init__(self) -> None:
+        if not is_axis(self.component):
+            raise TypeError("ComponentGroupScope.component must be a declared axis.")
+
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
+        return (self,)
+
+    def require_grouped(self, owner: str) -> "GroupedScope":
+        return self
+
+    def groups_by(self, component: type[Axis] | None) -> bool:
+        return self.component is component
+
+    def output_lineage_scope(self, consumer_scope, consumer_variable_components):
+        if self.component in consumer_variable_components:
+            return consumer_scope
+        if consumer_scope.groups_by(self.component) or not consumer_scope.as_grouped():
+            return self
+        raise ValueError(
+            f"Output lineage component {self.component.name!r} is neither the "
+            f"consumer group component {consumer_scope.component.name!r} nor one "
+            "of its variable components."
+        )
+
+    def contains_scope(self, required):
+        return required.groups_by(self.component) and self._contains_keys_of(required)
+
+    def may_supply_key(self, component, key):
+        return self.component is not component or self.contains_runtime_key(key)
+
+    @abstractmethod
+    def _contains_keys_of(self, required: ComponentGroupScope) -> bool:
+        """Whether every key of ``required`` (same component) is planned here."""
+
+
+@dataclass(frozen=True, slots=True)
+class DynamicGroupScope(GroupedScope):
+    """Groups of one component whose keys are discovered at run time."""
+
+    keys: ClassVar[tuple[None]] = (None,)
+    has_compiled_keys = False
+
+    def runtime_keys(self, discovered_keys):
         keys = tuple(
             dict.fromkeys(
                 self.normalize_key(key) for key in discovered_keys if key is not None
@@ -158,45 +320,78 @@ class ComponentGroupScope:
             )
         return keys
 
-    def contains_runtime_key(self, key: Hashable | None) -> bool:
-        """Return whether one concrete invocation belongs to this scope."""
+    def candidate_keys(self, runtime_value):
+        return () if runtime_value is None else (self.normalize_key(runtime_value),)
 
-        normalized_key = self.normalize_key(key)
-        if self.is_ungrouped:
-            return normalized_key is None
-        if self.is_dynamic:
-            return normalized_key is not None
-        return normalized_key in self.keys
+    def contains_runtime_key(self, key):
+        return self.normalize_key(key) is not None
 
-    def contains_scope(self, required: "ComponentGroupScope") -> bool:
-        """Return whether every invocation in ``required`` is available here."""
+    def _contains_keys_of(self, required):
+        return True
 
-        if self.is_ungrouped or required.is_ungrouped:
-            return self.is_ungrouped and required.is_ungrouped
-        if self.component is not required.component:
-            return False
-        if self.is_dynamic:
-            return True
-        if required.is_dynamic:
-            return False
-        return set(required.keys).issubset(self.keys)
-
-    def resolve_runtime_key(
-        self,
-        runtime_key: Hashable | None,
-    ) -> ComponentGroupKey:
-        """Resolve one concrete key against this compiler-owned scope."""
-
-        if self.is_ungrouped:
-            return None
+    def resolve_runtime_key(self, runtime_key):
         normalized_key = self.normalize_key(runtime_key)
-        if self.is_dynamic:
-            if normalized_key is None:
-                raise ValueError(
-                    f"Dynamic {self.component.name} component scope requires a "
-                    "concrete runtime key."
-                )
-            return normalized_key
+        if normalized_key is None:
+            raise ValueError(
+                f"Dynamic {self.component.name} component scope requires a "
+                "concrete runtime key."
+            )
+        return normalized_key
+
+    def selectable_from(self, producer_scope):
+        return producer_scope.groups_by(self.component)
+
+    def owned_by(self, invocation_scope):
+        return invocation_scope.groups_by(self.component)
+
+    def admits_record_key(self, execution_component, component_key, record_key):
+        return self.component is not execution_component or record_key == component_key
+
+    def value_for_plane(self, metadata, component):
+        from openhcs.core.source_matching import semantic_source_metadata_value
+
+        value = semantic_source_metadata_value(metadata, component.name)
+        return None if value is None else str(value)
+
+
+@dataclass(frozen=True, slots=True)
+class StaticGroupScope(GroupedScope):
+    """Several groups of one component named at compile time."""
+
+    keys: tuple[str, ...]
+    names_several_keys = True
+
+    def __post_init__(self) -> None:
+        GroupedScope.__post_init__(self)
+        if len(self.keys) < self.minimum_key_count() or any(
+            not isinstance(key, str) for key in self.keys
+        ):
+            raise ValueError(
+                f"{type(self).__name__} keys must be at least "
+                f"{self.minimum_key_count()} strings, got {self.keys!r}."
+            )
+
+    @staticmethod
+    def minimum_key_count() -> int:
+        return 2
+
+    def runtime_keys(self, discovered_keys):
+        return self.keys
+
+    def candidate_keys(self, runtime_value):
+        return self.keys
+
+    def contains_runtime_key(self, key):
+        return self.normalize_key(key) in self.keys
+
+    def _contains_keys_of(self, required):
+        return required.lies_within_keys(self.keys)
+
+    def lies_within_keys(self, keys):
+        return set(self.keys).issubset(keys)
+
+    def resolve_runtime_key(self, runtime_key):
+        normalized_key = self.normalize_key(runtime_key)
         if normalized_key in self.keys:
             return normalized_key
         raise ValueError(
@@ -204,47 +399,42 @@ class ComponentGroupScope:
             f"contain runtime key {normalized_key!r}."
         )
 
-    def select_runtime_key(
-        self,
-        runtime_key: Hashable | None,
-    ) -> ComponentGroupKey:
-        """Select one coordinate from this compiled scope for an invocation."""
+    def shared_invocation_scope(self):
+        return DynamicGroupScope(self.component)
 
-        if self.is_ungrouped:
-            return None
-        if self.has_single_static_key:
-            return self.require_single_static_key()
-        return self.resolve_runtime_key(runtime_key)
+    def excludes(self, other):
+        return other.keys_excluded_by(self.keys)
 
-    def require_single_static_key(self) -> str:
-        """Return the sole coordinate of an exact compiler-owned scope."""
+    def keys_excluded_by(self, keys):
+        return set(self.keys).isdisjoint(keys)
 
-        if not self.has_single_static_key:
-            raise ValueError(
-                "A single static component key is required, got "
-                f"component={self.component!r}, keys={self.keys!r}."
-            )
-        key = self.keys[0]
-        if key is None:
-            raise RuntimeError("Static component scopes cannot contain None.")
-        return key
 
-    def output_lineage_scope(
-        self,
-        consumer_scope: "ComponentGroupScope",
-        consumer_variable_components: ComponentSet,
-    ) -> "ComponentGroupScope":
-        """Propagate this source scope through one consumer invocation."""
+@dataclass(frozen=True, slots=True, init=False)
+class SingleKeyScope(StaticGroupScope):
+    """Exactly one group of one component, named at compile time."""
 
-        if self.is_ungrouped or self.component in consumer_variable_components:
-            return consumer_scope
-        if consumer_scope.is_ungrouped or self.component is consumer_scope.component:
-            return self
-        raise ValueError(
-            f"Output lineage component {self.component.name!r} is neither the "
-            f"consumer group component {consumer_scope.component.name!r} nor one "
-            "of its variable components."
-        )
+    names_several_keys = False
+
+    def __init__(self, component: type[Axis], key: str) -> None:
+        object.__setattr__(self, "component", component)
+        object.__setattr__(self, "keys", (key,))
+        self.__post_init__()
+
+    @staticmethod
+    def minimum_key_count() -> int:
+        return 1
+
+    def single_key(self) -> str:
+        return self.keys[0]
+
+    def require_single_key(self) -> str:
+        return self.keys[0]
+
+    def select_runtime_key(self, runtime_key):
+        return self.keys[0]
+
+    def shared_invocation_scope(self):
+        return self
 
 
 @dataclass(frozen=True, slots=True)
@@ -480,6 +670,16 @@ class RuntimeExecutionAxisScope:
             for component, value in self.presentation_component_values
         )
 
+    def for_output_scope(
+        self, output_scope: ComponentGroupScope
+    ) -> "RuntimeExecutionAxisScope":
+        """Project this execution identity onto an output's single group key."""
+
+        key = output_scope.single_key()
+        return self.for_group_coordinate(
+            None if key is None else output_scope.component, key
+        )
+
     def for_group_coordinate(
         self,
         component: type[Axis] | None,
@@ -567,11 +767,8 @@ class RuntimeExecutionAxisScope:
     def group_scope(self) -> ComponentGroupScope:
         """Return this runtime coordinate as one concrete component-group scope."""
         if self.component is None:
-            return ComponentGroupScope.ungrouped()
-        return ComponentGroupScope(
-            (self.require_value_text(),),
-            component=self.component,
-        )
+            return UngroupedScope()
+        return SingleKeyScope(self.component, self.require_value_text())
 
     @property
     def cache_key(self) -> tuple[tuple[str, str], ...]:

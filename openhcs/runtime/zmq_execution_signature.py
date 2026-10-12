@@ -94,7 +94,7 @@ class ExportRuntimeValues(ZMQRuntimeObservationExportScope):
         )
 
         return ZMQRuntimeExecutionObservationExport.from_execution(
-            compiled_contexts=execution_bundle.runtime_contexts,
+            executed_contexts=execution_results.executed_contexts,
             execution_results=execution_results,
             runtime_observations=execution_results.runtime_observations,
             output_roots=output_roots,

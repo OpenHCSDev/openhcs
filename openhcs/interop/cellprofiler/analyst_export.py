@@ -35,7 +35,7 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileRevision
 from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
@@ -675,7 +675,7 @@ class CPATableRowProjection:
 
     dialect: CellProfilerDatabaseColumnDialect
     image_set_numbering: CellProfilerImageSetNumbering
-    context: ProcessingContext | None = None
+    context: ExecutingContext | None = None
 
     def measurement_projections(
         self,
@@ -1355,7 +1355,7 @@ class CellProfilerAnalystProjectionBuilder:
 
     source_binding_plan: CompiledSourceBindingPlan
     dialect: CellProfilerDatabaseColumnDialect | None = None
-    context: ProcessingContext | None = None
+    context: ExecutingContext | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.source_binding_plan, CompiledSourceBindingPlan):

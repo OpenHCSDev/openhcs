@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_set import ComponentSet
@@ -1530,22 +1530,6 @@ class NamedSourceBinding(SourceAssignmentBase):
             return str(normalized_alias) == self.alias
 
         return self.selector.metadata_candidates_match((metadata,))
-
-    def input_plan(
-        self,
-        *,
-        group_keys: tuple[str | None, ...],
-        group_component: type[Axis] | None,
-    ) -> ArtifactInputPlan:
-        """Project this source declaration into a compiler input plan."""
-
-        return ArtifactInputPlan(
-            name=self.alias,
-            path=f"source-binding:{self.alias}",
-            artifact_type=self.artifact_kind,
-            group_keys=group_keys,
-            group_component=group_component,
-        )
 
     @property
     def requires_selector_resolution(self) -> bool:

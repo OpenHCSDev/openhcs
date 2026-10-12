@@ -24,7 +24,6 @@ from openhcs.core.artifacts.payloads import (
     TablePayloadShape,
 )
 from openhcs.core.axes import AxisFamily
-from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.memory import detect_memory_type
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -383,17 +382,21 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
         """Compose producer records according to this artifact's semantics."""
 
-        del producer_group_scope
         if len(values) != 1:
             raise ValueError(
                 f"{cls.__name__} does not define grouped runtime composition for "
                 f"{len(values)} values."
             )
         return values[0].data
+
+    @classmethod
+    def compose_runtime_groups(cls, values: Sequence[RuntimeValue]) -> object:
+        """Rebuild a producer's group axis from one record per group."""
+
+        return cls.compose_runtime_values(values)
 
     @classmethod
     def normalize_slice_aligned_value(
@@ -836,13 +839,26 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
-        """Stack grouped image records while preserving payload context."""
+        """Stack image records while preserving payload context."""
 
-        if producer_group_scope is None and len(values) == 1:
+        if len(values) == 1:
             return values[0].data
+        return cls._stack_runtime_values(values, keeps_memory_type=False)
 
+    @classmethod
+    def compose_runtime_groups(cls, values: Sequence[RuntimeValue]) -> object:
+        """Rebuild the producer's group axis on the producer's memory type."""
+
+        return cls._stack_runtime_values(values, keeps_memory_type=True)
+
+    @classmethod
+    def _stack_runtime_values(
+        cls,
+        values: Sequence[RuntimeValue],
+        *,
+        keeps_memory_type: bool,
+    ) -> object:
         from openhcs.core.aligned_image_payload import stack_image_payloads
         from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
 
@@ -856,7 +872,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         metadata_mode = ImagePayloadMetadataCompositionMode.for_plane_axis(
             RuntimePlaneAxis.RUNTIME_SLICE
         )
-        if producer_group_scope is None:
+        if not keeps_memory_type:
             return stack_image_payloads(payloads, metadata_mode=metadata_mode)
         return stack_image_payloads(
             payloads,
@@ -881,7 +897,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         if projection.axis_size != 1:
             raise ValueError(
                 f"Group-scoped scalar artifact {output_plan.name!r} for "
-                f"{output_plan.group_component.name!r} cannot retain a declared "
+                f"{output_plan.group_scope.component.name!r} cannot retain a declared "
                 f"runtime-slice axis of size {projection.axis_size}."
             )
         return RuntimeSliceProjection.value_for_slice(
@@ -1094,12 +1110,17 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
+        """Aggregate object-label records into one runtime stack."""
+
+        if len(values) == 1:
+            return values[0].data
+        return cls.compose_runtime_groups(values)
+
+    @classmethod
+    def compose_runtime_groups(cls, values: Sequence[RuntimeValue]) -> object:
         """Aggregate grouped object-label records into one runtime stack."""
 
-        if producer_group_scope is None and len(values) == 1:
-            return values[0].data
         labels = tuple(value.data for value in values)
         if len({value.representation for value in labels}) != 1:
             raise ValueError(
@@ -1301,13 +1322,11 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
         """Concatenate exact producer-group measurement tables."""
 
         from openhcs.core.runtime_measurements import MeasurementTable
 
-        del producer_group_scope
         return MeasurementTable.join(
             values[0].name, tuple(value.data for value in values)
         )
@@ -1385,14 +1404,18 @@ class ObjectLineageArtifactType(NominalPayloadKind, ArtifactType):
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
         """Reconstruct relationship records and retain grouped slice alignment."""
 
-        relationships = tuple(value.data for value in values)
-        if producer_group_scope is None and len(relationships) == 1:
-            return relationships[0]
-        return RuntimeSliceAlignedValues(relationships)
+        if len(values) == 1:
+            return values[0].data
+        return cls.compose_runtime_groups(values)
+
+    @classmethod
+    def compose_runtime_groups(cls, values: Sequence[RuntimeValue]) -> object:
+        """Keep each producer group as one slice of an aligned value."""
+
+        return RuntimeSliceAlignedValues(tuple(value.data for value in values))
 
 
 class RelationshipsArtifactType(ObjectLineageArtifactType):
@@ -1510,13 +1533,11 @@ class SpatialGridArtifactType(
     def compose_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        producer_group_scope: ComponentGroupScope | None = None,
     ) -> object:
         """Compose only spatial grids with identical declared slice domains."""
 
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-        del producer_group_scope
         grids = tuple(value.data for value in values)
 
         def layout(grid_value: object) -> tuple[object, ...]:

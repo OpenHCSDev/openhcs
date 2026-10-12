@@ -57,6 +57,10 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images_with_measurements,
 )
 from openhcs.core.artifacts.plans import MAIN_FLOW
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _module(name: str, **settings: str) -> ModuleBlock:
@@ -170,7 +174,7 @@ def _runtime_image_batch(*image_names: str) -> RuntimeArtifactBatch:
 
 
 def _export_context() -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={
             0: CompiledStepPlan(
                 step_index=0,
@@ -186,14 +190,14 @@ def _export_context() -> ProcessingContext:
         },
         filemanager=SimpleNamespace(exists=lambda *_args: False),
     )
-    context.dataset_root = Path("/")
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, dataset_root=Path("/"))
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_root=Path,
             source_workspace_metadata_document=lambda _plate_path: None,
         ),
-    )
+    ))
     return context
 
 
@@ -343,7 +347,7 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
         3
     }
 
-    multi_axis_context = ProcessingContext(axis_id="A01")
+    multi_axis_context = executing_context(axis_id="A01")
     multi_axis_context.execution_runtime = SimpleNamespace(
         execution_axis_values=("A01", "A02")
     )

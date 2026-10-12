@@ -168,13 +168,16 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path
     results = tmp_path / "source_out" / "results" if absolute else Path("results")
     orchestrator, steps, bundle = _compile(tmp_path, results, main_filter)
     # Workers return each step's saved outputs; the receiving boundary publishes them.
+    contexts = {
+        key: context.executing() for key, context in bundle.runtime_contexts.items()
+    }
     observations = RuntimeExecutionObservation(contexts=tuple(
         RuntimeContextObservation(context_key=key, records=(), outputs=step.process(context, index))
-        for key, context in bundle.runtime_contexts.items()
+        for key, context in contexts.items()
         for index, step in enumerate(steps)
     ))
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        bundle.runtime_contexts, runtime_observations=(observations,)
+        contexts, runtime_observations=(observations,)
     )
     saved = tmp_path / "source_out" / "converted"
     files = tuple(saved.glob("*.tif"))

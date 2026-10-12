@@ -14,7 +14,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionSucceeded,
     OmitRuntimeRecords,
 )
 from openhcs.runtime.viewer_protocol import ViewerControlResponse
@@ -47,7 +47,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         }
     )
     compiled_results = BundleExecutionResults(
-        {"A01": ExecutionResult.success("A01")},
+        {"A01": ExecutionSucceeded("A01")},
         extras=BundleExecutionExtras(viewer_states_by_port={5563: response}),
     )
 

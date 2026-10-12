@@ -461,7 +461,7 @@ def _artifact_input_summary(plan) -> ArtifactInputPlanSummary:
         name=str(plan.name),
         kind=str(plan.artifact_type.value),
         path=str(plan.path),
-        group_keys=tuple(plan.group_keys),
+        group_keys=plan.group_scope.keys,
         paths_by_group=_artifact_paths_by_group(plan),
         source_step_id=plan.source_step_id,
         source_step_scope_id=plan.source_step_scope_id,
@@ -478,7 +478,7 @@ def _artifact_summary(
         name=str(plan.name),
         kind=str(plan.artifact_type.value),
         path=str(plan.path),
-        group_keys=tuple(plan.group_keys),
+        group_keys=plan.group_scope.keys,
         paths_by_group=_artifact_paths_by_group(plan),
         materialization=_artifact_materialization_summary(
             context,

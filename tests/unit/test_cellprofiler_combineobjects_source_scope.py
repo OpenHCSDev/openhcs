@@ -24,7 +24,6 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
-    PathPlannerGroupScope,
 )
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import (
@@ -36,6 +35,9 @@ from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 COMBINE_OBJECTS_CPIPE = """CellProfiler Pipeline: http://www.cellprofiler.org
 Version:5
@@ -112,13 +114,13 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
     scope = PathPlannerExecutionGroups(planner).artifact_owned_execution_scope(
         snapshot,
         (CallableContract.from_callable(combine),),
-        consumer_scope=PathPlannerGroupScope.from_raw(
+        consumer_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),
     )
 
-    assert scope == PathPlannerGroupScope.from_raw(
+    assert scope == ComponentGroupScope.of(
         ("2",),
         component=Microscopy.Channel,
     )
@@ -161,7 +163,7 @@ def test_public_combineobjects_import_compiles_source_owned_scope(
     step_plan = context.step_plans[0]
     assert tuple(step_plan.variable_components) == (Microscopy.Site,)
     assert step_plan.group_by is Microscopy.Channel
-    assert step_plan.execution_group_scope == PathPlannerGroupScope.from_raw(
+    assert step_plan.execution_group_scope == ComponentGroupScope.of(
         ("1",),
         component=Microscopy.Channel,
     )

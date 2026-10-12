@@ -16,7 +16,10 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import (
     CompiledFunctionPattern,
     FunctionPatternSyntax,
@@ -123,11 +126,11 @@ def _compiled_pattern_with_exact_input_edges(
                 storage_plan = next(
                     plan for plan in input_plans.values() if plan.ref() == spec.ref()
                 )
-                producer_scope = storage_plan.producer_group_scope()
+                producer_scope = storage_plan.group_scope
                 invocation_scope = (
                     producer_scope
                     if compiled.is_grouped
-                    else ComponentGroupScope.ungrouped()
+                    else UngroupedScope()
                 )
                 edges.append(
                     InvocationArtifactInputEdgePlan(
@@ -141,7 +144,7 @@ def _compiled_pattern_with_exact_input_edges(
                             invocation_scope=invocation_scope,
                             producer_selection_scope=producer_scope,
                             component_scopes=(
-                                () if producer_scope.is_ungrouped else (producer_scope,)
+                                () if not producer_scope.as_grouped() else (producer_scope,)
                             ),
                         ),
                     )
@@ -672,8 +675,7 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
             name=name,
             path=f"/memory/{name}.pkl",
             artifact_type=ImageArtifactType,
-            group_keys=(key,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((key,), component=Microscopy.Channel),
             paths_by_group={
                 key: f"/memory/{name}.pkl",
             },
@@ -688,7 +690,7 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
         variable_components=(),
         group_by=Microscopy.Channel,
         artifact_inputs=input_plans,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),
@@ -718,8 +720,7 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
             name=name,
             path=f"/memory/{name}.pkl",
             artifact_type=ImageArtifactType,
-            group_keys=(key,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((key,), component=Microscopy.Channel),
             paths_by_group={key: f"/memory/{name}.pkl"},
         )
         for name, key in (("left", "1"), ("right", "2"))
@@ -732,7 +733,7 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
         variable_components=(),
         group_by=Microscopy.Channel,
         artifact_inputs=input_plans,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Channel,
         ),

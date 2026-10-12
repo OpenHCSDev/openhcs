@@ -12,7 +12,10 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
     RuntimeInvocationDomain,
@@ -98,8 +101,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         artifact_type=MeasurementsArtifactType,
         source_step_id=7,
         source_step_scope_id="measurement-producer",
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements_w2.pkl"},
     )
     compiled_pattern = compile_function_pattern(
@@ -113,9 +115,9 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         compiled_pattern,
         artifact_inputs={measurements_plan.ref(): measurements_plan},
         relation_source_scopes={
-            measurements.ref(): measurements_plan.producer_group_scope(),
+            measurements.ref(): measurements_plan.group_scope,
         },
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -136,7 +138,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
             bindings=(NamedSourceBinding(alias="OrigDNA"),)
         ),
         execution_group_value="channel",
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1",),
             component=Microscopy.Channel,
         ),
@@ -179,7 +181,7 @@ def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value=None,
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         compiled_function_pattern=compiled_pattern,
     )
 
