@@ -137,8 +137,9 @@ def test_declared_cache_admission_requires_cpu_and_explicit_cache(
     index.touch()
     assert GridKernelPreparation.can_prepare_in_child()
     index.unlink()
+    # Without a configured directory Numba caches beside the source.
     monkeypatch.setattr(numba_config, "CACHE_DIR", "")
-    assert not GridKernelPreparation.can_prepare_in_child()
+    assert GridKernelPreparation.can_prepare_in_child()
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path))
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "false")
     assert not GridKernelPreparation.can_prepare_in_child()
@@ -367,3 +368,43 @@ def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path)
     assert all(
         int((tmp_path / name).read_text()) in owned for name in ("first", "second")
     )
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="cache children fork",
+)
+def test_declared_hooks_run_in_cache_children_before_the_server_runs_them(
+    monkeypatch, kernel_module, tmp_path
+):
+    """A hook's kernels are compiled by a child; the server only loads them."""
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
+    monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path / "cache"))
+
+    def record(name):
+        def hook():
+            with (tmp_path / name).open("a") as stream:
+                stream.write(f"{os.getpid()}\n")
+
+        return hook
+
+    kernel_module.__openhcs_prepare__ = record("module")
+    shared = record("shared")
+    callables = (
+        declare_callable(kernel_module, shared),
+        declare_callable(kernel_module, shared),
+        declare_callable(kernel_module, record("own")),
+    )
+    PreparationCacheBatch.from_callables(callables).populate_child_caches(
+        max_workers=2
+    )
+    assert not PreparationOperation._completed
+    for name in ("module", "shared", "own"):
+        pids = (tmp_path / name).read_text().splitlines()
+        assert len(pids) == 1 and int(pids[0]) != os.getpid()
+
+    monkeypatch.delenv("OPENHCS_CPU_ONLY")
+    PreparationCacheBatch.from_callables(callables).populate_child_caches(
+        max_workers=2
+    )
+    assert len((tmp_path / "own").read_text().splitlines()) == 1

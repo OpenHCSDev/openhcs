@@ -40,7 +40,7 @@ class EnhanceEdgesModule(CellProfilerModule):
 
 
 from abc import ABC, abstractmethod
-from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
+from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
@@ -182,7 +182,7 @@ class EdgeEnhancementRequest:
 
 
 class EdgeEnhancementStrategy(
-    CompilerPreparedAutoRegisterFamily, ABC, metaclass=AutoRegisterMeta
+    PersistentNumbaKernelPreparation, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal dispatch point for one backend/method/direction edge algorithm."""
 
