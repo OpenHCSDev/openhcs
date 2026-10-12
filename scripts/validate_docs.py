@@ -197,19 +197,47 @@ class AuthoritySymbolError(ValueError):
     """A pinned symbol cannot be read from its authority file."""
 
 
-def _symbol_nodes(body: list[ast.stmt], name: str) -> list[ast.stmt]:
-    nodes: list[ast.stmt] = []
-    for node in body:
-        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            if node.name == name:
-                nodes.append(node)
-        elif isinstance(node, ast.Assign):
-            if any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
-                nodes.append(node)
-        elif isinstance(node, ast.AnnAssign):
-            if isinstance(node.target, ast.Name) and node.target.id == name:
-                nodes.append(node)
-    return nodes
+@dataclass(frozen=True)
+class AuthorityPin:
+    """One authority of an audit entry, as written in the audit file."""
+
+    path: object
+    sha256: object
+    role: object
+    symbols: object = None
+
+
+class _DefinitionsNamed(ast.NodeVisitor):
+    """Collect the statements of one body that define a given name."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.found: list[ast.stmt] = []
+        self.class_bodies: list[list[ast.stmt]] = []
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """Do not descend: only the statements handed to ``visit`` count."""
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+            self.class_bodies.append(node.body)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        if any(ast.unparse(target) == self.name for target in node.targets):
+            self.found.append(node)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        if ast.unparse(node.target) == self.name:
+            self.found.append(node)
 
 
 def authority_digest_of(authority_path: Path, symbols: list[str] | None = None) -> str:
@@ -231,14 +259,14 @@ def authority_digest_of(authority_path: Path, symbols: list[str] | None = None) 
     lines = text.splitlines(keepends=True)
     digest = hashlib.sha256()
     for symbol in sorted(symbols):
-        nodes: list[ast.stmt] = [tree]  # type: ignore[list-item]
+        bodies = [tree.body]
+        nodes: list[ast.stmt] = []
         for part in symbol.split("."):
-            nodes = [
-                match
-                for node in nodes
-                if isinstance(node, (ast.Module, ast.ClassDef))
-                for match in _symbol_nodes(node.body, part)
-            ]
+            definitions = _DefinitionsNamed(part)
+            for body in bodies:
+                for statement in body:
+                    definitions.visit(statement)
+            nodes, bodies = definitions.found, definitions.class_bodies
         if not nodes:
             raise AuthoritySymbolError(f"symbol is not defined: {symbol}")
         digest.update(symbol.encode("utf-8") + b"\0")
@@ -402,9 +430,9 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                if not {"path", "sha256", "role"} <= set(authority) or not set(
-                    authority
-                ) <= {"path", "sha256", "role", "symbols"}:
+                try:
+                    pin = AuthorityPin(**authority)
+                except TypeError:
                     findings.append(
                         Finding(
                             audit_file,
@@ -413,9 +441,9 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                authority_relative = authority["path"]
-                authority_role = authority["role"]
-                authority_digest = authority["sha256"]
+                authority_relative = pin.path
+                authority_role = pin.role
+                authority_digest = pin.sha256
                 if (
                     not isinstance(authority_relative, str)
                     or not authority_relative.strip()
@@ -489,7 +517,7 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                authority_symbols = authority.get("symbols")
+                authority_symbols = pin.symbols
                 if authority_symbols is not None and (
                     not _nonempty_string_list(authority_symbols)
                     or authority_path.suffix != ".py"
