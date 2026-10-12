@@ -202,7 +202,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
+        "sha256": "56a9b4e8bb7d8195095eb99a849f717e79ca37aa429c612804584cbd7939f420",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -224,6 +224,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/appendices/research_impact.rst against benchmark/cellprofiler_benchmark_cli.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/appendices/research_impact.rst in full and compared it against the changed authorities: pyproject.toml (python-introspect floor 0.2.8), benchmark/cellprofiler_benchmark_cli.py, benchmark/control.py; the observation export scope became a class family read by name, while the openhcs-benchmark entry point, typed receipts, read-only inspection and report, and the archive path the page names are unchanged, so no claim changed.",
       "On 2026-10-11 (B6), re-read docs/source/appendices/research_impact.rst in full and compared it against the changed authorities: pyproject.toml (dependency floors for zmqruntime, pycodify 0.2, objectstate 2.1, python-introspect, pyqt-reactive 0.5); the openhcs-benchmark entry point, benchmark CLI, run receipts, read-only inspection service and the archived page path all still exist, and the page states no version, so no claim changed.",
       "On 2026-10-11 (B6 final), compared docs/source/appendices/research_impact.rst against B6's later changes to benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
@@ -1160,7 +1161,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
+        "sha256": "b2bcf966b13447f4f584dd27ea250d8c0adbf41faed37b61c5a1a30aec2d7aed",
         "role": "Exercises Windows and macOS native installers, staged updates, and cellprofiler-compat installation on Python 3.14."
       },
       {
@@ -1172,6 +1173,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against .github/workflows/integration-tests.yml: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/getting_started/getting_started.rst in full and compared it against the changed authorities: pyproject.toml (python-introspect 0.2.8), openhcs/mcp/installed_demo.py, openhcs/desktop/update.py, openhcs/desktop/update_worker.py, openhcs/desktop/deployment.py and tests/unit/desktop/test_desktop_update_worker.py (E1: update-check origin, failed-update response and runtime platform became class families); the page names none of those types; the extras, Python range, openhcs and openhcs-mcp-demo scripts, and the verified-replacement update with the previous environment preserved are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/getting_started/getting_started.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5). The page states no dependency floors; rechecked requires-python (3.11-3.14) and every named extra (gui, viz, bioformats, mcp, cellprofiler-compat, napari, fiji, gpu) against pyproject.toml; no claim changes.",
@@ -1369,7 +1371,7 @@
       },
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "sha256": "630a74c9e4fb026a7c47e78b3a07427c4d16c9630447a523b36dd8c73e17e430",
         "role": "Compile/Connect/Connecting slot, Run availability (compiled, endpoint accepting requests) and Stop while a batch runs."
       },
       {
@@ -1381,6 +1383,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/basic_interface.rst against openhcs/authoring/session/operations/datasets.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/basic_interface.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/basic_interface.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py, widgets/plate_manager.py, widgets/pipeline_editor.py, services/ui_bridge_windows.py, openhcs/pyqt_gui/config.py, openhcs/agent/services/ui_bridge_service.py, openhcs/authoring/session/views.py and the three test modules (E1: selection scope, orchestrator state, action status and update-check origin became class families; the error-dialog marker became a boolean); the page describes user-visible behaviour and names no changed type; all-plates versus selected code documents, Connect/Compile/Run/Stop control behaviour and the pane identities are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/basic_interface.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py, widgets/plate_manager.py, widgets/pipeline_editor.py, shared/services/pipeline_editor_workflows.py, services/ui_bridge_windows.py, openhcs/core/pipeline_document.py and their tests (U3: DockPane, DockLayoutStore, ShortcutLifecycle, time-travel navigation, path cache and the external-editor switch moved to pyqt-reactive, GlobalEventBus broadcasts replaced by session events, ScopeKey scope ids; L6: pipeline documents render through pycodify generate_python_source; K6 debug command classes). The page describes behaviour, not those classes; rechecked the dock arrangement (system monitor above, Datasets and ZMQ server manager stacked left, Pipeline Editor right), the plate_manager window identity, list_previews on UIConfig, and that PipelineDocument still requires pipeline_steps; no claim changes.",
@@ -1551,7 +1554,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
+        "sha256": "56a9b4e8bb7d8195095eb99a849f717e79ca37aa429c612804584cbd7939f420",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1588,6 +1591,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against benchmark/cellprofiler_benchmark_cli.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/domain_expert_onboarding.rst in full and compared it against the changed authorities: openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, tests/unit/test_cellprofiler_pipeline_import.py (E1 input-source classes, K2 artifact package), benchmark/cellprofiler_benchmark_cli.py, benchmark/control.py (export scope family) and openhcs/authoring/session/views.py; the page names none of the changed types; the CellProfiler translation list, the unsupported-interaction report and the read-only benchmark inspection routes are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/domain_expert_onboarding.rst in full and compared it against the changed authorities: openhcs/interop/cellprofiler/pipeline_import.py, module_artifact_declarations.py, openhcs/agent/services/architecture_projection_service.py and tests/unit/test_cellprofiler_pipeline_import.py (K4: SourceBindingsConfig and StepSourceBindingsConfig now imported from openhcs.core.config, order matching is PairByOrder). The page names neither import location; rechecked the cellprofiler_translation topic id, the interactive-input import error, and the DatasetListView 'Datasets' title; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -2036,7 +2040,7 @@
       },
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "sha256": "630a74c9e4fb026a7c47e78b3a07427c4d16c9630447a523b36dd8c73e17e430",
         "role": "Declares the Init, Compile, Run, Viewer, and Results dataset operations and their button labels named in the tutorial steps."
       },
       {
@@ -2053,6 +2057,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/intro_stitching.rst against openhcs/authoring/session/operations/datasets.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/intro_stitching.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/intro_stitching.rst in full and compared it against the changed authorities: openhcs/demo/synthetic_plate_pipeline.py and openhcs/pyqt_gui/main.py; the supplied pipeline still has eight steps running from Image Enhancement Processing to Cell Counting (only its InputSource and variable-size spellings became ReadPipelineStart and PadToMaxSize) and main.py still places Generate Synthetic Plate under View; no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/intro_stitching.rst in full and compared it against the changed authority openhcs/pyqt_gui/main.py (U3 dock, shortcut and time-travel moves to pyqt-reactive); the View menu still holds the Generate Synthetic Plate action, so no correction was needed.",
@@ -2081,7 +2086,7 @@
     "authority": [
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "sha256": "630a74c9e4fb026a7c47e78b3a07427c4d16c9630447a523b36dd8c73e17e430",
         "role": "Declares the Init, Compile, Run, Connect, and Code dataset operations and the submit_timeout_ms request field that the recovery steps name."
       },
       {
@@ -2178,6 +2183,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/troubleshooting_FAQ.rst against openhcs/authoring/session/operations/datasets.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), openhcs/pyqt_gui/main.py changed by black formatting only (AST-equal) after docs/source/guide_for_biologists/troubleshooting_FAQ.rst was reviewed; no claim changes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/troubleshooting_FAQ.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/utils/environment.py, openhcs/pyqt_gui/launch.py, openhcs/runtime/viewer_protocol.py, openhcs/runtime/zmq_execution_client.py, openhcs/pyqt_gui/main.py and openhcs/pyqt_gui/services/ui_bridge_server.py; confirmed --no-gpu, OPENHCS_CPU_ONLY, the .startup.jsonl journal, materialize_runtime_artifacts and submit_timeout_ms still exist; the diffs are enum-to-family renames (orchestrator states, settle phases, viewer lifecycle, update-check origins), the AgentRuntimePlatform rename and the removed QtPlatformSystem enum, none of which the page names, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/troubleshooting_FAQ.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py (ScopeKey scope ids, K6 progress classes), openhcs/runtime/zmq_execution_client.py (K6: debug requests serialize themselves, command types are DebugCommandType classes; the .startup.jsonl journal beside the server log is unchanged) and openhcs/pyqt_gui/main.py (U3 moves to pyqt-reactive); the restart-and-restore action, OPENHCS_UI_CONFIG_CACHE_FILE, submit_timeout_ms and materialize_runtime_artifacts still exist, so no correction was needed.",
@@ -2797,7 +2803,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
+        "sha256": "b2bcf966b13447f4f584dd27ea250d8c0adbf41faed37b61c5a1a30aec2d7aed",
         "role": "Defines the operating-system integration matrix, the Python 3.14 core job, the scoped four-platform Official30 parity lane and its required check, installed-wheel GUI/MCP operation, installer screenshot artifacts, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2887,7 +2893,7 @@
       },
       {
         "path": "scripts/smoke_installed_gui.py",
-        "sha256": "a018e473245cee30747f86e85ab0410680bbab248753d20252cff727b22d381a",
+        "sha256": "2c08452db78f38d06aac4b78b4ffffb88d031dbb414894048646e7b294e4278e",
         "role": "Owns the installed-GUI acceptance timing and single terminal completion, applies the declared logging configuration, constructs the application on declaration-allocated endpoints, proves the background function catalogue and advertised endpoint log are usable, drives the GUI through packaged MCP, validates retained window snapshots, and cleans up exact owned resources outside the checkout."
       },
       {
@@ -2929,6 +2935,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml, scripts/smoke_installed_gui.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/config.py; the diff renames AgentRuntimePlatformAuthority to AgentRuntimePlatform and adds GuiLogLevel.emits_records; LoggingConfig and its default log directory, which the debugging section relies on, are unchanged, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authority openhcs/core/xdg_paths.py (legacy ~/.openhcs migration helpers deleted; get_*_file_path now plain path joins); the page's log-location claim (get_openhcs_data_dir() / \"logs\", honouring XDG_DATA_HOME, default ~/.local/share/openhcs/logs) still holds and the page never described the deleted migration, so no correction was needed.",
@@ -4379,7 +4386,7 @@
       },
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "sha256": "630a74c9e4fb026a7c47e78b3a07427c4d16c9630447a523b36dd8c73e17e430",
         "role": "Declares the add, set-pipeline, initialize, compile, run, and stop dataset operations behind the session tools."
       },
       {
@@ -4409,7 +4416,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
+        "sha256": "56a9b4e8bb7d8195095eb99a849f717e79ca37aa429c612804584cbd7939f420",
         "role": "Declares the list-cases, inspect-run, inspect-measured, and run-measured commands, including the required --wait-timeout-ms."
       },
       {
@@ -4456,6 +4463,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/user_guide/mcp_clients.rst against openhcs/authoring/session/operations/datasets.py, benchmark/cellprofiler_benchmark_cli.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/mcp_clients.rst in full and compared it against the changed authorities: openhcs/mcp/client_registration.py (registration statuses and platform keys became class families), openhcs/mcp/lifecycle.py (McpProcessRecoveryReason classes), openhcs/agent/path_policy.py, benchmark/cellprofiler_benchmark_cli.py (observation-scope choices read from the ZMQRuntimeObservationExportScope registry), benchmark/control.py and the two agent tests; the --observation-scope spellings outcomes and values (default values) are still the registered names, --wait-timeout-ms is still required, the dataset row still reports complete (ExecutionCompleted.name), and client registration and restart behaviour are unchanged; no edit needed. The --surface help text in openhcs/mcp/bootstrap.py still says the desktop surface hides headless tools although the desktop profile includes them (reported earlier, code not edited).",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/mcp_clients.rst against B6's later changes to benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/mcp_clients.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, benchmark/cellprofiler_benchmark_cli.py, benchmark/control_service.py, tests/unit/agent/test_mcp_server.py, tests/unit/test_benchmark_control.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",

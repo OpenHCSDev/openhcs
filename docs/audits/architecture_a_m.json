@@ -344,7 +344,7 @@
     "authority": [
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "sha256": "630a74c9e4fb026a7c47e78b3a07427c4d16c9630447a523b36dd8c73e17e430",
         "role": "Declares CompileDatasets and its initialised, idle and non-empty-pipeline availability checks."
       },
       {
@@ -386,6 +386,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against openhcs/authoring/session/operations/datasets.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/batch_workflow_service.rst in full and compared it against the changed authorities: openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py; E1 replaced the OrchestratorState and terminal-status enum members with classes and the session now takes the observation export scope as a class, but the compile-only and run flows, compile_artifact_id submission and lifecycle the page describes are unchanged and it names no state member, so no claim changed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/batch_workflow_service.rst in full and compared it against the changed authorities: openhcs/authoring/session/session.py (K6 debug command and replay mode became classes: RunDebugCommand, StopDebugCommand, PersistentPausedWorkerReplay); the page does not describe debug sessions, and CompileDatasets, DatasetPipelineRequest, CompiledDataset, BatchSubmitWaitEngine, compile_artifact_id submission, ExecutionProgress, Session.close and the endpoint_status binding all still exist, so no claim changed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
@@ -2318,13 +2319,14 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
+        "sha256": "56a9b4e8bb7d8195095eb99a849f717e79ca37aa429c612804584cbd7939f420",
         "role": "Owns the installed openhcs-benchmark execution, report and list-cases command surface."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against benchmark/cellprofiler_benchmark_cli.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/mcp_distribution.rst in full and compared it against the changed authorities: openhcs/mcp/server.py (registered-family defaults in tool schemas, recovery reason by name), dev_client_core.py and dev_client_session.py (poll status, field filter and orchestrator state classes), http.py and http_auth.py (McpHttpAuthenticationMode became PublicReadOnlyAccess/OAuthIntrospectionAccess classes), client_registration.py and openhcs/desktop/deployment.py (status classes; platform leaves keyed by AgentRuntimePlatform class), openhcs/authoring/session/session.py (current file: E1 state families; events_after, set_transport_config and FinishedExecution unchanged), ui_bridge_windows.py (error_dialog flag), llm_context_service.py, benchmark/control.py and benchmark/cellprofiler_benchmark_cli.py (export scope classes) and the two changed tests; CapabilityTransport is still an Enum with HOSTED_STREAMABLE_HTTP, the Windows and macOS registration and deployment leaves, the public or OAuth-introspection policy and the benchmark capability claims still hold, and the page names no renamed member.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/mcp_distribution.rst in full and compared it against the changed authorities: authoring/session/session.py (K6 debug command/replay classes), core/config_document.py (L6: rendering through pycodify.generate_python_source; project_dataclass_field_from_source unchanged) and pyqt_gui/services/ui_bridge_windows.py (U3: dirty/signature markers from objectstate.inspection, DockPane from pyqt-reactive); none changes the headless-session, saved-endpoint projection, window-capture, navigation or row-action claims, so no prose change was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",

@@ -82,7 +82,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
+        "sha256": "56a9b4e8bb7d8195095eb99a849f717e79ca37aa429c612804584cbd7939f420",
         "role": "Declares the openhcs-benchmark subcommands and options, including run-measured through the OpenHCS session."
       },
       {
@@ -114,6 +114,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared README.md against benchmark/cellprofiler_benchmark_cli.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml (python-introspect floor 0.2.8), openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/artifacts.py (K2 split it into the openhcs/core/artifacts package), openhcs/core/dataset_sources/source.py, openhcs/core/viewer_streaming_service.py, openhcs/mcp/client_registration.py, openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, benchmark/control.py; E1 turned OrchestratorState, MaterializationBackend, InputSource, the client-registration status and the observation export scope into class families, but the README names none of the old enum members and the `--observation-scope outcomes` spelling is still the registered name, so no claim changed. Replaced the deleted artifacts.py authority with openhcs/core/artifacts/kinds.py.",
       "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml (zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5 floors), openhcs/core/pipeline_document.py (renders through pycodify.generate_python_source), openhcs/core/pipeline/compiler.py and compilation_session.py (ScopeKey ids, progress classes, disabled-function stripping removed), openhcs/core/progress/types.py (K6: ProgressPhase/ProgressStatus enums became class families; set_progress_queue unchanged and still exported from openhcs.core.progress), openhcs/core/dataset_sources/source.py (SourceBindingsConfig import moved) and pipeline_import.py (K4 import moves). The README states no dependency version or phase name; the CellProfiler example's imports (ensure_global_config_context, set_progress_queue, import_cellprofiler_pipeline with source_root, PipelineOrchestrator.initialize/compile_pipelines) and the compilation diagram's class names all still resolve, so no claim changed.",
       "On 2026-10-11 (B6 final), compared README.md against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
