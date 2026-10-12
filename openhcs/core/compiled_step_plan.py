@@ -17,7 +17,10 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionPattern,
@@ -295,7 +298,7 @@ class CompiledStepPlan:
     )
     future_artifact_inputs: frozenset[ArtifactSpecRef] | None = None
     execution_group_scope: ComponentGroupScope = field(
-        default_factory=ComponentGroupScope.ungrouped
+        default_factory=UngroupedScope
     )
     compiled_function_pattern: CompiledFunctionPattern | None = None
     input_conversion: InputConversionPlan | None = None

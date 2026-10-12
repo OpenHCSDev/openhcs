@@ -17,7 +17,9 @@ from openhcs.core.config import (
     GlobalPipelineConfig, LazyNapariStreamingConfig, LazyPathPlanningConfig,
     LazyProcessingConfig,
 )
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (

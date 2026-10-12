@@ -20,7 +20,7 @@ from openhcs.core.artifacts.relations import (
     MaterializationSourceIdentityRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.image_file_serialization import ImagePayloadUint8Strategy
 from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (
@@ -921,7 +921,7 @@ def _recorded_save_images_rows(
     filename_suffix: str,
     file_format: SaveImagesFileFormat,
     output_location: str | None,
-    context: ProcessingContext | None,
+    context: ExecutingContext | None,
 ) -> DataclassMeasurementColumnarRows:
     suffix = filename_suffix if append_suffix else ""
     if filename_method is SaveImagesFilenameMethod.FROM_IMAGE_FILENAME:
@@ -1045,7 +1045,7 @@ def save_images_with_measurements(
     series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIME,
     lossless_compression: bool = True,
     slice_index: int = 0,
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
 ) -> tuple[RuntimeArrayData, RuntimeArrayData, DataclassMeasurementColumnarRows]:
     """Prepare an image for saving and record its output-file measurements.
 

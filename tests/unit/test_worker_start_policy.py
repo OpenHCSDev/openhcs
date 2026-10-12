@@ -4,11 +4,13 @@ import pytest
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import MultiprocessingStartMethod
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.worker_start_policy import (
     WorkerStartPlatform,
     WorkerStartExecutionFacts,
     resolve_worker_start_context,
+)
+from tests.context_support import (
+    executing_context,
 )
 
 
@@ -62,7 +64,7 @@ def test_macos_downgrades_fork_without_unsafe_override() -> None:
 
 def test_execution_facts_use_compiled_step_plan_semantics() -> None:
     compiled_contexts = {
-        "A01": ProcessingContext(
+        "A01": executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -88,7 +90,7 @@ def test_execution_facts_use_compiled_step_plan_semantics() -> None:
 
 def test_execution_facts_treat_numpy_contexts_as_cpu() -> None:
     compiled_contexts = {
-        "A01": ProcessingContext(
+        "A01": executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,

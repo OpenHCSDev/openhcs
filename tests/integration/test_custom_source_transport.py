@@ -22,6 +22,9 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,
 )
+from tests.context_support import (
+    compiled_context,
+)
 
 WORKTREE = Path(__file__).resolve().parents[2]
 PYTHON = Path(sys.executable)
@@ -452,7 +455,6 @@ def _compiled_custom_contexts(payload, runtime):
     from openhcs.constants.constants import Backend
     from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.function_patterns import (
         compile_function_pattern, normalize_function_pattern,
     )
@@ -477,11 +479,10 @@ def _compiled_custom_contexts(payload, runtime):
             step_index=0, step_name="Synthetic custom",
             axis_id=axis_id, compiled_function_pattern=pattern,
         )
-        context = ProcessingContext(
+        context = compiled_context(
             axis_id=axis_id, step_plans={0: plan},
             filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
         )
-        context.freeze()
         contexts[axis_id] = context
         normalized = FunctionStepTransportAuthority.normalize_context(context)
         transported = next(

@@ -24,7 +24,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
@@ -104,6 +103,12 @@ from openhcs.core.materialization import (
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
+from tests.context_support import (
+    executing_context,
+)
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -571,7 +576,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-    context = ProcessingContext(filemanager=filemanager)
+    context = executing_context(filemanager=filemanager)
     with context.runtime_step_scope():
         bundle = export_to_spreadsheet(
             add_filename_prefix=False,
@@ -1883,8 +1888,7 @@ def _measurement_record(
         name=name,
         path=f"/memory/{name}.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=(group_key,),
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((group_key,), component=group_component),
         variable_components=variable_components,
     )
     value = RuntimeValue.normalize(

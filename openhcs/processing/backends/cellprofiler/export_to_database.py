@@ -16,7 +16,7 @@ from openhcs.core.artifacts.kinds import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
@@ -833,7 +833,7 @@ class ExportToDatabaseModule(ArtifactExportModule):
     @staticmethod
     def prepare_bundle(
         artifact_batch: RuntimeArtifactBatch,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
         parameters: Mapping[str, Any],
         *,
         map_partition_invocations: (
@@ -920,7 +920,7 @@ def _partitioned_database_export(
 def export_to_database(
     *,
     artifact_batch: RuntimeArtifactBatch,
-    context: ProcessingContext,
+    context: ExecutingContext,
     sqlite_file: str = "DefaultDB.db",
     experiment_name: str = "MyExpt",
     add_table_prefix: bool = False,
