@@ -1,4 +1,4 @@
-"""Tests for ImageBrowser filter projection without constructing the widget."""
+"""File inventory records and the browser rows they give."""
 
 from pathlib import Path
 from types import SimpleNamespace
@@ -25,86 +25,17 @@ from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     FilenameParserCapability,
 )
+from openhcs.core.plate_image_inventory import PlateFileRecord
 from openhcs.pyqt_gui.widgets.image_browser import (
-    ImageBrowserFilterController,
-    ImageBrowserWidget,
-    ImageBrowserItem,
+    BrowsedFile,
+    ImageFile,
+    ResultFile,
+    ViewerBatch,
 )
 
 
-class _FolderItem:
-    def __init__(self, folder_path: str | None):
-        self.folder_path = folder_path
-
-    def data(self, *_):
-        return self.folder_path
-
-
-class _FolderTree:
-    def __init__(self, folder_path: str | None = None):
-        self.folder_path = folder_path
-
-    def selectedItems(self):
-        return [] if self.folder_path is None else [_FolderItem(self.folder_path)]
-
-
-class _SearchInput:
-    def text(self):
-        return ""
-
-
-class _ImageTableBrowser:
-    def __init__(self, browser: "_Browser"):
-        self.browser = browser
-
-    def search_items(self, _search_term: str):
-        return self.browser.file_items
-
-
-class _Browser:
-    def __init__(self):
-        self.folder_tree = _FolderTree("PlateA")
-        self.selected_wells = {"A01"}
-        self.file_items = {
-            key: ImageBrowserItem(key=key, metadata=metadata)
-            for key, metadata in {
-                "PlateA/A01_DAPI.tif": {
-                    "filename": "PlateA/A01_DAPI.tif",
-                    "well": "A01",
-                    "_display_channel": "DAPI",
-                },
-                "PlateA/A02_DAPI.tif": {
-                    "filename": "PlateA/A02_DAPI.tif",
-                    "well": "A02",
-                    "_display_channel": "DAPI",
-                },
-                "PlateA_results/A01_DAPI.csv": {
-                    "filename": "PlateA_results/A01_DAPI.csv",
-                    "well": "A01",
-                    "_display_channel": "DAPI",
-                },
-                "PlateB/A01_DAPI.tif": {
-                    "filename": "PlateB/A01_DAPI.tif",
-                    "well": "A01",
-                    "_display_channel": "DAPI",
-                },
-                "PlateA/A01_FITC.tif": {
-                    "filename": "PlateA/A01_FITC.tif",
-                    "well": "A01",
-                    "_display_channel": "FITC",
-                },
-            }.items()
-        }
-        self.search_input = _SearchInput()
-        self.image_table_browser = _ImageTableBrowser(self)
-        self.updated = {}
-
-    def _extract_well_id(self, metadata: dict) -> str:
-        return metadata["well"]
-
-    def _set_visible_files(self, files_dict, *, rebuild_index: bool):
-        assert rebuild_index is False
-        self.updated = files_dict
+def _rows(records) -> dict[str, BrowsedFile]:
+    return {row.key: row for record in records for row in BrowsedFile.of(record)}
 
 
 class _ResultOnlyOrchestrator:
@@ -182,63 +113,6 @@ class _LazyInventoryOrchestrator:
         return self._config
 
 
-def test_image_browser_filter_controller_applies_folder_and_partition_filters():
-    browser = _Browser()
-    controller = ImageBrowserFilterController(browser)
-
-    controller.apply_combined_filters()
-
-    assert set(browser.updated) == {
-        "PlateA/A01_DAPI.tif",
-        "PlateA_results/A01_DAPI.csv",
-        "PlateA/A01_FITC.tif",
-    }
-
-
-def test_image_browser_background_cycle_uses_synchronous_settled_stream_calls():
-    calls: list[tuple[str, tuple[str, ...]]] = []
-
-    class StreamingService:
-        def stream_images(self, request) -> None:
-            calls.append(("images", request.filenames))
-
-        def stream_rois(self, request) -> None:
-            calls.append(("rois", request.roi_filenames))
-
-        def stream_images_async(self, _request) -> None:
-            raise AssertionError("nested image streaming thread used")
-
-        def stream_rois_async(self, _request) -> None:
-            raise AssertionError("nested ROI streaming thread used")
-
-    browser = SimpleNamespace(
-        _prepare_streaming=lambda _config_key: (
-            object(),
-            "disk",
-            SimpleNamespace(viewer_family=SimpleNamespace(display_name="Napari")),
-        ),
-        streaming_service=StreamingService(),
-        _status_update_signal=SimpleNamespace(emit=lambda _message: None),
-        _show_streaming_error=lambda _viewer, _error: None,
-    )
-
-    ImageBrowserWidget._stream_rois_to_viewer(
-        browser,
-        ["A01_w1_rois.roi.zip"],
-        "napari_streaming_config",
-    )
-    ImageBrowserWidget._stream_images_to_viewer(
-        browser,
-        ["A01_w1.tif", "A01_w2.tif"],
-        "napari_streaming_config",
-    )
-
-    assert calls == [
-        ("rois", ("A01_w1_rois.roi.zip",)),
-        ("images", ("A01_w1.tif", "A01_w2.tif")),
-    ]
-
-
 def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
     roi_path = tmp_path / "plate" / "results" / "A01.roi.zip"
     text_path = tmp_path / "plate" / "results" / "summary.txt"
@@ -272,16 +146,21 @@ def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
         ),
     )
 
-    result_items = ImageBrowserWidget._result_items_from_inventory(inventory)
+    rows = _rows(PlateFileRecord.from_result(record) for record in inventory.records)
 
-    item = result_items["results/A01.roi.zip"]
-    assert item.result_file_type is RoiArchiveResultFile
-    assert item.full_path == roi_path
-    assert item.metadata["type"] == "ROI"
-    text_item = result_items["results/summary.txt"]
-    assert text_item.result_file_type is TextResultFile
-    assert text_item.full_path == text_path
-    assert text_item.metadata["type"] == "TEXT"
+    roi_row = rows["results/A01.roi.zip"]
+    assert isinstance(roi_row, ResultFile)
+    assert (roi_row.file_format, roi_row.path) == (RoiArchiveResultFile, roi_path)
+    assert roi_row["type"] == "ROI"
+    text_row = rows["results/summary.txt"]
+    assert (text_row.file_format, text_row.path) == (TextResultFile, text_path)
+    assert dict(text_row)["type"] == "TEXT"
+
+    # Each format decides what a viewer batch receives: ROIs stream, text does not.
+    batch = ViewerBatch()
+    for row in rows.values():
+        row.add_to(batch)
+    assert (batch.image_paths, batch.roi_paths) == ([], [str(roi_path)])
 
 
 def test_image_browser_projects_result_images_as_streamable_images(tmp_path: Path):
@@ -305,14 +184,15 @@ def test_image_browser_projects_result_images_as_streamable_images(tmp_path: Pat
         ),
     )
 
-    result_items = ImageBrowserWidget._result_items_from_inventory(inventory)
+    rows = _rows(PlateFileRecord.from_result(record) for record in inventory.records)
 
-    item = result_items["results/A01_labels.tif"]
-    assert item.file_kind is PlateFileKind.RESULT
-    assert item.is_result is True
-    assert item.streamable_image_path == str(image_path)
-    assert item.result_file_type is None
-    assert item.full_path == image_path
+    row = rows["results/A01_labels.tif"]
+    assert isinstance(row, ImageFile)
+    assert row.record.kind is PlateFileKind.RESULT
+    assert row.image_path == str(image_path)
+    batch = ViewerBatch()
+    row.add_to(batch)
+    assert (batch.image_paths, batch.roi_paths) == ([str(image_path)], [])
 
 
 def test_plate_file_inventory_reads_path_planned_result_only_output(
@@ -449,11 +329,10 @@ def test_plate_file_inventory_query_returns_unified_browser_records(
             component_filters=ComponentFilters.from_mapping({"well": "A01"}),
         )
     )
-    image_items, result_items = ImageBrowserWidget._items_from_file_records(
-        inventory.file_records()
-    )
+    rows = _rows(inventory.file_records())
 
     assert query_result.total_count == 1
     assert query_result.records[0].key == "images/A01_w1.tif"
-    assert image_items["images/A01_w1.tif"].metadata["well"] == "A01"
-    assert result_items["results/A01_summary.txt"].result_file_type is TextResultFile
+    assert isinstance(rows["images/A01_w1.tif"], ImageFile)
+    assert rows["images/A01_w1.tif"]["well"] == "A01"
+    assert rows["results/A01_summary.txt"].file_format is TextResultFile

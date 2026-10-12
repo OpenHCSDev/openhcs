@@ -33,7 +33,10 @@ from PyQt6.QtWidgets import (
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.grid_selector import GridAddressing, GridSelectorWidget
 from pyqt_reactive.widgets.shared.abstract_table_browser import ColumnDef
-from pyqt_reactive.widgets.shared.config_action_tabs import ConfigAction, ConfigActionTabs
+from pyqt_reactive.widgets.shared.config_action_tabs import (
+    ConfigAction,
+    ConfigActionTabs,
+)
 from pyqt_reactive.widgets.shared.detachable_panel import DetachablePanel
 from pyqt_reactive.widgets.shared.folder_tree import FolderRowFilter, FolderTreeWidget
 from pyqt_reactive.widgets.shared.grid_column_filter import GridColumnFilterLink
@@ -622,7 +625,7 @@ class ImageBrowserWidget(QWidget):
                 key=lambda row: kinds.index(type(row)),
             )
         except Exception as error:
-            logger.error("Failed to load files: %s", error, exc_info=True)
+            logger.exception("Failed to load files")
             QMessageBox.warning(self, "Error", f"Failed to load files: {error}")
             rows = []
         files = {row.key: row for row in rows}
@@ -688,7 +691,7 @@ class ImageBrowserWidget(QWidget):
                     lambda error: self._stream_failed.emit(viewer_name, str(error)),
                 )
             except Exception as error:
-                logger.error("Failed to stream to %s: %s", viewer_name, error, exc_info=True)
+                logger.exception("Failed to stream to %s", viewer_name)
                 self._stream_failed.emit(viewer_name, str(error))
 
         spawn_thread_with_context(send, name=f"view_{action.field_name}")
