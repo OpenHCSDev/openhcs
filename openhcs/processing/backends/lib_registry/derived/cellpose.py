@@ -3,7 +3,6 @@
 from dataclasses import asdict
 from functools import partial
 from operator import attrgetter
-from pathlib import Path
 from typing import Optional
 
 import torch
@@ -21,13 +20,6 @@ NormalizeOptions = ml.options_dataclass(
     transforms.normalize_img,
     stated={"lowhigh": tuple[float, float], "percentile": tuple[float, float]},
 )
-
-
-def _made(directory: Path) -> str:
-    """Cellpose makes ``models`` inside the directory, but not the directory."""
-
-    directory.mkdir(parents=True, exist_ok=True)
-    return str(directory)
 
 
 _segmentation_model = ml.Stated(SegmentationModel, attrgetter("value"), SegmentationModel)
@@ -61,12 +53,11 @@ library = ml.Library(
         "pretrained_model_ortho": _model_file,
         "channels": ml.Stated(tuple[int, int], list, tuple),
         # Cellpose mutates its module-level defaults; the complete dict is passed.
-        "normalize": ml.Stated(
-            NormalizeOptions, asdict, lambda on: NormalizeOptions(normalize=on)
-        ),
+        "normalize": ml.Stated(NormalizeOptions, asdict, lambda on: NormalizeOptions(normalize=on)),
         "resize": ml.Stated(tuple[int, int], list),
         "scale_range": ml.Stated(float, float),
-        "save_path": ml.Required(PlateOutputDirectory, _made),
+        # Cellpose makes ``models`` inside the directory, but not the directory.
+        "save_path": ml.Required(PlateOutputDirectory, ml.made_directory),
         **dict.fromkeys(("train_probs", "test_probs"), ml.Stated(tuple[float, ...], list)),
         **dict.fromkeys(
             ("test_data", "test_labels"),
@@ -196,14 +187,10 @@ for use, results in {
         utils.masks_to_outlines: [ml.Image("outlines", _whole)],
         utils.masks_to_edges: [ml.Image("edges", _whole)],
         utils.distance_to_boundary: [ml.Image("boundary_distance", _whole)],
-        utils.diameters: [
-            _objects("diameters", {"median_diameter": (0,), "diameter": (1,)})
-        ],
+        utils.diameters: [_objects("diameters", {"median_diameter": (0,), "diameter": (1,)})],
         utils.get_mask_compactness: [_objects("compactness", {"compactness": ()})],
         utils.get_mask_perimeters: [_objects("perimeters", {"perimeter": ()})],
-        utils.size_distribution: [
-            ml.Measurements("size_distribution", {"size_distribution": ()})
-        ],
+        utils.size_distribution: [ml.Measurements("size_distribution", {"size_distribution": ()})],
         metrics.mask_ious: [_objects("ious", {"iou": (0,), "matched_prediction": (1,)})],
     },
     ml.OneImage(): {utils.stitch3D: _new_labels},

@@ -838,6 +838,13 @@ class Library:
         )
 
 
+def made_directory(directory: Path) -> str:
+    """A directory the library writes into, made when it does not exist yet."""
+
+    directory.mkdir(parents=True, exist_ok=True)
+    return str(directory)
+
+
 def enum_of_names(name: str, module: str, names: Sequence[str]) -> type[Enum]:
     """An enum with one member per distinct name, importable from ``module``."""
 
