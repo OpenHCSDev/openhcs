@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_ty
 from objectstate import DataclassFieldAccess
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import CompilingContext
+from openhcs.core.context.processing_context import CompiledContext, CompilingContext
 from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
@@ -27,8 +27,15 @@ from openhcs.core.invocation_artifacts import (
     PipelineInvocationContractProviderAuthority,
 )
 from openhcs.core.vfs_protocol import (
-    FileManagerLike,
     DatasetPathDeclaration,
+    DeclaredFile,
+    DeclaredFileLinkError,
+    SeveralWritersOfDeclaredFileError,
+    FileManagerLike,
+    LinkedInputFile,
+    OutputFileOf,
+    PathRoots,
+    ProducedFileLookup,
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
 
@@ -92,12 +99,194 @@ class CompilationDatasetScope:
 
 
 @dataclass(frozen=True, slots=True)
-class CompilationPathResolver:
-    """Resolve declaration-owned paths for one compilation plate."""
+class OutputFileParameter:
+    """An output-file parameter of one callable of one step that has no value."""
 
-    dataset_scope: CompilationDatasetScope
+    step_index: int
+    step_name: str
+    function_name: str
+    parameter: str
+
+    def linked_input_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        declaration: DatasetPathDeclaration,
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        """Return the record of a consumer parameter that reads this file."""
+
+        del parameter, declaration
+        raise DeclaredFileLinkError(
+            f"{owner} reads {link!r}, but step {self.step_name!r} callable "
+            f"{self.function_name!r} has no value for output file "
+            f"{self.parameter!r} (it is None), so it writes no file."
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ProducedFile(OutputFileParameter):
+    """A file one callable of one step writes, at its resolved path."""
+
+    file: DeclaredFile
+
+    def linked_input_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        declaration: DatasetPathDeclaration,
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        del link, owner
+        return LinkedInputFile(
+            parameter=parameter,
+            path=self.file.path,
+            backend=self.file.backend,
+            declaration=declaration,
+            producer_step_index=self.step_index,
+            producer_step_name=self.step_name,
+            producer_parameter=self.parameter,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ProducedFiles(ProducedFileLookup):
+    """Every output-file parameter the steps of one pipeline declare.
+
+    Built once per pipeline from each step's function pattern; a consumer's
+    ``OutputFileOf`` argument resolves through it to the producer's path.
+    """
+
+    step_indexes_by_name: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
+    parameters: tuple[OutputFileParameter, ...] = ()
+
+    @classmethod
+    def from_pipeline(
+        cls,
+        pipeline: "ResolvedPipelineDefinition",
+        resolver: "CompilationPathResolver",
+    ) -> "ProducedFiles":
+        """Collect the output files of every step, then check every link."""
+
+        step_indexes_by_name: dict[str, tuple[int, ...]] = {}
+        parameters: list[OutputFileParameter] = []
+        step_items = tuple(
+            (
+                index,
+                f"step {step.name!r} (index {index})",
+                () if graph.pattern is None else tuple(graph.pattern.iter_items()),
+            )
+            for index, (step, graph) in enumerate(
+                zip(pipeline.steps, pipeline.artifact_graphs)
+            )
+        )
+        for (index, step_label, items), step in zip(step_items, pipeline.steps):
+            step_indexes_by_name[step.name] = (
+                *step_indexes_by_name.get(step.name, ()),
+                index,
+            )
+            for item in items:
+                contract = item.contract
+                values = contract.declared_path_values(item.kwargs_dict)
+                for name, declaration in contract.declared_path_parameters.items():
+                    if not declaration.writes_file:
+                        continue
+                    identity = (index, step.name, contract.function_name, name)
+                    parameters.append(
+                        ProducedFile(
+                            *identity,
+                            file=resolver.declared_file(
+                                name,
+                                values[name][1],
+                                declaration,
+                                owner=f"{step_label} callable "
+                                f"{contract.function_name}.{name}",
+                            ),
+                        )
+                        if name in values
+                        else OutputFileParameter(*identity)
+                    )
+        produced = cls(
+            step_indexes_by_name=step_indexes_by_name,
+            parameters=tuple(parameters),
+        )
+        linking = replace(resolver, produced_files=produced)
+        for index, step_label, items in step_items:
+            for item in items:
+                owner = f"{step_label} callable {item.contract.function_name}"
+                for declared in item.contract.declared_files(
+                    item.kwargs_dict, linking, owner=owner
+                ):
+                    declared.require_produced_before(
+                        index, owner=f"{owner}.{declared.parameter}"
+                    )
+        return produced
+
+    def linked_input_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        declaration: DatasetPathDeclaration,
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        step_indexes = self.step_indexes_by_name.get(link.step, ())
+        if not step_indexes:
+            raise DeclaredFileLinkError(
+                f"{owner} reads {link!r}, but the pipeline has no step named "
+                f"{link.step!r}; steps: {sorted(self.step_indexes_by_name)}."
+            )
+        if len(step_indexes) > 1:
+            raise DeclaredFileLinkError(
+                f"{owner} reads {link!r}, but step name {link.step!r} is shared by "
+                f"the steps at indexes {list(step_indexes)}; rename one so the "
+                "link names a single step."
+            )
+        (step_index,) = step_indexes
+        of_step = tuple(
+            written for written in self.parameters if written.step_index == step_index
+        )
+        matches = tuple(
+            written for written in of_step if written.parameter == link.parameter
+        )
+        if not matches:
+            raise DeclaredFileLinkError(
+                f"{owner} reads {link!r}, but parameter {link.parameter!r} is not a "
+                f"declared output file of step {link.step!r}; its output file "
+                f"parameters: {sorted({written.parameter for written in of_step})}."
+            )
+        if len(matches) > 1:
+            raise DeclaredFileLinkError(
+                f"{owner} reads {link!r}, but {len(matches)} callables of step "
+                f"{link.step!r} declare output file {link.parameter!r}: "
+                f"{[written.function_name for written in matches]}."
+            )
+        (written,) = matches
+        return written.linked_input_file(parameter, link, declaration, owner=owner)
+
+
+@dataclass(frozen=True, slots=True)
+class InputDatasetPathResolver(PathRoots):
+    """Resolve declared paths while only the input plate is known.
+
+    The path planning config names the folder output datasets are created in,
+    so its declared paths resolve before an output dataset root exists.
+    """
+
+    input_dataset: CompilationDatasetScope
     filemanager: FileManagerLike
     backend: str
+
+    def input_dataset_root(self) -> Path:
+        return self.input_dataset.path
+
+    def output_dataset_root(self) -> Path:
+        raise TypeError(
+            "The output dataset root is not known while resolving the config "
+            "that defines it."
+        )
 
     def resolve(
         self,
@@ -107,7 +296,12 @@ class CompilationPathResolver:
         owner: str,
     ) -> Path:
         try:
-            target = self.dataset_scope.resolve_address(
+            root = declaration.root(self)
+        except Exception as error:
+            error.add_note(f"While resolving {owner}: authored={value!r}.")
+            raise
+        try:
+            target = CompilationDatasetScope(root).resolve_address(
                 value,
                 filemanager=self.filemanager,
                 backend=self.backend,
@@ -121,9 +315,106 @@ class CompilationPathResolver:
         except Exception as error:
             error.add_note(
                 f"While resolving {owner}: authored={value!r}, "
-                f"dataset_root={self.dataset_scope.path}, backend={self.backend!r}."
+                f"{type(declaration).__name__} root={root}, "
+                f"backend={self.backend!r}."
             )
             raise
+
+
+@dataclass(frozen=True, slots=True)
+class CompilationPathResolver(InputDatasetPathResolver):
+    """Resolve declared paths and links between steps for one compilation plate."""
+
+    output_dataset: CompilationDatasetScope
+    produced_files: ProducedFileLookup = field(default_factory=ProducedFiles)
+
+    def output_dataset_root(self) -> Path:
+        return self.output_dataset.path
+
+    def declared_file(
+        self,
+        parameter: str,
+        value: object,
+        declaration: DatasetPathDeclaration,
+        *,
+        owner: str,
+    ) -> DeclaredFile:
+        """Resolve one authored argument of a declared path parameter."""
+
+        if isinstance(value, OutputFileOf):
+            return declaration.linked_file(
+                parameter, value, self.produced_files, owner=owner
+            )
+        if not isinstance(value, (str, Path)):
+            raise TypeError(
+                f"{owner} requires str, Path or OutputFileOf, got "
+                f"{type(value).__name__}."
+            )
+        return DeclaredFile(
+            parameter=parameter,
+            path=self.resolve(value, declaration, owner=owner),
+            backend=self.backend,
+            declaration=declaration,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredFileWriter:
+    """One compiled invocation that writes a declared output file."""
+
+    step_index: int
+    step_name: str
+    function_name: str
+    parameter: str
+    axis_id: str
+    group_key: str
+
+    def __str__(self) -> str:
+        return (
+            f"step {self.step_name!r} (index {self.step_index}) callable "
+            f"{self.function_name!r} parameter {self.parameter!r}, axis "
+            f"{self.axis_id!r}, group {self.group_key!r}"
+        )
+
+
+def require_one_writer_per_declared_file(
+    compiled_contexts: Mapping[str, "CompiledContext"],
+) -> None:
+    """Reject a plate whose compiled invocations share a declared output file.
+
+    A step that runs once for the plate has a plan in every context; only the
+    context that owns its outputs runs it, so only that plan counts.
+    """
+
+    writers_by_path: dict[Path, list[DeclaredFileWriter]] = {}
+    for context in compiled_contexts.values():
+        for plan in context.step_plans.values():
+            pattern = plan.compiled_function_pattern
+            if pattern is None or not plan.owns_runtime_outputs:
+                continue
+            for invocation in pattern.iter_invocations():
+                for declared in invocation.declared_files:
+                    if declared.declaration.writes_file:
+                        writers_by_path.setdefault(declared.path, []).append(
+                            DeclaredFileWriter(
+                                step_index=plan.step_index,
+                                step_name=plan.step_name,
+                                function_name=invocation.key.function_name,
+                                parameter=declared.parameter,
+                                axis_id=plan.axis_id,
+                                group_key=invocation.key.group_key,
+                            )
+                        )
+    for path, writers in writers_by_path.items():
+        if len(writers) > 1:
+            first, second, *others = writers
+            raise SeveralWritersOfDeclaredFileError(
+                f"Declared output file {path} has {len(writers)} writers: {first}; "
+                f"and {second}"
+                + (f"; and {len(others)} more" if others else "")
+                + ". A declared output file has one writer; run the step once "
+                "for the plate, or give each invocation its own file."
+            )
 
 
 def resolve_declared_dataclass_paths(

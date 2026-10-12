@@ -1965,6 +1965,16 @@ class FunctionCoreExecutor:
             self.source_memory_type,
         )
         main_data_arg = self.invocation.main_flow_call_argument(source_payload)
+        plan = self.group_data.execution_plan
+        self.invocation.before_call(
+            self.group_data.context,
+            call=(
+                f"step {plan.step_name!r} (index {plan.step_index}) callable "
+                f"{self.invocation.key.function_name!r}, axis {plan.axis_id!r}, "
+                f"group {self.group_key!r}, inputs "
+                f"{self.group_data.matching_files[:1]}"
+            ),
+        )
         final_kwargs = dict(self.invocation.runtime_kwargs)
         loads_artifact_inputs = self.should_load_artifact_inputs()
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
