@@ -39,7 +39,9 @@ def test_missing_display_preserves_default_and_wrong_viewer_fails_closed():
         FijiStreamingConfig().with_display_config(NapariDisplayConfig())
 
 
-def test_new_display_leaf_uses_existing_admission_without_consumer_edits():
+def test_new_display_leaf_uses_existing_admission_without_consumer_edits(stand_in_members):
+    stand_in_members(NapariStreamingConfig, NapariStreamingConfig.viewer_family)
+
     @dataclass(frozen=True)
     class IndependentPalette:
         palette_label: str = "new palette"

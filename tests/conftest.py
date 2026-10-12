@@ -4,7 +4,8 @@ import os
 import signal
 import tempfile
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Hashable, Iterator
+from contextlib import ExitStack
 from pathlib import Path
 
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
@@ -13,6 +14,7 @@ ensure_source_checkout_external_paths()
 
 import psutil
 import pytest
+from metaclass_registry.testing import restored_registry
 from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 
 from polystore.imagej_distribution import (
@@ -137,6 +139,24 @@ def _marked_processes(marker: str) -> list[psutil.Process]:
         except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
             continue
     return found
+
+
+@pytest.fixture
+def stand_in_members() -> Iterator[Callable[..., None]]:
+    """Let a test define stand-in members of a registered family.
+
+    ``stand_in_members(member, *keys)`` frees ``keys`` of the family that
+    ``member`` belongs to, so the test can define its own class under them.
+    When the test ends the registry is exactly what it was: the stand-ins are
+    gone and the production classes hold their keys again.
+    """
+
+    with ExitStack() as restored:
+
+        def allow(member: type, *released_keys: Hashable) -> None:
+            restored.enter_context(restored_registry(member, released=released_keys))
+
+        yield allow
 
 
 @pytest.fixture

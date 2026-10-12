@@ -35,7 +35,7 @@ Measured at this head by a runtime inventory (every `_register_class` / `_regist
 One rule, owned by `metaclass_registry.core`, applied to primary and secondary registries, cache loads and unpickling:
 
 1. **Same class object** again: no-op.
-2. **Same declaration created again** (equal `__module__` and `__qualname__`): the new object takes the key. This is what `dataclass(slots=True)`, `importlib.reload`, re-import after `del sys.modules[...]` and a re-run of the same function body produce. The declaration that owns the key is unchanged, so `[A]` and `[A, A']` do not differ in the judgment P10 6.2 protects; and the old object is the one Python itself discards from the module namespace.
+2. **Same declaration created again**: the new object takes the key. Two class objects are one declaration when their `__module__` and `__qualname__` are equal, or when the new class was built from a copy of the registered class's namespace (it then carries the token registration put there, and has the same module and name; `dataclass(slots=True)` does this and restores `__qualname__` only afterwards). This is what `dataclass(slots=True)`, `importlib.reload`, re-import after `del sys.modules[...]` and a re-run of the same function body produce. The declaration that owns the key is unchanged, so `[A]` and `[A, A']` do not differ in the judgment P10 6.2 protects; and the old object is the one Python itself discards from the module namespace.
 3. **Anything else** raises `DuplicateRegistryKeyError`, naming the registry, the key and both classes.
 4. **Intentional replacement** is a declaration in the replacing class body: `__replaces_registered__ = OtherClass`. It is read from the class body only (never inherited), and it is checked: the key must currently hold exactly `OtherClass`, otherwise the same error is raised. Nothing replaces by default.
 
@@ -56,7 +56,7 @@ In users:
 ## Guards
 
 - Library: `tests/test_core.py` asserts a different class on an occupied key raises, for primary and secondary registries.
-- OpenHCS: `tests/unit/test_registry_keys_unique.py` imports every OpenHCS module in a subprocess with registrations recorded and asserts no key was ever written by two different declarations without `__replaces_registered__`, and that the lower bound in `pyproject.toml` is `metaclass-registry>=0.4.0`.
+- OpenHCS: `tests/unit/test_registry_keys_unique.py` imports every OpenHCS module in a subprocess and asserts none raises `DuplicateRegistryKeyError`; that no module under `openhcs/`, `benchmark/` or `scripts/` writes `X.__registry__[key] = ...` by hand (AST); that the lower bound in `pyproject.toml` is `metaclass-registry>=0.4`; and that the streaming-config registry holds exactly the declared lazy replacements.
 
 ## Tests
 
@@ -70,7 +70,37 @@ Today: adding a class whose key collides with an existing one needs zero edits a
 
 ## Registries that do not use the library
 
-Recorded in the section "Plain registries" below once the sweep is complete.
+Found by an AST scan of 2238 files (`openhcs/`, `benchmark/`, `scripts/`, the nine `external/*/src`): subscript writes to module, class or registry-named instance dicts inside decorators, `register*` functions, `__init_subclass__` and custom metaclasses, each read and classified. 10 hand-written registries already reject duplicates. 13 did not; none has two registrants sharing a key today.
+
+Fixed here (a second, different registrant now raises):
+
+| Site | Registry |
+|---|---|
+| `openhcs/mcp/dev_client_commanding.py` | `CapabilityBackedCommandSpec.__capability_registry__` (uses `metaclass_registry.register_once`) |
+| `benchmark/datasets/cppipe_case_catalog.py` | `_OFFICIAL_CP3_CASE_DECLARATIONS` |
+| ObjectState `ui_visibility.py` | `UISpecialFieldRegistry._fields_by_owner` |
+| PolyStore `disk.py` | `FileFormatRegistry._writers` / `_readers` |
+| formbridge `forms/parameter_info_types.py` | inline dataclass widget `_factories` |
+| formbridge `protocols/preview_formatter.py` | `PreviewFormatterRegistry._formatters` |
+| pyqt-reactive `forms/widget_registry.py` | `WIDGET_IMPLEMENTATIONS` (the warning before overwrite is now an error) |
+| pyqt-reactive `forms/form_init_service.py` | `_builders_by_output` |
+
+The library checks are written inline: those libraries cannot require `metaclass-registry>=0.4.0` before it is released (PolyStore's `uv.lock` would not resolve). When they next raise their bound they should call `register_once`.
+
+Recorded, not changed (each overwrites on purpose or from a lifecycle; needs a design decision by the owner named):
+
+| Site | Registry | Why it is large | Owner |
+|---|---|---|---|
+| ObjectState `object_state_registry.py:371` | `ObjectStateRegistry._states` (scope key → state) | warns then overwrites; 186 call sites (173 in tests); time-travel code rewrites it | ObjectState maintainer / surface F1 |
+| ObjectState `context_manager.py:371` | `_known_hierarchy` (child type → parent type) | re-registered on every form build | ObjectState maintainer |
+| ObjectState `lazy_factory.py:1414-1652` | four display-metadata dicts (abbreviations, preview labels, always-viewable fields) | `@abbreviation` overwrites what `@global_pipeline_config` wrote | ObjectState maintainer |
+| PolyStore `filemanager.py:108` | `FileManager.registry` (backend name → instance) | callers pass a fresh instance each time | PolyStore maintainer / surface C5 |
+| `openhcs/core/orchestrator/orchestrator.py:132` | the process-wide storage registry's ZARR entry | replaced on every orchestrator init | surface C5 |
+| formbridge `services/service_registry.py:41` | `ServiceRegistry._services` (service type → live widget) | GUI lifecycle: registered per widget, removed on close | surface U4 |
+| formbridge `bridge/service.py:274` | `served_operations` built by a dict comprehension in `__init_subclass__` | two handlers for one operation collapse silently | surface U2 |
+| pyqt-reactive `services/scope_color_service.py:54` | `_strategies` via `register_strategy` | a public replace-the-default method with no caller | surface U3 (delete or keep as the explicit replacement) |
+
+Also found, outside this surface: `polystore.streaming.handlers` imports `metaclass_registry.lazy`, which does not exist (the module cannot be imported at this head) — PolyStore maintainer.
 
 ## Done when
 

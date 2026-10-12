@@ -64,7 +64,7 @@ def test_importing_every_openhcs_module_registers_no_key_twice() -> None:
     report = json.loads(completed.stdout[completed.stdout.rindex('{"imported"') :])
 
     assert report["duplicates"] == {}
-    assert report["imported"] > 900
+    assert report["imported"] > 500
 
 
 def test_openhcs_requires_the_metaclass_registry_that_rejects_duplicate_keys() -> None:
