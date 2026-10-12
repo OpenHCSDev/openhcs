@@ -114,6 +114,11 @@ def test_execution_server_launcher_prepares_before_binding_and_ready(
         def __init__(self, **_kwargs) -> None:
             events.append("construct")
 
+        def launched_by(self, launch):
+            # No --launch argument: a server started by hand owns itself.
+            assert launch.owner == ProcessIdentity.current()
+            return self
+
         def start(self) -> None:
             events.append("start")
 
@@ -148,6 +153,9 @@ def test_execution_server_launcher_projects_endpoint_overrides_into_config(
     class _Server:
         def __init__(self, **kwargs) -> None:
             captured.update(kwargs)
+
+        def launched_by(self, _launch):
+            return self
 
         def prepare_runtime_capabilities(self, _status_callback) -> None:
             return None

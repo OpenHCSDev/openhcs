@@ -6,7 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 from polystore.streaming.identity import StreamProducerIdentity
+from zmqruntime.transport import get_control_url, get_zmq_transport_url
+from zmqruntime.transport_modes import TransportMode
 
+from openhcs.agent.services.viewer_endpoint_discovery import viewer_ipc_directory
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
@@ -1354,5 +1357,15 @@ def test_master_viewer_endpoint_uses_the_openhcs_transport_owner(tmp_path):
     endpoint = master.McpMasterDemoOperations._endpoint(item)
 
     assert endpoint.config is master.OPENHCS_ZMQ_CONFIG
-    assert endpoint.data_url().endswith("/.openhcs/ipc/openhcs-zmq-6200.sock")
-    assert endpoint.control_url().endswith("/.openhcs/ipc/openhcs-zmq-7200.sock")
+    config = master.OPENHCS_ZMQ_CONFIG
+    socket_directory = config.socket_root() / config.ipc_socket_dir
+    assert viewer_ipc_directory() == socket_directory
+    assert endpoint.data_url() == f"ipc://{socket_directory}/openhcs-zmq-6200.sock"
+    assert endpoint.control_url() == f"ipc://{socket_directory}/openhcs-zmq-7200.sock"
+    # An execution endpoint on the same port resolves the same address.
+    assert endpoint.data_url() == get_zmq_transport_url(
+        6200, mode=TransportMode.IPC, config=config
+    )
+    assert endpoint.control_url() == get_control_url(
+        6200, TransportMode.IPC, config=config
+    )
