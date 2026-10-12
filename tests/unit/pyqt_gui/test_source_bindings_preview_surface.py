@@ -16,7 +16,7 @@ def test_source_bindings_pipeline_sources_preview_renders_palette_surface(qapp) 
     color_scheme = ColorScheme()
     original_palette = qapp.palette()
     qapp.setPalette(PaletteManager(color_scheme).create_palette())
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
     try:
         widget.set_preview_context(source_bindings=SourceBindingsConfig())
         widget.setStyleSheet(color_scheme.styles.generate_config_window_style())

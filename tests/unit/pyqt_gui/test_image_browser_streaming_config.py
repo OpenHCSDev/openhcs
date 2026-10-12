@@ -17,10 +17,24 @@ from openhcs.core.config import (
     StreamingConfig,
     StreamingDefaults,
 )
+from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.widgets.image_browser import (
     ImageBrowserConfig,
     ImageBrowserWidget,
+    NoDataset,
+    OrchestratorDataset,
 )
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from pyqt_reactive.theming import ColorScheme
+
+
+def _browser() -> ImageBrowserWidget:
+    return ImageBrowserWidget(
+        NoDataset(),
+        color_scheme=ColorScheme(),
+        zmq_config=OPENHCS_ZMQ_CONFIG,
+        progress_config=ProgressUIConfig(),
+    )
 
 
 def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
@@ -43,30 +57,20 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
         )
         ObjectStateRegistry.register(plate_state, _skip_snapshot=True)
 
-        browser = SimpleNamespace(
-            config=ImageBrowserConfig(),
-            scope_id=None,
-            _state_scope_parent_id=None,
+        orchestrator = SimpleNamespace(dataset_root=plate_path)
+        browser_state = OrchestratorDataset.scoped_to_dataset(orchestrator).config_state(
+            ImageBrowserConfig()
         )
-        browser_state = ImageBrowserWidget._create_state_for_orchestrator(
-            browser,
-            SimpleNamespace(dataset_root=plate_path),
-        )
-
-        nested_browser = SimpleNamespace(
-            config=ImageBrowserConfig(),
-            scope_id=None,
-            _state_scope_parent_id=f"{plate_path}::plate_viewer",
-        )
-        nested_state = ImageBrowserWidget._create_state_for_orchestrator(
-            nested_browser,
-            SimpleNamespace(dataset_root=plate_path),
-        )
+        nested = OrchestratorDataset(orchestrator, scope_parent=f"{plate_path}::plate_viewer")
+        nested_state = nested.config_state(ImageBrowserConfig())
 
         assert browser_state._parent_state is plate_state
         assert nested_state._parent_state is plate_state
         assert nested_state.scope_id == f"{plate_path}::plate_viewer::image_browser"
         assert ObjectStateRegistry.get_by_scope(browser_state.scope_id) is browser_state
+        nested.release_state(nested_state)
+        assert ObjectStateRegistry.get_by_scope(nested_state.scope_id) is None
+        assert NoDataset().config_state(ImageBrowserConfig()).scope_id is None
         for config_key in StreamingConfig.supported_config_keys():
             path = f"{config_key}.host"
             assert browser_state.get_resolved_value(path) == "global-host"
@@ -81,29 +85,12 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
         set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
-def test_image_browser_edits_advance_live_saved_baseline() -> None:
-    """A live streaming edit has no separate unsaved configuration state."""
-
-    state = ObjectState(ImageBrowserConfig())
-    path = "napari_streaming_config.port"
-    state.update_parameter(path, 6001)
-    assert state.is_raw_dirty
-    assert state.get_saved_resolved_value(path) != 6001
-
-    browser = SimpleNamespace(state=state)
-    ImageBrowserWidget._on_parameter_changed(browser, path, 6001)
-
-    assert state.get_resolved_value(path) == 6001
-    assert state.get_saved_resolved_value(path) == 6001
-    assert not state.is_raw_dirty
-    assert state.dirty_fields == set()
-
-
 def test_right_panel_replacement_releases_previous_server_browser(
     qapp, monkeypatch
 ) -> None:
-    browser = ImageBrowserWidget()
+    browser = _browser()
     previous_manager = browser.zmq_manager
+    previous_tabs = browser.viewer_tabs
     cleanup_calls = 0
     original_cleanup = previous_manager.cleanup
 
@@ -115,9 +102,12 @@ def test_right_panel_replacement_releases_previous_server_browser(
     monkeypatch.setattr(previous_manager, "cleanup", record_cleanup)
 
     try:
-        browser._rebuild_right_panel()
+        browser.set_dataset(NoDataset())
 
         assert cleanup_calls == 1
+        assert browser.viewer_tabs is not previous_tabs
+        assert browser.viewer_tabs.state is browser.state
+        assert browser.main_splitter.widget(1).isAncestorOf(browser.zmq_manager)
         assert browser.zmq_manager is not previous_manager
         assert previous_manager._registry_subscription.release() is False
     finally:
@@ -131,7 +121,7 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
     """Each registered viewer owns one title checkbox and its group flash target."""
 
     ObjectStateRegistry.clear()
-    browser = ImageBrowserWidget()
+    browser = _browser()
     browser.resize(1400, 900)
     browser.show()
     config_keys = StreamingConfig.supported_config_keys()
@@ -139,7 +129,7 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
     try:
         for _ in range(300):
             qapp.processEvents()
-            ready = len(browser.tabbed_form.tab_forms) == len(config_keys)
+            ready = len(browser.viewer_tabs.tab_forms) == len(config_keys)
             if ready:
                 ready = all(
                     config_key in form.nested_managers
@@ -149,7 +139,7 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
                     )
                     for config_key, form in zip(
                         config_keys,
-                        browser.tabbed_form.tab_forms,
+                        browser.viewer_tabs.tab_forms,
                         strict=True,
                     )
                 )
@@ -167,9 +157,9 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
             qapp.processEvents()
 
         for index, (config_key, form) in enumerate(
-            zip(config_keys, browser.tabbed_form.tab_forms, strict=True)
+            zip(config_keys, browser.viewer_tabs.tab_forms, strict=True)
         ):
-            browser.tabbed_form.tab_widget.setCurrentIndex(index)
+            browser.viewer_tabs.tab_widget.setCurrentIndex(index)
             QTest.qWait(75)
             qapp.processEvents()
 
