@@ -231,3 +231,27 @@ def test_image_output_of_per_slice_sources_stays_in_its_library(to_library):
 
     assert type(output.data) is type(pixels)
     np.testing.assert_array_equal(host_array(output), _label_pixels())
+
+
+def test_slicing_a_masked_image_does_not_copy_its_mask_to_host(device_array):
+    mask = device_array(np.ones((2, 16, 16), dtype=bool))
+    image = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
+        device_array(np.ones((2, 16, 16), dtype=np.float32)), mask
+    )
+
+    planes = image.alignment_slices()
+
+    assert [type(plane.mask) for plane in planes] == [device_array, device_array]
+    assert [plane.mask.shape for plane in planes] == [(16, 16), (16, 16)]
+
+
+@pytest.mark.parametrize("to_library", (_torch_cuda, _cupy), ids=("torch-cuda", "cupy"))
+def test_slicing_a_masked_gpu_image_keeps_its_mask_on_the_gpu(to_library):
+    mask = to_library(np.ones((2, 16, 16), dtype=bool))
+    image = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
+        to_library(np.ones((2, 16, 16), dtype=np.float32)), mask
+    )
+
+    planes = image.alignment_slices()
+
+    assert [type(plane.mask) for plane in planes] == [type(mask), type(mask)]

@@ -2122,13 +2122,15 @@ class ImagePayloadSliceProjector:
         """Select batch masks only after checking exact leading cardinality."""
         if self.mask is None:
             raise ValueError("Masked slice projection requires a mask payload.")
-        mask_array = np.asarray(self.mask, dtype=bool)
-        if mask_array.ndim == 0 or mask_array.shape[0] != len(slices):
+        mask = mask_array(self.mask)
+        mask = MemoryType(detect_memory_type(mask)).astype(mask, bool)
+        mask_shape = array_geometry(mask).shape
+        if not mask_shape or mask_shape[0] != len(slices):
             raise ValueError(
                 "Image payload mask cardinality must exactly match the declared "
-                f"plane axis: {mask_array.shape!r} for {len(slices)} slice(s)."
+                f"plane axis: {mask_shape!r} for {len(slices)} slice(s)."
             )
-        return tuple(mask_array[index] for index in range(len(slices)))
+        return tuple(mask[index] for index in range(len(slices)))
 
     def payload_for_slice(
         self,
@@ -2159,19 +2161,20 @@ class ImagePayloadSliceProjector:
     ) -> RuntimeArrayData | None:
         if self.mask is None:
             return None
-        mask_array = np.asarray(self.mask)
+        mask = mask_array(self.mask)
+        mask_shape = array_geometry(mask).shape
         if (
             self.metadata.plane_axis.one_plane_per_source_binding
-            and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
+            and slice_metadata.mask_domain(data_slice).accepts(mask_shape)
         ):
-            candidate = mask_array
+            candidate = mask
         else:
-            if mask_array.ndim == 0 or plane_index >= mask_array.shape[0]:
+            if not mask_shape or plane_index >= mask_shape[0]:
                 raise ValueError(
                     "Image payload mask does not carry the requested declared "
-                    f"slice index {plane_index}; got shape {mask_array.shape!r}."
+                    f"slice index {plane_index}; got shape {mask_shape!r}."
                 )
-            candidate = mask_array[plane_index]
+            candidate = mask[plane_index]
         if slice_metadata.mask_domain(data_slice).accepts(
             array_geometry(candidate).shape
         ):
