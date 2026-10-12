@@ -124,7 +124,7 @@ Not measurable here: pyclesperanto and CuPy program builds (no GPU on this machi
 | Compilations after readiness, ExampleHuman 1 and 4 workers, CometAssay, 3D monolayer | 0 | 0 |
 | Kernel loads in the client | 60 to 178 (0.5 to 1.0 s) | 0 |
 | Kernel loads in workers (ExampleFly, 2 workers) | 1 per worker | 0 |
-| First-party kernels with no compiled signature after preparation | 52 of 298 | 0 of 265 (13 more are `inline="always"`) |
+| First-party kernels with no compiled signature after preparation | 52 of 298 | 0 of 278 (13 of them are `inline="always"` and have none by design) |
 | Server imports after readiness: request setup / compile / execute (ExampleHuman) | 44 (0.059 s) / 2 (0.010 s) / 60 (0.043 s) | 0 / 2 (0.002 s) / 57 (0.029 s) |
 | Imports per worker on its first task | 45 to 102 (0.09 to 0.13 s; 0.44 s when PolyStore's registry cache misses) | 1 to 58 (0.002 to 0.034 s) |
 | Pipeline compile, first / second in one server session, ExampleHuman | 0.302 / 0.282 s | 0.181 / 0.176 s |
@@ -209,6 +209,18 @@ equality of the inherited implementation with the removed kernel on them.
    use. Unchanged.
 5. Signature variants listed under "What they cannot see".
 
-## Gates
+## Gates (run on `4ff20c10d` plus this section)
 
-In the PR description.
+- `verify_branch.sh r1e` (heavy slot): 11656 passed, 34 failed, 2 errors, 25 skipped;
+  collected 11714, reported 11691, no crash lines; new failures against the known list: 0.
+- Official30 parity (heavy slot, `official30.lock`, empty Numba and catalog caches,
+  traced): `1 passed in 716 s`, the one test that compiles, executes and compares all
+  30 cases. The trace of that run: after the first server's cold preparation, 0
+  compilations and 0 cache misses in any process across the 30 cases; each of the 29
+  later servers loads exactly the 286 signatures its own preparation loads
+  (8294 = 29 x 286) and nothing after; the 360 workers and the client load nothing.
+- `smoke_local.sh`: `smoke rc=0` (7 passed, GUI smoke exit 0).
+- `guardrails_local.sh`: `guardrails rc=0`.
+- Guards: `tests/integration/test_no_jit_after_readiness.py`, 2 passed (88 s).
+- Touched unit tests: `test_callable_abi_preparation`, `test_processing_preparation`,
+  `test_preparation_admission`, `test_function_catalog_zmq`: 117 passed.
