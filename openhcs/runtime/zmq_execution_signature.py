@@ -17,6 +17,11 @@ from zmqruntime.messages import ExecuteRequest, MessageFields
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.runtime.zmq_execution_observation import (
+    ZMQRuntimeExecutionObservationExport,
+    ZMQRuntimeExecutionOutcomeExport,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
@@ -89,10 +94,6 @@ class ExportRuntimeValues(ZMQRuntimeObservationExportScope):
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
-        from openhcs.runtime.zmq_execution_observation import (
-            ZMQRuntimeExecutionObservationExport,
-        )
-
         return ZMQRuntimeExecutionObservationExport.from_execution(
             executed_contexts=execution_results.executed_contexts,
             execution_results=execution_results,
@@ -118,11 +119,6 @@ class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
-        from openhcs.core.runtime_exports import RuntimeExportObservation
-        from openhcs.runtime.zmq_execution_observation import (
-            ZMQRuntimeExecutionOutcomeExport,
-        )
-
         return ZMQRuntimeExecutionOutcomeExport.from_execution(
             compiled_axis_ids=execution_bundle.runtime_contexts,
             execution_results=execution_results,

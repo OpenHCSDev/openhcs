@@ -2553,67 +2553,6 @@ def _fenwick_select_uint16(tree: np.ndarray, kth: int) -> np.uint16:
     return np.uint16(_fenwick_select_index(tree, kth, 32768))
 
 
-@njit(cache=True)
-def _rank_median_uint16_2d_numba(
-    image: np.ndarray, mask: np.ndarray, offsets_y: np.ndarray, offsets_x: np.ndarray
-) -> np.ndarray:
-    height, width = image.shape
-    output = np.empty((height, width), dtype=np.uint16)
-    footprint_size = offsets_y.shape[0]
-    for y in range(height):
-        values = np.empty(footprint_size, dtype=np.uint16)
-        for x in range(width):
-            count = 0
-            for offset_index in range(footprint_size):
-                yy = y + offsets_y[offset_index]
-                xx = x + offsets_x[offset_index]
-                if 0 <= yy < height and 0 <= xx < width:
-                    if mask[yy, xx]:
-                        values[count] = image[yy, xx]
-                    else:
-                        values[count] = np.uint16(0)
-                    count += 1
-            output[y, x] = _select_uint16(values, count, count // 2)
-    return output
-
-
-@njit(cache=True)
-def _select_uint16(values: np.ndarray, count: int, kth: int) -> np.uint16:
-    left = 0
-    right = count - 1
-    while True:
-        if left == right:
-            return values[left]
-        pivot_index = (left + right) // 2
-        pivot_index = _partition_uint16(values, left, right, pivot_index)
-        if kth == pivot_index:
-            return values[kth]
-        if kth < pivot_index:
-            right = pivot_index - 1
-        else:
-            left = pivot_index + 1
-
-
-@njit(cache=True)
-def _partition_uint16(
-    values: np.ndarray, left: int, right: int, pivot_index: int
-) -> int:
-    pivot_value = values[pivot_index]
-    values[pivot_index] = values[right]
-    values[right] = pivot_value
-    store_index = left
-    for index in range(left, right):
-        if values[index] < pivot_value:
-            current = values[store_index]
-            values[store_index] = values[index]
-            values[index] = current
-            store_index += 1
-    current = values[right]
-    values[right] = values[store_index]
-    values[store_index] = current
-    return store_index
-
-
 __all__ = public_names_from_objects(
     AutomaticSmoothingFilterSizeStrategy,
     AverageSmoothingPlaneStrategy,

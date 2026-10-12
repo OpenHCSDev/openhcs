@@ -18,6 +18,7 @@ from metaclass_registry.discovery import discover_registry_classes
 from openhcs.core.axes import AxisFamily
 
 _KERNEL_PACKAGE = __name__.rpartition(".")[0]
+_domain_registries: list[LazyDiscoveryDict] = []
 
 
 def load_domain_extensions() -> None:
@@ -45,8 +46,10 @@ def domain_registry_config(
 ) -> RegistryConfig:
     """Registry configuration for a kernel family that domains extend."""
 
+    registry = LazyDiscoveryDict(enable_cache=False)
+    _domain_registries.append(registry)
     return RegistryConfig(
-        registry_dict=LazyDiscoveryDict(enable_cache=False),
+        registry_dict=registry,
         key_attribute=key_attribute,
         skip_if_no_key=skip_if_no_key,
         registry_name=registry_name,
@@ -56,4 +59,23 @@ def domain_registry_config(
     )
 
 
-__all__ = ["domain_registry_config", "load_domain_extensions"]
+def discover_domain_registries() -> None:
+    """Complete every domain-extended family registry now, as first access would.
+
+    A server calls this before it forks workers and reports ready, so neither
+    it nor a worker imports kernel or domain members while serving a request.
+    Discovery imports the family roots that were not yet defined, so the loop
+    follows the list as it grows.
+    """
+
+    discovered = 0
+    while discovered < len(_domain_registries):
+        _domain_registries[discovered].values()
+        discovered += 1
+
+
+__all__ = [
+    "discover_domain_registries",
+    "domain_registry_config",
+    "load_domain_extensions",
+]

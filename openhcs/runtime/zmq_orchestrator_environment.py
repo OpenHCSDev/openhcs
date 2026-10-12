@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from polystore.base import reset_memory_backend, storage_registry
+
+from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
 
 if TYPE_CHECKING:
@@ -28,8 +31,6 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
     debug_execution_config: DebugExecutionConfig | None
 
     def prepare(self) -> ZMQOrchestratorEnvironment:
-        from polystore.base import reset_memory_backend, storage_registry
-
         from openhcs.core.debug import DebugExecutionPolicy
 
         reset_memory_backend()
@@ -45,8 +46,6 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
         )
 
     def prepared_dataset_root(self, storage_registry) -> str:
-        from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
-
         dataset_root = str(
             self.subject_id if self.execution_subject_id is None else self.execution_subject_id
         )
