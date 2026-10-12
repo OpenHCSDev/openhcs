@@ -259,6 +259,18 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
 
         apply_scope_color_scheme_to_widget_tree(self.form_manager, scheme)
 
+    def use_pipeline_config(self, pipeline_config) -> None:
+        """Resolve inherited placeholders against a replaced pipeline config."""
+        self.pipeline_config = pipeline_config
+
+        def retarget(form_manager) -> None:
+            form_manager.context_obj = pipeline_config
+            for nested_manager in form_manager.nested_managers.values():
+                retarget(nested_manager)
+
+        retarget(self.form_manager)
+        ObjectStateRegistry.increment_token()
+
     def code_document_driver(self) -> WindowCodeDocumentDriver:
         """Return this step editor's pycodified code-mode document driver."""
         return self._code_document_driver

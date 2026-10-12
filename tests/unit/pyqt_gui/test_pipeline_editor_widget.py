@@ -52,7 +52,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
-from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
+from openhcs.authoring.session.step_scopes import build_step_scope_id
 from formbridge.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
@@ -771,11 +771,7 @@ def test_dual_editor_step_scope_uses_logical_plate_scope() -> None:
     ScopeTokenService.clear_scope(logical_scope)
 
     step = FunctionStep(name="Threshold")
-    window = DualEditorWindow.__new__(DualEditorWindow)
-    window.plate_scope = logical_scope
-    window.editing_step = step
-
-    assert window._build_step_scope_id() == f"{logical_scope}::functionstep_0"
+    assert build_step_scope_id(logical_scope, step) == f"{logical_scope}::functionstep_0"
 
 
 def test_step_editor_scope_parse_preserves_cppipe_plate_scope() -> None:
@@ -1061,16 +1057,17 @@ class StepEditorRecorder:
         assert self.state is not None
         StepEditorRecorder.opened.append(self)
 
-    def set_original_step_for_change_detection(self) -> None:
-        pass
-
-    def connect_orchestrator_config_signal(self, signal) -> None:
-        del signal
-
     def connect_session_events(self, session) -> None:
         del session
 
-    def connect_artifact_signals(self, **signals) -> None:
+    def tab(self, tab_type):
+        del tab_type
+        return self
+
+    def follow_orchestrator_config(self, signal) -> None:
+        del signal
+
+    def follow_artifact_signals(self, **signals) -> None:
         del signals
 
     def show(self) -> None:

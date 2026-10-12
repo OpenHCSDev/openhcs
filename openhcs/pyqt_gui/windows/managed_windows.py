@@ -79,11 +79,11 @@ class ImageBrowserWindow(_ManagedChildCleanupWindow):
         self.setModal(False)
         self.resize(900, 600)
 
-        from openhcs.pyqt_gui.widgets.image_browser import ImageBrowserWidget
+        from openhcs.pyqt_gui.widgets.image_browser import ImageBrowserWidget, NoDataset
 
         layout = QVBoxLayout(self)
         self.widget = ImageBrowserWidget(
-            orchestrator=None,
+            NoDataset(),
             color_scheme=self.service_adapter.get_current_color_scheme(),
             zmq_config=self.main_window.runtime_context.ui_config.zmq,
             progress_config=self.main_window.runtime_context.ui_config.progress,
@@ -119,7 +119,9 @@ class ImageBrowserWindow(_ManagedChildCleanupWindow):
     def _update_orchestrator(self, plate_widget):
         orchestrator = plate_widget._get_current_orchestrator()
         if orchestrator:
-            self.widget.set_orchestrator(orchestrator)
+            from openhcs.pyqt_gui.widgets.image_browser import OrchestratorDataset
+
+            self.widget.set_dataset(OrchestratorDataset.scoped_to_dataset(orchestrator))
 
 
 class LogViewerWindowWrapper(_ManagedChildCleanupWindow):
