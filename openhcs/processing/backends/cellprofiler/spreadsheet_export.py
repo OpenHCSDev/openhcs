@@ -161,12 +161,6 @@ class SpreadsheetNanRepresentation(str, Enum):
         raise ValueError(f"Unsupported spreadsheet NaN representation {value!r}.")
 
 
-class CellProfilerSpreadsheetRowField(str, Enum):
-    """CellProfiler-owned spreadsheet row fields."""
-
-    IMAGE_NUMBER = "image_number"
-
-
 @dataclass(frozen=True, slots=True)
 class SpreadsheetColumnSelection:
     """One CellProfiler subject/measurement column selection."""
@@ -309,7 +303,7 @@ class SpreadsheetFileSelection:
     ) -> ColumnarRows:
         if len(selected_tables) == 1:
             return selected_tables[0][1]
-        image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+        image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
         grouped: list[tuple[str, ColumnarRows, OrderedDict[object, list[int]]]] = []
         image_counts: OrderedDict[object, int] = OrderedDict()
         for subject, rows in selected_tables:
@@ -443,7 +437,7 @@ class SpreadsheetFileSelection:
         if len(active_subjects) > 1:
             bindings = []
             subjects = sorted(active_subjects, key=len, reverse=True)
-            image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+            image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
             for name in columns:
                 if name == image_field:
                     bindings.append(("Image", name))
@@ -1062,7 +1056,7 @@ def _relationship_rows(
 def _cellprofiler_rows(rows: ColumnarRows) -> ColumnarRows:
     """Project declared image coordinates once while retaining sparse columns."""
     slice_field = MeasurementRowAxisField.SLICE_INDEX.value
-    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
     if slice_field not in rows.columns:
         return rows
     source_values = rows.column_values(slice_field)
@@ -1132,7 +1126,7 @@ def _selected_table_columns(
         return tables
     axis_fields = (
         *MeasurementRowAxisField.field_names(),
-        CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+        CellProfilerMeasurementDialect.row_identity_contract.sample_number_field,
     )
     selected = OrderedDict()
     for subject, rows in tables.items():
@@ -1171,7 +1165,7 @@ def _with_requested_aggregates(
     )
     if not (mean or median or standard_deviation or reference_means):
         return tables
-    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
     image = tables.get("Image")
     image_numbers = (
         ()
@@ -1277,7 +1271,7 @@ def _numeric_features(
     axis_fields = frozenset(
         (
             *MeasurementRowAxisField.field_names(),
-            CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+            CellProfilerMeasurementDialect.row_identity_contract.sample_number_field,
         )
     )
     features = []
@@ -1326,7 +1320,7 @@ def _with_image_columns_on_objects(
         return tables
     # Image metadata is small; retain its existing naming policy, without rebuilding
     # complete object row dictionaries just to project the selected columns.
-    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
     image_columns_by_number = {
         row[image_field]: _image_columns_for_objects(
             row,
@@ -1432,7 +1426,7 @@ def _rows_by_resolved_path(
     )
     if not tokens:
         return ((path_template, rows),)
-    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_field = CellProfilerMeasurementDialect.row_identity_contract.sample_number_field
     image_row_mappings = tuple(image_rows.iter_row_mappings())
     image_rows_by_number = {
         row[image_field]: row for row in image_row_mappings if image_field in row
@@ -1510,7 +1504,7 @@ class SpreadsheetPartitionInvocation:
     kwargs: dict[str, object]
     image_numbers: CellProfilerImageSetNumbering
     partition_fields: tuple[str, ...] = (
-        CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+        CellProfilerMeasurementDialect.row_identity_contract.sample_number_field,
     )
     csv_fields: tuple[FieldSpec, ...] = ()
 
@@ -1643,7 +1637,7 @@ def _partitioned_spreadsheet_export(
     relationship_domains = set()
     relationship_fields = (
         *ObjectRelationshipDeclaration.exported_field_names,
-        CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+        CellProfilerMeasurementDialect.row_identity_contract.sample_number_field,
     )
     if relationship_selections and relationships_partitionable:
         relationship_kwargs = {

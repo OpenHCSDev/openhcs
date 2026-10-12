@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import replace
-from enum import Enum
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -384,11 +383,8 @@ class ConfigSchemaHintsSection(AuthoringContextSection, PipelineAuthoringRulesCo
         visible_fields = tuple(field for field in schema.fields if not field.ui_hidden)
         lines = [f"\n## {schema.config_type}"]
         for field in visible_fields[:max_config_fields]:
-            requirement = ConfigFieldRequirementLabel.from_required(field.required)
-            resolution = ConfigFieldResolutionLabel.from_lazy(field.lazy)
-            lines.append(
-                f"- {field.path}: {field.type_repr} ({requirement.value}{resolution.value})"
-            )
+            traits = ("required" if field.required else "optional", *(("lazy",) if field.lazy else ()))
+            lines.append(f"- {field.path}: {field.type_repr} ({', '.join(traits)})")
         if len(visible_fields) > max_config_fields:
             remaining = len(visible_fields) - max_config_fields
             lines.append(f"- ... {remaining} more fields")
@@ -610,28 +606,6 @@ class ObjectStateEditingStepsSection(
 - Apply field changes with {agent_capabilities.ui_mutate_object_state_field.name}; keep save/commit explicit through managed UI actions so dirty/default markers remain inspectable.
 - A field-mutation request token is idempotency, not a base-revision guard. Confirm branch head, re-read the exact field immediately before one small approved mutation, and verify the field and related state surface immediately afterward; prefer a revision-checked code document for related atomic changes.
 - List recovery state with {agent_capabilities.ui_list_snapshots.name} and {agent_capabilities.ui_list_branches.name}. Use {agent_capabilities.ui_restore_snapshot.name} for an approved exact rollback, {agent_capabilities.ui_time_travel_head.name} to return to the current branch head, and {agent_capabilities.ui_switch_branch.name} only for an intentional branch change. Re-read the affected field and state surface after every recovery mutation."""
-
-
-class ConfigFieldRequirementLabel(Enum):
-    REQUIRED = "required"
-    OPTIONAL = "optional"
-
-    @classmethod
-    def from_required(cls, required: bool) -> "ConfigFieldRequirementLabel":
-        if required:
-            return cls.REQUIRED
-        return cls.OPTIONAL
-
-
-class ConfigFieldResolutionLabel(Enum):
-    LAZY = ", lazy"
-    EAGER = ""
-
-    @classmethod
-    def from_lazy(cls, lazy: bool) -> "ConfigFieldResolutionLabel":
-        if lazy:
-            return cls.LAZY
-        return cls.EAGER
 
 
 class AgentAuthoringContextService:

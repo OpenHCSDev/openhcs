@@ -243,7 +243,7 @@ make the generic factory know OpenHCS config classes.
 
 `UIConfig` and `PyQtGuiRuntimeContext` are typed process-level policies
 (`openhcs/pyqt_gui/config.py:351-419`). Cache load/save and direct endpoint
-projection already use typed `ConfigCache`/`ConfigDocumentAuthority`
+projection already use typed `ConfigCache`/`ConfigDocumentCodec`
 (`:439-494`). `OpenHCSPyQtApp.setup_application()` registers the global/UI
 ObjectState roots, sets the global configuration context, and installs the
 OpenHCS provider set (`openhcs/pyqt_gui/app.py:178-247`). These are valuable
