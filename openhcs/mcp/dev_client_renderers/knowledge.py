@@ -308,6 +308,13 @@ class FunctionSearchRenderer(FunctionEntryPresentation):
             lines.append("Functions:")
             for item in payload.items:
                 lines.extend(cls.entry_lines(item))
+        if payload.failed_custom_sources:
+            lines.append("Custom functions that failed to load:")
+            lines.extend(
+                f"- {source.name}: file={source.file_path} "
+                f"line={cls.text(source.line_number)} error={cls.quoted(source.error)}"
+                for source in payload.failed_custom_sources
+            )
         return "\n".join(lines)
 
 

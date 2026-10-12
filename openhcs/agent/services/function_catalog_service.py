@@ -41,6 +41,7 @@ from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
     FunctionArtifactSpec,
     FunctionCatalogEntry,
+    FailedCustomFunctionSource,
     FunctionCatalogPage,
     FunctionDetail,
     FunctionParameterSource,
@@ -876,6 +877,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             limit=limit,
             query=query,
             library=library,
+            failed_custom_sources=self._failed_custom_sources(),
         )
 
     def catalog(
@@ -900,6 +902,21 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             limit=len(entries),
             query=None,
             library=None,
+            failed_custom_sources=self._failed_custom_sources(),
+        )
+
+    @staticmethod
+    def _failed_custom_sources() -> tuple[FailedCustomFunctionSource, ...]:
+        """The persisted custom sources this process could not load, with their errors."""
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        return tuple(
+            FailedCustomFunctionSource(
+                name=failure.name,
+                file_path=str(failure.file_path),
+                error=failure.message,
+                line_number=failure.line_number or None,
+            )
+            for failure in manager.load_failures()
         )
 
     def _matching_entries(

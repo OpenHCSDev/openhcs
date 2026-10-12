@@ -15,6 +15,7 @@ from types import FunctionType
 from typing import ClassVar
 
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.processing.custom_functions.validation import ValidationError
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,10 +46,33 @@ class CustomFunctionSourceRevision:
 
 @dataclass(frozen=True, slots=True)
 class CustomFunctionSourceSnapshot:
-    """Exact source bytes decoded for preparation with their content proof."""
+    """Exact source bytes with their content proof."""
 
     source: CustomFunctionSource
-    code: str
+    content: bytes
+
+    @property
+    def file_name(self) -> str:
+        return f"{self.source.function_name}.py"
+
+    @property
+    def code(self) -> str:
+        """The source text; a source that is not UTF-8 is invalid."""
+        try:
+            return self.content.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValidationError(
+                f"Persisted custom function '{self.file_name}' is not UTF-8."
+            ) from exc
+
+    def require_declared_name(self, declared_name: str) -> None:
+        """A persisted source declares the function its file is named after."""
+        if declared_name != self.source.function_name:
+            raise ValidationError(
+                f"Persisted custom function '{self.file_name}' declares "
+                f"'{declared_name}'. The filename and declaration "
+                "name must match."
+            )
 
 
 @dataclass(frozen=True, slots=True, eq=False)
