@@ -1,0 +1,9 @@
+sgRNA,gene_symbol,plate
+ACGTT,GeneA,1
+TTACC,GeneB,1
+,NoBarcode,1
+GATAA,GeneC,1
+GATCC,GeneD,2
+ACGTT,GeneE,2
+CCTAA,GeneF,2
+GCGAA,GeneG,2

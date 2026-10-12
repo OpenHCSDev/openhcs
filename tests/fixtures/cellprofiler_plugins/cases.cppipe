@@ -2,10 +2,10 @@ CellProfiler Pipeline: http://www.cellprofiler.org
 Version:5
 DateRevision:428
 GitHash:
-ModuleCount:20
+ModuleCount:72
 HasImagePlaneDetails:False
 
-HistogramEqualization:[module_num:1|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:1|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedPlane']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:EqualizedPlane
     Bins:256
@@ -17,7 +17,7 @@ HistogramEqualization:[module_num:1|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:2|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:2|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedPlaneWithinMask']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:EqualizedPlaneWithinMask
     Bins:64
@@ -29,7 +29,7 @@ HistogramEqualization:[module_num:2|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:3|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:3|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['LocallyEqualizedPlane']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:LocallyEqualizedPlane
     Bins:128
@@ -41,7 +41,7 @@ HistogramEqualization:[module_num:3|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:4|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:4|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['LocallyEqualizedPlaneMaskUnused']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:LocallyEqualizedPlaneMaskUnused
     Bins:128
@@ -53,7 +53,7 @@ HistogramEqualization:[module_num:4|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedVolume']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:EqualizedVolume
     Bins:256
@@ -65,7 +65,7 @@ HistogramEqualization:[module_num:5|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:6|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:6|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedVolumeWithinMask']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:EqualizedVolumeWithinMask
     Bins:256
@@ -77,7 +77,7 @@ HistogramEqualization:[module_num:6|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:7|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:7|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedVolumeFramewise']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:EqualizedVolumeFramewise
     Bins:256
@@ -89,7 +89,7 @@ HistogramEqualization:[module_num:7|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:Yes
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:8|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:8|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EqualizedVolumeFramewiseWithinMask']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:EqualizedVolumeFramewiseWithinMask
     Bins:256
@@ -101,7 +101,7 @@ HistogramEqualization:[module_num:8|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:Yes
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:9|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:9|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['LocallyEqualizedVolume']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:LocallyEqualizedVolume
     Bins:128
@@ -113,7 +113,7 @@ HistogramEqualization:[module_num:9|svn_version:'Unknown'|variable_revision_numb
     Do framewise calculation?:No
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:10|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:10|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['LocallyEqualizedVolumeFramewise']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:LocallyEqualizedVolumeFramewise
     Bins:128
@@ -125,7 +125,7 @@ HistogramEqualization:[module_num:10|svn_version:'Unknown'|variable_revision_num
     Do framewise calculation?:Yes
     Tile Size (Z):2
 
-HistogramEqualization:[module_num:11|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramEqualization:[module_num:11|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['LocallyEqualizedVolumeNotDeclared3D']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:LocallyEqualizedVolumeNotDeclared3D
     Bins:128
@@ -137,27 +137,27 @@ HistogramEqualization:[module_num:11|svn_version:'Unknown'|variable_revision_num
     Do framewise calculation?:Yes
     Tile Size (Z):2
 
-DistanceTransform:[module_num:12|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+DistanceTransform:[module_num:12|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RescaledPlaneDistance']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:BinaryPlane
     Name the output image:RescaledPlaneDistance
     Rescale values from 0 to 1?:Yes
 
-DistanceTransform:[module_num:13|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+DistanceTransform:[module_num:13|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['PlaneDistance']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:BinaryPlane
     Name the output image:PlaneDistance
     Rescale values from 0 to 1?:No
 
-DistanceTransform:[module_num:14|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+DistanceTransform:[module_num:14|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RescaledVolumeDistance']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:BinaryVolume
     Name the output image:RescaledVolumeDistance
     Rescale values from 0 to 1?:Yes
 
-DistanceTransform:[module_num:15|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+DistanceTransform:[module_num:15|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['VolumeDistance']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:BinaryVolume
     Name the output image:VolumeDistance
     Rescale values from 0 to 1?:No
 
-HistogramMatching:[module_num:16|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramMatching:[module_num:16|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['PlaneMatchedToReference']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:PlaneMatchedToReference
     Is your image 3D?:No
@@ -165,7 +165,7 @@ HistogramMatching:[module_num:16|svn_version:'Unknown'|variable_revision_number:
     Image to use as reference :ReferencePlane
     Frame number:5
 
-HistogramMatching:[module_num:17|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramMatching:[module_num:17|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['PlaneMatchedToReferenceFrameSettingOn']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Plane
     Name the output image:PlaneMatchedToReferenceFrameSettingOn
     Is your image 3D?:No
@@ -173,7 +173,7 @@ HistogramMatching:[module_num:17|svn_version:'Unknown'|variable_revision_number:
     Image to use as reference :ReferencePlane
     Frame number:2
 
-HistogramMatching:[module_num:18|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramMatching:[module_num:18|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['VolumeMatchedToFrame']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:VolumeMatchedToFrame
     Is your image 3D?:Yes
@@ -181,7 +181,7 @@ HistogramMatching:[module_num:18|svn_version:'Unknown'|variable_revision_number:
     Image to use as reference :None
     Frame number:2
 
-HistogramMatching:[module_num:19|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramMatching:[module_num:19|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['VolumeMatchedToFrameNotDeclared3D']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:VolumeMatchedToFrameNotDeclared3D
     Is your image 3D?:No
@@ -189,10 +189,916 @@ HistogramMatching:[module_num:19|svn_version:'Unknown'|variable_revision_number:
     Image to use as reference :None
     Frame number:1
 
-HistogramMatching:[module_num:20|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+HistogramMatching:[module_num:20|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['VolumeMatchedToReference']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Volume
     Name the output image:VolumeMatchedToReference
     Is your image 3D?:Yes
     Use a frame within image as reference?:No
     Image to use as reference :ReferencePlane
     Frame number:2
+
+CallBarcodes:[module_num:21|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['BarcodesMatchedToLibrary']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:Intensity_MaxIntensity_CorrCycle01_A
+    Input data file location:Default Input Folder|
+    Name of the file:Barcodes.csv
+    Select the column of barcodes to match against:sgRNA
+    Select the column with gene/transcript barcode names:gene_symbol
+    Retain an image of the barcodes color coded by call?:Yes
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:Yes
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+
+CallBarcodes:[module_num:22|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['BarcodesWithEmptyVector']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:Intensity_MaxIntensity_CorrCycle01_A
+    Input data file location:Default Input Folder|
+    Name of the file:Barcodes.csv
+    Select the column containing barcodes to match against:sgRNA
+    Select the column containing gene/transcript barcode names:gene_symbol
+    Retain an image of the barcodes color coded by call?:Yes
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:No
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:Yes
+    What is the empty vector sequence?:TAAGG
+    What kind of encoding is used here?:One Hot Exponentially Multiplexed (ie 4-color SBS/ISS)
+    Base we are currently calling:A
+    Select the first measurement indicating that A is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called A?:Yes
+    Base we are currently calling:C
+    Select the first measurement indicating that C is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called C?:Yes
+    Base we are currently calling:G
+    Select the first measurement indicating that G is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called G?:Yes
+    Base we are currently calling:T
+    Select the first measurement indicating that T is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called T?:Yes
+
+CallBarcodes:[module_num:23|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:['BarcodesWithoutLibrary']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:Intensity_MaxIntensity_CorrCycle01_A
+    Input data file location:Elsewhere...|
+    Name of the file:None
+    Select the column containing barcodes to match against:No CSV file
+    Select the column containing gene/transcript barcode names:No CSV file
+    Retain an image of the barcodes color coded by match?:Yes
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:Yes
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+    What kind of encoding is used here?:One Hot Exponentially Multiplexed (ie 4-color SBS/ISS)
+    Do you want to match to an external library of barcodes?:No
+    Base we are currently calling:A
+    Select the first measurement indicating that A is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called A?:Yes
+    Base we are currently calling:C
+    Select the first measurement indicating that C is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called C?:Yes
+    Base we are currently calling:G
+    Select the first measurement indicating that G is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called G?:Yes
+    Base we are currently calling:T
+    Select the first measurement indicating that T is encoded:AreaShape_Area
+    Does a positive value here mean the base SHOULD be called T?:Yes
+    Minimum value to be considered positive in a channel:1.0
+
+CallBarcodes:[module_num:24|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:['BarcodesCalledByThreshold']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:AreaShape_Area
+    Input data file location:Default Input Folder|
+    Name of the file:Barcodes.csv
+    Select the column containing barcodes to match against:sgRNA
+    Select the column containing gene/transcript barcode names:gene_symbol
+    Retain an image of the barcodes color coded by match?:No
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:Yes
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+    What kind of encoding is used here?:Exponentially Multiplexed (SBS/ISS only)
+    Do you want to match to an external library of barcodes?:Yes
+    Base we are currently calling:A
+    Select the first measurement indicating that A is encoded:Intensity_MaxIntensity_CorrCycle01_A
+    Does a positive value here mean the base SHOULD be called A?:Yes
+    Base we are currently calling:A
+    Select the next measurement indicating that A is encoded:Intensity_MeanIntensity_CorrCycle01_A
+    Does a positive value here mean the base SHOULD be called A?:No
+    Base we are currently calling:C
+    Select the first measurement indicating that C is encoded:Intensity_MaxIntensity_CorrCycle01_C
+    Does a positive value here mean the base SHOULD be called C?:Yes
+    Base we are currently calling:G
+    Select the first measurement indicating that G is encoded:Intensity_MaxIntensity_CorrCycle01_G
+    Does a positive value here mean the base SHOULD be called G?:Yes
+    Base we are currently calling:T
+    Select the first measurement indicating that T is encoded:Intensity_MaxIntensity_CorrCycle01_T
+    Does a positive value here mean the base SHOULD be called T?:Yes
+    Minimum value to be considered positive in a channel:0.5
+
+CallBarcodes:[module_num:25|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:['BarcodesCalledByThresholdWithoutLibrary']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:AreaShape_Area
+    Input data file location:Elsewhere...|
+    Name of the file:None
+    Select the column containing barcodes to match against:No CSV file
+    Select the column containing gene/transcript barcode names:No CSV file
+    Retain an image of the barcodes color coded by match?:No
+    Enter the called barcode image name:None
+    Retain an image of the barcodes color coded by score match?:No
+    Enter the barcode score image name:None
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+    What kind of encoding is used here?:Exponentially Multiplexed (SBS/ISS only)
+    Do you want to match to an external library of barcodes?:No
+    Base we are currently calling:A
+    Select the first measurement indicating that A is encoded:Intensity_MaxIntensity_CorrCycle01_A
+    Does a positive value here mean the base SHOULD be called A?:Yes
+    Base we are currently calling:C
+    Select the first measurement indicating that C is encoded:Intensity_MaxIntensity_CorrCycle01_C
+    Does a positive value here mean the base SHOULD be called C?:Yes
+    Base we are currently calling:G
+    Select the first measurement indicating that G is encoded:Intensity_MaxIntensity_CorrCycle01_G
+    Does a positive value here mean the base SHOULD be called G?:Yes
+    Base we are currently calling:T
+    Select the first measurement indicating that T is encoded:Intensity_MaxIntensity_CorrCycle01_T
+    Does a positive value here mean the base SHOULD be called T?:Yes
+    Minimum value to be considered positive in a channel:1.25
+
+CallBarcodes:[module_num:26|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['BarcodesOfNoObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:3
+    Input object name:NoFoci
+    Select one of the measures from Cycle 1 to use for calling:Intensity_MaxIntensity_CorrCycle01_A
+    Input data file location:Default Input Folder|
+    Name of the file:Barcodes.csv
+    Select the column of barcodes to match against:sgRNA
+    Select the column with gene/transcript barcode names:gene_symbol
+    Retain an image of the barcodes color coded by call?:Yes
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:Yes
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+
+CallBarcodes:[module_num:27|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['BarcodesLongerThanTheLibrary']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Number of cycles:4
+    Input object name:Foci
+    Select one of the measures from Cycle 1 to use for calling:Intensity_MaxIntensity_CorrCycle01_A
+    Input data file location:Default Input Folder|
+    Name of the file:Barcodes.csv
+    Select the column of barcodes to match against:plate
+    Select the column with gene/transcript barcode names:gene_symbol
+    Retain an image of the barcodes color coded by call?:No
+    Enter the called barcode image name:BarcodeCalls
+    Retain an image of the barcodes color coded by score match?:No
+    Enter the barcode score image name:BarcodeScores
+    Do you have an empty vector barcode you would like to add to the barcode list?:No
+    What is the empty vector sequence?:AAAAAAAAAAAAAAA
+
+CompensateColors:[module_num:28|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedAcrossImage']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:4
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedAcrossImage_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedAcrossImage_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedAcrossImage_Cycle01_C
+    Select an image to measure:Cycle02_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedAcrossImage_Cycle02_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:29|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedSpotsWithinFoci']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:4
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedSpotsWithinFoci_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedSpotsWithinFoci_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedSpotsWithinFoci_Cycle01_C
+    Select an image to measure:Cycle02_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedSpotsWithinFoci_Cycle02_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:Foci
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:Yes, post-masking to objects
+    What compensation class should serve as the template histogram?:2
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.9
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:Yes
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:30|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedEachImageRescaledWithinCells']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedEachImageRescaledWithinCells_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedEachImageRescaledWithinCells_Cycle01_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:Cells
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:Yes
+    Should images be rescaled 0-1 before compensating but after masking to objects?:Yes, per image
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:Yes
+    What size radius should be used for the tophat filter?:2
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:31|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedEachClassRescaled']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:4
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedEachClassRescaled_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedEachClassRescaled_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedEachClassRescaled_Cycle01_C
+    Select an image to measure:Cycle02_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedEachClassRescaled_Cycle02_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:Yes, per group
+    Should histogram matching be performed between the image groups?:Yes, pre-masking or on unmasked images
+    What compensation class should serve as the template histogram?:2
+    Should images be rescaled 0-1 after compensating?:Yes
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:32|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedDividedByPercentile']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:4
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedDividedByPercentile_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedDividedByPercentile_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedDividedByPercentile_Cycle01_C
+    Select an image to measure:Cycle02_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedDividedByPercentile_Cycle02_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:Cells
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:Yes, pre-masking or on unmasked images
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:Yes
+    What percentile should be used for multiplication:90.5
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:Yes
+    What size sigma should be used for the DoG low sigma?:1
+    What size radius should be used for the DoG low sigma?:2
+
+CompensateColors:[module_num:33|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedAfterEveryFilter']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:4
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedAfterEveryFilter_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedAfterEveryFilter_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedAfterEveryFilter_Cycle01_C
+    Select an image to measure:Cycle02_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedAfterEveryFilter_Cycle02_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:Cells
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:Yes
+    Should images be rescaled 0-1 before compensating but after masking to objects?:Yes, per group
+    Should histogram matching be performed between the image groups?:Yes, post-masking to objects
+    What compensation class should serve as the template histogram?:2
+    Should images be rescaled 0-1 after compensating?:Yes
+    Should the images be divided by a scalar based on group percentiles:Yes
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:Yes
+    What size radius should be used for the tophat filter?:2
+    Should the images have a Laplacian of Gaussian filter applied before correction?:Yes
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:Yes
+    What size sigma should be used for the DoG low sigma?:1
+    What size radius should be used for the DoG low sigma?:2
+
+CompensateColors:[module_num:34|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedWithinFirstOfTwoObjectSets']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:2
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:CompensatedWithinFirstOfTwoObjectSets_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:CompensatedWithinFirstOfTwoObjectSets_Cycle01_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:Cells
+    Select an object to perform compensation within:Foci
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:35|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['CompensatedThreeClasses']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:3
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:FirstClass
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:5
+    Select an output image name:LastClass
+    Select an image to measure:Plane
+    What compensation class does this image belong to?:3
+    Select an output image name:MiddleClass
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:Foci
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:36|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['SpotsAcrossImageAreBlack']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:SpotsAcrossImageAreBlack_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:SpotsAcrossImageAreBlack_Cycle01_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:Yes
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:37|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['ClassNowhereBrightestIsBlack']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:BrightestEverywhere
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:2
+    Select an output image name:BrightestNowhere
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:38|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EachImageRescaledWithoutObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:EachImageRescaledWithoutObjects_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:EachImageRescaledWithoutObjects_Cycle01_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:Yes, per image
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:39|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['MatchedAfterMaskingWithoutObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:MatchedAfterMaskingWithoutObjects_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:MatchedAfterMaskingWithoutObjects_Cycle01_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:Yes, post-masking to objects
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:40|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['MatchedToClassWithoutImages']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:MatchedToClassWithoutImages_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:MatchedToClassWithoutImages_Cycle01_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:Yes, pre-masking or on unmasked images
+    What compensation class should serve as the template histogram?:3
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:41|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['ClassesOfDifferentSizes']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:3
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:ClassesOfDifferentSizes_Cycle01_A
+    Select an image to measure:Cycle02_A
+    What compensation class does this image belong to?:1
+    Select an output image name:ClassesOfDifferentSizes_Cycle02_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:ClassesOfDifferentSizes_Cycle01_C
+    Select where to perform color compensation:Across entire image
+    Select an object to perform compensation within:None
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:No
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+CompensateColors:[module_num:42|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['EachClassRescaledWithinNoObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:2
+    Hidden:1
+    Select an image to measure:Cycle01_A
+    What compensation class does this image belong to?:1
+    Select an output image name:EachClassRescaledWithinNoObjects_Cycle01_A
+    Select an image to measure:Cycle01_C
+    What compensation class does this image belong to?:2
+    Select an output image name:EachClassRescaledWithinNoObjects_Cycle01_C
+    Select where to perform color compensation:Within objects
+    Select an object to perform compensation within:NoFoci
+    Should individual images be rescaled 0-1 before compensating pre-masking or on unmasked images?:No
+    Should images be rescaled 0-1 before compensating but after masking to objects?:Yes, per group
+    Should histogram matching be performed between the image groups?:No
+    What compensation class should serve as the template histogram?:1
+    Should images be rescaled 0-1 after compensating?:No
+    Should the images be divided by a scalar based on group percentiles:No
+    What percentile should be used for multiplication:99.0
+    Should the images have a tophat filter applied before correction?:No
+    What size radius should be used for the tophat filter?:3
+    Should the images have a Laplacian of Gaussian filter applied before correction?:No
+    What size radius should be used for the LoG filter?:1
+    Should the images have a Difference of Gaussians filter applied before correction?:No
+    What size sigma should be used for the DoG low sigma?:3
+    What size radius should be used for the DoG low sigma?:5
+
+DeclumpObjects:[module_num:43|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedByShape']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedByShape
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:3
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:44|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedByIntensity']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedByIntensity
+    Declump method:Intensity
+    Reference Image:Plane
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:3
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:45|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedUnsmoothed']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedUnsmoothed
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:0.0
+    Minimum distance between seeds:2
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:46|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedWithDistantSeeds']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedWithDistantSeeds
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:2
+    Minimum distance between seeds:7
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:47|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedFromEveryPixel']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedFromEveryPixel
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:0
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:48|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedFromDeepSeeds']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedFromDeepSeeds
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.7
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:49|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedAwayFromBorder']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedAwayFromBorder
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:2
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:5
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:50|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedFromTwoSeeds']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedFromTwoSeeds
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:3
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:2
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:51|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedWithoutLastThreeSeeds']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedWithoutLastThreeSeeds
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:3
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-3
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:52|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedFromNoSeeds']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedFromNoSeeds
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:0
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:53|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedFromWideSeedsAcrossDiagonals']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedFromWideSeedsAcrossDiagonals
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:2
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Square,5
+    Watershed connectivity:2
+
+DeclumpObjects:[module_num:54|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedWithNumbersOutOfRange']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedWithNumbersOutOfRange
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:-1
+    Minimum absolute internal distance:-0.5
+    Pixels from border to exclude:-2
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:5
+
+DeclumpObjects:[module_num:55|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedNoObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:NoFoci
+    Name the output object:DeclumpedNoObjects
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:56|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedVolume']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:ClumpVolume
+    Name the output object:DeclumpedVolume
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:2
+    Minimum distance between seeds:7
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Ball,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:57|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedVolumeByIntensity']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:ClumpVolume
+    Name the output object:DeclumpedVolumeByIntensity
+    Declump method:Intensity
+    Reference Image:Volume
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:2
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:1
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Cube,2
+    Watershed connectivity:3
+
+DeclumpObjects:[module_num:58|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedPlaneWithBall']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedPlaneWithBall
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Ball,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:59|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedVolumeWithDisk']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:ClumpVolume
+    Name the output object:DeclumpedVolumeWithDisk
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:60|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedByIntensityOfAnotherShape']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedByIntensityOfAnotherShape
+    Declump method:Intensity
+    Reference Image:ReferencePlane
+    Segmentation distance transform smoothing factor:1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+DeclumpObjects:[module_num:61|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['DeclumpedWithNegativeSmoothing']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input object:Clumps
+    Name the output object:DeclumpedWithNegativeSmoothing
+    Declump method:Shape
+    Reference Image:None
+    Segmentation distance transform smoothing factor:-1.0
+    Minimum distance between seeds:1
+    Minimum absolute internal distance:0.0
+    Pixels from border to exclude:0
+    Maximum number of seeds:-1
+    Structuring element for seed dilation:Disk,1
+    Watershed connectivity:1
+
+MeasureRadialEntropy:[module_num:62|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfMeans']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Clumps
+    Which intensity measurement should be used?:Mean
+    Input number of bins:6
+
+MeasureRadialEntropy:[module_num:63|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfMedians']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Cells
+    Which intensity measurement should be used?:Median
+    Input number of bins:12
+
+MeasureRadialEntropy:[module_num:64|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfSums']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Clumps
+    Which intensity measurement should be used?:Integrated
+    Input number of bins:3
+
+MeasureRadialEntropy:[module_num:65|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfSmallObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Foci
+    Which intensity measurement should be used?:Mean
+    Input number of bins:12
+
+MeasureRadialEntropy:[module_num:66|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyWithTooFewBins']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Cells
+    Which intensity measurement should be used?:Integrated
+    Input number of bins:2
+
+MeasureRadialEntropy:[module_num:67|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyWithTooManyBins']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Foci
+    Which intensity measurement should be used?:Median
+    Input number of bins:61
+
+MeasureRadialEntropy:[module_num:68|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfNoObjects']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:NoFoci
+    Which intensity measurement should be used?:Mean
+    Input number of bins:6
+
+MeasureRadialEntropy:[module_num:69|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfVolume']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Volume
+    Select objects to measure:ClumpVolume
+    Which intensity measurement should be used?:Mean
+    Input number of bins:6
+
+MeasureRadialEntropy:[module_num:70|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfImageOfAnotherShape']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:ReferencePlane
+    Select objects to measure:Clumps
+    Which intensity measurement should be used?:Mean
+    Input number of bins:6
+
+MeasureRadialEntropy:[module_num:71|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyOfObjectsNumberedWithGap']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:CellsNumberedWithGap
+    Which intensity measurement should be used?:Mean
+    Input number of bins:6
+
+MeasureRadialEntropy:[module_num:72|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:['RadialEntropyWithUnevenWedgeCounts']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select an image to measure:Plane
+    Select objects to measure:Clumps
+    Which intensity measurement should be used?:Mean
+    Input number of bins:7

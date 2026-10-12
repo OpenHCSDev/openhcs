@@ -1,0 +1,32 @@
+{
+  "cellprofiler": "4.2.8.1",
+  "cellprofiler_plugins_commit": "5aaa4e54513173438b50b8e4b33ad6a592b35df0",
+  "numpy": "1.24.4",
+  "plugin_raised": {
+    "BarcodesLongerThanTheLibrary": "IndexError: string index out of range",
+    "ClassesOfDifferentSizes": "ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (2,) + inhomogeneous part.",
+    "DeclumpedByIntensityOfAnotherShape": "ValueError: `mask` (shape (24, 32)) must have same shape as `image` (shape (20, 28))",
+    "DeclumpedPlaneWithBall": "ValueError: Structuring element does not match object dimensions: 3 != 2",
+    "DeclumpedVolumeWithDisk": "ValueError: Structuring element does not match object dimensions: 2 != 3",
+    "DeclumpedWithNegativeSmoothing": "ValueError: Sigma values less than zero are not valid",
+    "EachClassRescaledWithinNoObjects": "ValueError: zero-size array to reduction operation minimum which has no identity",
+    "EachImageRescaledWithoutObjects": "UnboundLocalError: local variable 'object_mask' referenced before assignment",
+    "EqualizedVolumeFramewiseWithinMask": "IndexError: too many indices for array: array is 2-dimensional, but 3 were indexed",
+    "MatchedAfterMaskingWithoutObjects": "UnboundLocalError: local variable 'object_mask' referenced before assignment",
+    "MatchedToClassWithoutImages": "KeyError: 3",
+    "RadialEntropyOfImageOfAnotherShape": "IndexError: boolean index did not match indexed array along dimension 0; dimension is 20 but corresponding boolean dimension is 24",
+    "RadialEntropyOfNoObjects": "IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed",
+    "RadialEntropyOfObjectsNumberedWithGap": "IndexError: index 2 is out of bounds for axis 0 with size 2",
+    "RadialEntropyOfVolume": "ValueError: too many values to unpack (expected 2)",
+    "RadialEntropyWithUnevenWedgeCounts": "ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (5,) + inhomogeneous part.",
+    "VolumeMatchedToReference": "AttributeError: 'Image' object has no attribute 'ndim'"
+  },
+  "python": "3.9.25",
+  "scikit-image": "0.18.3",
+  "scipy": "1.9.0",
+  "voxel_spacing_zyx_of_volumes": [
+    5.0,
+    2.0,
+    2.0
+  ]
+}
