@@ -113,6 +113,12 @@ if TYPE_CHECKING:
     )
 
 
+# What the runtime binds to an operand: one image-level number, one vector of
+# per-object values, or either of those carried once per slice.
+MathOperandSliceValue = float | np.ndarray
+MathOperandValue = MathOperandSliceValue | RuntimeSliceAlignedValueSet[MathOperandSliceValue]
+
+
 class _CalculateMathNumeratorObjectRelation(ArtifactSpecRelation):
     """Bind the numerator operand to one exact object-label input."""
 
@@ -137,7 +143,7 @@ class _CalculateMathOperand1ValueRuntimeParameter(KeywordRuntimeParameter):
     """Runtime-bound numerator resolved from compiled measurement inputs."""
 
     parameter_name = "operand1_value"
-    annotation_type = Any
+    annotation_type = MathOperandValue
     parameter_default = 0.0
 
 
@@ -145,7 +151,7 @@ class _CalculateMathOperand2ValueRuntimeParameter(KeywordRuntimeParameter):
     """Runtime-bound denominator resolved from compiled measurement inputs."""
 
     parameter_name = "operand2_value"
-    annotation_type = Any
+    annotation_type = MathOperandValue
     parameter_default = 0.0
 
 
@@ -824,7 +830,7 @@ class MathPowerTransform(ABC):
 class MathOperand(MathPowerTransform):
     """One CellProfiler CalculateMath operand and its pre-transform."""
 
-    value: Any
+    value: MathOperandValue
 
     @property
     def transformed(self) -> Any:
@@ -877,7 +883,7 @@ class MathCalculationRequest:
     object_names: tuple[str, ...]
 
     def for_operand_values(
-        self, *, operand1_value: Any, operand2_value: Any
+        self, *, operand1_value: MathOperandSliceValue, operand2_value: MathOperandSliceValue
     ) -> "MathCalculationRequest":
         """Return this request with replacement operand values."""
         return replace(
@@ -896,8 +902,8 @@ class MathCalculationRequest:
 )
 def calculate_math(
     image: np.ndarray,
-    operand1_value: Any = 0.0,
-    operand2_value: Any = 0.0,
+    operand1_value: MathOperandValue = 0.0,
+    operand2_value: MathOperandValue = 0.0,
     operand1_feature: str | None = None,
     operand2_feature: str | None = None,
     operation: MathOperation = MathOperation.NONE,
@@ -1080,7 +1086,9 @@ class MathOperandSliceAlignment:
     request: MathCalculationRequest
 
     @property
-    def aligned_operands(self) -> tuple[tuple[int, Any, Any], ...] | None:
+    def aligned_operands(
+        self,
+    ) -> tuple[tuple[int, MathOperandSliceValue, MathOperandSliceValue], ...] | None:
         operand1 = self.request.operand1.value
         operand2 = self.request.operand2.value
         aligned_values = tuple(

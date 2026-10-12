@@ -15,10 +15,13 @@ import threading
 import types
 from collections.abc import Callable, Mapping
 from importlib.machinery import PathFinder
-from typing import Any
+from typing import TYPE_CHECKING
 
 
 import openhcs
+
+if TYPE_CHECKING:
+    from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +81,7 @@ def pipeline_source_requires_import_projection(source: str) -> bool:
     return False
 
 
-def _create_external_virtual_modules(all_functions: Mapping[str, Any]) -> None:
+def _create_external_virtual_modules(all_functions: Mapping[str, FunctionMetadata]) -> None:
     """Reconcile the canonical external-callable import projection."""
 
     external_functions_by_module: dict[str, dict[str, Callable]] = {}

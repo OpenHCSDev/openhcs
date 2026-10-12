@@ -21,7 +21,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Callable
 
 from arraybridge import MemoryType
 
@@ -558,15 +558,13 @@ class CustomFunctionManager:
         custom_function_changed.emit()
         return new_name
 
-    def _create_execution_namespace(self) -> dict[str, Any]:
+    def _create_execution_namespace(self) -> dict[str, object]:
         """
         Create controlled namespace for exec().
 
         Includes all memory type decorators and common imports.
         Does not restrict builtins (custom functions need full Python).
-
-        Returns:
-            Namespace dict for exec()
+        The values are ``object`` because user code binds whatever it defines.
         """
         from openhcs.core.memory import decorators
 
