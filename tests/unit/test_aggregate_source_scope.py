@@ -156,7 +156,7 @@ def test_axis_varying_between_runtime_planes_is_kept_not_reduced():
         for site in (1, 2)
     )
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_component_metadata=common,
         source_image_provenance_planes=SourceImageProvenancePlanes(planes),
     )
