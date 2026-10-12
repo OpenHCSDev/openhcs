@@ -45,7 +45,7 @@ Readiness is the catalog. A callable's kernels are prepared when a pipeline firs
 ## Remains
 
 1. Intel timings. Runs queued on the debug workflow: `38218985682` (before, head `2e5ab83a`) and `38220080786` (after, head `16e2cc64`, also times first use of four callables). Read with `gh run view <id> --log`; step A prints `TOTAL wall` and the largest gaps.
-2. Official30 parity under flock (`.claude/prof/parity.sh`); it was waiting for the lock at handoff.
+2. **Official30 parity has not passed.** One run under flock ended `1 failed` in 436 s: the first case (`ExampleColocalization`) raised `OpenHCS ZMQ client entered without a connected endpoint` and the other 29 were skipped, so no value was compared. That message is the known symptom of another worktree's server on the same port, but this change alters server startup, so it is not ruled out as the cause. Next step: read the execution-server log of that run under `.claude/pytest-parity`, then rerun `.claude/prof/parity.sh` (it needs `OPENHCS_CP_NATIVE_REFERENCE_ROOT` and `OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT`; without them the test skips and exits 0). Do not merge before 30/30.
 3. Delete `.github/workflows/r1-debug.yml` and `.github/r1-debug/` once item 1 is read.
 4. `PreparationCacheBatch`, `PreparationCacheWorker`, `can_prepare_in_child`, `cache_operations` and `cache_preparation_operations` in `openhcs/core/processing_preparation.py` have no production caller now; delete with their tests.
 5. Discovery itself (20 s locally, 70 s on Intel) is untouched apart from the requirement parse. Candidates: the slow skimage probes; on macOS check `matplotlib.font_manager` in step E of the debug run.
