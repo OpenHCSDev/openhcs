@@ -1,24 +1,29 @@
-"""Canonical Python document contract for one OpenHCS configuration object."""
+"""Python document for one OpenHCS configuration object."""
 
 from __future__ import annotations
 
 import ast
 from collections.abc import Mapping
-from dataclasses import MISSING, Field, fields
-from enum import Enum
+from dataclasses import MISSING, Field, dataclass, fields
 from typing import Any, TypeVar, cast, get_type_hints
+
+from pycodify import SourceDocument
 
 ConfigT = TypeVar("ConfigT")
 FieldT = TypeVar("FieldT")
 
 
-class ConfigDocumentField(str, Enum):
-    """Exact public assignment in a configuration Python document."""
+@dataclass(frozen=True, slots=True)
+class ConfigDocument(SourceDocument):
+    """One configuration object, saved as a Python file that assigns it."""
 
-    CONFIG = "config"
+    config: object
 
 
-class ConfigDocumentAuthority:
+(_CONFIG_NAME,) = ConfigDocument.assignment_names()
+
+
+class ConfigDocumentCodec:
     """Validate, parse, and render the canonical configuration document shape."""
 
     HEADER = "# OpenHCS configuration"
@@ -32,11 +37,7 @@ class ConfigDocumentAuthority:
     ) -> ConfigT:
         """Read the exact config assignment from an executed namespace."""
 
-        config_field = ConfigDocumentField.CONFIG.value
-        if config_field not in namespace:
-            raise ValueError(f"Config document must define {config_field!r}.")
-
-        config = namespace[config_field]
+        config = ConfigDocument.from_namespace(namespace).config
         cls._require_config_type(config, expected_config_type)
         return cast(ConfigT, config)
 
@@ -49,13 +50,9 @@ class ConfigDocumentAuthority:
     ) -> ConfigT:
         """Execute Python source and read its canonical config assignment."""
 
-        namespace: dict[str, object] = {}
-        code = compile(source, "<openhcs-config-document>", "exec")
-        exec(code, namespace)  # noqa: S102 - executable Python is the document format
-        return cls.from_namespace(
-            namespace,
-            expected_config_type=expected_config_type,
-        )
+        config = ConfigDocument.from_source(source).config
+        cls._require_config_type(config, expected_config_type)
+        return cast(ConfigT, config)
 
     @classmethod
     def project_dataclass_field_from_source(
@@ -87,7 +84,7 @@ class ConfigDocumentAuthority:
         dataclass_field = matching_fields[0]
 
         module = ast.parse(source, filename="<openhcs-config-document>")
-        config_field = ConfigDocumentField.CONFIG.value
+        config_field = _CONFIG_NAME
         assignments = tuple(
             statement
             for statement in module.body
@@ -162,13 +159,10 @@ class ConfigDocumentAuthority:
     ) -> str:
         """Render a validated config object as reviewable Python source."""
 
-        from pycodify import Assignment, generate_python_source
-
         import openhcs.serialization.pycodify_formatters  # noqa: F401
 
         cls._require_config_type(config, expected_config_type)
-        return generate_python_source(
-            Assignment(ConfigDocumentField.CONFIG.value, config),
+        return ConfigDocument(config=config).to_source(
             header=cls.HEADER,
             clean_mode=clean_mode,
         )
@@ -179,9 +173,8 @@ class ConfigDocumentAuthority:
         expected_config_type: type[ConfigT],
     ) -> None:
         if not isinstance(config, expected_config_type):
-            config_field = ConfigDocumentField.CONFIG.value
             raise TypeError(
-                f"Config document variable {config_field!r} must be "
+                f"Config document variable {_CONFIG_NAME!r} must be "
                 f"{expected_config_type.__name__}, got {type(config).__name__}."
             )
 

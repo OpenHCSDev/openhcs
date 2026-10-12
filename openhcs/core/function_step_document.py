@@ -4,20 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
 
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
-
-
-class FunctionStepDocumentField(str, Enum):
-    """Exact public assignment in a FunctionStep Python document."""
-
-    STEP = "step"
+from pycodify import SourceDocument
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionStepDocument:
+class FunctionStepDocument(SourceDocument):
     """Normalized public declaration for one FunctionStep."""
 
     step: FunctionStep
@@ -42,21 +36,15 @@ class FunctionStepDocumentCodec:
         cls,
         namespace: Mapping[str, object],
     ) -> FunctionStepDocument:
-        """Read the exact public step assignment from an executed namespace."""
+        """Read the public step assignment from an executed namespace."""
 
-        field_name = FunctionStepDocumentField.STEP.value
-        if field_name not in namespace:
-            raise ValueError(f"FunctionStep document must define {field_name!r}.")
-        return cls.from_value(namespace[field_name])
+        return cls.from_value(FunctionStepDocument.from_namespace(namespace).step)
 
     @classmethod
     def from_source(cls, source: str) -> FunctionStepDocument:
         """Execute Python source and read its FunctionStep assignment."""
 
-        namespace: dict[str, object] = {}
-        code = compile(source, "<openhcs-function-step-document>", "exec")
-        exec(code, namespace)
-        return cls.from_namespace(namespace)
+        return cls.from_value(FunctionStepDocument.from_source(source).step)
 
     @classmethod
     def render(
@@ -68,11 +56,8 @@ class FunctionStepDocumentCodec:
         """Render a validated FunctionStep document as reviewable Python source."""
 
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment, generate_python_source
 
-        normalized = cls.from_value(document.step)
-        return generate_python_source(
-            Assignment(FunctionStepDocumentField.STEP.value, normalized.step),
+        return cls.from_value(document.step).to_source(
             header=cls.HEADER,
             clean_mode=clean_mode,
         )

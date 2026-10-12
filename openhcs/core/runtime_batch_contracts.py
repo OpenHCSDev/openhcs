@@ -171,17 +171,7 @@ class RuntimeArtifactPartitionBatchRequest:
         )
 
 
-class RuntimeBatchCallableMetadataField(str, Enum):
-    """Callable metadata fields owned by runtime batch contracts."""
-
-    EXECUTORS = "__openhcs_runtime_batch_executors__"
-
-    def owner_label(self, func: Callable) -> str:
-        """Return a compact field label for validation errors."""
-        return f"{func}.{self.value}"
-
-
-RUNTIME_BATCH_EXECUTORS_ATTR = RuntimeBatchCallableMetadataField.EXECUTORS.value
+_BATCH_EXECUTORS_ATTRIBUTE = "__openhcs_runtime_batch_executors__"
 
 
 @dataclass(frozen=True, slots=True)
@@ -362,20 +352,19 @@ def runtime_batch_executors_from_callable(
     func: Callable,
 ) -> Mapping[RuntimeBatchExecutionDomain, Callable]:
     """Return declared batch executors keyed by runtime batch domain."""
-    executors_field = RuntimeBatchCallableMetadataField.EXECUTORS
     try:
         namespace = vars(func)
     except TypeError:
         declared = {}
     else:
-        if executors_field.value in namespace:
-            declared = namespace[executors_field.value]
+        if _BATCH_EXECUTORS_ATTRIBUTE in namespace:
+            declared = namespace[_BATCH_EXECUTORS_ATTRIBUTE]
         else:
             declared = {}
     if declared is None:
         declared = {}
     if not isinstance(declared, Mapping):
-        raise TypeError(f"{executors_field.owner_label(func)} must be a mapping.")
+        raise TypeError(f"{func}.{_BATCH_EXECUTORS_ATTRIBUTE} must be a mapping.")
     batch_executors: dict[RuntimeBatchExecutionDomain, Callable] = {}
     for raw_domain, executor in declared.items():
         domain = (
@@ -385,7 +374,7 @@ def runtime_batch_executors_from_callable(
         )
         if not callable(executor):
             raise TypeError(
-                f"{executors_field.owner_label(func)}[{domain.value!r}] must "
+                f"{func}.{_BATCH_EXECUTORS_ATTRIBUTE}[{domain.value!r}] must "
                 f"be callable, got {type(executor).__name__}."
             )
         batch_executors[domain] = executor
@@ -417,9 +406,7 @@ def runtime_batch_executor(
             raise TypeError(
                 f"{func!r} cannot carry runtime batch executor metadata."
             ) from exc
-        namespace[RuntimeBatchCallableMetadataField.EXECUTORS.value] = MappingProxyType(
-            batch_executors
-        )
+        namespace[_BATCH_EXECUTORS_ATTRIBUTE] = MappingProxyType(batch_executors)
         return func
 
     return decorator
