@@ -25,7 +25,7 @@ from openhcs.agent.capabilities import (
     get_agent_capability,
 )
 from openhcs.agent.dto.authoring import AuthoringContextRequest
-from openhcs.agent.dto.common import AgentError, AgentWarning
+from formbridge.contracts import AgentError, AgentWarning
 
 DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
 PresentationValue = TypeVar("PresentationValue")

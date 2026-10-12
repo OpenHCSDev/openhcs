@@ -201,7 +201,7 @@ def main() -> None:
     from openhcs.core.streaming_config_declarations import NapariViewer
     from zmqruntime.config import TransportMode
     from python_introspect import to_jsonable
-    from openhcs.agent.runtime_platform import AgentRuntimePlatform
+    from formbridge.runtime_platform import AgentRuntimePlatform
     from polystore.imagej_distribution import (
         FijiArchiveDistribution,
         ImageJArchiveDownloadPolicy,

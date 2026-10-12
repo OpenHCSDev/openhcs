@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from openhcs.agent.dto.viewer import VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
-from openhcs.agent.services.ui_bridge_service import DEFAULT_UI_BRIDGE_TIMEOUT_MS
+from formbridge.bridge.service import DEFAULT_UI_BRIDGE_TIMEOUT_MS
 
 MIN_MCP_CONTROL_TIMEOUT_MS = 1
 

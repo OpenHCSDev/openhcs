@@ -5,7 +5,7 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
-from pyqt_reactive.services.window_code_document import use_external_code_editor
+from formbridge.services.window_code_document import use_external_code_editor
 from objectstate import ScopeKey
 import copy
 import logging
@@ -17,7 +17,7 @@ from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QSplitter, QVBoxLayout
 from pyqt_reactive.animation import WindowFlashOverlay
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
@@ -30,14 +30,11 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
     ListItemLeadingMarker,
 )
 from pyqt_reactive.widgets.shared.manager_action_controller import CodeEditorPayload
-from pyqt_reactive.widgets.shared.manager_item_hooks import (
-    AttributeItemIdProjection,
-    ManagerItemHooks,
-)
+from formbridge.managers.item_hooks import AttributeItemIdProjection, ManagerItemHooks
 from pyqt_reactive.widgets.shared.manager_selection_controller import (
     ItemSelectionPayloadProjection,
 )
-from pyqt_reactive.widgets.shared.manager_state_binding import ManagerStateBinding
+from formbridge.managers.state_binding import ManagerStateBinding
 from pyqt_reactive.widgets.shared.manager_ui_scaffold import (
     create_manager_header,
     create_manager_list_widget,
@@ -87,7 +84,7 @@ from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     UiOwnedStateSurfaceDeclaration,
     state_surface_declaration_for_identity,
 )

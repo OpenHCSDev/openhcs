@@ -1,6 +1,6 @@
 """Declaration-driven OpenHCS config preview projections."""
 
-from pyqt_reactive.utils.preview_formatters import resolve_preview_label
+from formbridge.utils.preview_formatters import resolve_preview_label
 
 from openhcs.core.config import (
     LazyNapariStreamingConfig,

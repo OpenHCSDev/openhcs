@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
-from openhcs.agent.dto.common import AgentError, AgentWarning
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.session import NoArgumentsRequest, SessionOperationResult
 
 if TYPE_CHECKING:

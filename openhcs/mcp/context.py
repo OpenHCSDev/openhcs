@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from openhcs.agent.services.synthetic_plate_service import (
         SyntheticPlateGenerationService,
     )
-    from openhcs.agent.services.ui_bridge_service import UiBridgeService
+    from formbridge.bridge.service import UiBridgeService
     from openhcs.agent.services.viewer_endpoint_discovery import (
         ViewerEndpointDiscoveryService,
     )
@@ -287,9 +287,9 @@ class OpenHCSAgentContext:
     @property
     def ui_bridge_service(self) -> "UiBridgeService":
         if self._ui_bridge_service is None:
-            from openhcs.agent.services.ui_bridge_service import UiBridgeService
+            from openhcs.agent.services.ui_bridge_service import OpenHCSUiBridgeService
 
-            self._ui_bridge_service = UiBridgeService(path_policy=self.path_policy)
+            self._ui_bridge_service = OpenHCSUiBridgeService(path_policy=self.path_policy)
         return self._ui_bridge_service
 
     @property

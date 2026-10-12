@@ -36,11 +36,11 @@ from pydantic import Field as PydanticField
 from pydantic import WithJsonSchema
 from pydantic.json_schema import GenerateJsonSchema
 from metaclass_registry import AutoRegisterMeta
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.startup import EndpointStartupStatus
 
+import formbridge as formbridge_package
 import openhcs as openhcs_package
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
@@ -54,12 +54,12 @@ from openhcs.agent.capabilities import (
     get_capability_registry,
     require_agent_type_contract,
 )
-from openhcs.agent.dto.common import (
+from formbridge.contracts import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     AGENT_PARAMETER_PRODUCER_OUTPUT_CONTRACT_METADATA_KEY,
-    SCHEMA_VERSION,
     AgentError,
 )
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
 )
@@ -68,10 +68,7 @@ from openhcs.agent.dto.mcp import (
     McpServerStaleErrorResult,
     McpToolErrorResult,
 )
-from openhcs.agent.dto.ui_bridge import (
-    UiBridgeConnectionRequest,
-    UiBridgeConnectionSpec,
-)
+from formbridge.bridge.dto import UiBridgeConnectionRequest, UiBridgeConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowControlRequest
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.knowledge_manifest import knowledge_base_source_paths_from_manifest
@@ -243,8 +240,8 @@ MCP_SERVER_SOURCE_PATHS = _deduplicate_source_paths(
         Path(create_agent_context.__code__.co_filename).resolve(),
         Path(get_capability_registry.__code__.co_filename).resolve(),
         Path(to_jsonable.__code__.co_filename).resolve(),
-        _source_path_for_type(WindowSnapshotCaptureScope),
         *_package_python_source_paths(openhcs_package),
+        *_package_python_source_paths(formbridge_package),
         *MCP_SERVER_PACKAGED_RESOURCE_PATHS,
     )
 )

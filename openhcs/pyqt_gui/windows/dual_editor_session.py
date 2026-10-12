@@ -41,13 +41,6 @@ class DualEditorSession:
             expected_type=FunctionStep,
         )
 
-    def current_function_spec(self) -> FunctionSpec:
-        """Return the live function spec from ObjectState, falling back to the clone."""
-        object_session = self.object_session()
-        if object_session.has_parameter("func"):
-            return cast(FunctionSpec, object_session.parameter_value("func"))
-        return self.editing_step.func
-
     def current_source_bindings(self):
         """Return live source bindings from ObjectState, falling back to the clone."""
         object_session = self.object_session()

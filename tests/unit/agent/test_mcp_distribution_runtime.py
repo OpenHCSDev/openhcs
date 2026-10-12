@@ -7,19 +7,19 @@ import sys
 import time
 from pathlib import Path
 
-from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.runtime_platform import (
+from formbridge.contracts import SCHEMA_VERSION
+from formbridge.runtime_platform import (
     AgentRuntimePlatform,
     LinuxRuntimePlatform,
     WindowsRuntimePlatform,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    UI_BRIDGE_PROTOCOL_VERSION,
-    UiBridgeDescriptorDirectoryAuthority,
+from formbridge.bridge.service import (
+    UiBridgeDescriptorDirectories,
     UiBridgeDescriptorReader,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 
 
 def _write_descriptor(path: Path) -> None:
@@ -27,7 +27,7 @@ def _write_descriptor(path: Path) -> None:
         json.dumps(
             {
                 "schema_version": SCHEMA_VERSION,
-                "bridge_protocol_version": UI_BRIDGE_PROTOCOL_VERSION,
+                "bridge_protocol_version": OpenHCSUiBridgeApplication.protocol_version,
                 "application": to_jsonable(OPENHCS_ENDPOINT_APPLICATION),
                 "bridge_instance_id": "windows-test-bridge",
                 "pid": os.getpid(),
@@ -58,7 +58,7 @@ def test_windows_descriptor_default_uses_local_application_data(
         staticmethod(lambda: WindowsRuntimePlatform),
     )
 
-    descriptor_dirs = UiBridgeDescriptorDirectoryAuthority.descriptor_dirs()
+    descriptor_dirs = UiBridgeDescriptorDirectories.descriptor_dirs()
 
     assert descriptor_dirs[0] == (
         local_application_data / "OpenHCS" / "runtime" / "ui-bridge"

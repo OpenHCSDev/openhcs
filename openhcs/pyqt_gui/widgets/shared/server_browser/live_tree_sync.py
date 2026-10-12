@@ -7,9 +7,9 @@ from dataclasses import dataclass
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
-from pyqt_reactive.services.tree_item_key import EndpointPortProviderABC
-from pyqt_reactive.services.zmq_server_info import BaseServerInfo
-from pyqt_reactive.services.zmq_server_scan_service import StartingEndpointObservation
+from formbridge.services.tree_item_key import EndpointPortProviderABC
+from formbridge.services.zmq_server_info import BaseServerInfo
+from formbridge.services.zmq_server_scan_service import StartingEndpointObservation
 from zmqruntime.viewer_state import ViewerState, ViewerStateManager
 
 from openhcs.core.streaming_config_declarations import ViewerType

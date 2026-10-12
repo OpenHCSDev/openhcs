@@ -4,14 +4,12 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
-from openhcs.core.selection import AllItems, SelectedItems
-from openhcs.agent.dto.ui_bridge import (
-    UiStateSurfaceRequest,
-)
+from formbridge.selection import AllItems, SelectedItems
+from formbridge.bridge.dto import UiStateSurfaceRequest
 from openhcs.agent.ui_bridge_identities import (
-    PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
-    UiStateSurfaceIdentityDeclarationBase,
+    DatasetLiveMeasurementsStateSurfaceIdentity,
 )
+from formbridge.bridge.identities import UiStateSurfaceIdentityDeclarationBase
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress import ProgressEvent
@@ -24,17 +22,13 @@ from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
 )
-from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
-    state_surface_declaration_for_identity,
-)
-from openhcs.pyqt_gui.services.ui_bridge_live_overview import (
-    LiveOverviewBridgeProviderSet,
-)
+from formbridge.bridge.in_process import UiAgentBridgeService
+from formbridge.bridge.contracts import state_surface_declaration_for_identity
+from openhcs.pyqt_gui.services.ui_bridge_live_overview import LiveOverviewBridgeProviderSet
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import (
     PlateManagerBridgeProviderSet,
 )
-from openhcs.pyqt_gui.services.ui_bridge_registry import CompositeUiBridgeProviderSet
+from formbridge.bridge.registry import CompositeUiBridgeProviderSet
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.authoring.session.progress_notifications import (
     LiveMeasurementAvailableNotification,
@@ -45,6 +39,7 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,
 )
+from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,7 +121,7 @@ def _notification() -> LiveMeasurementAvailableNotification:
 
 
 def _bridge(manager: _Manager) -> UiAgentBridgeService:
-    return UiAgentBridgeService(
+    return OpenHCSUiAgentBridgeService(
         provider_set=CompositeUiBridgeProviderSet(
             (
                 PlateManagerBridgeProviderSet(manager),
@@ -140,17 +135,17 @@ def _bridge(manager: _Manager) -> UiAgentBridgeService:
 def _live_measurement_declaration():
     return state_surface_declaration_for_identity(
         PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS,
-        PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
+        DatasetLiveMeasurementsStateSurfaceIdentity,
     )
 
 
 def test_live_measurement_surface_is_declared_by_owning_widget() -> None:
     declaration = _live_measurement_declaration()
 
-    assert declaration.surface_id == "plate_manager.live_measurements"
+    assert declaration.surface_id == "datasets.live_measurements"
     assert (
         declaration.identity
-        is PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration
+        is DatasetLiveMeasurementsStateSurfaceIdentity
     )
     assert declaration.payload_schema == "openhcs.ui.live_measurements_state.v1"
     assert declaration.related_action_ids == (ShowLiveResults.operation_id,)

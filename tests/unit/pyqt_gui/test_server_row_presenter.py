@@ -7,7 +7,7 @@ try:
 except Exception:
     PYQT_AVAILABLE = False
 
-from pyqt_reactive.services.zmq_server_info import BaseServerInfo
+from formbridge.services.zmq_server_info import BaseServerInfo
 from zmqruntime.messages import PongResponse
 
 from openhcs.pyqt_gui.widgets.shared.server_browser.presentation_models import (

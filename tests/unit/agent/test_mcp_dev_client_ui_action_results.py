@@ -8,7 +8,7 @@ import pytest
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiActionIdentity,
     UiActionInvokeResult,
     UiBridgeOperationIdentity,
@@ -16,15 +16,17 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationRoute,
     UiMutationReceipt,
     UiMutationRequestToken,
-    UiPlateManagerState,
-    UiSelectedPlateWorkflowKind,
-    UiSelectedPlateWorkflowResult,
     UiStateSurfaceDocument,
     UiStateSurfaceIdentity,
     UiStateSurfaceSummary,
     UiWidgetTreeResult,
     UiWindowIdentity,
     UiWindowSummary,
+)
+from openhcs.agent.dto.ui_bridge import (
+    UiPlateManagerState,
+    UiSelectedPlateWorkflowKind,
+    UiSelectedPlateWorkflowResult,
 )
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_core import (
@@ -42,7 +44,7 @@ from python_introspect import to_jsonable
 def action_fixture():
     return UiActionInvokeResult(
         SCHEMA_VERSION,
-        UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
+        UiActionIdentity(widget_id="datasets", action_id="run_datasets"),
         "accepted",
         UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         target_scope_ids=("scope-1",),
@@ -57,8 +59,8 @@ def action_result(capability, value):
 
 def state_fixture(compiled, revision):
     summary = UiStateSurfaceSummary(
-        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="datasets.state"),
+        "Plate Manager", True, widget_id="datasets",
     )
     row = DatasetRowState(
         scope_id="scope-1", name="plate-one", root="/plate-one",
@@ -89,7 +91,7 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
     native = UiSelectedPlateWorkflowResult(
         SCHEMA_VERSION, UiSelectedPlateWorkflowKind("compile_datasets"),
         replace(action_fixture(),
-                identity=UiActionIdentity(widget_id="plate_manager", action_id="compile_datasets"),
+                identity=UiActionIdentity(widget_id="datasets", action_id="compile_datasets"),
                 receipt=UiMutationReceipt(UiMutationRequestToken(), "operation-one", True)),
     )
     receipt = UiBridgeOperationRef(
@@ -200,7 +202,7 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
         "--arguments", '{"workflow":"run_datasets"}',
     ]) == 0
     rendered = capsys.readouterr().out
-    assert "action=plate_manager/run_datasets status=accepted" in rendered
+    assert "action=datasets/run_datasets status=accepted" in rendered
     assert "accepted=True" in rendered and "targets=scope-1" in rendered
     assert workflow_result_action_status(result) == "accepted"
     assert workflow_result_target_scope_ids(result) == ("scope-1",)
@@ -284,7 +286,7 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
     try:
         assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
         value = ExtendedAction(
-            SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
+            SCHEMA_VERSION, UiActionIdentity(widget_id="datasets", action_id="run_datasets"),
             "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         )
         decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))
