@@ -698,6 +698,7 @@ def _hook_that_fails(declaration, **kwargs):
             "The filename and declaration name must match.",
         ),
     ),
+    ids=("preparation_hook", "name_taken", "not_utf8", "other_name"),
 )
 def test_a_source_that_cannot_be_registered_fails_alone(
     isolated_custom_runtime, monkeypatch, file_name, content, message,
