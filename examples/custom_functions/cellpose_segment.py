@@ -19,7 +19,13 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.materialization import CsvOptions, MaterializationSpec, ROIOptions
+from openhcs.core.materialization import (
+    CsvOptions,
+    ImageFileOptions,
+    MaterializationSpec,
+    NameByArtifactName,
+    ROIOptions,
+)
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
@@ -73,7 +79,10 @@ def _warm_up() -> None:
     ArtifactSpec(
         "cellpose_labels",
         ObjectLabelsArtifactType,
-        materialization=MaterializationSpec(ROIOptions()),
+        materialization=MaterializationSpec(
+            ROIOptions(),
+            ImageFileOptions(filename_suffix=".labels.tif", filename_identity=NameByArtifactName),
+        ),
     ),
 )
 def cellpose_segment(
@@ -98,7 +107,7 @@ def cellpose_segment(
         diameter: Expected object diameter in pixels. Leave empty to use the
             diameter the model was trained at (17 px for nuclei, 30 px otherwise).
         channels: Cellpose channel pair (segment, nuclear helper). (0, 0) means
-            grayscale: every plane is segmented independently.
+            grayscale, where every plane is segmented independently.
         flow_threshold: Maximum flow error per mask; raise it to keep more masks.
         cellprob_threshold: Minimum cell probability; lower it to keep more pixels.
         do_3D: Segment the stack as one 3D volume instead of plane by plane.
