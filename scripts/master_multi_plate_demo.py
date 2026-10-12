@@ -32,9 +32,9 @@ from zmqruntime import TransportMode
 
 from openhcs.agent.dto.ui_bridge import UiSelectedPlateWorkflowKind
 from openhcs.agent.ui_bridge_identities import (
-    PlateManagerOrchestratorCodeDocumentIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+    DatasetListWidgetIdentity,
 )
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
@@ -71,11 +71,11 @@ DEFAULT_OUTPUT_ROOT = ROOT / "mcp_outputs" / "master_multi_plate_demo"
 DEFAULT_BASE_PORT = 5900
 UI_TIMEOUT_MS = 2_000
 DEFAULT_PRESENTATION_DWELL_SECONDS = 1.0
-ORCHESTRATOR_DOCUMENT_ID = PlateManagerOrchestratorCodeDocumentIdentity.require_value()
+ORCHESTRATOR_DOCUMENT_ID = DatasetListCodeDocumentIdentity.require_value()
 PLATE_MANAGER_STATE_SURFACE_ID = (
-    PlateManagerStateSurfaceIdentityDeclaration.require_value()
+    DatasetListStateSurfaceIdentity.require_value()
 )
-PLATE_MANAGER_WIDGET_ID = PlateManagerWidgetIdentity.require_value()
+PLATE_MANAGER_WIDGET_ID = DatasetListWidgetIdentity.require_value()
 
 
 class MasterDemoFailure(RuntimeError):

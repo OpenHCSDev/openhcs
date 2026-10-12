@@ -11,7 +11,7 @@ import numpy as np
 from arraybridge.decorators import ThreadGPUContext
 from arraybridge.types import MemoryType
 from objectstate import ObjectStateRegistry
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 
 from openhcs.core.config import PipelineConfig
 from openhcs.core.memory import numpy

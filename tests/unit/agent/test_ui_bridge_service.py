@@ -1,5 +1,5 @@
 from __future__ import annotations
-from openhcs.core.selection import AllItems, SelectedItems
+from formbridge.selection import AllItems, SelectedItems
 from openhcs.agent.dto.session import DatasetRowState
 
 import inspect
@@ -10,12 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from zmqruntime import EndpointApplication, EndpointApplicationCompatibilityError
 
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.contracts import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentResourceRef
+from formbridge.bridge.dto import (
     ActionAccepted,
     OperationCompleted,
     OperationFailed,
@@ -43,7 +44,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
     UiCodeDocumentCatalog,
-    UiCodeDocumentId,
     UiCodeDocumentIdentity,
     UiCodeDocumentRequest,
     UiCodeDocumentSummary,
@@ -60,10 +60,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeListRequest,
     UiObjectStateScopeSummary,
     UiObjectStateValuePreview,
-    UiPlateManagerState,
-    UiSelectedPlateWorkflowKind,
-    UiSelectedPlateWorkflowRequest,
-    UiSelectedPlateWorkflowResult,
     UiSemanticAddress,
     UiSnapshotCatalog,
     UiSnapshotListRequest,
@@ -72,7 +68,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiSnapshotRestoreResult,
     UiStateSurfaceCatalog,
     UiStateSurfaceDocument,
-    UiStateSurfaceId,
     UiStateSurfaceIdentity,
     UiStateSurfaceRequest,
     UiStateSurfaceSummary,
@@ -97,12 +92,17 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
     UiWindowSummary,
 )
-from openhcs.agent.runtime_platform import AgentRuntimePlatform
-from openhcs.agent.services.ui_bridge_service import (
-    UI_BRIDGE_PROTOCOL_VERSION,
+from openhcs.agent.dto.ui_bridge import (
+    UiPlateManagerState,
+    UiSelectedPlateWorkflowKind,
+    UiSelectedPlateWorkflowRequest,
+    UiSelectedPlateWorkflowResult,
+)
+from formbridge.runtime_platform import AgentRuntimePlatform
+from formbridge.bridge.service import (
     UiBridgeApplyDocumentOperation,
     UiBridgeCloseWindowOperation,
-    UiBridgeDescriptorDirectoryAuthority,
+    UiBridgeDescriptorDirectories,
     UiBridgeDescriptorReader,
     UiBridgeGatewayABC,
     UiBridgeGatewayResponseError,
@@ -117,7 +117,6 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeMutateObjectStateFieldOperation,
     UiBridgeProcessAdvertisedDescriptorCatalog,
     UiBridgeRestoreSnapshotOperation,
-    UiBridgeSelectedPlateWorkflowOperation,
     UiBridgeService,
     UiBridgeSnapshotWindowOperation,
     UiBridgeStatusOperation,
@@ -125,14 +124,21 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeWaitForOperationReceiptOperation,
     UiBridgeWidgetTreeOperation,
 )
-from openhcs.agent.services.ui_bridge_transport import UiBridgeControlClient
+from openhcs.agent.services.ui_bridge_service import UiBridgeSelectedPlateWorkflowOperation
+from formbridge.bridge.transport import UiBridgeControlClient
 from openhcs.runtime.viewer_protocol import HeadlessSession, ProjectedGraphicalSession
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
+from openhcs.agent.ui_bridge_identities import (
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+)
+from openhcs.agent.services.ui_bridge_service import OpenHCSUiBridgeService
 
-DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
-STATE_SURFACE_ID = UiStateSurfaceId.PLATE_MANAGER.value
-WIDGET_ID = "plate_manager"
+DOCUMENT_ID = DatasetListCodeDocumentIdentity.require_value()
+STATE_SURFACE_ID = DatasetListStateSurfaceIdentity.require_value()
+WIDGET_ID = "datasets"
 PLATE_SCOPE_ID = "plate-1"
 PLATE_NAME = "plate 1"
 BRIDGE_ID = "bridge-1"
@@ -170,7 +176,7 @@ class UiBridgeDescriptorFile:
     def write(self) -> Path:
         payload = {
             "schema_version": SCHEMA_VERSION,
-            "bridge_protocol_version": UI_BRIDGE_PROTOCOL_VERSION,
+            "bridge_protocol_version": OpenHCSUiBridgeApplication.protocol_version,
             "application": to_jsonable(OPENHCS_ENDPOINT_APPLICATION),
             "bridge_instance_id": self.bridge_id,
             "pid": os.getpid(),
@@ -885,7 +891,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor))
 
     monkeypatch.setattr(
-        "openhcs.agent.runtime_platform."
+        "formbridge.runtime_platform."
         "LinuxRuntimePlatform._process_environment",
         lambda self, pid: (
             {
@@ -900,7 +906,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
         ),
     )
 
-    launch_context = UiBridgeService(path_policy=object()).viewer_launch_context()
+    launch_context = OpenHCSUiBridgeService(path_policy=object()).viewer_launch_context()
 
     assert launch_context.session is ProjectedGraphicalSession
     assert launch_context.environment_overlay == {
@@ -993,7 +999,7 @@ def test_descriptor_reader_rejects_mismatched_openhcs_application(
 def test_ui_bridge_client_rejects_mismatched_server_application() -> None:
     request = UiBridgeRequestEnvelope(
         schema_version=SCHEMA_VERSION,
-        bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
+        bridge_protocol_version=OpenHCSUiBridgeApplication.protocol_version,
         application=OPENHCS_ENDPOINT_APPLICATION,
         request_id="request-1",
         operation="status",
@@ -1002,7 +1008,7 @@ def test_ui_bridge_client_rejects_mismatched_server_application() -> None:
     )
     response = UiBridgeResponseEnvelope(
         schema_version=SCHEMA_VERSION,
-        bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
+        bridge_protocol_version=OpenHCSUiBridgeApplication.protocol_version,
         application=EndpointApplication(identifier="openhcs", version="0.7.22"),
         request_id=request.request_id,
         ok=True,
@@ -1050,7 +1056,7 @@ def test_descriptor_catalog_removes_dead_process_before_application_compatibilit
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (descriptor_directory,)),
     )
@@ -1168,7 +1174,7 @@ def test_descriptor_resolver_reports_ambiguous_live_descriptors(monkeypatch, tmp
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
-    service = UiBridgeService()
+    service = OpenHCSUiBridgeService()
     status = service.invoke(UiBridgeStatusOperation)
     launch_context = service.viewer_launch_context()
 
@@ -1237,7 +1243,7 @@ def test_descriptor_resolution_uses_process_advertised_descriptor(
         proc_root,
     )
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (tmp_path / "empty-descriptor-dir",)),
     )
@@ -1303,7 +1309,7 @@ def test_descriptor_catalog_unions_default_and_process_advertised_live_bridges(
     ).write()
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (default_directory,)),
     )
@@ -1343,7 +1349,7 @@ def test_descriptor_catalog_reads_duplicate_resolved_path_once(monkeypatch, tmp_
     alias_path = descriptor_directory / ".." / "descriptors" / descriptor_path.name
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (descriptor_directory,)),
     )
@@ -1877,7 +1883,7 @@ def test_unsupported_ui_bridge_operation_error_mentions_restart(monkeypatch, tmp
     assert error.code == "unsupported_ui_bridge_operation"
     assert error.hint is not None
     assert "Restart the UI or UI bridge process" in error.hint
-    assert "current OpenHCS source" in error.hint
+    assert "current source" in error.hint
 
 
 def test_restore_request_rejects_multiple_selectors(monkeypatch, tmp_path):
@@ -1983,7 +1989,7 @@ def test_wait_for_operation_receipt_uses_gateway_terminal_wait_owner(
 
     monkeypatch.setattr(gateway, "get_operation_status", get_operation_status)
     monkeypatch.setattr(
-        "openhcs.agent.services.ui_bridge_service.time.sleep",
+        "formbridge.bridge.service.time.sleep",
         lambda _seconds: None,
     )
     service = UiBridgeService(gateway=gateway)
@@ -2031,7 +2037,7 @@ def test_wait_for_operation_receipt_returns_fresh_running_ref_with_timeout_error
         lambda _connection, _request: running,
     )
     monkeypatch.setattr(
-        "openhcs.agent.services.ui_bridge_service.time.monotonic",
+        "formbridge.bridge.service.time.monotonic",
         lambda: next(monotonic_values),
     )
     service = UiBridgeService(gateway=gateway)
@@ -2050,7 +2056,7 @@ def test_wait_for_operation_receipt_returns_fresh_running_ref_with_timeout_error
     assert result.status == "running"
     assert result.started_at_unix == 7.0
     assert result.errors[0].code == "ui_bridge_operation_wait_timeout"
-    assert "openhcs_ui_wait_for_operation_receipt" in result.errors[0].hint
+    assert "get_operation_status" in result.errors[0].hint
     assert "does not establish domain workflow completion" in result.errors[0].hint
     assert result.identity is running.identity
 
@@ -2148,7 +2154,7 @@ def test_ui_requests_own_mcp_tool_argument_projection():
             base_revision_token="rev-1",
         ),
         UiActionInvokeRequest.from_fields(
-            widget_id="plate_manager",
+            widget_id="datasets",
             action_id="compile_datasets",
         ),
         UiWidgetActionInvokeRequest.from_fields(

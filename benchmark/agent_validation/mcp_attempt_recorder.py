@@ -54,7 +54,7 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionDetail,
 )
-from openhcs.agent.dto.ui_bridge import UiCodeDocument
+from formbridge.bridge.dto import UiCodeDocument
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec

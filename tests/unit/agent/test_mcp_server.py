@@ -14,7 +14,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import to_jsonable
 from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
@@ -36,7 +36,8 @@ from openhcs.agent.capabilities import (
     agent_capabilities,
     get_capability_registry,
 )
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
@@ -54,7 +55,7 @@ from openhcs.agent.dto.plate import (
     PlatePathInspectionResult,
     SyntheticPlateGenerationResult,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiActionCatalog,
     UiActionIdentity,
     UiActionSummary,
@@ -100,13 +101,9 @@ from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.object_state_field_help_service import (
     ObjectStateFieldHelpService,
 )
-from openhcs.agent.services.object_state_field_projection import (
-    ObjectStateFieldListProjector,
-)
+from formbridge.bridge.field_projection import ObjectStateFieldListProjector
 from openhcs.agent.services.selected_plate_service import SelectedPlateService
-from openhcs.agent.services.ui_bridge_service import (
-    DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-)
+from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
@@ -271,15 +268,6 @@ def test_agent_dto_package_exports_mcp_debugging_contracts():
         "UiSelectedPlateWorkflowKind",
         "UiSelectedPlateWorkflowRequest",
         "UiSelectedPlateWorkflowResult",
-        "UiObjectStateFieldHelpRequest",
-        "UiObjectStateFieldHelpResult",
-        "UiObjectStateFieldMutationRequest",
-        "UiObjectStateFieldMutationResult",
-        "UiWidgetRect",
-        "UiWidgetTreeNode",
-        "UiWidgetTreeRequest",
-        "UiWidgetTreeResult",
-        "UiWidgetActionSummary",
         "ViewerWindowLayerPayloads",
         "ViewerWindowPayloadRecord",
         "ViewerWindowPayloadRequest",
@@ -983,7 +971,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
 def test_mcp_widget_tree_projection_preserves_required_empty_action_fields():
     result = UiWidgetTreeResult(
         schema_version=SCHEMA_VERSION,
-        window_id="plate_manager",
+        window_id="datasets",
         projected=True,
         actionable_widgets=(
             UiWidgetActionSummary(
@@ -1145,9 +1133,9 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
                     UiCodeDocumentSummary(
                         schema_version=SCHEMA_VERSION,
                         identity=UiCodeDocumentIdentity(
-                            document_id="plate_manager.orchestrator_config"
+                            document_id="datasets.orchestrator_config"
                         ),
-                        widget_id="plate_manager",
+                        widget_id="datasets",
                         title="Plate config",
                         readable=True,
                         writable=True,
@@ -1164,9 +1152,9 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
                     UiStateSurfaceSummary(
                         schema_version=SCHEMA_VERSION,
                         identity=UiStateSurfaceIdentity(
-                            surface_id="plate_manager.state"
+                            surface_id="datasets.state"
                         ),
-                        widget_id="plate_manager",
+                        widget_id="datasets",
                         title="Plate state",
                         readable=True,
                     ),
@@ -1182,7 +1170,7 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
                     UiActionSummary(
                         schema_version=SCHEMA_VERSION,
                         identity=UiActionIdentity(
-                            widget_id="plate_manager", action_id="add_datasets"
+                            widget_id="datasets", action_id="add_datasets"
                         ),
                         title="Add plate",
                         enabled=True,
@@ -1232,7 +1220,7 @@ def test_mcp_ui_catalog_invocations_preserve_declared_identity(
 def test_mcp_widget_tree_projection_can_return_full_action_fields():
     result = UiWidgetTreeResult(
         schema_version=SCHEMA_VERSION,
-        window_id="plate_manager",
+        window_id="datasets",
         projected=True,
         actionable_widgets=(
             UiWidgetActionSummary(
@@ -1366,7 +1354,7 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     compact_result = asyncio.run(
         call_widget_tree(
             {
-                "window_id": "plate_manager",
+                "window_id": "datasets",
                 "maximum_item_model_nodes": 256,
                 "include_tree": True,
                 "connection": {"timeout_ms": 1234},
@@ -1376,7 +1364,7 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     full_result = asyncio.run(
         call_widget_tree(
             {
-                "window_id": "plate_manager",
+                "window_id": "datasets",
                 "compact_actions": False,
                 "connection": {"timeout_ms": 1234},
             }
@@ -1393,7 +1381,7 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     assert full_payload["actionable_widgets"][0]["raw_value"] is None
     assert ui_bridge_service.connections[0].timeout_ms == 1234
     first_request = ui_bridge_service.widget_tree_requests[0]
-    assert first_request.window_id == "plate_manager"
+    assert first_request.window_id == "datasets"
     assert first_request.maximum_item_model_nodes == 256
     assert first_request.include_tree is True
     assert first_request.open_policy.create_if_missing is False
@@ -1621,7 +1609,7 @@ def test_mcp_stale_watchlist_includes_agent_contract_sources():
         for path in watched_paths
     )
     assert any(
-        path.endswith("openhcs/agent/dto/ui_bridge.py") for path in watched_paths
+        path.endswith("formbridge/bridge/dto.py") for path in watched_paths
     )
     assert any(path.endswith("openhcs/agent/dto/viewer.py") for path in watched_paths)
     assert any(
@@ -1629,12 +1617,10 @@ def test_mcp_stale_watchlist_includes_agent_contract_sources():
         for path in watched_paths
     )
     assert any(
-        path.endswith("openhcs/agent/services/ui_bridge_service.py")
-        for path in watched_paths
+        path.endswith("formbridge/bridge/service.py") for path in watched_paths
     )
     assert any(
-        path.endswith("openhcs/agent/services/ui_bridge_transport.py")
-        for path in watched_paths
+        path.endswith("formbridge/bridge/transport.py") for path in watched_paths
     )
     assert any(
         path.endswith("openhcs/agent/services/viewer_window_service.py")
@@ -1648,7 +1634,7 @@ def test_mcp_stale_watchlist_includes_agent_contract_sources():
         path.endswith("openhcs/runtime/viewer_protocol.py") for path in watched_paths
     )
     assert any(
-        path.endswith("pyqt_reactive/services/window_snapshot.py")
+        path.endswith("formbridge/services/window_snapshot.py")
         for path in watched_paths
     )
 
@@ -2924,8 +2910,8 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     supported_selection_modes=("selected", "all"),
@@ -2985,7 +2971,7 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
     result = asyncio.run(call_selected_plate_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert ui_bridge_service.state_surface_request.surface_id == "plate_manager.state"
+    assert ui_bridge_service.state_surface_request.surface_id == "datasets.state"
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
     assert ui_bridge_service.connection_fields.timeout_ms == 1234
     assert plate_inspection_service.request.plate_path == selected_plate_root
@@ -3015,8 +3001,8 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     current_selection_count=1,
@@ -3113,8 +3099,8 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     supported_selection_modes=("selected", "all"),
@@ -3176,7 +3162,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
     result = asyncio.run(call_selected_plate_query_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert ui_bridge_service.state_surface_request.surface_id == "plate_manager.state"
+    assert ui_bridge_service.state_surface_request.surface_id == "datasets.state"
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
     assert plate_inspection_service.request.plate_path == output_dataset_root
     assert plate_inspection_service.request.source_format == "auto"
@@ -3228,8 +3214,8 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     current_selection_count=1,
@@ -3322,8 +3308,8 @@ def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     supported_selection_modes=("selected", "all"),
@@ -3418,7 +3404,7 @@ def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
     result = asyncio.run(call_selected_plate_sample_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert ui_bridge_service.state_surface_request.surface_id == "plate_manager.state"
+    assert ui_bridge_service.state_surface_request.surface_id == "datasets.state"
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
     assert plate_inspection_service.inspect_request is None
     assert plate_inspection_service.sample_request.plate_path == selected_plate_root
@@ -3449,8 +3435,8 @@ def test_mcp_selected_plate_image_sample_auto_selects_first_inventory_record():
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     current_selection_count=1,
@@ -3558,8 +3544,8 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
                 schema_version=SCHEMA_VERSION,
                 summary=UiStateSurfaceSummary(
                     schema_version=SCHEMA_VERSION,
-                    identity=UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-                    widget_id="plate_manager",
+                    identity=UiStateSurfaceIdentity(surface_id="datasets.state"),
+                    widget_id="datasets",
                     title="Plate manager state",
                     readable=True,
                     current_selection_count=1,
@@ -4876,7 +4862,7 @@ def test_mcp_dev_client_ui_commands_project_connection_arguments():
     state_args = parser.parse_args(
         (
             "state-surface",
-            "plate_manager.state",
+            "datasets.state",
             "--selection-mode",
             "selected",
             "--base-revision-token",
@@ -4891,7 +4877,7 @@ def test_mcp_dev_client_ui_commands_project_connection_arguments():
     state_call = dev_client._calls_from_args(state_args)[0]
 
     assert state_call.name == "openhcs_ui_get_state_surface"
-    assert state_call.arguments["surface_id"] == "plate_manager.state"
+    assert state_call.arguments["surface_id"] == "datasets.state"
     assert state_call.arguments["selection_mode"] == "selected"
     assert state_call.arguments["base_revision_token"] == "rev-1"
     assert state_call.arguments["connection"] == {
@@ -5643,7 +5629,7 @@ def _accepted_workflow_dev_result(
                 "action_result": {
                     "schema_version": "test",
                     "identity": {
-                        "widget_id": "plate_manager",
+                        "widget_id": "datasets",
                         "action_id": workflow,
                     },
                     "status": "accepted",
@@ -5654,12 +5640,12 @@ def _accepted_workflow_dev_result(
                     },
                     "target_scope_ids": list(target_scope_ids),
                     "selection_revision_token": None,
-                    "workflow_status_surface_ids": ["plate_manager.state"],
+                    "workflow_status_surface_ids": ["datasets.state"],
                     "event_sequence": 7,
                     "errors": [],
                     "warnings": [],
                 },
-                "state_surface_id": "plate_manager.state",
+                "state_surface_id": "datasets.state",
                 "errors": [],
                 "warnings": [],
             },
@@ -5752,7 +5738,7 @@ def _rejected_workflow_dev_result(
                 "action_result": {
                     "schema_version": "test",
                     "identity": {
-                        "widget_id": "plate_manager",
+                        "widget_id": "datasets",
                         "action_id": "compile_datasets",
                     },
                     "status": "rejected",
@@ -5763,12 +5749,12 @@ def _rejected_workflow_dev_result(
                     },
                     "target_scope_ids": ["scope-a"],
                     "selection_revision_token": None,
-                    "workflow_status_surface_ids": ["plate_manager.state"],
+                    "workflow_status_surface_ids": ["datasets.state"],
                     "event_sequence": 7,
                     "errors": [error],
                     "warnings": [],
                 },
-                "state_surface_id": "plate_manager.state",
+                "state_surface_id": "datasets.state",
                 "errors": [error],
                 "warnings": [],
             },
@@ -5804,7 +5790,7 @@ def test_mcp_dev_client_selected_workflow_poll_arguments_are_projected():
     workflow_call = dev_client._calls_from_args(args)[0]
     state_arguments = dev_client.state_surface_tool_arguments(
         args,
-        surface_id="plate_manager.state",
+        surface_id="datasets.state",
         selection_mode=args.poll_selection_mode,
     )
 
@@ -5825,7 +5811,7 @@ def test_mcp_dev_client_selected_workflow_poll_arguments_are_projected():
         },
     }
     assert state_arguments == {
-        "surface_id": "plate_manager.state",
+        "surface_id": "datasets.state",
         "selection_mode": "all",
         "base_revision_token": None,
         "connection": {
@@ -5905,8 +5891,8 @@ def _complete_plate_manager_state(sparse):
     from openhcs.agent.dto.ui_bridge import UiPlateManagerState
 
     summary = UiStateSurfaceSummary(
-        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="datasets.state"),
+        "Plate Manager", True, widget_id="datasets",
     )
     row = to_jsonable(DatasetRowState(
         scope_id="scope", name="plate", root="/plate", pipeline_path=None,
@@ -5931,8 +5917,8 @@ def _state_surface_dev_wire(dev_client):
     return to_jsonable(UiStateSurfaceDocument(
         schema_version=SCHEMA_VERSION,
         summary=UiStateSurfaceSummary(
-            SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-            "Plate Manager", True, widget_id="plate_manager",
+            SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="datasets.state"),
+            "Plate Manager", True, widget_id="datasets",
         ),
         payload_schema="openhcs.ui.plate_manager_state.v1", payload={},
     ))
@@ -6175,7 +6161,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
         "openhcs_ui_get_state_surface",
     ]
     assert calls[0].arguments == {
-        "surface_id": "plate_manager.state",
+        "surface_id": "datasets.state",
         "selection_mode": "all",
         "base_revision_token": None,
         "connection": {
@@ -6527,7 +6513,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
-    from openhcs.agent.services.ui_bridge_service import UiBridgeGatewayTimeoutError
+    from formbridge.bridge.service import UiBridgeGatewayTimeoutError
 
     calls: list[dev_client.McpDevToolCall] = []
     state_call_count = 0
@@ -6638,7 +6624,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
-    from openhcs.agent.services.ui_bridge_service import UiBridgeGatewayTimeoutError
+    from formbridge.bridge.service import UiBridgeGatewayTimeoutError
 
     workflow_call_count = 0
     state_call_count = 0
@@ -6746,7 +6732,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
-    from openhcs.agent.services.ui_bridge_service import UiBridgeGatewayTimeoutError
+    from formbridge.bridge.service import UiBridgeGatewayTimeoutError
 
     workflow_call_count = 0
     state_call_count = 0
@@ -7026,14 +7012,16 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
-    from openhcs.agent.dto.ui_bridge import (
-        UiPlateManagerState, UiStateSurfaceDocument,
-        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+    from openhcs.agent.dto.ui_bridge import UiPlateManagerState
+    from formbridge.bridge.dto import (
+        UiStateSurfaceDocument,
+        UiStateSurfaceIdentity,
+        UiStateSurfaceSummary,
     )
 
     surface_summary = UiStateSurfaceSummary(
-        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        "test", UiStateSurfaceIdentity(surface_id="datasets.state"),
+        "Plate Manager", True, widget_id="datasets",
     )
     baseline = UiPlateManagerState(
         schema_version="test", summary=surface_summary, object_state_token=1,
@@ -8485,8 +8473,8 @@ def test_mcp_dev_client_launches_fresh_current_source_server():
 def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
     from openhcs.agent.path_policy import AgentPathPolicy
-    from openhcs.agent.runtime_platform import AgentRuntimePlatform
-    from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
+    from formbridge.runtime_platform import AgentRuntimePlatform
+    from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
     from openhcs.core.native_threading import native_thread_count_environment_keys
     from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -8495,7 +8483,7 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
         monkeypatch.delenv(key, raising=False)
     for key in AgentPathPolicy.environment_keys():
         monkeypatch.delenv(key, raising=False)
-    for key in UiBridgeDescriptorEnvironment.child_process_environment_keys():
+    for key in OpenHCSUiBridgeApplication.descriptor_environment_keys():
         monkeypatch.setenv(key, f"/tmp/{key.casefold()}")
     monkeypatch.setenv("DISPLAY", ":0")
     monkeypatch.setenv("XAUTHORITY", "/tmp/test.Xauthority")
@@ -8540,10 +8528,10 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
     assert environment[bootstrap.MCP_VERBOSE_ENVIRONMENT_VARIABLE] == "1"
     assert {
         key: environment[key]
-        for key in UiBridgeDescriptorEnvironment.child_process_environment_keys()
+        for key in OpenHCSUiBridgeApplication.descriptor_environment_keys()
     } == {
         key: f"/tmp/{key.casefold()}"
-        for key in UiBridgeDescriptorEnvironment.child_process_environment_keys()
+        for key in OpenHCSUiBridgeApplication.descriptor_environment_keys()
     }
     assert {
         key: environment[key] for key in native_thread_count_environment_keys()
@@ -8560,10 +8548,7 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
 
 def test_mcp_dev_client_server_spec_preserves_windows_host_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
-    from openhcs.agent.runtime_platform import (
-        AgentRuntimePlatform,
-        WindowsRuntimePlatform,
-    )
+    from formbridge.runtime_platform import AgentRuntimePlatform, WindowsRuntimePlatform
 
     windows_authority = WindowsRuntimePlatform()
     expected_keys = {

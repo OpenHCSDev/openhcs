@@ -65,15 +65,17 @@
 
 name: Integration Tests
 
+# The full matrix gates PyPI releases, not merges (owner decision 2026-10-12):
+# it runs on demand, on release tags and nightly against main. Pull requests
+# run pr-checks.yml and refactor-guardrails.yml instead. The publish workflow
+# requires a green run of this workflow on the exact release commit
+# (scripts/release_readiness.py), whichever of these events produced it.
 on:
   push:
-    branches: [main]
-    paths-ignore:
-      - "website/**"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "website/**"
+    tags:
+      - "v*"
+  schedule:
+    - cron: "23 3 * * *"
   workflow_dispatch:
     inputs:
       test_mode:
@@ -151,7 +153,6 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     env:
       QT_QPA_PLATFORM: xcb
       QT_XCB_GL_INTEGRATION: xcb_glx
@@ -254,7 +255,6 @@ jobs:
     name: python-314-core-tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -299,7 +299,6 @@ jobs:
   gui-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -351,7 +350,6 @@ jobs:
     name: desktop-candidate-live-mcp (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -418,7 +416,6 @@ jobs:
   python-boundary-tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -563,7 +560,6 @@ jobs:
   backend-microscope-tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -693,7 +689,6 @@ jobs:
   # See: https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/tag/20240202
   omero-tests-linux:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -790,7 +785,6 @@ jobs:
   # Code quality checks (linting, formatting, type checking)
   code-quality:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -863,7 +857,6 @@ jobs:
   # Execute native bootstrap installers before tag-only release packaging.
   desktop-installer-source-test:
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -1794,7 +1787,6 @@ jobs:
   # simple-index propagation.
   pypi-dependency-readiness:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 10
     outputs:
       published_wheel_requirements: ${{ steps.dependency_projection.outputs.published_wheel_requirements }}
@@ -1830,7 +1822,6 @@ jobs:
   pypi-installation-test:
     needs: pypi-dependency-readiness
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -2160,7 +2151,6 @@ jobs:
   # must select its compatible managed runtime instead of accepting this JVM.
   official30-real-viewer-smoke:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 60
     env:
       OPENHCS_CP_NATIVE_REFERENCE_ROOT: ${{ github.workspace }}/benchmark/native_refs/official30_scoped_rows
@@ -2405,7 +2395,6 @@ jobs:
   # Run integration tests against wheel installation
   wheel-integration-test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     env:
       OPENHCS_CPU_ONLY: true
       OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE: "1"

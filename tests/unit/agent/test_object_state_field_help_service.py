@@ -11,7 +11,7 @@ from openhcs.agent.dto.functions import (
     SuppliedFromArtifactInput,
     SuppliedFromPrimaryInput,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiObjectStateFieldHelpRequest,
     UiObjectStateFieldSummary,
     UiObjectStateScopeCatalog,
@@ -19,9 +19,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeSummary,
     UiSemanticAddress,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    UiBridgeListObjectStateScopesOperation,
-)
+from formbridge.bridge.service import UiBridgeListObjectStateScopesOperation
 from openhcs.agent.services.object_state_field_help_service import (
     ObjectStateFieldHelpService,
 )

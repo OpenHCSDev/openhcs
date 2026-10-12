@@ -9,16 +9,16 @@ import numpy as np
 from PyQt6.QtWidgets import QSizePolicy
 
 import pyqt_reactive.widgets.system_monitor as system_monitor
-from pyqt_reactive.services.system_metrics_sampler import (
+from formbridge.services.system_metrics_sampler import (
     CpuMetrics,
     MemoryMetrics,
     SystemMetricsSamplerConfig,
 )
-from pyqt_reactive.services.system_monitor_config import (
+from formbridge.services.system_monitor_config import (
     PerformanceMonitorColors,
     PerformanceMonitorConfig,
 )
-from pyqt_reactive.services.system_metrics_sampler import SystemMetrics
+from formbridge.services.system_metrics_sampler import SystemMetrics
 from pyqt_reactive.widgets.system_monitor import (
     SystemMonitorAction,
     SystemMonitorGraphLayout,

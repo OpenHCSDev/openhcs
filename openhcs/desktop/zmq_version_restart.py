@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox
-from pyqt_reactive.services.async_operation_executor import (
-    AsyncOperationExecutorClosedError,
-)
+from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.desktop.restart import DesktopSessionRestart

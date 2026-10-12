@@ -9,10 +9,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QDialog, QTreeWidgetItem
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.zmq_server_info import BaseServerInfo
-from pyqt_reactive.services.zmq_server_scan_service import (
-    EndpointObservationSnapshot,
-)
+from formbridge.services.zmq_server_info import BaseServerInfo
+from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
 from pyqt_reactive.widgets import StatusState
 from pyqt_reactive.widgets.shared.zmq_server_browser_widget import (
     ZMQServerBrowserWidgetABC,

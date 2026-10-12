@@ -1,6 +1,6 @@
 """Domain change events for process-local custom-function declarations."""
 
-from pyqt_reactive.weak_events import WeakCallbackEvent
+from formbridge.weak_events import WeakCallbackEvent
 
 
 class CustomFunctionChangedEvent(WeakCallbackEvent[[]]):

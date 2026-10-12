@@ -14,7 +14,7 @@ def test_parameter_help_content_uses_parameter_window_not_docstring_mirror(
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
     from PyQt6.QtWidgets import QApplication
-    from pyqt_reactive.services.help_document import HelpDocumentFormat
+    from formbridge.services.help_document import HelpDocumentFormat
     from pyqt_reactive.widgets.help_document_browser import HelpDocumentBrowser
     from pyqt_reactive.windows.help_window_manager import (
         HELP_WINDOW_DIALOG_MARGIN,
@@ -146,9 +146,7 @@ def test_callable_parameter_popup_uses_wrapper_owned_descriptions(
 
 def test_callable_popup_projection_has_no_parameter_name_dispatch() -> None:
     import openhcs  # noqa: F401 - activates source-checkout externals first
-    from pyqt_reactive.services.parameter_help_service import (
-        parameter_description_from_target,
-    )
+    from formbridge.services.parameter_help_service import parameter_description_from_target
 
     source = inspect.getsource(parameter_description_from_target)
     tree = ast.parse(source)
@@ -249,7 +247,7 @@ def test_help_context_routes_parameter_help_with_function_target(monkeypatch) ->
 def test_dataclass_help_uses_source_field_docs_instead_of_signature() -> None:
     import openhcs  # noqa: F401 - activates source-checkout externals first
     from openhcs.core.config import LazyPathPlanningConfig, PathPlanningConfig
-    from pyqt_reactive.services.parameter_help_service import (
+    from formbridge.services.parameter_help_service import (
         docstring_info_for_target,
         resolved_parameter_description,
     )
@@ -293,7 +291,7 @@ def test_nested_dataclass_form_uses_nested_dataclass_help_target(
         ParameterFormManager,
     )
     from pyqt_reactive.theming import ColorScheme
-    from pyqt_reactive.services.parameter_help_service import source_dataclass_type
+    from formbridge.services.parameter_help_service import source_dataclass_type
 
     app = QApplication.instance() or QApplication([])
     manager = ParameterFormManager(

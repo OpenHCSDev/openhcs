@@ -2,11 +2,9 @@ from dataclasses import dataclass
 
 import pytest
 
-from openhcs.agent.dto.ui_bridge import UiObjectStateScopeListRequest
+from formbridge.bridge.dto import UiObjectStateScopeListRequest
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from openhcs.pyqt_gui.services.ui_bridge_object_state import (
-    ObjectStateScopeProjectionService,
-)
+from formbridge.bridge.object_state import ObjectStateScopeProjectionService
 
 
 def preview_test_callable(image, sigma: float = 1.0):

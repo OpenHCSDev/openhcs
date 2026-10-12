@@ -5,12 +5,10 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from pyqt_reactive.protocols import register_codegen_provider
-from pyqt_reactive.services.function_pattern_code_document import (
-    FunctionPatternCodeDocumentService,
-)
+from formbridge.protocols.codegen_provider import register_codegen_provider
+from formbridge.services.function_pattern_code_document import FunctionPatternCodeDocumentService
 
-from pyqt_reactive.core.path_cache import PathCacheKey
+from formbridge.core.path_cache import PathCacheKey
 
 import openhcs.pyqt_gui.widgets.plate_manager  # noqa: F401 - declares its dialog context
 from openhcs.core.steps.function_step import FunctionStep

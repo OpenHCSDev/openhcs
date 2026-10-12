@@ -5,9 +5,10 @@ from __future__ import annotations
 import hashlib
 from dataclasses import replace
 
-from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.selection import AllItems, SelectedItems, SelectionScope
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.bridge.dto import (
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
@@ -15,9 +16,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
-    UiLiveMeasurementEntryState,
-    UiLiveMeasurementsState,
-    UiPlateManagerState,
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
     UiLiveOverviewSection,
@@ -27,11 +25,16 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceSummary,
     UiMutationReceipt,
 )
+from openhcs.agent.dto.ui_bridge import (
+    UiLiveMeasurementEntryState,
+    UiLiveMeasurementsState,
+    UiPlateManagerState,
+)
 from openhcs.agent.ui_bridge_identities import (
-    PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
-    PlateManagerOrchestratorCodeDocumentIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
+    DatasetLiveMeasurementsStateSurfaceIdentity,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+    DatasetListWidgetIdentity,
 )
 from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
@@ -42,13 +45,12 @@ from openhcs.authoring.session.dataset_document import (
 )
 from openhcs.authoring.session.views import DatasetListView
 from pyqt_reactive.services.scope_color_service import ScopeColorService
+from formbridge.bridge.in_process import UiCodeDocumentApplyLabel, UiCodeDocumentValidationError
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
-    UiCodeDocumentApplyLabel,
     UiCodeDocumentExecutionService,
     UiCodeDocumentSourcePolicy,
-    UiCodeDocumentValidationError,
 )
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     APPLY_TIME_TRAVEL_OPT_IN_GUARD,
     CONFIRMATION_REQUIRED_GUARD,
     STALE_CODE_DOCUMENT_REVISION_ERROR,
@@ -63,10 +65,7 @@ from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     state_surface_declaration_for_identity,
     state_surface_ids_for_action,
 )
-from openhcs.pyqt_gui.services.ui_bridge_registry import (
-    UiBridgeProviderSetABC,
-    UiBridgeRegistrationContext,
-)
+from formbridge.bridge.registry import UiBridgeProviderSetABC, UiBridgeRegistrationContext
 from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
     SessionOperationActionProvider,
 )
@@ -80,13 +79,13 @@ PLATE_MANAGER_ACTIONS_TITLE = "Plate manager actions"
 PYTHON_MIME_TYPE = "text/x-python"
 
 PLATE_MANAGER_ORCHESTRATOR_IDENTITY = UiCodeDocumentProviderIdentity.from_declaration(
-    PlateManagerOrchestratorCodeDocumentIdentity,
+    DatasetListCodeDocumentIdentity,
     title=ORCHESTRATOR_DOCUMENT_TITLE,
 )
 PLATE_MANAGER_STATE_DECLARATION: UiOwnedStateSurfaceDeclaration = (
     state_surface_declaration_for_identity(
         PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS,
-        PlateManagerStateSurfaceIdentityDeclaration,
+        DatasetListStateSurfaceIdentity,
     )
 )
 PLATE_MANAGER_STATE_IDENTITY = UiStateSurfaceProviderIdentity.from_owner(
@@ -96,7 +95,7 @@ PLATE_MANAGER_STATE_IDENTITY = UiStateSurfaceProviderIdentity.from_owner(
 LIVE_MEASUREMENTS_STATE_DECLARATION: UiOwnedStateSurfaceDeclaration = (
     state_surface_declaration_for_identity(
         PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS,
-        PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
+        DatasetLiveMeasurementsStateSurfaceIdentity,
     )
 )
 LIVE_MEASUREMENTS_STATE_IDENTITY = UiStateSurfaceProviderIdentity.from_owner(
@@ -105,20 +104,20 @@ LIVE_MEASUREMENTS_STATE_IDENTITY = UiStateSurfaceProviderIdentity.from_owner(
 )
 PLATE_MANAGER_ACTION_PROVIDER_IDENTITY = (
     UiActionProviderIdentity.from_widget_declaration(
-        PlateManagerWidgetIdentity,
+        DatasetListWidgetIdentity,
         title=PLATE_MANAGER_ACTIONS_TITLE,
     )
 )
 PLATE_MANAGER_STATE_SURFACE_ID = PLATE_MANAGER_STATE_DECLARATION.surface_id
 PLATE_MANAGER_ACTION_STATE_SURFACES = (PLATE_MANAGER_STATE_SURFACE_ID,)
 PLATE_MANAGER_CODE_DOCUMENT_ID = (
-    PlateManagerOrchestratorCodeDocumentIdentity.require_value()
+    DatasetListCodeDocumentIdentity.require_value()
 )
 
 class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
     """Register all PlateManager surfaces with a UI bridge registry."""
 
-    registry_key = PlateManagerWidgetIdentity.require_value()
+    registry_key = DatasetListWidgetIdentity.require_value()
 
     def __init__(self, manager, *, execution_service=None) -> None:
         self._manager = manager
@@ -529,7 +528,7 @@ class PlateManagerStateSurfaceProvider(
             detail=cls._overview_row_detail(row),
             severity=cls._overview_row_severity(row).value,
             source_surface_id=PLATE_MANAGER_STATE_SURFACE_ID,
-            source_widget_id=PlateManagerWidgetIdentity.require_value(),
+            source_widget_id=DatasetListWidgetIdentity.require_value(),
         )
 
     @staticmethod

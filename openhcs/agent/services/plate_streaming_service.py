@@ -16,24 +16,22 @@ from polystore.streaming.identity import (
 )
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from python_introspect import JsonObject
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
     PlateFileStreamResult,
     PlatePathInspectionRequest,
 )
-from openhcs.agent.dto.ui_bridge import UiBridgeConnectionSpec
+from formbridge.bridge.dto import UiBridgeConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowStateResult
 from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionContext,
     PlateInspectionFileQueryProjection,
     PlateInspectionService,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    UiBridgeService,
-)
+from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC, UiBridgeService
 from openhcs.constants import Backend
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (

@@ -38,9 +38,9 @@ from openhcs.agent.capabilities import (
     LocalCapabilitySurfaceProfile,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import AgentCliRequest, AgentError, AgentResultEnvelope
+from formbridge.contracts import AgentCliRequest, AgentError, AgentResultEnvelope
 from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     AllFields,
     DefaultDiffFields,
     DirtyFields,
@@ -51,25 +51,20 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationStatus,
     UiBridgeOperationWaitRequest,
     UiObjectStateFieldFilter,
+    UiStateSurfaceDocument,
+    UiStateSurfaceRequest,
+)
+from openhcs.agent.dto.ui_bridge import (
     UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
     UiSelectedPlateWorkflowResult,
-    UiStateSurfaceDocument,
-    UiStateSurfaceRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.runtime_platform import AgentRuntimePlatform
-from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
-from openhcs.constants.constants import (
-    OrchestratorCompileFailed,
-    OrchestratorExecFailed,
-    OrchestratorInitFailed,
-    OrchestratorState,
-)
+from formbridge.runtime_platform import AgentRuntimePlatform
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 from openhcs.core.execution_state import (
     ManagerExecutionState,
-    TerminalExecutionStatus,
 )
 from openhcs.core.native_threading import native_thread_count_environment_keys
 from openhcs.core.plate_file_inventory import ALL_PLATE_FILE_KINDS
@@ -83,6 +78,8 @@ from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.axes import AxisFamily
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import DatasetWorkflowOperation
 
 if TYPE_CHECKING:
     from mcp.types import ProgressNotification
@@ -341,7 +338,7 @@ class McpDevServerSpec:
                 additional_keys=(
                     *self.mcp_environment_keys,
                     *AgentPathPolicy.environment_keys(),
-                    *UiBridgeDescriptorEnvironment.child_process_environment_keys(),
+                    *OpenHCSUiBridgeApplication.descriptor_environment_keys(),
                     *UIConfigCacheEnvironment.child_process_environment_keys(),
                     *OpenHCSProcessEnvironment.child_process_environment_keys(),
                     *native_thread_count_environment_keys(),
@@ -552,91 +549,24 @@ class McpDevToolResult:
         )
 
 
-class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
-    """Registered terminal-state criterion for one selected workflow kind."""
-
-    __registry__: ClassVar[
-        dict[UiSelectedPlateWorkflowKind, type["WorkflowTerminalStateCriterion"]]
-    ] = {}
-    __registry_key__ = "workflow"
-    __skip_if_no_key__ = True
-
-    workflow: ClassVar[UiSelectedPlateWorkflowKind]
-    failed_orchestrator_states: ClassVar[tuple[type[OrchestratorState], ...]] = ()
-    terminal_state_is_idempotent: ClassVar[bool] = False
-
-    @classmethod
-    def for_workflow(
-        cls,
-        workflow: UiSelectedPlateWorkflowKind,
-    ) -> "WorkflowTerminalStateCriterion":
-        return cls.__registry__[workflow]()
-
-    @abstractmethod
-    def terminal_for_row(self, row: DatasetRowState) -> bool:
-        """Return whether this workflow has reached its terminal row state."""
-
-    def failed_for_row(self, row: DatasetRowState) -> bool:
-        """Return whether this workflow reached a failed terminal row state."""
-        terminal_status = terminal_execution_status(row.terminal_status)
-        if terminal_status is not None and terminal_status.counts_as_failed:
-            return True
-
-        row_orchestrator_state = parse_orchestrator_state(row.orchestrator_state)
-        return (
-            row_orchestrator_state is not None
-            and row_orchestrator_state in self.failed_orchestrator_states
-        )
-
-
-class InitWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
-    workflow = UiSelectedPlateWorkflowKind.INIT
-    failed_orchestrator_states = (OrchestratorInitFailed,)
-    terminal_state_is_idempotent = True
-
-    def terminal_for_row(self, row: DatasetRowState) -> bool:
-        return row.init_pending is False and row.initialized is True
-
-
-class CompileWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
-    workflow = UiSelectedPlateWorkflowKind.COMPILE
-    failed_orchestrator_states = (OrchestratorCompileFailed,)
-
-    def terminal_for_row(self, row: DatasetRowState) -> bool:
-        return row.compile_pending is False and row.compiled is True
-
-
-class RunWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
-    workflow = UiSelectedPlateWorkflowKind.RUN
-    failed_orchestrator_states = (OrchestratorExecFailed,)
-
-    def terminal_for_row(self, row: DatasetRowState) -> bool:
-        return (
-            row.execution_active is False
-            and row.queue_position is None
-            and row.terminal_status is not None
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class WorkflowStatePollPolicy:
-    """Terminal-state policy for one selected PlateManager workflow."""
+    """Terminal-state policy for one selected dataset workflow step."""
 
-    criterion: WorkflowTerminalStateCriterion
+    operation: type[DatasetWorkflowOperation]
 
     @classmethod
     def from_workflow_text(cls, workflow: str) -> "WorkflowStatePollPolicy":
-        return cls(
-            criterion=WorkflowTerminalStateCriterion.for_workflow(
-                UiSelectedPlateWorkflowKind(workflow)
-            )
-        )
+        operation = SessionOperation.named(UiSelectedPlateWorkflowKind(workflow).value)
+        if not issubclass(operation, DatasetWorkflowOperation):
+            raise TypeError(f"{workflow!r} is not a dataset workflow step.")
+        return cls(operation=operation)
 
     def terminal_for_row(self, row: DatasetRowState) -> bool:
-        return self.criterion.terminal_for_row(row)
+        return self.operation.terminal_for_row(row)
 
     def failed_for_row(self, row: DatasetRowState) -> bool:
-        return self.criterion.failed_for_row(row)
+        return self.operation.failed_for_row(row)
 
     def can_evaluate(
         self,
@@ -648,7 +578,7 @@ class WorkflowStatePollPolicy:
         return (
             baseline is None
             or baseline.changed_by(result)
-            or self.criterion.terminal_state_is_idempotent
+            or self.operation.terminal_state_is_idempotent
         )
 
 
@@ -2472,25 +2402,6 @@ def workflow_poll_target_rows(
     if not target_scope_ids:
         return state.rows
     return tuple(row for row in state.rows if row.scope_id in target_scope_ids)
-
-
-def terminal_execution_status(
-    value: str | None,
-) -> type[TerminalExecutionStatus] | None:
-    if value is None:
-        return None
-    try:
-        return TerminalExecutionStatus.named(value)
-    except ValueError:
-        return None
-
-
-def parse_orchestrator_state(
-    value: str | None,
-) -> type[OrchestratorState] | None:
-    if value is None:
-        return None
-    return OrchestratorState.named(value)
 
 
 def workflow_poll_summary_result(

@@ -482,7 +482,7 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
                     emit_signal=False,
                 )
             except Exception as error:
-                from openhcs.agent.dto.common import AgentError
+                from formbridge.contracts import AgentError
                 # Native receipt is already confirmed; do not erase it on local failure.
                 return replace(result, errors=(AgentError.from_exception(
                     "custom_function_local_projection_failed", error,

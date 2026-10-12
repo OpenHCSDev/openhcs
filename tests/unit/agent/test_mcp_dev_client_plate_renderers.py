@@ -11,7 +11,8 @@ from python_introspect import to_jsonable
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import (
     PlateFileQueryRecordSummary,

@@ -261,7 +261,7 @@ def test_removed_ui_config_and_lifecycle_mirrors_do_not_recur() -> None:
         / "config_cache_adapter.py"
     ).exists()
     bridge_source = (
-        repository_root / "openhcs" / "pyqt_gui" / "services" / "ui_bridge_server.py"
+        repository_root / "external" / "formbridge" / "src" / "formbridge" / "bridge" / "server.py"
     ).read_text()
     assert "DEFAULT_UI_BRIDGE_HOST" not in bridge_source
     assert "DEFAULT_UI_BRIDGE_TRANSPORT" not in bridge_source

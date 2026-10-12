@@ -6109,7 +6109,7 @@ class NapariScreenshotControlAction(
     @staticmethod
     def capture_spec(message):
         from python_introspect import validate_annotated_dataclass
-        from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+        from formbridge.services.window_snapshot import WindowSnapshotCaptureSpec
 
         capture_spec = message.get(ViewerControlResponseField.PAYLOAD.value)
         if not isinstance(capture_spec, WindowSnapshotCaptureSpec):
