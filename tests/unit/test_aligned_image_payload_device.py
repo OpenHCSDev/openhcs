@@ -1,3 +1,5 @@
+from arraybridge.devices import HOST
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
@@ -233,7 +235,7 @@ def test_independent_cohort_copy_retains_nested_named_bundle_domains():
     context = AlignedImageSliceContext.main_flow("Canonical")
     named = ImageOutputBundle((payload,), (context,))
     nested = AlignedImageStack((named,))
-    copied = (nested).copied(memory_type="numpy", device_id=None,)
+    copied = (nested).copied(ArrayPlacement(MemoryType.NUMPY.library, HOST))
     assert type(copied) is AlignedImageStack
     assert type(copied.slices[0]) is ImageOutputBundle
     assert copied.slices[0].slice_contexts == (context,)

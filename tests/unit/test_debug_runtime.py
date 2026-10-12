@@ -13,7 +13,7 @@ import pytest
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.alias_property import AliasProperty
 
-from openhcs.constants.constants import MEMORY_TYPE_NUMPY
+from arraybridge import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
@@ -270,8 +270,8 @@ class DebugRuntimeFixture:
         if resolved_contract is None:
             resolved_contract = replace(
                 CallableContract.from_callable(func),
-                input_memory_type=MEMORY_TYPE_NUMPY,
-                output_memory_type=MEMORY_TYPE_NUMPY,
+                input_memory_type=MemoryType.NUMPY.value,
+                output_memory_type=MemoryType.NUMPY.value,
                 processing_contract=Pure3DContract,
                 runtime_adapter=runtime_adapter,
                 runtime_context_parameter=runtime_context_parameter,
@@ -332,7 +332,7 @@ class DebugRuntimeFixture:
             step_scope_id="plate::functionstep_3",
             step_name="debuggable",
             axis_id=DebugRuntimeFixture.AXIS_ID,
-            input_memory_type=MEMORY_TYPE_NUMPY,
+            input_memory_type=MemoryType.NUMPY.value,
             source_binding_plan=CompiledSourceBindingPlan(),
             variable_components=(),
             execution_group_scope=UngroupedScope(),
@@ -1060,7 +1060,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
         func=DebugRuntimeFixture.projection_mismatch,
         function_name="correct_illumination_calculate",
         module_name="CorrectIlluminationCalculate",
-        input_memory_type=MEMORY_TYPE_NUMPY, output_memory_type=MEMORY_TYPE_NUMPY, runtime_adapter=runtime_adapter, processing_contract=Pure2DContract, runtime_image_execution_mode=FullStackExecution,
+        input_memory_type=MemoryType.NUMPY.value, output_memory_type=MemoryType.NUMPY.value, runtime_adapter=runtime_adapter, processing_contract=Pure2DContract, runtime_image_execution_mode=FullStackExecution,
     )
     image = ImagePayloadMetadata(
         source_image_names=("OrigStain1", "OrigStain2"),

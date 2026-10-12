@@ -494,7 +494,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         # CPU-only mode excludes GPU framework declarations from the registry
         # surface; the GPU leg admits itself through the same process
         # admission authority the registry consults before skipping.
-        if OpenHCSProcessEnvironment.cpu_only_mode():
+        if OpenHCSProcessEnvironment.accelerators_excluded():
             pytest.skip("CPU-only mode excludes GPU framework declarations")
         cp = pytest.importorskip("cupy")
         from cupy_backends.cuda.libs import nvrtc

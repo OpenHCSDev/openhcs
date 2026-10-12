@@ -1,5 +1,7 @@
 """Whole image domains survive the producer/cache/next-load handoff."""
 
+from arraybridge.devices import HOST
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
@@ -9,7 +11,7 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.constants.constants import MEMORY_TYPE_NUMPY
+from arraybridge import MemoryType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
     UngroupedScope,
@@ -47,8 +49,8 @@ def _runtime():
             step_index=0,
             step_name="WholeImage",
             axis_id="A01",
-            output_memory_type=MEMORY_TYPE_NUMPY,
-            input_memory_type=MEMORY_TYPE_NUMPY,
+            output_memory_type=MemoryType.NUMPY.value,
+            input_memory_type=MemoryType.NUMPY.value,
             variable_components=(),
             artifact_inputs={},
             artifact_outputs={},
@@ -83,7 +85,7 @@ def test_opaque_whole_image_is_copied_without_a_new_execution_axis(shape, channe
     )
     assert len(projected) == 1
     assert projected[0][0] is payload
-    cached = payload.copied(memory_type=MEMORY_TYPE_NUMPY, device_id=None)
+    cached = payload.copied(ArrayPlacement(MemoryType.NUMPY.library, HOST))
     assert cached.data.shape == shape
     assert cached.metadata == metadata
     np.testing.assert_array_equal(cached.data, pixels)
@@ -120,7 +122,7 @@ def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
     value = (ImageOutputBundle if named else AlignedImageStack)((payload,), (context,))
     projected = _runtime()._project_output_slices(value, ["source.tif"])
     stack_payload = value.copy_projected_output_stack(
-        projected, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+        projected, ArrayPlacement(MemoryType.NUMPY.library, HOST)
     )
     if named and axis is not RuntimeSlicePlaneAxis:
         expected_shape, expected_axis = shape, axis
@@ -260,7 +262,7 @@ def test_mixed_named_outputs_retain_each_original_axis_before_projection(runtime
     bundle = ImageOutputBundle((planes, volume), contexts)
     projected = _runtime()._project_output_slices(bundle, [])
     assert bundle.copy_projected_output_stack(
-        projected, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+        projected, ArrayPlacement(MemoryType.NUMPY.library, HOST)
     ) is None
     assert [bundle.plane_axis_for_output_context(context) for _payload, context in projected] == [RuntimeSlicePlaneAxis] * runtime_count + [NoPlaneAxis]
 
@@ -366,14 +368,14 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     # must invalidate that cache rather than leave a false joint runtime domain.
     old_bundle = ImageOutputBundle((planes, declared_metadata.payload_with(opaque_pixels[None])), contexts)
     old_records = producer._save_outputs(old_bundle, [source, source])
-    assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in old_records), memory_type=MEMORY_TYPE_NUMPY) is not None
+    assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in old_records), memory_type=MemoryType.NUMPY.value) is not None
     bundle = ImageOutputBundle((planes, opaque), contexts)
     records = producer._save_outputs(bundle, [source, source])
     manifest = step_output_manifest(context)
     manifest.record_outputs(plan, records)
     assert tuple(r.output_path for r in records) == tuple(r.output_path for r in old_records)
     assert [r.main_flow_plane_axis for r in records] == [RuntimeSlicePlaneAxis, NoPlaneAxis]
-    assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in records), memory_type=MEMORY_TYPE_NUMPY) is None
+    assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in records), memory_type=MemoryType.NUMPY.value) is None
 
     def consumer_for(compiled):
         consumer_plan = replace(plan, step_index=1, step_scope_id="mixed-consumer", input_dir=tmp_path,
@@ -400,7 +402,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
             context.runtime_image_stack_cache.clear()
         else:
             selected_path = next(r.output_path for r in records if r.producer_identity.output_key == name)
-            context.runtime_image_stack_cache.store((selected_path,), memory_type=MEMORY_TYPE_NUMPY, stack=actual)
+            context.runtime_image_stack_cache.store((selected_path,), memory_type=MemoryType.NUMPY.value, stack=actual)
         repeated = selected.load_input_stack()[1]
         np.testing.assert_array_equal(repeated.data, expected)
         assert repeated.metadata.plane_axis is axis
@@ -412,7 +414,7 @@ def test_multiple_unprojected_named_binding_domains_fail_existing_bundle_grammar
         np.ones((1, 4, 5), dtype=np.float32)) for _ in contexts)
     with pytest.raises(ValueError, match="plane axis to be projected"):
         bundle = ImageOutputBundle(payloads, contexts)
-        bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), memory_type=MEMORY_TYPE_NUMPY, device_id=None)
+        bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), ArrayPlacement(MemoryType.NUMPY.library, HOST))
 
 
 def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
@@ -425,7 +427,7 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
         np.ones((4, 5), dtype=np.float32) * i, mask)
         for i, (name, mask) in enumerate(zip(("First", "Second"), (first_mask, second_mask), strict=True)))
     bundle = ImageOutputBundle(payloads, contexts)
-    stack_payload = bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), memory_type=MEMORY_TYPE_NUMPY, device_id=None)
+    stack_payload = bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), ArrayPlacement(MemoryType.NUMPY.library, HOST))
     expected = ImagePayloadBundleContext.from_payloads(payloads).compose()
     assert stack_payload.metadata.plane_axis is SourceBindingPlaneAxis
     np.testing.assert_array_equal(stack_payload.data, expected.data)

@@ -73,7 +73,7 @@ def pytest_sessionstart(session):
 
 
 # Conditionally import pytest-qt only when not in CPU-only mode
-CPU_ONLY_MODE = OpenHCSProcessEnvironment.cpu_only_mode()
+CPU_ONLY_MODE = OpenHCSProcessEnvironment.accelerators_excluded()
 if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
 else:

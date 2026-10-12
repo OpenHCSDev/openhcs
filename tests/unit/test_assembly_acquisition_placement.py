@@ -123,8 +123,8 @@ def test_cpu_and_gpu_share_the_same_site_contraction_contract():
     # CPU-only mode excludes GPU framework declarations from the registry
     # surface; the comparison admits the cupy declaration through the same
     # process-admission authority the registry itself consults.
-    if MemoryType.CUPY.is_installed() and not (
-        OpenHCSProcessEnvironment.cpu_only_mode()
+    if MemoryType.CUPY.library.is_installed() and not (
+        OpenHCSProcessEnvironment.accelerators_excluded()
     ):
         functions.append(assemble_stack_cupy)
     for function in functions:

@@ -40,7 +40,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.constants.constants import MEMORY_TYPE_NUMPY
+from arraybridge import MemoryType
 from openhcs.core.memory import numpy
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -138,7 +138,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         step_scope_id="plate::functionstep_3",
         step_name="metadata-consumer",
         axis_id="A01",
-        input_memory_type=MEMORY_TYPE_NUMPY,
+        input_memory_type=MemoryType.NUMPY.value,
         source_binding_plan=CompiledSourceBindingPlan(),
         variable_components=(),
         execution_group_scope=UngroupedScope(),
@@ -177,7 +177,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         scope,
         invocation,
         main_data_arg=ImagePayloadMetadata().payload_with(source),
-        source_memory_type=MEMORY_TYPE_NUMPY,
+        source_memory_type=MemoryType.NUMPY.value,
         declared_source_bindings=scope.execution_plan.source_binding_plan,
     ).execute()
     np.testing.assert_array_equal(result.data, source)

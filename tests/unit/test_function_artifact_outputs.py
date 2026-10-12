@@ -1,3 +1,5 @@
+from arraybridge.devices import HOST
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
@@ -11,7 +13,7 @@ import numpy as np
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.constants.constants import MEMORY_TYPE_NUMPY
+from arraybridge import MemoryType
 from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
@@ -219,7 +221,7 @@ def _execute_function_core(request: CoreExecutionRequest):
     declared_contract = compiled_invocation.contract
     contract = replace(
         declared_contract,
-        input_memory_type=MEMORY_TYPE_NUMPY, output_memory_type=MEMORY_TYPE_NUMPY, processing_contract=request.processing_contract,
+        input_memory_type=MemoryType.NUMPY.value, output_memory_type=MemoryType.NUMPY.value, processing_contract=request.processing_contract,
     )
     invocation = replace(
         compiled_invocation,
@@ -231,7 +233,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         step_scope_id="test::function_step",
         step_name="test",
         axis_id=request.context.axis_id,
-        input_memory_type=MEMORY_TYPE_NUMPY,
+        input_memory_type=MemoryType.NUMPY.value,
         source_binding_plan=CompiledSourceBindingPlan(),
         variable_components=(),
         execution_group_scope=request.execution_group_scope,
@@ -267,7 +269,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         runtime_scope,
         invocation,
         main_data_arg=request.main_data_arg,
-        source_memory_type=MEMORY_TYPE_NUMPY,
+        source_memory_type=MemoryType.NUMPY.value,
         declared_source_bindings=runtime_scope.execution_plan.source_binding_plan,
     ).execute()
 
@@ -1748,7 +1750,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             step_index=0,
             step_name="RGB output",
             axis_id="A01",
-            output_memory_type=MEMORY_TYPE_NUMPY,
+            output_memory_type=MemoryType.NUMPY.value,
             artifact_inputs={},
             execution_group_scope=UngroupedScope(),
             artifact_outputs={
@@ -1773,8 +1775,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
         ),
     )
 
-    stack_payload = (scalar_output).copied(memory_type=MEMORY_TYPE_NUMPY,
-        device_id=None,)
+    stack_payload = (scalar_output).copied(ArrayPlacement(MemoryType.NUMPY.library, HOST))
     assert stack_payload.data.shape == (2, 3, 3)
     stack_metadata = stack_payload.metadata
     assert stack_metadata.plane_axis.unstacked
@@ -1796,7 +1797,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
             step_index=0,
             step_name="DeclaredOutput",
             axis_id="A01",
-            output_memory_type=MEMORY_TYPE_NUMPY,
+            output_memory_type=MemoryType.NUMPY.value,
             artifact_inputs={},
             execution_group_scope=UngroupedScope(),
             artifact_outputs={},
@@ -1847,7 +1848,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
             step_index=0,
             step_name="DeclaredObjectLabels",
             axis_id="A01",
-            output_memory_type=MEMORY_TYPE_NUMPY,
+            output_memory_type=MemoryType.NUMPY.value,
             artifact_inputs={},
             execution_group_scope=UngroupedScope(),
             artifact_outputs={},
@@ -2941,7 +2942,7 @@ def _declared_source_executor(
         group_key=None,
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=object(),
-        source_memory_type=MEMORY_TYPE_NUMPY,
+        source_memory_type=MemoryType.NUMPY.value,
     )
 
 

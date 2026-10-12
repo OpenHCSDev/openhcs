@@ -1,5 +1,8 @@
 """Lightweight ownership/payload checks; these do not execute segmentation."""
 
+from arraybridge import MemoryType
+from arraybridge.devices import HOST
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import ast
 from openhcs.interop.cellprofiler.object_label_variants import (
@@ -241,7 +244,7 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     reloaded = pickle.loads(pickle.dumps(value))
     assert np.shares_memory(reloaded.slices[0].data, reloaded.compose().data)
     assert np.shares_memory(reloaded.slices[0].mask, reloaded.compose().mask)
-    independent = value.copied(memory_type="numpy", device_id=None)
+    independent = value.copied(ArrayPlacement(MemoryType.NUMPY.library, HOST))
     assert not np.shares_memory(independent.slices[0].data, composed.data)
     assert not np.shares_memory(independent.slices[0].mask, composed.mask)
 
@@ -269,7 +272,7 @@ def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, sp
     )
     expected = np.stack(pixels)
     expected_mask = first_mask.copy() if shared_mask and spatial_mask else np.stack(masks)
-    copied = source.copied(memory_type="numpy", device_id=None)
+    copied = source.copied(ArrayPlacement(MemoryType.NUMPY.library, HOST))
     assert source._composed_payload is None
     canonical = copied.compose()
     assert copied.compose() is canonical

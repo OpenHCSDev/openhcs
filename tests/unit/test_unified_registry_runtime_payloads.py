@@ -23,7 +23,7 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.memory import MEMORY_TYPE_NUMPY
+from arraybridge import MemoryType
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
@@ -66,7 +66,7 @@ from openhcs.core.payload_axes import PayloadAxes
 
 class MinimalRegistry(LibraryRegistryBase):
     MODULES_TO_SCAN = []
-    MEMORY_TYPE = MEMORY_TYPE_NUMPY
+    MEMORY_TYPE = MemoryType.NUMPY.value
     FLOAT_DTYPE = np.float32
 
     def get_library_version(self) -> str:
@@ -211,7 +211,7 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
         seen_paths.append(image.metadata.source_path)
         return image.with_pixels(image.data + 1)
 
-    add_one.output_memory_type = MEMORY_TYPE_NUMPY
+    add_one.output_memory_type = MemoryType.NUMPY.value
 
     result = Pure2DContract.execute(
         LibraryContractCall(add_one, ()),
@@ -338,7 +338,7 @@ def test_pure_2d_contract_projects_stack_shaped_kwargs_per_slice() -> None:
         seen_true_indices.append((int(true_y), int(true_x)))
         return image.with_pixels(np.where(mask_data, image_data + 100, image_data),)
 
-    apply_mask.output_memory_type = MEMORY_TYPE_NUMPY
+    apply_mask.output_memory_type = MemoryType.NUMPY.value
 
     result = Pure2DContract.execute(
         LibraryContractCall(apply_mask, ()),
@@ -393,7 +393,7 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
         seen_label_shapes.append(labels.labels.shape)
         return image
 
-    consume_labels.output_memory_type = MEMORY_TYPE_NUMPY
+    consume_labels.output_memory_type = MemoryType.NUMPY.value
 
     result = Pure2DContract.execute(
         LibraryContractCall(consume_labels, ()),

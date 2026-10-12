@@ -11,7 +11,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImageOutputBundle,
 )
-from openhcs.core.memory import MemoryType
+from arraybridge import MemoryType
 from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from tests.context_support import (

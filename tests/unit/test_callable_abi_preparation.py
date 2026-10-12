@@ -446,7 +446,7 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
         {},
         {},
     ).default_group.invocations[0]
-    placed = invocation.convert_input(source, "numpy")
+    placed = invocation.convert_input(source)
     invocation.main_flow_call_argument(placed)
     placed.data
     placed.mask
@@ -475,7 +475,7 @@ def test_compiled_input_reuses_produced_stack_realization_without_copy():
         {},
         {},
     ).default_group.invocations[0]
-    placed = invocation.convert_input(source, "numpy")
-    assert invocation.convert_input(source, "numpy") is placed
+    placed = invocation.convert_input(source)
+    assert invocation.convert_input(source) is placed
     assert placed.data is source.data
     assert np.shares_memory(source.slices[0], placed.data)

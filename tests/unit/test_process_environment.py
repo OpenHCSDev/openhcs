@@ -68,7 +68,7 @@ def test_process_environment_resolves_boolean_modes() -> None:
         OpenHCSProcessEnvironment.use_threading_key: "on",
     }
 
-    assert OpenHCSProcessEnvironment.cpu_only_mode(environment) is True
+    assert OpenHCSProcessEnvironment.accelerators_excluded(environment) is True
     assert OpenHCSProcessEnvironment.headless_mode(environment) is False
     assert OpenHCSProcessEnvironment.use_threading_mode(environment) is True
 
@@ -76,7 +76,7 @@ def test_process_environment_resolves_boolean_modes() -> None:
 def test_cpu_only_mode_projects_gpu_import_policy_to_dependencies() -> None:
     environment = {}
 
-    OpenHCSProcessEnvironment.enable_cpu_only_mode(environment)
+    OpenHCSProcessEnvironment.exclude_accelerators(environment)
 
     assert environment == {
         OpenHCSProcessEnvironment.cpu_only_key: "true",
@@ -93,7 +93,7 @@ def test_subprocess_gpu_suppression_projects_without_enabling_cpu_only() -> None
 
     OpenHCSProcessEnvironment.project_dependency_import_policy(environment)
 
-    assert OpenHCSProcessEnvironment.cpu_only_mode(environment) is False
+    assert OpenHCSProcessEnvironment.accelerators_excluded(environment) is False
     assert environment[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
     assert environment[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
     assert OpenHCSProcessEnvironment.jax_platforms_key not in environment
@@ -101,5 +101,5 @@ def test_subprocess_gpu_suppression_projects_without_enabling_cpu_only() -> None
 
 def test_cpu_only_mode_selects_cpu_even_if_jax_requested_an_accelerator() -> None:
     environment = {OpenHCSProcessEnvironment.jax_platforms_key: "cuda"}
-    OpenHCSProcessEnvironment.enable_cpu_only_mode(environment)
+    OpenHCSProcessEnvironment.exclude_accelerators(environment)
     assert environment[OpenHCSProcessEnvironment.jax_platforms_key] == "cpu"

@@ -460,7 +460,7 @@ def test_no_gpu_launch_uses_cpu_only_authority_without_gpu_setup(monkeypatch) ->
 
     assert result == 0
     assert [event[0] for event in signal_events] == ["installed", "closed"]
-    assert OpenHCSProcessEnvironment.cpu_only_mode() is True
+    assert OpenHCSProcessEnvironment.accelerators_excluded() is True
     assert os.environ[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
     assert os.environ[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
 
