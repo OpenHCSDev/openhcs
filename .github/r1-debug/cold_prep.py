@@ -81,6 +81,12 @@ def main():
     else:
         RegistryService.prepare_in_current_process(status_callback=status)
     status("prepared")
+    for name in filter(None, os.environ.get("R1_FIRST_USE", "").split(",")):
+        from openhcs.core.callable_contract import CallableContract
+
+        used = next(m.func for m in RegistryService._metadata_cache.values() if m.func.__name__ == name)
+        CallableContract.from_prepared_callable(used)
+        status(f"first use prepared {name}")
     with open(out, "w", encoding="utf-8") as handle:
         for wall, cpu, message in rows:
             handle.write(json.dumps({"t": wall, "cpu": cpu, "message": message}) + "\n")

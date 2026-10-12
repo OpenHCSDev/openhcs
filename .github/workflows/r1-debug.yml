@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/r1" && cd "$RUNNER_TEMP/r1"
           sysctl -n machdep.cpu.brand_string hw.ncpu || true
-          R1_NUMBA_EVENTS=1 XDG_CACHE_HOME="$RUNNER_TEMP/r1/a-cache" XDG_CONFIG_HOME="$RUNNER_TEMP/r1/a-config" XDG_DATA_HOME="$RUNNER_TEMP/r1/a-data" \
+          R1_FIRST_USE=create_composite,threshold,identify_primary_objects,watershed_cellprofiler4 R1_NUMBA_EVENTS=1 XDG_CACHE_HOME="$RUNNER_TEMP/r1/a-cache" XDG_CONFIG_HOME="$RUNNER_TEMP/r1/a-config" XDG_DATA_HOME="$RUNNER_TEMP/r1/a-data" \
             python -I "$GITHUB_WORKSPACE/.github/r1-debug/cold_prep.py" "$RUNNER_TEMP/r1/a-cold-serial.jsonl"
 
       - name: C. Second start on warm caches
