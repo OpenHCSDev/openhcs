@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from types import ModuleType
 
 from polystore import cleanup_backend_connections
+from polystore.base import ensure_storage_registry
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
@@ -209,9 +210,10 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
     def _prepare_first_request_state() -> None:
         """Run what the first request would otherwise run once, before the fork.
 
-        Each owner completes its own lazy state: here, the family registries
-        that domains extend. Workers inherit the result.
+        Each owner completes its own lazy state: the storage backend registry
+        and the family registries that domains extend. Workers inherit the result.
         """
+        ensure_storage_registry()
         discover_domain_registries()
 
     def _prepare_worker_resources(self) -> None:
