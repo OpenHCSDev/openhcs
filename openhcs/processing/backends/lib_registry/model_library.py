@@ -554,8 +554,11 @@ class Library:
     def _derive(
         self, name: str, call: Call, outputs: Sequence[Output], main: Pixels | None
     ) -> Callable:
-        controls = call.controls
-        names = ["image", *(control.name for control in controls)]
+        image_control = Control(
+            "image", np.ndarray, inspect.Parameter.empty, "Image stack (planes, Y, X)."
+        )
+        controls = (image_control, *call.controls)
+        names = [control.name for control in controls]
         repeated = sorted({repeat for repeat in names if names.count(repeat) > 1})
         if repeated:
             raise DerivationError(
@@ -565,17 +568,12 @@ class Library:
         signature = inspect.Signature(
             [
                 inspect.Parameter(
-                    "image", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=np.ndarray
-                ),
-                *(
-                    inspect.Parameter(
-                        control.name,
-                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                        default=control.default,
-                        annotation=control.annotation,
-                    )
-                    for control in controls
-                ),
+                    control.name,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=control.default,
+                    annotation=control.annotation,
+                )
+                for control in controls
             ]
         )
         whole_stack = self.one_image_when_set
@@ -617,7 +615,6 @@ class Library:
                 f"{summary} Derived from ``{target.__module__}.{target.__qualname__}``.",
                 "",
                 "Args:",
-                "    image: Image stack (planes, Y, X).",
                 *(f"    {control.name}: {control.text}" for control in controls),
             )
         )
@@ -625,7 +622,7 @@ class Library:
             artifact_outputs(*(output.spec() for output in outputs))(derived),
             contract=Pure3DContract,
             prepare=lambda: call.arguments(
-                {control.name: control.default for control in controls}, None
+                {control.name: control.default for control in call.controls}, None
             ),
         )
 
