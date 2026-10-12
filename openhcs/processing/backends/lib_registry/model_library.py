@@ -716,12 +716,12 @@ class DerivedLibraryRegistry(LibraryRegistryBase):
         return [self.DECLARATION_MODULE]
 
     def cache_source_mtimes(self) -> dict[str, float]:
-        """The derivation and the declaration decide what is discovered."""
+        """The declaration, beside this registry's own sources, decides what is discovered."""
 
         declaration = importlib.util.find_spec(self.DECLARATION_MODULE).origin
         return {
             **super().cache_source_mtimes(),
-            **{str(path): Path(path).stat().st_mtime for path in (__file__, declaration)},
+            declaration: Path(declaration).stat().st_mtime,
         }
 
     @classmethod
