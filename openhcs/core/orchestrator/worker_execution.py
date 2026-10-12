@@ -942,6 +942,7 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
         self._ownership_lock = threading.RLock()
         self._closed = False
         self._next_worker_id = 0
+        self._outdated_process_ids: set[int] = set()
 
     def _start_prepared_worker(self) -> WorkerProcess:
         worker = self.start_worker(f"prepared_{self._next_worker_id}", PrepareWorker())
@@ -961,6 +962,27 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 raise RuntimeError("Prepared worker resources are closed.")
             while len(self.workers) < self._capacity:
                 self._available.append(self._start_prepared_worker())
+
+    def replace_with_current_forks(self) -> None:
+        """Fork the idle workers again; leased ones are replaced on return.
+
+        A worker holds what the server had prepared when it was forked. After
+        the server prepares something more (a function registered while it is
+        serving), new forks inherit it, so no worker prepares or loads it
+        inside an execution.
+        """
+        with self._ownership_lock:
+            if self._closed:
+                return
+            idle, self._available = self._available, []
+            idle_process_ids = {worker.process.pid for worker in idle}
+            self._outdated_process_ids.update(
+                worker.process.pid
+                for worker in self.workers
+                if worker.process.pid not in idle_process_ids
+            )
+            self.release(idle, retire=True)
+            self.prepare()
 
     def acquire(self, worker_count: int) -> list[WorkerProcess]:
         """Transfer process ownership without locking any execution work."""
@@ -986,10 +1008,19 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
     def release(self, workers: list[WorkerProcess], *, retire: bool) -> None:
         """Return clean processes or retire the exact failed/cancelled lease."""
         with self._ownership_lock:
+            replaced = 0
             for worker in workers:
-                if not retire and not self._closed and worker.process.is_alive():
+                outdated = worker.process.pid in self._outdated_process_ids
+                self._outdated_process_ids.discard(worker.process.pid)
+                if (
+                    not retire
+                    and not outdated
+                    and not self._closed
+                    and worker.process.is_alive()
+                ):
                     self._available.append(worker)
                     continue
+                replaced += outdated
                 if worker.process.is_alive():
                     worker.process.terminate()
                 worker.process.join()
@@ -997,6 +1028,8 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 self.workers = [
                     owned for owned in self.workers if owned.process is not worker.process
                 ]
+            if replaced and not self._closed:
+                self.prepare()
 
     def close(self) -> None:
         """Close every process owned by this server preparation."""

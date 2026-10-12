@@ -1297,3 +1297,83 @@ def test_source_retirement_thaws_before_dropping_captured_owners(
         CustomFunctionRuntimeRegistry.prepare_source_once(current, lambda: previous)
     assert calls == ["thaw"]
     assert not RegistryService._startup_heap_frozen
+
+
+def _prepared_source(name: str, body: str) -> str:
+    return (
+        "from openhcs.core.memory import numpy as numpy_function\n"
+        "EVENTS = []\n"
+        "def _prepare() -> None:\n"
+        f"    {body}\n"
+        "@numpy_function(prepare=_prepare)\n"
+        f"def {name}(image):\n"
+        "    return image\n"
+    )
+
+
+@pytest.fixture
+def serving_process(monkeypatch):
+    """A process that prepared its catalogue for serving, as a server does."""
+    from openhcs.core.processing_preparation import CallablePreparation
+
+    monkeypatch.setattr(CallablePreparation, "_serves_prepared_callables", True)
+
+
+def test_serving_process_prepares_a_custom_function_when_it_registers_it(
+    isolated_custom_runtime, serving_process,
+) -> None:
+    """Registration after readiness runs the declared preparation, once."""
+    manager = CustomFunctionManager(create_storage=False)
+    [registered] = manager.register_from_code(
+        _prepared_source("late_probe", "EVENTS.append('prepared')"),
+        clear_caches=False, emit_signal=False,
+    )
+    events = inspect.unwrap(registered).__globals__["EVENTS"]
+    assert events == ["prepared"]
+
+    # Compiling a pipeline that names it has nothing left to prepare.
+    from openhcs.core.function_patterns import normalize_prepared_function_pattern
+
+    normalize_prepared_function_pattern(registered)
+    assert manager.load_all_custom_functions() == 1
+    assert events == ["prepared"]
+
+
+def test_authoring_process_registers_without_preparing(isolated_custom_runtime) -> None:
+    """Only a serving process prepares at registration; an editor does not."""
+    [registered] = CustomFunctionManager(create_storage=False).register_from_code(
+        _prepared_source("authored_probe", "EVENTS.append('prepared')"),
+        clear_caches=False, emit_signal=False,
+    )
+    assert inspect.unwrap(registered).__globals__["EVENTS"] == []
+
+
+def test_failed_preparation_is_a_load_failure_of_that_source_alone(
+    isolated_custom_runtime, serving_process,
+) -> None:
+    """A preparation that raises is listed with file, line and error; others load."""
+    storage_dir = isolated_custom_runtime
+    (storage_dir / "a_unprepared.py").write_text(
+        _prepared_source("a_unprepared", "raise RuntimeError('weights not found')"),
+        encoding="utf-8",
+    )
+    (storage_dir / "b_good.py").write_text(
+        _prepared_source("b_good", "EVENTS.append('prepared')"), encoding="utf-8"
+    )
+    manager = CustomFunctionManager(create_storage=False)
+
+    assert manager.load_all_custom_functions() == 1
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {"b_good"}
+    [failure] = manager.load_failures()
+    assert isinstance(failure, CustomFunctionLoadFailure)
+    assert failure.describe() == (
+        "a_unprepared.py, line 4: Function 'a_unprepared' preparation failed: "
+        "RuntimeError: weights not found"
+    )
+
+    with pytest.raises(ValidationError, match="preparation failed"):
+        manager.register_from_code(
+            _prepared_source("c_unprepared", "raise RuntimeError('no network')"),
+            persist=False, clear_caches=False, emit_signal=False,
+        )
+    assert "c_unprepared" not in CustomFunctionRuntimeRegistry.metadata_by_name()

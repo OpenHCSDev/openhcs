@@ -87,6 +87,7 @@ class PreparationOperation(ABC):
         """Clear core readiness, preserving independently owned kernel caches."""
         with cls._lock:
             cls._completed.clear()
+        CallablePreparation._serves_prepared_callables = False
         AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
 
 
@@ -210,10 +211,27 @@ class CallablePreparation:
     """Project declared operations lazily in their original effect order."""
 
     projection: CallableProjection
+    # True once this process (or the server it was forked from) prepared its
+    # catalogue for serving: from then on a callable is prepared when published.
+    _serves_prepared_callables: ClassVar[bool] = False
 
     @classmethod
     def from_callable(cls, func: Callable[..., object]) -> CallablePreparation:
         return cls(CallableProjection.from_callable(func))
+
+    @classmethod
+    def prepare_published(cls, func: Callable[..., object]) -> None:
+        """Prepare a callable that is published after serving preparation.
+
+        A serving process holds "prepared before usable" for every callable a
+        pipeline can name, so a late publication prepares as part of publishing.
+        Any other process (authoring, a client) prepares nothing here.
+        """
+        if cls._serves_prepared_callables:
+            cls.prepare_for_serving(
+                CallableProjection.from_callable(func).prepare_targets(),
+                lambda _message: None,
+            )
 
     def operations(self) -> Iterator[PreparationOperation]:
         """Read later hook declarations only after preceding operations finish."""
@@ -250,6 +268,7 @@ class CallablePreparation:
         during compilation or execution. Preparing one callable does not.
         """
         preparations = tuple(cls.from_callable(func) for func in callables)
+        CallablePreparation._serves_prepared_callables = True
         for preparation in preparations:
             preparation.prepare()
             status_callback(

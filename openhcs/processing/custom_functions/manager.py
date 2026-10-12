@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from arraybridge import MemoryType
 
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.xdg_paths import get_data_file_path
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -637,7 +638,7 @@ class CustomFunctionManager:
         )
         CustomFunctionSourceNamespace(source, namespace).bind(declaration)
         try:
-            return project_custom_function(
+            metadata = project_custom_function(
                 declaration,
                 declaration_revision=source.content_sha256,
             )
@@ -647,6 +648,19 @@ class CustomFunctionManager:
                 code,
                 declaration_line(code, declaration.__name__),
             ) from exc
+        # In a process that serves execution, loading a source includes its
+        # declared preparation: the function is not published until it ran.
+        try:
+            CallablePreparation.prepare_published(metadata.func)
+        except Exception as exc:
+            raise ValidationError.at_line(
+                f"Function '{declaration.__name__}' preparation failed: "
+                f"{type(exc).__name__}: {exc}",
+                code,
+                failing_source_line(exc, _SOURCE_FILENAME)
+                or declaration_line(code, declaration.__name__),
+            ) from exc
+        return metadata
 
     def _prepare_snapshot(
         self,

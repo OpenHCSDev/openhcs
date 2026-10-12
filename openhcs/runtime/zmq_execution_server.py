@@ -31,6 +31,7 @@ from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.dataset_sources.discovery import discover_domain_registries
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
+from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.runtime_execution_validation import runtime_output_roots
@@ -233,6 +234,11 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
             runner.close()
             raise
         self._prepared_worker_runner = runner
+        # A custom function loaded from now on is prepared in this process
+        # when it is published; workers forked before that do not hold it.
+        self._custom_function_subscription = custom_function_changed.subscribe(
+            runner.replace_with_current_forks
+        )
 
     def stop(self) -> None:
         """Stop transport and every exact process resource owned by this server."""

@@ -134,3 +134,121 @@ def test_preparation_compiles_every_kernel(cold_run_events: list[dict]) -> None:
         "them. Reach each from its owner's preparation, or delete it if nothing "
         "calls it:\n" + "\n".join(unprepared)
     )
+
+
+# --- A resource that is not a Numba kernel: a custom function's preparation ---
+
+PREPARED_RESOURCE = Path(__file__).resolve().parent / "helpers" / "prepared_resource"
+STORED_BEFORE_START = "resource_stored_before_start"
+STORED_WHILE_READY = "resource_stored_while_ready"
+
+
+@pytest.fixture(scope="module")
+def custom_function_events(tmp_path_factory: pytest.TempPathFactory) -> list[dict]:
+    """Two custom functions with a preparation, over one server with fork workers."""
+    root = tmp_path_factory.mktemp("prepared_resource")
+    trace = root / "trace.jsonl"
+    completed = subprocess.run(
+        [sys.executable, str(PREPARED_RESOURCE / "run_custom_function_pipelines.py"), str(root)],
+        cwd=REPOSITORY,
+        env={
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(
+                (str(PREPARED_RESOURCE), str(REPOSITORY), os.environ.get("PYTHONPATH", ""))
+            ),
+            "OPENHCS_PREPARED_RESOURCE_TRACE": str(trace),
+            "NUMBA_CACHE_DIR": str(root / "numba"),
+            "XDG_DATA_HOME": str(root / "data"),
+            "OPENHCS_CPU_ONLY": "1",
+            "QT_QPA_PLATFORM": "offscreen",
+            "DISPLAY": "",
+            "WAYLAND_DISPLAY": "",
+        },
+        capture_output=True,
+        text=True,
+        timeout=1800,
+    )
+    assert completed.returncode == 0, completed.stdout[-2000:] + completed.stderr[-4000:]
+    return sorted(
+        (json.loads(line) for line in trace.read_text().splitlines()),
+        key=lambda event: event["time"],
+    )
+
+
+def _kinds(events: list[dict], kind: str, function: str | None = None) -> list[dict]:
+    return [
+        event
+        for event in events
+        if event["kind"] == kind and function in (None, event["function"])
+    ]
+
+
+def _position(events: list[dict], event: dict) -> int:
+    return next(index for index, other in enumerate(events) if other is event)
+
+
+def test_custom_functions_are_prepared_before_the_server_reports_them_usable(
+    custom_function_events: list[dict],
+) -> None:
+    """Each function is prepared once, by the server, before its readiness report."""
+    events = custom_function_events
+    first_ready, ready_again = _kinds(events, "ready")
+    [stored_while_ready] = _kinds(events, "stored_while_ready")
+    [before_start] = _kinds(events, "prepare", STORED_BEFORE_START)
+    [while_ready] = _kinds(events, "prepare", STORED_WHILE_READY)
+
+    assert _position(events, before_start) < _position(events, first_ready)
+    assert (
+        _position(events, stored_while_ready)
+        < _position(events, while_ready)
+        < _position(events, ready_again)
+    ), "a function stored while the server is ready is prepared when the server learns of it"
+    workers = {event["pid"]: event["parent"] for event in _kinds(events, "call")}
+    assert {before_start["pid"], while_ready["pid"]} == set(workers.values()), (
+        "the server that forks the workers is the process that prepares"
+    )
+
+
+def test_nothing_is_prepared_or_loaded_during_compile_or_execute(
+    custom_function_events: list[dict],
+) -> None:
+    """Counts only: timed windows hold calls, never a preparation or a load."""
+    events = custom_function_events
+    timed: list[dict] = []
+    open_windows = 0
+    for event in events:
+        if event["kind"] in ("compile_start", "execute_start"):
+            open_windows += 1
+        elif event["kind"] in ("compile_end", "execute_end"):
+            open_windows -= 1
+        elif open_windows:
+            timed.append(event)
+    calls = [event for event in timed if event["kind"] == "call"]
+    assert {event["function"] for event in calls} == {
+        STORED_BEFORE_START, STORED_WHILE_READY,
+    }, "the pipelines did not call both functions, so the counter proves nothing"
+    assert len({event["pid"] for event in calls}) >= 2, "expected several worker processes"
+
+    late = [
+        f"{event['kind']} {event['function']} pid {event['pid']}"
+        for event in timed
+        if event["kind"] in ("prepare", "load")
+    ]
+    assert late == [], (
+        "A custom function was prepared or loaded its resource during a timed "
+        "compile or execute:\n" + "\n".join(late)
+    )
+
+
+def test_each_process_holds_exactly_one_load_of_each_resource(
+    custom_function_events: list[dict],
+) -> None:
+    """The server loads once; every worker inherits that one load and adds none."""
+    events = custom_function_events
+    for function in (STORED_BEFORE_START, STORED_WHILE_READY):
+        [prepared] = _kinds(events, "prepare", function)
+        assert [event["pid"] for event in _kinds(events, "load", function)] == [
+            prepared["pid"]
+        ]
+        calls = _kinds(events, "call", function)
+        assert calls and {event["loads"] for event in calls} == {1}
