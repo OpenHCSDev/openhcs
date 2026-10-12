@@ -128,26 +128,9 @@ paper/.current-*
 # Build runs, snapshots and intermediates are local. Main publication artifacts
 # are selected explicitly; do not force-add review history or microscopy dumps.
 paper/build/
+# Generated JSON is ignored by the directory it is written to (the three rules
+# here), never by extension: JSON fixtures, manifests and records are source.
 output/
-*.json
-!examples/*.json
-!paper/figures/cellprofiler_coverage_evidence.json
-!openhcs/resources/installer_contract.json
-!website/assets/agent/cold-start-workflow-record.json
-!website/assets/agent/neurite-outgrowth-workflow-record.json
-!website/assets/gallery/release-media-record.json
-!website/assets/gallery/source-capture-evidence.json
-!docs/source/development/mcp_knowledge_base_manifest.json
-!docs/audits/*.json
-!server.json
-!packaging/codex/openhcs/.mcp.json
-!packaging/codex/openhcs/.codex-plugin/plugin.json
-!packaging/mcpb/openhcs/manifest.json
-!benchmark/manifests/official23_plus_monolayer.json
-!benchmark/manifests/extra_provided_not_in_23_axis1.json
-!benchmark/manifests/official23_plus_extra6_axis1.json
-!benchmark/manifests/annotated_validation_20260915_preparation.json
-!benchmark/native_refs/**/.cellprofiler_benchmark_reference.json
 tests/integration/tests_data/
 
 # Embedded repositories

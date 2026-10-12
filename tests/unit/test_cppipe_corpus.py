@@ -16,6 +16,9 @@ from openhcs.core.config import PipelineConfig, SourceBindingsConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler import import_cellprofiler_pipeline
+from openhcs.interop.cellprofiler.module_artifact_contracts import (
+    UnknownArtifactInput,
+)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 
@@ -128,7 +131,7 @@ def test_in_tree_cppipe_corpus_import_expectations(
     if case.status is not CPPipeCorpusStatus.SUPPORTED:
         assert case.expected_error_substring is not None
         with pytest.raises(
-            KeyError,
+            UnknownArtifactInput,
             match=re.escape(case.expected_error_substring),
         ):
             import_cellprofiler_pipeline(case.cppipe_path)
@@ -187,22 +190,36 @@ def test_in_tree_cppipe_corpus_import_expectations(
     ]
 
 
-def test_cppipe_import_rejects_unknown_module_at_nominal_boundary(
+def test_cppipe_import_keeps_a_module_without_declaration_as_its_own_step(
     tmp_path: Path,
 ) -> None:
     cppipe_path = tmp_path / "unsupported.cppipe"
     cppipe_path.write_text(
         """CellProfiler Pipeline: https://cellprofiler.org
-UnsupportedModule:[module_num:1|enabled:True]
+UnsupportedModule:[module_num:1|variable_revision_number:2|enabled:True]
+    Some setting:Some value
+UnsupportedModule:[module_num:2|enabled:False]
 """,
         encoding="utf-8",
     )
 
+    assert CellProfilerModule.for_module("UnsupportedModule") is None
     with pytest.raises(
         KeyError,
         match="No CellProfiler module declaration is registered",
     ):
-        import_cellprofiler_pipeline(cppipe_path)
+        CellProfilerModule.require_module("UnsupportedModule")
+
+    (step,), _pipeline_config = import_cellprofiler_pipeline(cppipe_path)
+
+    assert step.name == "UnsupportedModule"
+    function, kwargs = step.func
+    assert function.__name__ == "undeclared_module"
+    assert kwargs == {
+        "module_name": "UnsupportedModule",
+        "variable_revision_number": 2,
+        "settings": (("Some setting", "Some value"),),
+    }
 
 
 def test_cppipe_import_rejects_pipeline_without_modules(tmp_path: Path) -> None:

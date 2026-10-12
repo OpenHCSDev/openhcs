@@ -437,7 +437,7 @@ class CellProfilerModule(
         for module in modules:
             if not module.enabled:
                 continue
-            config = cls.require_module(module.name).contribute_source_bindings(
+            config = cls.declaration_for_block(module).contribute_source_bindings(
                 module,
                 config,
             )
@@ -449,10 +449,21 @@ class CellProfilerModule(
         return True
 
     @classmethod
+    def adjacent_blocks_share_step(cls) -> bool:
+        """Return whether adjacent blocks of this module may lower into one step."""
+        return True
+
+    @classmethod
     def validate_pipeline_import(cls, module: "ModuleBlock") -> None:
         """Validate whether one parsed module can enter a headless pipeline."""
 
         del cls, module
+
+    @classmethod
+    def validate_compilation(cls, invocation: "NormalizedFunctionItem") -> None:
+        """Validate whether one public invocation of this module can compile."""
+
+        del cls, invocation
 
     @classmethod
     def uses_cellprofiler_runtime_adapter(cls) -> bool:
@@ -544,6 +555,23 @@ class CellProfilerModule(
                 f"No CellProfiler module declaration is registered for {module_name!r}."
             )
         return module_type
+
+    @classmethod
+    def declaration_for_block(cls, module: "ModuleBlock") -> type["CellProfilerModule"]:
+        """Return the declaration that imports one parsed module block.
+
+        A registered module name or alias selects its declaration exactly as
+        ``require_module`` does. Any other name is imported by the member of
+        this family that stands for a module OpenHCS has no declaration for.
+        """
+        module_type = cls.for_module(module.name)
+        if module_type is not None:
+            return module_type
+        from openhcs.processing.backends.cellprofiler.undeclared_module import (
+            UndeclaredModule,
+        )
+
+        return UndeclaredModule
 
     @classmethod
     def require_module_name(cls) -> str:

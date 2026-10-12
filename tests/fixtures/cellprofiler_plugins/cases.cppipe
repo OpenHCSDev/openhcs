@@ -1,0 +1,198 @@
+CellProfiler Pipeline: http://www.cellprofiler.org
+Version:5
+DateRevision:428
+GitHash:
+ModuleCount:20
+HasImagePlaneDetails:False
+
+HistogramEqualization:[module_num:1|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:EqualizedPlane
+    Bins:256
+    Mask:Leave blank
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:No
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:2|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:EqualizedPlaneWithinMask
+    Bins:64
+    Mask:MaskPlane
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:No
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:3|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:LocallyEqualizedPlane
+    Bins:128
+    Mask:Leave blank
+    Local:Yes
+    Tile Size:8
+    Clip limit:0.02
+    Is your image 3D?:No
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:4|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:LocallyEqualizedPlaneMaskUnused
+    Bins:128
+    Mask:MaskPlane
+    Local:Yes
+    Tile Size:8
+    Clip limit:0.02
+    Is your image 3D?:No
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:EqualizedVolume
+    Bins:256
+    Mask:Leave blank
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:Yes
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:6|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:EqualizedVolumeWithinMask
+    Bins:256
+    Mask:MaskVolume
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:Yes
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:7|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:EqualizedVolumeFramewise
+    Bins:256
+    Mask:Leave blank
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:Yes
+    Do framewise calculation?:Yes
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:8|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:EqualizedVolumeFramewiseWithinMask
+    Bins:256
+    Mask:MaskVolume
+    Local:No
+    Tile Size:8
+    Clip limit:0.01
+    Is your image 3D?:Yes
+    Do framewise calculation?:Yes
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:9|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:LocallyEqualizedVolume
+    Bins:128
+    Mask:Leave blank
+    Local:Yes
+    Tile Size:8
+    Clip limit:0.02
+    Is your image 3D?:Yes
+    Do framewise calculation?:No
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:10|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:LocallyEqualizedVolumeFramewise
+    Bins:128
+    Mask:Leave blank
+    Local:Yes
+    Tile Size:8
+    Clip limit:0.02
+    Is your image 3D?:Yes
+    Do framewise calculation?:Yes
+    Tile Size (Z):2
+
+HistogramEqualization:[module_num:11|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:LocallyEqualizedVolumeNotDeclared3D
+    Bins:128
+    Mask:Leave blank
+    Local:Yes
+    Tile Size:8
+    Clip limit:0.02
+    Is your image 3D?:No
+    Do framewise calculation?:Yes
+    Tile Size (Z):2
+
+DistanceTransform:[module_num:12|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:BinaryPlane
+    Name the output image:RescaledPlaneDistance
+    Rescale values from 0 to 1?:Yes
+
+DistanceTransform:[module_num:13|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:BinaryPlane
+    Name the output image:PlaneDistance
+    Rescale values from 0 to 1?:No
+
+DistanceTransform:[module_num:14|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:BinaryVolume
+    Name the output image:RescaledVolumeDistance
+    Rescale values from 0 to 1?:Yes
+
+DistanceTransform:[module_num:15|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:BinaryVolume
+    Name the output image:VolumeDistance
+    Rescale values from 0 to 1?:No
+
+HistogramMatching:[module_num:16|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:PlaneMatchedToReference
+    Is your image 3D?:No
+    Use a frame within image as reference?:No
+    Image to use as reference :ReferencePlane
+    Frame number:5
+
+HistogramMatching:[module_num:17|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Plane
+    Name the output image:PlaneMatchedToReferenceFrameSettingOn
+    Is your image 3D?:No
+    Use a frame within image as reference?:Yes
+    Image to use as reference :ReferencePlane
+    Frame number:2
+
+HistogramMatching:[module_num:18|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:VolumeMatchedToFrame
+    Is your image 3D?:Yes
+    Use a frame within image as reference?:Yes
+    Image to use as reference :None
+    Frame number:2
+
+HistogramMatching:[module_num:19|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:VolumeMatchedToFrameNotDeclared3D
+    Is your image 3D?:No
+    Use a frame within image as reference?:Yes
+    Image to use as reference :None
+    Frame number:1
+
+HistogramMatching:[module_num:20|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:Volume
+    Name the output image:VolumeMatchedToReference
+    Is your image 3D?:Yes
+    Use a frame within image as reference?:No
+    Image to use as reference :ReferencePlane
+    Frame number:2

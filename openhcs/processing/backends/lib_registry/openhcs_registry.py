@@ -12,6 +12,7 @@ import importlib.abc
 import importlib.metadata
 import inspect
 import logging
+import pkgutil
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import lru_cache
@@ -23,7 +24,6 @@ from weakref import WeakKeyDictionary
 
 import numpy as np
 from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
-from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
@@ -41,6 +41,7 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
     ProcessingContract,
 )
+from openhcs.utils.declared_requirements import declared_requirements
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionCanonicalLookup,
@@ -153,6 +154,23 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
             return selection.selected
 
         cls.__registry__.discover_matching(eligible)
+        # Full discovery skips a source that fails to import, and selection has
+        # nothing left to do once it ran. A source that declares a wanted key
+        # yet registered nothing is a failed import, not an absent declaration:
+        # importing it here lets its own error propagate. Declaration sources
+        # are the files of the catalog module's package.
+        if missing.difference(
+            key
+            for declaration in dict.values(cls.__registry__)
+            for key in declared_keys(declaration)
+        ):
+            package_name = cls.require_registry_catalog_module()
+            package = importlib.import_module(package_name)
+            for module_info in pkgutil.iter_modules(
+                package.__path__, f"{package_name}."
+            ):
+                if not module_info.ispkg and eligible(module_info.name):
+                    importlib.import_module(module_info.name)
         return tuple(
             declaration
             for declaration in dict.values(cls.__registry__)
@@ -331,20 +349,7 @@ def _module_declares_allowed_memory_type(
 _REQUIRED_DISTRIBUTIONS_NAME = "REQUIRED_DISTRIBUTIONS"
 
 
-@lru_cache(maxsize=1)
-def _openhcs_requirements() -> tuple[Requirement, ...]:
-    """Return the installed OpenHCS distribution's declared requirements.
-
-    Installed metadata is fixed for the life of the process; parsing it once
-    serves every module the catalog asks about.
-    """
-
-    return tuple(
-        Requirement(value) for value in importlib.metadata.requires("openhcs") or ()
-    )
-
-
-def _distribution_excluded_by_package_metadata(name: str) -> bool:
+def _distribution_excluded_by_declared_requirements(name: str) -> bool:
     """Return whether OpenHCS's own requirement markers leave ``name`` out here.
 
     A distribution is legitimately absent only when no OpenHCS requirement for
@@ -356,7 +361,7 @@ def _distribution_excluded_by_package_metadata(name: str) -> bool:
     canonical = canonicalize_name(name)
     requirements = tuple(
         requirement
-        for requirement in _openhcs_requirements()
+        for requirement in declared_requirements().requirements
         if canonicalize_name(requirement.name) == canonical
     )
     if not requirements:
@@ -369,11 +374,71 @@ def _distribution_excluded_by_package_metadata(name: str) -> bool:
         for marker in (requirement.marker for requirement in requirements)
     ):
         return False
+    return not _distribution_installed(name)
+
+
+def _distribution_installed(name: str) -> bool:
     try:
         importlib.metadata.distribution(name)
     except importlib.metadata.PackageNotFoundError:
-        return True
-    return False
+        return False
+    return True
+
+
+def distributions_not_installed(func: Callable[..., object]) -> tuple[str, ...]:
+    """Return the absent distributions the file defining ``func`` requires.
+
+    The file's ``REQUIRED_DISTRIBUTIONS`` is the one declaration: the catalogue
+    reads its literal before importing the file, and this reads the value the
+    function was defined beside.
+    """
+
+    declared = inspect.unwrap(func)
+    if not inspect.isfunction(declared):
+        return ()
+    return tuple(
+        name
+        for name in declared.__globals__.get(_REQUIRED_DISTRIBUTIONS_NAME, ())
+        if not _distribution_installed(name)
+    )
+
+
+def install_command_for_distributions(names: tuple[str, ...]) -> str:
+    """Return the pip command that installs ``names``.
+
+    The package requirements say which OpenHCS extra brings each distribution;
+    when several do, the extra that brings the fewest requirements is named. A
+    distribution no extra brings is installed by its own name.
+    """
+
+    requirements = declared_requirements().requirements
+
+    def brought_by(extra: str) -> tuple[str, ...]:
+        return tuple(
+            canonicalize_name(requirement.name)
+            for requirement in requirements
+            if requirement.marker is not None
+            and requirement.marker.evaluate({"extra": extra})
+            and not requirement.marker.evaluate({"extra": ""})
+        )
+
+    extras: list[str] = []
+    unbundled: list[str] = []
+    for name in names:
+        providing = tuple(
+            extra
+            for extra in declared_requirements().extras
+            if canonicalize_name(name) in brought_by(extra)
+        )
+        if providing:
+            extras.append(min(providing, key=lambda extra: len(brought_by(extra))))
+        else:
+            unbundled.append(name)
+    targets = (
+        *((f"'openhcs[{','.join(dict.fromkeys(extras))}]'",) if extras else ()),
+        *unbundled,
+    )
+    return f"pip install {' '.join(targets)}"
 
 
 @lru_cache(maxsize=1024)
@@ -419,7 +484,7 @@ def _module_in_this_catalog(
             "Skipping OpenHCS module %s - no allowed memory decorators", module_name
         )
         return False
-    excluded = _module_distributions_excluded_by_package_metadata(module_name)
+    excluded = _module_distributions_excluded_by_declared_requirements(module_name)
     if excluded:
         logger.info(
             "Skipping OpenHCS module %s - package requirements exclude %s here",
@@ -434,17 +499,17 @@ def _catalog_policy_context() -> dict[str, Any]:
 
     return {
         "allowed_memory_types": sorted(_allowed_openhcs_memory_types()),
-        "distributions_excluded_by_package_metadata": sorted(
+        "distributions_excluded_by_declared_requirements": sorted(
             {
                 canonicalize_name(requirement.name)
-                for requirement in _openhcs_requirements()
-                if _distribution_excluded_by_package_metadata(requirement.name)
+                for requirement in declared_requirements().requirements
+                if _distribution_excluded_by_declared_requirements(requirement.name)
             }
         ),
     }
 
 
-def _module_distributions_excluded_by_package_metadata(
+def _module_distributions_excluded_by_declared_requirements(
     module_name: str,
 ) -> tuple[str, ...]:
     """Return the module's declared distributions this installation excludes."""
@@ -455,7 +520,7 @@ def _module_distributions_excluded_by_package_metadata(
     return tuple(
         name
         for name in _source_required_distributions(*module_source)
-        if _distribution_excluded_by_package_metadata(name)
+        if _distribution_excluded_by_declared_requirements(name)
     )
 
 
@@ -745,8 +810,16 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         """Discover OpenHCS functions with memory type decorators and assign default contracts."""
         functions = {}
         modules = self.get_modules_to_scan()
+        # A catalog module hands over functions defined in other files; each
+        # file's own distribution requirement decides, as it does for a scan.
         catalog_functions = {
-            module_name: module.openhcs_registry_functions()
+            module_name: tuple(
+                func
+                for func in module.openhcs_registry_functions()
+                if not _module_distributions_excluded_by_declared_requirements(
+                    inspect.unwrap(func).__module__
+                )
+            )
             for module_name, module in modules
             if isinstance(module, OpenHCSFunctionCatalogModule)
         }
@@ -761,8 +834,6 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         )
 
         for module_name, module in modules:
-            import inspect
-
             module_function_count = 0
 
             if isinstance(module, OpenHCSFunctionCatalogModule):

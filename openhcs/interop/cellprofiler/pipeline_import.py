@@ -47,6 +47,9 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.source_bindings import source_binding_group_keys_for_group_by
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.interop.cellprofiler.module_artifact_contracts import (
+    UnknownArtifactInput,
+)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -231,6 +234,7 @@ def _public_pipeline(
         while (
             run_end < len(executable_modules)
             and executable_modules[run_end][0] is module_type
+            and module_type.adjacent_blocks_share_step()
         ):
             run_end += 1
 
@@ -303,7 +307,7 @@ def _parsed_pipeline_declaration(
     for module in modules:
         if not module.enabled:
             continue
-        module_type = CellProfilerModule.require_module(module.name)
+        module_type = CellProfilerModule.declaration_for_block(module)
         module_type.validate_pipeline_import(module)
         if not module_type.emits_function_step():
             continue
@@ -336,12 +340,21 @@ def _parsed_pipeline_declaration(
         group_by=Ungrouped,
         input_source=ReadPipelineStart,
     )
-    target_units = _parsed_target_units(
-        executable_modules,
-        binder=binder,
-        step_context=forward_context,
-        inherited_processing_config=pipeline_processing,
-    )
+    while True:
+        try:
+            target_units = _parsed_target_units(
+                executable_modules,
+                binder=binder,
+                step_context=forward_context,
+                inherited_processing_config=pipeline_processing,
+            )
+        except UnknownArtifactInput as unknown:
+            executable_modules = _modules_providing_unknown_input(
+                executable_modules,
+                unknown,
+            )
+        else:
+            break
     resolved_executable_modules = tuple(executable_modules)
     return _ParsedPipelineDeclaration(
         executable_modules=resolved_executable_modules,
@@ -351,6 +364,37 @@ def _parsed_pipeline_declaration(
         initial_context=forward_context,
         target_units=target_units,
     )
+
+
+def _modules_providing_unknown_input(
+    executable_modules: list[tuple[type[CellProfilerModule], ModuleBlock]],
+    unknown: UnknownArtifactInput,
+) -> list[tuple[type[CellProfilerModule], ModuleBlock]]:
+    """Give an unprovided input to the nearest earlier block that can provide it.
+
+    Target units number the executable blocks from one, so the reading block's
+    number is its position. Each declaration decides whether its block provides
+    the artifact; when none before the reader does, the reference stays unknown.
+    """
+
+    reference = unknown.reference
+    if reference is None:
+        raise unknown
+    reader_position = reference.module.module_num - 1
+    for position in range(reader_position - 1, -1, -1):
+        module_type, module = executable_modules[position]
+        providing_module = module_type.block_providing_artifact(
+            module,
+            name=reference.name,
+            artifact_type=reference.artifact_type,
+        )
+        if providing_module is not None:
+            return [
+                *executable_modules[:position],
+                (module_type, providing_module),
+                *executable_modules[position + 1 :],
+            ]
+    raise unknown
 
 
 def _pipeline_processing_config(
@@ -452,6 +496,10 @@ def _parsed_target_units(
             step_name=module.name,
             step_index=target_position,
             source_bindings=source_bindings,
+        )
+        module = module_type.block_in_artifact_context(
+            module,
+            step_context=declaration_context,
         )
         contract = module_type.callable_contract(
             module=module,
