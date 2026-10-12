@@ -24,7 +24,7 @@ ARTIFACT_UI_BOUNDARIES = (
     ROOT / "openhcs/authoring/session/progress.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_window.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_session.py",
-    ROOT / "openhcs/pyqt_gui/windows/dual_editor_tab_builder.py",
+    ROOT / "openhcs/pyqt_gui/windows/dual_editor_tabs.py",
 )
 
 

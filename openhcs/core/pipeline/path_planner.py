@@ -2310,8 +2310,12 @@ def _cached_paths_by_group(
     )
 
 
+ANALYSIS_RESULTS_DIR_SUFFIX = "_results"
+"""Appended to an image directory's name to name its analysis-results sibling."""
+
+
 @lru_cache(maxsize=8192)
 def _cached_analysis_results_dir_for(image_dir: str) -> str:
     """Return cached analysis-results sibling path for one image directory."""
     path = Path(image_dir)
-    return str(path.parent / f"{path.name}_results")
+    return str(path.parent / f"{path.name}{ANALYSIS_RESULTS_DIR_SUFFIX}")
