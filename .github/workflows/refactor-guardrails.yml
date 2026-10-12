@@ -34,7 +34,7 @@ jobs:
           base="$BASE"
           if [ -z "$base" ]; then base=$(git rev-parse HEAD^); fi
           for root in openhcs scripts benchmark; do
-            uvx --python 3.14 --from git+https://github.com/OpenHCSDev/agent-comms@aea99bf70aca6e9f9eaae0672e82c068e0b7eebb \
+            uvx --python 3.14 --from git+https://github.com/OpenHCSDev/agent-comms@863fbf890117f9cc5092c64726a1f175fc77d588 \
               agent-comms-ratchet --root "$root" --base "$base" --head "$HEAD"
           done
 
