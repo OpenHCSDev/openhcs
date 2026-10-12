@@ -67,7 +67,10 @@ from openhcs.core.pipeline_document import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.import_authority import (
+    ImportRootEndpoint,
+    OpenHCSRuntimeImportAuthority,
+)
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
@@ -955,7 +958,7 @@ class FunctionCatalogExecutionClient(
         )
 
 
-class ZMQExecutionClient(FunctionCatalogExecutionClient):
+class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
     """ZMQ client for OpenHCS pipeline execution with progress streaming."""
 
     config: OpenHCSZMQConfig
@@ -984,10 +987,6 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             config=config,
             connection_status_callback=connection_status_callback,
         )
-
-    @classmethod
-    def code_root(cls) -> str:
-        return str(OpenHCSRuntimeImportAuthority.current().import_root)
 
     @classmethod
     @contextmanager

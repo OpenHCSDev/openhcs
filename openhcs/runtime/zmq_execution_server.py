@@ -34,7 +34,7 @@ from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.import_authority import ImportRootEndpoint
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_compilation import (
     ZMQCompilationRequest,
@@ -163,14 +163,10 @@ class FunctionCatalogExecutionServer(ExecutionServer):
             self._function_catalog_preparation.cancel_and_join()
 
 
-class ZMQExecutionServer(FunctionCatalogExecutionServer):
+class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
     """OpenHCS-specific execution server."""
 
     _server_type = "execution"
-
-    @classmethod
-    def code_root(cls) -> str:
-        return str(OpenHCSRuntimeImportAuthority.current().import_root)
 
     def __init__(
         self,
