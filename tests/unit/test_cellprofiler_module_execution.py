@@ -43,14 +43,13 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableDeclaration,
     ImagePayloadConsumption,
-    attach_callable_contract_metadata,
     runtime_image_execution_mode,
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.config import DtypeConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -160,7 +159,6 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
@@ -302,7 +300,6 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     MaskObjectsModule,
     closing,
     erode_image,
-    mask_objects,
     resize_objects_3d,
 )
 from openhcs.processing.backends.cellprofiler.neighbors import (
@@ -379,7 +376,6 @@ from openhcs.processing.backends.cellprofiler.worms import (
 )
 from openhcs.core.processing_contracts import (
     FlexibleContract,
-    ProcessingContract,
     Pure2DAuxiliaryOutputAggregator,
     Pure2DContract,
     Pure2DInputSlicer,
@@ -406,6 +402,10 @@ from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 from openhcs.core.artifacts.plans import MAIN_FLOW
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _compiled_callable_contract(
@@ -500,7 +500,7 @@ def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group(
         artifact_outputs=(measurement_spec,),
     )
     executor = _module_executor(contract)
-    channel_scope = ComponentGroupScope(
+    channel_scope = ComponentGroupScope.of(
         ("1",),
         component=Microscopy.Channel,
     )
@@ -519,7 +519,7 @@ def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group(
                     artifact_type=object_spec.artifact_type,
                 ),
                 invocation_scope=channel_scope,
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(channel_scope,),
                 consumer_variable_components=(),
             ),
@@ -556,7 +556,7 @@ def test_active_inputs_restore_repeated_contract_roles_from_unique_storage() -> 
         artifact_inputs=(objects, objects),
     )
     executor = _module_executor(contract)
-    channel_scope = ComponentGroupScope(("1",), component=Microscopy.Channel)
+    channel_scope = ComponentGroupScope.of(("1",), component=Microscopy.Channel)
     runtime = _FakeCellProfilerRuntime(
         {},
         artifact_input_edges=(
@@ -567,7 +567,7 @@ def test_active_inputs_restore_repeated_contract_roles_from_unique_storage() -> 
                     artifact_type=objects.artifact_type,
                 ),
                 invocation_scope=channel_scope,
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(channel_scope,),
                 consumer_variable_components=(),
             ),
@@ -608,7 +608,7 @@ def test_active_inputs_exclude_unselected_independent_contract_roles() -> None:
         artifact_inputs=(first, second),
     )
     executor = _module_executor(contract)
-    channel_scope = ComponentGroupScope(("1",), component=Microscopy.Channel)
+    channel_scope = ComponentGroupScope.of(("1",), component=Microscopy.Channel)
     runtime = _FakeCellProfilerRuntime(
         {},
         artifact_input_edges=(
@@ -619,7 +619,7 @@ def test_active_inputs_exclude_unselected_independent_contract_roles() -> None:
                     artifact_type=first.artifact_type,
                 ),
                 invocation_scope=channel_scope,
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(channel_scope,),
                 consumer_variable_components=(),
             ),
@@ -756,7 +756,7 @@ def _artifact_input_edge_for_test(
     invocation_scope: ComponentGroupScope | None = None,
     stored: bool = True,
 ) -> InvocationArtifactInputEdgePlan:
-    scope = invocation_scope or ComponentGroupScope.ungrouped()
+    scope = invocation_scope or UngroupedScope()
     edge = replace(
         cellprofiler_runtime_input_edge_for_test(
             ArtifactInputPlan(
@@ -767,8 +767,8 @@ def _artifact_input_edge_for_test(
             ),
             spec=spec,
             invocation_scope=scope,
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
-            component_scopes=() if scope.is_ungrouped else (scope,),
+            producer_selection_scope=UngroupedScope(),
+            component_scopes=() if not scope.as_grouped() else (scope,),
             consumer_variable_components=(),
         ),
         spec=spec,
@@ -2566,8 +2566,8 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
                     path="/artifacts/Embryos",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2734,8 +2734,8 @@ def test_object_label_output_source_preserves_matching_input_object_plane_contex
                     path="/artifacts/Guides",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2799,8 +2799,8 @@ def test_resize_objects_output_source_policy_uses_input_object_context() -> None
                     path="/artifacts/ReferenceImage",
                     artifact_type=ImageArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2810,8 +2810,8 @@ def test_resize_objects_output_source_policy_uses_input_object_context() -> None
                     path="/artifacts/Nuclei",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2935,8 +2935,8 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
                     path="/artifacts/ReferenceImage",
                     artifact_type=ImageArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2946,8 +2946,8 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
                     path="/artifacts/Nuclei",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -3085,8 +3085,8 @@ def test_measure_object_size_shape_record_builder_keeps_shape_features_unqualifi
                     path="/artifacts/Cells",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -3447,8 +3447,8 @@ def test_object_label_output_source_payload_uses_primary_object_input() -> None:
                         path=f"/artifacts/{spec.name}",
                         artifact_type=spec.artifact_type,
                     ),
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=ComponentGroupScope.ungrouped(),
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=UngroupedScope(),
                     component_scopes=(),
                     consumer_variable_components=(),
                 )
@@ -3510,8 +3510,8 @@ def test_object_label_output_source_payload_uses_declared_primary_object_input()
                     path="/artifacts/PrimaryObjects",
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -4306,8 +4306,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 name=storage_plan.name,
                 path=storage_plan.path_for_runtime_query(group_key),
                 artifact_type=storage_plan.artifact_type,
-                group_keys=(group_key,),
-                group_component=storage_plan.group_component,
+                group_scope=ComponentGroupScope.of((group_key,), component=storage_plan.group_scope.component),
                 variable_components=storage_plan.variable_components,
                 component_domains=storage_plan.component_domains,
                 paths_by_group={
@@ -4315,7 +4314,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 },
                 sidecar_role=storage_plan.sidecar_role,
             )
-            for group_key in (storage_plan.group_keys or (None,))
+            for group_key in (storage_plan.group_scope.keys or (None,))
         )
 
     @staticmethod
@@ -5069,8 +5068,8 @@ def test_adapter_object_record_uses_nominal_full_stack_binding() -> None:
             artifact_type=ObjectLabelsArtifactType,
         ),
         spec=object_spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -9681,8 +9680,8 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
 def _pattern_group_runtime_for_output_memory(
     output_memory_type: str,
 ) -> PatternGroupExecutionRequest:
-    context = ProcessingContext(axis_id="A01")
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01")
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     return PatternGroupExecutionRequest(
         context=context,
         compiled_group=compile_function_pattern(
@@ -13541,7 +13540,7 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
         output_plans=(
             replace(
                 _artifact_output_plan(measurement_spec),
-                group_component=Microscopy.Channel,
+                group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
             ),
         ),
         spec=measurement_spec,
@@ -13558,20 +13557,19 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
                             name=spec.name,
                             path=f"/memory/{spec.name}.pkl",
                             artifact_type=ObjectLabelsArtifactType,
-                            group_keys=(channel,),
-                            group_component=Microscopy.Channel,
+                            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
                             paths_by_group={
                                 channel: f"/memory/{spec.name}_{channel}.pkl"
                             },
                         ),
                         spec=spec,
-                        invocation_scope=ComponentGroupScope.ungrouped(),
-                        producer_selection_scope=ComponentGroupScope(
+                        invocation_scope=UngroupedScope(),
+                        producer_selection_scope=ComponentGroupScope.of(
                             (channel,),
                             component=Microscopy.Channel,
                         ),
                         component_scopes=(
-                            ComponentGroupScope(
+                            ComponentGroupScope.of(
                                 (channel,),
                                 component=Microscopy.Channel,
                             ),
@@ -13759,17 +13757,16 @@ def test_relate_objects_measurement_table_rejects_distinct_image_set_axes() -> N
                             name=name,
                             path=f"/memory/{name}.pkl",
                             artifact_type=ObjectLabelsArtifactType,
-                            group_keys=(channel,),
-                            group_component=Microscopy.Channel,
+                            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
                             paths_by_group={channel: f"/memory/{name}_{channel}.pkl"},
                         ),
-                        invocation_scope=ComponentGroupScope.ungrouped(),
-                        producer_selection_scope=ComponentGroupScope(
+                        invocation_scope=UngroupedScope(),
+                        producer_selection_scope=ComponentGroupScope.of(
                             (channel,),
                             component=Microscopy.Channel,
                         ),
                         component_scopes=(
-                            ComponentGroupScope(
+                            ComponentGroupScope.of(
                                 (channel,),
                                 component=Microscopy.Channel,
                             ),

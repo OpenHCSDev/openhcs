@@ -44,7 +44,7 @@ from openhcs.core.image_payload_execution_mode import (
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.runtime_stores import RuntimeArtifactInput
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
@@ -65,7 +65,7 @@ class RuntimeImageExecutionContext:
 class RuntimeAdapterRequest:
     """Runtime data needed to build an invocation-scoped adapter."""
 
-    context: "ProcessingContext"
+    context: "ExecutingContext"
     callable_contract: "CallableContract | None" = None
     source_payload: object | None = None
     artifact_inputs: Mapping[

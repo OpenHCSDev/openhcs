@@ -69,6 +69,10 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def test_transient_axis_views_observe_each_new_projection_without_reusing_released_ids():
@@ -172,10 +176,9 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         assert selected.require_source_projection_for(lookup) is full.require_source_projection_for(lookup)
         assert selected.source_metadata_for(lookup) == full.source_metadata_for(lookup)
     assert len(full.pipeline_start_files()) == 18
-    from openhcs.core.context.processing_context import ProcessingContext
-    context = ProcessingContext(filemanager=filemanager, axis_id="A01")
-    context.dataset_root = workspace
-    context.microscope_handler = handler
+    context = executing_context(filemanager=filemanager, axis_id="A01")
+    context = with_facts(context, dataset_root=workspace)
+    context = with_facts(context, microscope_handler=handler)
     from openhcs.core import source_workspace_projection
     monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
     runtime_projection = WorkspaceSourceProjections.from_context(
@@ -183,9 +186,9 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     ).projection_or_empty()
     assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
     assert not hasattr(context, "runtime_source_workspace_projection_cache")
-    other = ProcessingContext(filemanager=filemanager, axis_id="A01")
-    other.dataset_root = workspace
-    other.microscope_handler = handler
+    other = executing_context(filemanager=filemanager, axis_id="A01")
+    other = with_facts(other, dataset_root=workspace)
+    other = with_facts(other, microscope_handler=handler)
     assert context.runtime_source_workspace_projections.cache is other.runtime_source_workspace_projections.cache is cache
     assert other.runtime_source_workspace_projections.projection_or_empty() is selected
     equivalent = WorkspaceSourceProjections.from_dataset_metadata(

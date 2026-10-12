@@ -25,7 +25,11 @@ if TYPE_CHECKING:
     from zmqruntime import OperationDeadline
 
     from openhcs.agent.dto.execution import RuntimeServerInfo
-    from openhcs.agent.dto.ui_bridge import UiWindowCatalog, UiWindowSnapshotResult
+    from openhcs.agent.dto.ui_bridge import (
+        UiActionInvokeResult,
+        UiWindowCatalog,
+        UiWindowSnapshotResult,
+    )
     from openhcs.agent.services.endpoint_function_catalog_service import (
         ZMQFunctionCatalogService,
     )
@@ -454,6 +458,15 @@ def _typed_tool_payload(
     return payload
 
 
+def require_ui_action_accepted(action_result: UiActionInvokeResult) -> None:
+    """Fail the smoke unless the live GUI took the requested action."""
+
+    from openhcs.agent.dto.ui_bridge import ActionAccepted
+
+    if action_result.status is not ActionAccepted:
+        raise AssertionError(f"Installed UI action was not accepted: {action_result}")
+
+
 def _window_ids(catalog: UiWindowCatalog) -> frozenset[str]:
     return frozenset(window.window_id for window in catalog.windows)
 
@@ -554,7 +567,6 @@ def run_installed_live_mcp_smoke(
     )
     from openhcs.agent.dto.mcp import McpServerHealthResult
     from openhcs.agent.dto.ui_bridge import (
-        UiActionInvocationStatus,
         UiActionInvokeResult,
         UiBridgeCatalog,
         UiBridgeStatus,
@@ -691,10 +703,7 @@ def run_installed_live_mcp_smoke(
             capability=agent_capabilities.ui_invoke_action,
             payload_type=UiActionInvokeResult,
         )
-        if action_result.status != UiActionInvocationStatus.ACCEPTED.value:
-            raise AssertionError(
-                f"Installed UI action was not accepted: {action_result}"
-            )
+        require_ui_action_accepted(action_result)
 
         timeout_text = f"{deadline.remaining_seconds():g}"
         windows_execution = client.execute(

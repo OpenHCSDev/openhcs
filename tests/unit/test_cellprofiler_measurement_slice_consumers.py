@@ -9,8 +9,8 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
 from openhcs.core.measurement_row_materialization import (
@@ -62,8 +62,8 @@ class _MeasurementInputAdapter:
         edge = cellprofiler_runtime_input_edge_for_test(
             input_plan,
             spec=measurement_spec,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )

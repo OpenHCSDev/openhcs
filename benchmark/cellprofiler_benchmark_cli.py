@@ -231,7 +231,10 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             MeasuredRunEnded,
             SessionMeasuredRun,
         )
-        from openhcs.agent.dto.session import DatasetRunRequest
+        from openhcs.agent.dto.session import (
+            DatasetRunRequest,
+            RuntimeObservationExportScopeName,
+        )
         from openhcs.agent.path_policy import AgentPathPolicy
         from openhcs.agent.session_access import AgentPathDatasetAccess
         from openhcs.authoring.session.session import CallerThread, Session
@@ -241,9 +244,6 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             mirror_input_workspace,
         )
         from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-        from openhcs.runtime.zmq_execution_signature import (
-            ZMQRuntimeObservationExportScope,
-        )
         from python_introspect import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()
@@ -281,7 +281,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             runtime_observation_export_path=str(
                 MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(output_dir)
             ),
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.named(
+            runtime_observation_export_scope=RuntimeObservationExportScopeName(
                 args.observation_scope
             ),
             submit_timeout_ms=args.submit_timeout_ms,

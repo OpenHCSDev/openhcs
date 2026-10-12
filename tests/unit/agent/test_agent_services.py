@@ -129,6 +129,9 @@ from openhcs.core.progress.types import (
     CompileProgressPhase,
     RunningProgressStatus,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 def sample_processing_function(image, sigma: float = 1.0):
@@ -330,7 +333,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             output_dir=Path("/tmp/out/A01"),
             main_flow_axis_persistence_enabled=False,
         )
-        step_plan.execution_group_scope = ComponentGroupScope.from_raw(
+        step_plan.execution_group_scope = ComponentGroupScope.of(
             ("A01",),
             component=Microscopy.Well,
         )
@@ -350,8 +353,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="positions",
             artifact_type=SpecialArtifactType,
             path="/tmp/out/A01/positions.pkl",
-            group_component=Microscopy.Well,
-            group_keys=("A01",),
+            group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
             paths_by_group={"A01": "/tmp/out/A01/positions.pkl"},
             source_step_id=0,
             source_step_scope_id="step-find-positions",
@@ -361,12 +363,11 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="objects",
             artifact_type=ObjectLabelsArtifactType,
             path="/tmp/out/A01/objects.zarr",
-            group_component=Microscopy.Well,
-            group_keys=("A01",),
+            group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
             paths_by_group={"A01": "/tmp/out/A01/objects.zarr"},
         )
         step_plan.artifact_outputs[output_plan.ref()] = output_plan
-        context = ProcessingContext(axis_id="A01")
+        context = executing_context(axis_id="A01")
         context.step_plans[0] = step_plan
         virtual_name = "A01_s001_w1_z001_t001.tif"
         full_virtual_path = str(request.plate / virtual_name)

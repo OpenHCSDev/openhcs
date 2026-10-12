@@ -22,7 +22,7 @@ from openhcs.core.runtime_plane_projection import (
 if TYPE_CHECKING:
     from openhcs.core.processing_contracts import ProcessingContract
     from openhcs.core.runtime_stores import RuntimeArtifactBatch
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 
 
 F = TypeVar("F", bound=Callable)
@@ -124,13 +124,13 @@ class RuntimeArtifactPartitionBatchRequest:
     """Parent-admitted artifact batch mapped through existing worker resources.
 
     The declared executor owns partition eligibility and global reductions.
-    ProcessingContext stays in the parent and is never part of worker requests.
+    ExecutingContext stays in the parent and is never part of worker requests.
     """
 
     func: Callable[..., object]
     artifact_batch: RuntimeArtifactBatch
     kwargs: Mapping[str, object]
-    runtime_context: ProcessingContext | None
+    runtime_context: ExecutingContext | None
     map_partition_invocations: Callable[
         [Callable[[object], object], Sequence[object]], tuple[object, ...]
     ]
@@ -142,7 +142,7 @@ class RuntimeArtifactPartitionBatchRequest:
         *,
         artifact_batch: RuntimeArtifactBatch,
         kwargs: Mapping[str, object],
-        runtime_context: ProcessingContext | None,
+        runtime_context: ExecutingContext | None,
         map_partition_invocations: Callable[
             [Callable[[object], object], Sequence[object]], tuple[object, ...]
         ],

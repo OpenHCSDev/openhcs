@@ -10,9 +10,11 @@ import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.component_group_scope import (
+    DynamicGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
@@ -31,6 +33,9 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _identity(image):
@@ -46,11 +51,11 @@ def _fixture():
         step_scope_id="loaded-cohort",
         input_memory_type="numpy",
         output_memory_type="numpy",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     request = PatternGroupExecutionRequest(
         context=context,
         execution_plan=plan,
@@ -140,7 +145,7 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
     assert loaded.runtime_plane_count == 2
     assert len(loaded.matching_files) == 3
     request.execution_plan.axis_id = "B02"
-    request.execution_plan.execution_group_scope = ComponentGroupScope.dynamic(
+    request.execution_plan.execution_group_scope = DynamicGroupScope(
         Microscopy.Site
     )
     assert loaded.axis_scope.axis_id == "B02"
@@ -414,12 +419,12 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         pattern,
         artifact_inputs={input_plan.ref(): input_plan},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection((source,)),
     )
     request.execution_plan.step_index = 1
-    request.execution_plan.execution_group_scope = ComponentGroupScope.ungrouped()
+    request.execution_plan.execution_group_scope = UngroupedScope()
     request.execution_plan.artifact_inputs = {input_plan.ref(): input_plan}
     request.execution_plan.artifact_outputs = {output_plan.ref(): output_plan}
     request.execution_plan.compiled_function_pattern = pattern
@@ -800,7 +805,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
             {},
         ),
         artifact_inputs={}, relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection(
             (source,) if primary_only else (source, ArtifactSpec.input("Other", ImageArtifactType)),

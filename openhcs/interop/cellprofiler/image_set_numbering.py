@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 from dataclasses import dataclass, field
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -50,7 +50,7 @@ class CellProfilerImageSetNumbering:
 
     def observe_export_paths(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         paths: Sequence[str],
     ) -> None:
         """Bind actual exporter numbering to its relative bundle paths."""
