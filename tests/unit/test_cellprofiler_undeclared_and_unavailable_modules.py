@@ -75,7 +75,7 @@ GaussianFilter:[module_num:4|variable_revision_number:1|enabled:True]
 
 _UNDECLARED_OBJECT_PRODUCER = (
     _SOURCE
-    + """RunCellpose:[module_num:2|variable_revision_number:3|enabled:True]
+    + """SomeLabsSegmenter:[module_num:2|variable_revision_number:3|enabled:True]
     Select the input image:DNA
     Detection mode:nuclei
     Name the output object:Nuclei
@@ -219,7 +219,7 @@ def test_undeclared_module_provides_objects_a_measurement_module_reads(
     steps, _pipeline_config = _import(tmp_path, _UNDECLARED_OBJECT_PRODUCER)
 
     assert [step.name for step in steps] == [
-        "RunCellpose",
+        "SomeLabsSegmenter",
         "MeasureObjectSizeShape",
         "MeasureObjectIntensity",
     ]

@@ -1,0 +1,678 @@
+{
+ "branch": "feature/cellpose-full-surface",
+ "commit": "0d127cc9fe30378f11c2b41dccb36c704082224b",
+ "module": "openhcs.processing.backends.lib_registry.derived.cellpose",
+ "cellpose": "3.1.1.3",
+ "functions": {
+  "segment": {
+   "parameters": {
+    "image": {
+     "annotation": "ndarray",
+     "default": "_empty"
+    },
+    "gpu": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "pretrained_model": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "model_type": {
+     "annotation": "Optional[SegmentationModel]",
+     "default": "None"
+    },
+    "mkldnn": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "diam_mean": {
+     "annotation": "float",
+     "default": "30.0"
+    },
+    "nchan": {
+     "annotation": "int",
+     "default": "2"
+    },
+    "pretrained_model_ortho": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "backbone": {
+     "annotation": "str",
+     "default": "'default'"
+    },
+    "batch_size": {
+     "annotation": "int",
+     "default": "8"
+    },
+    "resample": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "channels": {
+     "annotation": "Optional[tuple[int, int]]",
+     "default": "None"
+    },
+    "channel_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "z_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "normalize": {
+     "annotation": "NormalizeOptions",
+     "default": "NormalizeOptions(lowhigh=None, percentile=None, normalize=True, norm3D=True, sharpen_radius=0, smooth_radius=0, tile_norm_blocksize=0, tile_norm_smooth3D=1, invert=False)"
+    },
+    "invert": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "rescale": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "diameter": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "flow_threshold": {
+     "annotation": "float",
+     "default": "0.4"
+    },
+    "cellprob_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "do_3D": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "anisotropy": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "flow3D_smooth": {
+     "annotation": "int",
+     "default": "0"
+    },
+    "stitch_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "min_size": {
+     "annotation": "int",
+     "default": "15"
+    },
+    "max_size_fraction": {
+     "annotation": "float",
+     "default": "0.4"
+    },
+    "niter": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "augment": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "tile_overlap": {
+     "annotation": "float",
+     "default": "0.1"
+    },
+    "bsize": {
+     "annotation": "int",
+     "default": "224"
+    },
+    "interp": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "compute_masks": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "dtype_config": {
+     "annotation": "LazyDtypeConfig",
+     "default": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)"
+    }
+   },
+   "outputs": [
+    [
+     "labels",
+     "ObjectLabelsArtifactType"
+    ],
+    [
+     "cell_probability",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_field",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_rgb",
+     "ImageArtifactType"
+    ],
+    [
+     "measurements",
+     "MeasurementsArtifactType"
+    ]
+   ]
+  },
+  "segment_estimating_diameter": {
+   "parameters": {
+    "image": {
+     "annotation": "ndarray",
+     "default": "_empty"
+    },
+    "gpu": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "model_type": {
+     "annotation": "SegmentationModel",
+     "default": "SegmentationModel.CYTO3"
+    },
+    "nchan": {
+     "annotation": "int",
+     "default": "2"
+    },
+    "backbone": {
+     "annotation": "str",
+     "default": "'default'"
+    },
+    "batch_size": {
+     "annotation": "int",
+     "default": "8"
+    },
+    "channels": {
+     "annotation": "tuple[int, int]",
+     "default": "(0, 0)"
+    },
+    "channel_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "invert": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "normalize": {
+     "annotation": "NormalizeOptions",
+     "default": "NormalizeOptions(lowhigh=None, percentile=None, normalize=True, norm3D=True, sharpen_radius=0, smooth_radius=0, tile_norm_blocksize=0, tile_norm_smooth3D=1, invert=False)"
+    },
+    "diameter": {
+     "annotation": "float",
+     "default": "30.0"
+    },
+    "do_3D": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "resample": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "z_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "rescale": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "flow_threshold": {
+     "annotation": "float",
+     "default": "0.4"
+    },
+    "cellprob_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "anisotropy": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "flow3D_smooth": {
+     "annotation": "int",
+     "default": "0"
+    },
+    "stitch_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "min_size": {
+     "annotation": "int",
+     "default": "15"
+    },
+    "max_size_fraction": {
+     "annotation": "float",
+     "default": "0.4"
+    },
+    "niter": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "augment": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "tile_overlap": {
+     "annotation": "float",
+     "default": "0.1"
+    },
+    "bsize": {
+     "annotation": "int",
+     "default": "224"
+    },
+    "interp": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "compute_masks": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "dtype_config": {
+     "annotation": "LazyDtypeConfig",
+     "default": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)"
+    }
+   },
+   "outputs": [
+    [
+     "labels",
+     "ObjectLabelsArtifactType"
+    ],
+    [
+     "cell_probability",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_field",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_rgb",
+     "ImageArtifactType"
+    ],
+    [
+     "measurements",
+     "MeasurementsArtifactType"
+    ]
+   ]
+  },
+  "estimate_diameter": {
+   "parameters": {
+    "image": {
+     "annotation": "ndarray",
+     "default": "_empty"
+    },
+    "gpu": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "pretrained_model": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "model_type": {
+     "annotation": "Optional[SegmentationModel]",
+     "default": "None"
+    },
+    "mkldnn": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "diam_mean": {
+     "annotation": "float",
+     "default": "30.0"
+    },
+    "nchan": {
+     "annotation": "int",
+     "default": "2"
+    },
+    "pretrained_model_ortho": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "backbone": {
+     "annotation": "str",
+     "default": "'default'"
+    },
+    "pretrained_size": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "channels": {
+     "annotation": "Optional[tuple[int, int]]",
+     "default": "None"
+    },
+    "channel_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "normalize": {
+     "annotation": "NormalizeOptions",
+     "default": "NormalizeOptions(lowhigh=None, percentile=None, normalize=True, norm3D=True, sharpen_radius=0, smooth_radius=0, tile_norm_blocksize=0, tile_norm_smooth3D=1, invert=False)"
+    },
+    "invert": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "augment": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "batch_size": {
+     "annotation": "int",
+     "default": "8"
+    },
+    "dtype_config": {
+     "annotation": "LazyDtypeConfig",
+     "default": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)"
+    }
+   },
+   "outputs": [
+    [
+     "diameters",
+     "MeasurementsArtifactType"
+    ]
+   ]
+  },
+  "restore": {
+   "parameters": {
+    "image": {
+     "annotation": "ndarray",
+     "default": "_empty"
+    },
+    "gpu": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "pretrained_model": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "nchan": {
+     "annotation": "int",
+     "default": "1"
+    },
+    "model_type": {
+     "annotation": "Optional[RestorationModel]",
+     "default": "None"
+    },
+    "chan2": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "diam_mean": {
+     "annotation": "float",
+     "default": "30.0"
+    },
+    "batch_size": {
+     "annotation": "int",
+     "default": "8"
+    },
+    "channels": {
+     "annotation": "Optional[tuple[int, int]]",
+     "default": "None"
+    },
+    "channel_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "z_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "normalize": {
+     "annotation": "NormalizeOptions",
+     "default": "NormalizeOptions(lowhigh=None, percentile=None, normalize=True, norm3D=True, sharpen_radius=0, smooth_radius=0, tile_norm_blocksize=0, tile_norm_smooth3D=1, invert=False)"
+    },
+    "rescale": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "diameter": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "tile": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "do_3D": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "tile_overlap": {
+     "annotation": "float",
+     "default": "0.1"
+    },
+    "bsize": {
+     "annotation": "int",
+     "default": "224"
+    },
+    "dtype_config": {
+     "annotation": "LazyDtypeConfig",
+     "default": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)"
+    }
+   },
+   "outputs": []
+  },
+  "restore_and_segment": {
+   "parameters": {
+    "image": {
+     "annotation": "ndarray",
+     "default": "_empty"
+    },
+    "gpu": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "pretrained_model": {
+     "annotation": "Optional[Annotated[pathlib.Path, PlateInputFileDeclaration()]]",
+     "default": "None"
+    },
+    "model_type": {
+     "annotation": "Optional[SegmentationModel]",
+     "default": "None"
+    },
+    "restore_type": {
+     "annotation": "RestorationModel",
+     "default": "RestorationModel.DENOISE_CYTO3"
+    },
+    "nchan": {
+     "annotation": "int",
+     "default": "2"
+    },
+    "chan2_restore": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "batch_size": {
+     "annotation": "int",
+     "default": "8"
+    },
+    "channels": {
+     "annotation": "Optional[tuple[int, int]]",
+     "default": "None"
+    },
+    "channel_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "z_axis": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "normalize": {
+     "annotation": "NormalizeOptions",
+     "default": "NormalizeOptions(lowhigh=None, percentile=None, normalize=True, norm3D=True, sharpen_radius=0, smooth_radius=0, tile_norm_blocksize=0, tile_norm_smooth3D=1, invert=False)"
+    },
+    "rescale": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "diameter": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "tile_overlap": {
+     "annotation": "float",
+     "default": "0.1"
+    },
+    "augment": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "resample": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "invert": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "flow_threshold": {
+     "annotation": "float",
+     "default": "0.4"
+    },
+    "cellprob_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "do_3D": {
+     "annotation": "bool",
+     "default": "False"
+    },
+    "anisotropy": {
+     "annotation": "Optional[float]",
+     "default": "None"
+    },
+    "stitch_threshold": {
+     "annotation": "float",
+     "default": "0.0"
+    },
+    "min_size": {
+     "annotation": "int",
+     "default": "15"
+    },
+    "niter": {
+     "annotation": "Optional[int]",
+     "default": "None"
+    },
+    "interp": {
+     "annotation": "bool",
+     "default": "True"
+    },
+    "bsize": {
+     "annotation": "int",
+     "default": "224"
+    },
+    "flow3D_smooth": {
+     "annotation": "int",
+     "default": "0"
+    },
+    "dtype_config": {
+     "annotation": "LazyDtypeConfig",
+     "default": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)"
+    }
+   },
+   "outputs": [
+    [
+     "labels",
+     "ObjectLabelsArtifactType"
+    ],
+    [
+     "cell_probability",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_field",
+     "ImageArtifactType"
+    ],
+    [
+     "flow_rgb",
+     "ImageArtifactType"
+    ],
+    [
+     "measurements",
+     "MeasurementsArtifactType"
+    ]
+   ]
+  }
+ },
+ "enums": {
+  "SegmentationModel": {
+   "CYTO3": "cyto3",
+   "NUCLEI": "nuclei",
+   "CYTO2_CP3": "cyto2_cp3",
+   "TISSUENET_CP3": "tissuenet_cp3",
+   "LIVECELL_CP3": "livecell_cp3",
+   "YEAST_PHC_CP3": "yeast_PhC_cp3",
+   "YEAST_BF_CP3": "yeast_BF_cp3",
+   "BACT_PHASE_CP3": "bact_phase_cp3",
+   "BACT_FLUOR_CP3": "bact_fluor_cp3",
+   "DEEPBACS_CP3": "deepbacs_cp3",
+   "CYTO2": "cyto2",
+   "CYTO": "cyto",
+   "CPX": "CPx",
+   "TRANSFORMER_CP3": "transformer_cp3",
+   "NEURIPS_CELLPOSE_DEFAULT": "neurips_cellpose_default",
+   "NEURIPS_CELLPOSE_TRANSFORMER": "neurips_cellpose_transformer",
+   "NEURIPS_GRAYSCALE_CYTO2": "neurips_grayscale_cyto2",
+   "CP": "CP",
+   "TN1": "TN1",
+   "TN2": "TN2",
+   "TN3": "TN3",
+   "LC1": "LC1",
+   "LC2": "LC2",
+   "LC3": "LC3",
+   "LC4": "LC4"
+  },
+  "RestorationModel": {
+   "DENOISE_CYTO3": "denoise_cyto3",
+   "DEBLUR_CYTO3": "deblur_cyto3",
+   "UPSAMPLE_CYTO3": "upsample_cyto3",
+   "ONECLICK_CYTO3": "oneclick_cyto3",
+   "DENOISE_CYTO2": "denoise_cyto2",
+   "DENOISE_PER_CYTO2": "denoise_per_cyto2",
+   "DENOISE_SEG_CYTO2": "denoise_seg_cyto2",
+   "DENOISE_REC_CYTO2": "denoise_rec_cyto2",
+   "DEBLUR_CYTO2": "deblur_cyto2",
+   "DEBLUR_PER_CYTO2": "deblur_per_cyto2",
+   "DEBLUR_SEG_CYTO2": "deblur_seg_cyto2",
+   "DEBLUR_REC_CYTO2": "deblur_rec_cyto2",
+   "UPSAMPLE_CYTO2": "upsample_cyto2",
+   "UPSAMPLE_PER_CYTO2": "upsample_per_cyto2",
+   "UPSAMPLE_SEG_CYTO2": "upsample_seg_cyto2",
+   "UPSAMPLE_REC_CYTO2": "upsample_rec_cyto2",
+   "ONECLICK_CYTO2": "oneclick_cyto2",
+   "ONECLICK_PER_CYTO2": "oneclick_per_cyto2",
+   "ONECLICK_SEG_CYTO2": "oneclick_seg_cyto2",
+   "ONECLICK_REC_CYTO2": "oneclick_rec_cyto2",
+   "ANISO_CYTO2": "aniso_cyto2",
+   "DENOISE_NUCLEI": "denoise_nuclei",
+   "DENOISE_PER_NUCLEI": "denoise_per_nuclei",
+   "DENOISE_SEG_NUCLEI": "denoise_seg_nuclei",
+   "DENOISE_REC_NUCLEI": "denoise_rec_nuclei",
+   "DEBLUR_NUCLEI": "deblur_nuclei",
+   "DEBLUR_PER_NUCLEI": "deblur_per_nuclei",
+   "DEBLUR_SEG_NUCLEI": "deblur_seg_nuclei",
+   "DEBLUR_REC_NUCLEI": "deblur_rec_nuclei",
+   "UPSAMPLE_NUCLEI": "upsample_nuclei",
+   "UPSAMPLE_PER_NUCLEI": "upsample_per_nuclei",
+   "UPSAMPLE_SEG_NUCLEI": "upsample_seg_nuclei",
+   "UPSAMPLE_REC_NUCLEI": "upsample_rec_nuclei",
+   "ONECLICK_NUCLEI": "oneclick_nuclei",
+   "ONECLICK_PER_NUCLEI": "oneclick_per_nuclei",
+   "ONECLICK_SEG_NUCLEI": "oneclick_seg_nuclei",
+   "ONECLICK_REC_NUCLEI": "oneclick_rec_nuclei",
+   "ANISO_NUCLEI": "aniso_nuclei"
+  }
+ }
+}
