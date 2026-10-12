@@ -743,17 +743,17 @@ class CustomFunctionManager:
 
     def _clear_caches(self) -> None:
         """
-        Clear function registry metadata caches.
+        Tell the function registry that the custom functions changed.
 
-        Required after registration to ensure UI sees new functions.
+        The registry keeps every library it loaded and derives its lookup
+        again with the current custom functions, so the UI and the catalogue
+        see the change and nothing else is loaded or projected again.
         """
         from openhcs.processing.backends.lib_registry.registry_service import (
             RegistryService,
         )
 
-        # Clear RegistryService metadata cache
-        RegistryService.clear_metadata_cache()
-        logger.debug("Cleared RegistryService metadata cache")
+        RegistryService.custom_functions_changed()
 
         # Custom functions are process-local projections and are intentionally
         # not stored in the OpenHCSRegistry disk cache.
