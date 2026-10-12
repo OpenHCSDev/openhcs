@@ -24,6 +24,7 @@ from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
+from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import CallableProjection
 from openhcs.core.function_reference import ResolvedRegistryFunction
 from openhcs.core.processing_preparation import (
@@ -203,6 +204,14 @@ class RegistryService:
             emit_status(
                 f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
             )
+        emit_status("Completing the registries prepared callables use")
+        AutoRegisterRegistryPreparation.discover_module_registries(
+            sys.modules.get(module_name)
+            for module_name in dict.fromkeys(
+                CallableProjection.from_callable(func).module_name for func in callables
+            )
+            if module_name is not None
+        )
         emit_status("Resolving prepared callable signatures")
         for func in callables:
             CallableProjection.from_callable(func).warm_canonical_signature()

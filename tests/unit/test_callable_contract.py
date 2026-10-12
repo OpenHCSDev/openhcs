@@ -514,6 +514,51 @@ def test_prepare_processing_callable_does_not_warm_unrelated_loaded_families() -
     assert calls == {"related": 1, "unrelated": 0}
 
 
+def test_only_serving_readiness_reads_the_members_of_a_registry() -> None:
+    """Preparing a callable runs family hooks; it never completes a registry."""
+
+    class CountingRegistry(dict):
+        member_reads = 0
+
+        def values(self):
+            type(self).member_reads += 1
+            return super().values()
+
+    hook_calls = []
+
+    class LazyFamily(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegisterMeta):
+        __registry_key__ = "registry_key"
+        __skip_if_no_key__ = True
+        registry_key = None
+
+        @classmethod
+        def prepare_registered_family(cls) -> None:
+            hook_calls.append(cls)
+
+    LazyFamily.__registry__ = CountingRegistry(LazyFamily.__registry__)
+    module = ModuleType("tests.unit._lazy_family_module")
+    module.LazyFamily = LazyFamily
+    sys.modules[module.__name__] = module
+    AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+    try:
+        prepared = AutoRegisterRegistryPreparation.prepare_module_registered_families(
+            (module,)
+        )
+        assert prepared == (LazyFamily,)
+        assert hook_calls == [LazyFamily]
+        assert CountingRegistry.member_reads == 0
+
+        discovered = AutoRegisterRegistryPreparation.discover_module_registries(
+            (module,)
+        )
+        assert discovered == (LazyFamily,)
+        assert hook_calls == [LazyFamily]
+        assert CountingRegistry.member_reads == 1
+    finally:
+        sys.modules.pop(module.__name__, None)
+        AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+
+
 def test_prepare_processing_callable_caches_equivalent_bound_method_hooks() -> None:
     module_name = __name__
 
@@ -557,12 +602,12 @@ def test_module_registered_family_preparation_runs_compiler_prepared_family_hook
     _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0
     AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
 
-    report = AutoRegisterRegistryPreparation.prepare_module_registered_families(
+    prepared = AutoRegisterRegistryPreparation.prepare_module_registered_families(
         (sys.modules[__name__],)
     )
 
     assert _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS == 1
-    assert report.prepared_family_count == 1
+    assert prepared == (_PreparedAutoRegisterFamily,)
     assert _PreparedAutoRegisterImplementation in (
         _PreparedAutoRegisterFamily.__registry__.values()
     )

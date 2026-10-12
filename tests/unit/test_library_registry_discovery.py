@@ -661,10 +661,10 @@ def test_library_registry_discovery_is_stable_across_fresh_worker_processes(
     assert tuple((tmp_path / "cache" / "metaclass-registry").glob("*.json"))
 
 
-def test_registered_metadata_preparation_discovers_measurements_before_lookup(
+def test_serving_readiness_completes_the_measurement_registry_before_lookup(
     tmp_path: Path,
 ) -> None:
-    """Warm discovery once while later plugin declarations remain visible."""
+    """Readiness discovers once; later plugin declarations remain visible."""
     environment = os.environ.copy()
     environment.update(
         OPENHCS_CPU_ONLY="true",
@@ -672,28 +672,26 @@ def test_registered_metadata_preparation_discovers_measurements_before_lookup(
         XDG_DATA_HOME=str(tmp_path / "data"),
     )
     script = textwrap.dedent("""
-        from openhcs.core.processing_preparation import CallablePreparation, RegistryFamilyPreparation
+        from types import SimpleNamespace
+
+        from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.processing.backends.cellprofiler.thresholding import threshold
+        from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
         assert not CellProfilerModule.__registry__._discovered
-        operations = tuple(
-            operation
-            for source in CallablePreparation.from_callable(threshold).cache_sources()
-            for operation in source.cache_operations()
-        )
-        preparation = next(
-            operation for operation in operations
-            if isinstance(operation, RegistryFamilyPreparation)
-            and operation.family is CellProfilerModule
-        )
-        preparation.prepare()
+        # Kernel compilation is not this test's subject.
+        CallablePreparation.prepare = lambda self: None
+        PreparationCacheBatch.populate_child_caches = lambda *args, **kwargs: None
+        RegistryService._metadata_cache = {"threshold": SimpleNamespace(func=threshold)}
+
+        RegistryService.prepare_in_current_process()
         assert CellProfilerModule.__registry__._discovered
         declarations = tuple(CellProfilerModule.__registry__.values())
         assert declarations
         prefixes = CellProfilerModule.measurement_category_prefix_declarations()
         assert prefixes
-        preparation.prepare()
+        RegistryService.prepare_in_current_process()
         assert tuple(CellProfilerModule.__registry__.values()) == declarations
 
         class WarmupPlugin(CellProfilerModule):
