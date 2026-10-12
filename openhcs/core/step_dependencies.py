@@ -5,10 +5,13 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 if TYPE_CHECKING:
     from openhcs.core.pipeline.path_planner import PathPlanner
+
+Arriving = TypeVar("Arriving")
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +30,18 @@ class StepInputDependency(ABC):
         """Only a pipeline-start main input is filtered against raw source bindings."""
 
         return False
+
+    def arriving(
+        self,
+        from_pipeline_start: tuple[Arriving, ...],
+        from_step: Callable[[int], tuple[Arriving, ...]],
+    ) -> tuple[Arriving, ...]:
+        """What reaches the step as its main input, given what each origin supplies.
+
+        Nothing, unless a subclass names an origin.
+        """
+
+        return ()
 
     def require_pipeline_start(self) -> None:
         """Prove that this terminal dependency reaches the pipeline source."""
@@ -72,6 +87,13 @@ class PipelineStartInput(StepInputDependency):
     def uses_pipeline_start_anchors(self) -> bool:
         return True
 
+    def arriving(
+        self,
+        from_pipeline_start: tuple[Arriving, ...],
+        from_step: Callable[[int], tuple[Arriving, ...]],
+    ) -> tuple[Arriving, ...]:
+        return from_pipeline_start
+
     def require_pipeline_start(self) -> None:
         return None
 
@@ -95,6 +117,13 @@ class StepOutputInput(StepInputDependency):
 
     def predecessor_step_index(self) -> int:
         return self.source_step_index
+
+    def arriving(
+        self,
+        from_pipeline_start: tuple[Arriving, ...],
+        from_step: Callable[[int], tuple[Arriving, ...]],
+    ) -> tuple[Arriving, ...]:
+        return from_step(self.source_step_index)
 
     def default_input_dir(self, planner: PathPlanner) -> Path:
         return Path(planner.plans[self.source_step_index].output_dir)

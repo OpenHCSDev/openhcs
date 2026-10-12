@@ -15,6 +15,7 @@ from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
+from openhcs.core.array_conversions import StepConversions
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import (
@@ -463,6 +464,7 @@ def _execute_plate_steps(
     execute_dataset_scoped_steps(
         contexts,
         progress_queue=progress_queue,
+        conversions=StepConversions(),
         progress_context=ProgressExecutionContext(
             execution_id="execution-1",
             subject_id="plate-1",
@@ -938,6 +940,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     observation = execute_dataset_scoped_steps(
         {"A01": context},
         progress_queue=progress_queue,
+        conversions=StepConversions(),
         progress_context=ProgressExecutionContext(
             execution_id="execution-1",
             subject_id="plate-1",

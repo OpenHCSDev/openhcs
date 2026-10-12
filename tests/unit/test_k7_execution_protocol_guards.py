@@ -183,7 +183,9 @@ def test_context_phases_carry_only_their_own_state(tmp_path) -> None:
 
 def test_stopped_results_own_their_message_and_combination() -> None:
     failed = ExecutionFailed("A01", error_message="boom").at_combination(
-        "A01__combo_0", execution_result.RuntimeExecutionObservation()
+        "A01__combo_0",
+        execution_result.RuntimeExecutionObservation(),
+        execution_result.StepConversions(),
     )
     assert not failed.is_success()
     assert failed.failed_combination == "A01__combo_0"

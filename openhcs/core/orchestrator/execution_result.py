@@ -14,6 +14,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
+from openhcs.core.array_conversions import StepConversions
 from openhcs.core.context.processing_context import (
     ExecutingContext,
     ProcessingContext,
@@ -216,6 +217,8 @@ class ExecutionResult(ABC):
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
+    conversions: StepConversions = field(default_factory=StepConversions)
+    """The array conversions made while this axis's steps executed."""
 
     def is_success(self) -> bool:
         return False
@@ -254,12 +257,14 @@ class ExecutionStopped(ExecutionResult):
         self,
         context_key: str,
         runtime_observation: RuntimeExecutionObservation,
+        conversions: StepConversions,
     ) -> "ExecutionStopped":
         """Attribute this stop to one compiled context with the axis's records."""
         return replace(
             self,
             failed_combination=context_key,
             runtime_observation=runtime_observation,
+            conversions=conversions,
         )
 
 

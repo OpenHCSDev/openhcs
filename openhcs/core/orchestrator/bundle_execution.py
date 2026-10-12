@@ -20,6 +20,11 @@ from typing import (
 )
 
 from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
+from openhcs.core.array_conversions import (
+    StepConversions,
+    format_planned_and_observed,
+    planned_conversions,
+)
 from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -124,6 +129,8 @@ class BundleExecutionExtras:
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
+    conversions: StepConversions = field(default_factory=StepConversions)
+    """The array conversions of the whole run: every axis and the dataset-scoped steps."""
 
 
 class BundleExecutionResults(dict[str, ExecutionResult]):
@@ -265,6 +272,7 @@ def execute_bundle_request(
 
         execution_results = BundleExecutionResults()
         dataset_runtime_observation = RuntimeExecutionObservation()
+        conversions = StepConversions()
         try:
             executor_resources.install_execution_bundle(execution_bundle)
             orchestrator._executor_resources = executor_resources
@@ -293,6 +301,8 @@ def execute_bundle_request(
                             )
                         }
                     )
+                    for result in execution_results.values():
+                        conversions.merge(result.conversions)
                     if any(
                         result.stops_lane for result in execution_results.values()
                     ):
@@ -305,6 +315,7 @@ def execute_bundle_request(
                             executing_contexts,
                             progress_queue=validated.progress_queue,
                             progress_context=validated,
+                            conversions=conversions,
                             executor_resources=(
                                 executor_resources
                                 if validated.actual_max_workers > 1
@@ -350,6 +361,15 @@ def execute_bundle_request(
         else:
             viewer_states_by_port = MappingProxyType({})
         project_execution_state(orchestrator, execution_results)
+        logger.info(
+            "Array conversions of this run, planned and observed:\n%s",
+            format_planned_and_observed(
+                planned_conversions(
+                    next(iter(executing_contexts.values())).step_plans
+                ),
+                conversions,
+            ),
+        )
         if execution_results.is_success():
             _emit_execution_progress(
                 progress_queue=validated.progress_queue,
@@ -366,6 +386,7 @@ def execute_bundle_request(
             extras=BundleExecutionExtras(
                 viewer_states_by_port=viewer_states_by_port,
                 runtime_observation=dataset_runtime_observation,
+                conversions=conversions,
             ),
             executed_contexts=executing_contexts,
         )
@@ -511,10 +532,15 @@ def execute_dataset_scoped_steps(
     *,
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
+    conversions: StepConversions,
     heartbeat_interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS,
     executor_resources: WorkerExecutorResources | None = None,
 ) -> RuntimeExecutionObservation:
-    """Invoke dataset-scoped FunctionSteps once from merged runtime records."""
+    """Invoke dataset-scoped FunctionSteps once from merged runtime records.
+
+    Array conversions this process makes for a step are counted into
+    ``conversions``.
+    """
 
     observation_cursors = {
         context_key: context.runtime_value_store.observation_cursor()
@@ -530,6 +556,7 @@ def execute_dataset_scoped_steps(
             step_index,
         )
         with (
+            conversions.during_step(step_index),
             owner_context.runtime_step_scope(),
             _DatasetStepProgressHeartbeat(
                 progress_queue=progress_queue,

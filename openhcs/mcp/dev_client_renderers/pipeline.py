@@ -224,6 +224,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         if payload.steps:
             lines.append("Steps:")
             lines.extend(cls._step_lines(payload.steps))
+            lines.extend(cls._conversion_table_lines(payload.steps))
         return "\n".join(lines)
 
     @staticmethod
@@ -277,6 +278,13 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
                     f"  device: {assigned.library} on {assigned.device} "
                     f"({assigned.reason})"
                 )
+            for conversion in step.conversions:
+                lines.append(
+                    f"  conversion: {conversion.boundary}: "
+                    f"{conversion.source_library} on {conversion.source_device} -> "
+                    f"{conversion.target_library} on {conversion.target_device} "
+                    f"by {conversion.mechanism}"
+                )
             for viewer in step.viewer_streaming:
                 line = f"  viewer stream: viewer={viewer.viewer_type.value} config={viewer.config_key} backend={viewer.backend}"
                 if viewer.effective_config:
@@ -302,6 +310,37 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
                     f"  artifact ... truncated={step.truncated_artifact_output_count}"
                 )
         return lines
+
+    @staticmethod
+    def _conversion_table_lines(
+        steps: tuple[CompiledStepPlanSummary, ...],
+    ) -> list[str]:
+        """One table of the pipeline's conversions; axes share it, so each row is shown once."""
+        rows = list(
+            dict.fromkeys(
+                (
+                    str(step.step_index),
+                    conversion.boundary,
+                    f"{conversion.source_library} on {conversion.source_device}",
+                    f"{conversion.target_library} on {conversion.target_device}",
+                    conversion.mechanism,
+                )
+                for step in steps
+                for conversion in step.conversions
+            )
+        )
+        if not rows:
+            return []
+        rows.insert(0, ("step", "boundary", "source", "target", "mechanism"))
+        widths = [max(len(row[column]) for row in rows) for column in range(5)]
+        return [
+            "Conversions:",
+            *(
+                "  "
+                + "  ".join(cell.ljust(width) for cell, width in zip(row, widths)).rstrip()
+                for row in rows
+            ),
+        ]
 
     @classmethod
     def _artifact_input_line(cls, artifact: ArtifactInputPlanSummary) -> str:

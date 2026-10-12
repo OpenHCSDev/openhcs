@@ -179,6 +179,22 @@ class AssignedDeviceSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class PlannedConversionSummary:
+    """One boundary crossed while a step executes and the conversion made there.
+
+    ``mechanism`` is ArrayBridge's route for the two placements, or ``none``
+    where the arrays already are where they are read.
+    """
+
+    boundary: str
+    source_library: str
+    source_device: str
+    target_library: str
+    target_device: str
+    mechanism: str
+
+
+@dataclass(frozen=True, slots=True)
 class CompiledStepPlanSummary:
     step_index: int
     step_name: str
@@ -191,6 +207,7 @@ class CompiledStepPlanSummary:
     artifact_inputs: tuple[ArtifactInputPlanSummary, ...] = ()
     artifact_outputs: tuple[ArtifactPlanSummary, ...] = ()
     devices: tuple[AssignedDeviceSummary, ...] = ()
+    conversions: tuple[PlannedConversionSummary, ...] = ()
     truncated_artifact_input_count: int = 0
     truncated_artifact_output_count: int = 0
 

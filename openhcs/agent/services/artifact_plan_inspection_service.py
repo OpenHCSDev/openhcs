@@ -19,6 +19,7 @@ from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     ArtifactPlanSummary,
     AssignedDeviceSummary,
+    PlannedConversionSummary,
     CompiledStepPlanSummary,
     MainFlowMaterializationPlanSummary,
     PipelineSourceArtifactPlanInspectionRequest,
@@ -29,6 +30,7 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
+from openhcs.core.array_conversions import planned_step_conversions
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
@@ -410,6 +412,19 @@ def _bounded_step_summaries(compiled_contexts, axes: tuple[str, ...]):
                         reason=each.rule.reason,
                     )
                     for each in step_plan.device_assignment.assigned
+                ),
+                conversions=tuple(
+                    PlannedConversionSummary(
+                        boundary=each.boundary,
+                        source_library=str(each.source.library.name),
+                        source_device=each.source.device.label,
+                        target_library=str(each.target.library.name),
+                        target_device=each.target.device.label,
+                        mechanism=each.mechanism,
+                    )
+                    for each in planned_step_conversions(
+                        context.step_plans, step_plan.step_index
+                    )
                 ),
                 artifact_inputs=artifact_inputs,
                 artifact_outputs=artifact_outputs,

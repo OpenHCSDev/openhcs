@@ -75,6 +75,7 @@ __all__ = lazy_exports(
             "CompiledStepPlanSummary",
             "MainFlowMaterializationPlanSummary",
             "PipelineSourceArtifactPlanInspectionRequest",
+            "PlannedConversionSummary",
             "RuntimeDebugInspectionRequest",
             "RuntimeDebugInspectionResult",
             "RuntimeExecutionStatus",

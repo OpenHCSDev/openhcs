@@ -181,6 +181,9 @@ class ArrayPlacement:
         """The library's name, as memory declarations spell it."""
         return str(self.library.name)
 
+    def describe(self) -> str:
+        return f"{self.library.name} on {self.device.label}"
+
     def place(self, value: Any) -> Any:
         """Return an array here; the same object when it already is."""
         data = runtime_array_operand(value)

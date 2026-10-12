@@ -20,6 +20,7 @@ from openhcs.core.compiled_execution import (
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.array_conversions import StepConversions
 from openhcs.core.device_assignment import DeviceAssignment
 from openhcs.core.config import MultiprocessingStartMethod
 from openhcs.core.callable_contract import FunctionStepExecutionScope
@@ -1311,6 +1312,7 @@ def _execute_axis_with_sequential_combinations(
     )
 
     runtime_observations: list[RuntimeContextObservation] = []
+    conversions = StepConversions()
     for context_key, compiled_context in axis_contexts:
         if cancellation is not None:
             try:
@@ -1322,6 +1324,7 @@ def _execute_axis_with_sequential_combinations(
                     runtime_observation=RuntimeExecutionObservation(
                         contexts=tuple(runtime_observations),
                     ),
+                    conversions=conversions,
                 )
         context = compiled_context.executing(lane_context)
         try:
@@ -1333,6 +1336,7 @@ def _execute_axis_with_sequential_combinations(
                 cancellation=cancellation,
                 runtime_observation_mode=runtime_observation_mode,
             )
+            conversions.merge(result.conversions)
             observation = RuntimeContextObservation.from_context(
                 context_key=context_key,
                 context=context,
@@ -1370,6 +1374,7 @@ def _execute_axis_with_sequential_combinations(
             return result.at_combination(
                 context_key,
                 RuntimeExecutionObservation(contexts=tuple(runtime_observations)),
+                conversions,
             )
 
     lane_context.emit(
@@ -1386,6 +1391,7 @@ def _execute_axis_with_sequential_combinations(
         runtime_observation=RuntimeExecutionObservation(
             contexts=tuple(runtime_observations),
         ),
+        conversions=conversions,
     )
 
 
@@ -1459,6 +1465,7 @@ def _execute_single_axis_static(
         raise RuntimeError(error_msg)
 
     runtime_value_store = context.runtime_value_store
+    conversions = StepConversions()
     # Full-value observations, debug replay and viewer histories own their
     # original retention contract. Ordinary execution can retire dead inputs
     # only after the step's output/progress consumers have completed.
@@ -1542,7 +1549,8 @@ def _execute_single_axis_static(
             )
 
             observation_cursor = runtime_value_store.observation_cursor()
-            step_observation = step.process(context, step_index)
+            with conversions.during_step(step_index):
+                step_observation = step.process(context, step_index)
             context.record_completed_step_outputs(step_observation)
             observed_records = runtime_value_store.observed_values_after(
                 observation_cursor
@@ -1585,6 +1593,7 @@ def _execute_single_axis_static(
             runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
                 {context_key: context}
             ),
+            conversions=conversions,
         )
     except Exception as exc:
         logger.exception(
@@ -1597,6 +1606,7 @@ def _execute_single_axis_static(
             runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
                 {context_key: context}
             ),
+            conversions=conversions,
         )
 
     return ExecutionSucceeded(
@@ -1604,6 +1614,7 @@ def _execute_single_axis_static(
         runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
             {context_key: context}
         ),
+        conversions=conversions,
     )
 
 
