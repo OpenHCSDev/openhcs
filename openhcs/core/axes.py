@@ -296,14 +296,12 @@ class ConstantValue(AxisValueFallback):
 class GroupingDeclaration(ABC, metaclass=AxisDeclarationMeta):
     """What a step's ``group_by`` holds: one axis, or :class:`Ungrouped`.
 
-    Declarations register under their boundary ``name``, which is therefore
-    also their JSON spelling. Boundaries decode names through the active family
-    (``AxisFamily.named``), never through this registry: two families may
-    declare the same name.
+    A declaration's boundary ``name`` is its JSON spelling. Names are unique
+    within one :class:`AxisFamily`, not across families (``Microscopy.Site``
+    and a survey domain's ``Site`` are both ``"site"``), so the family holds
+    its declarations and decodes names (``AxisFamily.grouping_named``). There
+    is no registry of all declarations by name.
     """
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
 
     name: ClassVar[str]
 

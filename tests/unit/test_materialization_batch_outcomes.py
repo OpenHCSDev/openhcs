@@ -48,6 +48,8 @@ from tests.context_support import (
 
 
 class CsvOnlyMemoryBackend(MemoryStorageBackend):
+    _backend_type = "csv_only_memory"
+
     def accepts_payload(self, data, path):
         return Path(path).suffix == ".csv"
 

@@ -13,7 +13,7 @@ import sys
 import tempfile
 from typing import ClassVar
 
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import AutoRegisterMeta, register_once
 
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
@@ -263,7 +263,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
             capability = cls.capability
         except AttributeError:
             return
-        cls.__capability_registry__[capability] = cls
+        register_once(
+            cls.__capability_registry__,
+            capability,
+            cls,
+            registry_name="capability command spec",
+        )
 
     @classmethod
     def for_capability_name(

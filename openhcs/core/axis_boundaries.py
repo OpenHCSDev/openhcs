@@ -9,7 +9,7 @@ active family.
 from __future__ import annotations
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import AnnotationChoices, registered_class_from_key
+from python_introspect import AnnotationChoices, registered_class_from_key, to_jsonable
 
 from openhcs.core.axes import AxisDeclarationMeta, AxisFamily, GroupingDeclaration
 
@@ -50,11 +50,21 @@ class GroupingChoices(_AxisDeclarationChoices):
 
 
 
+@to_jsonable.register(AxisDeclarationMeta)
+def _boundary_name_of_declaration(declaration: AxisDeclarationMeta) -> object:
+    """Spell a grouping declaration by its boundary name."""
+
+    if issubclass(declaration, GroupingDeclaration) and "name" in vars(declaration):
+        return declaration.name
+    return to_jsonable.dispatch(AutoRegisterMeta)(declaration)
+
+
 @registered_class_from_key.register(AxisDeclarationMeta)
 def _declaration_from_boundary_name(family: AxisDeclarationMeta, key: object) -> type:
     """Decode a grouping declaration through the active family.
 
-    Two families may declare the same name, so the registry cannot decode it.
+    Names are unique within a family, not across families, so the active
+    family decodes them.
     """
 
     if issubclass(family, GroupingDeclaration):

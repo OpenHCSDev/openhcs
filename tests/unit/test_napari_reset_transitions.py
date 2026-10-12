@@ -699,9 +699,11 @@ def test_terminal_failed_candidate_is_retirable_without_erasing_other_failure(re
     assert keep in receiver.layer_route_state.layers
 
 
-def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hooks(receiver, monkeypatch):
+def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hooks(
+    receiver, monkeypatch, stand_in_members
+):
     calls = []
-    monkeypatch.setitem(NapariImageLayerDisplayHandler.__registry__, StreamingDataType.IMAGE, NapariImageLayerDisplayHandler)
+    stand_in_members(NapariImageLayerDisplayHandler, StreamingDataType.IMAGE)
     class IndependentPresentationCapability:
         @contextmanager
         def preserve_native_presentation(self, request):
@@ -816,10 +818,11 @@ def test_retirement_retains_survivor_source_members_without_late_navigation(
     assert receiver.viewer.layers.selection.active is native
 
 
-def test_new_selectable_capability_executes_cooperative_retention_hooks(receiver, monkeypatch):
+def test_new_selectable_capability_executes_cooperative_retention_hooks(
+    receiver, monkeypatch, stand_in_members
+):
     calls = []
-    monkeypatch.setitem(NapariPointsLayerDisplayHandler.__registry__, StreamingDataType.POINTS,
-                        NapariPointsLayerDisplayHandler)
+    stand_in_members(NapariPointsLayerDisplayHandler, StreamingDataType.POINTS)
 
     class IndependentPresentationCapability:
         @contextmanager
@@ -1148,10 +1151,11 @@ def test_fractional_spatial_selection_survives_real_qt_rematerialization(receive
                          "metadata": {ROIFractionalZ.FIELD: 1.5, "label": 7}}]] * 2
 
 
-def test_declared_point_coordinate_capability_executes_cooperative_hooks(receiver, monkeypatch):
+def test_declared_point_coordinate_capability_executes_cooperative_hooks(
+    receiver, monkeypatch, stand_in_members
+):
     admitted = []
-    monkeypatch.setitem(NapariPointsLayerDisplayHandler.__registry__, StreamingDataType.POINTS,
-                        NapariPointsLayerDisplayHandler)
+    stand_in_members(NapariPointsLayerDisplayHandler, StreamingDataType.POINTS)
 
     class CoordinateAdmissionRecording:
         @classmethod

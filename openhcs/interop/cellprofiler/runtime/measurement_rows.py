@@ -144,7 +144,9 @@ class FormattingMeasurementFeatureTemplate(
 ):
     """Shared feature-name formatting contract for templated measurement names."""
 
-    __registry_key__ = "__name__"
+    # Members are enums nested in their module class and several share a short
+    # name (``MeasurementFeatureTemplate``); the qualified name is unique.
+    __registry_key__ = "__qualname__"
 
     def __new__(
         cls,
