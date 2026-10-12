@@ -2,6 +2,17 @@
 
 Branch `refactor/DL3-output-provenance`. Gap 6 of `D1-cellpose-n2v2-custom-functions.md` (PR #1230).
 
+**Lands after DL1.** The storage part is PolyStore PR OpenHCSDev/PolyStore#41. PolyStore 0.6.3 is
+taken by the arraybridge 0.5.0 migration, so #41 has to be released as **0.6.4**, which requires
+`arraybridge>=0.5.0,<0.6`. OpenHCS main is on arraybridge 0.4.1 until
+`refactor/DL1-device-and-memory-types` merges, so this branch cannot pin 0.6.4 before that. Until
+then the submodule `external/PolyStore` points at the #41 commit (`8ee8ce4`) for local tests and
+`pyproject.toml` still says `polystore>=0.6.3,<0.7`, which is wrong and must become `>=0.6.4`.
+
+**Current state: see "Second hand-off" at the end.** The sections between here and there are the
+first agent's; where they describe the stored JSON as nested dicts with `kind` keys, the second
+hand-off replaces them.
+
 ## What is wrong (measured on `origin/main` at `1b5fe99f5`)
 
 - `openhcs_metadata.json` of an output dataset has no pipeline, function, parameter, source-hash
@@ -326,3 +337,126 @@ Failing ids outside `known.fail` (5), with the believed cause (none investigated
 
 The remaining 2 of the 7 failures are the ids in `known.fail`. Fix the first two rows as step 0
 of "What remains".
+
+## Second hand-off (2026-10-12): what changed, what remains
+
+Commit `3a55d1fe4` (pushed). Stopped at the context limit after items 1 and 2 of the continuation
+brief; nothing else is started in the tree.
+
+### Done
+
+**Brief item 1: the record is nominal types** (`openhcs/core/run_record.py`,
+`openhcs/core/function_identity.py`).
+
+| Type | Holds |
+|---|---|
+| `RunRecord` | `software`, `pipeline_code`, `global_config_code`, `configuration`, `steps`, `custom_sources` (text by sha256, each once) |
+| `SoftwareEnvironment` | OpenHCS, Python, platform, `installed_distributions` (version by name) |
+| `StepRecord` | `calls: StepCalls`, `configuration: tuple[ConfigValuesFromOwner, ...]` |
+| `StepCalls` | name, pipeline position, step scope id, memory types, `assigned_gpu_devices: tuple[GpuDevice, ...]`, `functions` |
+| `FunctionRecord` | `identity`, group, position, memory types, `parameters`, `declared_files` |
+| `FunctionIdentity` / `CustomFunctionIdentity` | key, module, name, `defined_in` and `imports` (`ModuleLibraries`); the custom one adds `source_sha256`. The text is not copied into the identity: `source_texts()` reads it from the registered `CustomFunctionSourceNamespace` that owns the hash, and the record stores it once under `custom_sources` |
+| `RecordedParameter` | name, value (Python expression, `None` when no declaration states it), `source: type[ParameterSource]` |
+| `ParameterSource` family | `WrittenInPipeline` (`pipeline`), `FunctionDefault` (`function_default`; the function and version are the identity of the enclosing `FunctionRecord`), `SuppliedAtRunTime` (`run_time`). Each says how its value is written (`value_expression`) |
+| `ConfigValuesFromOwner` | `owner: ConfigValueOwner(source, scope_id, type_name)`, `values` by field path. `source` is `type[ConfigValueSource]`: `SetOnObject` (`set_here`) or `InheritedFrom` (`inherited`) |
+| `DeclaredFile` | parameter, `declared_as`, path, `content: HashedFileContent \| UnhashedFileContent` (PolyStore's family) |
+| `DatasetRunRecords` | the two keys of the metadata document: `run_records` by id, `produced_files: Mapping[str, StoredProducedFile(run_record, producer: StreamProducerIdentity)]` |
+| `ProducedFile` | what the reader returns for one file: `record`, `producer`, `.step -> StepCalls` |
+
+**One codec.** Encode is `python_introspect.to_jsonable`, decode is
+`python_introspect.dataclass_from_mapping` (`external/python-introspect/src/python_introspect/
+jsonable.py`, `dataclass_projection.py`); `RunRecord.to_json` / `from_json` and
+`DatasetRunRecords.in_document` only call them. No `to_record` method is left in OpenHCS. A class
+of the two source families is stored as its registry key (`AutoRegisterMeta`, the codec's existing
+rule for `type[Family]`). The identity family and the file-content family carry data, and the codec
+has no nominal tag for a family *instance*: they are declared as unions of dataclasses and the
+decoder picks the member whose declared fields match exactly (it rejects undeclared fields and
+raises on an ambiguous match). `test_stored_json_reads_back_as_the_same_record` covers every type.
+**Open point for the owner:** that union decode is by field set, not by name. If that is not
+acceptable, the fix belongs in python-introspect (a registered family instance stored as key plus
+fields), not in a second codec here. PolyStore's `FileContent.to_record` / `from_record`
+(`hashed: bool` key) is now unused by OpenHCS and can be dropped from #41 when it is rebased.
+
+**Reader and capability return the types.** `RunRecord.for_dataset`, `RunRecord.for_output_file`,
+`ProducedFile.step`. `openhcs_read_run_record`: `RunRecordEntry(record_id, steps: tuple[StepCalls,
+...], record: RunRecord | None)`; the request flag is `include_full_record` (was
+`include_sources`); the digest-and-`shortened_fields` form is gone. Contract fixture regenerated
+(only that tool changed).
+
+**Size (part of brief item 5, measured on the two-step unit pipeline in the shared venv, 246
+distributions):** default response `steps` 2,277 bytes; full record 47,633 bytes (software 5,252,
+pipeline_code 12,000, global_config_code 7,453, configuration 9,846, steps 12,984). Grouping
+resolved values by owner took the pipeline configuration from 22.9 kB to 9.8 kB and each step's
+from 12.3 kB to 5.3 kB. Not re-measured on the Cellpose run.
+
+**Brief item 2: the two suite failures.**
+- `test_pycodify_formatters.py::test_function_step_round_trip_omits_injected_values_but_keeps_runtime_settings[False-...]`:
+  the first agent had changed what `clean_mode=False` means (the hook was in
+  `FunctionStepFormatter.format`). The test states the stored-document promise (every stored
+  field, no parameter the pipeline does not state) and it holds again: the hook is removed, and the
+  two tests that had been weakened for it (`test_authoring_roundtrip_boundaries.py`,
+  `test_source_round_trip.py`) are restored to main's text. The record's copy is its own
+  rendering, `PipelineDocumentCodec.render_with_every_parameter` (completes each step's pattern
+  with `with_every_parameter_written`, then renders unabridged).
+  `test_saved_pipeline_text_stays_short_and_the_record_copy_is_complete` asserts all three.
+- `test_mcp_dev_client_terminal_input.py::test_long_terminal_command_reuses_original_parser_and_client`:
+  not this branch. It pumps a 4 kB+ command through a PTY child with a 15 s deadline. Alone on the
+  branch at load average 13: 13.4 s and 8.5 s (passed), then 19.4 s and 17.3 s (one failed). With
+  the child importing `origin/main`'s package under the same load: 15.07 s and 15.01 s, both
+  failed, twice. Left as is.
+- `test_mcp_server.py` stdio tests: 5 s `session.initialize()` timeout under `-n 4`; `2 passed`
+  alone.
+
+Tests run here: `tests/unit/test_run_record.py`, `test_run_record_capability.py`,
+`tests/integration/test_run_record_round_trip.py`, `test_mcp_tool_contract.py`,
+`test_pycodify_formatters.py`, `test_source_round_trip.py`,
+`test_authoring_roundtrip_boundaries.py`: all pass. Full suite, guardrails, smoke and parity were
+not run after these changes.
+
+### What remains, in order (numbers are the continuation brief's)
+
+3. **Shrink the two oversized classes; ratchet to no increase.** Not started. Expected to be
+   cleared by item 1 but unverified: `StringSubscript`, `AnyAnnotation`, `unmodeled_record_shape`.
+   Still present: `GodClassExcess PipelineCompiler +7` (the seven lines are the
+   `RunDeclaration.before_step_resolution` call, `with_resolved_steps`, and `run_declaration=` at
+   three bundle constructions), `OpenHCSMetadataTarget +24` (`saved_path_producers` and the
+   additions in `finalize_completed_dataset`), the boolean chains in
+   `StepExecutionObservation.is_empty` and `AtomicMetadataWriter.reconcile_completed_dataset`,
+   and two absence probes (`ModuleExportedCallableFormatter.can_format` in
+   `pycodify_formatters.py`; one in `virtual_workspace_metadata.py`). Notes from reading the
+   compiler: the declaration needs the submitted documents before `_resolve_pipeline_once`
+   replaces the steps in place, and the per-step provenance that only
+   `ResolvedPipelineDefinition` holds; nothing on the bundle or the plans carries that
+   provenance, so the orchestrator (the single caller, `orchestrator.py:739`) cannot build it
+   after the fact without the compiler handing something over. The two early returns in
+   `compile_pipelines` build the same empty bundle twice. `saved_path_producers` belongs with
+   `ProducedFiles` in `run_record.py`. Then merge `origin/main` and run `guardrails_local.sh`.
+4. **Defects in what is recorded**, failing test first, none started:
+   (3) declared path left at its default: `CompiledFunctionInvocation.from_normalized_item`
+   (`function_patterns.py:~926`) replaces the kwargs with `resolve_declared_paths`' result, so the
+   invocation no longer knows which paths the pipeline wrote; it has to keep that (the stated
+   value and its source per declared path) so `_parameters` can say `function_default` and
+   `declared_files` holds the resolved path. (4) `enabled` has no parameters entry. (5) device on
+   a host run: `StepCalls.assigned_gpu_devices` is still an empty tuple; state it positively from
+   `FrameworkDeviceAssignment` and note the DL1 dependency. (6) enum defaults of custom functions
+   render with the mangled path. (7) libraries: direct imports only; add the requirements
+   closure, each list named. (8) plate-level outputs have no `produced_files` entry. (10) no
+   saved global config: `RunDeclaration.before_step_resolution` still falls back to
+   `GlobalPipelineConfig()`. (12) `changed_during_run`: still in the design text, not
+   implemented.
+5. **Reader**: a public "is this a dataset root / which dataset contains this file" answer
+   through the dataset access owner; `DatasetRunRecords.of_dataset` and `_dataset_root_of` still
+   read the metadata file directly, and `RunRecordTarget.at` probes for the file, so the
+   capability's read of the document above a file is not checked by the agent path policy. Size:
+   re-measure on the Cellpose record.
+6. **PolyStore 0.6.4**: not started. Rebase #41 onto PolyStore main, version 0.6.4, drop the
+   unused `to_record` / `from_record` if the owner agrees, suite in a fresh venv, merge, annotated
+   tag, publish. Then this branch's pin (see the top of this document).
+7. **Acceptance re-run** (Cellpose on CPU, three BBBC039 fields), then delete `.claude/venv-cpu`
+   (2.4 GB) and `.claude/scratch/` (1.2 GB): both still present in the worktree. The acceptance
+   scripts under `.claude/scratch/acceptance/` read the old dict form and need the typed reader.
+8. Gates (the landing agent's): guardrails `rc=0`, `verify_branch.sh`, smoke, parity. The PR is
+   still a draft; its body does not yet say "lands after DL1".
+9. Outside this branch, unchanged: ROI zip metadata and `segmentation_summary.txt` embed absolute
+   source paths; zip timestamps.
+
