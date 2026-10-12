@@ -13,6 +13,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Both tools are pinned by commit but resolve metaclass-registry unpinned.
+  # At these commits they were written against 0.3: under 0.4 agent-comms
+  # overrides the private `_register_class` without its new `replaces`
+  # argument (TypeError at import) and NominalRefactorAdvisor registers a
+  # mixin subclass under its mixin's key (DuplicateRegistryKeyError at import).
+  # The bound below is part of the pin; drop it when the pinned commits move
+  # to ones that run on 0.4.
   structural-ratchet:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -35,6 +42,7 @@ jobs:
           if [ -z "$base" ]; then base=$(git rev-parse HEAD^); fi
           for root in openhcs scripts benchmark; do
             uvx --python 3.14 --from git+https://github.com/OpenHCSDev/agent-comms@3b03785f45df2ef5dc62ba6aed99294192ecbb01 \
+              --with 'metaclass-registry<0.4' \
               agent-comms-ratchet --root "$root" --base "$base" --head "$HEAD"
           done
 
@@ -61,6 +69,7 @@ jobs:
         run: |
           uv run --no-project --python 3.12 --with pytest --with pyyaml \
             --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
+            --with 'metaclass-registry<0.4' \
             python -m pytest --noconftest -o addopts='' .github/tests/test_refactor_guardrails.py -q
       - name: Compare changed-file R1 evidence through NRA declarations
         env:
@@ -72,5 +81,6 @@ jobs:
           if [ -z "$base" ]; then base=$(git rev-parse HEAD^); fi
           uv run --no-project --python 3.12 \
             --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
+            --with 'metaclass-registry<0.4' \
             python -m scripts.check_refactor_r1 --base "$base" --head "$HEAD" \
             --scratch-root "$RUNNER_TEMP/openhcs-r1" --budget-seconds 600
