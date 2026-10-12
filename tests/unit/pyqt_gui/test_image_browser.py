@@ -6,12 +6,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from objectstate import ObjectStateRegistry
+from objectstate.global_config import set_global_config_for_editing
 from PyQt6.QtCore import Qt
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.record_table_browser import LabelledValue
 
 from openhcs.core.axes import AxisFamily, GridAddressed
-from openhcs.core.config import StreamingConfig
+from openhcs.core.config import GlobalPipelineConfig, StreamingConfig
 from openhcs.core.plate_image_inventory import PlateFileKind, PlateFileRecord
 from openhcs.core.result_file_formats import RoiArchiveResultFile, TextResultFile
 from openhcs.domains.microscopy.axes import Microscopy
@@ -102,11 +104,20 @@ def synchronous_threads(monkeypatch) -> None:
 
 @pytest.fixture
 def remote_sensing() -> Iterator[type[RemoteSensing]]:
+    # Config defaults name the active family's axes, so the global config other
+    # tests left behind is rebuilt under each family.
     RemoteSensing.activate()
+    _reset_global_config()
     try:
         yield RemoteSensing
     finally:
         Microscopy.activate()
+        _reset_global_config()
+
+
+def _reset_global_config() -> None:
+    ObjectStateRegistry.clear()
+    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_microscopy_files_show_axis_columns_filters_grid_and_folders(qapp) -> None:
