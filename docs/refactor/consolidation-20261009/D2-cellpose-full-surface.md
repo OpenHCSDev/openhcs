@@ -617,4 +617,94 @@ when run.
 
 ## Progress
 
-- Matrix and design committed; nothing built yet.
+Done: sections 1 to 7 (measurement, matrix, design); draft PR #1234. Nothing is built yet.
+Scratch (untracked, in the worktree): `.claude/venv` (CPU venv with Cellpose 3.1.1.3; delete at
+the end), `.claude/scripts/matrix.py` (renders section 2), `.claude/scripts/probe_eval.py`
+(return shapes), `.claude/platform-clones/` (delete at the end).
+
+### Facts the implementation must respect (measured on this branch)
+
+Platform:
+
+- Registry classes in `lib_registry/` are discovered by importing every module of that package
+  (not recursively). The registry file must not import Cellpose or torch at module level
+  (`tests/unit/test_library_registry_discovery.py:887`); use `importlib.util.find_spec` in
+  `is_library_available`. A registry that raises or returns false is skipped with a warning
+  (`registry_service.py:241-272`). A registry whose cache cannot round-trip breaks the whole
+  catalogue (`registry_service.py:162-166`).
+- A plain `LibraryRegistryBase` subclass needs `get_library_version`, `is_library_available`,
+  `discover_functions`, `get_library_object`, class attributes `_registry_name`,
+  `MODULES_TO_SCAN`, `MEMORY_TYPE`, `FLOAT_DTYPE`, a zero-argument `__init__`, and either
+  `_generate_function_name` or an override of `metadata_for_declared_callable`
+  (`unified_registry.py:337-362`). `get_module_patterns` must cover the module that holds the
+  derived functions (`owns_module`).
+- A function is transported as a reference and resolved in every process by
+  `import_module(metadata.module)` + `getattr(original_name)`; `inspect.unwrap(metadata.func)`
+  must be that object; the cache reloads the same way and re-applies
+  `reconstruct_cached_callable` (`registry_service.py:441-530`, `unified_registry.py:688-782`).
+  The module attribute is the memory-decorated function before the registry wrapper; keep one
+  registry wrapper per declaration (precedent `openhcs_registry.py:243-261, 958-969`).
+- Memory decorators can be applied to a closure with a synthesized `__signature__`,
+  `__annotations__`, `__name__`, `__module__`, `__doc__` (checked):
+  `numpy(func, contract=Pure3DContract, prepare=...)`; `artifact_outputs(...)` likewise.
+  `Pure3DContract` is one call on the whole stack (`processing_contracts.py:1140`).
+- Parameter descriptions come from `inspect.getdoc`, parsed as `Args:` with `name: text`
+  lines; Cellpose's `name (type, optional): text` form is not parsed, so the synthesized
+  docstring is written as `name: text`. A continuation line containing a colon is misread
+  (D1 row 1c): strip or reflow.
+- Dynamic enums and `make_dataclass` types must have `__module__`/`__qualname__` that resolve by
+  import (`pycodify/core.py:69-73`). Nested frozen-dataclass parameters work end to end
+  (precedent `count_cells_simple.py:316-320`). MCP authoring coerces only enum keyword values
+  (`callable_contract.py:1539-1551`): check whether a dataclass parameter can be set through
+  MCP and report it if not.
+- Avoid parameter names that are `PipelineConfig` fields (`runtime_config_parameter`,
+  `core/config.py:1417-1438`).
+- Image artifacts: `ImageArtifactType` output precedent `basic_processor_jax.py:40-65` (extra
+  image outputs kept off the main flow with `sidecar_role`), input precedent
+  `numpy_processor.py:413-415`. Accepted shapes are `(N, H, W)` or `(N, H, W, C)`
+  (`function_runtime.py:1093-1097`). Measurements: `DataclassMeasurementColumnarRows(rows, Row)`
+  with `ArtifactMeasurementSubjectRelation()`. Labels in: `ArtifactSpec.input(name,
+  ObjectLabelsArtifactType, parameter_name=...)`.
+- Declared files: `PlateInputFile`, `PlateOutputFile`, `PlateInputDirectory`,
+  `PlateOutputDirectory` (`vfs_protocol.py:211-214`), resolved at compile to absolute paths;
+  an input file must exist at compile.
+- Preparation: every `metadata.func` gets its `__openhcs_prepare__` run before readiness
+  (`registry_service.py:178-212`); one shared hook runs once per function unless it memoizes.
+- Guard tests a new registry touches: `tests/unit/test_library_registry_discovery.py`
+  (`:709-765`, `:819-892`, `:895-1001`), `test_processing_module_liveness.py:139-178`,
+  `test_catalog_optional_libraries.py`, `test_registry_keys_unique.py`,
+  `test_e1_enum_dispatch_guards.py`.
+- Smallest pipeline-through-the-server test to model on:
+  `tests/integration/test_count_cells_simple_dual_channel.py`; private server:
+  `ZMQExecutionClient.with_private_server()`.
+
+Cellpose (from `.claude/scripts/probe_eval.py`):
+
+- `CellposeModel.eval` on a list of N planes returns `(list of N (Y,X) uint16, list of N
+  [rgb (Y,X,3) uint8, dP (2,Y,X) float32, cellprob (Y,X) float32], list of N styles (256,))`.
+  With `z_axis=0` and `stitch_threshold>0`: masks `(Z,Y,X)`, flows `[(Z,Y,X,3), (2,Z,Y,X),
+  (Z,Y,X)]`, styles `(Z,256)`. With `do_3D`: dP `(3,Z,Y,X)`, styles `(n,256)` with n not Z.
+  With `channel_axis=0`: one `(Y,X)` result. `compute_masks=False`: masks is an empty array.
+- `Cellpose.eval` adds a fourth element, the diameters (list of floats). `SizeModel.eval`
+  returns `(diameters, diameters_from_styles)`. `DenoiseModel.eval` returns a list of
+  `(Y,X,1)` float32. `CellposeDenoiseModel.eval` returns `(masks, flows, styles, restored)`.
+- `Cellpose`, `SizeModel`, `CellposeDenoiseModel` constructors have no parameter docs in
+  `__init__`; class docstrings carry `Args:` for `Cellpose` and `DenoiseModel` only.
+- Weights download to `~/.cellpose/models` (present: `nucleitorch_0`, its size model,
+  `denoise_nuclei`).
+
+### What remains, in order
+
+1. `model_library.py` (generic), `cellpose_registry.py`, `derived/cellpose.py`, the
+   `OpenHCSRegistry` claim correction, `cache_source_mtimes`, the `cellpose` extra.
+   Functions: `segment`, `segment_estimating_diameter`, `estimate_diameter`, `restore`,
+   `restore_and_segment`; then `train_segmentation`, `train_size`, `train_restoration`; then the
+   module functions (`dynamics.resize_and_compute_masks`, `utils.*`, `metrics.*` listed in
+   `.claude/scripts/matrix.py`).
+2. Tests of section 6, including the four expected-to-fail tests of section 5.
+3. Pipeline runs through the execution server on CPU with a few fields of
+   `/home/ts/code/projects/openhcs/.claude/cellpose-demo/data` (copy, do not modify).
+4. GPU run commands (the 8 GB GPU venv does not fit: `/home` has 9 GB free).
+5. Gates: `verify_branch.sh d2 <worktree>`, `smoke_local.sh`, `guardrails_local.sh`.
+6. Update the matrix's last column to what was built; record the StarDist experiment or say it
+   was not run.
