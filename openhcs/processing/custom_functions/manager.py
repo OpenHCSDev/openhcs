@@ -15,11 +15,9 @@ Architecture:
 
 from __future__ import annotations
 
-import ast
 import logging
 import os
 import tempfile
-import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,6 +42,8 @@ from openhcs.processing.custom_functions.source_namespace import (
 )
 from openhcs.processing.custom_functions.validation import (
     ValidationError,
+    declaration_line,
+    failing_source_line,
     validate_code,
     validate_function,
 )
@@ -163,6 +163,35 @@ class CustomFunctionInfo(PersistedCustomFunction):
     @property
     def backend_label(self) -> str:
         return self.memory_type or self.contract.execution_scope.value
+
+
+def load_each_source(
+    snapshots: tuple[CustomFunctionSourceSnapshot, ...],
+    storage_dir: Path,
+    prepare: Callable[[CustomFunctionSourceSnapshot], "FunctionMetadata"],
+) -> tuple[dict[str, "FunctionMetadata"], tuple[CustomFunctionLoadFailure, ...]]:
+    """Load each persisted source on its own: what loaded, and what failed.
+
+    User source can raise anything while it is prepared or checked for
+    publication. Each failure becomes a listed ``CustomFunctionLoadFailure``,
+    so one source cannot hide the others and none is dropped.
+    """
+    prepared: dict[str, "FunctionMetadata"] = {}
+    failures: list[CustomFunctionLoadFailure] = []
+    for snapshot in snapshots:
+        name = snapshot.source.function_name
+        try:
+            metadata = prepare(snapshot)
+            CustomFunctionRuntimeRegistry.ensure_can_publish_persisted(metadata)
+        except Exception as error:
+            failures.append(
+                CustomFunctionLoadFailure(
+                    name=name, file_path=storage_dir / snapshot.file_name, error=error
+                )
+            )
+        else:
+            prepared[name] = metadata
+    return prepared, tuple(failures)
 
 
 class CustomFunctionManager:
@@ -313,13 +342,12 @@ class CustomFunctionManager:
             return 0
 
         revision, snapshots = self._snapshot_all_sources()
+        prepared, failures = load_each_source(
+            snapshots, self.storage_dir, self._prepare_snapshot
+        )
         with CustomFunctionRuntimeRegistry.lifecycle():
-            unchanged = revision == CustomFunctionRuntimeRegistry.source_revision()
-        prepared, failures = self._load_sources(snapshots)
-        if unchanged:
-            return len(prepared)
-
-        with CustomFunctionRuntimeRegistry.lifecycle():
+            if revision == CustomFunctionRuntimeRegistry.source_revision():
+                return len(prepared)
             self._require_revision(revision)
             CustomFunctionRuntimeRegistry.replace_all(prepared, revision)
 
@@ -430,12 +458,11 @@ class CustomFunctionManager:
         Returns:
             One entry per source file, ordered by file name
         """
-        if not self.storage_dir.exists():
-            return []
-
         _revision, snapshots = self._snapshot_all_sources()
-        prepared, failures = self._load_sources(snapshots)
-        listed: list[PersistedCustomFunction] = [
+        prepared, failures = load_each_source(
+            snapshots, self.storage_dir, self._prepare_snapshot
+        )
+        loaded = [
             CustomFunctionInfo(
                 name=name,
                 file_path=self.storage_dir / f"{name}.py",
@@ -443,14 +470,12 @@ class CustomFunctionManager:
             )
             for name, metadata in prepared.items()
         ]
-        return sorted([*listed, *failures], key=lambda listing: listing.file_path)
+        return sorted([*loaded, *failures], key=lambda listed: listed.file_path)
 
     def load_failures(self) -> tuple[CustomFunctionLoadFailure, ...]:
         """Return the persisted sources that could not be loaded."""
-        if not self.storage_dir.exists():
-            return ()
         _revision, snapshots = self._snapshot_all_sources()
-        return self._load_sources(snapshots)[1]
+        return load_each_source(snapshots, self.storage_dir, self._prepare_snapshot)[1]
 
     def get_function_code(self, func_name: str) -> str:
         """
@@ -563,7 +588,7 @@ class CustomFunctionManager:
 
         validation_result = validate_code(code)
         if not validation_result.is_valid:
-            raise self._validation_error(
+            raise ValidationError.at_line(
                 "Code validation failed:\n" + "\n".join(validation_result.errors),
                 code,
                 validation_result.line_number,
@@ -573,15 +598,10 @@ class CustomFunctionManager:
         try:
             exec(compile(code, _SOURCE_FILENAME, "exec"), namespace)
         except Exception as exc:
-            source_lines = [
-                frame.lineno
-                for frame in traceback.extract_tb(exc.__traceback__)
-                if frame.filename == _SOURCE_FILENAME and frame.lineno is not None
-            ]
-            raise self._validation_error(
+            raise ValidationError.at_line(
                 f"Code execution failed: {exc}",
                 code,
-                source_lines[-1] if source_lines else 0,
+                failing_source_line(exc, _SOURCE_FILENAME),
             ) from exc
 
         declared_names = set(validation_result.function_names)
@@ -603,18 +623,13 @@ class CustomFunctionManager:
 
         declaration = declarations[0]
         self._check_name_collision(declaration.__name__)
-        declaration_line = next(
-            node.lineno
-            for node in ast.parse(code).body
-            if isinstance(node, ast.FunctionDef) and node.name == declaration.__name__
-        )
         function_validation = validate_function(declaration)
         if not function_validation.is_valid:
-            raise self._validation_error(
+            raise ValidationError.at_line(
                 f"Function '{declaration.__name__}' validation failed:\n"
                 + "\n".join(function_validation.errors),
                 code,
-                declaration_line,
+                declaration_line(code, declaration.__name__),
             )
         source = CustomFunctionSource(
             function_name=declaration.__name__,
@@ -627,74 +642,22 @@ class CustomFunctionManager:
                 declaration_revision=source.content_sha256,
             )
         except ValueError as exc:
-            raise self._validation_error(
+            raise ValidationError.at_line(
                 f"Function '{declaration.__name__}' projection failed: {exc}",
                 code,
-                declaration_line,
+                declaration_line(code, declaration.__name__),
             ) from exc
-
-    @staticmethod
-    def _validation_error(message: str, code: str, line_number: int) -> ValidationError:
-        """Build the error for one source line, quoting that line when it has one."""
-        lines = code.splitlines()
-        snippet = lines[line_number - 1].strip() if 0 < line_number <= len(lines) else ""
-        return ValidationError(message, line_number, snippet)
 
     def _prepare_snapshot(
         self,
         snapshot: CustomFunctionSourceSnapshot,
     ) -> "FunctionMetadata":
         """Prepare one persisted source once; its file name must be its function name."""
-        file_name = f"{snapshot.source.function_name}.py"
-
-        def prepare() -> "FunctionMetadata":
-            try:
-                code = snapshot.content.decode("utf-8")
-            except UnicodeDecodeError as exc:
-                raise ValidationError(
-                    f"Persisted custom function '{file_name}' is not UTF-8."
-                ) from exc
-            return self._prepare_source(code)
-
         metadata = CustomFunctionRuntimeRegistry.prepare_source_once(
-            snapshot.source, prepare
+            snapshot.source, lambda: self._prepare_source(snapshot.code)
         )
-        if metadata.original_name != snapshot.source.function_name:
-            raise ValidationError(
-                f"Persisted custom function '{file_name}' declares "
-                f"'{metadata.original_name}'. The filename and declaration "
-                "name must match."
-            )
+        snapshot.require_declared_name(metadata.original_name)
         return metadata
-
-    def _load_sources(
-        self,
-        snapshots: tuple[CustomFunctionSourceSnapshot, ...],
-    ) -> tuple[dict[str, "FunctionMetadata"], tuple[CustomFunctionLoadFailure, ...]]:
-        """Load each persisted source on its own: what loaded, and what failed.
-
-        User source can raise anything while it is prepared or checked for
-        publication. Each failure becomes a listed ``CustomFunctionLoadFailure``
-        so one source cannot hide the others; none is dropped.
-        """
-        prepared: dict[str, "FunctionMetadata"] = {}
-        failures: list[CustomFunctionLoadFailure] = []
-        for snapshot in snapshots:
-            name = snapshot.source.function_name
-            try:
-                metadata = self._prepare_snapshot(snapshot)
-                CustomFunctionRuntimeRegistry.ensure_can_publish_persisted(metadata)
-            except Exception as error:
-                failures.append(
-                    CustomFunctionLoadFailure(
-                        name=name,
-                        file_path=self.storage_dir / f"{name}.py",
-                        error=error,
-                    )
-                )
-            else:
-                prepared[name] = metadata
-        return prepared, tuple(failures)
 
     def _check_name_collision(
         self,

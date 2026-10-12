@@ -11,6 +11,7 @@ exec(). Custom functions execute with full Python privileges.
 
 import ast
 import inspect
+import traceback
 from dataclasses import dataclass, replace
 from typing import Callable
 
@@ -42,11 +43,37 @@ class ValidationError(Exception):
             parts.append(f"Code: {self.code_snippet}")
         return " | ".join(parts)
 
+    @classmethod
+    def at_line(cls, message: str, code: str, line_number: int) -> "ValidationError":
+        """The error for one line of ``code`` (0 for none), quoting that line."""
+        lines = code.splitlines()
+        on_a_line = 0 < line_number <= len(lines)
+        return cls(message, line_number, lines[line_number - 1].strip() if on_a_line else "")
+
     def __copy__(self) -> "ValidationError":
         """Copy declared values without reformatting an already formatted arg."""
         error = type(self)(self.message, self.line_number, self.code_snippet)
         error.__dict__.update(self.__dict__)
         return error
+
+
+def failing_source_line(error: BaseException, source_filename: str) -> int:
+    """Innermost line of the executed source in an error's traceback, 0 for none."""
+    lines = [
+        frame.lineno
+        for frame in traceback.extract_tb(error.__traceback__)
+        if frame.filename == source_filename and frame.lineno is not None
+    ]
+    return lines[-1] if lines else 0
+
+
+def declaration_line(code: str, function_name: str) -> int:
+    """Line of the module-level ``def`` of ``function_name`` in ``code``."""
+    return next(
+        node.lineno
+        for node in ast.parse(code).body
+        if isinstance(node, ast.FunctionDef) and node.name == function_name
+    )
 
 
 @dataclass(frozen=True)
