@@ -7,10 +7,10 @@ import logging
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from concurrent.futures import CancelledError
 from copy import deepcopy
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
@@ -39,6 +39,7 @@ from zmqruntime.messages import (
     ControlMessageType,
     ControlRequestHeader,
     EndpointApplicationCompatibilityError,
+    EndpointLaunch,
     ExecuteRequest,
     ExecutionRecord,
     PongResponse,
@@ -157,6 +158,7 @@ class ExecutionRuntimeLaunchPlan:
         config: OpenHCSZMQConfig,
         *,
         persistent: bool,
+        launch: EndpointLaunch,
     ) -> subprocess.Popen:
         """Materialize this admitted plan through the canonical process policy.
 
@@ -191,6 +193,8 @@ class ExecutionRuntimeLaunchPlan:
             str(self.startup_status_file),
             "--config-source",
             _pycodify_config_source(server_config),
+            "--launch",
+            launch.to_argument(),
         ]
         root_logger = logging.getLogger()
         current_log_level = root_logger.getEffectiveLevel()
@@ -981,6 +985,30 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             connection_status_callback=connection_status_callback,
         )
 
+    @classmethod
+    @contextmanager
+    def with_private_server(
+        cls,
+        *,
+        progress_callback=None,
+        config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
+    ) -> Iterator[ZMQExecutionClient]:
+        """A connected client on a server it started at an address of its own.
+
+        The server stops when the block ends. The address comes from the
+        transport, so no other process is given it: a run that needs its own
+        server uses this instead of picking a free port.
+        """
+
+        private_endpoint = config.transport_mode.declaration.private_endpoint
+        with private_endpoint(config) as private_config:
+            with cls(
+                persistent=False,
+                progress_callback=progress_callback,
+                config=private_config,
+            ) as client:
+                yield client
+
     def connect(
         self,
         timeout: float | None = None,
@@ -1280,7 +1308,12 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         plan = self.runtime_launch_plan()
         self._runtime_launch_plan = None
         self._startup_status_path = plan.startup_status_file
-        return plan.spawn(self.endpoint, self.config, persistent=self.persistent)
+        return plan.spawn(
+            self.endpoint,
+            self.config,
+            persistent=self.persistent,
+            launch=self.launch(),
+        )
 
     def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
         """Resolve owner defaults without creating directories or warming."""

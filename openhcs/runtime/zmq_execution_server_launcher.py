@@ -12,6 +12,7 @@ import logging
 from pathlib import Path
 
 from zmqruntime.config import TransportMode
+from zmqruntime.messages import EndpointLaunch
 from zmqruntime.startup import (
     EndpointStartupPhase,
     EndpointStartupStatusWriter,
@@ -68,6 +69,12 @@ def main(
         "--prepare-capabilities",
         action="store_true",
         help="Prepare endpoint-owned capability caches without binding sockets",
+    )
+    parser.add_argument(
+        "--launch",
+        type=EndpointLaunch.from_argument,
+        default=None,
+        help="Launch record of the client that starts this server",
     )
     parser.add_argument(
         "--startup-status-path",
@@ -192,6 +199,7 @@ def main(
         server = execution_server_type(
             log_file_path=args.log_file_path,
             config=config,
+            launch=args.launch,
         )
 
         status_reporter.emit(
