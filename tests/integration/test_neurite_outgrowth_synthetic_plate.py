@@ -62,7 +62,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     Output,
     ViewerStreamBackendCallKwargs,
 )
@@ -192,7 +192,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             for output in compiled_plan.artifact_outputs.values()
             if output.name == "neurite_candidate_mask"
         )
-        assert checkpoint_plan.group_component is Microscopy.Site
+        assert checkpoint_plan.group_scope.component is Microscopy.Site
         assert checkpoint_plan.group_scope_sources()
         assert checkpoint_plan.source_context_source() is None
         assert compiled_plan.variable_components == [Microscopy.Channel]

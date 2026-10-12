@@ -24,7 +24,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
@@ -94,7 +93,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
 )
 from openhcs.processing.backends.cellprofiler.crop import CropModule
 from openhcs.processing.backends.cellprofiler.tracking import TrackObjectsModule
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     FileBundleOptions,
     MaterializationSpec,
     WriteMode,
@@ -104,6 +103,12 @@ from openhcs.processing.materialization import (
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
+from tests.context_support import (
+    executing_context,
+)
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -571,14 +576,14 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-    context = ProcessingContext(filemanager=filemanager)
+    context = executing_context(filemanager=filemanager)
     with context.runtime_step_scope():
         bundle = export_to_spreadsheet(
             add_filename_prefix=False,
             artifact_batch=batch,
             context=context,
         )
-        from openhcs.processing.materialization.core import ColumnarCsvOutput
+        from openhcs.core.materialization.core import ColumnarCsvOutput
         assert all(isinstance(output, ColumnarCsvOutput) for output in bundle.values())
         outputs = materialization_outputs(
             MaterializationSpec(FileBundleOptions()),
@@ -1883,8 +1888,7 @@ def _measurement_record(
         name=name,
         path=f"/memory/{name}.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=(group_key,),
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((group_key,), component=group_component),
         variable_components=variable_components,
     )
     value = RuntimeValue.normalize(
@@ -2163,7 +2167,7 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
     from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         _partitioned_spreadsheet_export,
     )
-    from openhcs.processing.materialization.core import ColumnarCsvOutput
+    from openhcs.core.materialization.core import ColumnarCsvOutput
 
     records = {}
     for ordinal in range(1, 13):
@@ -2256,7 +2260,7 @@ def test_partitioned_relationship_export_preserves_producer_then_axis_order(
     overlapping_declarations: bool,
 ) -> None:
     from dataclasses import replace
-    from openhcs.processing.materialization.core import ColumnarCsvOutput
+    from openhcs.core.materialization.core import ColumnarCsvOutput
     from openhcs.core.runtime_batch_contracts import (
         RuntimeArtifactPartitionBatchRequest,
     )
@@ -2359,7 +2363,7 @@ def test_rendered_partitions_keep_sparse_csv_without_raw_value_transport(
 ):
     import pickle
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
@@ -2429,7 +2433,7 @@ def test_rendered_partitions_keep_sparse_csv_without_raw_value_transport(
 
 def test_rendered_matching_headers_compose_without_decoding_value_columns():
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
@@ -2464,8 +2468,8 @@ def test_rendered_matching_headers_compose_without_decoding_value_columns():
 
 
 def test_csv_writer_shape_preserves_contextual_headers_and_empty_dialects():
-    from openhcs.processing.materialization.core import ColumnarCsvOutput
-    from openhcs.processing.materialization.options import CsvOptions
+    from openhcs.core.materialization.core import ColumnarCsvOutput
+    from openhcs.core.materialization.options import CsvOptions
     from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         CellProfilerSpreadsheetCsvOptions,
     )
@@ -2510,7 +2514,7 @@ def test_csv_writer_shape_preserves_contextual_headers_and_empty_dialects():
     assert generic_empty.table_shape() == ((), 0)
     # The nominal field owner rejects empty names; the generic mapping writer
     # still preserves the one-column blank CSV grammar.
-    from openhcs.processing.materialization.core import _render_csv_rows
+    from openhcs.core.materialization.core import _render_csv_rows
 
     with pytest.raises(ValueError, match="cannot be empty"):
         FieldSpec("")
@@ -2519,7 +2523,7 @@ def test_csv_writer_shape_preserves_contextual_headers_and_empty_dialects():
 
 def test_rendered_fixed_fields_snapshot_mutable_cells_and_keep_unrendered_identity():
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
@@ -2567,7 +2571,7 @@ def test_rendered_fixed_fields_snapshot_mutable_cells_and_keep_unrendered_identi
 def test_compact_csv_fallback_preserves_physical_dtype_promotion(nan_representation):
     import pickle
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
@@ -2657,7 +2661,7 @@ def test_compact_csv_fallback_preserves_physical_dtype_promotion(nan_representat
 
 def test_compact_csv_nested_fast_compose_keeps_original_dtype_segments():
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
@@ -2717,11 +2721,11 @@ def test_compact_csv_nested_fast_compose_keeps_original_dtype_segments():
 
 def test_compact_csv_preserves_original_semantic_schema_conflicts():
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )
-    from openhcs.processing.materialization.options import CsvOptions
+    from openhcs.core.materialization.options import CsvOptions
 
     outputs = tuple(
         ColumnarCsvOutput(
@@ -2740,7 +2744,7 @@ def test_compact_csv_preserves_original_semantic_schema_conflicts():
 
 def test_compact_csv_requested_absent_field_uses_original_merged_declaration():
     import numpy as np
-    from openhcs.processing.materialization.core import (
+    from openhcs.core.materialization.core import (
         ColumnarCsvOutput,
         RenderedColumnarCsvOutput,
     )

@@ -23,12 +23,12 @@ from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.vfs_protocol import PlateInputFile
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     MaterializationSpec,
     TiffStackOptions,
 )
-from openhcs.processing.materialization.options import NameByArtifactName
+from openhcs.core.materialization.options import NameByArtifactName
 
 logger = logging.getLogger(__name__)
 

@@ -42,7 +42,7 @@ from openhcs.core.runtime_stores import (
     RuntimeValueStore,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     FileBundleOptions,
     ImageFileOptions,

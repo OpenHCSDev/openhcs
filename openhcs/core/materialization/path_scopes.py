@@ -8,7 +8,7 @@ from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 
 
 class MaterializationRelativePathScope(ABC):
@@ -18,7 +18,7 @@ class MaterializationRelativePathScope(ABC):
     def scoped_path(
         self,
         relative_path: PurePosixPath,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> PurePosixPath:
         """Return the relative path owned by one runtime execution context."""
 
@@ -30,7 +30,7 @@ class SharedMaterializationRelativePathScope(MaterializationRelativePathScope):
     def scoped_path(
         self,
         relative_path: PurePosixPath,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> PurePosixPath:
         del context
         return relative_path
@@ -43,11 +43,9 @@ class ExecutionAxisMaterializationRelativePathScope(MaterializationRelativePathS
     def scoped_path(
         self,
         relative_path: PurePosixPath,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> PurePosixPath:
-        if context is None or context.execution_runtime is None:
-            return relative_path
-        if len(context.execution_runtime.execution_axis_values) <= 1:
+        if context is None or context.execution_axis_count() <= 1:
             return relative_path
 
         from openhcs.core.source_projection import OpenHCSPlaneAddress

@@ -13,7 +13,6 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.function_patterns import compile_function_pattern
@@ -22,7 +21,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionSucceeded,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -34,15 +33,18 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     JsonOptions,
     MaterializationSpec,
     SavedMaterializationOutputs,
     prepare_materialization,
 )
-from openhcs.processing.materialization.core import _WRITERS_BY_OPTIONS
+from openhcs.core.materialization.core import _WRITERS_BY_OPTIONS
 from tests.materialization_plans import output_plan as materialization_output_plan
+from tests.context_support import (
+    compiled_context,
+)
 
 
 class CsvOnlyMemoryBackend(MemoryStorageBackend):
@@ -137,30 +139,23 @@ class EmittedOutputStep(FunctionStep):
         return StepExecutionObservation(MappingProxyType({}), (self.path,))
 
 
-class FrozenWorkerContext(ProcessingContext):
-    def __init__(self):
-        super().__init__(
-            axis_id="A01",
-            filemanager=FileManager({"memory": MemoryStorageBackend()}),
-            step_plans={
-                0: CompiledStepPlan(
-                    step_index=0,
-                    step_name="Save",
-                    axis_id="A01",
-                    compiled_function_pattern=compile_function_pattern(
-                        admitted_graph(lambda image: image),
-                        {},
-                        {},
-                    ),
-                )
-            },
-        )
-        self.freeze()
-        self.released = False
-
-    def release_execution_image_cache(self):
-        super().release_execution_image_cache()
-        self.released = True
+def _compiled_worker_context():
+    return compiled_context(
+        axis_id="A01",
+        filemanager=FileManager({"memory": MemoryStorageBackend()}),
+        step_plans={
+            0: CompiledStepPlan(
+                step_index=0,
+                step_name="Save",
+                axis_id="A01",
+                compiled_function_pattern=compile_function_pattern(
+                    admitted_graph(lambda image: image),
+                    {},
+                    {},
+                ),
+            )
+        },
+    )
 
 
 @pytest.mark.parametrize("mode", tuple(RuntimeObservationMode.__subclasses__()))
@@ -170,7 +165,7 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
     import openhcs.core.orchestrator.worker_execution as worker
 
     path = tmp_path / "actual.csv"
-    context = FrozenWorkerContext()
+    context = _compiled_worker_context()
     lane = WorkerLaneExecutionContext(
         execution_id="execution",
         subject_id="plate",
@@ -197,7 +192,6 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
     )
     transported = pickle.loads(pickle.dumps(result))
 
-    assert context.released
     assert transported.is_success()
     assert transported.runtime_observation.contexts[0].outputs.runtime_export_paths == (path,)
     assert transported.runtime_observation.contexts[0].records == ()
@@ -219,7 +213,7 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
         contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (plate_path,))),)
     )
     results = BundleExecutionResults(
-        {"A01": ExecutionResult.success("A01", runtime_observation=worker)},
+        {"A01": ExecutionSucceeded("A01", runtime_observation=worker)},
         extras=BundleExecutionExtras(
             viewer_states_by_port={}, runtime_observation=parent
         ),

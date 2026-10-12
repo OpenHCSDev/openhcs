@@ -22,7 +22,7 @@ from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     FunctionGroupKey,
@@ -123,7 +123,7 @@ def _filter_patterns_by_component(
 class FunctionStepExecutor:
     """Run one compiled FunctionStep plan for one multiprocessing axis."""
 
-    def __init__(self, context: ProcessingContext, step_index: int) -> None:
+    def __init__(self, context: ExecutingContext, step_index: int) -> None:
         self.context = context
         compiled_plan = context.step_plans[step_index]
         if not isinstance(compiled_plan, CompiledStepPlan):
@@ -538,7 +538,7 @@ class FunctionStepExecutor:
     @classmethod
     def execute(
         cls,
-        context: ProcessingContext,
+        context: ExecutingContext,
         step_index: int,
     ) -> StepExecutionObservation:
         step_name = f"step_{step_index}"
@@ -593,7 +593,9 @@ class FunctionStepExecutor:
                 variable_components=ComponentSet.of(plan.variable_components),
             )
 
-        if scope.is_dynamic:
+        if scope.has_compiled_keys:
+            component_keys = scope.runtime_keys(())
+        else:
             discovered_keys = []
             for group in pattern.groups:
                 for invocation in group.invocations:
@@ -611,8 +613,6 @@ class FunctionStepExecutor:
             if not any(key is not None for key in discovered_keys):
                 return None
             component_keys = scope.runtime_keys(discovered_keys)
-        else:
-            component_keys = scope.runtime_keys(())
 
         selected_groups = []
         for component_key in component_keys:
@@ -634,9 +634,7 @@ class FunctionStepExecutor:
             for edge in edges:
                 edge_cohorts = candidate_scopes(
                     edge,
-                    ComponentGroupScope.from_raw(
-                        (component_key,), component=scope.component
-                    ),
+                    ComponentGroupScope.of((component_key,), component=scope.component),
                 )
                 if not edge_cohorts:
                     raise ValueError(
@@ -971,7 +969,7 @@ class FunctionStepExecutor:
                 "Ungrouped is only valid for non-dict function patterns."
             )
         if (
-            plan.execution_group_scope.is_ungrouped
+            not plan.execution_group_scope.as_grouped()
             and not plan.compiled_function_pattern.is_grouped
         ):
             axis_patterns = _single_execution_group_patterns(axis_patterns)

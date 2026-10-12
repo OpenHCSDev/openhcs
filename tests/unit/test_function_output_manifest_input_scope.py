@@ -178,7 +178,7 @@ def _compiled_pattern_with_input_edges(
             artifact_type=spec.artifact_type,
             source_step_scope_id=source_scope_id,
         )
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         edges.append(
             InvocationArtifactInputEdgePlan(
                 key=InvocationArtifactInputProjectionKey(
@@ -417,7 +417,7 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
         artifact_type=source.artifact_type,
         source_step_scope_id="color_to_gray",
     )
-    producer_scope = storage_plan.producer_group_scope()
+    producer_scope = storage_plan.group_scope
     invocation = invocation.with_artifact_input_edges(
         (
             InvocationArtifactInputEdgePlan(

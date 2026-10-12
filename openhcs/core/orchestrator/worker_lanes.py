@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Sequence, TypeAlias
 from python_introspect import project_dataclass
 
 from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import CompiledContext
 from openhcs.core.debug import (
     DebugExecutionContext,
     DebugExecutionPolicy,
@@ -18,7 +18,7 @@ from openhcs.core.debug import (
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.progress import ProgressExecutionContext
 
-TransportAxisContexts: TypeAlias = List[tuple[str, ProcessingContext]]
+TransportAxisContexts: TypeAlias = List[tuple[str, CompiledContext]]
 ForkAxisContextKeys: TypeAlias = List[str]
 LaneAxisContextPayload: TypeAlias = TransportAxisContexts | ForkAxisContextKeys
 WorkerLaneAxisContexts: TypeAlias = List[tuple[str, LaneAxisContextPayload]]
@@ -150,7 +150,7 @@ class CompiledContextLanePlanner:
 
     def plan(
         self,
-        contexts_snapshot: Mapping[str, ProcessingContext],
+        contexts_snapshot: Mapping[str, CompiledContext],
         worker_assignments: Mapping[str, Sequence[str]],
     ) -> WorkerAssignmentPlan:
         contexts_by_axis = self._contexts_by_axis(contexts_snapshot)
@@ -172,7 +172,7 @@ class CompiledContextLanePlanner:
 
     def _contexts_by_axis(
         self,
-        contexts_snapshot: Mapping[str, ProcessingContext],
+        contexts_snapshot: Mapping[str, CompiledContext],
     ) -> Dict[str, List[str]]:
         contexts_by_axis: dict[str, list[str]] = defaultdict(list)
         for context_key, context in contexts_snapshot.items():
@@ -242,7 +242,7 @@ class CompiledContextLanePlanner:
 
     def _lane_axis_contexts(
         self,
-        contexts_snapshot: Mapping[str, ProcessingContext],
+        contexts_snapshot: Mapping[str, CompiledContext],
         contexts_by_axis: Mapping[str, List[str]],
         worker_assignments: Mapping[str, List[str]],
         axis_to_worker: Mapping[str, str],

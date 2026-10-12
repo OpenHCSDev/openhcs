@@ -35,7 +35,10 @@ from openhcs.core.runtime_adapters import RuntimeAdapterSpec, runtime_adapter
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from tests.context_support import (
+    executing_context,
+)
 
 
 @pytest.mark.parametrize("invalid_policy", [None, False, ArtifactOutputPolicy])
@@ -272,7 +275,6 @@ def test_table_wide_subject_owner_rejects_distinct_named_image_subjects(output_p
 
 
 def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
-    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.processing.backends.cellprofiler.image_quality import (
         MeasureImageQualityModule,
     )
@@ -311,7 +313,6 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     CellProfilerRecordedArtifactOutputPolicy,
 ])
 def test_measurement_row_owner_controls_named_object_roster_admission(policy):
-    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
 
     objects = tuple(
@@ -345,7 +346,6 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     """The real module/provider declares the owner, not a compiler exemption."""
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding
@@ -359,7 +359,6 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
         identify_primary_objects,
     )
     from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
-    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 
     (input_binding,) = IdentifyPrimaryObjectsModule.declared_artifact_bindings(
@@ -385,7 +384,7 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
         ),
     )
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             axis_id="A01",
             step_plans={
                 0: CompiledStepPlan(

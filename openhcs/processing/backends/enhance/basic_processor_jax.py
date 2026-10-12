@@ -26,7 +26,7 @@ from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFiel
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     MaterializationSpec,
     NameByArtifactName,

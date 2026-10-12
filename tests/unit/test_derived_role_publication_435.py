@@ -1,6 +1,6 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
-from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
+from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
 import json
 
@@ -41,7 +41,7 @@ from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions, MaterializationSpec,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -93,7 +93,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         components.update(channel="1", z_index="0")
         plan.variable_components = (Microscopy.ZIndex,)
         plan.group_by = Microscopy.Channel
-        plan.execution_group_scope = ComponentGroupScope.from_raw(
+        plan.execution_group_scope = ComponentGroupScope.of(
             ("1",), component=Microscopy.Channel,
         )
         source_planes = []
@@ -141,7 +141,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         )
         if aggregate:
             output_plan = replace(
-                output_plan, group_keys=("1",), group_component=Microscopy.Channel,
+                output_plan, group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel), 
                 variable_components=(Microscopy.ZIndex,),
             )
         plan.artifact_outputs[output_plan.ref()] = output_plan

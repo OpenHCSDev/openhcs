@@ -1,7 +1,11 @@
-"""
-Processing Context for OpenHCS.
+"""Processing contexts for OpenHCS, one class per phase.
 
-This module defines the ProcessingContext class, which maintains state during pipeline execution.
+``ProcessingContext`` holds what the compiler decides for one multiprocessing-axis
+value. ``CompilingContext`` is that state while the compiler fills it in;
+``CompilingContext.freeze`` returns an immutable ``CompiledContext``, which is
+what bundles and workers carry. ``CompiledContext.executing`` starts one
+execution: an ``ExecutingContext`` holds the compiled facts plus the runtime
+stores, caches and debug sink of that execution only.
 """
 
 from __future__ import annotations
@@ -62,33 +66,41 @@ class RequiredVisualizer:
 
 
 class ProcessingContext:
-    """
-    Maintains state during pipeline execution.
-
-    The ProcessingContext is the canonical owner of all state during pipeline execution.
-    After compilation and freezing, it should be treated as immutable by processing steps.
-
-    OWNERSHIP: This class may ONLY be instantiated by PipelineOrchestrator.
-    All other components must receive a context instance, never create one.
+    """What the compiler decides for one multiprocessing-axis value.
 
     Attributes:
-        step_plans: Dictionary mapping step indices to compiled execution plans.
-        axis_id: Identifier of the multiprocessing axis value being processed.
-        filemanager: Instance of FileManager for VFS operations.
+        step_plans: Compiled plan of each step, by step index.
+        axis_id: The multiprocessing-axis value being processed.
+        filemanager: FileManager for VFS operations.
         post_execute_hooks: Domain hooks bound for this compilation.
-        output_dataset_root: Planned runtime output plate root.
-        pipeline_sequential_mode: Flag indicating pipeline-wide vs step-wide sequential processing.
-        pipeline_sequential_combinations: Pre-computed sequential combinations for pipeline-wide mode.
-        current_sequential_combination: Active combination during pipeline-wide sequential execution.
-        _is_frozen: Internal flag indicating if the context is immutable.
+        output_dataset_root: Planned runtime output dataset root.
+        pipeline_sequential_mode: Whether sequential combinations are pipeline-wide.
+        pipeline_sequential_combinations: Combinations for pipeline-wide mode.
+        current_sequential_combination: The combination this context compiles.
     """
 
-    _is_frozen: bool = False
+    step_plans: dict[int, CompiledStepPlan]
+    axis_id: str | None
+    filemanager: FileManager | None
 
     @classmethod
     def require_parameter_name(cls) -> str:
         """Return the callable ABI name for runtime context injection."""
         return "context"
+
+    def require_axis_id(self) -> str:
+        """Return the compiled multiprocessing-axis identity."""
+
+        if not self.axis_id:
+            raise ValueError(f"{type(self).__name__} requires an axis_id.")
+        return self.axis_id
+
+
+class CompilingContext(ProcessingContext):
+    """A processing context while the compiler fills it in.
+
+    OWNERSHIP: only ``PipelineOrchestrator.create_context`` builds one.
+    """
 
     def __init__(
         self,
@@ -100,34 +112,7 @@ class ProcessingContext:
         output_dataset_root: str | None = None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
-        """
-        Initialize the processing context.
-
-        Args:
-            step_plans: Dictionary mapping step indices to compiled execution plans.
-            axis_id: Identifier of the multiprocessing axis value being processed.
-            filemanager: FileManager instance for VFS operations.
-            post_execute_hooks: Domain hooks bound for this compilation.
-            output_dataset_root: Planned runtime output plate root.
-        """
-        self._is_frozen = False
-
-        if step_plans is None:
-            self.step_plans = {}
-        else:
-            self.step_plans = dict(step_plans)
-        self.runtime_value_store = RuntimeValueStore()
-        self.runtime_image_stack_cache = RuntimeImageStackCache()
-        self.runtime_function_output_identity_cache = FunctionOutputIdentityCache()
-        self.runtime_pattern_discovery_cache = RuntimePatternDiscoveryCache()
-        self.runtime_source_binding_context_cache = RuntimeSourceBindingContextCache()
-        self._runtime_step_values: dict[type[object], object] | None = None
-        from openhcs.core.steps.abstract import StepExecutionObservation
-
-        self.completed_step_outputs = StepExecutionObservation.empty()
-        self._runtime_source_workspace_projections: (
-            WorkspaceSourceProjections | None
-        ) = None
+        self.step_plans = {} if step_plans is None else dict(step_plans)
         self.source_image_set_identity_policy = SourceImageSetIdentityPolicy()
         self.axis_id = axis_id
         self.filemanager = filemanager
@@ -142,13 +127,85 @@ class ProcessingContext:
         self.post_execute_hooks = tuple(post_execute_hooks)
         self.output_dataset_root = output_dataset_root
         self.transport_config = transport_config
-
-        self.execution_runtime: WorkerLaneExecutionContext | None = None
-        self.debug_event_sink = NO_OP_DEBUG_EVENT_SINK
-
         self.pipeline_sequential_mode = False
         self.pipeline_sequential_combinations = None
         self.current_sequential_combination = None
+
+    def freeze(self) -> "CompiledContext":
+        """Return the immutable compiled context once every fact is set."""
+
+        if not self.axis_id:
+            raise RuntimeError("Cannot freeze ProcessingContext: 'axis_id' is not set.")
+        if self.filemanager is None:
+            raise RuntimeError(
+                "Cannot freeze ProcessingContext: 'filemanager' is not set."
+            )
+        return CompiledContext(vars(self))
+
+
+class CompiledContext(ProcessingContext):
+    """The compiler's immutable result for one axis value (or combination)."""
+
+    def __init__(self, compiled_facts: dict[str, object]):
+        object.__setattr__(self, "_compiled_facts", frozenset(compiled_facts))
+        self.__dict__.update(compiled_facts)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError(
+            f"{type(self).__name__} is immutable; cannot set {name!r}."
+        )
+
+    def compiled_facts(self) -> dict[str, object]:
+        return {name: self.__dict__[name] for name in self._compiled_facts}
+
+    def with_step_plans(
+        self, step_plans: dict[int, CompiledStepPlan]
+    ) -> "CompiledContext":
+        """Return this compiled context with its step plans replaced."""
+        return CompiledContext(self.compiled_facts() | {"step_plans": step_plans})
+
+    def executing(
+        self,
+        execution_runtime: "WorkerLaneExecutionContext | None" = None,
+    ) -> "ExecutingContext":
+        """Start one execution of this compiled context."""
+        return ExecutingContext(self, execution_runtime)
+
+
+class ExecutingContext(CompiledContext):
+    """One execution of a compiled context, with that execution's state.
+
+    ``execution_runtime`` is the worker lane running it; dataset-scoped steps
+    run in the parent without a lane.
+    """
+
+    def __init__(
+        self,
+        compiled: CompiledContext,
+        execution_runtime: "WorkerLaneExecutionContext | None" = None,
+    ):
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        CompiledContext.__init__(self, compiled.compiled_facts())
+        self.runtime_value_store = RuntimeValueStore()
+        self.runtime_image_stack_cache = RuntimeImageStackCache()
+        self.runtime_function_output_identity_cache = FunctionOutputIdentityCache()
+        self.runtime_pattern_discovery_cache = RuntimePatternDiscoveryCache()
+        self.runtime_source_binding_context_cache = RuntimeSourceBindingContextCache()
+        self.completed_step_outputs = StepExecutionObservation.empty()
+        self.debug_event_sink = NO_OP_DEBUG_EVENT_SINK
+        self.execution_runtime = execution_runtime
+        self._runtime_step_values: dict[type[object], object] | None = None
+        self._runtime_source_workspace_projections: (
+            WorkspaceSourceProjections | None
+        ) = None
+        if execution_runtime is not None:
+            execution_runtime.install_debug_sink(self)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if name in self._compiled_facts:
+            CompiledContext.__setattr__(self, name, value)
+        object.__setattr__(self, name, value)
 
     @property
     def runtime_source_workspace_projections(
@@ -163,20 +220,11 @@ class ProcessingContext:
             self._runtime_source_workspace_projections = authority
         return authority
 
-    def bind_execution_runtime(
-        self,
-        runtime: WorkerLaneExecutionContext,
-    ) -> None:
-        """Bind worker-owned execution identity after compilation freeze."""
-
-        self.execution_runtime = runtime
-        self.reset_completed_step_outputs()
-
-    def reset_completed_step_outputs(self) -> None:
-        """Start an execution's saved-output facts without retaining old payloads."""
-        from openhcs.core.steps.abstract import StepExecutionObservation
-
-        self.completed_step_outputs = StepExecutionObservation.empty()
+    def execution_axis_count(self) -> int:
+        """Return how many axis values this execution's lane runs; 0 without a lane."""
+        if self.execution_runtime is None:
+            return 0
+        return len(self.execution_runtime.execution_axis_values)
 
     def record_completed_step_outputs(
         self, observation: "StepExecutionObservation"
@@ -263,62 +311,5 @@ class ProcessingContext:
             )
         self.debug_event_sink = debug_event_sink
 
-    def inject_plan(self, step_id: int, plan: CompiledStepPlan) -> None:
-        """
-        Inject a step plan into the context.
 
-        This method is the canonical way to add step plans to the context during compilation.
-        All step configuration must be injected into the context using this method.
-
-        Args:
-            step_id: The step index used as the compiled-plan key.
-            plan: The step execution plan
-
-        Raises:
-            AttributeError: If the context is frozen.
-        """
-        if self._is_frozen:
-            raise AttributeError("Cannot inject plan into a frozen ProcessingContext.")
-        self.step_plans[step_id] = plan
-
-    def freeze(self) -> None:
-        """
-        Freezes the context, making its attributes immutable.
-
-        This should be called after all compilation and plan injection is complete.
-        Essential attributes like step_plans, filemanager, and axis_id must be set.
-
-        Raises:
-            RuntimeError: If essential attributes are not set before freezing.
-        """
-        if not self.axis_id:
-            raise RuntimeError("Cannot freeze ProcessingContext: 'axis_id' is not set.")
-        if self.filemanager is None:
-            raise RuntimeError(
-                "Cannot freeze ProcessingContext: 'filemanager' is not set."
-            )
-        if self.step_plans is None:
-            raise RuntimeError(
-                "Cannot freeze ProcessingContext: 'step_plans' is not set."
-            )
-
-        self._is_frozen = True
-
-    def require_axis_id(self) -> str:
-        """Return the compiled multiprocessing-axis identity."""
-
-        if not self.axis_id:
-            raise ValueError("Compiled ProcessingContext requires an axis_id.")
-        return self.axis_id
-
-    def is_frozen(self) -> bool:
-        """
-        Check if the context is frozen.
-
-        Returns:
-            True if the context is frozen, False otherwise.
-        """
-        return self._is_frozen
-
-
-DebugExecutionContext.register(ProcessingContext)
+DebugExecutionContext.register(ExecutingContext)

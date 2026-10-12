@@ -9,11 +9,11 @@ import os
 import shutil
 import zipfile
 import zlib
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
 from pathlib import Path
-from typing import Any
+
+from python_introspect import to_jsonable
 
 from benchmark.contracts.dataset import DatasetSpec
 from benchmark.contracts.validation import (
@@ -185,10 +185,10 @@ class ValidationCorpusPreparer:
                     "source_root": str(source_root),
                     "raw_root": str(raw_root),
                     "artifacts": [
-                        _json_value(artifact) for artifact in validation.artifacts
+                        to_jsonable(artifact) for artifact in validation.artifacts
                     ],
                     "repository_sources": [
-                        _json_value(source) for source in validation.repository_sources
+                        to_jsonable(source) for source in validation.repository_sources
                     ],
                     "reference_decoder": {
                         "url": validation.reference_decoder_url,
@@ -197,7 +197,7 @@ class ValidationCorpusPreparer:
                     "partition_counts": _partition_counts(records),
                     "input_plane_count": len(records),
                     "reference_count": len(references),
-                    "trial_split": _json_value(validation.trial_split),
+                    "trial_split": to_jsonable(validation.trial_split),
                     "development": {
                         "source_set_count": len(
                             {record.source_set_id for record in development_records}
@@ -243,13 +243,13 @@ class ValidationCorpusPreparer:
                         },
                     },
                     "authoring_tracks": [
-                        _json_value(track) for track in validation.authoring_tracks
+                        to_jsonable(track) for track in validation.authoring_tracks
                     ],
                     "published_assay_references": [
-                        _json_value(reference)
+                        to_jsonable(reference)
                         for reference in validation.published_assay_references
                     ],
-                    "dsl_contract": _json_value(dsl_contract),
+                    "dsl_contract": to_jsonable(dsl_contract),
                     "blindness_boundary": (
                         "Only authoring/ is supplied before pipeline freeze. "
                         "frozen_execution/ is disclosed after freeze for unchanged "
@@ -758,7 +758,7 @@ def freeze_pipeline(
             f"Pipeline is already frozen for this corpus: {receipt_path}"
         )
     receipt_path.write_text(
-        json.dumps(_json_value(receipt), indent=2, sort_keys=True) + "\n",
+        json.dumps(to_jsonable(receipt), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     return receipt
@@ -876,17 +876,3 @@ def _partition_counts(
     for record in records:
         counts[record.partition.value] = counts.get(record.partition.value, 0) + 1
     return counts
-
-
-def _json_value(value: Any) -> Any:
-    if is_dataclass(value) and not isinstance(value, type):
-        return {key: _json_value(item) for key, item in asdict(value).items()}
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, dict):
-        return {str(key): _json_value(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list)):
-        return [_json_value(item) for item in value]
-    return value

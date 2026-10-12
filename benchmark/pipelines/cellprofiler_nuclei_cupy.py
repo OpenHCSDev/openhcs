@@ -22,7 +22,7 @@ try:
 
     from openhcs.core.memory.decorators import cupy as cupy_func
     from openhcs.core.pipeline.function_contracts import artifact_outputs
-    from openhcs.processing.materialization import csv_materializer
+    from openhcs.core.materialization import csv_materializer
     from openhcs.processing.backends.analysis.cell_counting_cpu import (
         materialize_segmentation_masks,
     )

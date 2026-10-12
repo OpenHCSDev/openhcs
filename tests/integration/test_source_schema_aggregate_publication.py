@@ -29,7 +29,9 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.memory import numpy as numpy_function
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -48,7 +50,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     register_custom_function,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource

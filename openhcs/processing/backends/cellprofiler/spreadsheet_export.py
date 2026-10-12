@@ -31,7 +31,7 @@ from openhcs.core.artifacts.kinds import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
@@ -100,14 +100,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     FileBundleOptions,
     MaterializationSpec,
     WriteMode,
 )
 
-from openhcs.processing.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
+from openhcs.core.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -597,7 +597,7 @@ def prepare_spreadsheet_bundle(
     ),
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
     image_numbers: CellProfilerImageSetNumbering | None = None,
     experiment_tables: tuple[MeasurementTable, ...] | None = None,
 ) -> dict[str, ColumnarCsvOutput]:
@@ -1560,7 +1560,7 @@ def _partitioned_spreadsheet_export(
     """Use existing lanes only where exact source domains separate the export."""
     batch = request.artifact_batch
     kwargs = {**runtime_callable_defaults(request.func), **request.kwargs}
-    kwargs.pop(ProcessingContext.require_parameter_name(), None)
+    kwargs.pop(ExecutingContext.require_parameter_name(), None)
     path_templates = (
         str(kwargs["output_directory"]),
         str(kwargs["filename_prefix"]) if kwargs["add_filename_prefix"] else "",
@@ -1825,7 +1825,7 @@ def export_to_spreadsheet(
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
     artifact_batch: RuntimeArtifactBatch,
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
 ) -> dict[str, ColumnarCsvOutput]:
     """Render one plate's exact contract-selected spreadsheet file bundle.
 
