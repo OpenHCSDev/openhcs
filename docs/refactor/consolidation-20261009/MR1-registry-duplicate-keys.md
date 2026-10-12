@@ -118,7 +118,7 @@ Also found, outside this surface: `polystore.streaming.handlers` imports `metacl
 - [x] Plain-registry sweep.
 - [x] Test collisions (OpenHCS, PolyStore, zmqruntime).
 - [x] Checks: see "Verification (second agent)".
-- [ ] Library PRs other than metaclass-registry, and the OpenHCS PR: left to the lead (see "For the lead").
+- [x] Libraries released; OpenHCS merged with main, pinned to the released tags, gates run, PR opened: see "Landing (third agent)".
 
 ## Handoff (2026-10-12)
 
@@ -235,4 +235,50 @@ metaclass-registry has PR OpenHCSDev/metaclass-registry#5 (0.4.0, not tagged). N
 | pycodify | none | Unchanged. |
 
 None of these bumps a version or touches a lock. OpenHCS requires `metaclass-registry>=0.4.0,<0.5`, so it cannot merge before 0.4.0 is released. zmqruntime must ship its commit before or with 0.4.0 reaching its users: on 0.4.0, a second `ExecutionServer` subclass in one process raises without it.
+
+## Landing (third agent, 2026-10-12)
+
+Where this section differs from the ones above, this one is current.
+
+### What changed
+
+- Merged `origin/main` (`ac19abb49`, #1223). The only conflicts were submodule pointers.
+- Submodules are at the released tags, each of which contains both main's previous pin and the MR1 commits: metaclass-registry `v0.4.0`, ObjectState `v3.0.1`, PolyStore `v0.6.2`, zmqruntime `v0.6.4`, formbridge `v0.1.3`, pyqt-reactive `v0.7.2`.
+- `pyproject.toml` lower bounds: `metaclass-registry>=0.4.0`, `objectstate>=3.0.1`, `polystore>=0.6.2`, `zmqruntime>=0.6.4`, `formbridge>=0.1.3`, `pyqt-reactive>=0.7.2`. The repo keeps no lock, constraints or CI pin file for these; `pyproject.toml` and the submodule pointers are the only places they are stated.
+- Environment: the worktree has no environment of its own. It runs the shared repo `.venv`, and `openhcs._source_dependencies` puts the worktree's `external/*/src` first on the path, so the released sources are what is imported (checked by printing each module's `__file__` and version). Nothing was pip-installed into the shared `.venv`, because every other worktree uses it; its dist-info for polystore (0.3.4) and zmqruntime (0.4.1) is stale and those two report that number from metadata.
+- `.github/workflows/refactor-guardrails.yml`: the two guardrail tools get `--with 'metaclass-registry<0.4'`. See "Guardrail tools" below.
+
+### Collisions, each by its owner
+
+| Collision | Owner of the fix | Resolution |
+|---|---|---|
+| `MaximaInputStrategy` `'mask'` | metaclass-registry 0.4.0 | A subclass derives its own key instead of inheriting the key registration stamped on its parent. `ObjectMaximaInputStrategy` is `'objects'`, `MaskMaximaInputStrategy` holds `'mask'`. No OpenHCS change, no replacement declared. |
+| `FormattingMeasurementFeatureTemplate` `'MeasurementFeatureTemplate'` | the family (`measurement_rows.py`) | Keyed by `__qualname__`; the nested enums of two modules share a short name but not a qualified one. |
+| `StreamingConfig` viewer keys vs lazy forms | `StreamingConfigMeta` (`openhcs/core/config.py`) | The one use of `__replaces_registered__`. See below. |
+| Axis names (`'site'`, …) across families | `AxisFamily` | The global name-keyed registry of `GroupingDeclaration` is deleted; a family's `axes` holds its declarations and decodes names. Two families can declare `site`. |
+
+**Why the lazy streaming configs declare a replacement.** ObjectState generates `LazyNapariStreamingConfig(NapariStreamingConfig, LazyDataclass)` and substitutes it for the declared class in every config field that holds one; pipeline and step fields are typed with the lazy form. The registry answers "which type configures viewer V", and its readers construct or match what those fields hold (`tests/integration/test_cellprofiler_official30_zmq.py` builds `config_type(**kwargs)` for a pipeline field; a base instance there would fill class defaults instead of inheriting from the global config). So the lazy form does take the declared class's place by design, exactly as it does in the field annotations. The metaclass declares it once, only for a lazy form whose generating class is registered; the abstract `LazyStreamingConfig` declares nothing. This preserves what main did by accident (last writer wins), now stated.
+
+Candidate left for the owner, not done here: the registry could hold the declared classes and readers could ask ObjectState for the lazy form (`get_lazy_type_for_base`). metaclass-registry 0.4.0 has no way for a generated subclass that inherits a key attribute to stay out of the registry, so that needs a library change first. `compiler.py:429` maps the registered lazy type back with `get_base_type_for_lazy` to match base and lazy instances alike.
+
+### Guardrail tools (found while running the gate; fails on main too)
+
+`guardrails_local.sh` and the Refactor Guardrails workflow install agent-comms `3b03785` and NominalRefactorAdvisor `0844525` by commit, but those resolve metaclass-registry unpinned. Since 0.4.0 reached PyPI both fail at import:
+
+- agent-comms: `TypeError: _FamilyMeta._register_class() got an unexpected keyword argument 'replaces'` (it overrides the library's private method). Reproduced with `--base origin/main~1 --head origin/main`: exit 1; with `--with 'metaclass-registry<0.4'`: exit 0.
+- NominalRefactorAdvisor: `DuplicateRegistryKeyError`, `ClassLineWitnessCandidate` registers under the key of its mixin `ClassNameWitnessNameMixin`.
+
+This PR bounds the tools' metaclass-registry in the workflow, as part of their pin. The shared `.claude/verify/guardrails_local.sh` is outside this worktree and was not edited; it needs the same `--with`, or the tools need fixing at their source and the pinned commits moved (owners: agent-comms and NominalRefactorAdvisor maintainers).
+
+### Checks observed at `245df3331` (code head; the receipt commit after it is docs only)
+
+| Check | Result |
+|---|---|
+| `verify_branch.sh mr1` | `suite: = 34 failed, 11650 passed, 25 skipped, 356 warnings, 2 errors, 6 subtests passed in 696.13s (0:11:36) =`; `collected 11708, reported 11685, crash lines 0`; `new vs known: 0`; `only on mr1:` empty. No `DuplicateRegistryKeyError` in the log. A first run was stopped by the machine at 11502 tests for low memory; this is the complete rerun under `heavy.lock`. |
+| `smoke_local.sh` (GUI part included) | `smoke pytest exit 0 (70 s): 7 passed`; `smoke gui exit 0 (20 s)`; `smoke rc=0` |
+| official30 parity under `heavy.lock` and `official30.lock` | `1 passed, 2 warnings in 660.10s (0:11:00)`; `summary.csv`: 30 cases, `equivalent_count` 1 of 1 and `min_parity_accuracy` 1.0 for all 30 |
+| `guardrails_local.sh` as shared | all three ratchets `exit 1`, guard tests `1 error`, `nra-r1 exit 1`; `guardrails rc=1`. Every failure is the tool import error above, before any OpenHCS file is read |
+| the same script with `--with 'metaclass-registry<0.4'` on the three tool commands (copy under `.claude/mr1/`) | `ratchet openhcs exit 0`, `ratchet scripts exit 0`, `ratchet benchmark exit 0`, `38 passed`, `nra-r1 exit 0: "increased": []`, `guardrails rc=0` |
+| Import everything with the rule enforced | 1103 modules imported, 18 failed for unrelated reasons (torch, pyclesperanto, `metaclass_registry.lazy` in `polystore.streaming.handlers`, benchmark imports); no `DuplicateRegistryKeyError`; 79 same-statement re-creations; the only different-class replacements are the two declared lazy streaming configs |
+| Guard and touched tests | 376 passed |
 
