@@ -2843,7 +2843,7 @@
       },
       {
         "path": ".github/workflows/website-pages.yml",
-        "sha256": "577e0747692e7738bdb22f1b579c08984d6dffa8e709e0e33ed9edf4110b3be6",
+        "sha256": "d4fdfdf27f02a9c9cab67fa876f7a06844fa8b7298acce0e25a352682a34925f",
         "role": "Installs the OpenHCS candidate from submodule sources with install_ci_candidate before validating gallery generation, then deploys the checked-in dependency-free website projection."
       },
       {
@@ -2935,6 +2935,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), .github/workflows/website-pages.yml changed after docs/source/guides/testing_guide.rst was reviewed: the Website workflow's concurrency group is per ref; no claim changes.",
       "On 2026-10-11 (B6 final), scripts/smoke_installed_gui.py changed after docs/source/guides/testing_guide.rst was reviewed: the GUI smoke compares the action status to ActionAccepted; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml, scripts/smoke_installed_gui.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
