@@ -935,12 +935,18 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
 
         return AxisFamily.active().payload_spatial_rank
 
+    # A probe call costs what the library's default parameters make of the
+    # array (skimage's rolling_ball builds a radius-100 ball over every pixel),
+    # so the arrays are as small as still classifies every function the same.
+    PROBE_STACK_DEPTH = 3
+    PROBE_PLANE_EDGE = 8
+
     def create_test_arrays(self) -> Tuple[Any, Any]:
         """Return (stack probe, plane probe) at the active family's spatial rank."""
-        plane_shape = (20,) * self.probe_spatial_rank()
+        plane_shape = (self.PROBE_PLANE_EDGE,) * self.probe_spatial_rank()
         dtype = self._get_float_dtype()
         return (
-            self._create_array((3, *plane_shape), dtype),
+            self._create_array((self.PROBE_STACK_DEPTH, *plane_shape), dtype),
             self._create_array(plane_shape, dtype),
         )
 

@@ -145,7 +145,7 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
             source = spec.loader.get_source(module_name)
             if source is None:
                 return True
-            module_ast = ast.parse(source, filename=spec.origin or module_name)
+            module_ast = _parsed_source(source, spec.origin or module_name)
             selection = _CatalogDeclarationSourceSelection(
                 missing, attributes, normalize
             )
@@ -296,6 +296,13 @@ def _catalog_memory_types(func: Callable) -> frozenset[MemoryType] | None:
     return declared
 
 
+@lru_cache(maxsize=1024)
+def _parsed_source(source: str, origin: str) -> ast.Module:
+    """Parse one module source once for every question discovery asks of it."""
+
+    return ast.parse(source, filename=origin)
+
+
 def _module_source(module_name: str) -> tuple[str, str] | None:
     """Return loader-decoded module source and origin, or None without source."""
 
@@ -324,8 +331,13 @@ def _module_declares_allowed_memory_type(
 _REQUIRED_DISTRIBUTIONS_NAME = "REQUIRED_DISTRIBUTIONS"
 
 
+@lru_cache(maxsize=1)
 def _openhcs_requirements() -> tuple[Requirement, ...]:
-    """Return the installed OpenHCS distribution's declared requirements."""
+    """Return the installed OpenHCS distribution's declared requirements.
+
+    Installed metadata is fixed for the life of the process; parsing it once
+    serves every module the catalog asks about.
+    """
 
     return tuple(
         Requirement(value) for value in importlib.metadata.requires("openhcs") or ()
@@ -368,7 +380,7 @@ def _distribution_excluded_by_package_metadata(name: str) -> bool:
 def _source_required_distributions(source: str, origin: str) -> tuple[str, ...]:
     """Read a module's literal ``REQUIRED_DISTRIBUTIONS`` declaration."""
 
-    for statement in ast.parse(source, filename=origin).body:
+    for statement in _parsed_source(source, origin).body:
         if isinstance(statement, ast.Assign):
             targets = statement.targets
         elif isinstance(statement, ast.AnnAssign):
@@ -456,7 +468,7 @@ def _source_declares_allowed_memory_type(
     """Inspect loader-decoded source; content identity invalidates edited modules."""
 
     try:
-        module_ast = ast.parse(source, filename=origin)
+        module_ast = _parsed_source(source, origin)
     except SyntaxError:
         return True
     import_bindings = _module_import_bindings(module_ast)
