@@ -180,3 +180,19 @@ No site was found where a value comes only from an entered `config_context`.
 - Still open, for the job that follows ObjectState 3.0.4: one owner for the global
   config in OpenHCS (the registered global state), one registration site, and removal of
   `Session.global_config` as a second holder.
+
+## Pinned to 3.0.4 (2026-10-12)
+
+3.0.4 (`01f3a5d`): a state's resolved values no longer read a `config_context` the caller
+has entered (owner decision: values depend on the object's place in the registered
+hierarchy, not the caller), and saving the global state stores the saved global config
+itself, so the result no longer depends on whether the caller saves or sets first.
+Measured by the ObjectState agent on OpenHCS main: in the dual editor's normal path 0 of
+58 state resolutions happen inside an entered context and values are identical; they
+differ only when the step state has an unresolved change while the form is built, where
+3.0.3 kept the entered config's value with source `None`.
+
+Caller clean-up this enables, not done in this pin (see ObjectState #56):
+`session.py:468`, `:1030`, `:1055`; `pyqt_gui/app.py:235-249`;
+`pyqt_gui/services/window_handlers.py:100`; `pyqt_gui/windows/dual_editor_tabs.py:52`;
+pyqt-reactive `config_window.py:182`, `:214-226`.
