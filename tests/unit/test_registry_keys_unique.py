@@ -144,3 +144,38 @@ def test_two_axis_families_may_each_declare_the_same_axis_name() -> None:
     assert to_jsonable(Survey.Site) == to_jsonable(Microscopy.Site) == "site"
     assert to_jsonable(Ungrouped) == "none"
     assert not hasattr(GroupingDeclaration, "__registry__")
+
+
+def test_mask_and_object_maxima_strategies_are_registered_under_their_own_modes() -> None:
+    from openhcs.processing.backends.cellprofiler.maxima import (
+        MaskMaximaInputStrategy,
+        ObjectMaximaInputStrategy,
+    )
+
+    registry = MaximaInputStrategy.__registry__
+
+    assert registry[ExcludeMode.MASK.value] is MaskMaximaInputStrategy
+    assert registry[ExcludeMode.OBJECTS.value] is ObjectMaximaInputStrategy
+
+
+def test_same_named_feature_templates_of_two_modules_are_both_registered() -> None:
+    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+        FormattingMeasurementFeatureTemplate,
+    )
+    from openhcs.processing.backends.cellprofiler.classification import (
+        ClassifyObjectsSingleMeasurementModule,
+    )
+    from openhcs.processing.backends.cellprofiler.image_geometry import FlipAndRotateModule
+
+    registry = FormattingMeasurementFeatureTemplate.__registry__
+    flip = FlipAndRotateModule.MeasurementFeatureTemplate
+    classify = ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate
+
+    assert flip is not classify
+    assert flip.__name__ == classify.__name__ == "MeasurementFeatureTemplate"
+    assert registry["FlipAndRotateModule.MeasurementFeatureTemplate"] is flip
+    assert (
+        registry["ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate"]
+        is classify
+    )
+    assert len(set(registry.values())) == len(registry)
