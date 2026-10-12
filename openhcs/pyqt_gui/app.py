@@ -220,49 +220,16 @@ class OpenHCSPyQtApp(QApplication):
         )
         logger.info("Storage registry initialization started in background")
 
-        # CRITICAL FIX: Establish global config context for lazy dataclass resolution
-        # This was missing and caused placeholder resolution to fall back to static defaults
-        from objectstate.global_config import set_global_config_for_editing
-        from objectstate.lazy_factory import ensure_global_config_context
-        from objectstate.object_state import (
-            ObjectState,
-            ObjectStateRegistry,
-        )
-
-        from openhcs.core.config import GlobalPipelineConfig
-
-        # Set for editing (UI placeholders) - this uses threading.local() storage
-        set_global_config_for_editing(
-            GlobalPipelineConfig, self.pipeline_runtime_config
-        )
-
-        # ALSO ensure context for orchestrator creation (required by orchestrator.__init__)
-        ensure_global_config_context(GlobalPipelineConfig, self.pipeline_runtime_config)
-
-        # Register GlobalPipelineConfig ObjectState (singleton, persists for app lifetime)
-        # This is the root of the ObjectState hierarchy
-        # scope_id="" (empty string) for global scope - visible to all orchestrators
-        global_state = ObjectState(
-            object_instance=self.pipeline_runtime_config,
-            scope_id="",  # Empty string = global scope
-        )
-        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
+        # The state that holds the global config is registered by ``open_session``
+        # (the main window starts the session); until then the config that
+        # ``config_cache`` stored is the global config.
+        from objectstate.object_state import ObjectState, ObjectStateRegistry
 
         ui_state = ObjectState(
             object_instance=self.ui_config,
             scope_id=UIConfig.object_state_scope_id(),
         )
         ObjectStateRegistry.register(ui_state, _skip_snapshot=True)
-
-        # ARCHITECTURAL FIX: Do NOT set contextvars at app startup
-        # contextvars is ONLY for temporary nested contexts (inside with config_context() blocks)
-        # threading.local() is the single source of truth for persistent global config
-        # Placeholder resolution will automatically fall back to threading.local() via get_base_global_config()
-        # This eliminates the dual storage architecture smell
-
-        logger.info(
-            "Global configuration context established for lazy dataclass resolution"
-        )
 
         # Register pyqt-reactor providers (codegen, logs, function selection, etc.)
         from openhcs.pyqt_gui.services.reactor_providers import (

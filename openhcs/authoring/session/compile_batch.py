@@ -6,6 +6,7 @@ import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from objectstate import get_saved_global_config
 from zmqruntime.execution import BatchSubmitWaitEngine, CallbackBatchSubmitWaitPolicy
 
 from openhcs.authoring.session.compilation import (
@@ -21,6 +22,7 @@ from openhcs.authoring.session.events import (
     StatusReported,
 )
 from openhcs.authoring.session.run_requests import dataset_pipeline_request
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.execution_state import ExecutionFailed
 from openhcs.constants.constants import OrchestratorCompileFailed, OrchestratorCompiled
 from openhcs.runtime.zmq_execution_signature import TransportValue
@@ -63,7 +65,9 @@ class CompileBatch:
             for scope_id in scope_ids:
                 try:
                     requests.append(
-                        dataset_pipeline_request(scope_id, session.global_config)
+                        dataset_pipeline_request(
+                            scope_id, get_saved_global_config(GlobalPipelineConfig)
+                        )
                     )
                 except Exception as error:
                     self._compile_failed(scope_id, error)

@@ -238,6 +238,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         )
         from openhcs.agent.path_policy import AgentPathPolicy
         from openhcs.agent.session_access import AgentPathDatasetAccess
+        from openhcs.authoring.session.lifetime import close_session, open_session
         from openhcs.authoring.session.session import CallerThread, Session
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.input_workspace import (
@@ -300,7 +301,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             persistent=args.persistent,
             **({} if args.port is None else {"default_port": args.port}),
         )
-        session = Session(
+        session = open_session(
             transport_config=transport,
             global_config=GlobalPipelineConfig(),
             main_thread=CallerThread(),
@@ -337,7 +338,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         finally:
             if session.execution_state.busy:
                 measured.stop()
-            session.close()
+            close_session(session)
         print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))
         return 0
 

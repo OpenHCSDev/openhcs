@@ -25,6 +25,7 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
+from objectstate import set_global_config
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
@@ -535,7 +536,12 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 request_context.pipeline_steps,
                 request_context.compile_artifact_id,
             )
-            self._ensure_request_global_config_context(request_context)
+            # This process registers no global-config state, and the queue worker
+            # runs one request at a time: the request's global config is the
+            # process's until the next request replaces it.
+            set_global_config(
+                GlobalPipelineConfig, request_context.configs.global_pipeline
+            )
             execution_bundle = (
                 self._compiled_artifacts[
                     request_context.compile_artifact_id
@@ -885,19 +891,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         progress_emitter.compile_failed(
             axis_ids=self._compile_failure_axis_ids(partition_values),
             error=str(error),
-        )
-
-    @staticmethod
-    def _ensure_request_global_config_context(
-        request_context: ZMQExecutionContext,
-    ) -> None:
-        from objectstate.lazy_factory import (
-            ensure_global_config_context,
-        )
-
-        ensure_global_config_context(
-            GlobalPipelineConfig,
-            request_context.configs.global_pipeline,
         )
 
     @staticmethod

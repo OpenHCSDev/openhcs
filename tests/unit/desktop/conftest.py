@@ -5,13 +5,14 @@ from __future__ import annotations
 import pytest
 from objectstate import ObjectStateRegistry
 
+from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 
 def headless_session() -> Session:
-    return Session(
+    return open_session(
         transport_config=OpenHCSZMQConfig(persistent=False),
         global_config=GlobalPipelineConfig(),
         main_thread=CallerThread(),
@@ -27,5 +28,5 @@ def restart_session():
     try:
         yield session
     finally:
-        session.close()
+        close_session(session)
         ObjectStateRegistry.clear()

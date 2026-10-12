@@ -55,7 +55,7 @@ class OpenHCSWindowCreationAuthority:
         request: ScopeWindowCreationRequest,
     ) -> Optional[QWidget]:
         """Create GlobalPipelineConfig editor window."""
-        from objectstate import ObjectStateRegistry, set_global_config_for_editing
+        from objectstate import ObjectStateRegistry
 
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.config_cache import save_global_config_sync
@@ -96,8 +96,7 @@ class OpenHCSWindowCreationAuthority:
         def handle_save(new_config: GlobalPipelineConfig) -> None:
             if not save_global_config_sync(new_config):
                 raise RuntimeError("Failed to persist GlobalPipelineConfig.")
-            if not self._emit_main_window_global_config_changed(new_config):
-                set_global_config_for_editing(GlobalPipelineConfig, new_config)
+            self._emit_main_window_global_config_changed(new_config)
             logger.info("Global config saved via window")
 
         def handle_ui_save(new_config: UIConfig) -> None:
@@ -369,13 +368,10 @@ class OpenHCSWindowCreationAuthority:
             return None
         return plate_manager.service_adapter.main_window
 
-    def _emit_main_window_global_config_changed(self, new_config) -> bool:
+    def _emit_main_window_global_config_changed(self, new_config) -> None:
         plate_manager = self._plate_manager()
-        if plate_manager is None:
-            return False
-
-        plate_manager.service_adapter.main_window.config_changed.emit(new_config)
-        return True
+        if plate_manager is not None:
+            plate_manager.service_adapter.main_window.config_changed.emit(new_config)
 
     def _show_window(self, window: QWidget) -> None:
         window.show()

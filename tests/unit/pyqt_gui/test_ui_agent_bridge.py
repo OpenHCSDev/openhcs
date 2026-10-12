@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
@@ -111,6 +110,7 @@ from openhcs.authoring.session.operations.pipelines import (
     EditPipelineStep,
     ShowPipelineCode,
 )
+from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Renderer, Session
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
 from openhcs.constants.constants import OrchestratorExecuting, OrchestratorReady
@@ -3563,8 +3563,7 @@ class BridgeSessions:
     @classmethod
     def get(cls) -> Session:
         if cls.current is None:
-            ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
-            cls.current = Session(
+            cls.current = open_session(
                 transport_config=OpenHCSZMQConfig(
                     default_port=session_port(), persistent=False
                 ),
@@ -3576,7 +3575,7 @@ class BridgeSessions:
     @classmethod
     def close(cls) -> None:
         if cls.current is not None:
-            cls.current.close()
+            close_session(cls.current)
             cls.current = None
 
 

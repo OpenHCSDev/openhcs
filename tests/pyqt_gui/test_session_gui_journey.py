@@ -21,6 +21,7 @@ from openhcs.authoring.session.operations.datasets import (
     InitializeDatasets,
     RunDatasets,
 )
+from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.authoring.session.views import DatasetListView
 from openhcs.core.config import GlobalPipelineConfig
@@ -50,7 +51,7 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
     application = QApplication.instance() or QApplication([])
     root, source = _synthetic_dataset(tmp_path)
     dispatcher = UiThreadDispatcher()
-    session = Session(
+    session = open_session(
         transport_config=OpenHCSZMQConfig(default_port=_port(1), persistent=False),
         global_config=GlobalPipelineConfig(),
         main_thread=DispatcherThread(dispatcher),
@@ -115,5 +116,5 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         manager.cleanup()
         manager.close()
         release_widgets(application, manager)
-        session.close()
+        close_session(session)
         dispatcher.close()

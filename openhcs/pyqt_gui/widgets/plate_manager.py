@@ -14,7 +14,7 @@ from functools import singledispatchmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Tuple
 
-from objectstate import DataclassFieldAccess
+from objectstate import DataclassFieldAccess, get_saved_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import pyqtSignal
 from formbridge.core.path_cache import PathCacheKey
@@ -80,7 +80,7 @@ from openhcs.authoring.session.views import (
     DatasetListView,
     output_relations,
 )
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.constants.constants import OrchestratorCreated
 from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.session_rendering import (
@@ -438,7 +438,8 @@ class PlateManagerWidget(
                 return None
             scope_id = selected[0]
         relation = output_relations(
-            tuple(self.plates), self.session.global_config.path_planning_config
+            tuple(self.plates),
+            get_saved_global_config(GlobalPipelineConfig).path_planning_config,
         ).get(scope_id)
         if relation is not None and relation.source_scope_id is not None:
             return ObjectStateRegistry.get_object(relation.source_scope_id)

@@ -18,7 +18,7 @@ from objectstate.value_semantics import semantic_values_equal
 from formbridge.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from formbridge.selection import SelectedScopeIdsCarrier
-from objectstate import retain_only_authored_paths
+from objectstate import get_live_global_config, retain_only_authored_paths
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
     PlateManagerOrchestratorCodePayload,
@@ -102,11 +102,6 @@ class DatasetDocument(SelectedScopeIdsCarrier):
     clean_mode: bool = True
 
 
-def live_global_config(session: "Session") -> GlobalPipelineConfig:
-    state = ObjectStateRegistry.get_by_scope("")
-    if state is None:
-        return session.global_config
-    return state.to_object(update_delegate=False)
 
 
 def authored_pipeline_config(scope_id: str) -> PipelineConfig:
@@ -129,7 +124,7 @@ def render_dataset_document(
 ) -> DatasetDocument:
     payload = PlateManagerCodeDocumentAuthority.from_values(
         plate_paths=list(scope_ids),
-        global_pipeline_config=live_global_config(session),
+        global_pipeline_config=get_live_global_config(GlobalPipelineConfig),
         per_plate_configs={
             scope_id: authored_pipeline_config(scope_id) for scope_id in scope_ids
         },
@@ -156,7 +151,7 @@ def apply_dataset_document(
     global_changed = scope.commits_global_draft(
         ObjectStateRegistry.get_by_scope("")
     ) or not semantic_values_equal(
-        live_global_config(session), payload.global_pipeline_config
+        get_live_global_config(GlobalPipelineConfig), payload.global_pipeline_config
     )
     changed_configs = {
         scope_id: config

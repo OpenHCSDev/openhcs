@@ -30,7 +30,6 @@ from openhcs.agent.ui_bridge_identities import (
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 from openhcs.agent.dto.session import PipelineFileRequest
 from openhcs.authoring.session.operations.pipelines import LoadPipelineFile
-from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.pipeline_import import PipelineImporter
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
@@ -215,9 +214,6 @@ class MainWindowLifecycleWorkflow:
     status_progress_bar: QProgressBar
     ui_bridge_lifecycle: "MainWindowUiBridgeLifecycle"
     ui_services: PyQtServiceAdapter
-
-    def propagate_config(self, new_config: GlobalPipelineConfig) -> None:
-        self.main_window.session.adopt_global_config(new_config)
 
     def refresh_progress(self) -> None:
         """Reproject the existing work owners after local initialization changes."""

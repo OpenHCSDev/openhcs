@@ -262,11 +262,12 @@ class OpenHCSAgentContext:
 
         if self._session is None:
             from openhcs.agent.session_access import AgentPathDatasetAccess
-            from openhcs.authoring.session.session import CallerThread, Session
+            from openhcs.authoring.session.lifetime import open_session
+            from openhcs.authoring.session.session import CallerThread
             from openhcs.core.config import GlobalPipelineConfig
             from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
-            self._session = Session(
+            self._session = open_session(
                 transport_config=self._session_transport_config or OpenHCSZMQConfig(),
                 global_config=GlobalPipelineConfig(),
                 main_thread=self._main_thread or CallerThread(),

@@ -65,6 +65,7 @@ from openhcs.authoring.session.events import (
     ServerConnectionChanged,
     SessionEvent,
 )
+from openhcs.authoring.session.lifetime import open_session
 from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.core.config import GlobalPipelineConfig
 from formbridge.contracts import AgentError
@@ -235,7 +236,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         )
         self.desktop_update_service.check_failed.connect(self._on_update_check_failed)
 
-        self.session = Session(
+        self.session = open_session(
             transport_config=runtime_context.ui_config.zmq,
             global_config=self.pipeline_runtime_config,
             main_thread=DispatcherThread(main_window_services.ui_dispatcher),
@@ -1167,7 +1168,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             return
 
         try:
-            from objectstate.global_config import get_current_global_config
+            from objectstate import get_live_global_config
 
             from openhcs.core.config import GlobalPipelineConfig
             from openhcs.processing.backends.analysis.consolidate_analysis_results import (
@@ -1175,7 +1176,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             )
 
             # Get global config
-            global_config = get_current_global_config(GlobalPipelineConfig)
+            global_config = get_live_global_config(GlobalPipelineConfig)
 
             # Run consolidation
             summary_df = consolidate_analysis_results(
@@ -1502,7 +1503,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         """Handle global configuration changes."""
         self.set_pipeline_runtime_config(new_config)
         self.service_adapter.set_global_config(new_config)
-        self.lifecycle_workflow.propagate_config(new_config)
+        self.session.saved_global_config_changed()
 
     def closeEvent(self, event):
         """Handle application close event."""

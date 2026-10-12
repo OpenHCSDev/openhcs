@@ -49,6 +49,7 @@ from openhcs.authoring.session.events import RuntimeArtifactAvailable
 from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
+from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_compilation import (
@@ -321,7 +322,7 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
             available.set()
 
         ObjectStateRegistry.clear()
-        session = Session(
+        session = open_session(
             transport_config=OpenHCSZMQConfig(persistent=False),
             global_config=GlobalPipelineConfig(),
             main_thread=CallerThread(),
