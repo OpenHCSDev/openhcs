@@ -113,6 +113,13 @@ jobs:
             tests/integration/test_r1_debug_case.py \
             --basetemp "$RUNNER_TEMP/r1/pytest-recorded" -s --tb=short 2>&1 | tee "$RUNNER_TEMP/r1/report-recorded.txt"
 
+      - name: Angle kernel bits on this runner
+        if: always()
+        run: |
+          python scripts/run_installed_tests.py --repo-root "$GITHUB_WORKSPACE" -- \
+            tests/unit/test_cellprofiler_processing_backend.py -k "arccos or enclosing_circle" \
+            --basetemp "$RUNNER_TEMP/r1/pytest-unit" -v --tb=short 2>&1 | tee "$RUNNER_TEMP/r1/report-unit.txt"
+
       - name: Upload measurement tables and dumps
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
