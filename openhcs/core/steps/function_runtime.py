@@ -1140,6 +1140,11 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
             else None
         )
+        passed_through_qualifiers = (
+            (None,) * num_outputs
+            if passed_through_records is None
+            else tuple(record.filename_qualifier for record in passed_through_records)
+        )
 
         if num_outputs < num_inputs:
             logger.debug(
@@ -1200,14 +1205,11 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 output_identity = output_identity.with_filename_qualifier(
                     output_context.output_key
                 )
-            elif (
-                passed_through_records is not None
-                and passed_through_records[i].filename_qualifier is not None
-            ):
+            elif passed_through_qualifiers[i] is not None:
                 # A passed-through surface keeps the qualifier its producer
                 # published it under; dropping it would merge sibling surfaces.
                 output_identity = output_identity.with_filename_qualifier(
-                    passed_through_records[i].filename_qualifier
+                    passed_through_qualifiers[i]
                 )
             output_path = output_identity.path_for_request(output_path_request)
             output_path_text = str(output_path)
