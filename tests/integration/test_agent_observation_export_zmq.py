@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import pytest
 from objectstate.object_state import ObjectStateRegistry
 from zmqruntime import DataControlPortPairAuthority
-from zmqruntime.messages import ExecutionStatus
+from zmqruntime.messages import ExecutionStatus, MessageFields
 
 from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
@@ -335,7 +335,11 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
 
     exported = ZMQRuntimeExecutionOutcomeExport.read(export_path)
     exported.require_successful_axes()
-    assert completed.results_summary["well_count"] == exported.axis_count == 1
+    assert (
+        completed.results_summary[MessageFields.PARTITION_COUNT]
+        == exported.axis_count
+        == 1
+    )
     assert completed.results_summary["runtime_observation_export_scope"] == "outcomes"
     assert exported.successful_axis_count == 1
     assert exported.output_roots

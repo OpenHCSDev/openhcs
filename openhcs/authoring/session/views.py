@@ -279,6 +279,16 @@ class DatasetListView(SessionView):
         terminal = activity.terminal_status
         runtime = activity.runtime
         debug_phase = activity.debug_phase
+        finished_id, finished = next(
+            (
+                (execution_id, finished)
+                for execution_id, finished in reversed(
+                    session.finished_executions.items()
+                )
+                if finished.scope_id == row.scope_id
+            ),
+            (None, None),
+        )
         return DatasetRowState(
             scope_id=row.scope_id,
             name=row.name,
@@ -305,15 +315,9 @@ class DatasetListView(SessionView):
             source_root=relation.source_root,
             debug_phase=None if debug_phase is None else debug_phase.name,
             debug_session_id=activity.debug_session_id,
-            finished_execution_id=next(
-                (
-                    execution_id
-                    for execution_id, finished in reversed(
-                        session.finished_executions.items()
-                    )
-                    if finished.scope_id == row.scope_id
-                ),
-                None,
+            finished_execution_id=finished_id,
+            finished_execution_error=(
+                None if finished is None else finished.record.error
             ),
         )
 

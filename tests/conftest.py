@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
 
@@ -63,7 +64,7 @@ def pytest_sessionstart(session):
 
 
 # Conditionally import pytest-qt only when not in CPU-only mode
-CPU_ONLY_MODE = os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true"
+CPU_ONLY_MODE = OpenHCSProcessEnvironment.cpu_only_mode()
 if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
 else:
@@ -151,25 +152,30 @@ def reap_spawned_processes(monkeypatch) -> Iterator[None]:
     marker = uuid.uuid4().hex
     monkeypatch.setenv(SPAWN_MARKER_VARIABLE, marker)
     yield
-    own_group = os.getpgid(0)
     survivors = _marked_processes(marker)
     for process in survivors:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGTERM)
-            else:
-                process.terminate()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
+        _stop_marked_process(process, force=False)
     _gone, alive = psutil.wait_procs(survivors, timeout=10)
     for process in alive:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGKILL)
-            else:
-                process.kill()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
+        _stop_marked_process(process, force=True)
     psutil.wait_procs(alive, timeout=10)
+
+
+def _stop_marked_process(process: psutil.Process, *, force: bool) -> None:
+    """Signal a detached POSIX session's whole group, else the process itself.
+
+    Windows has no process groups; every descendant carries the marker, so
+    stopping each marked process covers the tree there.
+    """
+    try:
+        if os.name == "posix":
+            group = os.getpgid(process.pid)
+            if group != os.getpgid(0):
+                os.killpg(group, signal.SIGKILL if force else signal.SIGTERM)
+                return
+        if force:
+            process.kill()
+        else:
+            process.terminate()
+    except (ProcessLookupError, psutil.NoSuchProcess):
+        return

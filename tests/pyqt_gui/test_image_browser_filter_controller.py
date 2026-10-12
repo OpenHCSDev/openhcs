@@ -24,6 +24,7 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     FilenameParserCapability,
+    MetadataHandler,
 )
 from openhcs.core.plate_image_inventory import PlateFileRecord
 from openhcs.pyqt_gui.widgets.image_browser import (
@@ -61,7 +62,8 @@ class _InventoryParser:
         )
 
 
-class _InventoryMetadataHandler:
+class _InventoryMetadataHandler(MetadataHandler):
+    """Inherits the handler defaults (workspace root, no virtual workspace)."""
     def __init__(self, handler_result_dir: Path) -> None:
         self._handler_result_dir = handler_result_dir
 
@@ -69,11 +71,17 @@ class _InventoryMetadataHandler:
         assert all_subdirs is True
         return ("images/A01_w1.tif",)
 
-    def source_workspace_metadata_document(self, _plate_path: Path):
-        return None
+    def find_metadata_file(self, _plate_path: Path) -> Path:
+        raise AssertionError("Inventory does not read the metadata file.")
 
-    def source_dataset(self, _plate_path: Path):
-        return None
+    def get_grid_dimensions(self, _plate_path: Path):
+        raise AssertionError("Inventory does not read grid dimensions.")
+
+    def get_pixel_size(self, _plate_path: Path):
+        raise AssertionError("Inventory does not read pixel size.")
+
+    def component_value_set(self, _plate_path: Path):
+        raise AssertionError("Inventory does not read the component value set.")
 
     def source_workspace_root(self, plate_path: Path) -> Path:
         return plate_path

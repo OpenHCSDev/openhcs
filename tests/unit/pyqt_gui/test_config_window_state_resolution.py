@@ -30,7 +30,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
 )
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.pyqt_gui.config import UIConfig, get_default_ui_config
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.services.window_handlers import (
@@ -195,11 +195,11 @@ def test_ui_config_pycodify_round_trip_preserves_exact_zmq_type() -> None:
             ports_per_server_type=4,
         ),
     )
-    source = ConfigDocumentAuthority.render(
+    source = ConfigDocumentCodec.render(
         config,
         expected_config_type=UIConfig,
     )
-    restored = ConfigDocumentAuthority.from_source(
+    restored = ConfigDocumentCodec.from_source(
         source,
         expected_config_type=UIConfig,
     )
@@ -292,7 +292,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         }
         code_document = plate_window.window_code_document_driver().read_document()
         assert (
-            ConfigDocumentAuthority.from_source(
+            ConfigDocumentCodec.from_source(
                 code_document.source,
                 expected_config_type=PipelineConfig,
             )
@@ -544,7 +544,7 @@ config = PipelineConfig(
             "partition_filter_config.partition_filter",
         }
         assert source == authored_source
-        restored = ConfigDocumentAuthority.from_source(
+        restored = ConfigDocumentCodec.from_source(
             source,
             expected_config_type=PipelineConfig,
         )

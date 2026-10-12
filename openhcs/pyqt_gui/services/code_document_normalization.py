@@ -10,7 +10,7 @@ from metaclass_registry import AutoRegisterMeta
 from formbridge.services.function_pattern_code_document import FunctionPatternValue
 from python_introspect import AnnotatedDataclassValidationMixin
 
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.function_step_document import (
     FunctionStepDocument,
     FunctionStepDocumentCodec,
@@ -102,11 +102,11 @@ class ConfigDocumentNormalizationStrategy(CodeDocumentNormalizationStrategy):
         declaration_type: type[DeclarationT],
         clean_mode: bool,
     ) -> str:
-        config = ConfigDocumentAuthority.from_source(
+        config = ConfigDocumentCodec.from_source(
             source,
             expected_config_type=declaration_type,
         )
-        return ConfigDocumentAuthority.render(
+        return ConfigDocumentCodec.render(
             config,
             expected_config_type=declaration_type,
             clean_mode=clean_mode,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
 from functools import lru_cache
 from types import ModuleType
 from typing import Iterable
@@ -15,15 +14,6 @@ from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
 AUTO_REGISTER_REGISTRY_ATTRIBUTE = "__registry__"
 
 
-@dataclass(slots=True)
-class AutoRegisterRegistryPreparationReport:
-    """Summary of AutoRegister registries prepared before worker execution."""
-
-    registry_count: int = 0
-    class_count: int = 0
-    prepared_family_count: int = 0
-
-
 class AutoRegisterRegistryPreparation:
     """Prepare AutoRegisterMeta registries at compiler/runtime boundaries."""
 
@@ -31,37 +21,32 @@ class AutoRegisterRegistryPreparation:
     def prepare_module_registered_families(
         cls,
         modules: Iterable[ModuleType | None],
-    ) -> AutoRegisterRegistryPreparationReport:
-        """Prepare compiler-owned AutoRegister families defined in modules."""
-        return cls._scan_module_registries(modules, prepare_families=True)
+    ) -> tuple[type, ...]:
+        """Run the preparation hook of each compiler-prepared family a module uses.
+
+        Preparing one callable must not complete a lazy registry: reading a
+        registry's members imports its whole discovery package. A family whose
+        hook needs every member asks its own registry.
+        """
+        families = cls.module_registry_owners(modules, compiler_prepared_only=True)
+        for family in families:
+            family.prepare_registered_family()
+        return families
 
     @classmethod
     def discover_module_registries(
         cls,
         modules: Iterable[ModuleType | None],
-    ) -> AutoRegisterRegistryPreparationReport:
-        """Force registry discovery without invoking backend family warmups."""
-        return cls._scan_module_registries(modules, prepare_families=False)
+    ) -> tuple[type, ...]:
+        """Complete every lazy registry the modules use, without family warmups.
 
-    @classmethod
-    def _scan_module_registries(
-        cls,
-        modules: Iterable[ModuleType | None],
-        *,
-        prepare_families: bool,
-    ) -> AutoRegisterRegistryPreparationReport:
-        """Scan module registries and optionally prepare module-owned families."""
-        report = AutoRegisterRegistryPreparationReport()
-        for candidate in cls.module_registry_owners(
-            modules, compiler_prepared_only=prepare_families
-        ):
-            registry = candidate.__registry__
-            report.class_count += len(tuple(registry.values()))
-            report.registry_count += 1
-            if prepare_families:
-                candidate.prepare_registered_family()
-                report.prepared_family_count += 1
-        return report
+        Serving readiness calls this once for the whole catalog so that no
+        registry is first discovered during compilation or execution.
+        """
+        families = cls.module_registry_owners(modules, compiler_prepared_only=False)
+        for family in families:
+            tuple(family.__registry__.values())
+        return families
 
     @classmethod
     def module_registry_owners(
@@ -77,8 +62,6 @@ class AutoRegisterRegistryPreparation:
             if not isinstance(module, ModuleType):
                 continue
             for candidate in cls.module_registry_families(module):
-                # Counting an unrelated lazy registry would discover its whole
-                # package even though this path has no preparation hook to run.
                 if compiler_prepared_only and not issubclass(
                     candidate, CompilerPreparedAutoRegisterFamily
                 ):

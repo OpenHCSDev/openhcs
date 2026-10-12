@@ -127,7 +127,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
 ):
     import subprocess
     import sys
-    from openhcs.core.config_document import ConfigDocumentAuthority
+    from openhcs.core.config_document import ConfigDocumentCodec
     from openhcs.runtime import zmq_execution_client as module
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
@@ -172,7 +172,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
             "openhcs.runtime.zmq_execution_server_launcher"
         )
     )
-    child_config = ConfigDocumentAuthority.from_source(
+    child_config = ConfigDocumentCodec.from_source(
         command[command.index("--config-source") + 1],
         expected_config_type=OpenHCSZMQConfig,
     )

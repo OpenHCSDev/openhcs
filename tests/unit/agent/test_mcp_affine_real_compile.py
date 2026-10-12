@@ -83,7 +83,7 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
         assert result["steps"][0]["step_name"] == "DeclaredNlm"
         assert result["source_workspace"]["file_count"] == 1
         assert len(calls) == 1 and progress_threads
-        assert calls[0].pipeline_document.original_source == source
+        assert calls[0].pipeline_document.source_text == source
         assert result["progress_event_count"] == 1
         stages = (
             "Resolving pipeline source document",

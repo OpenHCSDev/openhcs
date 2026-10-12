@@ -224,6 +224,32 @@ class CallablePreparation:
         for operation in self.operations():
             operation.prepare()
 
+    @classmethod
+    def prepare_for_serving(
+        cls,
+        callables: Iterable[Callable[..., object]],
+        status_callback: Callable[[str], None],
+    ) -> None:
+        """Prepare every callable, then complete the registries their modules use.
+
+        Only this step completes lazy registries, so none is first discovered
+        during compilation or execution. Preparing one callable does not.
+        """
+        preparations = tuple(cls.from_callable(func) for func in callables)
+        for preparation in preparations:
+            preparation.prepare()
+            status_callback(
+                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
+            )
+        status_callback("Completing the registries prepared callables use")
+        AutoRegisterRegistryPreparation.discover_module_registries(
+            importlib.import_module(module_name)
+            for module_name in dict.fromkeys(
+                preparation.projection.module_name for preparation in preparations
+            )
+            if module_name is not None
+        )
+
     def cache_sources(self) -> tuple[PreparationOperation, ...]:
         module_name = self.projection.module_name
         if module_name is None:
@@ -312,6 +338,18 @@ class PreparationCacheWorker:
             self.result_connection.close()
 
 
+def _schedulable_cpu_count() -> int:
+    """CPUs this process may run on.
+
+    Linux exposes the scheduler's affinity set. macOS has no affinity API:
+    every online CPU is schedulable there.
+    """
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return os.cpu_count() or 1
+
+
 @dataclass(frozen=True, slots=True)
 class PreparationCacheBatch:
     """Schedule derived cache operations without interpreting backend families."""
@@ -340,14 +378,7 @@ class PreparationCacheBatch:
             raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
             return
-        try:
-            worker_capacity = min(max_workers, len(os.sched_getaffinity(0)))
-        except AttributeError:
-            # Without an affinity witness there is no admitted parallel cache
-            # work. The existing parent preparation still owns readiness.
-            return
-        if worker_capacity < 1:
-            return
+        worker_capacity = min(max_workers, _schedulable_cpu_count())
         operations = {
             operation.identity: operation
             for preparation in self.preparations

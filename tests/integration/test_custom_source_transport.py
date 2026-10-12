@@ -509,7 +509,7 @@ def _spawn(path):
     from openhcs.core.config import MultiprocessingStartMethod
     from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
     from openhcs.core.orchestrator.worker_execution import WorkerExecutorFactory
-    from openhcs.core.progress import ProgressExecutionContext
+    from openhcs.core.progress import ProgressExecutionContext, ProgressStatus
 
     # A future derived context can carry nontransportable local runtime state;
     # no generic worker-bootstrap consumer should need to learn its fields.

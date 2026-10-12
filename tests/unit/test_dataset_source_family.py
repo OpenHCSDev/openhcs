@@ -14,7 +14,7 @@ from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import ArtifactPlanInspectionService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.config import LazyPartitionFilterConfig, PipelineConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source import (
@@ -125,7 +125,7 @@ def test_config_schema_patch_and_source_share_opera_handler_identity() -> None:
     assert config.dataset_source is OperaPhenixHandler
     assert "dataset_source=OperaPhenixHandler" in rendered.source
     assert (
-        ConfigDocumentAuthority.from_source(
+        ConfigDocumentCodec.from_source(
             rendered.source,
             expected_config_type=PipelineConfig,
         ).dataset_source
