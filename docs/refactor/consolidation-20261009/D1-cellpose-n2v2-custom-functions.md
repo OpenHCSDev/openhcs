@@ -240,7 +240,7 @@ Test results observed:
   at registration when its import fails.
 - private CPU venv (torch 2.14.1+cpu, Cellpose 3.1.1.3), `OPENHCS_CPU_ONLY=1`: `4 passed`.
 - private GPU venv (torch 2.6.0+cu124, CuPy 14.2, Cellpose 3.1.1.3): `4 passed`.
-- `guardrails_local.sh`: GUARDRAILS_RESULT
+- `guardrails_local.sh` on the merged branch: ratchets openhcs/scripts/benchmark exit 0, `38 passed`, `nra-r1 exit 0: "increased": []`, `guardrails rc=0`.
 
 Not tested: Cellpose 4; `do_3D` and two-channel input; CuPy or torch on a second GPU; several
 sites per well; a plate-scoped custom function; the GUI editor dialog itself (the manager call
