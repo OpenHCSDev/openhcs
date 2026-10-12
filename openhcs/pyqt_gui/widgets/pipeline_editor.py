@@ -644,7 +644,6 @@ class PipelineEditorWidget(
             on_save_callback=on_save,
             orchestrator=self._get_current_orchestrator(),
             parent=self,
-            service_adapter=self.service_adapter,
             plate_scope=scope_id,
             source_bindings=self._current_source_bindings(),
             source_binding_context=self.current_source_binding_context(),

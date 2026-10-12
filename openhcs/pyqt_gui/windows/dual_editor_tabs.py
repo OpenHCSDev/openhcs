@@ -127,8 +127,6 @@ class FunctionPatternTab(StepEditorTab):
             invocation_badge_provider=edit.function_invocation_badge_provider,
             before_mutation=edit.before_mutation,
         )
-        if edit.main_window:
-            self.editor.main_window = edit.main_window
         self.editor.refresh_from_context()
         self.editor.apply_selected_pattern_key_from_state()
         self.editor.function_pattern_changed.connect(
@@ -154,8 +152,9 @@ class FunctionPatternTab(StepEditorTab):
         self.editor.set_scope_index(index)
 
     def pipeline_step_replaced(self, step: FunctionStep) -> None:
-        if step.func:
-            self.editor._initialize_pattern_data(step.func)
+        pattern = step.func
+        if pattern:
+            self.editor._initialize_pattern_data(pattern)
             self.editor._populate_function_list()
 
     def _on_function_pattern_changed(self) -> None:
@@ -233,8 +232,6 @@ class ArtifactsTab(StepEditorTab):
         self,
         notification: DebugSnapshotAvailableNotification,
     ) -> None:
-        if (
-            notification.progress_event.subject_id == self.edit.plate_scope
-            and notification.snapshot is not None
-        ):
-            self.view.apply_debug_snapshot(notification.snapshot)
+        snapshot = notification.snapshot
+        if notification.progress_event.subject_id == self.edit.plate_scope and snapshot is not None:
+            self.view.apply_debug_snapshot(snapshot)

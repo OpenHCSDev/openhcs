@@ -44,20 +44,6 @@ from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 logger = logging.getLogger(__name__)
 
 
-def _main_window_of(service_adapter, parent_widget):
-    """The main window, from the given service adapter or the nearest manager widget's."""
-    from pyqt_reactive.widgets.shared.abstract_manager_widget import (
-        AbstractManagerWidget,
-    )
-
-    current = parent_widget
-    while service_adapter is None and current is not None:
-        if isinstance(current, AbstractManagerWidget):
-            service_adapter = current.service_adapter
-        current = current.parent()
-    return None if service_adapter is None else service_adapter.main_window
-
-
 class DualEditorWindow(TabbedEditorWindow):
     """Edit one pipeline step; follow it while the pipeline around it changes."""
 
@@ -72,7 +58,6 @@ class DualEditorWindow(TabbedEditorWindow):
         color_scheme: ColorScheme | None = None,
         orchestrator=None,
         parent=None,
-        service_adapter=None,
         step_index: int | None = None,
         *,
         plate_scope: str,
@@ -101,7 +86,6 @@ class DualEditorWindow(TabbedEditorWindow):
                 source_binding_context=source_binding_context,
                 function_invocation_badge_provider=function_invocation_badge_provider,
                 compiled_artifact_inspection_provider=compiled_artifact_inspection_provider,
-                main_window=_main_window_of(service_adapter, parent),
             ),
             color_scheme=color_scheme,
             parent=parent,

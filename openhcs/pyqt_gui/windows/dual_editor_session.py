@@ -62,7 +62,6 @@ class StepEdit(EditedObject):
     compiled_artifact_inspection_provider: Callable[
         [str], CompiledArtifactInspection | None
     ] = _nothing_to_do
-    main_window: Any = None
     #: The clone that is edited, so unsaved changes never reach the pipeline's object.
     step: FunctionStep = field(init=False)
     _scope_id: str = field(init=False)
@@ -124,7 +123,8 @@ class StepEdit(EditedObject):
 
     def save(self) -> FunctionStep:
         saved = self.object_session().to_object(update_delegate=False)
-        if not saved.name or not saved.name.strip():
+        step_name = saved.name
+        if not step_name or not step_name.strip():
             raise SaveRefused("Step name cannot be empty.")
         self.is_new = False
         self.step = saved

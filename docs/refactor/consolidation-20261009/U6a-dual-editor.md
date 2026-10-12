@@ -108,6 +108,27 @@ rule once: every driver accepts what it positively owns, and where two accept, t
 owns the target. No driver names another tab's fields; a first draft whose step driver negated
 `FunctionPatternField.owns_field_path` was removed.
 
+## Glued names (`<DomainType><GenericConcept>`)
+
+Rule: a mechanism takes the object or its declaration and asks it; no class per (type x mechanism).
+
+- `StepFieldNavigationDriver` (added in a draft of this change): removed. The step tab uses the
+  library's form driver unchanged; the form answers from its own ObjectState fields.
+- `FunctionFieldNavigationDriver` (pyqt-reactive, also added in a draft of this change, not
+  pre-existing): removed. Its only behaviour was "accept the paths the function pattern owns".
+  `FieldWindowNavigationDriver` now takes `owns_field_path` and asks the editor that shows the fields;
+  `FunctionListEditorWidget.window_navigation_driver` passes `FunctionPatternField.owns_field_path`.
+- `DualEditorWindowNavigationDriver` (met): removed, replaced by the generic
+  `TabbedEditorNavigationDriver`.
+- `DualEditorFunctionPatternController`, `_DualEditorTabBuilder`, `_DualEditorTabBuildContext`,
+  `DualEditorSession` (met): removed or replaced by `StepEdit`.
+- Met and left: `FunctionPatternField` (formbridge; a field declaration with path helpers, read by
+  several services), `StepEditorStateRequest` (`step_parameter_editor.py`; a scope lookup that only
+  raises a step-specific message), `FunctionStepCodeDocumentDriver`
+  (`services/function_step_code_document.py`), `StepParameterEditorWidget`. Not examined here.
+- Added and kept: `StepEditorTab` (the family base that carries the two step-specific hooks),
+  `StepEdit`, and the three tab declarations. `TabbedEditorNavigationDriver` is generic.
+
 ## What was done
 
 Library (pyqt-reactive, branch `refactor/U6a-tabbed-editor-window`):
@@ -141,6 +162,11 @@ window file 51 -> 4 (none on an editor widget); 11 places that named a tab -> 0 
 - `has_parameter("func")` fallbacks to the unsaved clone in the old session: **tests-only**. The
   ObjectState of a `FunctionStep` holds its constructor parameters, `func` among them; a state without
   it now raises instead of writing to the clone. Not exercised: a step subclass whose state omits `func`.
+- `service_adapter` parameter and `func_editor.main_window`: **unused**; the window only used the
+  adapter to set `main_window` on the function editor, which nothing in pyqt-reactive or formbridge
+  reads. Both callers updated.
+- `TypeError` re-checks of the compiled-inspection provider's return value and of the compiled-state
+  signal payload: **tests-only**; the signatures state the types, nothing re-validates them now.
 - Navigation `ROOT_WIDGETS` wait when an editor did not exist yet: **derived**; tabs are built in the
   window constructor, before a driver can be asked.
 

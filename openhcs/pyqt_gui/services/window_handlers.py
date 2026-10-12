@@ -239,7 +239,6 @@ class OpenHCSWindowCreationAuthority:
             step_data=step,
             is_new=False,
             orchestrator=orchestrator,
-            service_adapter=plate_manager.service_adapter,
             step_index=editor_scope.step_token.index,
             plate_scope=editor_scope.plate_scope,
             compiled_artifact_inspection_provider=(
