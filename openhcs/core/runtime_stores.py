@@ -1,6 +1,7 @@
 """Runtime stores for typed artifact values."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -33,7 +34,6 @@ from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -613,7 +613,7 @@ class RuntimeArtifactInput:
             data=RuntimeSliceProjection.value_for_slice(
                 payload,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     plane_index=matching_indices[0],
                     axis_size=slice_count,
                 ),

@@ -24,8 +24,8 @@ from zmqruntime.messages import (
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from zmqruntime.client import EndpointShutdownMode, EndpointShutdownResult
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import (
     AgentCliArgumentSpec,
     AgentCliRequest,
     AgentError,

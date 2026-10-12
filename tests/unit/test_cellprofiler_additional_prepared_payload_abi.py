@@ -1,4 +1,5 @@
 """Prepared raw arguments retain context consumed by nominal CP request owners."""
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -6,7 +7,6 @@ import pytest
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -146,7 +146,7 @@ def test_prepared_align_preserves_named_plane_axis_masks_and_source_identity(col
             paths=("/input/first.tif", "/input/second.tif"),
             component_metadata=({"well": "A01", "channel": "1"}, {"well": "A01", "channel": "2"}),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         axes=PayloadAxes.colour_samples(3 if color else None),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(2, 3), source_shape_yx=(14, 17)

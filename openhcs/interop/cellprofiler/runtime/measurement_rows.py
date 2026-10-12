@@ -84,10 +84,10 @@ def measurement_source_image_name_for_slice(
         )
 
     if plane_projection is None:
-        if source_metadata.plane_axis is not None:
+        if source_metadata.plane_axis.leads_data:
             raise ValueError(
                 "Measurement source metadata declares plane axis "
-                f"{source_metadata.plane_axis.value!r} without a runtime projection."
+                f"{source_metadata.plane_axis.name!r} without a runtime projection."
             )
         if slice_index != 0:
             raise ValueError(
@@ -102,7 +102,7 @@ def measurement_source_image_name_for_slice(
                 "RuntimePlaneAxisValueProjection or None, got "
                 f"{type(plane_projection).__name__}."
             )
-        if plane_projection.plane_index is not None:
+        if plane_projection.selects_one_plane:
             raise ValueError(
                 "Measurement row source projection requires a preserved runtime "
                 "plane axis, not a preselected plane."
@@ -412,7 +412,7 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
 
     label_payload: ObjectLabelValue
     object_name: str
-    domain_scope: ObjectLabelDomainScope | None = None
+    domain_scope: type[ObjectLabelDomainScope] | None = None
 
     @abstractmethod
     def coordinate_is_measured(
@@ -430,8 +430,8 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
         if self.domain_scope is not None and self.domain_scope is not declared_scope:
             raise ValueError(
                 "ObjectLocationMeasurementRows domain_scope must match the "
-                f"object-label declaration; got {self.domain_scope.value!r}, "
-                f"expected {declared_scope.value!r}."
+                f"object-label declaration; got {self.domain_scope.name!r}, "
+                f"expected {declared_scope.name!r}."
             )
 
     def rows(self) -> MeasurementProjectedColumnarRows:
@@ -475,7 +475,7 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
 
     def label_plane_domains(self) -> tuple[tuple[object, tuple[int, ...]], ...]:
         domain = self.label_payload.object_label_domain()
-        if domain.scope is ObjectLabelDomainScope.PAYLOAD:
+        if domain.scope.ids_span_payload:
             object_ids = domain.explicit_id_domain()
             if object_ids is None:
                 raise ValueError(

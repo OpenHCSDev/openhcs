@@ -19,6 +19,7 @@ from openhcs.agent.ui_bridge_identities import GlobalConfigWindowIdentity
 from openhcs.authoring.session.step_scopes import StepEditorScope
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
 if TYPE_CHECKING:
     from objectstate.object_state import ObjectState
@@ -131,7 +132,7 @@ class OpenHCSWindowCreationAuthority:
                     ),
                 ),
             ),
-            scope_id=OpenHCSUiWindowId.canonical_manager_scope_for_agent_window_id(
+            scope_id=UiStableWindowIdentityDeclaration.manager_scope_for_window_id(
                 global_config_window_scope_id(request.scope_id)
             ),
             title_text=GlobalConfigWindowIdentity.require_title(),
@@ -355,7 +356,7 @@ class OpenHCSWindowCreationAuthority:
         window.tab_widget.setCurrentIndex(tab_index)
 
     def _plate_manager(self):
-        from pyqt_reactive.services.service_registry import ServiceRegistry
+        from formbridge.services.service_registry import ServiceRegistry
 
         from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 

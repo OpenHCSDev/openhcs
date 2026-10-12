@@ -1,3 +1,5 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
@@ -13,11 +15,9 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowValueField,
 )
 from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_object_labels import (
@@ -71,14 +71,14 @@ def _projected_measurement_rows(result, *, object_name="Cells"):
 
 def _timepoint_labels(labels: np.ndarray, *, axis_size: int) -> ObjectLabelPayload:
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=axis_size,
     )
     return ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=PresentObjectLabelIdsDomainDeclaration(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             plane_projection=projection,
         ).declared_domain(None, labels),
     )
@@ -633,7 +633,7 @@ def test_retained_tracking_image_uses_track_palette_and_preserves_measurements()
     metadata = retained.output_image.metadata
     assert pixels.shape == (2, 32, 40, 3)
     assert pixels.dtype == np.float32
-    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.plane_axis is SourceBindingPlaneAxis
     assert metadata.axis_position(ColourAxis) == -1
     assert metadata.unit_interval_intensity_scale == 255
     np.testing.assert_array_equal(pixels[:, 0, 0], np.zeros((2, 3)))

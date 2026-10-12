@@ -296,9 +296,6 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureRelationDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-)
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -1497,7 +1494,7 @@ def _object_intensity_prepared_labels_for_batch_group(
     labels = first_request.completion_label_payload
     if not isinstance(labels, ObjectLabelValue):
         return None
-    if labels.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
+    if labels.plane_axis.one_plane_per_source_binding:
         return None
     return ObjectIntensityPreparedLabels.from_measurement(
         image=first_request.image.data,

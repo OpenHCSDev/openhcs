@@ -8822,11 +8822,13 @@
       "type": "string"
      },
      "surface_id": {
-      "default": "plate_manager.state",
       "title": "Surface Id",
       "type": "string"
      }
     },
+    "required": [
+     "surface_id"
+    ],
     "title": "openhcs_ui_get_state_surfaceArguments",
     "type": "object"
    },

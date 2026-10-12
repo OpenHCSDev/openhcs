@@ -1,5 +1,6 @@
 """Prepared canonical signatures survive compilation and worker transport."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import inspect
 import pickle
 from types import SimpleNamespace
@@ -24,7 +25,6 @@ from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.pipeline.function_contracts import composed_image_payload
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.core.runtime_batch_contracts import (
@@ -71,7 +71,7 @@ def test_composition_default_respects_explicit_raw_carrier_boundary(
     mask = np.ones((1, 4, 5), dtype=bool)
     mask[0, 0, 0] = False
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("FITC",),
     ).payload_with(pixels, mask)
     expected = source if retains_payload else pixels
@@ -80,7 +80,7 @@ def test_composition_default_respects_explicit_raw_carrier_boundary(
 
     assert result is expected
     assert received[0] is expected
-    assert source.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert source.metadata.plane_axis is SourceBindingPlaneAxis
     np.testing.assert_array_equal(source.mask, mask)
 
 
@@ -99,7 +99,7 @@ def test_prepared_composition_default_survives_transport_without_introspection(
     monkeypatch.setattr(contract_module, "get_type_hints", forbidden)
     monkeypatch.setattr(inspect, "signature", forbidden)
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("FITC",),
     ).payload_with(np.ones((1, 4, 5)), np.ones((1, 4, 5), dtype=bool))
     for _ in range(40):
@@ -453,7 +453,7 @@ def test_compiled_input_reuses_produced_stack_realization_without_copy():
 
     source = ProducedImageStack(
         tuple(np.full((3, 4), value, dtype=np.float32) for value in (1, 2)),
-        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
     )
     invocation = compile_function_pattern(
         admitted_graph(gaussian_blur),

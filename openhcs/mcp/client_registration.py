@@ -24,7 +24,7 @@ import tomlkit
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from tomlkit.items import InlineTable
 
-from openhcs.agent.runtime_platform import (
+from formbridge.runtime_platform import (
     AgentRuntimePlatform,
     MacOSRuntimePlatform,
     WindowsRuntimePlatform,

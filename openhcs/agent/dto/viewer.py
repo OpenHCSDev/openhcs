@@ -11,7 +11,7 @@ from typing import Annotated, ClassVar, Self, cast
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
-from pyqt_reactive.services.window_snapshot import (
+from formbridge.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotCaptureSpec,
     WindowSnapshotFrameCondition,
@@ -33,8 +33,8 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeViewportPresentation,
 )
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import (
     AgentCliArgumentSpec,
     AgentCliRequest,
     AgentError,

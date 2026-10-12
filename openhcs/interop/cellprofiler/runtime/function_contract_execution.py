@@ -162,7 +162,7 @@ class CellProfilerContractCall(ContractCall):
             raise RuntimeSliceProjectionDeclarationError(
                 f"{self._owner} with a per-plane contract has an image payload "
                 "plane axis that conflicts with the compiled projection: "
-                f"{declared_plane_axis!r} != {projection.axis.value!r}."
+                f"{declared_plane_axis!r} != {projection.axis.name!r}."
             )
         prepare_started_at = time.perf_counter()
         slices = tuple(

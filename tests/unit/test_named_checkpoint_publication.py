@@ -56,7 +56,7 @@ class SyntheticAggregateField(SourceProjectedImageOutput):
         return replace(self, data=data)
 
     def resolve_source_context(self, source, projection):
-        assert projection is not None and projection.plane_index is None
+        assert projection is not None and projection.preserves_complete_axis
         assert projection.axis_size == 24
         return source.metadata.collapse_leading_plane_axis().payload_with(self.data, None)
 
@@ -145,7 +145,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     for item in metadata["subdirectories"]["checkpoints_results"]["source_projection"]:
         retained = ImagePayloadMetadata.from_mapping(item["image_metadata"])
         assert retained.source_image_provenance_planes.contributor_count == 24
-        assert retained.plane_axis is None
+        assert retained.plane_axis.unstacked
     # The workspace index exposes both relative and absolute lookup aliases.
     # Verify canonical storage inventory, not the number of lookup keys.
     all_inventory = {

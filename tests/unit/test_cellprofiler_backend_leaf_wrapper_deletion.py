@@ -1,11 +1,11 @@
 """Behavior gates retained after backend-leaf wrapper deletion."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -43,7 +43,7 @@ def test_align_execution_retains_input_and_additional_mode_invariants(
                     )
                 )
             ),
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
         ).payload_with(image, None),
         method="Mutual Information",
         crop_mode="Keep size",

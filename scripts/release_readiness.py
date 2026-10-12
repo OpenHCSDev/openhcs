@@ -158,8 +158,6 @@ class ReleaseWorkflowGate(Enum):
             commit.sha,
             "--workflow",
             self.value,
-            "--event",
-            "push",
             "--limit",
             "10",
             "--json",
@@ -182,7 +180,7 @@ class ReleaseWorkflowGate(Enum):
         )
         if successful is None:
             raise ReleaseReadinessError(
-                f"No successful {self.value} push run exists for {commit.sha}."
+                f"No successful {self.value} run exists for {commit.sha}."
             )
         return successful.url
 

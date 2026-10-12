@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 
 from openhcs.agent.capabilities import agent_capabilities
 from python_introspect import JsonValue

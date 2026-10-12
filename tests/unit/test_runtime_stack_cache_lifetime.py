@@ -1,5 +1,6 @@
 """Execution-boundary release of image reuse storage."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import gc
 import weakref
 
@@ -10,7 +11,6 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from tests.context_support import (
     executing_context,
@@ -55,7 +55,7 @@ def test_context_image_cache_release_preserves_runtime_artifacts_and_observation
     )
     retained_array = np.ones((1, 2, 2), dtype=np.uint16)
     retained_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(retained_array, None)
     value = RuntimeValue.normalize(output_plan, retained_payload, axis_id="A01")
     store = context.runtime_value_store

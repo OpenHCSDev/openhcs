@@ -14,7 +14,7 @@ after='''    def payloads_for_slices(
         slices: Sequence[RuntimeArrayData],
     ) -> list[RuntimeArrayData]:
         """Project each child once, keeping strict batch-mask cardinality."""
-        if self.metadata.plane_axis is None:
+        if self.metadata.plane_axis.unstacked:
             if len(slices) != 1:
                 raise ValueError(
                     "Image payload produced multiple slices without a declared "

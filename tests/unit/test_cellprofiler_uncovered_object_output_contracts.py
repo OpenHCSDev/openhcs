@@ -1,6 +1,7 @@
 """Focused contracts for uncovered CellProfiler object-producing leaves."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 
 import inspect
 from pathlib import Path
@@ -316,7 +317,7 @@ def test_identify_dead_worms_projects_exact_native_measurement_features() -> Non
             object_label_output_domain_scope=lambda: None,
             adapter=SimpleNamespace(
                 request=SimpleNamespace(
-                    plane_projection=SimpleNamespace(plane_index=None)
+                    plane_projection=RuntimePlaneProjection.stack()
                 )
             ),
             measurement_source_metadata=lambda _specs: label_payload.metadata,

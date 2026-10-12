@@ -14,7 +14,7 @@ from zmqruntime.process_launch import (
     BackgroundProcessPlatform,
     WindowsBackgroundProcesses,
 )
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module

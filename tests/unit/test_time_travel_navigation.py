@@ -2,7 +2,7 @@ from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
-from pyqt_reactive.services.function_navigation import build_function_token_field_path
+from formbridge.services.function_navigation import build_function_token_field_path
 from pyqt_reactive.services.window_navigation import (
     NavigationWaitReason,
     RegisteredWindowNavigationReadiness,

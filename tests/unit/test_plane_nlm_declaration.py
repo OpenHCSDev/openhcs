@@ -1,6 +1,7 @@
 """Independent-plane NLM uses the original contract, kernel and source owners."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from dataclasses import replace
@@ -21,7 +22,6 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.memory import numpy as numpy_contract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -57,7 +57,7 @@ def _source(plane_count):
         replace(plane, source_image_name="C1") for plane in provenance.planes
     ))
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("C1",) * plane_count,
         source_image_provenance_planes=provenance,
         source_plane_dtypes=("float32",) * plane_count,
@@ -105,7 +105,7 @@ def test_real_nlm_kernel_receives_only_planes_and_restores_context(
     assert result.data.shape == (plane_count, 16, 20)
     current = result.metadata
     prior = source.metadata
-    assert current.plane_axis is prior.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert current.plane_axis is prior.plane_axis is RuntimeSlicePlaneAxis
     assert current.source_voxel_spacing == prior.source_voxel_spacing
     assert current.source_spatial_domain == prior.source_spatial_domain
     assert current.source_image_provenance_planes.identity == prior.source_image_provenance_planes.identity

@@ -7,9 +7,7 @@ from weakref import ref
 from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import QCoreApplication, QEvent, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QMainWindow
-from pyqt_reactive.services.zmq_server_scan_service import (
-    EndpointObservationSnapshot,
-)
+from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
 from pyqt_reactive.theming import ColorScheme
 from zmqruntime.messages import PongResponse, ServerRole
 

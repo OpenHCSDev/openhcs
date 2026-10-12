@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import os,sys,time,json,resource,ctypes,gc
 from pathlib import Path
 from multiprocessing import get_context
@@ -6,7 +7,6 @@ sys.path.insert(0,'/home/ts/code/projects/openhcs-cohort-qualification-main429-2
 import numpy as np
 from PIL import Image
 from openhcs.core.runtime_image_values import ImageMetadataPayload,ImagePayloadMetadata,image_payload_data
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
 from openhcs.processing.backends.cellprofiler.color import combine_color_to_gray
 from openhcs.processing.backends.cellprofiler.smoothing import smooth_image
@@ -14,7 +14,7 @@ mode=sys.argv[1]; advice=int(sys.argv[2]); np._core.multiarray._set_madvise_huge
 os.sched_setaffinity(0,{0})
 root=Path('/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images')
 data=np.stack([np.asarray(Image.open(root/name)) for name in ('DMSO_B5_t0.JPG','DMSO_B5_t24.JPG')])
-metadata=ImagePayloadMetadata(source_channel_axis=-1,plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_plane_intensity_scales=(255,255),source_plane_dtypes=('uint8','uint8'))
+metadata=ImagePayloadMetadata(source_channel_axis=-1,plane_axis=RuntimeSlicePlaneAxis,source_plane_intensity_scales=(255,255),source_plane_dtypes=('uint8','uint8'))
 payload=ImageMetadataPayload(data,metadata)
 def chain():
     normalized=normalize_cellprofiler_image_payload(payload)

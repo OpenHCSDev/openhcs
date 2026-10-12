@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QMessageBox
 from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
-from openhcs.core.selection import AllItems
+from formbridge.selection import AllItems
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop.deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,

@@ -9,7 +9,8 @@ from pathlib import Path
 
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from python_introspect import JsonObject, to_jsonable
 from openhcs.agent.dto.execution import (
     ArtifactInputPlanSummary,

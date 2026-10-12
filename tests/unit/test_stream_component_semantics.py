@@ -1,3 +1,5 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from types import MappingProxyType
 
 import pytest
@@ -129,7 +131,7 @@ def test_stream_route_metadata_excludes_payload_local_plane_component() -> None:
     projector = StreamViewerComponentMetadataProjector.for_item_fields(
         ("well", "site", "channel", "z_index", "timepoint"),
         {
-            "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+            "plane_axis": RuntimeSlicePlaneAxis.name,
             "plane_component_values": {"channel": ("1", "2")},
         },
     )
@@ -212,7 +214,7 @@ def _plane_metadata(axis, coordinates):
 @pytest.mark.parametrize("component", ("site", "channel", "z_index"))
 def test_retained_stream_domain_includes_exact_planes_not_scalar_address(component):
     metadata = _plane_metadata(
-        RuntimePlaneAxis.RUNTIME_SLICE,
+        RuntimeSlicePlaneAxis,
         ({component: "3"}, {component: "1"}),
     )
     scalar = SourceImageIdentity(component_metadata={"well": "A01"})
@@ -235,7 +237,7 @@ def test_retained_stream_domain_includes_exact_planes_not_scalar_address(compone
 
 def test_collapsed_contributors_do_not_restore_a_stream_pixel_axis():
     metadata = _plane_metadata(
-        RuntimePlaneAxis.RUNTIME_SLICE, ({"site": "3"}, {"site": "1"}),
+        RuntimeSlicePlaneAxis, ({"site": "3"}, {"site": "1"}),
     ).collapse_leading_plane_axis()
     observations = StreamSourceComponentMetadataItems.from_image_metadata(
         metadata, fallback_source_identity=SourceImageIdentity(
@@ -246,7 +248,7 @@ def test_collapsed_contributors_do_not_restore_a_stream_pixel_axis():
     assert observations.domain_metadata_items(("well", "site")) == ({"well": "A01"},)
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 @pytest.mark.parametrize("component", AxisFamily.active().axes)
 def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
     axis, component
@@ -260,7 +262,7 @@ def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
         metadata, ()
     )
 
-    assert fields["plane_axis"] == axis.value
+    assert fields["plane_axis"] == axis.name
     assert fields["plane_component_values"] == {component.name: ("1", "2")}
     assert (
         metadata.retained_plane_component_values() == fields["plane_component_values"]
@@ -268,7 +270,7 @@ def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
 
 
 def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
-    metadata = _plane_metadata(None, ({"channel": "1"}, {"channel": "2"}))
+    metadata = _plane_metadata(NoPlaneAxis, ({"channel": "1"}, {"channel": "2"}))
 
     assert metadata.retained_plane_component_values() == {}
     wire = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
@@ -280,14 +282,14 @@ def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
         ImagePayloadMetadata.from_viewer_image_metadata(
             wire["image_metadata"]
         ).plane_axis
-        is None
+        is NoPlaneAxis
     )
 
 
 @pytest.mark.parametrize("storage_components", [(), (Microscopy.Channel,)])
 def test_retained_plane_domain_rejects_multiple_varying_components(storage_components):
     metadata = _plane_metadata(
-        RuntimePlaneAxis.SOURCE_BINDING,
+        SourceBindingPlaneAxis,
         ({"channel": "1", "z_index": "1"}, {"channel": "2", "z_index": "2"}),
     )
 
@@ -299,7 +301,7 @@ def test_retained_plane_domain_rejects_multiple_varying_components(storage_compo
 
 def test_singleton_plane_projection_remains_exactly_compiler_owned():
     metadata = _plane_metadata(
-        RuntimePlaneAxis.RUNTIME_SLICE,
+        RuntimeSlicePlaneAxis,
         ({"site": "3", "channel": "7"},),
     )
 
@@ -314,7 +316,7 @@ def test_singleton_plane_projection_remains_exactly_compiler_owned():
 
 def test_singleton_plane_projection_rejects_ambiguous_compiler_components():
     metadata = _plane_metadata(
-        RuntimePlaneAxis.RUNTIME_SLICE,
+        RuntimeSlicePlaneAxis,
         ({"site": "3", "channel": "7"},),
     )
 

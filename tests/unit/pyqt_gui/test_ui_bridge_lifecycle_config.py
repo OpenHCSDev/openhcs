@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 import zmq
-from pyqt_reactive.services.zmq_server_scan_service import ZMQServerScanService
+from formbridge.services.zmq_server_scan_service import ZMQServerScanService
 from zmqruntime import (
     ControlMessageType,
     DataControlPortPairAuthority,
@@ -23,12 +23,9 @@ from zmqruntime.transport import get_default_transport_mode
 
 from python_introspect import to_jsonable
 
-from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import UiBridgeRequestEnvelope, UiBridgeStatus
-from openhcs.agent.services.ui_bridge_service import (
-    UI_BRIDGE_PROTOCOL_VERSION,
-    UiBridgeStatusOperation,
-)
+from formbridge.contracts import SCHEMA_VERSION
+from formbridge.bridge.dto import UiBridgeRequestEnvelope, UiBridgeStatus
+from formbridge.bridge.service import UiBridgeStatusOperation
 from openhcs.pyqt_gui.config import (
     AgentUiBridgeConfig,
     PyQtGuiRuntimeContext,
@@ -39,13 +36,13 @@ from openhcs.pyqt_gui.services.main_window_workflows import MainWindowUiBridgeLi
 from openhcs.pyqt_gui.services.ui_bridge_composition import (
     OpenHCSUiBridgeCompositionRoot,
 )
-from openhcs.pyqt_gui.services.ui_bridge_server import (
-    UI_BRIDGE_BROWSER_SERVER_NAME,
+from formbridge.bridge.server import (
     UiBridgeControlServer,
     UiBridgeEndpointInUseError,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 
 
 def test_agent_ui_bridge_config_reads_environment(monkeypatch) -> None:
@@ -468,7 +465,7 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
             context.term()
 
     assert response["type"] == ResponseType.PONG.value
-    assert response["server"] == UI_BRIDGE_BROWSER_SERVER_NAME
+    assert response["server"] == OpenHCSUiBridgeApplication.server_name
     assert response["server_role"] == ServerRole.GENERIC.value
     assert response["port"] == port
     assert response["control_port"] == (port + OPENHCS_ZMQ_CONFIG.control_port_offset)
@@ -531,7 +528,7 @@ def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(
             to_jsonable(
                 UiBridgeRequestEnvelope(
                     schema_version=SCHEMA_VERSION,
-                    bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
+                    bridge_protocol_version=OpenHCSUiBridgeApplication.protocol_version,
                     application=OPENHCS_ENDPOINT_APPLICATION,
                     request_id="identity",
                     operation=UiBridgeStatusOperation.name,
@@ -553,7 +550,7 @@ def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(
             context.term()
 
     assert (
-        original_binding.connection.transport_endpoint().occupied_ports(
+        original_binding.connection.transport_endpoint(OPENHCS_ZMQ_CONFIG).occupied_ports(
             transport_config
         )
         == frozenset()
@@ -597,7 +594,7 @@ def test_ui_bridge_startup_lock_timeout_precedes_worker_readiness_wait(
         return ExpiringStartupLock(operation_deadline)
 
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.ui_bridge_server.endpoint_startup_lock",
+        "formbridge.bridge.server.endpoint_startup_lock",
         expiring_startup_lock,
     )
 
@@ -683,7 +680,7 @@ def test_zmq_browser_scan_service_discovers_ui_bridge_default_transport(
     )
 
     assert len(snapshot.responses) == 1
-    assert snapshot.responses[0].server == UI_BRIDGE_BROWSER_SERVER_NAME
+    assert snapshot.responses[0].server == OpenHCSUiBridgeApplication.server_name
     assert snapshot.responses[0].port == port
     assert snapshot.responses[0].application == OPENHCS_ENDPOINT_APPLICATION
     assert endpoint.occupied_ports(OPENHCS_ZMQ_CONFIG) == frozenset()

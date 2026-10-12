@@ -11,14 +11,11 @@ import logging
 import threading
 from typing import TYPE_CHECKING
 
-from pyqt_reactive.services.interval_snapshot_poller import (
+from formbridge.services.interval_snapshot_poller import (
     CallbackIntervalSnapshotPollerPolicy,
     IntervalSnapshotPoller,
 )
-from pyqt_reactive.services.zmq_server_info import (
-    BaseServerInfo,
-    ExecutionServerInfo,
-)
+from formbridge.services.zmq_server_info import BaseServerInfo, ExecutionServerInfo
 from zmqruntime.progress import EventRegistryMutation
 
 from openhcs.authoring.session.events import (

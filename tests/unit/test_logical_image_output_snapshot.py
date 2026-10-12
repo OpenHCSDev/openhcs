@@ -1,4 +1,5 @@
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 """Typed image sets retain physical coverage across volume/plane exports."""
 
@@ -23,7 +24,6 @@ from openhcs.core.runtime_execution_validation import (
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_image_values import ImageMaskDomain, ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -140,7 +140,7 @@ def test_projection_owner_partitions_whole_exports_and_scalar_cohorts(exported_v
         projections[0],
         address=None,
         ref=SourcePixelRef("disk", "whole-volume.tiff"),
-        image_metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        image_metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     declared = SourceProjectionSet((whole_image, *reversed(projections)))
     whole, planes = declared.image_export_groups(Z_STACK)
@@ -211,7 +211,7 @@ def test_producer_and_execution_cohorts_remain_distinct(exported_volume, change)
 @pytest.mark.parametrize(
     "metadata_changes, message",
     (
-        ({"plane_axis": RuntimePlaneAxis.RUNTIME_SLICE}, "scalar image metadata"),
+        ({"plane_axis": RuntimeSlicePlaneAxis}, "scalar image metadata"),
         ({"axes": PayloadAxes.colour_samples(0)}, "declared non-spatial axes"),
         ({"source_dtype": "uint8"}, "declared dtype"),
         ({"mask_defines_border": True}, "incompatible image metadata"),

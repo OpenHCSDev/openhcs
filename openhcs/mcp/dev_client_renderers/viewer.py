@@ -16,7 +16,7 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfo,
     RuntimeServerScanResult,
 )
-from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+from formbridge.bridge.dto import UiWindowSnapshotResult
 from openhcs.agent.dto.viewer import (
     ViewerWindowImageSampleResult,
     ViewerWindowLayerIsolationResult,

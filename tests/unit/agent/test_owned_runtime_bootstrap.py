@@ -33,6 +33,7 @@ from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
 )
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 _PRODUCTION_SPAWN = ZMQExecutionClient._spawn_server_process
 
@@ -291,7 +292,7 @@ def test_effective_connection_matches_configured_native_endpoint(
         configured_mode if requested_mode is None else requested_mode
     )
     resolved = connection.resolved(config)
-    assert resolved.transport_endpoint() == endpoint
+    assert resolved.transport_endpoint(OPENHCS_ZMQ_CONFIG) == endpoint
     assert resolved.execution_client(config).endpoint == endpoint
     assert connection.transport_mode is requested_mode  # Input stays immutable.
     assert ZMQExecutionClient(config=config).endpoint == config.client_endpoint()
@@ -359,7 +360,7 @@ def test_start_observe_close_retain_one_effective_route(
     started = service.start_from_request(request)
     handle = dataclass_from_mapping(RuntimeBootstrapHandle, to_jsonable(started.handle))
     assert handle.connection.transport_mode is expected.transport_mode
-    assert handle.connection.transport_endpoint() == expected
+    assert handle.connection.transport_endpoint(OPENHCS_ZMQ_CONFIG) == expected
     assert not handle.launch_plan.startup_status_file.exists()
     # Retained explicit routing wins even if another observer has a different
     # configured default. No second transport record or mutable mode cache.

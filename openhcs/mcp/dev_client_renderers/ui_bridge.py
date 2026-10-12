@@ -9,9 +9,9 @@ from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import AgentWarning
+from formbridge.contracts import AgentWarning
 from openhcs.agent.dto.mcp import McpServerHealthResult
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     QT_TOP_LEVEL_WINDOW_KIND,
     UiActionCatalog,
     UiActionInvokeResult,
@@ -23,14 +23,8 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentCatalog,
     UiCodeDocumentSummary,
     UiCodeDocumentValidationResult,
-    UiDebugActionState,
-    UiDebugRuntimeFrameState,
     UiLiveOverviewSection,
     UiLiveOverviewState,
-    UiPipelineDebugSessionState,
-    UiPipelineEditorState,
-    UiPlateManagerState,
-    UiSelectedPlateWorkflowResult,
     UiSnapshotRef,
     UiStateSurfaceCatalog,
     UiStateSurfaceDocument,
@@ -43,11 +37,21 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowCatalog,
     UiWindowSummary,
 )
+from openhcs.agent.dto.ui_bridge import (
+    UiDebugActionState,
+    UiDebugRuntimeFrameState,
+    UiPipelineDebugSessionState,
+    UiPipelineEditorState,
+    UiPlateManagerState,
+    UiSelectedPlateWorkflowResult,
+)
 from openhcs.agent.ui_bridge_identities import (
     MainWindowWidgetIdentity,
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineEditorStateSurfaceIdentityDeclaration,
-    PlateManagerStateSurfaceIdentityDeclaration,
+    DatasetListStateSurfaceIdentity,
+)
+from formbridge.bridge.identities import (
     UiLiveOverviewStateSurfaceIdentityDeclaration,
     UiStateSurfaceIdentityDeclarationBase,
 )
@@ -316,7 +320,7 @@ class UiLiveOverviewStateSurfaceRenderer(UiStateSurfaceStateRenderer):
 class PlateManagerStateSurfaceRenderer(UiStateSurfaceStateRenderer):
     """Compact renderer for PlateManager state-surface rows."""
 
-    surface_identity = PlateManagerStateSurfaceIdentityDeclaration
+    surface_identity = DatasetListStateSurfaceIdentity
     output_contract = UiPlateManagerState
 
     @classmethod

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Sequence
 
 from PyQt6.QtWidgets import QTreeWidgetItem
-from pyqt_reactive.services.zmq_server_info import ExecutionServerInfo
+from formbridge.services.zmq_server_info import ExecutionServerInfo
 from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 
 from openhcs.core.progress import ProgressEvent

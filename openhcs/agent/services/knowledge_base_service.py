@@ -20,7 +20,8 @@ from openhcs.agent.knowledge_manifest import (
     python_source_root,
 )
 from openhcs.agent.knowledge_manifest_schema import ComparisonManifestSnapshot
-from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseCatalog,

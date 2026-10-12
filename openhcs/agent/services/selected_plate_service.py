@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from openhcs.core.selection import SelectedItems
-from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from formbridge.selection import SelectedItems
+from formbridge.contracts import AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
     OutputPlateRoot,
@@ -22,20 +23,15 @@ from openhcs.agent.dto.plate import (
     SelectedPlateImageSampleRequest,
     SelectedPlateImageSampleResult,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiBridgeConnectionSpec,
     UiStateSurfaceDocument,
     UiStateSurfaceRequest,
 )
-from openhcs.agent.ui_bridge_identities import (
-    PlateManagerStateSurfaceIdentityDeclaration,
-)
+from openhcs.agent.ui_bridge_identities import DatasetListStateSurfaceIdentity
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.agent.services.ui_bridge_service import (
-    UiBridgeGetStateSurfaceOperation,
-    UiBridgeService,
-)
+from formbridge.bridge.service import UiBridgeGetStateSurfaceOperation, UiBridgeService
 from openhcs.core.plate_image_inventory import PlateFileKind
 
 
@@ -290,7 +286,7 @@ class SelectedPlateService:
         state_document = self.ui_bridge_service.invoke(
             UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
-                surface_id=PlateManagerStateSurfaceIdentityDeclaration.require_value(),
+                surface_id=DatasetListStateSurfaceIdentity.require_value(),
                 selection_mode=SelectedItems.name,
             ),
             connection,
@@ -325,7 +321,7 @@ class SelectedPlateService:
         target: type[SelectedPlateFileQueryTarget],
         source_format: str,
     ) -> tuple[SelectedPlateTargetRoot | None, AgentError | None]:
-        state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
+        state_surface_id = DatasetListStateSurfaceIdentity.require_value()
         plate_root = selected_plate.plate_root
         if plate_root is None:
             raise RuntimeError("Selected row plate_root was validated as a string.")
@@ -347,7 +343,7 @@ class SelectedPlateService:
     def selected_plate_row_from_state_surface(
         state_document: UiStateSurfaceDocument,
     ) -> tuple[Mapping[str, JsonValue] | None, AgentError | None]:
-        state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
+        state_surface_id = DatasetListStateSurfaceIdentity.require_value()
         selected_scope_ids = state_document.selected_scope_ids
         if len(selected_scope_ids) != 1:
             return None, AgentError(

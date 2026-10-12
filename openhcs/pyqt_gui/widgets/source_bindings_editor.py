@@ -44,7 +44,7 @@ from pyqt_reactive.forms.inline_dataclass_context import (
     InlineDataclassChildFieldIdentity,
     InlineDataclassFormContext,
 )
-from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
+from formbridge.forms.layout_constants import CURRENT_LAYOUT
 from pyqt_reactive.forms.widget_creation_config import (
     EnabledTitleWidgetMoveAuthority,
 )
@@ -78,7 +78,7 @@ from pyqt_reactive.widgets.no_scroll_spinbox import NoneAwareCheckBox
 from pyqt_reactive.widgets.shared.clickable_help_components import (
     InlineDataclassGroupBox,
 )
-from pyqt_reactive.widgets.shared.scope_color_receiver import ScopeColorSchemeReceiver
+from formbridge.theming.scope_color_receiver import ScopeColorSchemeReceiver
 from pyqt_reactive.widgets.shared.scoped_table_widget import ScopedTableWidget
 from pyqt_reactive.widgets.structural_table import (
     EditableTableSemanticBinding,
@@ -122,7 +122,7 @@ from openhcs.core.source_bindings_preview import (
 
 if TYPE_CHECKING:
     from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
-    from pyqt_reactive.forms.parameter_info_types import InlineDataclassWidgetInfo
+    from formbridge.forms.parameter_info_types import InlineDataclassWidgetInfo
 
 SourceBindingsEditorRawValue = SourceBindingsConfig | LazyDataclass
 
@@ -1980,9 +1980,7 @@ def resolved_source_bindings_value(
 def register_source_bindings_editor_widget() -> None:
     """Register the typed source-binding editor with pyqt-reactive forms."""
 
-    from pyqt_reactive.forms.parameter_info_types import (
-        register_inline_dataclass_widget,
-    )
+    from formbridge.forms.parameter_info_types import register_inline_dataclass_widget
 
     register_inline_dataclass_widget(
         SourceBindingsConfig,
