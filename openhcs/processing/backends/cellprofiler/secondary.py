@@ -301,12 +301,10 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,
     CellProfilerThresholdRequest,
-    CellProfilerThresholdResult,
     CellProfilerThresholdScope,
     CellProfilerThresholdSettings,
     CellProfilerVarianceMethod,
     OutputObjectThresholdMeasurementRecordRowsMixin,
-    ThresholdMeasurementFeatureRecord,
     ThresholdPrimitiveBackendStrategy,
     ThresholdSettingsModule,
     normalize_cellprofiler_image,
@@ -786,61 +784,6 @@ class ThresholdMethod(Enum):
     TRIANGLE = "triangle"
 
 
-@dataclass
-class SecondaryObjectStats(ThresholdMeasurementFeatureRecord):
-    slice_index: Annotated[int, MeasurementRowAxisField.SLICE_INDEX]
-    method: SecondaryMethod
-    object_count: int
-    mean_area: float
-    median_area: float
-    total_area: int
-    area_coverage_percent: float
-    final_threshold: float
-    original_threshold: float = 0.0
-    weighted_variance: float = 0.0
-    sum_of_entropies: float = 0.0
-
-    @classmethod
-    def from_labels(
-        cls,
-        labels: np.ndarray,
-        *,
-        image_shape: tuple[int, int],
-        threshold: CellProfilerThresholdResult,
-        method: SecondaryMethod,
-    ) -> "SecondaryObjectStats":
-        areas = np.bincount(np.asarray(labels).ravel())[1:]
-        positive_areas = areas[areas > 0]
-        object_count = int(positive_areas.size)
-        if object_count == 0:
-            mean_area = 0.0
-            median_area = 0.0
-            total_area = 0
-        else:
-            mean_area = float(np.mean(positive_areas))
-            median_area = float(np.median(positive_areas))
-            total_area = int(np.sum(positive_areas))
-        height, width = image_shape
-        pixel_count = height * width
-        if pixel_count:
-            area_coverage = 100.0 * total_area / pixel_count
-        else:
-            area_coverage = 0.0
-        return cls(
-            slice_index=0,
-            method=method,
-            object_count=object_count,
-            mean_area=mean_area,
-            median_area=median_area,
-            total_area=total_area,
-            area_coverage_percent=area_coverage,
-            final_threshold=float(threshold.final_threshold),
-            original_threshold=float(threshold.original_threshold),
-            weighted_variance=float(threshold.weighted_variance),
-            sum_of_entropies=float(threshold.sum_of_entropies),
-        )
-
-
 @dataclass(frozen=True)
 class SecondaryObjectLabels:
     """CellProfiler object-container label variants for secondary objects."""
@@ -1269,19 +1212,6 @@ def _execute_identify_secondary_objects(
     )
     runtime_profiler.log(
         "iso_label_variants",
-        time.perf_counter() - phase_started_at,
-        function="identify_secondary_objects",
-        method=method.value,
-    )
-    phase_started_at = time.perf_counter()
-    stats = SecondaryObjectStats.from_labels(
-        object_labels.segmented,
-        image_shape=img.shape,
-        threshold=threshold,
-        method=method,
-    )
-    runtime_profiler.log(
-        "iso_stats",
         time.perf_counter() - phase_started_at,
         function="identify_secondary_objects",
         method=method.value,
@@ -2077,7 +2007,6 @@ __all__ = public_names_from_objects(
     SecondaryDistanceTransformBackendStrategy,
     SecondaryMethod,
     SecondaryObjectLabels,
-    SecondaryObjectStats,
     SecondaryPropagationBackendStrategy,
     SecondarySegmentationRequest,
     SecondarySegmentationStrategy,

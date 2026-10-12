@@ -30,7 +30,7 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     MaterializationSpec,
     StreamingOnlyMaterializationSpec,

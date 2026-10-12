@@ -13,7 +13,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
 )
 from openhcs.core.steps.function_io import save_materialized_data
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     MaterializationSpec,
     NameByArtifactName,

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
         MaterializedRuntimeArtifact,
         RuntimeArtifactMaterialization,
     )
-    from openhcs.processing.materialization.core import Output
+    from openhcs.core.materialization.core import Output
 
 
 HookObservations = Mapping[str, object]

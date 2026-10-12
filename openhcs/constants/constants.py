@@ -5,7 +5,6 @@ This module defines all constants related to backends, defaults, I/O, memory, an
 These constants are governed by various doctrinal clauses.
 """
 
-from enum import Enum
 from abc import ABC
 from typing import ClassVar, Set
 
@@ -151,19 +150,6 @@ _RASTER_IMAGE_EXTENSIONS: Set[str] = {
 }
 DEFAULT_IMAGE_EXTENSIONS: Set[str] = set(_TIFF_IMAGE_EXTENSIONS)
 LOADABLE_IMAGE_EXTENSIONS: Set[str] = _TIFF_IMAGE_EXTENSIONS | _RASTER_IMAGE_EXTENSIONS
-
-
-class FileFormat(Enum):
-    TIFF = list(DEFAULT_IMAGE_EXTENSIONS)
-    NUMPY = [".npy"]
-    TORCH = [".pt", ".torch", ".pth"]
-    JAX = [".jax"]
-    CUPY = [".cupy", ".craw"]
-    TENSORFLOW = [".tf"]
-    JSON = [".json"]
-    CSV = [".csv"]
-    TEXT = [".txt", ".py", ".md", ".swc"]
-    ROI = [".roi.zip"]
 
 
 DEFAULT_BACKEND = Backend.MEMORY

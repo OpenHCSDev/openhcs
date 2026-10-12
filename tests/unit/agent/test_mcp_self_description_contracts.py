@@ -11,7 +11,9 @@ import pytest
 
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.constants.constants import FileFormat
+from openhcs.core.result_file_formats import (
+    RoiArchiveResultFile,
+)
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -89,7 +91,7 @@ def test_exact_plate_file_path_reports_kind_exclusion() -> None:
             PlateResultFileRecord(
                 relative_path="results/A01_rois.roi.zip",
                 full_path=result_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
             ),
         ),
     )

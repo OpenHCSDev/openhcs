@@ -63,7 +63,7 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     ImageFileOptions,
     MaterializationSpec,

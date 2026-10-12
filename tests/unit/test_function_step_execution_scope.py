@@ -79,7 +79,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.step_dependencies import NoMainFlowInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
+from openhcs.core.materialization import FileBundleOptions, MaterializationSpec
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (

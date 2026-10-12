@@ -87,7 +87,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerObjectDisplayConfigInput,
     ViewerRouteComponentValueTracker,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     PointROIOptions,
     materialize,

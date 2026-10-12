@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
+from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 from polystore.base import DataSink, ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.napari_stream import NapariStreamingBackend
@@ -148,7 +148,7 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     FileBundleOptions,
     JsonOptions,
@@ -160,11 +160,11 @@ from openhcs.processing.materialization import (
     roi_zip,
     tiff_stack,
 )
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     MaterializationSpec,
     materialization_outputs,
 )
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.options import (
     ImageFileOptions,
     NameByArtifactName,
     NameBySourceIdentity,

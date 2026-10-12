@@ -45,9 +45,7 @@ class ExecutionAxisMaterializationRelativePathScope(MaterializationRelativePathS
         relative_path: PurePosixPath,
         context: ProcessingContext | None,
     ) -> PurePosixPath:
-        if context is None or context.execution_runtime is None:
-            return relative_path
-        if len(context.execution_runtime.execution_axis_values) <= 1:
+        if context is None or context.execution_axis_count() <= 1:
             return relative_path
 
         from openhcs.core.source_projection import OpenHCSPlaneAddress
