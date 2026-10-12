@@ -1413,6 +1413,11 @@ from objectstate.lazy_factory import _inject_all_pending_fields
 
 _inject_all_pending_fields()
 
+# The config family is complete here: refuse a field no form control can be built for.
+from openhcs.core.stated_types import require_stated_field_types
+
+require_stated_field_types(GlobalPipelineConfig)
+
 
 def runtime_config_parameter(
     parameter: inspect.Parameter,

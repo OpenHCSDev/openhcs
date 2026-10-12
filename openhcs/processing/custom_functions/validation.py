@@ -14,6 +14,7 @@ import inspect
 from dataclasses import dataclass, replace
 from typing import Callable
 
+from openhcs.core.stated_types import require_stated_parameter_types
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 
 
@@ -195,6 +196,7 @@ def validate_function(func: Callable) -> ValidationResult:
         contract = OpenHCSRegistry.declared_callable_contract(func)
         if contract is None:
             raise ValueError(f"Function {func.__name__!r} is not an admitted OpenHCS declaration.")
+        require_stated_parameter_types(func)
         if contract.execution_scope is FunctionStepExecutionScope.PLATE:
             from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 

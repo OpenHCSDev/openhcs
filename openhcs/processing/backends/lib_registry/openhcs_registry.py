@@ -27,6 +27,7 @@ from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
+from openhcs.core.stated_types import require_stated_parameter_types
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
@@ -864,6 +865,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         callable_contract = self.declared_callable_contract(func)
         if callable_contract is None:
             return None
+        require_stated_parameter_types(func)
         declared = inspect.unwrap(func)
         plate_scoped = (
             callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
