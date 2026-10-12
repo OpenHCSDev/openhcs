@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 from formbridge.protocols import codegen_provider, component_selection
+from formbridge.protocols.component_selection import FunctionSelectionProviderABC
 from objectstate import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QLabel
@@ -31,6 +32,11 @@ from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 PLATE = "dual-editor-plate"
 
 
+class NoSelectionProvider(FunctionSelectionProviderABC):
+    def select_function(self, parent=None, **context):
+        raise AssertionError("These tests never open function selection")
+
+
 class PlateSignals(QObject):
     orchestrator_config_changed = pyqtSignal(str, object)
     compiled = pyqtSignal(str, object)
@@ -45,6 +51,9 @@ def open_step_editor(qapp, monkeypatch):
         component_selection,
         "_component_selection_provider",
         OpenHCSComponentSelectionProvider(),
+    )
+    monkeypatch.setattr(
+        component_selection, "_function_selection_provider", NoSelectionProvider()
     )
     monkeypatch.setattr(codegen_provider, "_codegen_provider", OpenHCSCodegenProvider())
     plate = ObjectState(PipelineConfig(), scope_id=PLATE)
