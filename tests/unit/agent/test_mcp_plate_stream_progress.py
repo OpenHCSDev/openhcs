@@ -30,7 +30,10 @@ from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server
 from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
 
-from test_persisted_output_reopen import NoRuntimeBridge, declared_output
+from tests.unit.agent.test_persisted_output_reopen import (
+    NoRuntimeBridge,
+    declared_output,
+)
 from tests.unit.test_streaming_service import FakeViewer
 
 

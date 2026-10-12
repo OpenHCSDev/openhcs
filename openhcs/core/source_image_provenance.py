@@ -135,6 +135,18 @@ class SourceImageIdentity:
         return self.path is not None or self.component_metadata is not None
 
     @property
+    def filter_paths(self) -> tuple[str, ...]:
+        """Store-owned paths that source filters match.
+
+        A virtual workspace path names the plane; the stored source paths it
+        was admitted from are what a FILE filter selects.
+        """
+        stored = SourceMetadataFields.source_filter_paths(self.component_metadata or {})
+        if stored:
+            return stored
+        return () if self.path is None else (self.path,)
+
+    @property
     def filename_extension(self) -> str | None:
         """Project the declared source filename fact, never a format default."""
         if self.component_metadata is None:
@@ -630,6 +642,25 @@ class SourceImageProvenancePlanes:
         )
 
     @property
+    def contributor_groups(
+        self,
+    ) -> tuple[tuple[SourceImageProvenanceContributor, ...], ...]:
+        """Contributors grouped by the pixels they reduce into: top-level ones
+        into the whole payload, nested ones into their own runtime plane."""
+        return (
+            tuple(
+                plane
+                for plane in self.planes
+                if isinstance(plane, SourceImageProvenanceContributor)
+            ),
+            *(
+                plane.contributors
+                for plane in self.planes
+                if not isinstance(plane, SourceImageProvenanceContributor)
+            ),
+        )
+
+    @property
     def represented_source_image_names(self) -> tuple[str, ...]:
         """Return every alias owned by a runtime plane or pixel contributor."""
 
@@ -1058,32 +1089,30 @@ class SourceImageProvenance:
         """Exclude only coordinates proven reduced into pixel contributors.
 
         Contributors do not own a projectable runtime axis. A component that
-        varies across their complete source addresses therefore has no scalar
-        address on the derived image. Absent or incomplete contributor evidence
-        cannot exempt an acquired plane from its required coordinates.
+        varies across the contributors of one pixel group therefore has no
+        scalar address on the derived image; one that varies only between
+        runtime planes is that plane axis. Absent or incomplete contributor
+        evidence cannot exempt an acquired plane from its required coordinates.
         """
-        contributors = self.source_image_provenance_planes.contributors
         scalar_components = SourceMetadataFields.component_domains(
             self.scalar_source_identity.component_metadata or {}
         )
-        contributor_components = tuple(
-            SourceMetadataFields.component_domains(contributor.component_metadata or {})
-            for contributor in contributors
-        )
         reduced = set()
-        for component in AxisFamily.active().axes:
-            if component in scalar_components:
-                continue
-            if len(contributor_components) < 2 or not all(
-                len(values.get(component, ())) == 1 for values in contributor_components
-            ):
-                continue
-            values = frozenset(
-                value for values in contributor_components for value in values[component]
+        for contributors in self.source_image_provenance_planes.contributor_groups:
+            domains = tuple(
+                SourceMetadataFields.component_domains(item.component_metadata or {})
+                for item in contributors
             )
-            if len(values) > 1:
-                reduced.add(component.name)
-        return tuple(component for component in component_order if component not in reduced)
+            for component in AxisFamily.active().axes:
+                if component in scalar_components or len(domains) < 2:
+                    continue
+                if not all(len(values.get(component, ())) == 1 for values in domains):
+                    continue
+                if len({values[component][0] for values in domains}) > 1:
+                    reduced.add(component.name)
+        return tuple(
+            component for component in component_order if component not in reduced
+        )
 
     def image_set_identities(
         self,

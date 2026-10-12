@@ -5,6 +5,7 @@ Main application window using WindowManager for clean window abstraction.
 """
 
 import logging
+from concurrent.futures import Future
 from collections.abc import Callable
 from functools import singledispatchmethod
 from pathlib import Path
@@ -212,6 +213,8 @@ class OpenHCSMainWindow(QMainWindow):
         # Core configuration
         self.runtime_context = runtime_context
         self.function_catalog_service = function_catalog_service
+        # Completes once the shared endpoint is attached and its catalog prewarmed.
+        self.execution_services_prepared: Future[None] | None = None
 
         # Create shared components
         self.storage_registry = storage_registry
@@ -362,7 +365,9 @@ class OpenHCSMainWindow(QMainWindow):
     def start_background_services(self) -> None:
         """Start non-visual services after the initialized window has painted."""
 
-        self.service_adapter.execute_async_operation(self._prepare_execution_services)
+        self.execution_services_prepared = self.service_adapter.execute_async_operation(
+            self._prepare_execution_services
+        )
         self._start_ui_bridge_if_enabled()
         self._check_for_updates_on_startup()
 

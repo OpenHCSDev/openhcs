@@ -39,7 +39,10 @@ from openhcs.runtime.napari_streaming_handlers import (
 )
 from openhcs.runtime.napari_viewer_server import NapariBatchPayload, NapariImagePayload
 
-from test_persisted_output_reopen import NoRuntimeBridge, declared_output
+from tests.unit.agent.test_persisted_output_reopen import (
+    NoRuntimeBridge,
+    declared_output,
+)
 
 
 @pytest.fixture

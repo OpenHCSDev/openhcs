@@ -16,6 +16,7 @@ import logging
 import os
 import threading
 import time
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from collections.abc import Callable, Iterable
@@ -204,6 +205,25 @@ class DispatcherThread(MainThread):
         return self._dispatcher.call(callback)
 
 
+def _creates_files_in(directory: Path) -> bool:
+    """Whether the filesystem lets this process create a file in ``directory``.
+
+    Permission bits (``os.access``) do not see Windows ACLs or read-only
+    shares; an actual creation does. One attempt answers: ``tempfile`` on
+    Windows reads a refused creation as a name collision whenever ``os.access``
+    passes and retries up to ``os.TMP_MAX`` (2**31 - 1) times. The probe file is
+    removed at once, so it leaves nothing behind.
+    """
+
+    probe = Path(directory) / f".openhcs-write-probe-{uuid.uuid4().hex}"
+    try:
+        os.close(os.open(probe, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
+    except OSError:
+        return False
+    probe.unlink()
+    return True
+
+
 class DatasetAccess(ABC):
     """Which dataset roots this session may read and initialize."""
 
@@ -218,7 +238,7 @@ class DatasetAccess(ABC):
         """
 
         return all(
-            os.access(directory, os.W_OK)
+            _creates_files_in(directory)
             for directory in {
                 Path(root),
                 *(path.parent for path in METADATA_CONFIG.managed_paths(root)),
@@ -1513,4 +1533,3 @@ class Session:
         if not self.current_scope_id:
             return None
         return self.debug_context(self.current_scope_id)
-

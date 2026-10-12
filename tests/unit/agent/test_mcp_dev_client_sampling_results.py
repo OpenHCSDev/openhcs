@@ -81,20 +81,30 @@ def command_render(response, argv):
 
 @pytest.mark.parametrize("structured", [False, True])
 @pytest.mark.parametrize("selected_case", [False, True])
-def test_original_session_framing_to_generated_sampling_command(structured, selected_case, monkeypatch):
-    from test_mcp_dev_client_pipeline_results import ControlledWireSession
+def test_original_session_framing_to_generated_sampling_command(
+    structured, selected_case, monkeypatch
+):
+    from tests.unit.agent.test_mcp_dev_client_pipeline_results import (
+        ControlledWireSession,
+    )
     import openhcs.mcp.dev_client_core as ingress
 
     value = selected(sample()) if selected_case else sample()
-    argv = ("selected-plate-sample",) if selected_case else ("sample-plate-image", "source-plate", "image.tif")
+    argv = (
+        ("selected-plate-sample",)
+        if selected_case
+        else ("sample-plate-image", "source-plate", "image.tif")
+    )
     args = dev_client._build_parser().parse_args(argv)
     command = dev_client.McpDevCommandSpec.for_name(args.command)
     peer = ControlledWireSession((value,), structured=structured)
     decoded = []
     original_decode = ingress.dataclass_from_mapping
+
     def observe(contract, receipt):
         decoded.append(contract)
         return original_decode(contract, receipt)
+
     monkeypatch.setattr(ingress, "dataclass_from_mapping", observe)
     response = asyncio.run(command.run_session(peer, args))
     assert decoded == [type(value)]

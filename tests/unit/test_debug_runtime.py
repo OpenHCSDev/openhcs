@@ -566,8 +566,13 @@ def test_debug_artifact_boundary_has_no_name_key_reconstruction():
         ),
         (
             repository_root / "openhcs/core/steps/function_runtime.py",
+            "FunctionCoreDebugMixin",
+            {"debug_artifacts", "debug_event"},
+        ),
+        (
+            repository_root / "openhcs/core/steps/function_runtime.py",
             "FunctionCoreExecutor",
-            {"debug_artifacts", "debug_event", "invoke"},
+            {"invoke"},
         ),
     )
     violations: list[tuple[str, int, str]] = []

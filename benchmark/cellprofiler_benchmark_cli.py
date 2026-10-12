@@ -6,6 +6,7 @@ import argparse
 import json
 import math
 import os
+import signal
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -322,7 +323,9 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
                 )
                 return 130
             except MeasuredRunEnded as ended:
-                print(json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr)
+                print(
+                    json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr
+                )
                 raise RuntimeError(
                     f"Ordinary pipeline run did not complete: {ended}"
                 ) from ended
@@ -1069,6 +1072,10 @@ def create_benchmark_argument_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the registered benchmark CLI."""
 
+    if sys.platform == "win32":
+        # Ctrl+Break is the Windows console interrupt a launcher can deliver
+        # to this process alone; it stops a run exactly as Ctrl+C does.
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)
     arguments = tuple(sys.argv[1:] if argv is None else argv)
     parser = create_benchmark_argument_parser()
     parsed = parser.parse_args(arguments)

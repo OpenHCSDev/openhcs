@@ -367,7 +367,7 @@ class CustomFunctionManager:
 
         for py_file in sorted(self.storage_dir.glob("*.py")):
             try:
-                metadata = self._prepare_source(py_file.read_text(encoding="utf-8"))
+                metadata = self._prepare_source(py_file.read_bytes().decode("utf-8"))
                 contract = CallableContract.from_callable(metadata.func)
                 functions.append(
                     CustomFunctionInfo(
@@ -401,7 +401,7 @@ class CustomFunctionManager:
         if not file_path.exists():
             raise ValueError(f"Custom function '{func_name}' not found")
 
-        return file_path.read_text(encoding="utf-8")
+        return file_path.read_bytes().decode("utf-8")
 
     def update_custom_function(self, old_name: str, new_code: str) -> str:
         """
@@ -662,8 +662,10 @@ class CustomFunctionManager:
             dir=self.storage_dir,
         )
         try:
-            with os.fdopen(file_descriptor, "w", encoding="utf-8") as stream:
-                stream.write(code)
+            # Persist the exact bytes the revision digest was computed from;
+            # text-mode newline translation would change them on Windows.
+            with os.fdopen(file_descriptor, "wb") as stream:
+                stream.write(code.encode("utf-8"))
                 stream.flush()
                 os.fsync(stream.fileno())
         except BaseException:

@@ -548,6 +548,21 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             self.context.microscope_handler.parser,
         )
 
+    def _producer_filename_qualifiers(
+        self,
+        matching_files: Sequence[str],
+    ) -> tuple[str | None, ...]:
+        """Resolve the filename qualifier each producer gave the loaded paths."""
+
+        records = step_output_manifest(self.context).producer_output_records_for_paths(
+            self.execution_plan,
+            matching_files,
+            self.context.microscope_handler.parser,
+        )
+        if records is None:
+            return (None,) * len(matching_files)
+        return tuple(record.filename_qualifier for record in records)
+
     def load_input_stack(
         self,
     ) -> tuple[list[str], RuntimeArrayData]:
@@ -1001,6 +1016,24 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
         return binding.apply_loaded_payload(payload, source_context)
 
+    def _passes_producer_outputs_through(
+        self,
+        processed_stack: ImagePayload,
+        output_count: int,
+        input_count: int,
+    ) -> bool:
+        """Whether each published slice is the producer's aligned output, passed on.
+
+        A declared passthrough chain names no output of its own, so its slices
+        keep the exact producer declaration (context and filename qualifier)
+        of the input file they are aligned to.
+        """
+        if processed_stack.owns_output_surfaces:
+            return False
+        if self._unwrapped_main_flow_output_context() is not None:
+            return False
+        return output_count == input_count
+
     def _project_output_slices(
         self,
         processed_stack: ImagePayload,
@@ -1009,21 +1042,13 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         """Split the function's main output into its published slices."""
         if processed_stack.declares_whole_image_output:
             output_context = self._unwrapped_main_flow_output_context()
-            contexts = (
-                (output_context,)
-                if output_context is not None
-                else (
-                    self._producer_output_contexts(matching_files)
-                    if len(matching_files) == 1
-                    else ()
-                )
-            )
-            context = (
-                contexts[0]
-                if contexts
-                else AlignedImageSliceContext.anonymous_main_flow()
-            )
-            return ((processed_stack, context),)
+            if output_context is None and self._passes_producer_outputs_through(
+                processed_stack, 1, len(matching_files)
+            ):
+                output_context = self._producer_output_contexts(matching_files)[0]
+            if output_context is None:
+                output_context = AlignedImageSliceContext.anonymous_main_flow()
+            return ((processed_stack, output_context),)
         unstack_started_at = time.perf_counter()
         projected = processed_stack.main_output_slices(
             lambda data: self._unstack_main_output(data, len(matching_files))
@@ -1039,19 +1064,15 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         if processed_stack.owns_output_surfaces:
             return projected
         output_payloads = tuple(payload for payload, _context in projected)
-        output_context = self._unwrapped_main_flow_output_context()
-        slice_contexts = (
-            (output_context,) * len(output_payloads)
-            if output_context is not None
-            else ()
-        )
-        if not slice_contexts and len(output_payloads) == len(matching_files):
+        if self._passes_producer_outputs_through(
+            processed_stack, len(output_payloads), len(matching_files)
+        ):
             slice_contexts = self._producer_output_contexts(matching_files)
-        if not slice_contexts:
-            slice_contexts = tuple(
-                AlignedImageSliceContext.anonymous_main_flow()
-                for _payload in output_payloads
-            )
+        else:
+            output_context = self._unwrapped_main_flow_output_context()
+            if output_context is None:
+                output_context = AlignedImageSliceContext.anonymous_main_flow()
+            slice_contexts = (output_context,) * len(output_payloads)
         return tuple(zip(output_payloads, slice_contexts, strict=True))
 
     def _unstack_main_output(
@@ -1125,6 +1146,13 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         output_slices = tuple(payload for payload, _context in projected_outputs)
         num_outputs = len(output_slices)
         num_inputs = len(matching_files)
+        passed_through_qualifiers = (
+            self._producer_filename_qualifiers(matching_files)
+            if self._passes_producer_outputs_through(
+                processed_stack, num_outputs, num_inputs
+            )
+            else (None,) * num_outputs
+        )
 
         if num_outputs < num_inputs:
             logger.debug(
@@ -1184,6 +1212,12 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             if explicit_output_surfaces and not output_context.is_anonymous_main_flow:
                 output_identity = output_identity.with_filename_qualifier(
                     output_context.output_key
+                )
+            elif passed_through_qualifiers[i] is not None:
+                # A passed-through surface keeps the qualifier its producer
+                # published it under; dropping it would merge sibling surfaces.
+                output_identity = output_identity.with_filename_qualifier(
+                    passed_through_qualifiers[i]
                 )
             output_path = output_identity.path_for_request(output_path_request)
             output_path_text = str(output_path)
