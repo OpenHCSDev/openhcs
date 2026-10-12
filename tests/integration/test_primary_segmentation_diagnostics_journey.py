@@ -14,7 +14,6 @@ from openhcs.interop.cellprofiler.object_label_variants import (
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
-from tests.run_records import minimal_run_record
 
 
 def _field(empty=False):
@@ -365,7 +364,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     primary_plan = context.step_plans[0]
     assert primary_plan.write_backend == "memory"
     assert primary_plan.materialized_output is None
-    OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)
     metadata_path = METADATA_CONFIG.metadata_path(primary_plan.output_dataset_root)
     metadata_document = json.loads(metadata_path.read_text())
     persisted_source_provenance = SourceImageProvenance.from_mapping(

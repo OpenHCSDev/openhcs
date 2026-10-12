@@ -10,7 +10,7 @@ import abc
 import inspect
 from pathlib import Path
 from collections.abc import Mapping
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Iterable, get_type_hints
 
@@ -99,14 +99,7 @@ class StepExecutionObservation:
     @property
     def is_empty(self) -> bool:
         """Whether this completed output carrier has no facts to transport."""
-        return not (
-            self.materialized_locations_by_address
-            or self.runtime_export_paths
-            or self.hook_observations
-            or self.sample_numbers_by_export_path
-            or self.source_projection_entries_by_target
-            or self.producer_by_saved_path
-        )
+        return not any(getattr(self, carried.name) for carried in fields(self))
 
     @classmethod
     def empty(cls) -> "StepExecutionObservation":

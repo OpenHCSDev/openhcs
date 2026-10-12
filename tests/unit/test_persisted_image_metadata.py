@@ -46,7 +46,6 @@ from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
-from tests.run_records import minimal_run_record, no_produced_files
 
 
 def metadata_fixture():
@@ -168,8 +167,7 @@ def receive_projection_entries(writer, metadata_path, subdirectory, entries):
         backend="disk", results_dir=None, create_openhcs_metadata=False,
     )
     writer.reconcile_completed_dataset(
-        metadata_path, {}, produced_entries_by_target={target: entries},
-        produced_files=no_produced_files(), run_record=minimal_run_record(),
+        metadata_path, {}, produced_entries_by_target={target: entries}
     )
 
 

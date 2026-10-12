@@ -84,7 +84,7 @@ from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
 )
-from openhcs.core.run_record import RunRecord
+from openhcs.core.run_record import ProducedFiles, RunRecord
 from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataTarget,
 )
@@ -348,8 +348,8 @@ def execute_bundle_request(
                         executing_contexts
                     ),
                 ),
-                run_record=run_record,
             )
+            run_record.store_with_saved_files(executing_contexts)
         if execution_results.is_success():
             viewer_states_by_port = settle_viewer_state(
                 visualizers,
@@ -654,7 +654,7 @@ def execute_dataset_scoped_steps(
                         materialized_locations_by_address=MappingProxyType({}),
                         source_projection_entries_by_target=projection_entries,
                         producer_by_saved_path=(
-                            OpenHCSMetadataTarget.saved_path_producers(
+                            ProducedFiles.stated_by_step(
                                 owner_context,
                                 owner_plan.require_function_execution_ready(),
                                 artifact_materializations=materializations,

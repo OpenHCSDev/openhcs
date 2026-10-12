@@ -1342,7 +1342,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     monkeypatch.setattr(
         compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_dataset",
-        lambda _contexts, *, runtime_observations, run_record: events.append("metadata"),
+        lambda _contexts, *, runtime_observations: events.append("metadata"),
     )
     response = ViewerControlResponse(
         payload={

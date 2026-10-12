@@ -1540,15 +1540,10 @@ class PipelineCompiler:
             )
             if not axis_values_to_process:
                 logger.warning("No axis values found to process based on filter.")
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return CompiledExecutionBundle.with_nothing_to_run(
+                    pipeline_definition,
+                    effective_config,
+                    server_mode=is_zmq_execution,
                     run_declaration=run_declaration,
                 )
 
@@ -1564,15 +1559,10 @@ class PipelineCompiler:
                 logger.warning(
                     "All steps were disabled. Pipeline is empty after filtering."
                 )
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return CompiledExecutionBundle.with_nothing_to_run(
+                    pipeline_definition,
+                    effective_config,
+                    server_mode=is_zmq_execution,
                     run_declaration=run_declaration,
                 )
             path_resolver = CompilationPathResolver(

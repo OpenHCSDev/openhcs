@@ -160,6 +160,29 @@ class CompiledExecutionBundle:
         )
 
     @classmethod
+    def with_nothing_to_run(
+        cls,
+        pipeline_definition: Sequence[AbstractStep],
+        effective_config: GlobalPipelineConfig,
+        *,
+        server_mode: bool,
+        run_declaration: RunDeclaration,
+    ) -> "CompiledExecutionBundle":
+        """The bundle of a compilation that selected no axis value or no enabled step."""
+
+        return cls.from_runtime_contexts(
+            pipeline_definition=pipeline_definition,
+            runtime_contexts={},
+            worker_assignments={},
+            runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+                effective_config,
+                compiled_contexts={},
+                server_mode=server_mode,
+            ),
+            run_declaration=run_declaration,
+        )
+
+    @classmethod
     def from_runtime_contexts(
         cls,
         *,

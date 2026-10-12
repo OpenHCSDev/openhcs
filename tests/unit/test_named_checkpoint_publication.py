@@ -48,7 +48,6 @@ from openhcs.core.materialization import (
 )
 from openhcs.core.axes import TileAxis
 from openhcs.domains.microscopy.axes import Microscopy
-from tests.run_records import minimal_run_record
 
 
 
@@ -113,8 +112,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
         for key, context in contexts.items()
     ))
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        contexts, runtime_observations=(observations,),
-        run_record=minimal_run_record(),
+        contexts, runtime_observations=(observations,)
     )
     root = tmp_path / "source_out"
     metadata = json.loads((root / "openhcs_metadata.json").read_text())
@@ -167,4 +165,4 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     # error. This is not a missing-address permissive fallback.
     tifffile.imwrite(root / "checkpoints" / "unaddressed.tif", np.zeros((8, 8), dtype=np.uint16))
     with pytest.raises(MetadataWriteError, match="Saved images lack typed produced addresses.*unaddressed"):
-        OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts, run_record=minimal_run_record())
+        OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)

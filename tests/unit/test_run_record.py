@@ -35,6 +35,7 @@ from openhcs.core.run_record import (
     RecordedParameter,
     RunDeclaration,
     RunRecord,
+    RunRecordWriter,
     SetOnObject,
     SuppliedAtRunTime,
     UnrecordedOutputFile,
@@ -486,12 +487,7 @@ def test_dataset_root_that_received_only_a_table_gets_a_document_with_the_record
     table.write_text("nonzero\n9\n")
     record = minimal_run_record()
 
-    AtomicMetadataWriter().reconcile_completed_dataset(
-        results_root / "openhcs_metadata.json",
-        {},
-        produced_files=ProducedFiles({table: _table_producer()}),
-        run_record=record,
-    )
+    RunRecordWriter().store(results_root, ProducedFiles({table: _table_producer()}), record)
 
     produced = RunRecord.for_output_file(table)
     assert produced.record.record_id == record.record_id

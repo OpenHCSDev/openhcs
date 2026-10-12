@@ -74,6 +74,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )
 from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
+from openhcs.core.run_record import ProducedFiles
 from openhcs.core.steps.function_outputs import (
     MaterializedImageOutputWriter,
     MemoryOutputWriter,
@@ -112,7 +113,6 @@ from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.config import IncludePartitions
-from tests.run_records import minimal_run_record, no_produced_files
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -131,7 +131,6 @@ def _publish_saved_step(context, plan, *, artifact_materializations=()):
             metadata_path,
             {target: context for target in entries if target.create_openhcs_metadata},
             produced_entries_by_target=entries,
-            produced_files=no_produced_files(), run_record=minimal_run_record(),
         )
 
 
@@ -171,7 +170,7 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
             "runtime_artifacts",
         ),
         (OpenHCSMetadataTarget, "observe_for_step", "metadata"),
-        (OpenHCSMetadataTarget, "saved_path_producers", "producers"),
+        (ProducedFiles, "stated_by_step", "producers"),
     ):
         monkeypatch.setattr(
             authority,
@@ -243,8 +242,7 @@ def test_metadata_document_targets_follow_backend_declaration(
         lambda _self, metadata_path, *_args, **_kwargs: documents.append(metadata_path),
     )
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        {"A01": SimpleNamespace(step_plans={0: plan})},
-        run_record=minimal_run_record(),
+        {"A01": SimpleNamespace(step_plans={0: plan})}
     )
     assert documents == (
         [METADATA_CONFIG.metadata_path(root)] if expected_targets else []
@@ -1709,7 +1707,7 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
         Backend.MEMORY.value,
     )
     _publish_saved_step(context, plan)
-    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context}, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
 
     subdirectory = json.loads(
         (dataset_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -2184,7 +2182,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
     # must supply the same addresses, calibration and exact saved coverage.
     for record in records:
         filemanager.delete(record.output_path, Backend.MEMORY.value)
-    OpenHCSMetadataTarget.finalize_completed_dataset({well: context}, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset({well: context})
     subdirectory = json.loads((dataset_root / "openhcs_metadata.json").read_text())[
         FIELDS.SUBDIRECTORIES
     ]["images"]
@@ -2205,14 +2203,14 @@ def test_produced_address_publication_never_parses_generated_filenames(
     unregistered = output_dir / "unowned_s001_w1_z001_t001.tif"
     tifffile.imwrite(unregistered, pixels)
     with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
-        OpenHCSMetadataTarget.finalize_completed_dataset({well: context}, run_record=minimal_run_record())
+        OpenHCSMetadataTarget.finalize_completed_dataset({well: context})
     assert metadata_path.read_bytes() == previous_metadata
     unregistered.unlink()  # This fixture owns the synthetic file.
 
     if len(paths) > 1:
         removed = paths[0]
         (dataset_root / removed).unlink()
-        OpenHCSMetadataTarget.finalize_completed_dataset({well: context}, run_record=minimal_run_record())
+        OpenHCSMetadataTarget.finalize_completed_dataset({well: context})
         reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][
             "images"
         ]
@@ -2329,12 +2327,10 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
         dataset_root / "openhcs_metadata.json",
         {target: owner_context for target in combined_facts},
         produced_entries_by_target=combined_facts,
-        produced_files=no_produced_files(), run_record=minimal_run_record(),
     )
 
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        {"A01": owner_context, "B03": follower_context},
-        run_record=minimal_run_record(),
+        {"A01": owner_context, "B03": follower_context}
     )
 
     metadata = json.loads(
@@ -2361,7 +2357,7 @@ def test_completed_plate_metadata_skips_unmaterialized_output_target(tmp_path):
     plan.create_openhcs_metadata = True
     context.step_plans = {plan.step_index: plan}
 
-    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context}, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
 
     assert not (dataset_root / "openhcs_metadata.json").exists()
 
@@ -2530,9 +2526,9 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
     if stray_image:
         tifffile.imwrite(tmp_path / "images/review/unowned.tif", pixels)
         with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
-            OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context}, run_record=minimal_run_record())
+            OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
         return
-    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context}, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
     subdirectories = json.loads((tmp_path / "openhcs_metadata.json").read_text())[
         FIELDS.SUBDIRECTORIES
     ]
@@ -2647,7 +2643,7 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
         context, plan, artifact_materializations=materializations
     )
     context.runtime_value_store.clear()
-    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context}, run_record=minimal_run_record())
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
     metadata_path = tmp_path / "openhcs_metadata.json"
     subdirectories = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]
     assert set(subdirectories) == {"images/exports"}

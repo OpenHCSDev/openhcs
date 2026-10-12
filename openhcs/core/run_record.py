@@ -44,9 +44,15 @@ from python_introspect import JsonObject, JsonValue, dataclass_from_mapping, to_
 
 from openhcs.core.function_identity import FunctionIdentity
 
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG, AtomicMetadataWriter
 
 if TYPE_CHECKING:
+    from openhcs.core.context.processing_context import ExecutingContext
+    from openhcs.core.steps.function_artifact_materialization import (
+        MaterializedRuntimeArtifact,
+    )
     from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig
@@ -250,7 +256,7 @@ class RunDeclaration:
     def before_step_resolution(
         cls,
         orchestrator: "PipelineOrchestrator",
-        pipeline_definition: Sequence["AbstractStep"],
+        pipeline_definition: Sequence[AbstractStep],
     ) -> "RunDeclaration":
         """Render the documents as submitted, before the compiler resolves the steps in place."""
         from objectstate import ObjectState, ObjectStateRegistry
@@ -519,6 +525,29 @@ class RunRecord:
             json.dumps(self.to_json(), sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
 
+    def store_with_saved_files(self, contexts: Mapping[str, "ExecutingContext"]) -> None:
+        """Write this record into the document of each output dataset the run saved files under.
+
+        Runs in the parent process once the run has ended, also after a failure,
+        right after the dataset's own metadata is published. Each document
+        receives the producer of every file saved under its dataset root.
+        """
+        from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
+
+        saved = ProducedFiles(
+            StepExecutionObservation.combine(
+                context.completed_step_outputs for context in contexts.values()
+            ).producer_by_saved_path
+        )
+        declared_dataset_roots = {
+            Path(target.dataset_root)
+            for context in contexts.values()
+            for plan in context.step_plans.values()
+            for target in OpenHCSMetadataTarget.for_plan(plan)
+        }
+        for dataset_root, files in saved.by_dataset_root(declared_dataset_roots).items():
+            RunRecordWriter().store(dataset_root, files, self)
+
     @classmethod
     def at_run_start(
         cls,
@@ -736,6 +765,42 @@ class ProducedFiles:
 
     producer_by_path: Mapping[Path, StreamProducerIdentity]
 
+    @staticmethod
+    def stated_by_step(
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        *,
+        artifact_materializations: tuple[MaterializedRuntimeArtifact, ...],
+    ) -> Mapping[Path, StreamProducerIdentity]:
+        """The producer identity of each file this step saved under a metadata document.
+
+        Both statements are the ones the viewer stream uses: a main-flow record
+        carries its own identity; a saved artifact's comes from its output plan.
+        """
+        from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
+
+        producers: dict[Path, StreamProducerIdentity] = {}
+        for target in OpenHCSMetadataTarget.for_execution(
+            context, plan, artifact_materializations=artifact_materializations
+        ):
+            if not OpenHCSMetadataTarget.hosts_metadata_document(target.backend):
+                continue
+            for record in target.produced_records(context, plan):
+                producers[Path(record.path_under(target.output_dir))] = (
+                    record.producer_identity
+                )
+        artifact_target = plan.runtime_artifact_materialization
+        if artifact_target.has_persistent_target:
+            backend = artifact_target.require_persistent_backend()
+            if OpenHCSMetadataTarget.hosts_metadata_document(backend):
+                for saved in artifact_materializations:
+                    producer = plan.producer_identity_for_artifact(
+                        saved.materialization.output_plan
+                    )
+                    for output in saved.outputs_for_backend(backend):
+                        producers[Path(output.path)] = producer
+        return MappingProxyType(producers)
+
     def by_dataset_root(
         self, dataset_roots: Iterable[Path]
     ) -> Mapping[Path, "ProducedFiles"]:
@@ -760,28 +825,29 @@ class ProducedFiles:
             {root: ProducedFiles(MappingProxyType(files)) for root, files in by_root.items()}
         )
 
-    def write_into(
-        self,
-        document: dict[str, JsonValue],
-        *,
-        dataset_root: Path,
-        record: RunRecord,
-    ) -> None:
-        """Store the record with the files this run saved under this dataset root.
 
-        A document the run saved nothing under is left as it is. A record no
-        file refers to any more is dropped.
+class RunRecordWriter(AtomicMetadataWriter):
+    """Stores a run's record in a dataset's metadata document, under that document's lock."""
+
+    def store(self, dataset_root: Path, files: ProducedFiles, record: RunRecord) -> None:
+        """Add the record with the files the run saved under ``dataset_root``.
+
+        A record no file refers to any more is dropped in the same update.
         """
-        if not self.producer_by_path:
-            return
-        document.update(
-            to_jsonable(
-                DatasetRunRecords.in_document(document).with_run(
-                    record,
-                    {
-                        path.relative_to(dataset_root).as_posix(): producer
-                        for path, producer in self.producer_by_path.items()
-                    },
+
+        def update(document: dict[str, JsonValue] | None) -> dict[str, JsonValue]:
+            document = self._ensure_subdirectories_structure(document)
+            document.update(
+                to_jsonable(
+                    DatasetRunRecords.in_document(document).with_run(
+                        record,
+                        {
+                            path.relative_to(dataset_root).as_posix(): producer
+                            for path, producer in files.producer_by_path.items()
+                        },
+                    )
                 )
             )
-        )
+            return document
+
+        self._execute_update(METADATA_CONFIG.metadata_path(dataset_root), update)
