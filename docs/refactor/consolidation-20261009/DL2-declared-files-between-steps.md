@@ -61,7 +61,7 @@ is `None` has no record). DL3 hashes from that list; DL2 computes no hash. Exact
 
 - Attribute path: `bundle.runtime_contexts[axis].step_plans[step_index].compiled_function_pattern
   .iter_invocations()` yields `CompiledFunctionInvocation`; its field
-  `declared_files: tuple[DeclaredFile, ...]` (`openhcs/core/function_patterns.py:503`). It is an init
+  `declared_files: tuple[DeclaredFile, ...]` (`openhcs/core/function_patterns.py:504`). It is an init
   field, so `__reduce__` carries it to worker processes (checked through
   `for_transport_serialization().transport_contexts` and pickle).
 - `openhcs.core.vfs_protocol.DeclaredFile` (frozen): `parameter: str`, `path: Path` (absolute),
@@ -126,30 +126,31 @@ Public names (all in `openhcs/core/vfs_protocol.py` unless said otherwise):
 
 Compiler (`openhcs/core/pipeline/compilation_session.py`):
 
-- `InputDatasetPathResolver` (`:271`) knows only the input dataset; `CompilationPathResolver`
-  (`:325`) inherits it and adds `output_dataset` and `produced_files`. `compiler.py:1575-1600`
-  resolves `path_planning_config` with the first (so `global_output_folder` is absolute), computes
-  the output root with `PipelinePathPlanner.build_output_dataset_root`, then builds the second. An
+- `InputDatasetPathResolver` (`:267`) knows only the input dataset; `CompilationPathResolver`
+  (`:321`) inherits it and adds `output_dataset` and `produced_files`.
+  `CompilationPathResolver.for_dataset` (`:331`, called at `compiler.py:1571`) resolves
+  `path_planning_config` with the first (so `global_output_folder` is absolute), computes the output
+  root with `PathPlannerPathAuthority.build_output_dataset_root`, then builds the second. An
   output-rooted declaration inside the config that defines the root raises `TypeError`. The error
   note of `resolve` names the declaration class and the root used.
-- `ProducedFiles.from_pipeline` (`:166`, called once per pipeline at `compiler.py:1621`, before
+- `ProducedFiles.from_pipeline` (`:166`, called once per pipeline through `reading_files_of` at `compiler.py:1591`, before
   per-axis compilation) builds the table from each step's normalized function pattern
-  (`pipeline.artifact_graphs[i].pattern`) and each callable's `writes_file` parameters (authored
+  (`ArtifactGraph.invocation_items()`) and each callable's `writes_file` parameters (authored
   value or signature default), then resolves every declared path of every step once with the step
   named in the error. Link errors (`DeclaredFileLinkError`): unknown step; step name shared by
   several steps; parameter not an output file of that step; several callables of the step declare
   it; producer value `None`; producer not earlier. An output parameter given a link is a `TypeError`.
   An unlinked missing input is still `FileNotFoundError` at compile.
-- `require_one_writer_per_declared_file(compiled_contexts)` (`:380`, called at `compiler.py:1665`,
+- `require_one_writer_per_declared_file(compiled_contexts)` (`:425`, called at `compiler.py:1632`,
   right after `_compile_axis_values`) raises `SeveralWritersOfDeclaredFileError` naming two writers
   (step, callable, parameter, axis, group key) and the count of the rest. It counts invocations of
   plans with `owns_runtime_outputs`, so a step that runs once for the plate is one writer.
 
 Run time:
 
-- `CompiledFunctionInvocation.before_call` (`function_patterns.py:636`) runs each record's
+- `CompiledFunctionInvocation.before_call` (`function_patterns.py:637`) runs each record's
   `before_call`. Called at the two places an invocation is called: per-axis
-  `FunctionCoreExecutor.execute` (`function_runtime.py:1969`) and the once-per-plate call
+  `PatternGroupData.execute_chain` (`function_runtime.py:1508`) and the once-per-plate call
   (`bundle_execution.py:568`). A `LinkedInputFile` that does not exist raises `FileNotFoundError`
   naming the consumer call and the producer step and parameter. A written file is claimed in
   `ExecutingContext.declared_file_writes` (`processing_context.py:195`); a second claim of one path
@@ -182,6 +183,9 @@ so the one-writer rule is not applied to it.
   path widget; there is no editor for choosing a producer step. Not built here.
 - MCP / function catalog describe the parameter from its annotation, which did not change; no code
   there reads the declaration family (grep: only `pycodify_formatters.py` outside `core/`).
+- Ratchet: `PipelineCompiler` and `FunctionCoreExecutor` are over the class-size limit, so the
+  resolver construction lives on `CompilationPathResolver` and the call check in
+  `PatternGroupData.execute_chain`.
 - New tests were written together with the change and were not observed failing first; the old
   behaviour is recorded by the research run (`e6`: bundle under the input plate).
 

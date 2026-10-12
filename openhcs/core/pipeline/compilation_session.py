@@ -181,9 +181,12 @@ class ProducedFiles(ProducedFileLookup):
             for item in items:
                 contract = item.contract
                 values = contract.declared_path_values(item.kwargs_dict)
-                for name, declaration in contract.declared_path_parameters.items():
-                    if not declaration.writes_file:
-                        continue
+                written_file_parameters = tuple(
+                    name
+                    for name, declaration in contract.declared_path_parameters.items()
+                    if declaration.writes_file
+                )
+                for name in written_file_parameters:
                     identity = (index, step.name, contract.function_name, name)
                     parameters.append(
                         ProducedFile(
@@ -191,7 +194,7 @@ class ProducedFiles(ProducedFileLookup):
                             file=resolver.declared_file(
                                 name,
                                 values[name][1],
-                                declaration,
+                                values[name][0],
                                 owner=f"{step_label} callable "
                                 f"{contract.function_name}.{name}",
                             ),
@@ -429,23 +432,26 @@ def require_one_writer_per_declared_file(
     """
 
     writers_by_path: dict[Path, list[DeclaredFileWriter]] = {}
-    for context in compiled_contexts.values():
-        for plan in context.step_plans.values():
-            if not plan.owns_runtime_outputs:
-                continue
-            for invocation in plan.compiled_function_pattern.iter_invocations():
-                for declared in invocation.declared_files:
-                    if declared.declaration.writes_file:
-                        writers_by_path.setdefault(declared.path, []).append(
-                            DeclaredFileWriter(
-                                step_index=plan.step_index,
-                                step_name=plan.step_name,
-                                function_name=invocation.key.function_name,
-                                parameter=declared.parameter,
-                                axis_id=plan.axis_id,
-                                group_key=invocation.key.group_key,
-                            )
+    running_plans = (
+        plan
+        for context in compiled_contexts.values()
+        for plan in context.step_plans.values()
+        if plan.owns_runtime_outputs
+    )
+    for plan in running_plans:
+        for invocation in plan.compiled_function_pattern.iter_invocations():
+            for declared in invocation.declared_files:
+                if declared.declaration.writes_file:
+                    writers_by_path.setdefault(declared.path, []).append(
+                        DeclaredFileWriter(
+                            step_index=plan.step_index,
+                            step_name=plan.step_name,
+                            function_name=invocation.key.function_name,
+                            parameter=declared.parameter,
+                            axis_id=plan.axis_id,
+                            group_key=invocation.key.group_key,
                         )
+                    )
     for path, writers in writers_by_path.items():
         if len(writers) > 1:
             first, second, *others = writers
