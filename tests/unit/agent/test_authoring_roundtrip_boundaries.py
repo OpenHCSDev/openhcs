@@ -162,8 +162,14 @@ def test_real_authoring_render_parse_retains_registry_memory_contract(
             original_step.func, original_step.name
         )
     )
-    if kwargs != {"gamma": 1, "gain": 1} or not clean:
-        assert step.func[1] == kwargs
+    if clean:
+        if kwargs != {"gamma": 1, "gain": 1}:
+            assert step.func[1] == kwargs
+    else:
+        # The complete text writes every parameter, so a later change of a
+        # default cannot change what the text means.
+        assert kwargs.items() <= step.func[1].items()
+        assert set(step.func[1]) > set(kwargs)
 
 
 def test_registry_reference_formatting_uses_alias_without_resolving(

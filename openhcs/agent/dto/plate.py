@@ -13,6 +13,8 @@ from zmqruntime.config import TransportMode
 
 from formbridge.contracts import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
+    AgentCliArgumentSpec,
+    AgentDataclassCliRequest,
     AgentError,
     AgentResultEnvelope,
     AgentResourceRef,
@@ -1339,3 +1341,69 @@ class SelectedPlateFileStreamResult(AgentResultEnvelope):
     selected_plate: JsonObject = field(default_factory=dict)
     target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     stream: PlateFileStreamResult | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RunRecordReadRequest(AgentDataclassCliRequest):
+    """Read what produced an output dataset, or one output file inside one.
+
+    ``path`` is an output dataset root (the directory that holds the OpenHCS
+    metadata document) or one output file below such a root.
+    ``include_sources`` returns the long texts in full; otherwise each is
+    replaced by its sha256 and length and named in ``shortened_fields``.
+    """
+
+    path: str
+    include_sources: bool = False
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        return (
+            AgentCliArgumentSpec(
+                field_name="path",
+                positional=True,
+                help="Output dataset root, or one output file inside one.",
+            ),
+            *super(RunRecordReadRequest, cls).agent_cli_argument_specs(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RunRecordEntry:
+    """One stored run record, addressed by the sha256 of its full content.
+
+    ``shortened_fields`` names every field of ``record`` whose value was
+    replaced by ``{"shortened": true, "sha256": ..., "length": ...}``; it is
+    empty when the record is returned in full.
+    """
+
+    record_id: str
+    record: JsonObject
+    shortened_fields: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ProducedFileEntry:
+    """One output file with the producer identity stored for it and its producing step."""
+
+    path: str
+    record_id: str
+    producer: JsonObject
+    step: JsonObject
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class RunRecordReadResult(AgentResultEnvelope):
+    """Run records read from one output dataset.
+
+    For a dataset root ``records`` holds every record and ``produced_files`` is
+    empty; for an output file ``produced_files`` holds that file and
+    ``records`` holds the one record of the run that wrote it.
+    """
+
+    path: str
+    include_sources: bool
+    records: tuple[RunRecordEntry, ...] = ()
+    produced_files: tuple[ProducedFileEntry, ...] = ()
+    errors: tuple[AgentError, ...] = ()
+    warnings: tuple[AgentWarning, ...] = ()
