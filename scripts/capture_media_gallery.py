@@ -32,7 +32,6 @@ import openhcs  # noqa: F401  # Activate recorded source dependencies before UI 
 
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
-from formbridge.services.tab_identity import TabLabelDeclarationMixin
 from pyqt_reactive.services.widget_tree_projection import WidgetActionKind
 from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping, to_jsonable
@@ -1013,23 +1012,23 @@ class GalleryUiBridgeSession:
     def select_tab(
         self,
         window_id: str,
-        tab: TabLabelDeclarationMixin,
+        label: str,
     ) -> None:
         def matching_actions() -> tuple[UiWidgetActionSummary, ...]:
             return tuple(
                 action
                 for action in self.widget_tree(window_id).actionable_widgets
                 if WidgetActionKind.TAB_SELECTOR.value in action.action_kinds
-                and tab.label in action.item_texts
+                and label in action.item_texts
             )
 
         matches = matching_actions()
         if len(matches) != 1:
             raise MediaGalleryError(
-                f"Expected one tab selector containing {tab.label!r}, "
+                f"Expected one tab selector containing {label!r}, "
                 f"found {len(matches)}."
             )
-        target_index = tab.index_in(matches[0].item_texts)
+        target_index = matches[0].item_texts.index(label)
         self.invoke_widget_action(
             window_id,
             matches[0],
@@ -1040,7 +1039,7 @@ class GalleryUiBridgeSession:
             lambda: any(
                 action.current_index == target_index for action in matching_actions()
             ),
-            f"tab {tab.label!r} to become active in {window_id!r}",
+            f"tab {label!r} to become active in {window_id!r}",
         )
 
     def spawn_from_plate_manager_action(
@@ -1255,7 +1254,7 @@ def capture_object_state_editor_source(
     session.navigate_scope(scope_id, target.scope_role)
     try:
         if target.tab is not None:
-            session.select_tab(scope_id, target.tab)
+            session.select_tab(scope_id, target.tab.label)
         if target.scope_role.requires_nested_navigation:
             session.wait_for_flash_feedback(scope_id)
         return session.capture_window(scope_id)
@@ -1273,7 +1272,7 @@ def capture_plate_manager_action_source(
     window_id = session.spawn_from_plate_manager_action(target)
     try:
         if target.tab is not None:
-            session.select_tab(window_id, target.tab)
+            session.select_tab(window_id, target.tab.label)
         return session.capture_window(window_id)
     finally:
         session.close_window(window_id)
@@ -1308,7 +1307,7 @@ def capture_function_selector_source(
     )
     session.navigate_scope(editor_scope, target.editor_scope_role)
     try:
-        session.select_tab(editor_scope, target.editor_tab)
+        session.select_tab(editor_scope, target.editor_tab.label)
         selector_window_id = session.spawn_function_selector(editor_scope, target)
         try:
             return session.capture_window(selector_window_id)

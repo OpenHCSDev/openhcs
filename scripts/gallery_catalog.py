@@ -41,7 +41,9 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
+from openhcs.pyqt_gui.ui_tab_identities import PlateViewerTab
+from openhcs.pyqt_gui.windows.dual_editor_session import StepEditorTab
+from openhcs.pyqt_gui.windows.dual_editor_tabs import FunctionPatternTab, StepSettingsTab
 
 if TYPE_CHECKING:
     from openhcs.authoring.session.step_scopes import StepEditorScope
@@ -408,7 +410,7 @@ class ObjectStateEditorCaptureTarget(UiContextCaptureTargetABC):
     """An ObjectState-backed configuration editor resolved from live scopes."""
 
     scope_role: ObjectStateCaptureScopeRole
-    tab: DualEditorTab | None = None
+    tab: type[StepEditorTab] | None = None
 
     def capture_source(
         self,
@@ -462,7 +464,7 @@ class FunctionSelectorCaptureTarget(UiContextCaptureTargetABC):
 
     action: FunctionListEditorAction = FunctionListEditorAction.ADD
     editor_scope_role: ObjectStateCaptureScopeRole = ObjectStateCaptureScopeRole.STEP
-    editor_tab: DualEditorTab = DualEditorTab.FUNCTION_PATTERN
+    editor_tab: type[StepEditorTab] = FunctionPatternTab
 
     def capture_source(
         self,
@@ -934,7 +936,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                 ),
                 capture_target=ObjectStateEditorCaptureTarget(
                     scope_role=ObjectStateCaptureScopeRole.STEP,
-                    tab=DualEditorTab.STEP_SETTINGS,
+                    tab=StepSettingsTab,
                 ),
                 publication_targets=documentation,
             ),
@@ -958,7 +960,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                 ),
                 capture_target=ObjectStateEditorCaptureTarget(
                     scope_role=ObjectStateCaptureScopeRole.FUNCTION,
-                    tab=DualEditorTab.FUNCTION_PATTERN,
+                    tab=FunctionPatternTab,
                 ),
                 publication_targets=documentation,
             ),

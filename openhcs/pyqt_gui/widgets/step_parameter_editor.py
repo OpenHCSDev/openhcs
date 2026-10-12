@@ -45,7 +45,15 @@ from pyqt_reactive.widgets.shared import (
 from pyqt_reactive.widgets.shared.scrollable_form_body import (
     create_scrollable_form_body,
 )
-from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
+from pyqt_reactive.services.window_navigation import (
+    RegisteredWindowNavigationRequest,
+    WindowNavigationDriver,
+)
+from pyqt_reactive.widgets.shared.scrollable_form_mixin import (
+    ScrollableFormMixin,
+    ScrollableFormWindowNavigationDriver,
+)
+from formbridge.services.function_navigation import FunctionPatternField
 from pyqt_reactive.services.parameter_ops_service import ParameterOpsService
 from formbridge.services.code_editor_form_updater import CodeEditorFormUpdater
 from formbridge.services.window_code_document import (
@@ -86,6 +94,15 @@ class StepEditorStateRequest:
                 f"Registry has: {[s.scope_id for s in ObjectStateRegistry.get_all()]}"
             )
         return state
+
+
+class StepFieldNavigationDriver(ScrollableFormWindowNavigationDriver):
+    """Navigate step fields; function-pattern fields belong to the function editor."""
+
+    def accepts_field_path(self, request: RegisteredWindowNavigationRequest) -> bool:
+        return not FunctionPatternField.owns_field_path(
+            request.field_path
+        ) and super().accepts_field_path(request)
 
 
 class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QWidget):
@@ -258,6 +275,21 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
         )
 
         apply_scope_color_scheme_to_widget_tree(self.form_manager, scheme)
+
+    def window_navigation_driver(self) -> WindowNavigationDriver:
+        return StepFieldNavigationDriver(self)
+
+    def use_pipeline_config(self, pipeline_config) -> None:
+        """Resolve inherited placeholders against a replaced pipeline config."""
+        self.pipeline_config = pipeline_config
+
+        def retarget(form_manager) -> None:
+            form_manager.context_obj = pipeline_config
+            for nested_manager in form_manager.nested_managers.values():
+                retarget(nested_manager)
+
+        retarget(self.form_manager)
+        ObjectStateRegistry.increment_token()
 
     def code_document_driver(self) -> WindowCodeDocumentDriver:
         """Return this step editor's pycodified code-mode document driver."""
