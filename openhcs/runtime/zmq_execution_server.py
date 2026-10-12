@@ -224,20 +224,13 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
             if sys.platform.startswith("linux")
             else (os.cpu_count() or 1)
         )
-        runner = PreparedForkWorkerLaneRunner(
-            multiprocessing_context=multiprocessing.get_context("fork"),
-            capacity=capacity,
+        self._prepared_worker_runner = PreparedForkWorkerLaneRunner.prepared(
+            multiprocessing.get_context("fork"), capacity
         )
-        try:
-            runner.prepare()
-        except BaseException:
-            runner.close()
-            raise
-        self._prepared_worker_runner = runner
-        # A custom function loaded from now on is prepared in this process
-        # when it is published; workers forked before that do not hold it.
-        self._custom_function_subscription = custom_function_changed.subscribe(
-            runner.replace_with_current_forks
+        # A custom function this server loads later is prepared here; workers
+        # forked before that do not hold it.
+        custom_function_changed.subscribe(
+            self._prepared_worker_runner.replace_with_current_forks
         )
 
     def stop(self) -> None:

@@ -195,6 +195,40 @@ def load_each_source(
     return prepared, tuple(failures)
 
 
+def project_declaration(
+    declaration: Callable,
+    source: CustomFunctionSource,
+    code: str,
+) -> "FunctionMetadata":
+    """Project one validated declaration; a serving process also prepares it.
+
+    In a process that serves execution, loading a source includes its declared
+    preparation, so the function is not published until that has run. A
+    preparation that raises is reported at the source line that raised.
+    """
+    name = declaration.__name__
+    try:
+        metadata = project_custom_function(
+            declaration,
+            declaration_revision=source.content_sha256,
+        )
+    except ValueError as exc:
+        raise ValidationError.at_line(
+            f"Function '{name}' projection failed: {exc}",
+            code,
+            declaration_line(code, name),
+        ) from exc
+    try:
+        CallablePreparation.prepare_published(metadata.func)
+    except Exception as exc:
+        raise ValidationError.at_line(
+            f"Function '{name}' preparation failed: {type(exc).__name__}: {exc}",
+            code,
+            failing_source_line(exc, _SOURCE_FILENAME) or declaration_line(code, name),
+        ) from exc
+    return metadata
+
+
 class CustomFunctionManager:
     """
     Manager for custom function lifecycle operations.
@@ -637,30 +671,7 @@ class CustomFunctionManager:
             content_sha256=CustomFunctionSource.content_digest(code.encode("utf-8")),
         )
         CustomFunctionSourceNamespace(source, namespace).bind(declaration)
-        try:
-            metadata = project_custom_function(
-                declaration,
-                declaration_revision=source.content_sha256,
-            )
-        except ValueError as exc:
-            raise ValidationError.at_line(
-                f"Function '{declaration.__name__}' projection failed: {exc}",
-                code,
-                declaration_line(code, declaration.__name__),
-            ) from exc
-        # In a process that serves execution, loading a source includes its
-        # declared preparation: the function is not published until it ran.
-        try:
-            CallablePreparation.prepare_published(metadata.func)
-        except Exception as exc:
-            raise ValidationError.at_line(
-                f"Function '{declaration.__name__}' preparation failed: "
-                f"{type(exc).__name__}: {exc}",
-                code,
-                failing_source_line(exc, _SOURCE_FILENAME)
-                or declaration_line(code, declaration.__name__),
-            ) from exc
-        return metadata
+        return project_declaration(declaration, source, code)
 
     def _prepare_snapshot(
         self,

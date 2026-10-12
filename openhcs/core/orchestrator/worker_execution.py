@@ -12,7 +12,7 @@ import signal
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Self, Sequence
 
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -944,6 +944,19 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
         self._next_worker_id = 0
         self._outdated_process_ids: set[int] = set()
 
+    @classmethod
+    def prepared(
+        cls, multiprocessing_context: multiprocessing.context.BaseContext, capacity: int
+    ) -> Self:
+        """A runner whose idle workers are started, or nothing if one fails."""
+        runner = cls(multiprocessing_context=multiprocessing_context, capacity=capacity)
+        try:
+            runner.prepare()
+        except BaseException:
+            runner.close()
+            raise
+        return runner
+
     def _start_prepared_worker(self) -> WorkerProcess:
         worker = self.start_worker(f"prepared_{self._next_worker_id}", PrepareWorker())
         self._next_worker_id += 1
@@ -1008,19 +1021,16 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
     def release(self, workers: list[WorkerProcess], *, retire: bool) -> None:
         """Return clean processes or retire the exact failed/cancelled lease."""
         with self._ownership_lock:
-            replaced = 0
+            # A lease forked before the server last prepared something is
+            # retired whole and forked again.
+            process_ids = {worker.process.pid for worker in workers}
+            outdated = bool(process_ids & self._outdated_process_ids)
+            self._outdated_process_ids -= process_ids
+            retire = retire or outdated
             for worker in workers:
-                outdated = worker.process.pid in self._outdated_process_ids
-                self._outdated_process_ids.discard(worker.process.pid)
-                if (
-                    not retire
-                    and not outdated
-                    and not self._closed
-                    and worker.process.is_alive()
-                ):
+                if not retire and not self._closed and worker.process.is_alive():
                     self._available.append(worker)
                     continue
-                replaced += outdated
                 if worker.process.is_alive():
                     worker.process.terminate()
                 worker.process.join()
@@ -1028,7 +1038,7 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 self.workers = [
                     owned for owned in self.workers if owned.process is not worker.process
                 ]
-            if replaced and not self._closed:
+            if outdated and not self._closed:
                 self.prepare()
 
     def close(self) -> None:
