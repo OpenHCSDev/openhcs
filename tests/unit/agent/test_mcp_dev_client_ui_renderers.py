@@ -62,7 +62,7 @@ from openhcs.mcp.dev_client_rendering import (
     UiActionCatalogRenderOptions,
     WidgetTreeRenderOptions,
 )
-from test_mcp_dev_client_renderers import SERVER, framed, sample_dto
+from tests.unit.agent.test_mcp_dev_client_renderers import SERVER, framed, sample_dto
 
 
 def render(payload, options=None) -> str:

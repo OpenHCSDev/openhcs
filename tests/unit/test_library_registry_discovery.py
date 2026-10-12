@@ -50,6 +50,110 @@ def test_native_catalog_import_failures_follow_declared_memory_admission(
         assert registry.get_modules_to_scan() == []
 
 
+@pytest.mark.parametrize(
+    "requirement, outcome",
+    [
+        # The package's own marker leaves the distribution out of this environment.
+        ("absent-catalog-probe>=1; platform_system == 'NoSuchSystem'", "excluded"),
+        # Declared only for an extra this installation did not select.
+        ("absent-catalog-probe>=1; extra == 'probe'", "excluded"),
+        # Required here, yet absent: a broken installation fails loudly.
+        ("absent-catalog-probe>=1", "broken"),
+        # A module cannot claim a distribution the package never declares.
+        ("unrelated-catalog-probe>=1", "undeclared"),
+    ],
+)
+def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here(
+    tmp_path, monkeypatch, requirement, outcome
+) -> None:
+    from packaging.requirements import Requirement
+
+    from openhcs.processing.backends.lib_registry import openhcs_registry
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        OpenHCSRegistry,
+    )
+
+    package_name = "native_catalog_distribution_probe"
+    package = tmp_path / package_name
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    (package / "processing.py").write_text(
+        "from openhcs.core.memory.decorators import numpy\n"
+        "import absent_catalog_probe\n"
+        "REQUIRED_DISTRIBUTIONS = ('absent-catalog-probe',)\n"
+        "@numpy\n"
+        "def process(image):\n    return image\n"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "1")
+    monkeypatch.setattr(
+        openhcs_registry,
+        "_openhcs_requirements",
+        lambda: (Requirement(requirement),),
+    )
+    registry = OpenHCSRegistry()
+    registry.MODULES_TO_SCAN = [f"{package_name}.processing"]
+
+    if outcome == "excluded":
+        assert registry.get_modules_to_scan() == []
+        assert registry.cache_discovery_context()[
+            "distributions_excluded_by_package_metadata"
+        ] == ["absent-catalog-probe"]
+    elif outcome == "broken":
+        with pytest.raises(ModuleNotFoundError, match="absent_catalog_probe"):
+            registry.get_modules_to_scan()
+    else:
+        with pytest.raises(ValueError, match="absent-catalog-probe"):
+            registry.get_modules_to_scan()
+
+
+@pytest.mark.parametrize(
+    "platform_system, platform_machine, excluded",
+    [
+        ("Darwin", "x86_64", True),
+        ("Darwin", "arm64", False),
+        ("Linux", "x86_64", False),
+    ],
+)
+def test_basicpy_catalog_module_follows_the_package_basicpy_marker(
+    monkeypatch, platform_system, platform_machine, excluded
+) -> None:
+    """Intel macOS installs omit openhcs-basicpy; its catalog module follows."""
+
+    import importlib.metadata
+
+    import packaging.markers
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_distributions_excluded_by_package_metadata,
+    )
+
+    environment = packaging.markers.default_environment()
+    monkeypatch.setattr(
+        packaging.markers,
+        "default_environment",
+        lambda: {
+            **environment,
+            "platform_system": platform_system,
+            "platform_machine": platform_machine,
+        },
+    )
+    installed_distribution = importlib.metadata.distribution
+
+    def distribution_without_basicpy(name: str):
+        if name == "openhcs-basicpy":
+            raise importlib.metadata.PackageNotFoundError(name)
+        return installed_distribution(name)
+
+    monkeypatch.setattr(
+        importlib.metadata, "distribution", distribution_without_basicpy
+    )
+
+    assert _module_distributions_excluded_by_package_metadata(
+        "openhcs.processing.backends.enhance.basic_processor_jax"
+    ) == (("openhcs-basicpy",) if excluded else ())
+
+
 def test_concurrent_catalog_requests_share_one_metadata_load(monkeypatch) -> None:
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,
@@ -661,10 +765,10 @@ def test_library_registry_discovery_is_stable_across_fresh_worker_processes(
     assert tuple((tmp_path / "cache" / "metaclass-registry").glob("*.json"))
 
 
-def test_registered_metadata_preparation_discovers_measurements_before_lookup(
+def test_serving_readiness_completes_the_measurement_registry_before_lookup(
     tmp_path: Path,
 ) -> None:
-    """Warm discovery once while later plugin declarations remain visible."""
+    """Readiness discovers once; later plugin declarations remain visible."""
     environment = os.environ.copy()
     environment.update(
         OPENHCS_CPU_ONLY="true",
@@ -672,28 +776,26 @@ def test_registered_metadata_preparation_discovers_measurements_before_lookup(
         XDG_DATA_HOME=str(tmp_path / "data"),
     )
     script = textwrap.dedent("""
-        from openhcs.core.processing_preparation import CallablePreparation, RegistryFamilyPreparation
+        from types import SimpleNamespace
+
+        from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.processing.backends.cellprofiler.thresholding import threshold
+        from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
         assert not CellProfilerModule.__registry__._discovered
-        operations = tuple(
-            operation
-            for source in CallablePreparation.from_callable(threshold).cache_sources()
-            for operation in source.cache_operations()
-        )
-        preparation = next(
-            operation for operation in operations
-            if isinstance(operation, RegistryFamilyPreparation)
-            and operation.family is CellProfilerModule
-        )
-        preparation.prepare()
+        # Kernel compilation is not this test's subject.
+        CallablePreparation.prepare = lambda self: None
+        PreparationCacheBatch.populate_child_caches = lambda *args, **kwargs: None
+        RegistryService._metadata_cache = {"threshold": SimpleNamespace(func=threshold)}
+
+        RegistryService.prepare_in_current_process()
         assert CellProfilerModule.__registry__._discovered
         declarations = tuple(CellProfilerModule.__registry__.values())
         assert declarations
         prefixes = CellProfilerModule.measurement_category_prefix_declarations()
         assert prefixes
-        preparation.prepare()
+        RegistryService.prepare_in_current_process()
         assert tuple(CellProfilerModule.__registry__.values()) == declarations
 
         class WarmupPlugin(CellProfilerModule):

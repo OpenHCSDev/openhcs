@@ -28,7 +28,10 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import (
-    RuntimeSourceImageProvenancePlane, SourceImageIdentity, SourceImageProvenancePlanes,
+    RuntimeSourceImageProvenancePlane,
+    SourceImageIdentity,
+    SourceImageProvenanceContributor,
+    SourceImageProvenancePlanes,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.abstract import StepExecutionObservation
@@ -37,7 +40,7 @@ from openhcs.core.materialization.core import Output, materialization_outputs
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from test_materialization_core import _viewer_stream_backend_kwargs
+from tests.unit.test_materialization_core import _viewer_stream_backend_kwargs
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
 
@@ -134,6 +137,32 @@ def test_absence_one_equal_or_incomplete_contributors_cannot_exempt_acquired_pla
         adapter.to_filemanager_kwargs(output)
     with pytest.raises(ValueError, match="site"):
         adapter.filemanager_batches((output,))
+
+
+def test_axis_varying_between_runtime_planes_is_kept_not_reduced():
+    common = {"well": "A01", "z_index": 1, "timepoint": 1}
+    planes = tuple(
+        RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity(component_metadata={**common, "site": site}),
+            contributors=tuple(
+                SourceImageProvenanceContributor(
+                    SourceImageIdentity(
+                        component_metadata={**common, "site": site, "channel": channel}
+                    )
+                )
+                for channel in (1, 2)
+            ),
+        )
+        for site in (1, 2)
+    )
+    metadata = ImagePayloadMetadata(
+        plane_axis=SourceBindingPlaneAxis,
+        source_component_metadata=common,
+        source_image_provenance_planes=SourceImageProvenancePlanes(planes),
+    )
+    assert metadata.source_provenance.required_scalar_components(
+        ("site", "channel", "well")
+    ) == ("site", "well")
 
 
 def test_present_scalar_override_remains_required_despite_varied_contributors():

@@ -3,13 +3,15 @@
 import glob
 import json
 import tomllib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
 from scripts.build_mcp_knowledge_assets import (
     KNOWLEDGE_MANIFEST_RELATIVE_PATH,
+    PACKAGED_KNOWLEDGE_PATH_BUDGET,
     PACKAGED_KNOWLEDGE_ROOT_RELATIVE_PATH,
+    knowledge_asset_projections,
     project_knowledge_assets,
 )
 from openhcs.agent.knowledge_manifest_schema import (
@@ -294,3 +296,47 @@ def test_wheel_globs_include_the_projected_hidden_plugin_manifest(tmp_path):
     assert plugin_manifest in included
     plugin_root = plugin_manifest.parent.parent
     assert {path for path in projected if path.is_relative_to(plugin_root)} <= included
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+# The installer CI proof root under the runner profile, with long paths disabled.
+WINDOWS_INSTALLED_KNOWLEDGE_ROOT = PureWindowsPath(
+    r"C:\Users\runneradmin\AppData\Local\OpenHCS Installer Smoke",
+    "env-00000000",
+    "Lib",
+    "site-packages",
+    *PACKAGED_KNOWLEDGE_ROOT_RELATIVE_PATH.parts,
+)
+WINDOWS_MAX_PATH = 260
+
+
+def test_every_packaged_resource_fits_the_windows_installed_path_budget():
+    workflow = PROJECT_ROOT / ".github" / "workflows" / "integration-tests.yml"
+    assert '"OpenHCS Installer Smoke"' in workflow.read_text(encoding="utf-8")
+    root_length = len(str(WINDOWS_INSTALLED_KNOWLEDGE_ROOT)) + 1
+    assert root_length + PACKAGED_KNOWLEDGE_PATH_BUDGET < WINDOWS_MAX_PATH
+    projections = knowledge_asset_projections(PROJECT_ROOT)
+    assert any(path.suffix == ".cppipe" for path in projections)
+    too_long = [
+        str(WINDOWS_INSTALLED_KNOWLEDGE_ROOT / relative)
+        for relative in projections
+        if len(str(WINDOWS_INSTALLED_KNOWLEDGE_ROOT / relative)) >= WINDOWS_MAX_PATH
+    ]
+    assert too_long == []
+
+
+@pytest.mark.parametrize(
+    "case_name", ["x" * PACKAGED_KNOWLEDGE_PATH_BUDGET, "nested/name", "name:stream"]
+)
+def test_native_placement_rejects_unbudgeted_case_names(tmp_path, case_name):
+    project_root, manifest_path, _ = _project_with_document(tmp_path)
+    recipe_path = project_root / "recipe.json"
+    recipe_path.write_text(
+        json.dumps({"cases": [{"name": case_name, "cppipe_path": "a.cppipe"}]}),
+        encoding="utf-8",
+    )
+    catalog = json.loads(manifest_path.read_text(encoding="utf-8"))
+    catalog["documents"].append({"source_path": "recipe.json"})
+    manifest_path.write_text(json.dumps(catalog), encoding="utf-8")
+    with pytest.raises(ValueError):
+        knowledge_asset_projections(project_root)

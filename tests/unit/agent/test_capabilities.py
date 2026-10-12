@@ -528,3 +528,27 @@ def test_connection_shape_is_declared_by_the_invocation_family():
     ):
         assert issubclass(capability, RuntimeServerCapability)
         assert isinstance(capability.invocation, AgentFromFieldsServiceInvocation)
+
+
+def test_requestless_ui_bridge_capability_passes_connection_as_connection():
+    """A requestless operation's only argument is the connection, never a request."""
+
+    from types import SimpleNamespace
+
+    from openhcs.agent.services.ui_bridge_service import UiBridgeService
+
+    seen = []
+
+    class RecordingUiBridgeService(UiBridgeService):
+        def invoke(self, operation, request=None, connection=None):
+            seen.append((operation, request, connection))
+            return "served"
+
+    connection = object()
+    invocation = agent_capabilities.ui_bridge_status.invocation
+    context = SimpleNamespace(
+        ui_bridge_service=RecordingUiBridgeService(gateway=object())
+    )
+
+    assert invocation.execute(context, connection) == "served"
+    assert seen == [(invocation.operation, None, connection)]

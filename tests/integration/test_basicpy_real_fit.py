@@ -17,6 +17,7 @@ def test_real_algorithm_uses_numpy_transport_and_is_cpu_catalog_eligible(monkeyp
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         _catalog_memory_types,
         _module_declares_allowed_memory_type,
+        _module_distributions_excluded_by_package_metadata,
     )
 
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
@@ -27,6 +28,12 @@ def test_real_algorithm_uses_numpy_transport_and_is_cpu_catalog_eligible(monkeyp
     )
     assert _module_declares_allowed_memory_type(
         basic_flatfield_correction_jax.__module__, frozenset({MemoryType.NUMPY.value})
+    )
+    assert (
+        _module_distributions_excluded_by_package_metadata(
+            basic_flatfield_correction_jax.__module__
+        )
+        == ()
     )
 
 

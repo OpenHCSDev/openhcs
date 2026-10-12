@@ -494,9 +494,7 @@ def _mcp_server_health() -> McpServerHealthResult:
         restart_command=recovery.restart_command,
         restart_command_is_stable=recovery.restart_command_is_stable,
         reconnect_required=recovery.reconnect_required,
-        reconnect_owner=(
-            None if recovery.reconnect_owner is None else recovery.reconnect_owner.value
-        ),
+        reconnect_owner=recovery.reconnect_owner,
         retry_after_reconnect=recovery.retry_after_reconnect,
         automatic_recovery_on_reconnect=(recovery.automatic_recovery_on_reconnect),
         restart_hint=recovery.hint,
@@ -927,11 +925,7 @@ def _mcp_server_stale_error(tool_name: str) -> JsonValue:
             restart_command=recovery.restart_command,
             restart_command_is_stable=recovery.restart_command_is_stable,
             reconnect_required=recovery.reconnect_required,
-            reconnect_owner=(
-                None
-                if recovery.reconnect_owner is None
-                else recovery.reconnect_owner.value
-            ),
+            reconnect_owner=recovery.reconnect_owner,
             retry_after_reconnect=recovery.retry_after_reconnect,
             automatic_recovery_on_reconnect=(recovery.automatic_recovery_on_reconnect),
             restart_hint=recovery.hint or "",

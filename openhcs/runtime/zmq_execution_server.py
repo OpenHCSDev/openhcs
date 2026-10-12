@@ -26,7 +26,7 @@ from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -492,7 +492,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         pipeline_config: PipelineConfig,
     ) -> OpenHCSExecutionConfigBundle:
         if request_payload.config_code is not None:
-            global_config = ConfigDocumentAuthority.from_source(
+            global_config = ConfigDocumentCodec.from_source(
                 request_payload.config_code,
                 expected_config_type=GlobalPipelineConfig,
             )
