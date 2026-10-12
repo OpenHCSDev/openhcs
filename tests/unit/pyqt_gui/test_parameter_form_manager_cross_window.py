@@ -175,7 +175,6 @@ def test_registry_deferred_invalidations_coalesce_until_flush(monkeypatch) -> No
         classmethod(record_invalidation),
     )
     ObjectStateRegistry._deferred_invalidations.clear()
-    ObjectStateRegistry._deferred_invalidation_depth = 0
 
     with ObjectStateRegistry.defer_live_invalidations():
         ObjectStateRegistry.invalidate_by_type_and_scope("", str, "name")

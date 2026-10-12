@@ -12,6 +12,13 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
 
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
+
+# Every socket and lock file of this pytest process, and of the servers and
+# viewers it starts, lives under a root no other run sees. Each xdist worker
+# imports this module, so each has its own.
+use_private_socket_root()
+
 import psutil
 import pytest
 from zmqruntime.messages import AckReturnRoute, ProcessIdentity
@@ -99,12 +106,14 @@ def cleanup_test_runtime_resources():
 
 @pytest.fixture
 def unix_socket_dir():
-    """A short private directory for AF_UNIX/IPC sockets.
+    """A private directory for AF_UNIX/IPC sockets, beneath the socket root.
 
     ``sun_path`` holds about 104-108 bytes, so a socket under a deep
     ``tmp_path`` (long ``--basetemp`` or ``TMPDIR``) cannot bind.
     """
-    with tempfile.TemporaryDirectory(prefix="ohcs-sock-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="s-", dir=OPENHCS_ZMQ_CONFIG.socket_root()
+    ) as directory:
         yield Path(directory)
 
 

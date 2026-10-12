@@ -3127,7 +3127,7 @@ def test_inline_source_bindings_edit_flashes_changed_collection() -> None:
     manager.deleteLater()
 
 
-def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> None:
+def test_inline_source_bindings_dropdown_edit_flashes_changed_cell_and_inheriting_cell() -> None:
     QtApplicationHarness.app()
     state = ObjectState(PipelineConfig())
     manager = ParameterFormManager(
@@ -3173,15 +3173,32 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         )
         QApplication.processEvents()
 
-        expected_path = "source_bindings_config.source_filters[0].match_type"
-        assert [entry[0] for entry in registered] == [expected_path]
-        assert queued == [expected_path]
-        assert state.parameters["source_bindings_config.source_filters"] == (
+        # The edited cell, and the same cell of the step section: that section
+        # sets no filters of its own and shows the ones it inherits from
+        # source_bindings_config of the same PipelineConfig, so the value it
+        # resolves to changes with the edit while its own value stays unset.
+        edited_clauses = (
             SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
             ),
+        )
+        expected_paths = [
+            "source_bindings_config.source_filters[0].match_type",
+            "step_source_bindings_config.source_filters[0].match_type",
+        ]
+        assert [entry[0] for entry in registered] == expected_paths
+        assert queued == expected_paths
+        assert state.parameters["source_bindings_config.source_filters"] == edited_clauses
+        assert state.parameters["step_source_bindings_config.source_filters"] is None
+        assert (
+            state.get_resolved_value("step_source_bindings_config.source_filters")
+            == edited_clauses
+        )
+        assert state.get_provenance("step_source_bindings_config.source_filters") == (
+            state.scope_id,
+            SourceBindingsConfig,
         )
         queued.clear()
         registered.clear()

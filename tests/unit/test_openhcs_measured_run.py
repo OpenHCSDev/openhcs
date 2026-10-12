@@ -51,6 +51,10 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
     clients = []
 
     class FakeClient:
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
+
         def __init__(self, *, port, persistent, progress_callback):
             assert port is None
             assert persistent is False
@@ -615,6 +619,10 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
     selected_ports = []
 
     class AttachedClient:
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
+
         def __init__(self, **kwargs):
             selected_ports.append(kwargs["port"])
             self.connected_endpoint = SimpleNamespace(
@@ -634,11 +642,6 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
             return None
 
     monkeypatch.setattr(measured_run, "ZMQExecutionClient", AttachedClient)
-    monkeypatch.setattr(
-        measured_run.DataControlPortPairAuthority,
-        "acquire",
-        lambda *_args, **_kwargs: SimpleNamespace(data_port=5555),
-    )
     submission = OpenHCSExecutionSubmission(
         subject_id=tmp_path,
         pipeline_document=PipelineDocumentCodec.from_values(
@@ -660,4 +663,4 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
             timing_observer=measured_run._ZMQProgressTimingObserver(),
             require_owned_server=True,
         )
-    assert selected_ports == [5555]
+    assert selected_ports == [None]

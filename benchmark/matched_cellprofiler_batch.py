@@ -30,7 +30,6 @@ from objectstate.lazy_factory import (
     ensure_global_config_context,
     rebuild_lazy_config_with_new_global_reference,
 )
-from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import ExecutionStatusSnapshot
 
 from benchmark.adapters.cellprofiler import (
@@ -114,7 +113,6 @@ from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -1206,11 +1204,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.preflight_native_references:
         execution_scope = nullcontext(None)
     else:
-        port = DataControlPortPairAuthority.acquire(
-            OPENHCS_ZMQ_CONFIG,
-            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-        ).data_port
-        execution_scope = ZMQExecutionClient(port=port, persistent=False)
+        execution_scope = ZMQExecutionClient.with_private_server()
     receipts = {}
     with execution_scope as client:
         for case in selected_cases:

@@ -12,11 +12,14 @@ import logging
 from pathlib import Path
 
 from zmqruntime.config import TransportMode
+from zmqruntime.messages import AnySessionAudience, EndpointLaunch
 from zmqruntime.startup import (
     EndpointStartupPhase,
     EndpointStartupStatusWriter,
 )
 from zmqruntime.transport import TransportEndpoint
+
+from openhcs.runtime.import_authority import ImportRootEndpoint
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +71,14 @@ def main(
         "--prepare-capabilities",
         action="store_true",
         help="Prepare endpoint-owned capability caches without binding sockets",
+    )
+    parser.add_argument(
+        "--launch",
+        type=EndpointLaunch.from_argument,
+        default=EndpointLaunch.by_this_process(
+            ImportRootEndpoint.code_root(), AnySessionAudience
+        ),
+        help="Launch record of the starting client (default: started by hand)",
     )
     parser.add_argument(
         "--startup-status-path",
@@ -192,7 +203,7 @@ def main(
         server = execution_server_type(
             log_file_path=args.log_file_path,
             config=config,
-        )
+        ).launched_by(args.launch)
 
         status_reporter.emit(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
