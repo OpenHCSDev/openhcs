@@ -763,7 +763,9 @@ def run_installed_live_mcp_smoke(
         bridge_port=bridge_status.connection.require_port("Installed UI bridge smoke"),
         bridge_reachable=bridge_status.reachable,
         bridge_transport=(
-            bridge_status.connection.transport_endpoint().transport_mode.value
+            bridge_status.connection.transport_endpoint(
+                execution_config
+            ).transport_mode.value
         ),
         execution_server_log=execution_server_log,
         function_catalog=function_catalog,
