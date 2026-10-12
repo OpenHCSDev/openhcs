@@ -607,6 +607,7 @@ def test_main_close_attempts_every_top_level_owner_after_other_failures(
         _close_object_state_subscriptions=lambda: fail("subscriptions"),
         shortcut_lifecycle=SimpleNamespace(close=lambda: fail("shortcuts")),
         lifecycle_workflow=SimpleNamespace(close=lambda: fail("resources")),
+        session=SimpleNamespace(close=lambda: fail("session")),
     )
     monkeypatch.setattr(
         "PyQt6.QtCore.QTimer.singleShot",
@@ -620,6 +621,7 @@ def test_main_close_attempts_every_top_level_owner_after_other_failures(
         "subscriptions",
         "shortcuts",
         "resources",
+        "session",
         "accept",
         "quit_scheduled",
     ]

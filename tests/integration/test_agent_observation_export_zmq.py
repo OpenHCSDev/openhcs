@@ -93,7 +93,7 @@ def mcp_session(tmp_path: Path):
     try:
         yield built, context.session
     finally:
-        context.session.close()
+        context.close()
 
 
 def _call(built, name: str, arguments: dict) -> dict:

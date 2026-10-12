@@ -18,7 +18,7 @@ from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module
-from tests.unit.desktop.conftest import headless_session
+from tests.unit.desktop.sessions import headless_session
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep

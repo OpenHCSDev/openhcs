@@ -16,9 +16,8 @@ from arraybridge.decorators import DtypeConversion
 from objectstate import ObjectState, ObjectStateRegistry
 from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
 
-from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
-from openhcs.authoring.session.session import CallerThread
+from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.core.config import (
     DtypeConfig,
     GlobalPipelineConfig,
@@ -68,7 +67,7 @@ def test_headless_session_global_config_reaches_existing_step_states(
 ) -> None:
     """A session started without a GUI, as the MCP server starts its own."""
 
-    session = open_session(
+    session = Session(
         global_config=_global_config(BEFORE),
         transport_config=OpenHCSZMQConfig(default_port=29873, persistent=False),
         main_thread=CallerThread(),
@@ -97,7 +96,7 @@ def test_headless_session_global_config_reaches_existing_step_states(
         } == {(AFTER, AFTER)}
         assert {state.get_provenance(FIELD) for state in states} == {("", DtypeConfig)}
     finally:
-        close_session(session)
+        session.close()
 
 
 def test_saved_global_config_reaches_saved_values_of_existing_step_states(

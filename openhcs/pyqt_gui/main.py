@@ -65,7 +65,6 @@ from openhcs.authoring.session.events import (
     ServerConnectionChanged,
     SessionEvent,
 )
-from openhcs.authoring.session.lifetime import open_session
 from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.core.config import GlobalPipelineConfig
 from formbridge.contracts import AgentError
@@ -236,9 +235,9 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         )
         self.desktop_update_service.check_failed.connect(self._on_update_check_failed)
 
-        self.session = open_session(
-            transport_config=runtime_context.ui_config.zmq,
+        self.session = Session(
             global_config=self.pipeline_runtime_config,
+            transport_config=runtime_context.ui_config.zmq,
             main_thread=DispatcherThread(main_window_services.ui_dispatcher),
             progress_interval_seconds=(
                 runtime_context.ui_config.progress.update_interval_ms / 1000
@@ -1518,6 +1517,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             ),
             ("closing shortcut routing", self.shortcut_lifecycle.close),
             ("closing window resources", self.lifecycle_workflow.close),
+            ("closing the session", self.session.close),
         )
         for description, operation in shutdown_operations:
             try:

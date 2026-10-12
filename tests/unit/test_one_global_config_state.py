@@ -22,7 +22,6 @@ from objectstate import (
 
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.authoring.session import compile_batch as compile_batch_module
-from openhcs.authoring.session.lifetime import close_session
 from openhcs.constants.constants import OrchestratorReady
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig
@@ -107,18 +106,17 @@ def empty_registry() -> Iterator[None]:
 def test_headless_session_keeps_one_global_state_until_it_closes(
     empty_registry: None, tmp_path: Path
 ) -> None:
-    context = OpenHCSAgentContext(
+    with OpenHCSAgentContext(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,), writable_roots=(tmp_path,)
         ),
         session_transport_config=OpenHCSZMQConfig(
             default_port=session_port(), persistent=False
         ),
-    )
-    assert _global_state() is None
+    ) as context:
+        assert _global_state() is None
 
-    session = context.session
-    try:
+        session = context.session
         state = _global_state()
         assert state is not None
 
@@ -128,11 +126,30 @@ def test_headless_session_keeps_one_global_state_until_it_closes(
 
         session.apply_global_config(GlobalPipelineConfig(num_workers=EDITED_WORKERS))
         assert _global_state() is state
-    finally:
-        close_session(session)
 
     assert _global_state() is None
     assert get_saved_global_config(GlobalPipelineConfig) is None
+
+
+def test_agent_context_closes_only_the_session_it_opened() -> None:
+    with caller_session() as session:
+        state = _global_state()
+        with OpenHCSAgentContext(session=session) as context:
+            assert context.session is session
+        assert _global_state() is state
+        session.apply_global_config(GlobalPipelineConfig(num_workers=EDITED_WORKERS))
+        assert _global_state() is state
+
+    assert _global_state() is None
+
+
+def test_closing_a_session_leaves_a_later_sessions_state_registered() -> None:
+    with caller_session() as first:
+        with caller_session():
+            state = _global_state()
+            first.close()
+            assert _global_state() is state
+        assert _global_state() is None
 
 
 def test_gui_session_keeps_one_global_state_until_it_closes(tmp_path: Path) -> None:

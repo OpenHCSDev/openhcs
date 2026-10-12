@@ -220,8 +220,8 @@ class OpenHCSPyQtApp(QApplication):
         )
         logger.info("Storage registry initialization started in background")
 
-        # The state that holds the global config is registered by ``open_session``
-        # (the main window starts the session); until then the config that
+        # The state that holds the global config is registered by ``Session``
+        # (the main window constructs it); until then the config that
         # ``config_cache`` stored is the global config.
         from objectstate.object_state import ObjectState, ObjectStateRegistry
 

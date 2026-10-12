@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Sequence
+from contextlib import ExitStack
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -148,14 +149,21 @@ def build_bootstrap_failure_server(
 def build_bootstrapped_server(
     capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
     *,
+    lifetime: ExitStack,
     main_thread_dispatcher: "McpMainThreadDispatcher | None" = None,
 ) -> "FastMCP":
-    """Build the full OpenHCS MCP server, or a fail-soft bootstrap server."""
+    """Build the full OpenHCS MCP server, or a fail-soft bootstrap server.
+
+    The server's context (and the session it opens) is entered on ``lifetime``:
+    the caller that serves owns that stack and closes it when serving ends.
+    """
     try:
         from openhcs.agent.capabilities import DesktopLocalCapabilitySurfaceProfile
+        from openhcs.mcp.context import create_agent_context
         from openhcs.mcp.server import build_server
 
         return build_server(
+            lifetime.enter_context(create_agent_context()),
             main_thread_dispatcher=main_thread_dispatcher,
             capability_surface_profile=(
                 DesktopLocalCapabilitySurfaceProfile()
@@ -201,10 +209,14 @@ def run_bootstrapped_server(
         return
     from openhcs.mcp.stdio import McpStdioTransport
 
-    with McpStdioTransport.reserve_process_stdio() as stdio_transport:
+    with (
+        McpStdioTransport.reserve_process_stdio() as stdio_transport,
+        ExitStack() as lifetime,
+    ):
         try:
             server = build_bootstrapped_server(
                 capability_surface_profile,
+                lifetime=lifetime,
                 main_thread_dispatcher=stdio_transport.execution.dispatcher,
             )
             stdio_transport.run(server)
@@ -249,19 +261,21 @@ def _run_resident_socket_server(
             else idle_exit_seconds
         ),
     )
-    try:
-        server = build_bootstrapped_server(
-            capability_surface_profile,
-            main_thread_dispatcher=transport.execution.dispatcher,
-        )
-    except Exception as exc:
-        transport._log(
-            "build_failed",
-            exception_type=type(exc).__name__,
-            message=str(exc),
-        )
-        raise SystemExit(1) from exc
-    transport.serve(server)
+    with ExitStack() as lifetime:
+        try:
+            server = build_bootstrapped_server(
+                capability_surface_profile,
+                lifetime=lifetime,
+                main_thread_dispatcher=transport.execution.dispatcher,
+            )
+        except Exception as exc:
+            transport._log(
+                "build_failed",
+                exception_type=type(exc).__name__,
+                message=str(exc),
+            )
+            raise SystemExit(1) from exc
+        transport.serve(server)
 
 
 def _build_parser() -> argparse.ArgumentParser:

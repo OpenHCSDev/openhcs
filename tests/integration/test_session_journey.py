@@ -20,7 +20,7 @@ from openhcs.authoring.session.operations.datasets import (
     AddDatasets,
     InitializeDatasets,
 )
-from openhcs.authoring.session.session import CallerThread
+from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps import FunctionStep
@@ -144,13 +144,12 @@ def test_headless_mcp_journey_adds_compiles_and_runs_a_dataset(tmp_path: Path) -
         }
         assert {"DatasetsChanged", "CompiledStateChanged", "DatasetExecutionFinished"} <= kinds
     finally:
-        context.session.close()
+        context.close()
 
 
 def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -> None:
     """Initialization never writes into a source it may not write."""
 
-    from openhcs.authoring.session.lifetime import close_session, open_session
 
     from openhcs.core.config import GlobalPipelineConfig
 
@@ -163,7 +162,7 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
     _set_writable(root, False)
     before = _source_state(root)
     workspaces = tmp_path / "workspaces"
-    session = open_session(
+    session = Session(
         transport_config=OpenHCSZMQConfig(default_port=_port(2), persistent=False),
         global_config=GlobalPipelineConfig(),
         main_thread=CallerThread(),
@@ -189,5 +188,5 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
         assert session.orchestrator(scope_id).dataset_root.is_relative_to(workspaces)
         assert _source_state(root) == before
     finally:
-        close_session(session)
+        session.close()
         _set_writable(root, True)

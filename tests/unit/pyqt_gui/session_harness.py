@@ -13,7 +13,6 @@ from pathlib import Path
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.authoring.session.datasets import write_dataset_scope_ids
-from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -70,7 +69,7 @@ def caller_session(**kwargs) -> Iterator[Session]:
     persisted = kwargs.pop("persisted_scope_ids", None)
     if persisted is not None:
         write_dataset_scope_ids(list(persisted))
-    session = open_session(
+    session = Session(
         transport_config=OpenHCSZMQConfig(default_port=session_port(), persistent=False),
         global_config=global_config,
         main_thread=kwargs.pop("main_thread", CallerThread()),
@@ -80,7 +79,7 @@ def caller_session(**kwargs) -> Iterator[Session]:
     try:
         yield session
     finally:
-        close_session(session)
+        session.close()
         _forget_progress(session)
 
 

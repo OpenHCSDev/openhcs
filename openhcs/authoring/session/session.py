@@ -313,11 +313,21 @@ class FinishedExecution:
 
 
 class Session:
-    """Datasets, their pipelines and executions, and the events they emit."""
+    """Datasets, their pipelines and executions, and the events they emit.
+
+    A process has one session at a time, and the session is what holds the
+    global config: constructing it registers the ObjectState at the global
+    scope (``scope_id=""``) around ``global_config``, and :meth:`close`
+    unregisters that state. No other code registers a global-config state and
+    nothing keeps a copy: read it with ``get_live_global_config`` /
+    ``get_saved_global_config`` and replace it with :meth:`apply_global_config`.
+    Whoever constructs a session closes it.
+    """
 
     def __init__(
         self,
         *,
+        global_config: GlobalPipelineConfig,
         transport_config: OpenHCSZMQConfig,
         main_thread: MainThread,
         progress_interval_seconds: float = 1 / 30,
@@ -375,6 +385,10 @@ class Session:
         self._work = AsyncOperationExecutor()
         self._closed = False
 
+        self._global_config_state = ObjectState(
+            object_instance=global_config, scope_id=""
+        )
+        ObjectStateRegistry.register(self._global_config_state, _skip_snapshot=True)
         dataset_list_state()
         self._split_dataset_scopes()
 
@@ -425,12 +439,17 @@ class Session:
         return future
 
     def close(self) -> None:
+        """Stop the session's work and unregister the state it registered."""
+
         if self._closed:
             return
         self._closed = True
         self.progress.close()
         self._work.close()
         self.execution_control.disconnect()
+        registered = ObjectStateRegistry.global_config_state(GlobalPipelineConfig)
+        if registered is self._global_config_state:
+            ObjectStateRegistry.unregister(registered, _skip_snapshot=True)
 
     # -- configuration --------------------------------------------------------
 

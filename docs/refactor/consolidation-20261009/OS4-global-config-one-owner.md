@@ -26,13 +26,20 @@ A fact with several writers kept equal by convention is a restated relation
 
 - The state registered at scope `""` is the holder. Reads are
   `get_live_global_config` / `get_saved_global_config`.
-- ONE registration site: `openhcs/authoring/session/lifetime.py::open_session`
-  registers the state and starts the session; `close_session` ends the session and
-  unregisters the state. The GUI main window (`pyqt_gui/main.py`), the headless MCP
-  context (`mcp/context.py`), the benchmark CLI and the test harness all start their
-  session there. Starting the session is what registers the state; there is no
-  "register if nobody did". `Session` gained no member (it lost one attribute, one
-  constructor parameter and three setter calls).
+- ONE registration site and one owner: `Session.__init__` takes a required
+  `global_config` and registers the state around it; `Session.close()` unregisters
+  that state (only while it is still the one registered). There is one way to start
+  a session (`Session(global_config=..., ...)`) and one way to end it
+  (`session.close()`); there is no "register if nobody did".
+- Whoever constructs a session closes it. The GUI main window constructs it and its
+  `closeEvent` closes it. `OpenHCSAgentContext` (`mcp/context.py`) opens one lazily
+  and is a context manager: it keeps a `contextlib.ExitStack`, puts `session.close`
+  on it when its `session` property constructs the session, and `close()` closes the
+  stack, so a session passed in as `session=` stays its giver's. The serving
+  processes own the context: `mcp/bootstrap.py` (`build_bootstrapped_server` enters
+  it on the required `lifetime: ExitStack` that `run_bootstrapped_server` and
+  `_run_resident_socket_server` hold while they serve), `mcp/http.py::main`,
+  `scripts/mcp_memory_diagnostic.py`; the benchmark CLI closes its session.
 - `Session.global_config` is deleted; its eight readers ask
   `get_saved_global_config(GlobalPipelineConfig)`. `dataset_document.live_global_config`
   is deleted; its callers ask `get_live_global_config(GlobalPipelineConfig)`.
@@ -47,7 +54,7 @@ A fact with several writers kept equal by convention is a restated relation
 
 | Deleted | Certificate |
 | --- | --- |
-| `app.py` two setter calls and the global-state registration | **derived**: `open_session` registers the state; registering makes its object the global config (ObjectState 4.0.0). |
+| `app.py` two setter calls and the global-state registration | **derived**: `Session.__init__` registers the state; registering makes its object the global config (ObjectState 4.0.0). |
 | `Session.global_config` attribute and constructor parameter | **derived**: `get_saved_global_config` reads the registered state's saved object; the attribute was only ever assigned the object last saved. |
 | `Session.adopt_global_config` store write | **derived**: the state already holds the config after `mark_saved` (window save) or `set_global_config` (`apply_global_config`). |
 | `session.py` setter in `initialize_datasets` and in its worker `run()` | **derived** (one config per process; the worker reads the same one). Renamed instead of deleted they would revert unsaved global edits; `tests/unit/test_one_global_config_state.py` covers add, initialise, compile, run. |
@@ -56,6 +63,9 @@ A fact with several writers kept equal by convention is a restated relation
 | `ZMQExecutionServer._ensure_request_global_config_context` | **derived**: a one-line forward to `set_global_config`, inlined at its one call. |
 | `dataset_document.live_global_config(session)` | **derived**: equal to `get_live_global_config(GlobalPipelineConfig)` with a state registered; its no-state branch read the deleted attribute. |
 | `dual_editor_tabs.py` entered `config_context` block around the step form | **tests-only**: the four test files that build the step editor give 61 passed with and without it; the earlier probe saw 0 lazy resolutions inside it over 8 builds. Not exercised: step types or widgets outside those tests that would do a plain lazy read (not through a state) while the form is built. |
+| `open_session(global_config=..., **session_arguments)` | **derived**: registration of the state followed by `Session(...)`; both are now `Session.__init__`. Its `**session_arguments: Any` restated the constructor's parameters untyped. |
+| `close_session(session)` | **derived**: `session.close()` followed by unregistering the global state; both are now `Session.close()`. With it gone there is no second, weaker way to end a session. |
+| `openhcs/authoring/session/lifetime.py` | **unused** once both functions are gone; its docstring is the `Session` class docstring. |
 | `benchmark` uses of the 3.x "rebuild lazy config" helper | **derived**: it stored the global config and returned a field-for-field copy; lazy fields resolve at read time. Replaced by `set_global_config` and the config object itself. |
 | `_candidate_pipeline_config(global_config=...)` parameter (benchmark) | **unused** after the above. |
 
@@ -156,7 +166,7 @@ ObjectState submodule at the start of the gate run: `02393c4aa482da320b5c5299459
 1. Decide the 29: rerun the suite with nothing else running; if they persist, find the
    test that leaves a global state registered (an autouse fixture that fails a test
    leaving `ObjectStateRegistry.global_config_state(GlobalPipelineConfig)` set would
-   name it) and give the headless context an end (`close_session`).
+   name it) and give the headless context an end (done: `OpenHCSAgentContext.close`).
 2. `tests/unit/test_bioformats_microscope_handler.py::test_openhcs_output_subdirectory_initializes_from_metadata_root`
    failed in a sub-run (`MetadataNotFoundError`); it is not in the 29, so it either is
    in `known.fail` or passed in the suite. Check.

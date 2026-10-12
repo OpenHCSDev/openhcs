@@ -49,7 +49,6 @@ from openhcs.authoring.session.events import RuntimeArtifactAvailable
 from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
-from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_compilation import (
@@ -322,56 +321,58 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
             available.set()
 
         ObjectStateRegistry.clear()
-        session = open_session(
+        session = Session(
             transport_config=OpenHCSZMQConfig(persistent=False),
             global_config=GlobalPipelineConfig(),
             main_thread=CallerThread(),
         )
-        session.subscribe(apply_runtime_notification)
-        client.progress_callback = session.progress.on_progress
-        client.enable_progress_stream()
-        time.sleep(0.15)
-
-        server._worker_assignments_by_execution["run-1"] = {"worker_0": ["A01"]}
-        # The server publishes progress only for executions it admitted.
-        server.active_executions["run-1"] = ExecutionRecord(
-            execution_id="run-1",
-            subject_id="/plates/one",
-            client_address=None,
-            status="running",
-        )
-        multiprocessing_context = multiprocessing.get_context("spawn")
-        worker_queue = multiprocessing_context.Queue()
-        progress_forwarder = threading.Thread(
-            target=server._forward_worker_progress,
-            args=(worker_queue,),
-            daemon=True,
-        )
-        worker_process = multiprocessing_context.Process(
-            target=_emit_spawned_runtime_observation,
-            args=(worker_queue,),
-        )
-        progress_forwarder.start()
-        worker_process.start()
         try:
-            worker_process.join(timeout=20.0)
-            assert not worker_process.is_alive()
-            assert worker_process.exitcode == 0
-        finally:
-            if worker_process.is_alive():
-                worker_process.terminate()
-                worker_process.join(timeout=5.0)
-            worker_queue.put(None)
-            progress_forwarder.join(timeout=5.0)
-            worker_queue.close()
-            worker_queue.join_thread()
-            server._worker_assignments_by_execution.pop("run-1", None)
-            server.active_executions.pop("run-1", None)
+            session.subscribe(apply_runtime_notification)
+            client.progress_callback = session.progress.on_progress
+            client.enable_progress_stream()
+            time.sleep(0.15)
 
-        assert available.wait(timeout=5.0)
-        tracked = session.progress_tracker.get_events("run-1")
-        session.close()
-        ObjectStateRegistry.clear()
+            server._worker_assignments_by_execution["run-1"] = {"worker_0": ["A01"]}
+            # The server publishes progress only for executions it admitted.
+            server.active_executions["run-1"] = ExecutionRecord(
+                execution_id="run-1",
+                subject_id="/plates/one",
+                client_address=None,
+                status="running",
+            )
+            multiprocessing_context = multiprocessing.get_context("spawn")
+            worker_queue = multiprocessing_context.Queue()
+            progress_forwarder = threading.Thread(
+                target=server._forward_worker_progress,
+                args=(worker_queue,),
+                daemon=True,
+            )
+            worker_process = multiprocessing_context.Process(
+                target=_emit_spawned_runtime_observation,
+                args=(worker_queue,),
+            )
+            progress_forwarder.start()
+            worker_process.start()
+            try:
+                worker_process.join(timeout=20.0)
+                assert not worker_process.is_alive()
+                assert worker_process.exitcode == 0
+            finally:
+                if worker_process.is_alive():
+                    worker_process.terminate()
+                    worker_process.join(timeout=5.0)
+                worker_queue.put(None)
+                progress_forwarder.join(timeout=5.0)
+                worker_queue.close()
+                worker_queue.join_thread()
+                server._worker_assignments_by_execution.pop("run-1", None)
+                server.active_executions.pop("run-1", None)
+
+            assert available.wait(timeout=5.0)
+            tracked = session.progress_tracker.get_events("run-1")
+        finally:
+            session.close()
+            ObjectStateRegistry.clear()
 
     assert len(notifications) == 1
     assert list(tracked) == [notifications[0].event]

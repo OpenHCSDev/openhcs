@@ -351,7 +351,7 @@ def test_http_main_uses_streamable_http(monkeypatch):
         def run(self, *, transport):
             transports.append(transport)
 
-    monkeypatch.setattr(mcp_http, "build_http_server", lambda: Server())
+    monkeypatch.setattr(mcp_http, "build_http_server", lambda *, context: Server())
 
     mcp_http.main([])
 

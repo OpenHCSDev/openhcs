@@ -110,7 +110,6 @@ from openhcs.authoring.session.operations.pipelines import (
     EditPipelineStep,
     ShowPipelineCode,
 )
-from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Renderer, Session
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
 from openhcs.constants.constants import OrchestratorExecuting, OrchestratorReady
@@ -3551,7 +3550,7 @@ class BridgeSessions:
     @classmethod
     def get(cls) -> Session:
         if cls.current is None:
-            cls.current = open_session(
+            cls.current = Session(
                 transport_config=OpenHCSZMQConfig(
                     default_port=session_port(), persistent=False
                 ),
@@ -3563,7 +3562,7 @@ class BridgeSessions:
     @classmethod
     def close(cls) -> None:
         if cls.current is not None:
-            close_session(cls.current)
+            cls.current.close()
             cls.current = None
 
 
