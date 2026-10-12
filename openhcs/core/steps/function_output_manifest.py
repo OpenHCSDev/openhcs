@@ -1,6 +1,7 @@
 """Execution-local main-flow output lineage for FunctionStep execution."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -60,7 +61,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     output_path: str
     relative_output_path: str
     image_metadata: ImagePayloadMetadata | None = None
-    main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE
+    main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis
 
     def published(self) -> "ProducedOutputSemantics":
         """Fix the saved slot while retaining live provenance and storage aliases."""
@@ -212,7 +213,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         output_identity: FunctionOutputIdentity,
         output_context: AlignedImageSliceContext | None = None,
         image_metadata: ImagePayloadMetadata | None = None,
-        main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE,
+        main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis,
     ) -> "ProducedOutputSemantics":
         output_path_text = str(output_path)
         if output_context is None:

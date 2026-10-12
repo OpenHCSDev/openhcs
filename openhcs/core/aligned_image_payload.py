@@ -1,6 +1,8 @@
 """Generic aligned image-payload composition for multi-source runtime inputs."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from _thread import LockType
 from abc import ABC, abstractmethod
@@ -30,7 +32,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayload,
     ImagePayloadMetadata,
     ImagePayloadSliceProjector,
-    ImagePayloadMetadataCompositionMode,
     ImageMaskDomain,
     project_image_mask_to_data_domain,
     preserved_image_plane_projection,
@@ -46,6 +47,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
@@ -382,7 +384,7 @@ class ImagePayloadStackComposition(ABC):
 
     @property
     @abstractmethod
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode: ...
+    def composition_metadata_mode(self) -> type[RuntimePlaneAxis]: ...
 
     @staticmethod
     def validate_main_flow_cohort(
@@ -410,7 +412,7 @@ class ImagePayloadStackComposition(ABC):
             declared_plane_axis=(
                 producer_records[0].main_flow_plane_axis
                 if producer_records and len(producer_records) == 1
-                else None
+                else NoPlaneAxis
             ),
         ):
             main_data_stack = payloads[0].copied(
@@ -418,32 +420,30 @@ class ImagePayloadStackComposition(ABC):
                 device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
             )
         else:
-            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
+            metadata_mode = RuntimeSlicePlaneAxis
             if producer_records:
                 declared_axis = producer_records[0].main_flow_plane_axis
                 # Scalar occurrences of one declared output reconstruct its
                 # runtime axis; distinct output contexts introduce a binding axis.
                 metadata_mode = (
-                    ImagePayloadMetadataCompositionMode.BUNDLE
-                    if declared_axis is None
+                    SourceBindingPlaneAxis
+                    if declared_axis.unstacked
                     and len(
                         {record.output_context for record in producer_records}
                     ) > 1
-                    else ImagePayloadMetadataCompositionMode.for_plane_axis(
-                        declared_axis or RuntimePlaneAxis.RUNTIME_SLICE
-                    )
+                    else declared_axis.axis_when_stacked()
                 )
             if source_projection is not None and workspace_source_lookups:
                 metadata_mode = source_projection.payload_composition_mode(
                     workspace_source_lookups
                 )
-            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
+            if metadata_mode.one_plane_per_runtime_slice:
                 main_data_stack = stack_image_payloads(
                     payloads, metadata_mode=metadata_mode,
                     memory_type=execution_plan.input_memory_type,
                     device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
                 )
-            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+            elif metadata_mode.one_plane_per_source_binding:
                 main_data_stack = ImagePayloadBundleContext.from_payloads(
                     tuple(payloads), metadata_mode=metadata_mode,
                 ).compose()
@@ -455,7 +455,7 @@ class ImagePayloadStackComposition(ABC):
         payloads: Sequence[RuntimeArrayData],
         metadata: Sequence[ImagePayloadMetadata],
         *,
-        single_output_plane_axis: RuntimePlaneAxis | None,
+        single_output_plane_axis: type[RuntimePlaneAxis],
     ) -> RuntimeArrayData:
         """Attach saved member context without replacing the independent buffer."""
         data = stack_payload.data
@@ -474,19 +474,14 @@ class ImagePayloadStackComposition(ABC):
                 return member
             # Cache the cohort the next step composes from this one saved member.
             return stack_image_payloads(
-                (member,), metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+                (member,), metadata_mode=RuntimeSlicePlaneAxis,
             )
         if np.shape(data)[:1] != (len(payloads),):
             raise ValueError(
                 "Output stack must match its declared output slice count: "
                 f"stack shape {np.shape(data)!r}, slice count {len(payloads)}."
             )
-        stack_plane_axis = stack_payload.metadata.plane_axis
-        mode = (
-            ImagePayloadMetadataCompositionMode.STACK
-            if stack_plane_axis is None
-            else ImagePayloadMetadataCompositionMode.for_plane_axis(stack_plane_axis)
-        )
+        mode = stack_payload.metadata.plane_axis.axis_when_stacked()
         output_metadata = ImagePayloadMetadata.compose(
             tuple(payloads), mode=mode, source_metadata=tuple(
                 record.with_current_intensity_from(current_intensity, plane_index=index)
@@ -566,7 +561,7 @@ class ImagePayloadStackContext(ImagePayloadStackComposition):
     """Explicit dense stack inputs; the ancestor owns composition."""
 
     payloads: Sequence[ImagePayload]
-    metadata_mode: ImagePayloadMetadataCompositionMode
+    metadata_mode: type[RuntimePlaneAxis]
 
     def __post_init__(self) -> None:
         # Stack members arrive as payloads or as bare producer arrays.
@@ -579,14 +574,14 @@ class ImagePayloadStackContext(ImagePayloadStackComposition):
         return tuple(self.payloads)
 
     @property
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
+    def composition_metadata_mode(self) -> type[RuntimePlaneAxis]:
         return self.metadata_mode
 
 
 def stack_image_payloads(
     image_payloads: Sequence[Any],
     *,
-    metadata_mode: ImagePayloadMetadataCompositionMode,
+    metadata_mode: type[RuntimePlaneAxis],
     memory_type: str | None = None,
     device_id: int | None = None,
 ) -> Any:
@@ -669,14 +664,14 @@ def unstack_image_payload_context(
     payload: Any,
     slices: Sequence[Any],
     *,
-    default_plane_axis: RuntimePlaneAxis | None = None,
+    default_plane_axis: type[RuntimePlaneAxis] = NoPlaneAxis,
 ) -> list[Any]:
     """Attach one source plane of payload context to each unstacked image slice."""
     mask = payload.mask
     metadata = payload.metadata
     if mask is None and not metadata.has_values:
         return [metadata.payload_with(image_slice) for image_slice in slices]
-    if metadata.plane_axis is None and default_plane_axis is not None:
+    if metadata.plane_axis.unstacked and default_plane_axis.leads_data:
         metadata = replace(metadata, plane_axis=default_plane_axis)
     projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
     return projector.payloads_for_slices(slices)
@@ -690,7 +685,7 @@ class ImagePayloadComposition:
     execution_mode: type[ImagePayloadExecutionMode]
 
     @property
-    def plane_axis(self) -> RuntimePlaneAxis | None:
+    def plane_axis(self) -> type[RuntimePlaneAxis]:
         """Return the invocation axis, distinct from a bundle's inner source axis."""
         return self.payload.invocation_plane_axis
 
@@ -703,7 +698,7 @@ class ImagePayloadComposition:
         """Return the complete projection owned by the composed payload axis."""
 
         axis = self.plane_axis
-        if axis is None:
+        if axis.unstacked:
             return None
         return preserved_image_plane_projection(
             self.payload,
@@ -716,8 +711,8 @@ class ImagePayloadComposition:
 class ImagePayloadBundleContext(ImagePayloadStackContext):
     """Compose same-slice image bundle data, masks, and metadata together."""
 
-    metadata_mode: ImagePayloadMetadataCompositionMode = (
-        ImagePayloadMetadataCompositionMode.BUNDLE
+    metadata_mode: type[RuntimePlaneAxis] = (
+        SourceBindingPlaneAxis
     )
 
     def __post_init__(self) -> None:
@@ -732,7 +727,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             for index, (payload, metadata) in enumerate(
                 zip(self.payloads, self.source_metadata, strict=True)
             )
-            if metadata.plane_axis is not None
+            if metadata.plane_axis.leads_data
         )
         if declared_axes:
             raise ValueError(
@@ -761,8 +756,8 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         cls,
         payloads: tuple[RuntimeArrayData, ...],
         *,
-        metadata_mode: ImagePayloadMetadataCompositionMode = (
-            ImagePayloadMetadataCompositionMode.BUNDLE
+        metadata_mode: type[RuntimePlaneAxis] = (
+            SourceBindingPlaneAxis
         ),
     ) -> "ImagePayloadBundleContext":
         return cls(
@@ -1101,7 +1096,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         slices: Sequence[Any],
         *,
         memory_type: str,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> "ProducedImageStack":
         """Wrap produced image slices as a stack without allocating its pixels."""
         return ProducedImageStack(
@@ -1163,7 +1158,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         return self.slices
 
     @property
-    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+    def projected_output_composition_mode(self) -> type[RuntimePlaneAxis]:
         """Declare the outer runtime axis retained by projected output members."""
         return self.composition_metadata_mode
 
@@ -1186,7 +1181,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         return self.compose()
 
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
-        if context.axis is self.composition_metadata_mode.plane_axis:
+        if context.axis is self.composition_metadata_mode:
             return self.aligned_slice(
                 context.require_plane_index(),
                 context.axis_size,
@@ -1206,9 +1201,9 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
 
     def plane_axis_for_output_context(
         self, context: AlignedImageSliceContext,
-    ) -> RuntimePlaneAxis | None:
+    ) -> type[RuntimePlaneAxis]:
         """An explicitly aligned stack declares its outer runtime-slice domain."""
-        return RuntimePlaneAxis.RUNTIME_SLICE
+        return RuntimeSlicePlaneAxis
 
     @property
     def owns_output_surfaces(self) -> bool:
@@ -1302,7 +1297,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         """Prepare an independent output buffer in this owner's declared domain."""
         payloads = tuple(payload for payload, _context in projected_outputs)
         metadata_mode = self.projected_output_composition_mode
-        if metadata_mode is None:
+        if metadata_mode.unstacked:
             return payloads[0].copied(memory_type=memory_type, device_id=device_id)
         data = tuple(payload.data for payload in payloads)
         declared_axes = {
@@ -1311,7 +1306,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         }
         if len(declared_axes) != 1 or len({tuple(np.shape(item)) for item in data}) != 1:
             return None
-        if metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+        if metadata_mode.one_plane_per_source_binding:
             return ImagePayloadBundleContext.from_payloads(
                 payloads, metadata_mode=metadata_mode,
             ).compose()
@@ -1402,13 +1397,41 @@ class AlignedImageStack(ImagePayloadSliceStack):
     """Per-runtime-slice bundles of separately bound image inputs or outputs."""
 
     @property
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
-        return ImagePayloadMetadataCompositionMode.STACK
+    def composition_metadata_mode(self) -> type[RuntimePlaneAxis]:
+        return RuntimeSlicePlaneAxis
 
     @property
-    def invocation_plane_axis(self) -> RuntimePlaneAxis:
+    def invocation_plane_axis(self) -> type[RuntimePlaneAxis]:
         """An aligned stack is invoked once per outer runtime slice."""
-        return RuntimePlaneAxis.RUNTIME_SLICE
+        return RuntimeSlicePlaneAxis
+
+    def slice_source_provenances(self) -> tuple[SourceImageProvenance, ...]:
+        return tuple(value.scalar_source_provenance() for value in self.slices)
+
+    def scalar_source_provenance(self) -> SourceImageProvenance:
+        """Collapse the inner image bundle's source topology into one slice's sources."""
+        metadata = tuple(value.metadata for value in self.slices)
+        provenances = tuple(
+            (
+                fields.source_provenance.for_source_plane(0)
+                if fields.plane_axis.unstacked
+                and fields.source_provenance.source_plane_count == 1
+                else fields.source_provenance
+            )
+            for fields in metadata
+        )
+        provenance = SourceImageProvenance.bundle(
+            provenances,
+            scalar_sources=tuple(fields.source_provenance for fields in metadata),
+            preserve_single_topology=(
+                len(metadata) == 1
+                and metadata[0].plane_axis.one_plane_per_source_binding
+            ),
+        )
+        return (
+            provenance.with_runtime_planes_as_contributors()
+            .with_common_scalar_identity_from_planes()
+        )
 
     @property
     def keeps_own_source_context(self) -> bool:
@@ -1454,7 +1477,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
     """
 
     memory_type: str
-    plane_axis: RuntimePlaneAxis
+    plane_axis: type[RuntimePlaneAxis]
     source_metadata: InitVar[ImagePayloadMetadata | None] = None
     _metadata: ImagePayloadMetadata = field(init=False, repr=False)
     _composed_payload: RuntimeArrayData | None = field(default=None, init=False, repr=False)
@@ -1475,7 +1498,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
         self._metadata = (
             ImagePayloadMetadata.compose(
                 self.slices,
-                mode=ImagePayloadMetadataCompositionMode.for_plane_axis(self.plane_axis),
+                mode=self.plane_axis,
             )
             if source_metadata is None else source_metadata
         )
@@ -1503,8 +1526,8 @@ class ProducedImageStack(ImagePayloadSliceStack):
         return self._metadata
 
     @property
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
-        return ImagePayloadMetadataCompositionMode.for_plane_axis(self.plane_axis)
+    def composition_metadata_mode(self) -> type[RuntimePlaneAxis]:
+        return self.plane_axis
 
     @property
     def dtype(self) -> Any:
@@ -1518,11 +1541,11 @@ class ProducedImageStack(ImagePayloadSliceStack):
 
     def plane_axis_for_output_context(
         self, context: AlignedImageSliceContext,
-    ) -> RuntimePlaneAxis:
+    ) -> type[RuntimePlaneAxis]:
         return self.plane_axis
 
     def runtime_slice_count(self) -> int | None:
-        if self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        if self.plane_axis.one_plane_per_runtime_slice:
             return len(self.slices)
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
@@ -1692,24 +1715,24 @@ class ImageOutputBundle(AlignedImageStack):
         )
 
     @property
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
-        return ImagePayloadMetadataCompositionMode.BUNDLE
+    def composition_metadata_mode(self) -> type[RuntimePlaneAxis]:
+        return SourceBindingPlaneAxis
 
     @property
-    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+    def projected_output_composition_mode(self) -> type[RuntimePlaneAxis]:
         """Flatten declared inner runtime planes, retaining other named image domains."""
         if any(
-            payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            payload.metadata.plane_axis.one_plane_per_runtime_slice
             for payload in self.slices
         ):
-            return ImagePayloadMetadataCompositionMode.STACK
+            return RuntimeSlicePlaneAxis
         if len(self.slices) == 1:
-            return None
+            return NoPlaneAxis
         return self.composition_metadata_mode
 
     def plane_axis_for_output_context(
         self, context: AlignedImageSliceContext,
-    ) -> RuntimePlaneAxis | None:
+    ) -> type[RuntimePlaneAxis]:
         """Resolve a named output's own inner plane axis before slice projection."""
         payloads = tuple(
             payload for payload, declared_context in zip(self.slices, self.slice_contexts, strict=True)
@@ -1741,7 +1764,7 @@ class ImageOutputBundle(AlignedImageStack):
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
         """Project each named output through its shared declared runtime axis."""
         if (
-            context.axis is RuntimePlaneAxis.RUNTIME_SLICE
+            context.axis.one_plane_per_runtime_slice
             and self.inner_runtime_slice_count() is None
         ):
             return self.aligned_slice(context.require_plane_index(), context.axis_size)
@@ -1801,8 +1824,8 @@ def compose_aligned_image_payload(
     image_payloads: tuple[Any, ...],
     slice_contexts: Sequence[AlignedImageSliceContext] = (),
     stack_broadcast_source_indices: Sequence[int | None] = (),
-    metadata_mode: ImagePayloadMetadataCompositionMode = (
-        ImagePayloadMetadataCompositionMode.BUNDLE
+    metadata_mode: type[RuntimePlaneAxis] = (
+        SourceBindingPlaneAxis
     ),
     *,
     retain_single_input: bool = True,
@@ -1970,7 +1993,7 @@ def compose_aligned_image_payload(
                                 RuntimeSliceProjection.value_for_slice(
                                     payload,
                                     RuntimePlaneAxisValueProjection.from_selected_plane(
-                                        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                                        axis=RuntimeSlicePlaneAxis,
                                         plane_index=slice_index,
                                         axis_size=slice_count,
                                     ),
@@ -2005,7 +2028,7 @@ def aligned_image_stack_kwargs(
     """Slice runtime-array kwargs alongside an aligned image stack."""
     resolver = AlignedImageStackKwargResolver(
         projection_axis=RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=slice_index,
             axis_size=slice_count,
         ),

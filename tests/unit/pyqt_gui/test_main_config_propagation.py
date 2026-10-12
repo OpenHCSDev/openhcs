@@ -5,9 +5,7 @@ from types import MethodType, SimpleNamespace
 
 import pytest
 from PyQt6.QtWidgets import QWidget
-from pyqt_reactive.services.async_operation_executor import (
-    AsyncOperationExecutorClosedError,
-)
+from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 import openhcs.pyqt_gui.main as main_module
 from openhcs.core.config import GlobalPipelineConfig
@@ -337,9 +335,7 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
 
 def test_list_preview_config_applies_to_both_real_lists(qtbot) -> None:
     from pyqt_reactive.core import ReorderableListWidget
-    from pyqt_reactive.strategies.preview_formatting import (
-        ObjectStatePreviewFormattingService,
-    )
+    from formbridge.strategies.preview_formatting import ObjectStatePreviewFormattingService
     from pyqt_reactive.widgets.shared.abstract_manager_widget import (
         AbstractManagerWidget,
     )

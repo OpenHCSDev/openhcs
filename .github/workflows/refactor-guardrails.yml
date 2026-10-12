@@ -3,8 +3,6 @@ name: Refactor Guardrails
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -40,9 +38,15 @@ jobs:
               agent-comms-ratchet --root "$root" --base "$base" --head "$HEAD"
           done
 
+  # The R1 comparison scans the base and the head tree under one deadline.
+  # Measured: 141 s for the base scan alone on a hosted runner, so about 280 s
+  # for both; 160 s timed out on large diffs without a finding. 600 s is twice
+  # the measured need and the value the local gate uses. The job timeout leaves
+  # 10 minutes around the scan for checkout, tool install and the guard tests,
+  # so the scan's own deadline reports first and the job is never just killed.
   nra-r1:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,4 +73,4 @@ jobs:
           uv run --no-project --python 3.12 \
             --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
             python -m scripts.check_refactor_r1 --base "$base" --head "$HEAD" \
-            --scratch-root "$RUNNER_TEMP/openhcs-r1" --budget-seconds 160
+            --scratch-root "$RUNNER_TEMP/openhcs-r1" --budget-seconds 600

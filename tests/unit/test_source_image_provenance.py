@@ -1,11 +1,11 @@
 """Focused source-image provenance projection regressions."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import (
@@ -155,7 +155,7 @@ def test_declared_source_projection_resolves_singleton_plane_contributor() -> No
     )
     projected = projected_payload.metadata
 
-    assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projected.plane_axis is RuntimeSlicePlaneAxis
     assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_provenance.represented_source_image_names == (
         "OrigOverlay",
@@ -178,14 +178,14 @@ def test_complete_source_identity_accepts_nested_contributor() -> None:
                 ),
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     payload = metadata.payload_with(np.zeros((1, 4, 5), dtype=np.float32))
 
     assert metadata.has_complete_source_identity(
         payload,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
     )
@@ -207,7 +207,7 @@ def test_complete_source_identity_requires_multi_plane_axis_declaration() -> Non
     assert not metadata.has_complete_source_identity(
         payload,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -220,18 +220,18 @@ def test_derived_singleton_runtime_plane_retains_declared_source_name() -> None:
             component_metadata=({"well": "A01", "channel": "1"},),
         ),
         source_image_names=("DNA",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((1, 4, 5), dtype=np.float32))
     output = ImagePayloadMetadata(
         source_image_names=("OrigOverlay",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32))
 
     derived = source.metadata.derive_payload(
         ImagePayload.of(source),
         ImagePayload.of(output),
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
     )
@@ -241,7 +241,7 @@ def test_derived_singleton_runtime_plane_retains_declared_source_name() -> None:
     )
     projected = projected_payload.metadata
 
-    assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projected.plane_axis is RuntimeSlicePlaneAxis
     assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_provenance.represented_source_image_names == (
         "OrigOverlay",
@@ -300,7 +300,7 @@ def _repeated_source_alias_payload(
             "uint8",
             "uint16",
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     return metadata.payload_with(pixels, mask), pixels, mask
 
@@ -321,7 +321,7 @@ def test_declared_source_projection_selects_ordered_repeated_alias_planes() -> N
         projected_payload.mask,
         np.stack((mask[1], mask[6])),
     )
-    assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projected.plane_axis is RuntimeSlicePlaneAxis
     assert projected.source_plane_intensity_scales == (255.0, 65535.0)
     assert projected.source_plane_dtypes == ("uint8", "uint16")
     assert projected.source_image_names == ("OrigER", "OrigER")
@@ -348,7 +348,7 @@ def test_declared_source_projection_drops_axis_for_single_selected_plane() -> No
 
     np.testing.assert_array_equal(projected_payload.data, pixels[2])
     np.testing.assert_array_equal(projected_payload.mask, mask[2])
-    assert projected.plane_axis is None
+    assert projected.plane_axis.unstacked
     assert projected.intensity_scale == 30.0
     assert projected.source_dtype == "uint8"
     assert projected.source_path == "/input/plane_2.tif"

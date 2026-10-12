@@ -6,6 +6,7 @@ modules, which each mode imports when it executes.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -123,7 +124,9 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+        from openhcs.core.runtime_plane_projection import (
+            RuntimePlaneAxisValueProjection,
+        )
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         if not isinstance(request.image, AlignedImageStack):
@@ -131,13 +134,12 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 "Aligned runtime batch execution requires AlignedImageStack, got "
                 f"{type(request.image).__name__}."
             )
-        projection = request.plane_projection
-        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise ValueError(
-                "Aligned runtime batch execution requires a compiled runtime-slice "
-                "projection."
-            )
-        if projection.plane_index is not None:
+        projection = RuntimePlaneAxisValueProjection.require_runtime_slice_projection(
+            request.plane_projection,
+            "Aligned runtime batch execution requires a compiled runtime-slice "
+            "projection.",
+        )
+        if projection.selects_one_plane:
             raise ValueError(
                 "Aligned runtime batch execution received an image after its "
                 "runtime-slice projection was already selected."
@@ -182,7 +184,6 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             Pure2DSliceBatchExecutor,
             RuntimePure2DSliceBatchRequest,
         )
-        from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
         from openhcs.core.runtime_slice_projection import (
             RuntimeSliceProjection,
@@ -205,12 +206,12 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 f"{owner} requires a compiled runtime-slice projection for "
                 "aligned multi-image stack execution."
             )
-        if projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"{owner} aligned image execution requires "
-                f"RuntimePlaneAxis.RUNTIME_SLICE, got {projection.axis!r}."
-            )
-        if projection.plane_index is not None:
+        projection.axis.require_runtime_slices(
+            f"{owner} aligned image execution requires "
+            f"RuntimeSlicePlaneAxis, got {projection.axis!r}.",
+            error=RuntimeSliceProjectionDeclarationError,
+        )
+        if projection.selects_one_plane:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{owner} received an AlignedImageStack after the compiled "
                 "runtime-slice projection already selected plane "
@@ -226,14 +227,14 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             slice_plane_axes = tuple(
                 slice_payload.metadata.plane_axis for slice_payload in image.slices
             )
-            if any(
-                plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
+            if not all(
+                plane_axis.one_plane_per_source_binding
                 for plane_axis in slice_plane_axes
             ):
                 raise ValueError(
                     f"{owner} with whole-stack contract {contract.key!r} requires "
                     "every aligned image slice to declare "
-                    f"RuntimePlaneAxis.SOURCE_BINDING; got {slice_plane_axes!r}."
+                    f"SourceBindingPlaneAxis; got {slice_plane_axes!r}."
                 )
 
         def execute_aligned_stack_slice(
@@ -284,7 +285,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 aligned_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
                     result_batch.main_outputs,
                     memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                 )
                 if not isinstance(aligned_main_output, AlignedImageStack):
                     raise TypeError(
@@ -308,7 +309,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 stacked_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
                     result_batch.main_outputs,
                     memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                 )
             elif len(canonical_specs) == len(result_batch.main_outputs):
                 stacked_main_output = AlignedImageStack(
@@ -340,7 +341,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 Pure2DAuxiliaryOutputAggregator.aggregate(
                     values,
                     memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                 )
                 for values in result_batch.auxiliary_groups
             ),

@@ -12,7 +12,6 @@ from openhcs.core.runtime_object_label_domains import ObjectLabelIdDomainStrateg
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain, SpatialShapeYX
@@ -93,9 +92,9 @@ class SparseIJVLabelRows(ColumnarRows):
     def value_for_slice(
         self, context: RuntimePlaneAxisValueProjection
     ) -> "SparseIJVLabelRows":
-        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            return self
-        return self.slice(context.require_plane_index())
+        if context.axis.one_plane_per_runtime_slice:
+            return self.slice(context.require_plane_index())
+        return self
 
     @property
     def has_slice_index(self) -> bool:

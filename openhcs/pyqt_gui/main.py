@@ -29,12 +29,11 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from pyqt_reactive.animation import WindowFlashOverlay
+from pyqt_reactive.bridge.host import UiBridgeHostWindow
 from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
 from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.zmq_server_scan_service import (
-    EndpointObservationSnapshot,
-)
+from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
 from pyqt_reactive.widgets import (
     StatusIndicator,
     StatusState,
@@ -44,18 +43,18 @@ from pyqt_reactive.widgets.shared.dock_layout import DockLayoutStore, DockPane
 from pyqt_reactive.widgets.system_monitor import SystemMonitorWidget
 from zmqruntime import EndpointConnectionCancelledError
 
-from openhcs.core.selection import AllItems, SelectedItems
+from formbridge.selection import AllItems, SelectedItems
 from openhcs.agent.services.endpoint_function_catalog_service import (
     ZMQFunctionCatalogService,
 )
 from openhcs.agent.ui_bridge_identities import (
     MainWindowWidgetIdentity,
     PipelineEditorWidgetIdentity,
-    PlateManagerWidgetIdentity,
+    DatasetListWidgetIdentity,
     SystemMonitorWindowIdentity,
-    UiLiveOverviewStateSurfaceIdentityDeclaration,
     ZmqServerManagerWindowIdentity,
 )
+from formbridge.bridge.identities import UiLiveOverviewStateSurfaceIdentityDeclaration
 from openhcs.authoring.session.events import (
     ExecutionStateChanged,
     ProgressAdvanced,
@@ -68,7 +67,7 @@ from openhcs.authoring.session.events import (
 )
 from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.authoring.session.operations.application import (
     CheckForUpdates,
     ExitApplication,
@@ -103,9 +102,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
     build_main_window_specs,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
-    UiOwnedStateSurfaceDeclaration,
-)
+from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.windows.dual_editor_window import (
     select_step_editor_tab_after_time_travel,
@@ -175,7 +172,7 @@ class MainWindowUiServices(PyQtServiceAdapter):
         )
 
 
-class OpenHCSMainWindow(QMainWindow):
+class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
     """
     Main OpenHCS PyQt6 application window.
 
@@ -413,7 +410,7 @@ class OpenHCSMainWindow(QMainWindow):
         from openhcs.pyqt_gui.services.ui_bridge_composition import (
             OpenHCSUiBridgeCompositionRoot,
         )
-        from openhcs.pyqt_gui.services.ui_bridge_server import UiBridgeControlServer
+        from formbridge.bridge.server import UiBridgeControlServer
 
         return UiBridgeControlServer(
             OpenHCSUiBridgeCompositionRoot.for_main_window(self).build_service(),
@@ -498,8 +495,8 @@ class OpenHCSMainWindow(QMainWindow):
         )
         plate_manager_pane = DockPane.create(
             main_window=self,
-            window_id=PlateManagerWidgetIdentity.require_value(),
-            title=PlateManagerWidgetIdentity.require_title(),
+            window_id=DatasetListWidgetIdentity.require_value(),
+            title=DatasetListWidgetIdentity.require_title(),
             widget=self.plate_manager_widget,
             manager_header=self.plate_manager_widget.manager_header,
         )
@@ -715,7 +712,7 @@ class OpenHCSMainWindow(QMainWindow):
         system_monitor_action.triggered.connect(self.show_system_monitor)
         view_menu.addAction(system_monitor_action)
 
-        plate_action = QAction(f"&{PlateManagerWidgetIdentity.require_title()}", self)
+        plate_action = QAction(f"&{DatasetListWidgetIdentity.require_title()}", self)
         plate_action.triggered.connect(self.show_plate_manager)
         view_menu.addAction(plate_action)
         self.shortcut_lifecycle.bind_menu_action(

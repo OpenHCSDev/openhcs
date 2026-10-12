@@ -1,6 +1,8 @@
 """Focused regressions for declaration-owned CellProfiler execution semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import ast
 import inspect
@@ -28,14 +30,12 @@ from openhcs.core.function_patterns import (
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.interop.cellprofiler.runtime.module_execution import (
@@ -248,9 +248,9 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
         variant_data=ObjectLabelVariantData(
             labels=np.full((1, 4, 5), 7, dtype=np.int32),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((7,),),
         ),
     )
@@ -260,9 +260,9 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
 
     assert isinstance(projected, ObjectLabelPayload)
     assert object_label_dense_array(projected).shape == (4, 5)
-    assert projected.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+    assert projected.object_label_domain().scope.ids_span_payload
     assert projected.object_label_domain().declared_object_ids == (7,)
-    assert projected.plane_axis is None
+    assert projected.plane_axis.unstacked
     assert (
         policy.image_execution_mode(
             projected,
@@ -277,9 +277,9 @@ def test_slice_aligned_object_measurement_rejects_full_stack_label_domain() -> N
         variant_data=ObjectLabelVariantData(
             labels=np.ones((2, 4, 5), dtype=np.int32),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
     )

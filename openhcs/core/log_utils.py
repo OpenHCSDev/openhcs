@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import List, Optional
 
-from pyqt_reactive.core.log_utils import LogFileInfo, LogType
+from formbridge.core.log_utils import LogFileInfo, LogType
 from zmqruntime.execution.logs import ExecutionWorkerLogIdentity
 from zmqruntime.messages import ProcessIdentity
 

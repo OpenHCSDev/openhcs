@@ -82,7 +82,7 @@ class CellProfilerMeasurementVector:
     def runtime_value(self) -> RuntimeCallableArgument:
         if (
             self.plane_projection is None
-            or self.plane_projection.plane_index is not None
+            or self.plane_projection.selects_one_plane
         ):
             if len(self.slices) != 1:
                 raise ValueError(

@@ -1,6 +1,7 @@
 """Focused tests for retained CellProfiler runtime cache authorities."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from types import SimpleNamespace
@@ -39,9 +40,6 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-)
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -96,7 +94,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
     producer_pixels = np.full((2, 2), 1.0, dtype=np.float32)
     first_payload = AlignedImageStack.from_output_slices(
-        (producer_pixels,), memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        (producer_pixels,), memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
     )
     first_value = RuntimeValue.normalize(
         output_plan,
@@ -119,7 +117,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
 
     replacement_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(np.full((1, 2, 2), 2.0, dtype=np.float32), None)
     replacement_value = RuntimeValue.normalize(
         output_plan,

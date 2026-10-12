@@ -15,22 +15,22 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from pyqt_reactive.core.log_utils import LogFileInfo
-from pyqt_reactive.protocols import (
-    CodegenProviderABC,
+from formbridge.core.log_utils import LogFileInfo
+from formbridge.protocols.codegen_provider import CodegenProviderABC, register_codegen_provider
+from formbridge.protocols.component_selection import (
     ComponentSelectionProviderABC,
-    FormGenConfig,
     FunctionSelectionProviderABC,
-    LogDiscoveryProviderABC,
-    ServerScanProviderABC,
-    register_codegen_provider,
     register_component_selection_provider,
     register_function_selection_provider,
-    register_log_discovery_provider,
-    register_preview_formatter,
-    register_server_scan_provider,
-    set_form_config,
 )
+from formbridge.protocols.form_config import FormGenConfig, set_form_config
+from formbridge.protocols.log_providers import (
+    LogDiscoveryProviderABC,
+    ServerScanProviderABC,
+    register_log_discovery_provider,
+    register_server_scan_provider,
+)
+from formbridge.protocols.preview_formatter import register_preview_formatter
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
 from openhcs.agent.services.endpoint_function_catalog_service import (
@@ -138,9 +138,7 @@ class OpenHCSServerScanProvider(ServerScanProviderABC):
     def scan_for_server_logs(self) -> list[LogFileInfo]:
         from pathlib import Path
 
-        from pyqt_reactive.services.zmq_server_scan_service import (
-            ZMQServerScanService,
-        )
+        from formbridge.services.zmq_server_scan_service import ZMQServerScanService
         from zmqruntime.execution.logs import ExecutionWorkerLogObservation
 
         from openhcs.core.streaming_config_factory import get_all_streaming_ports
@@ -212,7 +210,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         return axis
 
     def _get_plate_manager(self):
-        from pyqt_reactive.services.service_registry import ServiceRegistry
+        from formbridge.services.service_registry import ServiceRegistry
 
         from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 

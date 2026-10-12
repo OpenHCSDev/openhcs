@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from pyqt_reactive.services.window_code_document import (
+from formbridge.services.window_code_document import (
     PYTHON_MIME_TYPE,
     WindowCodeDocument,
     WindowCodeDocumentDriver,

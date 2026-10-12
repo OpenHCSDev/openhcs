@@ -13,7 +13,8 @@ import sys
 import pytest
 
 from openhcs.agent.capabilities import SamplePlateImageCapability, agent_capabilities
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.plate import PlateImageSampleResult, SelectedPlateImageSampleResult
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRecord, ViewerWindowImageSampleResult
 from openhcs.mcp import dev_client

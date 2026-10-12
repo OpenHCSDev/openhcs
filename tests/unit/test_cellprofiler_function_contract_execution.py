@@ -1,6 +1,7 @@
 """Focused tests for the CellProfiler mode/processing-contract boundary."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -24,7 +25,6 @@ from openhcs.core.callable_contract import (
     callable_request,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
@@ -115,7 +115,7 @@ def test_registered_morph_distance_projects_raw_abi_and_retains_source_context()
     pixels[:, 2:5, 2:5] = 1
     mask = np.ones_like(pixels, dtype=bool)
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("SavedLabels",),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/tmp/saved-labels.tif",),
@@ -133,14 +133,14 @@ def test_registered_morph_distance_projects_raw_abi_and_retains_source_context()
         {"operation": MorphOperation.DISTANCE},
         execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+            axis=RuntimeSlicePlaneAxis, axis_size=1,
         ),
     )
 
     np.testing.assert_array_equal(result.data, expected[None])
     np.testing.assert_array_equal(result.mask, mask)
     metadata = result.metadata
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.source_image_names == ("SavedLabels",)
     assert metadata.source_image_provenance_planes.paths == ("/tmp/saved-labels.tif",)
     assert metadata.source_image_provenance_planes.component_metadata == (
@@ -177,7 +177,7 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
     )
     selected_labels = np.full((3, 4), 5, dtype=np.float32)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+        axis=RuntimeSlicePlaneAxis, axis_size=2,
     )
 
     assert contract.runtime_main_flow_call_argument(source) is source
@@ -205,7 +205,7 @@ def test_raw_slice_abi_does_not_relax_output_mask_shape_validation() -> None:
         np.ones((3, 4)), np.ones((3, 4), dtype=bool),
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+        axis=RuntimeSlicePlaneAxis, axis_size=1,
     )
     with pytest.raises(ValueError, match="[Mm]ask.*shape|shape.*[Mm]ask"):
         _execute_one_slice(contract, bad_shape, projection, source, {}, 0, 1)
@@ -310,7 +310,7 @@ def test_raw_slice_argument_retains_buffer_identity_for_inplace_array_callable()
         pixels, None,
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+        axis=RuntimeSlicePlaneAxis, axis_size=1,
     )
     result = _execute_one_slice(contract, inplace, projection, source, {}, 0, 1)
 
@@ -332,10 +332,10 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
         artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE, source_image_names=("DNA",),
+        plane_axis=RuntimeSlicePlaneAxis, source_image_names=("DNA",),
     ).payload_with(np.ones((12, 3, 4)), None)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=12,
+        axis=RuntimeSlicePlaneAxis, axis_size=12,
     )
     executor = CellProfilerFunctionContractExecutor()
     hints = []
@@ -391,10 +391,10 @@ def test_raw_abi_derivation_follows_existing_input_guards(monkeypatch) -> None:
             execution_mode=AlignedStackExecution,
         )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+        axis=RuntimeSlicePlaneAxis, axis_size=2,
     )
     mismatched_image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(np.zeros((2, 3, 4)), None)
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match="conflicts"):
         CellProfilerFunctionContractExecutor().execute(
@@ -416,13 +416,13 @@ def test_per_plane_execution_passes_each_plane_through_the_raw_abi() -> None:
         raw, Pure2DContract,
         artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
-    source = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
+    source = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
         np.ones((2, 3, 4)), None,
     )
     result = CellProfilerFunctionContractExecutor().execute(
         contract, raw, source, {}, execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+            axis=RuntimeSlicePlaneAxis, axis_size=2,
         ),
     )
 
@@ -449,9 +449,9 @@ def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(monke
         artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),),
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_image_names=("DNA",),
+        plane_axis=RuntimeSlicePlaneAxis,source_image_names=("DNA",),
     ).payload_with(np.ones((12,3,4)),None)
-    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.RUNTIME_SLICE,axis_size=12)
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis,axis_size=12)
     def forbidden(*args, **kwargs):
         raise AssertionError("Prepared execution introspected a live callable")
     monkeypatch.setattr(inspect,"signature",forbidden)
@@ -480,8 +480,8 @@ def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_cont
     monkeypatch.setattr(CallablePreparation,"prepare",lambda self:None)
     contract = CallableContract.from_prepared_callable(wrapper)
     contract = replace(contract,processing_contract=Pure2DContract, artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),))
-    source = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_image_names=("DNA",)).payload_with(np.ones((12,3,4)),None)
-    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.RUNTIME_SLICE,axis_size=12)
+    source = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis,source_image_names=("DNA",)).payload_with(np.ones((12,3,4)),None)
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis,axis_size=12)
     def forbidden(*args, **kwargs):
         raise AssertionError("Prepared authored raw target queried a live signature")
     monkeypatch.setattr(inspect,"signature",forbidden)
@@ -533,7 +533,7 @@ def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request
     monkeypatch.setattr(CallableContract, "resolve_raw_runtime_callable", resolve_once)
     monkeypatch.setattr(CallableContract, "from_callable", reject_reconstruction)
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(np.ones((3, 4, 5), dtype=np.float32), None)
 
     result = CellProfilerFunctionContractExecutor().execute(
@@ -543,7 +543,7 @@ def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request
         {"scale": 4, "adapter_control": 17},
         execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -582,7 +582,7 @@ def test_flexible_dispatch_preserves_canonical_signature_control_defaults(
     )
     contract = _compiled_contract(decorated, FlexibleContract)
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(np.ones((3, 4, 5), dtype=np.float32), None)
 
     CellProfilerFunctionContractExecutor().execute(
@@ -592,7 +592,7 @@ def test_flexible_dispatch_preserves_canonical_signature_control_defaults(
         {},
         execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -637,7 +637,7 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
         if image_mode is AlignedStackExecution
         else (
             ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+                plane_axis=RuntimeSlicePlaneAxis
             ).payload_with(np.zeros((2, 2, 3), dtype=np.float32), None)
             if processing_contract is VolumetricToSliceContract
             else np.zeros((2, 3), dtype=np.float32)
@@ -652,7 +652,7 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
             ValueError,
             match=(
                 "DispatchProbeModule.*dispatch_probe.*"
-                "pure_3d.*RuntimePlaneAxis.SOURCE_BINDING"
+                "pure_3d.*SourceBindingPlaneAxis"
             ),
         ):
             CellProfilerFunctionContractExecutor().execute(
@@ -662,7 +662,7 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
                 {},
                 execution_mode=image_mode,
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     axis_size=2,
                 ),
             )
@@ -677,7 +677,7 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
         execution_mode=image_mode,
         plane_projection=(
             RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=2,
             )
             if image_mode is AlignedStackExecution
@@ -702,7 +702,7 @@ def test_aligned_pure_2d_consumes_unique_declared_source_binding_plane() -> None
         artifact_inputs=(image_spec,),
     )
     source_stack = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/tmp/site-1.tif", "/tmp/site-2.tif"),
             component_metadata=(({"site": "1"}), ({"site": "2"})),
@@ -728,7 +728,7 @@ def test_aligned_pure_2d_consumes_unique_declared_source_binding_plane() -> None
         {},
         execution_mode=composition.execution_mode,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -748,7 +748,7 @@ def test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution(
 
     spatial_domain = SourceSpatialDomain(source_shape_yx=(2, 3))
     source_stack = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_spatial_domain=spatial_domain,
         source_image_names=("Raw", "Raw"),
     ).payload_with(
@@ -783,7 +783,7 @@ def test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution(
         artifact_outputs=(output_spec,),
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
         source_aliases=("Raw", "Illum"),
     )
@@ -823,7 +823,7 @@ def test_aligned_execution_preserves_each_slice_inner_source_binding_axis(
         return image[0]
 
     pair = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("Orig", "Illum"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/tmp/orig.tif", "/tmp/illum.pkl"),
@@ -841,7 +841,7 @@ def test_aligned_execution_preserves_each_slice_inner_source_binding_axis(
         {},
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -873,7 +873,7 @@ def test_aligned_stack_type_mismatch_fails_before_raw_invocation() -> None:
             {},
             execution_mode=AlignedStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=2,
             ),
         )
@@ -923,7 +923,7 @@ def test_aligned_stack_requires_exact_compiled_runtime_slice_projection() -> Non
             {},
             execution_mode=AlignedStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=3,
             ),
         )
@@ -947,7 +947,7 @@ def test_aligned_stack_projects_runtime_plane_projection_kwarg_nominally() -> No
         Pure2DContract,
     )
     preserved = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
 
@@ -990,7 +990,7 @@ def test_declared_output_axis_contextualizes_multiple_canonical_outputs(
         outputs = np.stack((np.asarray(image) + 1, np.asarray(image) + 2))
         return (
             ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+                plane_axis=RuntimeSlicePlaneAxis
             ).payload_with(outputs, None),
             trailing,
         )
@@ -1013,7 +1013,7 @@ def test_declared_output_axis_contextualizes_multiple_canonical_outputs(
         {},
         execution_mode=execution_mode,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -1054,7 +1054,7 @@ def test_multi_canonical_output_rejects_undeclared_array_axis() -> None:
             {},
             execution_mode=FullStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=2,
             ),
         )
@@ -1066,7 +1066,7 @@ def test_multi_canonical_output_requires_exact_projection_cardinality() -> None:
             tuple(np.asarray(image) + output_index for output_index in range(3))
         )
         return ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            plane_axis=RuntimeSlicePlaneAxis
         ).payload_with(outputs, None)
 
     callable_contract = _compiled_contract(
@@ -1089,7 +1089,7 @@ def test_multi_canonical_output_requires_exact_projection_cardinality() -> None:
             {},
             execution_mode=FullStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=3,
             ),
         )
@@ -1140,7 +1140,7 @@ def test_aligned_stack_transposes_multiple_canonical_outputs_across_runtime_slic
         {},
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=runtime_slice_count,
         ),
     )
@@ -1179,7 +1179,7 @@ def test_aligned_stack_preserves_one_scalar_output_per_declared_surface() -> Non
         {},
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -1209,7 +1209,7 @@ def test_aligned_stack_aggregates_one_canonical_output_for_one_runtime_slice() -
         {},
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
     )
@@ -1242,7 +1242,7 @@ def test_aligned_stack_unwraps_one_declared_surface_after_slice_transpose() -> N
         {},
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -1278,7 +1278,7 @@ def test_aligned_stack_rejects_canonical_output_surface_count_mismatch() -> None
             {},
             execution_mode=AlignedStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=1,
             ),
         )

@@ -1,6 +1,9 @@
 """Nominal runtime object-label values and transformations."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import (
@@ -36,14 +39,11 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainDeclaration,
     ObjectLabelDomainMetadata,
     ObjectLabelDomainMetadataStrategy,
-    ObjectLabelDomainScope,
     ObjectLabelIdDomainStrategy,
-    ObjectLabelPlaneDomainStrategy,
     PreserveSourceObjectLabelDomainDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
-    RuntimePlaneAxisStrategy,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceIdentityProjectableValue,
 )
@@ -291,7 +291,7 @@ class ObjectLabelVariantData:
     ) -> "ObjectLabelVariantData":
         """Project every present variant onto one runtime slice."""
         return self.project_plane(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_index=slice_index,
             plane_count=slice_count,
         )
@@ -299,7 +299,7 @@ class ObjectLabelVariantData:
     def project_plane(
         self,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
         plane_index: int,
         plane_count: int,
     ) -> "ObjectLabelVariantData":
@@ -327,7 +327,7 @@ class ObjectLabelVariantData:
     def project_label_data_plane(
         labels: ObjectLabelData,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
         plane_index: int,
         plane_count: int,
     ) -> ObjectLabelData:
@@ -442,7 +442,7 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
         return super().in_representation(representation)
 
     def project_plane(
-        self, *, plane_axis: RuntimePlaneAxis, plane_index: int, plane_count: int,
+        self, *, plane_axis: type[RuntimePlaneAxis], plane_index: int, plane_count: int,
     ) -> ObjectLabelVariantData:
         self.validate_plane_count(plane_count, "Object-label data plane projection")
         if plane_index < 0 or plane_index >= plane_count:
@@ -559,7 +559,7 @@ class ObjectLabelValue(
     variant_data: ObjectLabelVariantData
     representation: ObjectLabelRepresentation
     domain: ObjectLabelDomain
-    plane_axis: RuntimePlaneAxis | None
+    plane_axis: type[RuntimePlaneAxis]
     parent_image_source_voxel_spacing: SourceVoxelSpacing
 
     def object_label_domain(self) -> ObjectLabelDomain:
@@ -570,9 +570,7 @@ class ObjectLabelValue(
         declared_identity: MeasurementObjectRowIdentity,
     ) -> MeasurementObjectRowIdentity:
         """Project declared row identity through this label value's domain scope."""
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            self.domain.scope
-        ).measurement_object_row_identity(declared_identity)
+        return self.domain.scope.measurement_object_row_identity(declared_identity)
 
     def validate_object_label_variants(self) -> None:
         if not isinstance(self.variant_data, ObjectLabelVariantData):
@@ -637,9 +635,7 @@ class ObjectLabelValue(
         """Return an image payload in this value's exact object-label domain."""
 
         labels = object_label_dense_array(self)
-        domain_strategy = ObjectLabelPlaneDomainStrategy.for_enum_member(
-            self.object_label_domain().scope
-        )
+        domain_strategy = self.object_label_domain().scope
         metadata = self.metadata.with_source_provenance(
             domain_strategy.measurement_reference_source_provenance(self)
         )
@@ -650,38 +646,47 @@ class ObjectLabelValue(
     def declared_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
         """Return the exact runtime plane axis declared by this label value."""
         domain = self.object_label_domain()
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            domain.scope
-        ).value_projection(self)
+        return domain.scope.value_projection(self)
 
     def measurement_planes(self) -> tuple["ObjectLabelValue", ...]:
         """Return values projected through the declared label-plane domain."""
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            self.object_label_domain().scope
-        ).declared_measurement_planes(self)
+        return self.object_label_domain().scope.declared_measurement_planes(self)
 
     def measurement_plane_domains(self) -> tuple[tuple[int, ...], ...]:
         """Return object-ID domains in declared measurement-plane order."""
         domain = self.object_label_domain()
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            domain.scope
-        ).plane_domains(
+        return domain.scope.plane_domains(
             self,
             domain=domain,
         )
 
+    def runtime_slice_projection(self) -> RuntimePlaneAxisValueProjection | None:
+        """Return the declared plane projection when its planes are runtime slices."""
+        projection = self.declared_plane_projection()
+        if projection is not None and projection.axis.one_plane_per_runtime_slice:
+            return projection
+        return None
+
     def runtime_slice_plane_count(self) -> int | None:
         """Return the declared runtime-slice plane count, when present."""
-        projection = self.declared_plane_projection()
-        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            return None
-        return projection.axis_size
+        projection = self.runtime_slice_projection()
+        return None if projection is None else projection.axis_size
+
+    def for_runtime_slice(self, slice_index: int) -> "ObjectLabelValue":
+        """Return the labels of one runtime slice; other label values are unchanged."""
+        projection = self.runtime_slice_projection()
+        if projection is None:
+            return self
+        return self.value_for_slice(projection.selected_plane(slice_index))
 
     # -- RuntimeSliceProjectableValue -------------------------------------
 
     def runtime_slice_count(self) -> int | None:
-        if self.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            return None
+        if self.plane_axis.one_plane_per_runtime_slice:
+            return self._declared_runtime_slice_count()
+        return None
+
+    def _declared_runtime_slice_count(self) -> int:
         plane_count = self.declared_plane_count()
         if plane_count is None:
             from openhcs.core.runtime_slice_projection import (
@@ -706,7 +711,7 @@ class ObjectLabelValue(
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Object labels have no nominal plane-stack contract for their "
-                f"declared {context.axis.value!r} axis."
+                f"declared {context.axis.name!r} axis."
             )
         if plane_count != context.axis_size:
             raise ValueError(
@@ -764,8 +769,8 @@ class ObjectLabelValue(
         del output
         return (
             plane_projection is not None
-            and plane_projection.plane_index is None
-            and self.metadata.plane_axis is None
+            and plane_projection.preserves_complete_axis
+            and self.metadata.plane_axis.unstacked
             and not self.metadata.persists_whole_image()
             and np.ndim(object_label_dense_array(self)) >= 3
         )
@@ -779,7 +784,7 @@ class ObjectLabelValue(
         source_metadata = self.metadata
         if source_metadata.persists_whole_image():
             return source_metadata.derive_payload(self, output, plane_projection=None)
-        if plane_projection is None or plane_projection.plane_index is not None:
+        if plane_projection is None or plane_projection.selects_one_plane:
             return source_metadata.derive_payload(
                 self, output, plane_projection=plane_projection,
             )
@@ -815,7 +820,7 @@ class ObjectLabelValue(
         if slice_count is None:
             return (self,)
         projection = RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=slice_count,
+            axis=RuntimeSlicePlaneAxis, axis_size=slice_count,
         )
         return tuple(
             self.value_for_slice(projection.selected_plane(index))
@@ -824,7 +829,7 @@ class ObjectLabelValue(
 
     def declared_plane_count(self) -> int | None:
         """Return this value's validated plane-scoped label cardinality."""
-        if self.domain.scope is not ObjectLabelDomainScope.PLANE:
+        if self.domain.scope.ids_span_payload:
             return None
         declared_domains = self.domain.declared_object_id_domains
         if not declared_domains:
@@ -838,9 +843,9 @@ class ObjectLabelValue(
 
     def validate_source_alignment(self, label_name: str) -> None:
         """Validate source-addressable provenance for every declared label plane."""
-        if self.domain.scope is ObjectLabelDomainScope.PAYLOAD:
+        if self.domain.scope.ids_span_payload:
             return
-        if self.domain.scope is not ObjectLabelDomainScope.PLANE:
+        if self.domain.scope.ids_span_payload:
             raise TypeError(
                 f"Unsupported object-label domain scope {self.domain.scope!r}."
             )
@@ -894,7 +899,7 @@ class ObjectLabelValue(
         source_provenance: SourceImageProvenance | None = None,
         source_spatial_domain: SourceSpatialDomain | None = None,
         parent_image_source_voxel_spacing: SourceVoxelSpacing | None = None,
-        plane_axis: RuntimePlaneAxis | None | object = _PRESERVE_PLANE_AXIS,
+        plane_axis: type[RuntimePlaneAxis] | object = _PRESERVE_PLANE_AXIS,
     ) -> Self:
         """Return this nominal carrier with exact replacement label semantics."""
         selected_representation = (
@@ -902,9 +907,7 @@ class ObjectLabelValue(
         )
         selected_domain = self.domain if domain is None else domain
         selected_plane_axis = (
-            ObjectLabelPlaneDomainStrategy.for_enum_member(
-                selected_domain.scope
-            ).value_plane_axis(self.plane_axis)
+            selected_domain.scope.value_plane_axis(self.plane_axis)
             if plane_axis is _PRESERVE_PLANE_AXIS
             else plane_axis
         )
@@ -968,13 +971,13 @@ class ObjectLabelValue(
             ObjectLabelVariantData(labels, variants),
             domain=object_label_domain_for_projected_label_plane(self, plane_index),
             source_provenance=self.source_provenance.for_source_plane(plane_index),
-            plane_axis=None,
+            plane_axis=NoPlaneAxis,
         )
 
     def with_measurement_labels(self, labels: ObjectLabelData) -> Self:
         """Return measurement-time labels in this value's declared domain."""
         variants = ObjectLabelVariantData.compatible_replacement(self, labels)
-        if self.domain.scope is ObjectLabelDomainScope.PLANE:
+        if self.domain.scope.ids_per_plane:
             plane_count = self.declared_plane_count()
             if plane_count is None:
                 raise ValueError(
@@ -1016,7 +1019,7 @@ class ObjectLabelValue(
             variants,
             domain=object_label_domain_for_projected_label_plane(self, plane_index),
             source_provenance=self.source_provenance.for_source_plane(plane_index),
-            plane_axis=None,
+            plane_axis=NoPlaneAxis,
         )
 
     def with_runtime_slice_projection(
@@ -1028,7 +1031,7 @@ class ObjectLabelValue(
         source_plane_indices: tuple[int, ...] | None,
     ) -> "ObjectLabelValue":
         """Return this carrier projected onto one runtime slice."""
-        if self.plane_axis is None:
+        if self.plane_axis.unstacked:
             return self
         source_variants = self.variant_data
         variants = (
@@ -1056,12 +1059,10 @@ class ObjectLabelValue(
         )
         projected_plane_count = (
             len(projected_domain.declared_object_id_domains)
-            if projected_domain.scope is ObjectLabelDomainScope.PLANE
+            if projected_domain.scope.ids_per_plane
             else 1
         )
-        projected_axis = RuntimePlaneAxisStrategy.for_enum_member(
-            self.plane_axis
-        ).projected_axis(projected_plane_count)
+        projected_axis = self.plane_axis.projected_axis(projected_plane_count)
         slice_metadata = self.metadata.for_grouped_source_plane_projection(
             source_plane_indices=source_plane_indices,
             runtime_plane_index=slice_index,
@@ -1131,17 +1132,13 @@ class ObjectLabelValue(
         self.representation = ObjectLabelRepresentation(
             self.representation,
         )
-        if self.plane_axis is not None:
-            self.plane_axis = RuntimePlaneAxis(
-                self.plane_axis,
-            )
-        if self.domain.scope is ObjectLabelDomainScope.PAYLOAD:
-            if self.plane_axis is not None:
+        if self.domain.scope.ids_span_payload:
+            if self.plane_axis.leads_data:
                 raise ValueError(
                     f"{value_label} payload-scoped labels cannot declare a plane axis."
                 )
-        elif self.domain.scope is ObjectLabelDomainScope.PLANE:
-            if self.plane_axis is None:
+        elif self.domain.scope.ids_per_plane:
+            if self.plane_axis.unstacked:
                 raise ValueError(
                     f"{value_label} plane-scoped labels require a declared plane axis."
                 )
@@ -1274,7 +1271,7 @@ def object_label_source_context_provenance(
     """Merge image provenance into labels without reviving stale stack axes."""
     label_provenance = label.source_provenance
     image_provenance = image.metadata.source_provenance
-    if label.domain.scope is ObjectLabelDomainScope.PLANE:
+    if label.domain.scope.ids_per_plane:
         plane_count = label.declared_plane_count()
         if plane_count is None:
             raise ValueError(
@@ -1286,7 +1283,7 @@ def object_label_source_context_provenance(
                 image_provenance = runtime_image_values.ImagePayloadMetadata.compose(
                     (image,),
                     mode=(
-                        runtime_image_values.ImagePayloadMetadataCompositionMode.STACK
+                        RuntimeSlicePlaneAxis
                     ),
                 ).source_provenance
             else:
@@ -1317,7 +1314,7 @@ class ObjectLabelPayload(ObjectLabelValue):
 
     representation: ObjectLabelRepresentation = ObjectLabelRepresentation.DENSE_LABELS
     domain: ObjectLabelDomain = field(default_factory=ObjectLabelDomain)
-    plane_axis: RuntimePlaneAxis | None = None
+    plane_axis: type[RuntimePlaneAxis] = NoPlaneAxis
     parent_image_source_voxel_spacing: SourceVoxelSpacing = field(
         default_factory=SourceVoxelSpacing
     )
@@ -1356,7 +1353,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
     source_image_name: str | None = None
     representation: ObjectLabelRepresentation = ObjectLabelRepresentation.DENSE_LABELS
     domain: ObjectLabelDomain = field(default_factory=ObjectLabelDomain)
-    plane_axis: RuntimePlaneAxis | None = None
+    plane_axis: type[RuntimePlaneAxis] = NoPlaneAxis
     parent_image_source_voxel_spacing: SourceVoxelSpacing = field(
         default_factory=SourceVoxelSpacing
     )
@@ -1405,9 +1402,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
                     metadata.object_label_source_spatial_domain()
                 )
             )
-            plane_axis = ObjectLabelPlaneDomainStrategy.for_enum_member(
-                payload.domain.scope
-            ).value_plane_axis(payload.plane_axis)
+            plane_axis = payload.domain.scope.value_plane_axis(payload.plane_axis)
             variants = variants.in_representation(payload.representation)
             if isinstance(payload, ObjectLabelSet):
                 payload.require_name()
@@ -1456,11 +1451,28 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         axis_size: int,
     ) -> int | None:
         """Resolve source aliases only when this label set declares that axis."""
-        if self.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
-            return None
-        return self.source_provenance.source_alias_plane_index(
-            source_aliases,
-            axis_size,
+        if self.plane_axis.one_plane_per_source_binding:
+            return self.source_provenance.source_alias_plane_index(
+                source_aliases,
+                axis_size,
+            )
+        return None
+
+    def source_aliases_select_one_plane(self) -> bool:
+        """Return whether source-binding labels resolve their own aliases to one plane."""
+        aliases = self.source_aliases
+        if not aliases:
+            raise ValueError(
+                "Source-binding object labels require explicit source aliases."
+            )
+        declared_projection = self.declared_plane_projection()
+        if declared_projection is None:
+            raise ValueError(
+                "Source-binding object labels require a declared plane projection."
+            )
+        return (
+            self.source_alias_plane_index(aliases, declared_projection.axis_size)
+            is not None
         )
 
     def object_label_semantic_identity(self) -> tuple[tuple[str, Hashable], ...]:
@@ -2263,11 +2275,11 @@ def object_label_domain_for_projected_label_plane(
 ) -> ObjectLabelDomain:
     """Return the payload-domain object IDs carried by one selected plane."""
     domain = source.object_label_domain()
-    if domain.scope is ObjectLabelDomainScope.PAYLOAD:
+    if domain.scope.ids_span_payload:
         return domain
     plane_domain = domain.project_planes((plane_index,))
     return ObjectLabelDomain.declared(
-        scope=ObjectLabelDomainScope.PAYLOAD,
+        scope=PayloadLabelScope,
         declared_object_count=plane_domain.declared_object_count,
         declared_object_ids=plane_domain.declared_object_ids,
     )

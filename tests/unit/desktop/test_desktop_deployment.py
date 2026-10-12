@@ -11,10 +11,7 @@ from pathlib import Path
 import pytest
 
 from openhcs.desktop import deployment as desktop_deployment
-from openhcs.agent.runtime_platform import (
-    MacOSRuntimePlatform,
-    WindowsRuntimePlatform,
-)
+from formbridge.runtime_platform import MacOSRuntimePlatform, WindowsRuntimePlatform
 from openhcs.desktop.deployment import (
     DesktopDeployment,
     DesktopDeploymentContext,

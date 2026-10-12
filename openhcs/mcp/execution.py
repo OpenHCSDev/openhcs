@@ -4,19 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from concurrent.futures import Future
 from contextvars import copy_context
 import threading
 from typing import Any, ParamSpec, TypeVar
 
-from PyQt6.QtCore import QCoreApplication, QEventLoop, QThread
-from polystore import cleanup_backend_connections
-from pyqt_reactive.core.future_completion import FutureCompletion
-from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
-from pyqt_reactive.services.ui_thread_dispatch import (
-    UiThreadDispatcher,
-    UiThreadDispatchTimeoutError,
+from formbridge.services.async_operation_executor import AsyncOperationExecutor
+from formbridge.services.main_thread_dispatch import (
+    MainThreadDispatchTimeoutError,
+    QueuedMainThreadDispatcher,
 )
+from polystore import cleanup_backend_connections
 
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 
@@ -24,31 +21,29 @@ ParametersT = ParamSpec("ParametersT")
 ResultT = TypeVar("ResultT")
 
 
-class McpQueuedCallNotStartedError(AgentFacingErrorMixin, UiThreadDispatchTimeoutError):
-    """Original dispatch owner cancelled this callback before it began."""
+class McpQueuedCallNotStartedError(AgentFacingErrorMixin, MainThreadDispatchTimeoutError):
+    """The dispatcher cancelled this callback before it began."""
 
     agent_error_code = "mcp_call_not_started"
     agent_error_hint = (
-        "The Qt dispatcher cancelled this queued callback before invocation. "
+        "The main-thread dispatcher cancelled this queued callback before invocation. "
         "This call did not execute; it created no runtime process or handle. "
         "This is not an uncertain started operation. Preserve its failed receipt "
         "and resolve the occupied main-thread work before a separate new attempt."
     )
 
 
-class McpMainThreadDispatcher(UiThreadDispatcher):
-    """Extend the original Qt dispatch owner with request-context propagation.
+class McpMainThreadDispatcher(QueuedMainThreadDispatcher):
+    """Run MCP application work on the process main thread with request context.
 
-    ObjectState operations also require the process main thread in a headless
-    server. Absence of a Qt application must not authorize a worker thread.
+    ObjectState operations require the process main thread in a headless server,
+    so the dispatcher must be built there.
     """
 
-    @staticmethod
-    def _is_ui_thread() -> bool:
-        return (
-            threading.current_thread() is threading.main_thread()
-            and UiThreadDispatcher._is_ui_thread()
-        )
+    def __init__(self) -> None:
+        if threading.current_thread() is not threading.main_thread():
+            raise RuntimeError("The MCP dispatcher must be built on the process main thread.")
+        super().__init__()
 
     def call(
         self, callback: Callable[[], ResultT], *, timeout_ms: int = 5000
@@ -59,35 +54,28 @@ class McpMainThreadDispatcher(UiThreadDispatcher):
         )
 
     @staticmethod
-    def _dispatch_timeout_error() -> UiThreadDispatchTimeoutError:
-        """Project only the original dispatch owner's successful cancellation.
+    def _dispatch_timeout_error() -> MainThreadDispatchTimeoutError:
+        """Project only the dispatcher's successful cancellation.
 
-        The owner passes this error to its queued call's atomic cancel(). A
+        The dispatcher passes this error to its queued call's atomic cancel(). A
         callback's own exception, including a dispatch timeout after a side
         effect, remains the callback outcome and never passes through this hook.
         """
-        return McpQueuedCallNotStartedError("Timed out waiting for UI thread dispatch.")
+        return McpQueuedCallNotStartedError("Timed out waiting for main-thread dispatch.")
 
     async def invoke(self, callback: Callable[[], ResultT]) -> ResultT:
-        """Await the original affine call without blocking SDK notifications."""
-        if self._is_ui_thread():
+        """Await one main-thread call without blocking SDK notifications."""
+        if self._is_owner_thread():
             return self.call(callback)
         return await asyncio.to_thread(self.call, callback)
 
 
 class McpTransportExecutor(AsyncOperationExecutor):
-    """Run the SDK loop off-main while the original Qt dispatcher owns calls.
-
-    QCoreApplication supplies only an event dispatcher, not a GUI or native
-    execution server. Compiler, catalog and kernel placement remain unchanged.
-    """
+    """Run the SDK loop off-main while the main thread serves dispatched calls."""
 
     def __init__(self) -> None:
         if threading.current_thread() is not threading.main_thread():
             raise RuntimeError("MCP transport must be started on the process main thread.")
-        self._application = QCoreApplication.instance() or QCoreApplication([])
-        if QThread.currentThread() != self._application.thread():
-            raise RuntimeError("MCP transport requires the Qt application main thread.")
         super().__init__(max_workers=1)
         self.dispatcher = McpMainThreadDispatcher()
 
@@ -97,22 +85,13 @@ class McpTransportExecutor(AsyncOperationExecutor):
         *args: ParametersT.args,
         **kwargs: ParametersT.kwargs,
     ) -> ResultT:
-        """Join one transport using event-driven completion, not a new poller."""
-        loop = QEventLoop()
+        """Serve main-thread calls until the transport operation finishes."""
         future = self.submit(operation, *args, **kwargs)
-
-        def finished(completed: Future[ResultT]) -> None:
-            loop.quit()
-
-        completion = FutureCompletion(future, finished)
-        if not future.done():
-            loop.exec()
-        # Keep the original completion relay alive through the event loop.
-        del completion
+        self.dispatcher.run_until(future)
         return future.result()
 
     def close(self) -> None:
-        """Release process resources on their original main-thread owner.
+        """Release process resources on the main thread.
 
         Both transports reach this boundary after their SDK operation finishes.
         PolyStore owns the lazy ImageJ context and registered resource cleanup;

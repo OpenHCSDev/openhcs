@@ -6,14 +6,15 @@ import pytest
 from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
     RuntimeExecutionStatus,
     RuntimeServerInfo,
     RuntimeServerScanResult,
 )
-from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+from formbridge.bridge.dto import UiWindowSnapshotResult
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,
     ViewerWindowImageSampleResult,

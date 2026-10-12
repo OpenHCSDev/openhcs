@@ -7,7 +7,7 @@ from typing import ClassVar
 from pyqt_reactive.windows.config_window import ConfigDocumentFormat, ConfigWindow
 
 from openhcs.core.config_document import ConfigDocumentAuthority
-from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
 
 class OpenHCSConfigDocument(ConfigDocumentFormat):
@@ -35,4 +35,4 @@ class OpenHCSConfigWindow(ConfigWindow):
     def window_manager_scope_id(self) -> str | None:
         if self.scope_id is None:
             return None
-        return OpenHCSUiWindowId.agent_window_id_for_manager_scope(self.scope_id)
+        return UiStableWindowIdentityDeclaration.window_id_for_manager_scope(self.scope_id)

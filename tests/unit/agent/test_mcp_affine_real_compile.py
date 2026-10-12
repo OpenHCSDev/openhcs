@@ -5,7 +5,6 @@ from pathlib import Path
 import threading
 from types import SimpleNamespace
 
-from PyQt6.QtCore import QCoreApplication, QThread
 
 from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -47,7 +46,6 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
     class AffineCompileGateway(InProcessCompileInspectionGateway):
         def compile(self, request):
             assert threading.current_thread() is threading.main_thread()
-            assert QThread.currentThread() == QCoreApplication.instance().thread()
             assert identity.get() == "exact-source-request"
             calls.append(request)
             return super().compile(request)

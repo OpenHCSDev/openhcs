@@ -8,11 +8,12 @@ from typing import TYPE_CHECKING, ClassVar
 
 from zmqruntime.startup import EndpointStartupPresentationTarget
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.session import (
     DatasetPipelineSourceRequest,
     DatasetRootsRequest,
+    DatasetRowState,
     DatasetRunRequest,
     DatasetTargetsRequest,
     NoArgumentsRequest,
@@ -24,6 +25,13 @@ from openhcs.authoring.session.operations import (
     RendererOperation,
     SessionOperation,
 )
+from openhcs.constants.constants import (
+    OrchestratorCompileFailed,
+    OrchestratorExecFailed,
+    OrchestratorInitFailed,
+    OrchestratorState,
+)
+from openhcs.core.execution_state import TerminalExecutionStatus
 
 if TYPE_CHECKING:
     pass
@@ -104,9 +112,34 @@ class InitializedTargetsOperation(DatasetTargetsOperation):
 
 
 class DatasetWorkflowOperation(SessionOperation):
-    """One step of the dataset workflow (initialize, compile, run)."""
+    """One step of the dataset workflow (initialize, compile, run).
+
+    Each step also says when a dataset row shows it finished or failed.
+    """
 
     workflow_name: ClassVar[str]
+    failed_orchestrator_states: ClassVar[tuple[type[OrchestratorState], ...]] = ()
+    terminal_state_is_idempotent: ClassVar[bool] = False
+    """A row already in the terminal state proves completion without a change."""
+
+    @classmethod
+    def terminal_for_row(cls, row: DatasetRowState) -> bool:
+        """Whether ``row`` shows this step finished."""
+        raise NotImplementedError(f"{cls.__name__} declares no terminal row state.")
+
+    @classmethod
+    def failed_for_row(cls, row: DatasetRowState) -> bool:
+        """Whether ``row`` shows this step failed."""
+        failed_terminal_statuses = {
+            name
+            for name, status in TerminalExecutionStatus.__registry__.items()
+            if status.counts_as_failed
+        }
+        failed_states = {state.name for state in cls.failed_orchestrator_states}
+        return (
+            row.terminal_status in failed_terminal_statuses
+            or row.orchestrator_state in failed_states
+        )
 
 
 class AddDatasets(PromptedOperation, HeadlessOperation):
@@ -182,6 +215,8 @@ class EditDatasetConfig(InitializedTargetsOperation, RendererOperation):
 class InitializeDatasets(IdleTargetsOperation, DatasetWorkflowOperation, HeadlessOperation):
     operation_id = "initialize_datasets"
     workflow_name = "INIT"
+    failed_orchestrator_states = (OrchestratorInitFailed,)
+    terminal_state_is_idempotent = True
     label = "Init"
     tooltip = "Initialize selected datasets"
     description = (
@@ -189,6 +224,10 @@ class InitializeDatasets(IdleTargetsOperation, DatasetWorkflowOperation, Headles
         "its scope kind declares). Initialization writes dataset metadata."
     )
     side_effects = ("writes_dataset_metadata",)
+
+    @classmethod
+    def terminal_for_row(cls, row: DatasetRowState) -> bool:
+        return row.init_pending is False and row.initialized is True
 
     @classmethod
     def run(cls, session, request) -> SessionOperationResult:
@@ -221,6 +260,7 @@ class CompileDatasets(
 ):
     operation_id = "compile_datasets"
     workflow_name = "COMPILE"
+    failed_orchestrator_states = (OrchestratorCompileFailed,)
     label = "Compile"
     tooltip = "Compile dataset pipelines"
     description = (
@@ -228,6 +268,10 @@ class CompileDatasets(
         "starting it as needed)."
     )
     side_effects = ("submits_compile_jobs",)
+
+    @classmethod
+    def terminal_for_row(cls, row: DatasetRowState) -> bool:
+        return row.compile_pending is False and row.compiled is True
 
     @classmethod
     def resolved(cls, session) -> type[SessionOperation]:
@@ -307,6 +351,7 @@ class WaitForServer(SessionOperation):
 class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOperation):
     operation_id = "run_datasets"
     workflow_name = "RUN"
+    failed_orchestrator_states = (OrchestratorExecFailed,)
     label = "Run"
     tooltip = "Run or stop dataset execution"
     description = (
@@ -315,6 +360,10 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
     )
     request = DatasetRunRequest
     side_effects = ("submits_execution_jobs",)
+
+    @classmethod
+    def terminal_for_row(cls, row: DatasetRowState) -> bool:
+        return row.execution_active is False and row.queued is False and row.has_terminal_status
 
     @classmethod
     def resolved(cls, session) -> type[SessionOperation]:

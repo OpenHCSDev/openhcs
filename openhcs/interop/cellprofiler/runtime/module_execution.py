@@ -1,6 +1,7 @@
 """Execution bridge from generated CellProfiler modules to OpenHCS runtime state."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
 import time
@@ -51,7 +52,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -705,7 +705,7 @@ class CellProfilerModuleExecutor:
         )
         plane_projection = (
             preserved_image_plane_projection(payload, adapter, source_aliases)
-            if payload.metadata.plane_axis is not None
+            if payload.metadata.plane_axis.leads_data
             else None
         )
         return CellProfilerMeasurementImage(
@@ -798,7 +798,7 @@ class CellProfilerModuleExecutor:
             )
             runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
                 adapter,
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
                 (),
             )
             projected_binding = (
@@ -811,7 +811,7 @@ class CellProfilerModuleExecutor:
                     ),
                 )
                 if runtime_projection is not None
-                and runtime_projection.plane_index is not None
+                and runtime_projection.selects_one_plane
                 else None
             )
             source_names = []
@@ -1268,13 +1268,13 @@ class CellProfilerModuleExecutor:
         )
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         current_runtime_payload = current_image
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
         ):
             current_runtime_payload = cast(
                 RuntimeCallableArgument,
@@ -1290,7 +1290,7 @@ class CellProfilerModuleExecutor:
             )
             if (
                 runtime_projection is not None
-                and runtime_projection.plane_index is not None
+                and runtime_projection.selects_one_plane
                 and current_image_payload.metadata.plane_axis
                 is runtime_projection.axis
             ):
@@ -1480,12 +1480,12 @@ class CellProfilerModuleExecutor:
             phase_started_at = time.perf_counter()
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
         ):
             runtime_kwargs = cast(
                 dict[str, RuntimeCallableArgument],

@@ -17,18 +17,13 @@ from openhcs.authoring.session.datasets import (
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.authoring.session.step_scopes import FunctionStepScopeToken
-from pyqt_reactive.services.function_pattern_code_document import (
+from formbridge.services.function_pattern_code_document import (
     FunctionPatternCodeDocumentService,
     FunctionPatternValue,
     function_pattern_authority,
 )
-from pyqt_reactive.services.pattern_data_manager import (
-    FUNC_EDITOR_PATTERN_TOKENS_META_KEY,
-)
-from pyqt_reactive.services.scope_token_service import (
-    ScopeTokenService,
-    reconcile_occurrence_tokens,
-)
+from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
+from formbridge.services.scope_token_service import ScopeTokenService, reconcile_occurrence_tokens
 
 PipelineFunctionPattern = FunctionSpec | None
 FunctionPatternTokenTree = list[str] | dict[str, "FunctionPatternTokenTree"] | None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.session import (
     DatasetRequest,
     PipelineFileRequest,

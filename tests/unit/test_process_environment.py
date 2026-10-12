@@ -5,7 +5,7 @@ from polystore.imagej_distribution import (
     ImageJArchiveDownloadPolicy,
 )
 
-from openhcs.agent.runtime_platform import WindowsRuntimePlatform
+from formbridge.runtime_platform import WindowsRuntimePlatform
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 

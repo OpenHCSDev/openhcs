@@ -11,7 +11,7 @@ from napari.components import ViewerModel
 from qtpy.QtCore import QEvent, Signal
 from qtpy.QtGui import QColor, QImage, QPainter
 from qtpy.QtWidgets import QApplication, QWidget
-from pyqt_reactive.services.window_snapshot import WindowSnapshotFrameCondition
+from formbridge.services.window_snapshot import WindowSnapshotFrameCondition
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import TransportEndpoint
 from zmqruntime.timeouts import OperationDeadline
