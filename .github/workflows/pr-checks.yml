@@ -1,0 +1,173 @@
+# Cheap pull-request checks (owner decision 2026-10-12): merges do not wait on
+# the full matrix in integration-tests.yml, which gates PyPI releases instead.
+# A pull request runs these two Linux jobs plus refactor-guardrails.yml.
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+  OPENHCS_CPU_ONLY: "true"
+
+concurrency:
+  group: pr-checks-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The test files this pull request adds or changes, tests/core, and the tests
+  # that read the workflow and release files. The whole of tests/unit runs in
+  # the full matrix and in the session lead's local run, not here.
+  unit-subset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: xcb
+      QT_XCB_GL_INTEGRATION: xcb_glx
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install native Qt and software OpenGL test runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1 libegl1 libgl1-mesa-dri libglx-mesa0 libopengl0 \
+            libdbus-1-3 libfontconfig1 libglib2.0-0 libxcb-shape0 \
+            libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
+            libxcb-xfixes0 xauth xvfb
+
+      - name: Build and install the candidate wheels
+        run: |
+          python -m pip install --upgrade pip build
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --extras dev,dev-gui,gui,cellprofiler-compat,fiji,mcp-http,napari
+
+      - name: Materialize tracked Official30 unit fixture
+        run: |
+          CELLPROFILER_EXAMPLES_ROOT="$RUNNER_TEMP/openhcs-unit/cellprofiler-examples"
+          echo "CELLPROFILER_EXAMPLES_ROOT=$CELLPROFILER_EXAMPLES_ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$CELLPROFILER_EXAMPLES_ROOT/ExampleHuman/images"
+          cp \
+            benchmark/native_refs/official30_scoped_rows/ExampleHuman_ExampleHuman_wells_include_first1/native_cellprofiler_headless/ExampleHuman.cppipe \
+            "$CELLPROFILER_EXAMPLES_ROOT/ExampleHuman/ExampleHuman.cppipe"
+
+      - name: Run tests/core, the workflow tests and the changed test files
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          tests=(
+            tests/core
+            tests/unit/test_ci_action_pinning.py
+            tests/unit/test_ci_package_boundaries.py
+            tests/unit/test_mcp_release_workflow.py
+            tests/unit/test_release_readiness.py
+          )
+          if [ -n "$BASE" ]; then
+            merge_base=$(git merge-base "$BASE" "$HEAD")
+            while IFS= read -r -d '' changed; do
+              case "$(basename "$changed")" in
+                test_*.py) tests+=("$changed") ;;
+              esac
+            done < <(git diff --name-only --diff-filter=ACMR -z "$merge_base" "$HEAD" -- tests/unit tests/core)
+          fi
+          mapfile -t tests < <(printf '%s\n' "${tests[@]}" | sort -u)
+          printf 'selected: %s\n' "${tests[@]}"
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX" \
+            python scripts/run_installed_tests.py --repo-root "$GITHUB_WORKSPACE" -- \
+            "${tests[@]}" -n auto --dist loadfile -p no:randomly -q --tb=short \
+            -o faulthandler_timeout=120
+
+  # The same paths as .claude/verify/smoke_local.sh: datasets through the real
+  # entry points (MCP tools, the measured CLI in a child process, the Qt dataset
+  # list on a real execution server), then the live GUI with packaged MCP.
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      QT_QPA_PLATFORM: offscreen
+      XDG_CACHE_HOME: ${{ runner.temp }}/openhcs-smoke-cache
+      XDG_CONFIG_HOME: ${{ runner.temp }}/openhcs-smoke-config
+      XDG_DATA_HOME: ${{ runner.temp }}/openhcs-smoke-data
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install the Qt runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1 libegl1 libopengl0 libdbus-1-3 libfontconfig1 libglib2.0-0 \
+            libxkbcommon-x11-0
+
+      - name: Build and install the candidate wheels
+        run: |
+          python -m pip install --upgrade pip build
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --extras dev,dev-gui,gui,cellprofiler-compat,fiji,mcp-http,napari
+
+      - name: Run the smoke tests
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          if [ -f tests/smoke_tests.txt ]; then
+            mapfile -t tests < <(grep -v '^[[:space:]]*\(#\|$\)' tests/smoke_tests.txt)
+          else
+            tests=(
+              tests/integration/test_session_journey.py::test_headless_mcp_journey_adds_compiles_and_runs_a_dataset
+              tests/integration/test_session_journey.py::test_gui_journey_runs_the_same_operations_through_the_widgets
+              tests/integration/test_agent_observation_export_zmq.py::test_headless_observation_export_uses_ordinary_execution
+              tests/integration/test_agent_observation_export_zmq.py::test_measured_cli_uses_ordinary_source_session_and_shared_finalizer
+              tests/integration/test_measured_cli_session.py::test_read_only_source_plate_completes_and_stays_byte_identical
+            )
+          fi
+          python scripts/run_installed_tests.py --repo-root "$GITHUB_WORKSPACE" -- \
+            "${tests[@]}" -n 2 --dist load -p no:cacheprovider -p no:randomly -q --tb=short \
+            -o faulthandler_timeout=240 --durations=10
+
+      - name: Operate the installed GUI through packaged MCP
+        timeout-minutes: 8
+        run: |
+          mkdir -p "$RUNNER_TEMP/openhcs-smoke-evidence"
+          python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_gui.py" \
+            --forbid-import-root "$GITHUB_WORKSPACE" \
+            --evidence-directory "$RUNNER_TEMP/openhcs-smoke-evidence"
+
+      - name: Upload GUI smoke evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-smoke-evidence
+          path: ${{ runner.temp }}/openhcs-smoke-evidence
+          if-no-files-found: ignore
+          retention-days: 3

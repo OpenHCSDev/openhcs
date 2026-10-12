@@ -193,6 +193,65 @@ def _valid_sha256(value: object) -> bool:
     )
 
 
+class AuthoritySymbolError(ValueError):
+    """A pinned symbol cannot be read from its authority file."""
+
+
+def _symbol_nodes(body: list[ast.stmt], name: str) -> list[ast.stmt]:
+    nodes: list[ast.stmt] = []
+    for node in body:
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            if node.name == name:
+                nodes.append(node)
+        elif isinstance(node, ast.Assign):
+            if any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+                nodes.append(node)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == name:
+                nodes.append(node)
+    return nodes
+
+
+def authority_digest_of(authority_path: Path, symbols: list[str] | None = None) -> str:
+    """Return the digest an audit pins for one authority.
+
+    Without ``symbols`` the whole file is pinned. With ``symbols`` (dotted
+    names such as ``Compiler.compile`` in a Python file) only the source text
+    of those definitions is pinned, decorators included, so edits elsewhere in
+    the file and line shifts leave the pin valid.
+    """
+    content = authority_path.read_bytes()
+    if not symbols:
+        return hashlib.sha256(content).hexdigest()
+    text = content.decode("utf-8")
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as exc:
+        raise AuthoritySymbolError(f"cannot parse authority: {exc.msg}") from exc
+    lines = text.splitlines(keepends=True)
+    digest = hashlib.sha256()
+    for symbol in sorted(symbols):
+        nodes: list[ast.stmt] = [tree]  # type: ignore[list-item]
+        for part in symbol.split("."):
+            nodes = [
+                match
+                for node in nodes
+                if isinstance(node, (ast.Module, ast.ClassDef))
+                for match in _symbol_nodes(node.body, part)
+            ]
+        if not nodes:
+            raise AuthoritySymbolError(f"symbol is not defined: {symbol}")
+        digest.update(symbol.encode("utf-8") + b"\0")
+        for node in nodes:
+            first = min(
+                [node.lineno]
+                + [d.lineno for d in getattr(node, "decorator_list", [])]
+            )
+            segment = "".join(lines[first - 1 : node.end_lineno])
+            digest.update(textwrap.dedent(segment).encode("utf-8") + b"\0")
+    return digest.hexdigest()
+
+
 def validate_documentation_audit(
     doc_root: Path,
     audit_root: Path,
@@ -343,7 +402,9 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                if set(authority) != {"path", "sha256", "role"}:
+                if not {"path", "sha256", "role"} <= set(authority) or not set(
+                    authority
+                ) <= {"path", "sha256", "role", "symbols"}:
                     findings.append(
                         Finding(
                             audit_file,
@@ -428,18 +489,36 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                actual_authority_digest = hashlib.sha256(
-                    authority_path.read_bytes()
-                ).hexdigest()
-                if authority_digest != actual_authority_digest:
+                authority_symbols = authority.get("symbols")
+                if authority_symbols is not None and (
+                    not _nonempty_string_list(authority_symbols)
+                    or authority_path.suffix != ".py"
+                ):
                     findings.append(
                         Finding(
                             audit_file,
                             1,
-                            f"{source_path}: authority changed after review: "
-                            f"{authority_relative}",
+                            f"{source_path}: authority symbols must be a non-empty "
+                            f"list of names in a Python file: {authority_relative}",
                         )
                     )
+                else:
+                    try:
+                        unchanged = authority_digest == authority_digest_of(
+                            authority_path, authority_symbols
+                        )
+                        reason = ""
+                    except AuthoritySymbolError as exc:
+                        unchanged, reason = False, f": {exc}"
+                    if not unchanged:
+                        findings.append(
+                            Finding(
+                                audit_file,
+                                1,
+                                f"{source_path}: authority changed after review: "
+                                f"{authority_relative}{reason}",
+                            )
+                        )
                 if not authority_relative.startswith("docs/source/"):
                     has_non_documentation_authority = True
             if not has_non_documentation_authority:
@@ -794,7 +873,20 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_DOC_ROOT,
         help="active documentation file or root (default: docs/source)",
     )
+    parser.add_argument(
+        "--authority-digest",
+        nargs="+",
+        metavar=("PATH", "SYMBOL"),
+        help=(
+            "print the sha256 an audit entry pins for an authority file, "
+            "scoped to the given symbols when any are named, and exit"
+        ),
+    )
     args = parser.parse_args(argv)
+    if args.authority_digest:
+        authority_file, *symbols = args.authority_digest
+        print(authority_digest_of(Path(authority_file), symbols))
+        return 0
     doc_root = args.doc_root.resolve()
     if not doc_root.exists() or not (doc_root.is_dir() or doc_root.is_file()):
         parser.error(f"documentation target does not exist: {doc_root}")
