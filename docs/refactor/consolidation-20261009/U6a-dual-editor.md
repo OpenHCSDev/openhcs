@@ -101,6 +101,9 @@ Guards pass, `guardrails rc=0`, `smoke rc=0`, pyqt-reactive suite passes.
 
 ## Navigation ownership (design choice)
 
+Superseded by `U6-gui-integration.md`: the step form does not show `func`, so it no longer
+claims it, and two claims on one path now raise. The later-tab rule described below is removed.
+
 `CompositeWindowNavigationDriver` asks every driver and uses all that accept. It has no order. The
 step form's ObjectState holds `func`, so the step form's own driver accepts `func...` paths that the
 function tab also accepts. `TabbedEditorNavigationDriver` (a subclass of the composite) declares the

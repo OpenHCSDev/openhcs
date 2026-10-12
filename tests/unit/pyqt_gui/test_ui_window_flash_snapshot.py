@@ -284,7 +284,7 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
             return WindowRouteIndex((), ())
 
     scope_id = "native-navigation-receipt"
-    WindowManager.register(scope_id, window, NativeProofDriver(selected.append))
+    WindowManager.register(scope_id, window, NativeProofDriver(selected.append, form.owns_field_path))
     bridge.register_window_provider(ScopeOnlyProjection(None))
     try:
         accepted = bridge.navigate_window(
