@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -18,9 +18,16 @@ from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )
-from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.steps.function_step import FunctionStep
+from pycodify import SourceDocument
 
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PipelineStepsDocument(SourceDocument):
+    """The steps of one pipeline, saved as a Python file that assigns them."""
+
+    pipeline_steps: list[FunctionStep]
 
 
 class FunctionStepTransportAuthority:
@@ -35,13 +42,12 @@ class FunctionStepTransportAuthority:
     ) -> str:
         """Normalize and pycodify one public FunctionStep list."""
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment, generate_python_source
 
         steps = list(pipeline_steps)
         cls._require_function_steps(steps)
-        normalized = cls.normalize_pipeline(steps)
-        return generate_python_source(
-            Assignment(PipelineDocumentField.PIPELINE_STEPS.value, normalized),
+        return PipelineStepsDocument(
+            pipeline_steps=cls.normalize_pipeline(steps)
+        ).to_source(
             header="# Edit this pipeline and save to apply changes",
             clean_mode=clean_mode,
         )
@@ -52,13 +58,16 @@ class FunctionStepTransportAuthority:
         namespace: Mapping[str, object],
     ) -> list[FunctionStep]:
         """Require and normalize the public FunctionStep export."""
-        field_name = PipelineDocumentField.PIPELINE_STEPS.value
-        if field_name not in namespace:
-            raise ValueError(f"Pipeline source must define {field_name!r}.")
-        pipeline_steps = namespace[field_name]
+        return cls.normalized_steps(
+            PipelineStepsDocument.from_namespace(namespace).pipeline_steps
+        )
+
+    @classmethod
+    def normalized_steps(cls, pipeline_steps: object) -> list[FunctionStep]:
+        """Require a list of FunctionStep and normalize each member."""
         if type(pipeline_steps) is not list:
             raise TypeError(
-                f"{field_name} must be a list[FunctionStep], "
+                "pipeline_steps must be a list[FunctionStep], "
                 f"got {type(pipeline_steps).__name__}."
             )
         cls._require_function_steps(pipeline_steps)

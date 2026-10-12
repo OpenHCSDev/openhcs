@@ -19,7 +19,7 @@ from benchmark.metrics.time import TimeMetric
 from benchmark.pipelines.registry import NUCLEI_SEGMENTATION
 from benchmark.runner import run_benchmark
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
@@ -95,7 +95,7 @@ def test_openhcs_adapter_retains_declared_path_policy_and_explicit_exports(
     assert result.success is True
     assert result.provenance["csv_output_count"] > 0
     assert result.provenance["image_output_count"] == 0
-    submitted_config = ConfigDocumentAuthority.from_source(
+    submitted_config = ConfigDocumentCodec.from_source(
         (output_dir / "submitted_global_config.py").read_text(encoding="utf-8"),
         expected_config_type=GlobalPipelineConfig,
     )
