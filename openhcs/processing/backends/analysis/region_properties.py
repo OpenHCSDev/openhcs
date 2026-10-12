@@ -174,6 +174,14 @@ class SkimageNumpyLabelRegionPropertiesBackendStrategy(
     backend_provider = SkimageBackendProvider
     is_default_backend = False
 
+    def prepare_backend(self) -> None:
+        # Orientation is the one Numba kernel behind the scikit-image table,
+        # whose bounding-box columns are strided for several labels and
+        # contiguous for one.
+        labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)
+        self.measure_2d(labels, include_advanced=False)
+        self.measure_2d(np.minimum(labels, 1), include_advanced=False)
+
     def measure_2d(
         self,
         labels: np.ndarray,

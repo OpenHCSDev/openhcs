@@ -284,30 +284,6 @@ def _propagation_heap_pop(
 
 
 @njit(cache=True)
-def _propagate_labels_numba(
-    image: np.ndarray,
-    seed_labels: np.ndarray,
-    mask: np.ndarray,
-    weight: float,
-    max_distance: float,
-) -> np.ndarray:
-    output, distances = _propagate_labels_and_distances_numba(
-        image,
-        seed_labels,
-        mask,
-        weight,
-        max_distance,
-    )
-    if max_distance >= 0.0:
-        height, width = output.shape
-        for y in range(height):
-            for x in range(width):
-                if distances[y, x] > max_distance and seed_labels[y, x] <= 0:
-                    output[y, x] = 0
-    return output
-
-
-@njit(cache=True)
 def _propagate_labels_and_distances_numba(
     image: np.ndarray,
     seed_labels: np.ndarray,

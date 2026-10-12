@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from types import ModuleType
 
 from polystore import cleanup_backend_connections
+from polystore.base import ensure_storage_registry
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
@@ -27,10 +28,12 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.dataset_sources.discovery import discover_domain_registries
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.import_authority import ImportRootEndpoint
@@ -47,6 +50,7 @@ from openhcs.runtime.zmq_control import (
 from openhcs.runtime.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
     ZMQAuxiliaryExecutionParams,
+    ZMQAuxiliaryParamField,
     ZMQExecutionRequestPayload,
 )
 from openhcs.runtime.zmq_orchestrator_environment import (
@@ -148,8 +152,15 @@ class FunctionCatalogExecutionServer(ExecutionServer):
         self,
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
-        """Prepare catalog metadata before physical endpoint readiness."""
+        """Prepare the catalog and what a first request would otherwise run once.
+
+        The storage backend registry and the family registries that domains
+        extend are completed by their owners here, so workers forked after
+        this inherit them and no request pays for them.
+        """
         self._function_catalog_preparation.prepare_before_serving(status_callback)
+        ensure_storage_registry()
+        discover_domain_registries()
 
     def start(self) -> None:
         self.prepare_runtime_capabilities()
@@ -813,9 +824,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         export_path = request_context.auxiliary_params.runtime_observation_export_path
         if export_path is None:
             return
-
-        from openhcs.core.runtime_execution_validation import runtime_output_roots
-        from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
 
         execution_bundle = compilation.execution_bundle
         output_roots = runtime_output_roots(

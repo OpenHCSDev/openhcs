@@ -1713,6 +1713,15 @@ def _prepare_granularity_backend() -> None:
             element_radius=10,
             spectrum_length=5,
         )
+        # A subsampled spectrum takes object means from resampled values.
+        measure_granularity_objects.__wrapped__(
+            image,
+            labels,
+            subsample_size=0.25,
+            background_subsample_size=0.25,
+            element_radius=10,
+            spectrum_length=5,
+        )
 
 
 __all__ = [

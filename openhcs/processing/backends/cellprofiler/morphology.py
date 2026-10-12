@@ -1989,15 +1989,6 @@ class MorphologyBackendStrategy(
         """Fill enclosed background components smaller than a size limit."""
 
     @abstractmethod
-    def restore_removed_declump_basins(
-        self,
-        pre_declump_labels: np.ndarray,
-        labels_before_size_filter: np.ndarray,
-        labels_after_size_filter: np.ndarray,
-    ) -> np.ndarray:
-        """Restore removed watershed basins with one surviving original identity."""
-
-    @abstractmethod
     def local_maxima_by_label(
         self, image: np.ndarray, labels: np.ndarray, footprint: np.ndarray
     ) -> np.ndarray:
@@ -2243,18 +2234,6 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
             )
         return output
 
-    def restore_removed_declump_basins(
-        self,
-        pre_declump_labels: np.ndarray,
-        labels_before_size_filter: np.ndarray,
-        labels_after_size_filter: np.ndarray,
-    ) -> np.ndarray:
-        return _restore_removed_declump_basins_numba(
-            np.ascontiguousarray(pre_declump_labels, dtype=np.int64),
-            np.ascontiguousarray(labels_before_size_filter, dtype=np.int64),
-            np.ascontiguousarray(labels_after_size_filter, dtype=np.int64),
-        ).astype(np.asarray(labels_after_size_filter).dtype, copy=False)
-
     def local_maxima_by_label(
         self, image: np.ndarray, labels: np.ndarray, footprint: np.ndarray
     ) -> np.ndarray:
@@ -2341,6 +2320,11 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
             for writable_image in (False, True):
                 image = np.arange(9, dtype=dtype).reshape((3, 3))
                 image.flags.writeable = writable_image
+                # Named on this class: the OpenCV subclass replaces closing
+                # with cv2 and shares this preparation.
+                NumbaNumpyMorphologyBackendStrategy.grayscale_closing(
+                    self, image, footprint
+                )
                 for full_mask in (False, True):
                     for writable_mask in (False, True):
                         smoothing_mask = (
@@ -2432,16 +2416,6 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
             footprint_offsets.x_offsets,
             first_pass_is_dilation,
         )
-
-    def block_labels(
-        self, image_shape: tuple[int, int], block_size: int
-    ) -> tuple[np.ndarray, np.ndarray]:
-        if len(image_shape) != 2:
-            raise NotImplementedError(
-                "Numba morphology backend currently supports 2-D block labels."
-            )
-        height, width = image_shape
-        return _block_labels_2d_numba(int(height), int(width), max(1, int(block_size)))
 
     def blockwise_minimum(
         self, image: np.ndarray, mask: np.ndarray | None, block_size: int
@@ -2628,33 +2602,14 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
             size_predicate=size_predicate,
         )
 
-    def restore_removed_declump_basins(
-        self,
-        pre_declump_labels: np.ndarray,
-        labels_before_size_filter: np.ndarray,
-        labels_after_size_filter: np.ndarray,
-    ) -> np.ndarray:
-        pre_declump = np.asarray(pre_declump_labels)
-        before = np.asarray(labels_before_size_filter)
-        after = np.asarray(labels_after_size_filter)
-        if pre_declump.ndim != 2 or before.ndim != 2 or after.ndim != 2:
-            raise NotImplementedError(
-                "Numba morphology backend currently supports 2-D declump basin restoration."
-            )
-        if pre_declump.shape != before.shape or before.shape != after.shape:
-            raise ValueError(
-                f"Declump basin restoration inputs must have identical shapes; got {pre_declump.shape!r}, {before.shape!r}, and {after.shape!r}."
-            )
-        return _restore_removed_declump_basins_numba(
-            np.ascontiguousarray(pre_declump, dtype=np.int64),
-            np.ascontiguousarray(before, dtype=np.int64),
-            np.ascontiguousarray(after, dtype=np.int64),
-        ).astype(after.dtype, copy=False)
-
     def fill_labeled_holes_below_size(
         self, labels: np.ndarray, maximum_hole_size: int
     ) -> np.ndarray:
         labels_array = np.asarray(labels)
+        if labels_array.dtype != np.bool_:
+            return super().fill_labeled_holes_below_size(
+                labels_array, maximum_hole_size
+            )
         if labels_array.ndim != 2:
             return self._fill_labeled_holes_below_size_planewise(
                 labels_array, maximum_hole_size
@@ -2685,11 +2640,7 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
         fill_flags = _hole_fill_flags_below_size_numba(
             sizes, touches_border, component_count, int(maximum_hole_size)
         )
-        if labels.dtype == np.bool_:
-            return _fill_binary_holes_from_components_numba(
-                np.ascontiguousarray(labels), components, fill_flags
-            )
-        return _fill_labeled_holes_single_label_components_numba(
+        return _fill_binary_holes_from_components_numba(
             np.ascontiguousarray(labels), components, fill_flags
         )
 
@@ -2766,16 +2717,8 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
             if np.issubdtype(labels_array.dtype, np.integer)
             else np.dtype(np.int64)
         )
-        if labels_array.ndim > 2:
-            relabeled_planes, count = _relabel_sequential_3d_numba(
-                np.ascontiguousarray(
-                    labels_array.reshape((-1, *labels_array.shape[-2:])),
-                    dtype=label_dtype,
-                )
-            )
-            return (relabeled_planes.reshape(labels_array.shape), int(count))
         if labels_array.ndim != 2:
-            raise ValueError("Relabeling requires at least two dimensions.")
+            return super().relabel_sequential(labels_array)
         return _relabel_sequential_numba(
             np.ascontiguousarray(labels_array, dtype=label_dtype)
         )
@@ -2909,28 +2852,6 @@ def _scipy_erode_labeled_objects(
         labels_array, footprint=np.asarray(footprint, dtype=bool)
     )
     return labels_array * (contours == 0)
-
-
-@njit(cache=True)
-def _block_labels_2d_numba(
-    height: int, width: int, block_size: int
-) -> tuple[np.ndarray, np.ndarray]:
-    row_blocks = max(1, int(np.floor(float(height) / float(block_size))))
-    column_blocks = max(1, int(np.floor(float(width) / float(block_size))))
-    labels = np.empty((height, width), dtype=np.int32)
-    indexes = np.empty(row_blocks * column_blocks, dtype=np.int32)
-    for row in range(row_blocks):
-        y_start = int(np.ceil(float(row * height) / float(row_blocks)))
-        y_stop = int(np.ceil(float((row + 1) * height) / float(row_blocks)))
-        for column in range(column_blocks):
-            x_start = int(np.ceil(float(column * width) / float(column_blocks)))
-            x_stop = int(np.ceil(float((column + 1) * width) / float(column_blocks)))
-            label = row * column_blocks + column
-            indexes[label] = label
-            for y in range(y_start, y_stop):
-                for x in range(x_start, x_stop):
-                    labels[y, x] = label
-    return (labels, indexes)
 
 
 @njit(cache=True)
@@ -4365,51 +4286,6 @@ def _fill_binary_holes_from_components_numba(
 
 
 @njit(cache=True)
-def _fill_labeled_holes_single_label_components_numba(
-    labels: np.ndarray, components: np.ndarray, fill_flags: np.ndarray
-) -> np.ndarray:
-    height, width = labels.shape
-    component_labels = np.zeros(fill_flags.size, dtype=np.int64)
-    for y in range(height):
-        for x in range(width):
-            component = components[y, x]
-            if component <= 0 or not fill_flags[component]:
-                continue
-            if y > 0:
-                _record_component_boundary_label_numba(
-                    component_labels, component, int(labels[y - 1, x])
-                )
-            if y + 1 < height:
-                _record_component_boundary_label_numba(
-                    component_labels, component, int(labels[y + 1, x])
-                )
-            if x > 0:
-                _record_component_boundary_label_numba(
-                    component_labels, component, int(labels[y, x - 1])
-                )
-            if x + 1 < width:
-                _record_component_boundary_label_numba(
-                    component_labels, component, int(labels[y, x + 1])
-                )
-    has_fillable_component = False
-    for component in range(component_labels.size):
-        if component_labels[component] > 0:
-            has_fillable_component = True
-            break
-    if not has_fillable_component:
-        return labels
-    output = labels.copy()
-    for y in range(height):
-        for x in range(width):
-            component = components[y, x]
-            if component > 0 and fill_flags[component]:
-                label = component_labels[component]
-                if label > 0:
-                    output[y, x] = label
-    return output
-
-
-@njit(cache=True)
 def _max_label_2d_numba(labels: np.ndarray) -> int:
     height, width = labels.shape
     max_label = 0
@@ -4419,211 +4295,6 @@ def _max_label_2d_numba(labels: np.ndarray) -> int:
             if label > max_label:
                 max_label = label
     return max_label
-
-
-@njit(cache=True)
-def _restore_removed_declump_basins_numba(
-    pre_declump_labels: np.ndarray,
-    labels_before_size_filter: np.ndarray,
-    labels_after_size_filter: np.ndarray,
-) -> np.ndarray:
-    height, width = labels_before_size_filter.shape
-    output = labels_after_size_filter.copy()
-    max_pre_declump_label = _max_label_2d_numba(pre_declump_labels)
-    component_surviving_label = np.zeros(max_pre_declump_label + 1, dtype=np.int64)
-    for y in range(height):
-        for x in range(width):
-            pre_label = int(pre_declump_labels[y, x])
-            after_label = int(labels_after_size_filter[y, x])
-            if pre_label <= 0 or after_label <= 0:
-                continue
-            current_label = component_surviving_label[pre_label]
-            if current_label == 0:
-                component_surviving_label[pre_label] = after_label
-            elif current_label != after_label:
-                component_surviving_label[pre_label] = -1
-    visited = np.zeros((height, width), dtype=np.bool_)
-    stack_y = np.empty(height * width, dtype=np.int64)
-    stack_x = np.empty(height * width, dtype=np.int64)
-    component_y = np.empty(height * width, dtype=np.int64)
-    component_x = np.empty(height * width, dtype=np.int64)
-    for start_y in range(height):
-        for start_x in range(width):
-            if visited[start_y, start_x]:
-                continue
-            if (
-                labels_before_size_filter[start_y, start_x] <= 0
-                or labels_after_size_filter[start_y, start_x] > 0
-            ):
-                visited[start_y, start_x] = True
-                continue
-            stack_size = 1
-            stack_y[0] = start_y
-            stack_x[0] = start_x
-            visited[start_y, start_x] = True
-            component_size = 0
-            boundary_label = 0
-            has_multiple_boundary_labels = False
-            pre_declump_label = 0
-            has_multiple_pre_declump_labels = False
-            while stack_size:
-                stack_size -= 1
-                y = stack_y[stack_size]
-                x = stack_x[stack_size]
-                component_y[component_size] = y
-                component_x[component_size] = x
-                component_size += 1
-                current_pre_declump_label = int(pre_declump_labels[y, x])
-                if current_pre_declump_label <= 0:
-                    has_multiple_pre_declump_labels = True
-                elif pre_declump_label == 0:
-                    pre_declump_label = current_pre_declump_label
-                elif pre_declump_label != current_pre_declump_label:
-                    has_multiple_pre_declump_labels = True
-                for dy in range(-1, 2):
-                    yy = y + dy
-                    if yy < 0 or yy >= height:
-                        continue
-                    for dx in range(-1, 2):
-                        if dy == 0 and dx == 0:
-                            continue
-                        xx = x + dx
-                        if xx < 0 or xx >= width:
-                            continue
-                        neighbor_after = labels_after_size_filter[yy, xx]
-                        if neighbor_after > 0:
-                            if boundary_label == 0:
-                                boundary_label = neighbor_after
-                            elif boundary_label != neighbor_after:
-                                has_multiple_boundary_labels = True
-                            continue
-                        if visited[yy, xx]:
-                            continue
-                        if (
-                            labels_before_size_filter[yy, xx] > 0
-                            and labels_after_size_filter[yy, xx] == 0
-                        ):
-                            visited[yy, xx] = True
-                            stack_y[stack_size] = yy
-                            stack_x[stack_size] = xx
-                            stack_size += 1
-            if (
-                boundary_label <= 0
-                or has_multiple_boundary_labels
-                or pre_declump_label <= 0
-                or has_multiple_pre_declump_labels
-            ):
-                continue
-            surviving_label = component_surviving_label[pre_declump_label]
-            if surviving_label <= 0 or surviving_label != boundary_label:
-                continue
-            for index in range(component_size):
-                output[component_y[index], component_x[index]] = boundary_label
-    return output
-
-
-@njit(cache=True)
-def _record_component_boundary_label_numba(
-    component_labels: np.ndarray, component: int, label: int
-) -> None:
-    if label <= 0:
-        return
-    current = component_labels[component]
-    if current == 0:
-        component_labels[component] = label
-    elif current != label:
-        component_labels[component] = -1
-
-
-@njit(cache=True)
-def _fill_labeled_holes_from_components_numba(
-    labels: np.ndarray, components: np.ndarray, fill_flags: np.ndarray
-) -> np.ndarray:
-    height, width = labels.shape
-    capacity = height * width
-    output = labels.copy()
-    queue_y = np.empty(capacity, dtype=np.int64)
-    queue_x = np.empty(capacity, dtype=np.int64)
-    head = 0
-    tail = 0
-    for y in range(height):
-        for x in range(width):
-            component = components[y, x]
-            if component <= 0 or not fill_flags[component]:
-                continue
-            label = _first_adjacent_foreground_label_numba(labels, y, x)
-            if label == 0:
-                continue
-            output[y, x] = label
-            queue_y[tail] = y
-            queue_x[tail] = x
-            tail += 1
-    while head < tail:
-        y = queue_y[head]
-        x = queue_x[head]
-        head += 1
-        component = components[y, x]
-        label = output[y, x]
-        if (
-            y > 0
-            and components[y - 1, x] == component
-            and fill_flags[component]
-            and (output[y - 1, x] == 0)
-        ):
-            output[y - 1, x] = label
-            queue_y[tail] = y - 1
-            queue_x[tail] = x
-            tail += 1
-        if (
-            y + 1 < height
-            and components[y + 1, x] == component
-            and fill_flags[component]
-            and (output[y + 1, x] == 0)
-        ):
-            output[y + 1, x] = label
-            queue_y[tail] = y + 1
-            queue_x[tail] = x
-            tail += 1
-        if (
-            x > 0
-            and components[y, x - 1] == component
-            and fill_flags[component]
-            and (output[y, x - 1] == 0)
-        ):
-            output[y, x - 1] = label
-            queue_y[tail] = y
-            queue_x[tail] = x - 1
-            tail += 1
-        if (
-            x + 1 < width
-            and components[y, x + 1] == component
-            and fill_flags[component]
-            and (output[y, x + 1] == 0)
-        ):
-            output[y, x + 1] = label
-            queue_y[tail] = y
-            queue_x[tail] = x + 1
-            tail += 1
-    return output
-
-
-@njit(cache=True)
-def _first_adjacent_foreground_label_numba(labels: np.ndarray, y: int, x: int):
-    height, width = labels.shape
-    for dy in range(-1, 2):
-        neighbor_y = y + dy
-        if neighbor_y < 0 or neighbor_y >= height:
-            continue
-        for dx in range(-1, 2):
-            if dy == 0 and dx == 0:
-                continue
-            neighbor_x = x + dx
-            if neighbor_x < 0 or neighbor_x >= width:
-                continue
-            label = labels[neighbor_y, neighbor_x]
-            if label != 0:
-                return label
-    return labels[y, x]
 
 
 @njit(cache=True)
@@ -4707,50 +4378,6 @@ def _binary_shrink_2d_numba(
 
 
 @njit(cache=True)
-def _seed_points_from_components_numba(
-    components: np.ndarray, component_count: int
-) -> np.ndarray:
-    height, width = components.shape
-    counts = np.zeros(component_count + 1, dtype=np.int64)
-    sum_y = np.zeros(component_count + 1, dtype=np.float64)
-    sum_x = np.zeros(component_count + 1, dtype=np.float64)
-    for y in range(height):
-        for x in range(width):
-            component = components[y, x]
-            if component <= 0:
-                continue
-            counts[component] += 1
-            sum_y[component] += y
-            sum_x[component] += x
-    best_distance = np.empty(component_count + 1, dtype=np.float64)
-    best_y = np.full(component_count + 1, -1, dtype=np.int64)
-    best_x = np.full(component_count + 1, -1, dtype=np.int64)
-    for component in range(component_count + 1):
-        best_distance[component] = np.inf
-    for y in range(height):
-        for x in range(width):
-            component = components[y, x]
-            if component <= 0:
-                continue
-            centroid_y = sum_y[component] / counts[component]
-            centroid_x = sum_x[component] / counts[component]
-            dy = y - centroid_y
-            dx = x - centroid_x
-            distance = dy * dy + dx * dx
-            if distance < best_distance[component]:
-                best_distance[component] = distance
-                best_y[component] = y
-                best_x[component] = x
-    seeds = np.zeros((height, width), dtype=np.bool_)
-    for component in range(1, component_count + 1):
-        y = best_y[component]
-        x = best_x[component]
-        if y >= 0 and x >= 0:
-            seeds[y, x] = True
-    return seeds
-
-
-@njit(cache=True)
 def _relabel_sequential_flat_numba(labels: np.ndarray) -> tuple[np.ndarray, int]:
     max_label = 0
     for index in range(labels.size):
@@ -4783,15 +4410,6 @@ def _relabel_sequential_numba(labels: np.ndarray) -> tuple[np.ndarray, int]:
     height, width = labels.shape
     flat_output, count = _relabel_sequential_flat_numba(labels.reshape(height * width))
     return (flat_output.reshape((height, width)), count)
-
-
-@njit(cache=True)
-def _relabel_sequential_3d_numba(labels: np.ndarray) -> tuple[np.ndarray, int]:
-    plane_count, height, width = labels.shape
-    flat_output, count = _relabel_sequential_flat_numba(
-        labels.reshape(plane_count * height * width)
-    )
-    return (flat_output.reshape((plane_count, height, width)), count)
 
 
 class ExpandShrinkOperationStrategy(

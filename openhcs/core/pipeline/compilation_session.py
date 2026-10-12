@@ -15,7 +15,7 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import (
-    normalize_function_pattern,
+    normalize_prepared_function_pattern,
     NormalizedFunctionItem,
 )
 from openhcs.core.invocation_artifacts import (
@@ -389,7 +389,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
             "steps",
             tuple(
                 (
-                    step.with_function_spec(normalize_function_pattern(step.func or []))
+                    step.with_function_spec(normalize_prepared_function_pattern(step.func or []))
                     if isinstance(step, FunctionStep)
                     else step
                 )

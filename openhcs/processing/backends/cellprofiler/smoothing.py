@@ -88,7 +88,7 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
 
 
 class SmoothingMethod(Enum):
@@ -986,6 +986,20 @@ def prepare_smooth() -> None:
     """Compile default Gaussian smoothing before timed execution."""
     image = np.linspace(0.0, 1.0, 64 * 64, dtype=np.float32).reshape((64, 64))
     smooth.__wrapped__(image)
+    # The Numba provider keeps float32 planes and masks as they arrive, so the
+    # read-only and writable forms are separate compiled signatures.
+    numba_image = np.linspace(0.0, 1.0, 16 * 16, dtype=np.float32).reshape((16, 16))
+    numba_mask = np.ones(numba_image.shape, dtype=np.bool_)
+    numba_mask[0, 0] = False
+    for image_writeable in (True, False):
+        numba_image.flags.writeable = image_writeable
+        smooth.__wrapped__(numba_image, smoothing_backend_provider=NumbaBackendProvider)
+        for mask_writeable in (True, False):
+            numba_mask.flags.writeable = mask_writeable
+            smooth.__wrapped__(
+                ImagePayloadMetadata().payload_with(numba_image, numba_mask),
+                smoothing_backend_provider=NumbaBackendProvider,
+            )
 
 
 pure_2d_batch_executor(smooth_batch)(smooth)

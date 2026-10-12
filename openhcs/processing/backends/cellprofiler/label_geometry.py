@@ -53,13 +53,15 @@ def _numpy_124_scalar_arccos(typing_context, value):
     return signature, codegen
 
 
-@njit(cache=True)
-def _numpy_124_svml_arccos(values: np.ndarray) -> np.ndarray:
-    """Return NumPy 1.24 standard-SVML arccos values for a flat array."""
-    result = np.empty(values.size, dtype=np.float64)
-    for index in range(values.size):
-        result[index] = _numpy_124_scalar_arccos(values[index])
-    return result
+if _NUMPY_124_SVML_ACOS_AVAILABLE:
+    # Defined only where it can run: a kernel that exists is one preparation compiles.
+    @njit(cache=True)
+    def _numpy_124_svml_arccos(values: np.ndarray) -> np.ndarray:
+        """Return NumPy 1.24 standard-SVML arccos values for a flat array."""
+        result = np.empty(values.size, dtype=np.float64)
+        for index in range(values.size):
+            result[index] = _numpy_124_scalar_arccos(values[index])
+        return result
 
 
 _DEKKER_SPLITTER = 134217729.0  # 2**27 + 1
@@ -236,6 +238,17 @@ def _numpy_124_arccos(values: np.ndarray) -> np.ndarray:
     if _NUMPY_124_SVML_ACOS_AVAILABLE:
         return _numpy_124_svml_arccos(value_array)
     return _numpy_124_portable_arccos(value_array)
+
+
+def prepare_arccos_kernels() -> None:
+    """Compile the arccos kernel this CPU uses, and the portable one.
+
+    A process started with AVX-512 disabled shares the Numba cache and uses the
+    portable kernel, so it is compiled on every machine.
+    """
+    values = np.zeros(1, dtype=np.float64)
+    _numpy_124_arccos(values)
+    _numpy_124_portable_arccos(values)
 
 
 def feret_diameters_from_labels(

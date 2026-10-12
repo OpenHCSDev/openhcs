@@ -1408,6 +1408,16 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
         self.measure_prepared_batch(
             (image_3d, np.ascontiguousarray(1.0 - image_3d)), prepared_3d
         )
+        # Labels filling most of the volume take the dense scan, not the sparse one.
+        dense_labels_3d = np.ones(image_3d.shape, dtype=np.int32)
+        dense_labels_3d[4:] = 2
+        self.measure(
+            image_3d,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(labels=dense_labels_3d),
+                domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+            ),
+        )
 
 
 def object_intensity_backend(

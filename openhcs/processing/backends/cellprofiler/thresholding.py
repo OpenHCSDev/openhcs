@@ -1367,6 +1367,10 @@ class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrat
         self.mad(values)
         self.otsu_threshold(values)
         self.weighted_otsu_threshold(values.astype(np.float32))
+        # Repeated intensities take the counted-rank weighted Otsu kernels.
+        self.weighted_otsu_threshold(np.repeat(values, 2).astype(np.float32))
+        # Two separated modes: the histogram minimum exists.
+        self.minimum_threshold(np.repeat(np.array([0.0, 1.0]), 8))
         self.li_threshold(values)
         self.triangle_threshold(values)
         self.isodata_threshold(values)

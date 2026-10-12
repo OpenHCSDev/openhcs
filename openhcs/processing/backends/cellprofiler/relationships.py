@@ -856,6 +856,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
+from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.processing_contracts import (
     Pure2DContract,
 )
@@ -1779,6 +1780,18 @@ class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrat
         self.label_centers(parent_labels)
         self.centroid_distances(parent_labels, child_labels, parents_of)
         self.minimum_distances(parent_labels, child_labels, parents_of)
+        # Sparse rows are C-ordered, or column-ordered once their slice column
+        # is dropped; the two endpoints need not agree.
+        plane_rows = SparseIJVLabelRows.from_dense_labels(child_labels)
+        layouts = tuple(
+            np.asarray(rows.as_yx_label_array(), dtype=np.int64)
+            for rows in (plane_rows, SparseIJVLabelRows.from_slices((plane_rows,)))
+        )
+        for parent_rows in layouts:
+            for child_rows in layouts:
+                self.relate_sparse_ijv_children_to_parents(
+                    parent_rows, child_rows, 3, 3
+                )
 
     def relate_children_to_parents(
         self, parent_labels: np.ndarray, child_labels: np.ndarray, child_count: int
