@@ -36,6 +36,7 @@ from openhcs.core.context.processing_context import (
     RequiredVisualizer,
 )
 from openhcs.core.debug import DebugExecutionPolicy
+from openhcs.core.execution_state import PipelineLoadPhase
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.post_execute import PostExecuteHook
@@ -121,6 +122,7 @@ class BundleExecutionExtras:
     RESULTS_SUMMARY_KEY: ClassVar[str] = "viewer_states_by_port"
 
     viewer_states_by_port: Mapping[int, "ViewerControlResponse"]
+    load_phase: PipelineLoadPhase
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
@@ -142,7 +144,8 @@ class BundleExecutionResults(dict[str, ExecutionResult]):
     ) -> None:
         super().__init__(results or {})
         self.extras = extras or BundleExecutionExtras(
-            viewer_states_by_port=MappingProxyType({})
+            viewer_states_by_port=MappingProxyType({}),
+            load_phase=PipelineLoadPhase.without_lanes(),
         )
         self.executed_contexts = MappingProxyType(dict(executed_contexts or {}))
 
@@ -279,18 +282,20 @@ def execute_bundle_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
-                    # Its own phase, finished before any lane starts. Empty
-                    # when the pipeline was prepared (or declares no loads).
-                    load_started = time.perf_counter()
-                    loads = executor_resources.load_pipeline_resources(
-                        execution_bundle, validated.actual_max_workers
+                    # Its own phase, finished before any lane starts and
+                    # reported apart from the execution. No loads when the
+                    # pipeline was prepared (or declares none).
+                    load_phase = PipelineLoadPhase.timed(
+                        lambda: executor_resources.load_pipeline_resources(
+                            execution_bundle, validated.actual_max_workers
+                        )
                     )
-                    if loads:
+                    if load_phase.loads:
                         logger.info(
                             "Pipeline was not prepared: %d resource load(s) before "
                             "execution took %.3fs.",
-                            loads,
-                            time.perf_counter() - load_started,
+                            load_phase.loads,
+                            load_phase.seconds,
                         )
                     lane_results = executor_resources.run_worker_lanes(
                         pipeline_definition=validated.pipeline_definition,
@@ -378,6 +383,7 @@ def execute_bundle_request(
             execution_results,
             extras=BundleExecutionExtras(
                 viewer_states_by_port=viewer_states_by_port,
+                load_phase=load_phase,
                 runtime_observation=dataset_runtime_observation,
             ),
             executed_contexts=executing_contexts,

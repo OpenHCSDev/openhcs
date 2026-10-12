@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -1352,19 +1353,38 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     )
     submissions = []
 
+    private_client = object()
+    calls = []
+
+    @contextmanager
+    def fake_client(*, execution_port, progress_callback):
+        assert execution_port == 18088
+        clock[0] += 30.0  # the server's start is outside the clock
+        calls.append("server started")
+        yield private_client
+        clock[0] += 5.0
+
+    def fake_prepare(*, client, submission):
+        assert client is private_client
+        clock[0] += 7.0  # the pipeline's preparation is outside the clock
+        calls.append("prepared")
+        submissions.append(submission)
+        return 0.5
+
     def fake_execute(
         *,
+        client,
         submission,
         phase_timing,
         timing_observer,
         expected_axis_count,
-        execution_port,
         require_owned_server,
     ):
         clock[0] += 4.25
-        submissions.append(submission)
+        calls.append("run")
+        assert client is private_client
+        assert submissions == [submission], "the prepared document is the one that runs"
         assert expected_axis_count == well_count
-        assert execution_port == 18088
         assert require_owned_server is True
         assert timing_observer.on_event is not None
         for index in range(1, well_count + 1):
@@ -1409,8 +1429,14 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         )
 
     monkeypatch.setattr(
+        well_throughput_scaling, "measured_execution_client", fake_client
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling, "prepare_measured_openhcs_pipeline", fake_prepare
+    )
+    monkeypatch.setattr(
         well_throughput_scaling,
-        "execute_measured_openhcs_pipeline",
+        "execute_measured_openhcs_pipeline_on_client",
         fake_execute,
     )
 
@@ -1432,9 +1458,13 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert result.successful_wells == well_count
     assert result.compile_seconds == 1.5
     assert result.execute_seconds == 2.75
-    assert result.total_seconds == 4.25
+    assert calls == ["server started", "prepared", "run"]
+    assert result.prepare_seconds == 0.5
+    assert result.total_seconds == 4.25, (
+        "the clock starts after the preparation and holds the run alone"
+    )
     assert result.peak_memory_mb == 512.0
-    assert clock[0] == 134.25
+    assert clock[0] == 134.25 + 30.0 + 7.0 + 5.0
     assert result.execution_route == ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
     assert len(submissions) == 1
     assert submissions[0].subject_id == str(tmp_path / "input")

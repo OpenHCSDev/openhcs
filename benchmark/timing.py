@@ -18,6 +18,7 @@ from python_introspect import dataclass_from_mapping
 from zmqruntime.messages import ExecutionRecord, ExecutionStatus
 
 from openhcs.core.config import Backend
+from openhcs.core.execution_state import PipelineLoadPhase
 from openhcs.core.vfs_protocol import FileManagerLike
 
 
@@ -33,6 +34,7 @@ class BenchmarkPhase(StrEnum):
     EXECUTE_OPENHCS = auto()
     SERVER_COMPILATION_JOB = auto()
     SERVER_PIPELINE_JOB = auto()
+    SERVER_LOAD_PHASE = auto()
     SUBMIT_OPENHCS = auto()
     WAIT_OPENHCS = auto()
     EXECUTE_NATIVE_CP = auto()
@@ -50,6 +52,7 @@ class BenchmarkPhase(StrEnum):
             BenchmarkPhase.EXECUTE_OPENHCS,
             BenchmarkPhase.SERVER_COMPILATION_JOB,
             BenchmarkPhase.SERVER_PIPELINE_JOB,
+            BenchmarkPhase.SERVER_LOAD_PHASE,
         }
 
     @property
@@ -77,10 +80,10 @@ def additive_phase_total_seconds(phase_seconds: Mapping[str, float]) -> float | 
     return sum(additive) if additive else None
 
 
-def completed_server_execution_seconds(
+def completed_server_job_seconds(
     record: ExecutionRecord, *, expected_execution_id: str | None = None
 ) -> float:
-    """Measure a completed ordinary job using its server-owned time bounds."""
+    """Measure a completed job (compile, prepare) using its server-owned time bounds."""
     start_time = record.start_time
     end_time = record.end_time
     if (
@@ -99,6 +102,32 @@ def completed_server_execution_seconds(
             f"Completed OpenHCS job {record.execution_id!r} has no valid server time bounds."
         )
     return float(end_time - start_time)
+
+
+def completed_server_load_phase(record: ExecutionRecord) -> PipelineLoadPhase:
+    """The load phase a completed execution reports, inside its time bounds."""
+    try:
+        load_phase = PipelineLoadPhase.from_results_summary(record.results_summary)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Completed OpenHCS execution {record.execution_id!r} reports no load phase."
+        ) from exc
+    if not record.start_time <= load_phase.started_at <= load_phase.ended_at <= record.end_time:
+        raise ValueError(
+            f"Completed OpenHCS execution {record.execution_id!r} reports a load "
+            "phase outside its time bounds."
+        )
+    return load_phase
+
+
+def completed_server_execution_seconds(
+    record: ExecutionRecord, *, expected_execution_id: str | None = None
+) -> float:
+    """Measure a completed execution: its server time bounds without its load phase."""
+    job_seconds = completed_server_job_seconds(
+        record, expected_execution_id=expected_execution_id
+    )
+    return job_seconds - completed_server_load_phase(record).seconds
 
 
 @dataclass(frozen=True, slots=True)

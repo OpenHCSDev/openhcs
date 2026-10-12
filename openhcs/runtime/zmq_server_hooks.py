@@ -79,6 +79,8 @@ class ZMQResultsSummaryEnricher:
                 summary[
                     ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
                 ] = str(observation_export_scope)
+        if compiled_execution_extras is not None:
+            summary.update(compiled_execution_extras.load_phase.results_summary_fields())
         if (
             compiled_execution_extras is not None
             and compiled_execution_extras.viewer_states_by_port

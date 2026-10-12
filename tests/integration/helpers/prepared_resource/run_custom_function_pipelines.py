@@ -84,6 +84,13 @@ def probe(image, model: Literal["small", "large", "undeclared"] = "small"):
     return image
 '''
 
+# The same function under a second name, for pipelines that are executed
+# without a "prepare this pipeline" request: no worker holds its loads yet.
+UNPREPARED_PROBE = "probe_unprepared"
+UNPREPARED_PROBE_SOURCE = PROBE_SOURCE.replace(
+    '"probe"', f'"{UNPREPARED_PROBE}"'
+).replace("def probe(", f"def {UNPREPARED_PROBE}(")
+
 
 def main() -> None:
     work = Path(sys.argv[1]).resolve()
@@ -121,6 +128,12 @@ def main() -> None:
         ExecutionWaitResult,
     )
 
+    from benchmark.timing import (
+        completed_server_execution_seconds,
+        completed_server_job_seconds,
+        completed_server_load_phase,
+    )
+
     plate = work / "plate"
     with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
         SyntheticMicroscopyGenerator(
@@ -139,6 +152,9 @@ def main() -> None:
 
     stored_before_start = store("resource_stored_before_start")
     [probe] = manager.register_from_code(PROBE_SOURCE, persist=True, emit_signal=False)
+    [probe_unprepared] = manager.register_from_code(
+        UNPREPARED_PROBE_SOURCE, persist=True, emit_signal=False
+    )
 
     suffix = "_prepared_resource"
     vfs = VFSConfig(materialization_backend=MaterializeToDisk)
@@ -194,12 +210,51 @@ def main() -> None:
         ).require_complete("compile")
         return compile_id
 
+    def completed(job_id: str, job: str):
+        return ExecutionWaitResult.from_wire(
+            client.wait_for_completion(job_id)
+        ).require_completed_execution(job, expected_execution_id=job_id)
+
+    def record_run_times(
+        function: str,
+        *,
+        prepared: bool,
+        client_started_at: float,
+        outside_total: list[list[float]],
+        compile_record,
+        execution_record,
+    ) -> None:
+        """What the records report, on the clock of the trace."""
+        load_phase = completed_server_load_phase(execution_record)
+        record(
+            "run_times",
+            function,
+            prepared=prepared,
+            client_started_at=client_started_at,
+            client_ended_at=time.time(),
+            outside_total=outside_total,
+            compile_started_at=compile_record.start_time,
+            compile_ended_at=compile_record.end_time,
+            execution_started_at=execution_record.start_time,
+            execution_ended_at=execution_record.end_time,
+            load_started_at=load_phase.started_at,
+            load_ended_at=load_phase.ended_at,
+            loads=load_phase.loads,
+            job_seconds=completed_server_job_seconds(execution_record),
+            execution_seconds=completed_server_execution_seconds(execution_record),
+        )
+
     def run_prepared(steps) -> None:
         """Compile, "prepare this pipeline", execute: three separate jobs."""
+        client_started_at = time.time()
         record("compile_start")
-        compile_id = compile_pipeline(steps)
+        compile_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_compile(submission(steps))
+        ).require_execution_id("compile")
+        compile_record = completed(compile_id, "compile")
         record("compile_end")
         record("pipeline_preparation_start")
+        preparation_started_at = time.time()
         preparation_id = ExecutionSubmissionResponse.from_wire(
             client.submit_prepared_pipeline(
                 ZMQExecutionRequestBuilder.from_task(
@@ -210,15 +265,46 @@ def main() -> None:
         ExecutionWaitResult.from_wire(
             client.wait_for_completion(preparation_id)
         ).require_complete("prepare")
+        preparation_ended_at = time.time()
         record("pipeline_preparation_end")
         record("execute_start")
         execution_id = ExecutionSubmissionResponse.from_wire(
             client.submit_pipeline(submission(steps, compile_artifact_id=compile_id))
         ).require_execution_id("execute")
-        ExecutionWaitResult.from_wire(
-            client.wait_for_completion(execution_id)
-        ).require_complete("execute")
+        execution_record = completed(execution_id, "execute")
         record("execute_end")
+        record_run_times(
+            "probe",
+            prepared=True,
+            client_started_at=client_started_at,
+            outside_total=[[preparation_started_at, preparation_ended_at]],
+            compile_record=compile_record,
+            execution_record=execution_record,
+        )
+
+    def run_unprepared(steps) -> None:
+        """Compile and execute, as the GUI does: the execution loads by itself.
+
+        The client's wall clock around this run contains the load phase, so it
+        is not marked as a timed window: the windows are the records' own.
+        """
+        client_started_at = time.time()
+        compile_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_compile(submission(steps))
+        ).require_execution_id("compile")
+        compile_record = completed(compile_id, "compile")
+        execution_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_pipeline(submission(steps, compile_artifact_id=compile_id))
+        ).require_execution_id("execute")
+        execution_record = completed(execution_id, "execute")
+        record_run_times(
+            UNPREPARED_PROBE,
+            prepared=False,
+            client_started_at=client_started_at,
+            outside_total=[],
+            compile_record=compile_record,
+            execution_record=execution_record,
+        )
 
     try:
         if not client.connect(timeout=1800):
@@ -264,6 +350,12 @@ def main() -> None:
             )
         except Exception as error:
             record("refused", "probe", message=str(error))
+
+        unprepared = [
+            FunctionStep(name="probe", func=(probe_unprepared, {"model": "large"}))
+        ]
+        run_unprepared(unprepared)
+        run_unprepared(unprepared)
     finally:
         client.disconnect()
 

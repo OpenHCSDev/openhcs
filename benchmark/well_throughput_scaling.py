@@ -9,7 +9,7 @@ import math
 import statistics
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
 from dataclasses import asdict, dataclass, replace
 from enum import Enum, StrEnum
 from pathlib import Path
@@ -31,9 +31,9 @@ from benchmark.file_digest import sha256_file
 from benchmark.metrics.memory import MemoryMetric
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
-    execute_measured_openhcs_pipeline,
     execute_measured_openhcs_pipeline_on_client,
     measured_execution_client,
+    prepare_measured_openhcs_pipeline,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
@@ -2051,7 +2051,9 @@ def run_case_well_throughput(
 ) -> WellThroughputResult:
     """Time public compilation/execution, including outcome delivery.
 
-    Benchmark diagnostics and memory-observer lifecycle are outside the clock.
+    The server's start, the "prepare this pipeline" request (reported as
+    ``prepare_seconds``), benchmark diagnostics and memory-observer lifecycle
+    are outside the clock.
     """
     if (execution_client is None) != (timing_observer is None):
         raise ValueError(
@@ -2165,24 +2167,29 @@ def run_case_well_throughput(
         started_at = time.perf_counter()
         try:
             try:
-                if execution_client is None:
-                    completed, _ = execute_measured_openhcs_pipeline(
-                        submission=submission,
-                        phase_timing=phase_timing,
-                        timing_observer=timing_observer,
-                        expected_axis_count=len(well_ids),
+                with (
+                    measured_execution_client(
                         execution_port=execution_port,
-                        require_owned_server=True,
+                        progress_callback=timing_observer,
                     )
-                else:
+                    if execution_client is None
+                    else nullcontext(execution_client)
+                ) as client:
+                    prepare_seconds = prepare_measured_openhcs_pipeline(
+                        client=client, submission=submission
+                    )
+                    # The run's diagnostics and clock start after preparation.
+                    progress_events.clear()
+                    started_at = time.perf_counter()
                     completed, _ = execute_measured_openhcs_pipeline_on_client(
-                        client=execution_client,
+                        client=client,
                         submission=submission,
                         phase_timing=phase_timing,
                         timing_observer=timing_observer,
                         expected_axis_count=len(well_ids),
                         require_owned_server=True,
                     )
+                    total_seconds = time.perf_counter() - started_at
                 outcome = completed.observation_export
                 if not isinstance(outcome, ZMQRuntimeExecutionOutcomeExport):
                     raise TypeError(
@@ -2198,7 +2205,6 @@ def run_case_well_throughput(
                 execute_seconds = _required_phase_seconds(
                     phase_timing, BenchmarkPhase.SERVER_PIPELINE_JOB
                 )
-                total_seconds = time.perf_counter() - started_at
             except KeyboardInterrupt:
                 total_seconds = time.perf_counter() - started_at
                 peak_memory_mb = memory_metric.get_result()

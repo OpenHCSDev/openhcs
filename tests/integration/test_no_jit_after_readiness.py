@@ -314,3 +314,118 @@ def test_a_value_that_was_not_acquired_is_refused_at_compile(
         for event in custom_function_events
         if event["kind"] in ("acquire", "load") and event.get("model") == "undeclared"
     ]
+
+
+# --- Timing is honest: a record reports its load phase apart from its duration ---
+
+UNPREPARED_PROBE = "probe_unprepared"
+
+
+def _run_times(events: list[dict], function: str) -> tuple[dict, dict]:
+    first, second = _kinds(events, "run_times", function)
+    return first, second
+
+
+def _inside(events: list[dict], windows: list[tuple[float, float]], *kinds: str) -> list[dict]:
+    return [
+        event
+        for event in events
+        if event["kind"] in kinds
+        and any(start <= event["time"] <= end for start, end in windows)
+    ]
+
+
+def _without(window: tuple[float, float], *holes: tuple[float, float]) -> list[tuple[float, float]]:
+    """The window minus the intervals inside it, each strictly excluded."""
+    parts = [window]
+    for hole_start, hole_end in holes:
+        parts = [
+            part
+            for start, end in parts
+            for part in (
+                [(start, end)]
+                if hole_end < start or end < hole_start
+                else [(start, hole_start - 1e-9), (hole_end + 1e-9, end)]
+            )
+        ]
+    return [(start, end) for start, end in parts if start <= end]
+
+
+def _timed_windows(run: dict) -> dict[str, list[tuple[float, float]]]:
+    """Compile, execute and total of one run as its records report them."""
+    load_phase = (run["load_started_at"], run["load_ended_at"])
+    return {
+        "compile": [(run["compile_started_at"], run["compile_ended_at"])],
+        "execute": _without(
+            (run["execution_started_at"], run["execution_ended_at"]), load_phase
+        ),
+        "total": _without(
+            (run["client_started_at"], run["client_ended_at"]),
+            load_phase,
+            *(tuple(interval) for interval in run["outside_total"]),
+        ),
+    }
+
+
+@pytest.mark.parametrize("function", [PROBE, UNPREPARED_PROBE])
+def test_load_phase_is_outside_what_a_record_reports_as_compile_execute_and_total(
+    custom_function_events: list[dict], function: str
+) -> None:
+    """Prepared or not, first run or second: the reported windows hold no load."""
+    events = custom_function_events
+    for run in _run_times(events, function):
+        assert (
+            run["execution_started_at"]
+            <= run["load_started_at"]
+            <= run["load_ended_at"]
+            <= run["execution_ended_at"]
+        ), "the load phase is a part of the execution's time bounds"
+        assert run["execution_seconds"] == pytest.approx(
+            (run["execution_ended_at"] - run["execution_started_at"])
+            - (run["load_ended_at"] - run["load_started_at"])
+        ), "an execution's duration is its time bounds without its load phase"
+        windows = _timed_windows(run)
+        assert _inside(events, windows["execute"], "call"), (
+            "the execute window holds no call, so the counter proves nothing"
+        )
+        for name, window in windows.items():
+            late = [
+                f"{event['kind']} {event['function']} pid {event['pid']}"
+                for event in _inside(events, window, "prepare", "acquire", "load")
+            ]
+            assert late == [], f"inside the reported {name} window:\n" + "\n".join(late)
+
+
+def test_load_phase_of_an_unprepared_pipeline_is_reported_by_its_first_execution_only(
+    custom_function_events: list[dict],
+) -> None:
+    """Two workers load in the first execution's load phase; the second has none."""
+    events = custom_function_events
+    first, second = _run_times(events, UNPREPARED_PROBE)
+    loads = _kinds(events, "load", UNPREPARED_PROBE)
+    calls = _kinds(events, "call", UNPREPARED_PROBE)
+
+    assert first["loads"] == 2 and first["load_ended_at"] > first["load_started_at"]
+    assert loads == _inside(
+        loads, [(first["load_started_at"], first["load_ended_at"])], "load"
+    ), "every load of the pipeline is inside the load phase its first execution reports"
+    assert len(loads) == first["loads"] and len({event["pid"] for event in loads}) == 2
+    assert {event["pid"] for event in calls} == {event["pid"] for event in loads}, (
+        "the workers that loaded are the workers that execute, in both runs"
+    )
+    assert first["execution_seconds"] < first["job_seconds"]
+
+    assert second["loads"] == 0, "the second execution finds the loads held"
+    assert not _inside(
+        events,
+        [(second["load_started_at"], second["load_ended_at"])],
+        "prepare", "acquire", "load",
+    )
+
+
+def test_load_phase_of_a_prepared_pipeline_is_empty_in_both_executions(
+    custom_function_events: list[dict],
+) -> None:
+    """The loads ran in "prepare this pipeline", so no execution reports one."""
+    for run in _run_times(custom_function_events, PROBE):
+        assert run["prepared"] and run["loads"] == 0
