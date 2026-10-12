@@ -300,9 +300,9 @@ def test_selected_hook_failure_is_not_admitted_as_completed(monkeypatch):
         events.append("attempt")
         raise RuntimeError("selected preparation failed")
 
-    from openhcs.core.processing_preparation import CallableHookPreparation
+    from openhcs.core.processing_preparation import AcquireHookPreparation
 
-    operation = CallableHookPreparation(hook, None, "new_selected")
+    operation = AcquireHookPreparation(hook, None, "new_selected")
     for _ in range(2):
         with pytest.raises(RuntimeError, match="selected preparation failed"):
             operation.prepare()

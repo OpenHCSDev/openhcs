@@ -39,6 +39,7 @@ from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
     ZMQPipelineRunPhase,
+    prepare_pipeline,
     run_compiled_pipeline,
 )
 from openhcs.runtime.zmq_execution_observation import (
@@ -54,6 +55,8 @@ from .timing import (
     BenchmarkPhase,
     PhaseTimingTrace,
     completed_server_execution_seconds,
+    completed_server_job_seconds,
+    completed_server_load_phase,
 )
 
 ZMQ_RESULTS_SUMMARY_FILENAME = MeasuredPipelineRunArtifact.RESULTS_SUMMARY.value
@@ -301,6 +304,24 @@ def execute_measured_openhcs_pipeline(
         )
 
 
+def prepare_measured_openhcs_pipeline(
+    *,
+    client: ZMQExecutionClient,
+    submission: OpenHCSExecutionSubmission,
+) -> float:
+    """Load what the pipeline selects into its workers; seconds of that server job.
+
+    Sent before a measured run's clock starts, so the run that follows on the
+    same client performs no load.
+    """
+
+    try:
+        preparation = prepare_pipeline(client, submission)
+        return completed_server_job_seconds(preparation.preparation_record)
+    except (RuntimeError, ValueError) as exc:
+        raise ToolExecutionError(str(exc)) from exc
+
+
 def execute_measured_openhcs_pipeline_on_client(
     *,
     client: ZMQExecutionClient,
@@ -345,7 +366,7 @@ def execute_measured_openhcs_pipeline_on_client(
     try:
         phase_timing.record(
             BenchmarkPhase.SERVER_COMPILATION_JOB,
-            seconds=completed_server_execution_seconds(
+            seconds=completed_server_job_seconds(
                 run.compile_record, expected_execution_id=run.compile_artifact_id
             ),
         )
@@ -354,6 +375,10 @@ def execute_measured_openhcs_pipeline_on_client(
             seconds=completed_server_execution_seconds(
                 run.execution_record, expected_execution_id=run.execution_id
             ),
+        )
+        phase_timing.record(
+            BenchmarkPhase.SERVER_LOAD_PHASE,
+            seconds=completed_server_load_phase(run.execution_record).seconds,
         )
     except ValueError as exc:
         raise ToolExecutionError(str(exc)) from exc

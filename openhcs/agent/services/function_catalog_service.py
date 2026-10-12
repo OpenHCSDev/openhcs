@@ -28,6 +28,11 @@ from python_introspect import (
 from zmqruntime import OperationCancellation
 
 import openhcs.processing.custom_functions.manager as custom_function_manager
+from openhcs.processing.custom_functions.catalogue_changes import (
+    CustomFunctionChange,
+    ServerCatalogueState,
+    SourceFailedOnServer,
+)
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
     CellProfilerArtifactBindingSummary,
@@ -388,7 +393,11 @@ class CatalogSearchCandidate:
 
 @dataclass(frozen=True, slots=True)
 class CatalogSearchProjection:
-    """Reusable search projection derived from one registry metadata mapping."""
+    """Search projection of one function, derived from its metadata object.
+
+    The metadata object is the key: the projection of a function stays valid
+    exactly as long as the registry publishes this same object for it.
+    """
 
     metadata: FunctionMetadata
     entry: FunctionCatalogEntry
@@ -735,7 +744,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
 
         with self._state_lock:
             metadata = self._projection_metadata
-            if metadata is None or self._projections is None:
+            if metadata is None:
                 return False
         if metadata != RegistryService.cached_metadata_snapshot():
             return False
@@ -748,7 +757,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         super().__init__()
         self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
-        self._projections: tuple[CatalogSearchProjection, ...] | None = None
+        self._projections: tuple[CatalogSearchProjection, ...] = ()
 
     def register_custom_function(
         self, request: CustomFunctionRegistrationRequest
@@ -839,6 +848,33 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         return CustomFunctionRegistrationObservation(
             schema_version=SCHEMA_VERSION, handle=handle, published_sources=published,
             persisted_source=persisted, warnings=warnings,
+        )
+
+    def follow_custom_function_change(self, change: CustomFunctionChange) -> None:
+        """Apply a connected session's change to this server's custom functions."""
+        change.apply_on_server(
+            custom_function_manager.CustomFunctionManager(create_storage=False),
+            self._path_policy.assert_writable,
+        )
+
+    def custom_catalogue_state(self) -> ServerCatalogueState:
+        """What this server holds of the custom functions once nothing is pending."""
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        return ServerCatalogueState(
+            pending=False,
+            loaded=CustomFunctionRuntimeRegistry.published_sources(),
+            failed=tuple(
+                SourceFailedOnServer(
+                    name=failure.name,
+                    message=failure.message,
+                    line_number=failure.line_number,
+                )
+                for failure in manager.load_failures()
+            ),
         )
 
     def custom_function_registration_destination(
@@ -978,21 +1014,29 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         status_callback: Callable[[str], None] | None,
         cancellation: OperationCancellation | None = None,
     ) -> tuple[CatalogSearchProjection, ...]:
-        """Project a registry revision once and reuse it across text queries."""
+        """Project each function once per metadata object the registry publishes.
+
+        A function whose metadata object is the one already projected keeps its
+        projection; only added and replaced functions are projected.
+        """
 
         with self._state_lock:
-            if metadata_by_id is not self._projection_metadata:
-                self._projection_metadata = metadata_by_id
-                self._projections = None
-            cached = self._projections
-            if cached is not None:
-                return cached
+            if metadata_by_id is self._projection_metadata:
+                return self._projections
+            projected_by_id = {
+                projection.entry.function_id: projection
+                for projection in self._projections
+            }
         if status_callback is not None:
             status_callback("Projecting function metadata for the execution endpoint")
         projections = []
         for function_id, metadata in sorted(metadata_by_id.items()):
             if cancellation is not None and cancellation.requested():
                 raise CancelledError
+            projected = projected_by_id.get(function_id)
+            if projected is not None and projected.metadata is metadata:
+                projections.append(projected)
+                continue
             contract = CallableContract.from_callable(metadata.func)
             signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
                 metadata.func, contract
@@ -1021,11 +1065,11 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             )
         if cancellation is not None and cancellation.requested():
             raise CancelledError
-        projected = tuple(projections)
+        current = tuple(projections)
         with self._state_lock:
-            if metadata_by_id is self._projection_metadata:
-                self._projections = projected
-        return projected
+            self._projection_metadata = metadata_by_id
+            self._projections = current
+        return current
 
     def get(
         self,

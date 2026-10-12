@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+import enum
 import importlib
+import inspect
 import multiprocessing
 import os
 import signal
 import traceback
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Iterable, Iterator
+from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
 from contextlib import ExitStack
 from dataclasses import dataclass, field
-from itertools import chain, islice
+from itertools import chain, islice, product
 from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
 from threading import Lock
-from typing import ClassVar
+from typing import ClassVar, Literal, get_args, get_origin, get_type_hints
 
 from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import (
@@ -87,6 +89,7 @@ class PreparationOperation(ABC):
         """Clear core readiness, preserving independently owned kernel caches."""
         with cls._lock:
             cls._completed.clear()
+        CallablePreparation._serves_prepared_callables = False
         AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
 
 
@@ -190,19 +193,110 @@ class ModuleHookPreparation(DeclaredHookPreparation):
         return ("module", self.module_name, id(self.hook))
 
 
+HookArguments = tuple[tuple[str, Hashable], ...]
+
+
+class UnpreparedValueError(ValueError):
+    """A step selects a value its function's preparation did not acquire."""
+
+
+def declared_hook_arguments(hook: Callable[..., object]) -> tuple[HookArguments, ...]:
+    """Every argument combination a hook declares it can be called with.
+
+    A hook names parameters of its function. Each must be annotated with a
+    finite type: an ``Enum`` (every member) or a ``Literal`` (its values, which
+    is how a hook declares fewer values than its function accepts). A hook
+    without parameters declares the single empty combination.
+    """
+    hints = get_type_hints(hook)
+    names = tuple(inspect.signature(hook).parameters)
+    values_by_name: list[tuple[Hashable, ...]] = []
+    for name in names:
+        annotation = hints.get(name)
+        if get_origin(annotation) is Literal:
+            values_by_name.append(get_args(annotation))
+        elif isinstance(annotation, type) and issubclass(annotation, enum.Enum):
+            values_by_name.append(tuple(annotation))
+        else:
+            raise TypeError(
+                f"Preparation hook {hook.__qualname__!r} parameter {name!r} must be "
+                f"annotated with an Enum or a Literal, got {annotation!r}."
+            )
+    return tuple(tuple(zip(names, values)) for values in product(*values_by_name))
+
+
+def selected_hook_arguments(
+    hook: Callable[..., object],
+    func: Callable[..., object],
+    kwargs: Mapping[str, object],
+) -> HookArguments:
+    """What a call of ``func`` with ``kwargs`` selects for the hook's parameters.
+
+    ``func`` is read for a default only when the call does not pass the value.
+    """
+    selected: list[tuple[str, Hashable]] = []
+    for name in inspect.signature(hook).parameters:
+        if name in kwargs:
+            selected.append((name, kwargs[name]))
+            continue
+        parameters = inspect.signature(func).parameters
+        if name not in parameters or parameters[name].default is inspect.Parameter.empty:
+            raise TypeError(
+                f"Preparation hook {hook.__qualname__!r} names {name!r}, which is not "
+                f"a parameter with a default of {func!r}."
+            )
+        selected.append((name, parameters[name].default))
+    return tuple(selected)
+
+
 @dataclass(frozen=True, slots=True)
 class CallableHookPreparation(DeclaredHookPreparation):
+    """One call of a function's hook: the function, the hook and its arguments."""
+
     module_name: str | None
     function_name: str
+    arguments: HookArguments = ()
+
+    lifetime: ClassVar[str]
 
     @property
     def identity(self) -> Hashable:
         module_label = "<unknown>" if self.module_name is None else self.module_name
         return (
-            "callable",
+            self.lifetime,
             f"{module_label}.{self.function_name}",
             (str(self.hook.__module__), str(self.hook.__qualname__)),
+            self.arguments,
         )
+
+    def execute(self) -> None:
+        self.hook(**dict(self.arguments))
+
+    def is_completed(self) -> bool:
+        with self._lock:
+            return self.identity in self._completed
+
+
+class AcquireHookPreparation(CallableHookPreparation):
+    """Put a resource on this machine (kernel cache, weights): before readiness."""
+
+    lifetime = "callable"
+
+
+@dataclass(frozen=True, slots=True)
+class LoadHookPreparation(CallableHookPreparation):
+    """Load a resource into this process or onto its device: per pipeline."""
+
+    lifetime = "load"
+    device_id: int | None = None
+
+    @property
+    def identity(self) -> Hashable:
+        return (*CallableHookPreparation.identity.fget(self), self.device_id)
+
+    def can_prepare_in_child(self) -> bool:
+        """A load lives in the process that runs it; a child cannot do it."""
+        return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,12 +304,29 @@ class CallablePreparation:
     """Project declared operations lazily in their original effect order."""
 
     projection: CallableProjection
+    # True once this process (or the server it was forked from) prepared its
+    # catalogue for serving: from then on a callable is prepared when published.
+    _serves_prepared_callables: ClassVar[bool] = False
 
     @classmethod
     def from_callable(cls, func: Callable[..., object]) -> CallablePreparation:
         return cls(CallableProjection.from_callable(func))
 
-    def operations(self) -> Iterator[PreparationOperation]:
+    @classmethod
+    def prepare_published(cls, func: Callable[..., object]) -> None:
+        """Prepare a callable that is published after serving preparation.
+
+        A serving process holds "prepared before usable" for every callable a
+        pipeline can name, so a late publication prepares as part of publishing.
+        Any other process (authoring, a client) prepares nothing here.
+        """
+        if cls._serves_prepared_callables:
+            cls.prepare_for_serving(
+                CallableProjection.from_callable(func).prepare_targets(),
+                lambda _message: None,
+            )
+
+    def module_operations(self) -> Iterator[PreparationOperation]:
         """Read later hook declarations only after preceding operations finish."""
         module_name = self.projection.module_name
         if module_name is not None:
@@ -227,16 +338,90 @@ class CallablePreparation:
             )
             if hook is not None:
                 yield ModuleHookPreparation(hook, module_name)
-        hook = DeclaredCallable().read(
-            self.projection.namespace.get(FunctionContractAttribute.processing_prepare),
-            owner=f"{self.projection.name!r}.{FunctionContractAttribute.processing_prepare}",
+
+    def operations(self) -> Iterator[PreparationOperation]:
+        """The module's operations, then every acquisition the callable declares."""
+        yield from self.module_operations()
+        yield from self.acquisitions()
+
+    def _hook(self, attribute: str) -> Callable[..., object] | None:
+        return DeclaredCallable().read(
+            self.projection.namespace.get(attribute),
+            owner=f"{self.projection.name!r}.{attribute}",
         )
-        if hook is not None:
-            yield CallableHookPreparation(hook, module_name, self.projection.name)
+
+    def acquisitions(self) -> tuple[AcquireHookPreparation, ...]:
+        """One acquisition per argument combination the acquire hook declares."""
+        hook = self._hook(FunctionContractAttribute.processing_prepare)
+        if hook is None:
+            return ()
+        return tuple(
+            AcquireHookPreparation(
+                hook, self.projection.module_name, self.projection.name, arguments
+            )
+            for arguments in declared_hook_arguments(hook)
+        )
+
+    def selected_load(
+        self, kwargs: Mapping[str, object], device_id: int | None
+    ) -> LoadHookPreparation | None:
+        """The load a step with these keyword arguments needs in its workers."""
+        hook = self._hook(FunctionContractAttribute.processing_load)
+        if hook is None:
+            return None
+        return LoadHookPreparation(
+            hook,
+            self.projection.module_name,
+            self.projection.name,
+            selected_hook_arguments(hook, self.projection.func, kwargs),
+            device_id,
+        )
+
+    def prepare_selected(self, kwargs: Mapping[str, object]) -> None:
+        """Make what a step selects available to a compile, acquiring nothing late.
+
+        A serving process acquired every declared value before it reported
+        ready, so a selection outside that set is refused, naming what was
+        acquired. A process that does not serve has no readiness: it acquires
+        the selected value here, and nothing else.
+        """
+        hook = self._hook(FunctionContractAttribute.processing_prepare)
+        if hook is None:
+            return
+        selection = AcquireHookPreparation(
+            hook,
+            self.projection.module_name,
+            self.projection.name,
+            selected_hook_arguments(hook, self.projection.func, kwargs),
+        )
+        if selection.is_completed():
+            return
+        if not self._serves_prepared_callables:
+            selection.prepare()
+            return
+        acquired = [
+            ", ".join(f"{name}={value!r}" for name, value in operation.arguments)
+            for operation in self.acquisitions()
+            if operation.is_completed()
+        ]
+        raise UnpreparedValueError(
+            f"{self.projection.name!r} was not prepared for "
+            + ", ".join(f"{name}={value!r}" for name, value in selection.arguments)
+            + ". Prepared before this server reported ready: "
+            + ("; ".join(acquired) or "nothing")
+            + "."
+        )
 
     def prepare(self) -> None:
+        """Prepare everything the callable declares: what a serving process does."""
         for operation in self.operations():
             operation.prepare()
+
+    def prepare_for_call(self, kwargs: Mapping[str, object]) -> None:
+        """Prepare for one compiled call: the module, then what the call selects."""
+        for operation in self.module_operations():
+            operation.prepare()
+        self.prepare_selected(kwargs)
 
     @classmethod
     def prepare_for_serving(
@@ -250,6 +435,7 @@ class CallablePreparation:
         during compilation or execution. Preparing one callable does not.
         """
         preparations = tuple(cls.from_callable(func) for func in callables)
+        CallablePreparation._serves_prepared_callables = True
         for preparation in preparations:
             preparation.prepare()
             status_callback(
@@ -397,7 +583,7 @@ class PreparationCacheBatch:
             for operation in preparation.cache_sources()
         }
         hooks = {
-            operation.hook: operation
+            operation.identity: operation
             for preparation in preparations
             for operation in preparation.hooks()
         }

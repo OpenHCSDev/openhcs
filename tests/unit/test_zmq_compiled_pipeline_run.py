@@ -16,6 +16,7 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionClient,
     ZMQExecutionRequestBuilder,
     ZMQPipelineRunPhase,
+    prepare_pipeline,
     run_compiled_pipeline,
 )
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
@@ -32,6 +33,10 @@ class FakeExecutionClient:
     def submit_prepared_pipeline(self, request):
         if request.compile_control.compile_only:
             return self.submit_compile(request)
+        if (request.config_params or {}).get("prepare_workers_only"):
+            self.events.append("submit_preparation")
+            self.preparation_submission = request
+            return {"status": "accepted", "execution_id": "prepare-1"}
         return self.submit_pipeline(request)
 
     def submit_compile(self, submission):
@@ -49,15 +54,15 @@ class FakeExecutionClient:
         self.events.append(f"wait:{execution_id}")
         return {
             "status": (
-                self.compile_status
-                if execution_id == "compile-1"
-                else self.execute_status
+                self.execute_status
+                if execution_id == "execute-1"
+                else self.compile_status
             ),
             "execution_id": execution_id,
             "execution": {
                 "execution_id": execution_id,
                 "subject_id": "/tmp/plate",
-                "status": self.compile_status if execution_id == "compile-1" else self.execute_status,
+                "status": self.execute_status if execution_id == "execute-1" else self.compile_status,
                 "start_time": 10.0,
                 "end_time": 12.0,
             },
@@ -104,11 +109,47 @@ def test_compiled_pipeline_run_uses_one_document_and_source_owned_phases():
         "wait:compile-1",
         "submit_execution",
         "wait:execute-1",
-    ]
+    ], "a run sends no preparation: a timed caller prepares before its clock"
     assert client.execution_submission.pipeline_code == result.request.pipeline_code
     assert client.execution_submission.compile_control.compile_artifact_id == "compile-1"
+    assert "prepare_workers_only" not in (client.execution_submission.config_params or {})
     assert observed_phases == [
-        (event, phase) for phase in ZMQPipelineRunPhase for event in ("start", "end")
+        (event, phase)
+        for phase in (
+            ZMQPipelineRunPhase.SUBMIT_COMPILE,
+            ZMQPipelineRunPhase.WAIT_COMPILE,
+            ZMQPipelineRunPhase.SUBMIT_EXECUTION,
+            ZMQPipelineRunPhase.WAIT_EXECUTION,
+        )
+        for event in ("start", "end")
+    ]
+
+
+def test_pipeline_preparation_is_its_own_request_with_its_own_phases():
+    client = FakeExecutionClient()
+    observed_phases = []
+
+    @contextmanager
+    def observe(phase):
+        observed_phases.append(phase)
+        yield
+
+    preparation = prepare_pipeline(client, _submission(), phase_context=observe)
+
+    assert client.events == [
+        "submit_compile",
+        "wait:compile-1",
+        "submit_preparation",
+        "wait:prepare-1",
+    ]
+    assert client.preparation_submission.compile_control.compile_artifact_id == "compile-1"
+    assert preparation.compiled.compile_artifact_id == "compile-1"
+    assert preparation.preparation_record.execution_id == "prepare-1"
+    assert observed_phases == [
+        ZMQPipelineRunPhase.SUBMIT_COMPILE,
+        ZMQPipelineRunPhase.WAIT_COMPILE,
+        ZMQPipelineRunPhase.SUBMIT_PREPARATION,
+        ZMQPipelineRunPhase.WAIT_PREPARATION,
     ]
 
 

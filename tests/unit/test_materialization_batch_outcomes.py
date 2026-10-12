@@ -15,6 +15,7 @@ from polystore.memory import MemoryStorageBackend
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.execution_state import PipelineLoadPhase
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
@@ -217,7 +218,9 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
     results = BundleExecutionResults(
         {"A01": ExecutionSucceeded("A01", runtime_observation=worker)},
         extras=BundleExecutionExtras(
-            viewer_states_by_port={}, runtime_observation=parent
+            viewer_states_by_port={},
+            load_phase=PipelineLoadPhase.without_lanes(),
+            runtime_observation=parent,
         ),
     )
     exports = RuntimeExportObservation.from_runtime_observations(

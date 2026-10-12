@@ -15,6 +15,11 @@ from threadpoolctl import threadpool_info
 from zmqruntime import OperationCancellation
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
+from openhcs.processing.custom_functions.catalogue_changes import (
+    ServerCatalogueState,
+    SourceFailedOnServer,
+)
+
 if TYPE_CHECKING:
     from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
     from openhcs.agent.dto.functions import (
@@ -22,7 +27,10 @@ if TYPE_CHECKING:
         FunctionCatalogPreparationState,
     )
     from openhcs.agent.services.function_catalog_service import (
-        FunctionCatalogServiceABC,
+        FunctionCatalogService,
+    )
+    from openhcs.processing.custom_functions.catalogue_changes import (
+        CustomFunctionChange,
     )
 
 
@@ -50,13 +58,14 @@ class FunctionCatalogPreparation:
 
     def __init__(
         self,
-        function_catalog: "FunctionCatalogServiceABC",
+        function_catalog: "FunctionCatalogService",
     ) -> None:
         self._lock = threading.RLock()
         self._future: Future[None] | None = None
         self._thread: threading.Thread | None = None
         self._cancellation = OperationCancellation()
         self._function_catalog = function_catalog
+        self._refused_changes: dict[str, str] = {}
         self._snapshot = EndpointStartupStatus(
             sequence=0,
             phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
@@ -90,6 +99,74 @@ class FunctionCatalogPreparation:
             self._thread = thread
             thread.start()
             return future
+
+    def follow_custom_function_change(self, change: "CustomFunctionChange") -> None:
+        """Apply a session's change, then bring the catalogue up to date.
+
+        Returns at once. The change runs after any preparation already under
+        way, on this owner's future, so the server reports pending until the
+        change's sources are loaded and acquired, and ready after.
+        """
+        with self._lock:
+            earlier = self._thread
+            future = self._new_preparation_future()
+            if future.cancelled():
+                return
+            thread = threading.Thread(
+                target=self._follow,
+                args=(earlier, future, change),
+                name="openhcs-custom-function-change",
+                daemon=True,
+            )
+            self._thread = thread
+            thread.start()
+
+    def _follow(
+        self,
+        earlier: threading.Thread | None,
+        future: Future[None],
+        change: "CustomFunctionChange",
+    ) -> None:
+        if earlier is not None:
+            earlier.join()
+
+        def apply(
+            *,
+            status_callback: Callable[[str], None],
+            cancellation: OperationCancellation,
+        ) -> None:
+            names = ", ".join(change.function_names)
+            status_callback(f"Preparing custom function {names}")
+            try:
+                self._function_catalog.follow_custom_function_change(change)
+            except Exception as error:
+                # The change is refused; the catalogue itself is still whole.
+                with self._lock:
+                    for name in change.function_names:
+                        self._refused_changes[name] = f"{type(error).__name__}: {error}"
+            else:
+                with self._lock:
+                    for name in change.function_names:
+                        self._refused_changes.pop(name, None)
+            self._function_catalog.prepare_projections(
+                status_callback=status_callback, cancellation=cancellation
+            )
+
+        self._prepare(future, apply)
+
+    def custom_catalogue_state(self) -> "ServerCatalogueState":
+        """Pending while this owner prepares; otherwise what the server holds."""
+        future = self.ensure_started()
+        if not future.done():
+            return ServerCatalogueState(pending=True)
+        future.result()
+        state = self._function_catalog.custom_catalogue_state()
+        with self._lock:
+            refused = tuple(
+                SourceFailedOnServer(name=name, message=message, line_number=0)
+                for name, message in self._refused_changes.items()
+            )
+        return replace(state, failed=(*state.failed, *refused))
 
     def _new_preparation_future(self) -> Future[None]:
         """Create this owner's future while the caller holds its lifecycle lock."""

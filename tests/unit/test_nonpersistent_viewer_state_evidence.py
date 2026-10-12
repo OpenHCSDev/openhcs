@@ -8,7 +8,7 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.execution_state import ExecutionOutputSummary, PipelineLoadPhase
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
     BundleExecutionResults,
@@ -48,7 +48,10 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     )
     compiled_results = BundleExecutionResults(
         {"A01": ExecutionSucceeded("A01")},
-        extras=BundleExecutionExtras(viewer_states_by_port={5563: response}),
+        extras=BundleExecutionExtras(
+            viewer_states_by_port={5563: response},
+            load_phase=PipelineLoadPhase(started_at=10.0, ended_at=10.5, loads=2),
+        ),
     )
 
     class ProgressQueue:
@@ -126,6 +129,9 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     summary = enriched[MessageFields.EXECUTION][MessageFields.RESULTS_SUMMARY]
     assert summary["output_dataset_root"] == "/tmp/output"
     assert summary["auto_add_output_dataset"] is True
+    assert PipelineLoadPhase.from_results_summary(summary) == (
+        compiled_results.extras.load_phase
+    ), "the record's summary carries the execution's load phase"
     states_by_port = summary[BundleExecutionExtras.RESULTS_SUMMARY_KEY]
     state_payload = states_by_port["5563"]["payload"]
     layer = state_payload["layers"][0]

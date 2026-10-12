@@ -277,6 +277,9 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         def submit_prepared_pipeline(self, request):
             if request.compile_control.compile_only:
                 return self.submit_compile(request)
+            if (request.config_params or {}).get("prepare_workers_only"):
+                assert request.compile_control.compile_artifact_id == "compile-1"
+                return {"status": "accepted", "execution_id": "prepare-1"}
             return self.submit_pipeline(request)
 
         def submit_compile(self, submission):
@@ -297,7 +300,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             self.waits.append(execution_id)
-            if execution_id == "compile-1":
+            if execution_id in ("compile-1", "prepare-1"):
                 return {
                     "execution": self.poll_status(execution_id)["execution"],
                     "status": "complete",
@@ -337,7 +340,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
             }
 
         def poll_status(self, execution_id):
-            assert execution_id in {"compile-1", "exec-1"}
+            assert execution_id in {"compile-1", "prepare-1", "exec-1"}
             return {
                 "status": "ok",
                 "execution": {
@@ -345,7 +348,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                     "subject_id": "/tmp/execution_plate",
                     "client_address": None,
                     "status": "complete",
-                    "results_summary": {"output_dataset_root": str(tmp_path)},
+                    "results_summary": {
+                        "output_dataset_root": str(tmp_path),
+                        "load_phase": {"started_at": 13.5, "ended_at": 14.0, "loads": 1},
+                    },
                     "start_time": 10.0 if execution_id == "compile-1" else 13.0,
                     "end_time": 12.0 if execution_id == "compile-1" else 17.0,
                 },
@@ -374,7 +380,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
     assert execution.execution_id == "exec-1"
     assert execution.output_roots == (tmp_path,)
-    assert execution.results_summary == {"output_dataset_root": str(tmp_path)}
+    assert execution.results_summary == {
+        "output_dataset_root": str(tmp_path),
+        "load_phase": {"started_at": 13.5, "ended_at": 14.0, "loads": 1},
+    }
     assert (
         execution.endpoint_provenance.endpoint_openhcs_version
         == OPENHCS_ENDPOINT_APPLICATION.version

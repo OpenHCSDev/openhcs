@@ -116,6 +116,9 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
                     "status": "complete",
                     "start_time": 10.0,
                     "end_time": 12.0,
+                    "results_summary": {
+                        "load_phase": {"started_at": 10.5, "ended_at": 10.75, "loads": 2}
+                    },
                 },
             }
 
@@ -194,8 +197,19 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         BenchmarkPhase.WAIT_OPENHCS,
         BenchmarkPhase.SERVER_COMPILATION_JOB,
         BenchmarkPhase.SERVER_PIPELINE_JOB,
+        BenchmarkPhase.SERVER_LOAD_PHASE,
         BenchmarkPhase.VALIDATE_RUNTIME,
     ]
+    server_seconds = {
+        record.phase: record.seconds
+        for record in timing.records
+        if record.phase.name.startswith("SERVER_")
+    }
+    assert server_seconds == {
+        BenchmarkPhase.SERVER_COMPILATION_JOB: 2.0,
+        BenchmarkPhase.SERVER_PIPELINE_JOB: 1.75,
+        BenchmarkPhase.SERVER_LOAD_PHASE: 0.25,
+    }, "an execution's seconds exclude the load phase its record reports"
 
 
 def test_progress_observer_uses_extrema_for_parallel_axis_events() -> None:
@@ -273,6 +287,9 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
                     "status": "complete",
                     "start_time": 10.0,
                     "end_time": 12.0,
+                    "results_summary": {
+                        "load_phase": {"started_at": 10.5, "ended_at": 10.75, "loads": 2}
+                    },
                 },
             }
 

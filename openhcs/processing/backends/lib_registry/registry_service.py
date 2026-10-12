@@ -549,6 +549,21 @@ class RegistryService:
             )
 
     @classmethod
+    def custom_functions_changed(cls) -> None:
+        """Derive the unified lookup again; every loaded library is kept.
+
+        Custom functions are the only entries that are not in a library's
+        persistent catalogue: a registry adds them to what it loaded each time
+        the lookup is derived. So the registries and the metadata objects they
+        loaded stay, and whatever is derived from one unchanged metadata object
+        is still valid after a custom function was added, replaced or removed.
+        """
+        with cls._registry_inventory_lock:
+            cls.release_prepared_catalog()
+            cls._metadata_cache = None
+            cls._resolved_reference_callables.clear()
+
+    @classmethod
     def clear_metadata_cache(cls) -> None:
         """Clear cached metadata to force re-discovery."""
         with cls._registry_inventory_lock:

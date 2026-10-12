@@ -13,6 +13,8 @@ from benchmark.timing import (
     PhaseTimingTrace,
     additive_phase_total_seconds,
     completed_server_execution_seconds,
+    completed_server_job_seconds,
+    completed_server_load_phase,
     write_phase_timing_csv,
     write_phase_timing_jsonl,
 )
@@ -104,11 +106,60 @@ def test_completed_server_duration_uses_exact_ordinary_job() -> None:
         end_time=12.5,
     )
     assert (
-        completed_server_execution_seconds(record, expected_execution_id="execution-1")
+        completed_server_job_seconds(record, expected_execution_id="execution-1")
         == 2.5
     )
     with pytest.raises(ValueError, match="no valid server time bounds"):
-        completed_server_execution_seconds(record, expected_execution_id="other")
+        completed_server_job_seconds(record, expected_execution_id="other")
+
+
+def _execution_record(results_summary: dict[str, object] | None) -> ExecutionRecord:
+    return ExecutionRecord(
+        execution_id="execution-1",
+        subject_id="plate",
+        client_address=None,
+        status="complete",
+        start_time=10.0,
+        end_time=12.5,
+        results_summary=results_summary,
+    )
+
+
+def test_execution_duration_excludes_the_load_phase_the_record_reports() -> None:
+    record = _execution_record(
+        {"load_phase": {"started_at": 10.25, "ended_at": 11.0, "loads": 2}}
+    )
+    load_phase = completed_server_load_phase(record)
+    assert (load_phase.started_at, load_phase.ended_at, load_phase.loads) == (
+        10.25,
+        11.0,
+        2,
+    )
+    assert completed_server_job_seconds(record) == 2.5
+    assert completed_server_execution_seconds(record) == 1.75
+
+
+@pytest.mark.parametrize(
+    ("results_summary", "message"),
+    (
+        (None, "reports no load phase"),
+        ({}, "reports no load phase"),
+        ({"load_phase": {"started_at": 10.25, "ended_at": 11.0}}, "reports no load phase"),
+        (
+            {"load_phase": {"started_at": 9.0, "ended_at": 11.0, "loads": 1}},
+            "outside its time bounds",
+        ),
+        (
+            {"load_phase": {"started_at": 12.0, "ended_at": 13.0, "loads": 1}},
+            "outside its time bounds",
+        ),
+    ),
+)
+def test_an_execution_record_without_a_valid_load_phase_has_no_duration(
+    results_summary: dict[str, object] | None, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        completed_server_execution_seconds(_execution_record(results_summary))
 
 
 @pytest.mark.parametrize(
@@ -127,7 +178,7 @@ def test_completed_server_duration_rejects_invalid_bounds(
         end_time=end_time,
     )
     with pytest.raises(ValueError, match="no valid server time bounds"):
-        completed_server_execution_seconds(record)
+        completed_server_job_seconds(record)
 
 
 def test_phase_timing_writers_can_use_filemanager_vfs() -> None:

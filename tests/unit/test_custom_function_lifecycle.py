@@ -18,11 +18,11 @@ import openhcs.processing.custom_functions.manager as manager_module
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.events import custom_function_changed
-from openhcs.processing.custom_functions.manager import (
+from openhcs.processing.custom_functions.listing import (
     CustomFunctionInfo,
     CustomFunctionLoadFailure,
-    CustomFunctionManager,
 )
+from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     project_custom_function,
@@ -1297,3 +1297,266 @@ def test_source_retirement_thaws_before_dropping_captured_owners(
         CustomFunctionRuntimeRegistry.prepare_source_once(current, lambda: previous)
     assert calls == ["thaw"]
     assert not RegistryService._startup_heap_frozen
+
+
+def _prepared_source(name: str, body: str) -> str:
+    return (
+        "from openhcs.core.memory import numpy as numpy_function\n"
+        "EVENTS = []\n"
+        "def _prepare() -> None:\n"
+        f"    {body}\n"
+        "@numpy_function(prepare=_prepare)\n"
+        f"def {name}(image):\n"
+        "    return image\n"
+    )
+
+
+@pytest.fixture
+def serving_process(monkeypatch):
+    """A process that prepared its catalogue for serving, as a server does."""
+    from openhcs.core.processing_preparation import CallablePreparation
+
+    monkeypatch.setattr(CallablePreparation, "_serves_prepared_callables", True)
+
+
+def test_serving_process_prepares_a_custom_function_when_it_registers_it(
+    isolated_custom_runtime, serving_process,
+) -> None:
+    """Registration after readiness runs the declared preparation, once."""
+    manager = CustomFunctionManager(create_storage=False)
+    [registered] = manager.register_from_code(
+        _prepared_source("late_probe", "EVENTS.append('prepared')"),
+        clear_caches=False, emit_signal=False,
+    )
+    events = inspect.unwrap(registered).__globals__["EVENTS"]
+    assert events == ["prepared"]
+
+    # Compiling a pipeline that names it has nothing left to prepare.
+    from openhcs.core.function_patterns import normalize_prepared_function_pattern
+
+    normalize_prepared_function_pattern(registered)
+    assert manager.load_all_custom_functions() == 1
+    assert events == ["prepared"]
+
+
+def test_authoring_process_registers_without_preparing(isolated_custom_runtime) -> None:
+    """Only a serving process prepares at registration; an editor does not."""
+    [registered] = CustomFunctionManager(create_storage=False).register_from_code(
+        _prepared_source("authored_probe", "EVENTS.append('prepared')"),
+        clear_caches=False, emit_signal=False,
+    )
+    assert inspect.unwrap(registered).__globals__["EVENTS"] == []
+
+
+def test_failed_preparation_is_a_load_failure_of_that_source_alone(
+    isolated_custom_runtime, serving_process,
+) -> None:
+    """A preparation that raises is listed with file, line and error; others load."""
+    storage_dir = isolated_custom_runtime
+    (storage_dir / "a_unprepared.py").write_text(
+        _prepared_source("a_unprepared", "raise RuntimeError('weights not found')"),
+        encoding="utf-8",
+    )
+    (storage_dir / "b_good.py").write_text(
+        _prepared_source("b_good", "EVENTS.append('prepared')"), encoding="utf-8"
+    )
+    manager = CustomFunctionManager(create_storage=False)
+
+    assert manager.load_all_custom_functions() == 1
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {"b_good"}
+    [failure] = manager.load_failures()
+    assert isinstance(failure, CustomFunctionLoadFailure)
+    assert failure.describe() == (
+        "a_unprepared.py, line 4: Function 'a_unprepared' preparation failed: "
+        "RuntimeError: weights not found"
+    )
+
+    with pytest.raises(ValidationError, match="preparation failed"):
+        manager.register_from_code(
+            _prepared_source("c_unprepared", "raise RuntimeError('no network')"),
+            persist=False, clear_caches=False, emit_signal=False,
+        )
+    assert "c_unprepared" not in CustomFunctionRuntimeRegistry.metadata_by_name()
+
+
+# --- The manager tells the servers this process is connected to ---
+
+from openhcs.processing.custom_functions.catalogue_changes import (  # noqa: E402
+    CustomFunctionChange,
+    CustomFunctionCreated,
+    CustomFunctionDeleted,
+    CustomFunctionEdited,
+    ServerCatalogueState,
+    SourceFailedOnServer,
+)
+from openhcs.processing.custom_functions.connected_servers import (  # noqa: E402
+    ConnectedServers,
+    CustomFunctionServer,
+)
+from openhcs.processing.custom_functions.listing import (  # noqa: E402
+    CustomFunctionPreparing,
+)
+
+
+class _ScriptedServer(CustomFunctionServer):
+    """Reports pending until released, then the state it was given."""
+
+    def __init__(self, process: str, settled: ServerCatalogueState) -> None:
+        self.process = process
+        self.settled = settled
+        self.released = threading.Event()
+        self.told: list[CustomFunctionChange] = []
+        self.connected = True
+
+    def is_connected(self) -> bool:
+        return self.connected
+
+    def server_process(self) -> str:
+        return self.process
+
+    def follow_custom_function_change(self, change):
+        self.told.append(change)
+        return ServerCatalogueState(pending=True)
+
+    def custom_catalogue_state(self):
+        if not self.released.is_set():
+            return ServerCatalogueState(pending=True)
+        return self.settled
+
+
+@pytest.fixture
+def servers(monkeypatch) -> ConnectedServers:
+    owner = ConnectedServers()
+    monkeypatch.setattr(owner, "poll_seconds", 0.001)
+    monkeypatch.setattr(manager_module, "connected_servers", owner)
+    return owner
+
+
+_FOLLOWED_SOURCE = '''
+from openhcs.core.memory import numpy
+
+@numpy
+def followed(image, gain: float = 1.0):
+    """Multiply the stack.
+
+    Args:
+        image: Image stack.
+        gain: Factor.
+    """
+    return image * gain
+'''
+
+
+def test_create_edit_and_delete_each_tell_every_connected_server_once(
+    isolated_custom_runtime, servers,
+) -> None:
+    acquired = ServerCatalogueState(pending=False)
+    server = _ScriptedServer("server", acquired)
+    same_server_again = _ScriptedServer("server", acquired)
+    not_connected = _ScriptedServer("other", acquired)
+    not_connected.connected = False
+    for each in (server, same_server_again, not_connected):
+        each.released.set()
+        servers.add(each)
+    manager = CustomFunctionManager()
+
+    manager.register_from_code(_FOLLOWED_SOURCE)
+    edited = _FOLLOWED_SOURCE.replace("gain: float = 1.0", "gain: float = 2.0")
+    manager.update_custom_function("followed", edited)
+    manager.delete_custom_function("followed")
+    assert servers.wait_until_followed(10)
+
+    told = [*server.told, *same_server_again.told]
+    assert told == [
+        CustomFunctionCreated(name="followed", code=_FOLLOWED_SOURCE),
+        CustomFunctionEdited(old_name="followed", name="followed", code=edited),
+        CustomFunctionDeleted(name="followed"),
+    ], "one request per change and per server process, in order"
+    assert not_connected.told == []
+
+
+def test_a_function_is_listed_as_preparing_until_the_server_reports(
+    isolated_custom_runtime, servers,
+) -> None:
+    server = _ScriptedServer("server", ServerCatalogueState(pending=False))
+    servers.add(server)
+    changes: list[str] = []
+
+    def record_change() -> None:
+        changes.append("changed")
+
+    subscription = custom_function_changed.subscribe(record_change)
+    manager = CustomFunctionManager()
+
+    manager.register_from_code(_FOLLOWED_SOURCE)
+    assert _listed(manager) == [("followed (preparing)", CustomFunctionPreparing)]
+    reported_before = len(changes)
+
+    server.released.set()
+    assert servers.wait_until_followed(10)
+    assert _listed(manager) == [("followed", CustomFunctionInfo)]
+    assert len(changes) == reported_before + 1, "listeners are told when the server settles"
+    subscription.cancel()
+
+
+def test_a_source_the_server_could_not_acquire_is_listed_as_failed_to_load(
+    isolated_custom_runtime, servers,
+) -> None:
+    server = _ScriptedServer(
+        "server",
+        ServerCatalogueState(
+            pending=False,
+            failed=(
+                SourceFailedOnServer(
+                    name="followed",
+                    message="Function 'followed' preparation failed: ConnectionError: no route",
+                    line_number=4,
+                ),
+            ),
+        ),
+    )
+    server.released.set()
+    servers.add(server)
+    manager = CustomFunctionManager()
+
+    manager.register_from_code(_FOLLOWED_SOURCE)
+    assert servers.wait_until_followed(10)
+
+    [listed] = manager.list_custom_functions()
+    assert (listed.list_label, type(listed)) == (
+        "followed (failed to load)", CustomFunctionLoadFailure,
+    )
+    assert "ConnectionError: no route" in listed.status and "line 4" in listed.status
+
+
+def test_a_server_applies_each_change_to_its_own_store(isolated_custom_runtime) -> None:
+    """The members' effect in a server: hold the source, load; drop it, withdraw."""
+    manager = CustomFunctionManager()
+    written: list[str] = []
+
+    def admit(path):
+        written.append(path.name)
+        return path
+
+    CustomFunctionCreated(name="followed", code=_FOLLOWED_SOURCE).apply_on_server(manager, admit)
+    first = CustomFunctionRuntimeRegistry.published_sources()
+    assert [source.function_name for source in first] == ["followed"]
+    assert written == [isolated_custom_runtime.name, "followed.py"]
+
+    # A server that shares the session's store already holds the bytes.
+    CustomFunctionCreated(name="followed", code=_FOLLOWED_SOURCE).apply_on_server(manager, admit)
+    assert written == [isolated_custom_runtime.name, "followed.py"]
+
+    renamed = _FOLLOWED_SOURCE.replace("def followed", "def followed_renamed")
+    CustomFunctionEdited(
+        old_name="followed", name="followed_renamed", code=renamed
+    ).apply_on_server(manager, admit)
+    second = CustomFunctionRuntimeRegistry.published_sources()
+    assert [source.function_name for source in second] == ["followed_renamed"]
+    assert "followed" not in vars(custom_functions)
+
+    CustomFunctionDeleted(name="followed_renamed").apply_on_server(manager, admit)
+    assert CustomFunctionRuntimeRegistry.published_sources() == ()
+    assert not tuple(isolated_custom_runtime.glob("*.py"))
+    with pytest.raises(KeyError, match="'followed_renamed' was deleted"):
+        RegistryService.metadata_for_canonical_key("openhcs:followed_renamed")

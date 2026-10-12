@@ -9,7 +9,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from enum import Enum
 from functools import cache, wraps
@@ -2086,6 +2086,39 @@ def attach_processing_prepare(func: Any, prepare: Any) -> None:
         namespace[FunctionContractAttribute.processing_prepare] = prepare
 
 
+def processing_load(*targets: Callable[..., object]) -> Callable[..., object]:
+    """Declare what the target functions load into each process that runs them.
+
+    ``processing_prepare`` declares what is acquired once per machine (a kernel
+    cache, downloaded weights), before a server reports ready. This declares
+    the other part: what is loaded into memory or onto a device (a model, a
+    warm-up call). It runs in the workers of a pipeline that selects the
+    function, when the pipeline is prepared, with the values the step selects
+    and on the device the compiler assigned.
+    """
+    if not targets:
+        raise ValueError("processing_load requires at least one target callable.")
+
+    def decorator(load: Callable[..., object]) -> Callable[..., object]:
+        for target in targets:
+            attach_processing_load(target, load)
+        return load
+
+    return decorator
+
+
+def attach_processing_load(
+    func: Callable[..., object], load: Callable[..., object]
+) -> None:
+    """Attach a load hook to every callable of a decorated function."""
+    if not callable(func) or not callable(load):
+        raise TypeError("A load hook and its target must both be callable.")
+    for target in CallableProjection.from_callable(func).prepare_targets():
+        _mutable_callable_namespace(target)[
+            FunctionContractAttribute.processing_load
+        ] = load
+
+
 def runtime_image_execution_mode(
     mode: type[ImagePayloadExecutionMode],
 ) -> Any:
@@ -2229,6 +2262,10 @@ class CallableProjection:
             owner=f"{self.name!r}.{FunctionContractAttribute.canonical_signature}",
         ) is not None
 
+    def resolved(self) -> "CallableProjection":
+        """The projection of the declared function a compiler reference names."""
+        return type(self).from_callable(_resolve_declared_callable(self.func))
+
     def declared_callable(self) -> Any:
         """Keep ready library references or resolve live authored targets, preparing nothing."""
         if self.has_published_signature():
@@ -2258,13 +2295,25 @@ class CallableProjection:
             module_name=self.module_name,
         )
 
-    def prepared_callable(self) -> Any:
-        """Keep ready library references or prepare live authored targets before validation."""
+    def prepared_callable(self, kwargs: Mapping[str, object] | None = None) -> Any:
+        """Keep ready library references or prepare live authored targets before validation.
+
+        With the keyword arguments of a compiled call, only what that call
+        selects is prepared, and a serving process refuses a selection it did
+        not acquire before it reported ready.
+        """
+        from openhcs.core.processing_preparation import CallablePreparation
+
         if self.has_published_signature():
+            if kwargs is not None:
+                CallablePreparation.from_callable(self.func).prepare_selected(kwargs)
             return self.func
         resolved = _resolve_declared_callable(self.func)
         for target in type(self).from_callable(resolved).prepare_targets():
-            prepare_processing_callable(target)
+            if kwargs is None:
+                prepare_processing_callable(target)
+            else:
+                CallablePreparation.from_callable(target).prepare_for_call(kwargs)
         return resolved
 
     def warm_canonical_signature(self) -> None:

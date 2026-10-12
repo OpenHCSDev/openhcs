@@ -42,7 +42,10 @@ from zmqruntime.messages import (
     EndpointLaunch,
     ExecuteRequest,
     ExecutionRecord,
+    MessageFields,
     PongResponse,
+    ProcessIdentity,
+    ResponseType,
     ServerRole,
     StatusRequest,
 )
@@ -67,6 +70,15 @@ from openhcs.core.pipeline_document import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+from openhcs.processing.custom_functions.catalogue_changes import (
+    CustomCatalogueStateRequest,
+    CustomFunctionChange,
+    ServerCatalogueState,
+)
+from openhcs.processing.custom_functions.connected_servers import (
+    CustomFunctionServer,
+    connected_servers,
+)
 from openhcs.runtime.import_authority import (
     ImportRootEndpoint,
     OpenHCSRuntimeImportAuthority,
@@ -413,8 +425,27 @@ class ZMQPipelineRunPhase(Enum):
 
     SUBMIT_COMPILE = "submit_compile"
     WAIT_COMPILE = "wait_compile"
+    SUBMIT_PREPARATION = "submit_preparation"
+    WAIT_PREPARATION = "wait_preparation"
     SUBMIT_EXECUTION = "submit_execution"
     WAIT_EXECUTION = "wait_execution"
+
+
+@dataclass(frozen=True, slots=True)
+class ZMQCompiledPipeline:
+    """A submission whose compile job completed; the server retains its artifact."""
+
+    compile_artifact_id: str
+    request: ZMQExecutionRequestBuilder
+    compile_record: ExecutionRecord
+
+
+@dataclass(frozen=True, slots=True)
+class ZMQPipelinePreparation:
+    """A completed "prepare this pipeline": its workers hold what it loads."""
+
+    compiled: ZMQCompiledPipeline
+    preparation_record: ExecutionRecord
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,6 +472,114 @@ class ZMQCompiledPipelineRun:
         return ExecutionOutputSummary.from_results_summary(self.results_summary)
 
 
+@dataclass(frozen=True, slots=True)
+class ZMQPipelineJobs:
+    """The jobs of one submission on one client, each observed by its phases."""
+
+    client: ZMQExecutionClient
+    submission: OpenHCSExecutionSubmission
+    phase_context: (
+        Callable[[ZMQPipelineRunPhase], AbstractContextManager[None]] | None
+    ) = None
+
+    def _phase(self, phase: ZMQPipelineRunPhase) -> AbstractContextManager[None]:
+        return nullcontext() if self.phase_context is None else self.phase_context(phase)
+
+    def _completed_job(
+        self,
+        request: ZMQExecutionRequestBuilder,
+        *,
+        submit_phase: ZMQPipelineRunPhase,
+        wait_phase: ZMQPipelineRunPhase,
+        submission: str,
+        failure: str,
+    ) -> tuple[ExecutionRecord, float]:
+        """Submit one job and wait for it; its record and when completion was seen."""
+        with self._phase(submit_phase):
+            response = ExecutionSubmissionResponse.from_wire(
+                self.client.submit_prepared_pipeline(request)
+            )
+        if not response.accepted:
+            raise RuntimeError(response.require_failure_text(submission))
+        job_id = response.require_execution_id(submission)
+        with self._phase(wait_phase):
+            wait_response = self.client.wait_for_completion(
+                job_id,
+                poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+            )
+            completion_observed_at = time.time()
+        record = ExecutionWaitResult.from_wire(wait_response).require_completed_execution(
+            failure, expected_execution_id=job_id
+        )
+        return record, completion_observed_at
+
+    def compile(self) -> ZMQCompiledPipeline:
+        request = ZMQExecutionRequestBuilder.from_task(self.submission)
+        compile_record, _ = self._completed_job(
+            request.compile_request(),
+            submit_phase=ZMQPipelineRunPhase.SUBMIT_COMPILE,
+            wait_phase=ZMQPipelineRunPhase.WAIT_COMPILE,
+            submission="OpenHCS ZMQ compile submission",
+            failure="OpenHCS ZMQ compilation failed",
+        )
+        return ZMQCompiledPipeline(
+            compile_artifact_id=compile_record.execution_id,
+            request=request,
+            compile_record=compile_record,
+        )
+
+    def prepare(self, compiled: ZMQCompiledPipeline) -> ZMQPipelinePreparation:
+        """Load what the compiled pipeline selects into the workers that will run it."""
+        preparation_record, _ = self._completed_job(
+            compiled.request.with_worker_preparation(compiled.compile_artifact_id),
+            submit_phase=ZMQPipelineRunPhase.SUBMIT_PREPARATION,
+            wait_phase=ZMQPipelineRunPhase.WAIT_PREPARATION,
+            submission="OpenHCS ZMQ pipeline preparation submission",
+            failure="OpenHCS ZMQ pipeline preparation failed",
+        )
+        return ZMQPipelinePreparation(
+            compiled=compiled, preparation_record=preparation_record
+        )
+
+    def execute(self, compiled: ZMQCompiledPipeline) -> ZMQCompiledPipelineRun:
+        execution_request = compiled.request.with_compile_artifact_id(
+            compiled.compile_artifact_id
+        )
+        execution_record, completion_observed_at = self._completed_job(
+            execution_request,
+            submit_phase=ZMQPipelineRunPhase.SUBMIT_EXECUTION,
+            wait_phase=ZMQPipelineRunPhase.WAIT_EXECUTION,
+            submission="OpenHCS ZMQ execution submission",
+            failure="OpenHCS ZMQ execution failed",
+        )
+        return ZMQCompiledPipelineRun(
+            compile_artifact_id=compiled.compile_artifact_id,
+            execution_id=execution_record.execution_id,
+            request=execution_request,
+            compile_record=compiled.compile_record,
+            execution_record=execution_record,
+            completion_observed_at=completion_observed_at,
+        )
+
+
+def prepare_pipeline(
+    client: ZMQExecutionClient,
+    submission: OpenHCSExecutionSubmission,
+    *,
+    phase_context: (
+        Callable[[ZMQPipelineRunPhase], AbstractContextManager[None]] | None
+    ) = None,
+) -> ZMQPipelinePreparation:
+    """Compile one document and load what it selects into its workers.
+
+    A caller that times a run sends this before its clock starts: a following
+    run of the same document finds the loads held and performs none.
+    """
+
+    jobs = ZMQPipelineJobs(client, submission, phase_context)
+    return jobs.prepare(jobs.compile())
+
+
 def run_compiled_pipeline(
     client: ZMQExecutionClient,
     submission: OpenHCSExecutionSubmission,
@@ -449,65 +588,14 @@ def run_compiled_pipeline(
         Callable[[ZMQPipelineRunPhase], AbstractContextManager[None]] | None
     ) = None,
 ) -> ZMQCompiledPipelineRun:
-    """Compile and execute one ordinary document with an optional phase observer."""
+    """Compile and execute one ordinary document with an optional phase observer.
 
-    def phase_scope(phase: ZMQPipelineRunPhase) -> AbstractContextManager[None]:
-        return nullcontext() if phase_context is None else phase_context(phase)
+    The execution loads what its workers do not hold yet as a phase of its
+    own, which its record reports apart from its duration.
+    """
 
-    with phase_scope(ZMQPipelineRunPhase.SUBMIT_COMPILE):
-        request = ZMQExecutionRequestBuilder.from_task(submission)
-        compile_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_prepared_pipeline(request.compile_request())
-        )
-    if not compile_response.accepted:
-        raise RuntimeError(
-            compile_response.require_failure_text("OpenHCS ZMQ compile submission")
-        )
-    compile_artifact_id = compile_response.require_execution_id(
-        "OpenHCS ZMQ compile submission"
-    )
-    with phase_scope(ZMQPipelineRunPhase.WAIT_COMPILE):
-        compile_wait_response = client.wait_for_completion(
-            compile_artifact_id,
-            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
-        )
-    compile_record = ExecutionWaitResult.from_wire(
-        compile_wait_response
-    ).require_completed_execution(
-        "OpenHCS ZMQ compilation failed", expected_execution_id=compile_artifact_id
-    )
-
-    execution_request = request.with_compile_artifact_id(compile_artifact_id)
-    with phase_scope(ZMQPipelineRunPhase.SUBMIT_EXECUTION):
-        execution_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_prepared_pipeline(execution_request)
-        )
-    if not execution_response.accepted:
-        raise RuntimeError(
-            execution_response.require_failure_text("OpenHCS ZMQ execution submission")
-        )
-    execution_id = execution_response.require_execution_id(
-        "OpenHCS ZMQ execution submission"
-    )
-    with phase_scope(ZMQPipelineRunPhase.WAIT_EXECUTION):
-        completion_response = client.wait_for_completion(
-            execution_id,
-            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
-        )
-        completion_observed_at = time.time()
-    execution_record = ExecutionWaitResult.from_wire(
-        completion_response
-    ).require_completed_execution(
-        "OpenHCS ZMQ execution failed", expected_execution_id=execution_id
-    )
-    return ZMQCompiledPipelineRun(
-        compile_artifact_id=compile_artifact_id,
-        execution_id=execution_id,
-        request=execution_request,
-        compile_record=compile_record,
-        execution_record=execution_record,
-        completion_observed_at=completion_observed_at,
-    )
+    jobs = ZMQPipelineJobs(client, submission, phase_context)
+    return jobs.execute(jobs.compile())
 
 
 def _pycodify_config_source(
@@ -545,6 +633,21 @@ class ZMQExecutionRequestBuilder:
         return replace(
             self,
             compile_control=self.compile_control.as_execution_request(artifact_id),
+        )
+
+    def with_worker_preparation(self, artifact_id: str) -> ZMQExecutionRequestBuilder:
+        """The request that prepares the workers of a compiled pipeline."""
+        boundary = self.config_projection.params_boundary or ZMQConfigParamsBoundary(
+            None
+        )
+        return replace(
+            self.with_compile_artifact_id(artifact_id),
+            config_projection=replace(
+                self.config_projection,
+                params_boundary=boundary.with_updates(
+                    ZMQAuxiliaryExecutionParams(prepare_workers_only=True).to_transport()
+                ),
+            ),
         )
 
     @property
@@ -961,8 +1064,14 @@ class FunctionCatalogExecutionClient(
         )
 
 
-class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
-    """ZMQ client for OpenHCS pipeline execution with progress streaming."""
+class ZMQExecutionClient(
+    ImportRootEndpoint, FunctionCatalogExecutionClient, CustomFunctionServer
+):
+    """ZMQ client for OpenHCS pipeline execution with progress streaming.
+
+    While it is connected, its server follows this process's custom functions:
+    every change the manager makes is sent to it.
+    """
 
     config: OpenHCSZMQConfig
 
@@ -990,6 +1099,36 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
             config=config,
             connection_status_callback=connection_status_callback,
         )
+        connected_servers.add(self)
+
+    def server_process(self) -> ProcessIdentity | None:
+        endpoint = self.connected_endpoint
+        return None if endpoint is None else endpoint.process_identity
+
+    def follow_custom_function_change(
+        self, change: CustomFunctionChange
+    ) -> ServerCatalogueState:
+        return self._custom_catalogue_exchange(
+            {
+                MessageFields.TYPE: change.wire_type,
+                CustomFunctionChange.change_key: change,
+            }
+        )
+
+    def custom_catalogue_state(self) -> ServerCatalogueState:
+        return self._custom_catalogue_exchange(
+            {MessageFields.TYPE: CustomCatalogueStateRequest.wire_type}
+        )
+
+    def _custom_catalogue_exchange(
+        self, message: dict[str, object]
+    ) -> ServerCatalogueState:
+        response = self._send_control_request(
+            message, timeout_ms=self.config.control_timeout_ms
+        )
+        if response.get(MessageFields.STATUS) != ResponseType.OK.value:
+            raise RuntimeError(str(response.get(MessageFields.ERROR) or response))
+        return response[ServerCatalogueState.state_key]
 
     @classmethod
     @contextmanager

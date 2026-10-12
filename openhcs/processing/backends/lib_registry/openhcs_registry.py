@@ -688,11 +688,12 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         Load functions from cache or discover them, then add custom functions.
 
         Custom functions are NOT cached - they're loaded fresh from .py files
-        each time and added to the result here.
+        each time and added to a copy of what this registry loaded, so a
+        removed custom function is gone from the next result.
         """
         # Cached callable imports resolve their own declarations. A cache miss
         # enters discover_functions(), which imports every candidate module.
-        functions = super().load_or_discover_functions()
+        functions = dict(super().load_or_discover_functions())
         if not self.MODULES_TO_SCAN:
             return functions
 

@@ -45,6 +45,7 @@ class ZMQAuxiliaryParamField(Enum):
     PARTITION_VALUES = "partition_values"
     RUNTIME_OBSERVATION_EXPORT_PATH = "runtime_observation_export_path"
     RUNTIME_OBSERVATION_EXPORT_SCOPE = "runtime_observation_export_scope"
+    PREPARE_WORKERS_ONLY = "prepare_workers_only"
 
 
 class ZMQRuntimeObservationExportScope(ABC, metaclass=AutoRegisterMeta):
@@ -141,6 +142,9 @@ class ZMQAuxiliaryExecutionParams:
     runtime_observation_export_scope: type[ZMQRuntimeObservationExportScope] = (
         ExportRuntimeValues
     )
+    # "Prepare this pipeline": load what the compiled pipeline selects into the
+    # workers that will run it, and execute nothing.
+    prepare_workers_only: bool = False
 
     def __post_init__(self) -> None:
         self.runtime_observation_export_scope.check_export_path(
@@ -170,6 +174,8 @@ class ZMQAuxiliaryExecutionParams:
             params.update(self.debug_execution_config.to_config_params())
         if self.runtime_observation_export_path is not None:
             params.update(self.runtime_observation_items())
+        if self.prepare_workers_only:
+            params[ZMQAuxiliaryParamField.PREPARE_WORKERS_ONLY.value] = True
         return params
 
     def runtime_observation_items(self) -> TransportRequestItems:
@@ -199,11 +205,14 @@ class ZMQAuxiliaryExecutionParams:
         auxiliary = cls.from_transport(config_params)
         if config_params is None:
             return None
-        observation_fields = dict(auxiliary.runtime_observation_items())
+        not_compiled = {
+            *dict(auxiliary.runtime_observation_items()),
+            ZMQAuxiliaryParamField.PREPARE_WORKERS_ONLY.value,
+        }
         return {
             key: value
             for key, value in config_params.items()
-            if key not in observation_fields
+            if key not in not_compiled
         } or None
 
     @classmethod
@@ -228,6 +237,10 @@ class ZMQAuxiliaryExecutionParams:
                     ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
                 )
             ),
+            prepare_workers_only=config_params.get(
+                ZMQAuxiliaryParamField.PREPARE_WORKERS_ONLY.value
+            )
+            is True,
         )
 
     @staticmethod

@@ -22,6 +22,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
     def openhcs_decorator(
         *args: Any,
         prepare: Any = None,
+        load: Any = None,
         contract: Any = None,
         **kwargs: Any,
     ) -> Any:
@@ -51,6 +52,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
+                load=load,
                 processing_contract=processing_contract,
             )
             return wrapped
@@ -62,6 +64,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
+                load=load,
                 processing_contract=processing_contract,
             )
             return wrapped
@@ -171,6 +174,7 @@ def _attach_openhcs_metadata(
     wrapped: Any,
     *,
     prepare: Any,
+    load: Any,
     processing_contract: Any,
 ) -> None:
     from openhcs.core.callable_contract import attach_callable_contract_metadata
@@ -202,6 +206,10 @@ def _attach_openhcs_metadata(
         from openhcs.core.callable_contract import attach_processing_prepare
 
         attach_processing_prepare(wrapped, prepare)
+    if load is not None:
+        from openhcs.core.callable_contract import attach_processing_load
+
+        attach_processing_load(wrapped, load)
     if processing_contract is not None:
         _strip_unowned_semantic_controls(wrapped, processing_contract)
         attach_callable_contract_metadata(

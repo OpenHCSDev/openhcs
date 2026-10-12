@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, fields
 from enum import Enum
-from typing import Any, ClassVar
+from math import isfinite
+from typing import Any, ClassVar, Self
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.messages import MessageFields
@@ -63,6 +65,63 @@ class ExecutionOutputSummary:
     @property
     def is_present(self) -> bool:
         return any(value is not None for value in asdict(self).values())
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineLoadPhase:
+    """The resource loads an execution ran in its workers before any lane started.
+
+    Its own interval inside the execution's time bounds, on the same clock
+    (``time.time()`` of the server). An execution of a pipeline that was
+    prepared, or that declares no load, reports ``loads == 0``.
+    """
+
+    RESULTS_SUMMARY_KEY: ClassVar[str] = "load_phase"
+
+    started_at: float
+    ended_at: float
+    loads: int
+
+    def __post_init__(self) -> None:
+        if isinstance(self.loads, bool) or not isinstance(self.loads, int):
+            raise TypeError("A load phase counts its loads with an integer.")
+        if (
+            not isinstance(self.started_at, float)
+            or not isinstance(self.ended_at, float)
+            or not isfinite(self.started_at)
+            or not isfinite(self.ended_at)
+        ):
+            raise TypeError("A load phase starts and ends at finite float times.")
+        if self.ended_at < self.started_at or self.loads < 0:
+            raise ValueError("A load phase cannot end before it starts or undo loads.")
+
+    @classmethod
+    def timed(cls, load: Callable[[], int]) -> Self:
+        """Run the loads and report when they started, ended and how many ran."""
+        started_at = time.time()
+        loads = load()
+        return cls(started_at=started_at, ended_at=time.time(), loads=loads)
+
+    @classmethod
+    def without_lanes(cls) -> Self:
+        """The phase of an execution that started no lane: nothing was loaded."""
+        return cls.timed(lambda: 0)
+
+    @property
+    def seconds(self) -> float:
+        return self.ended_at - self.started_at
+
+    def results_summary_fields(self) -> dict[str, dict[str, float | int]]:
+        """The phase as the execution record's summary carries it."""
+        return {self.RESULTS_SUMMARY_KEY: asdict(self)}
+
+    @classmethod
+    def from_results_summary(cls, summary: Mapping[str, object]) -> Self:
+        """Read the phase an execution record reports; its absence is an error."""
+        reported = summary[cls.RESULTS_SUMMARY_KEY]
+        if not isinstance(reported, Mapping):
+            raise TypeError("An execution record reports its load phase as fields.")
+        return cls(**{name.name: reported[name.name] for name in fields(cls)})
 
 
 @dataclass(frozen=True, slots=True)

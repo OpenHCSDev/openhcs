@@ -93,6 +93,8 @@ class ZMQCompilationRequest:
     compiler_progress_queue: Any
     debug_execution_policy: Any
     compile_heartbeat_interval_seconds: float = 2.0
+    # False for "prepare this pipeline": the execution that follows uses the artifact.
+    consumes_artifact: bool = True
 
     def resolve(self) -> ZMQCompilationResult:
         if self.compile_artifact_id is not None:
@@ -119,7 +121,7 @@ class ZMQCompilationRequest:
 
         compilation = artifact.compilation
         step_names = compilation.step_names
-        if not self.retain_compile_artifact:
+        if self.consumes_artifact and not self.retain_compile_artifact:
             self.compiled_artifacts.pop(self.compile_artifact_id)
         self.progress_emitter.artifact_init_started(
             compiled_axis_ids=compilation.compiled_axis_ids,
