@@ -48,8 +48,6 @@ jobs:
       MPLBACKEND: Agg
       NUMBA_DISABLE_INTEL_SVML: ${{ 'macos-latest' == 'macos-latest' && '1' || '0' }}
       NPY_DISABLE_CPU_FEATURES: AVX512_SKX,X86_V4
-      CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
-      OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
       R1_CASES: ${{ github.event.inputs.case || 'ExampleHuman' }}
     steps:
       - name: Enable Windows long paths
@@ -76,12 +74,16 @@ jobs:
       - name: Materialize inputs
         env:
           OPENHCS_BENCHMARK_AUTO_ACQUIRE: "1"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
         run: |
           python -c "from benchmark.cellprofiler_comparison import load_comparison_cases; print(len(load_comparison_cases('benchmark/manifests/official30_portable_axis1.json')))"
 
       - name: Run the case and print value differences
         env:
           OPENHCS_BENCHMARK_AUTO_ACQUIRE: "0"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
           PYTHONPATH: ${{ github.workspace }}/.github/r1-debug
           R1_DEBUG_DUMP_DIR: ${{ runner.temp }}/r1/circles
           OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR: ${{ runner.temp }}/r1/intensity-traces
@@ -122,8 +124,6 @@ jobs:
       MPLBACKEND: Agg
       NUMBA_DISABLE_INTEL_SVML: ${{ 'windows-latest' == 'macos-latest' && '1' || '0' }}
       NPY_DISABLE_CPU_FEATURES: AVX512_SKX,X86_V4
-      CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
-      OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
       R1_CASES: ${{ github.event.inputs.case || 'ExampleImagingFlowCytometryObjectsInGrid' }}
     steps:
       - name: Enable Windows long paths
@@ -150,12 +150,16 @@ jobs:
       - name: Materialize inputs
         env:
           OPENHCS_BENCHMARK_AUTO_ACQUIRE: "1"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
         run: |
           python -c "from benchmark.cellprofiler_comparison import load_comparison_cases; print(len(load_comparison_cases('benchmark/manifests/official30_portable_axis1.json')))"
 
       - name: Run the case and print value differences
         env:
           OPENHCS_BENCHMARK_AUTO_ACQUIRE: "0"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
           PYTHONPATH: ${{ github.workspace }}/.github/r1-debug
           R1_DEBUG_DUMP_DIR: ${{ runner.temp }}/r1/circles
           OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR: ${{ runner.temp }}/r1/intensity-traces
