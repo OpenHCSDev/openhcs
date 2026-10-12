@@ -560,3 +560,40 @@ def test_projection_imports_only_the_selected_declared_path() -> None:
         assert exc.entry is remote
     else:
         raise AssertionError("Remote-only selection did not fail explicitly")
+
+
+def test_selector_names_custom_functions_the_endpoint_failed_to_load(
+    qapp,
+    monkeypatch,
+) -> None:
+    from dataclasses import replace
+
+    from openhcs.agent.dto.functions import FailedCustomFunctionSource
+
+    signals = CustomFunctionSignals()
+    monkeypatch.setattr(selector_module, "custom_function_signals", signals)
+    entry = _entry("openhcs:stable_probe")
+    page = replace(
+        _page(entry),
+        failed_custom_sources=(
+            FailedCustomFunctionSource(
+                "broken_probe", "/store/broken_probe.py", "No module named 'x'", 1
+            ),
+        ),
+    )
+    service = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _config: _EndpointClient(page),
+    )
+    dialog = FunctionSelectorDialog(service)
+
+    try:
+        _wait_until(qapp, lambda: entry.function_id in dialog.catalog_entries)
+        assert dialog.function_table_browser.status_label.text() == (
+            "Functions: 1/1 | Custom functions that failed to load: broken_probe "
+            "(see the Custom Function Manager for the errors)"
+        )
+    finally:
+        signals.functions_changed.disconnect(dialog._on_functions_changed)
+        dialog.close()
+        service.close()

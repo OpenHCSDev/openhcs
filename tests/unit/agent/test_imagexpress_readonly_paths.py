@@ -253,64 +253,61 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
     )
     key = f"imagexpress_site_folders_{reverse}"
     subtype = type("SiteAcquisitionHandler", parents, {"source_name": key})
-    try:
-        plate = write_plate(tmp_path)
-        source = plate / "TimePoint_1"
-        renamed = plate / "TimePoint_3"
-        source.rename(renamed)
-        site = renamed / "Site_7"
-        site.mkdir()
-        for folder in tuple(renamed.glob("ZStep*")):
-            folder.rename(site / folder.name)
-        result = inspect_plate(plate, source_format=key, max_component_values=10)
-        assert not result.errors
-        assert result.handler_class == subtype.__name__
-        assert result.image_files.count == result.parse_summary.parsed_file_count == 4
-        summaries = {item.component: item for item in result.components}
-        assert tuple(v.key for v in summaries[Microscopy.Site.name].values) == ("7",)
-        assert tuple(v.key for v in summaries[Microscopy.Timepoint.name].values) == ("3",)
-        assert summaries[Microscopy.ZIndex.name].count == 2
-        query = service_for(plate).query_files(
-            PlateFileQueryRequest.from_fields(
-                plate_path=str(plate),
-                source_format=key,
-                include_previews=False,
-            )
+    plate = write_plate(tmp_path)
+    source = plate / "TimePoint_1"
+    renamed = plate / "TimePoint_3"
+    source.rename(renamed)
+    site = renamed / "Site_7"
+    site.mkdir()
+    for folder in tuple(renamed.glob("ZStep*")):
+        folder.rename(site / folder.name)
+    result = inspect_plate(plate, source_format=key, max_component_values=10)
+    assert not result.errors
+    assert result.handler_class == subtype.__name__
+    assert result.image_files.count == result.parse_summary.parsed_file_count == 4
+    summaries = {item.component: item for item in result.components}
+    assert tuple(v.key for v in summaries[Microscopy.Site.name].values) == ("7",)
+    assert tuple(v.key for v in summaries[Microscopy.Timepoint.name].values) == ("3",)
+    assert summaries[Microscopy.ZIndex.name].count == 2
+    query = service_for(plate).query_files(
+        PlateFileQueryRequest.from_fields(
+            plate_path=str(plate),
+            source_format=key,
+            include_previews=False,
         )
-        assert not query.errors
-        assert query.total_count == 4
-        assert {item.metadata["site"] for item in query.records} == {7}
-        # Inspector parses each path twice (inventory and bounded summary); query once.
-        for path in {path for _, path in events}:
-            assert events.count(("site", path)) == events.count(("ancestor", path)) == 3
-        assert (
-            subtype.__mro__.count(PathTerminus)
-            == subtype.__mro__.count(FilenameParserCapability)
-            == 1
-        )
-        assert DatasetSource.__registry__[key] is subtype
-        assert not (plate / "openhcs_metadata.json").exists()
-        filemanager = FileManager(dict(storage_registry))
-        handler = DatasetSourceChoice.named(key).open(plate, filemanager=filemanager)
-        handler.initialize_workspace(plate, filemanager)
-        prepared = PlateFileInventory.from_handler(
-            plate_path=plate,
-            handler=handler,
-            filemanager=filemanager,
-            backend=handler.get_primary_backend(plate, filemanager),
-        )
-        assert len(prepared.image_records) == 4
-        assert {record.metadata["site"] for record in prepared.image_records} == {7}
-        assert {record.metadata["timepoint"] for record in prepared.image_records} == {
-            3
-        }
-        assert {record.source_path for record in prepared.image_records} == {
-            item.metadata["source_path"] for item in query.records
-        }
-        for path in {path for _, path in events}:
-            assert events.count(("site", path)) == events.count(("ancestor", path))
-    finally:
-        del DatasetSource.__registry__[key]
+    )
+    assert not query.errors
+    assert query.total_count == 4
+    assert {item.metadata["site"] for item in query.records} == {7}
+    # Inspector parses each path twice (inventory and bounded summary); query once.
+    for path in {path for _, path in events}:
+        assert events.count(("site", path)) == events.count(("ancestor", path)) == 3
+    assert (
+        subtype.__mro__.count(PathTerminus)
+        == subtype.__mro__.count(FilenameParserCapability)
+        == 1
+    )
+    assert DatasetSource.__registry__[key] is subtype
+    assert not (plate / "openhcs_metadata.json").exists()
+    filemanager = FileManager(dict(storage_registry))
+    handler = DatasetSourceChoice.named(key).open(plate, filemanager=filemanager)
+    handler.initialize_workspace(plate, filemanager)
+    prepared = PlateFileInventory.from_handler(
+        plate_path=plate,
+        handler=handler,
+        filemanager=filemanager,
+        backend=handler.get_primary_backend(plate, filemanager),
+    )
+    assert len(prepared.image_records) == 4
+    assert {record.metadata["site"] for record in prepared.image_records} == {7}
+    assert {record.metadata["timepoint"] for record in prepared.image_records} == {
+        3
+    }
+    assert {record.source_path for record in prepared.image_records} == {
+        item.metadata["source_path"] for item in query.records
+    }
+    for path in {path for _, path in events}:
+        assert events.count(("site", path)) == events.count(("ancestor", path))
 
 
 def test_initializer_rejects_ambiguous_paths_instead_of_overwriting(tmp_path):

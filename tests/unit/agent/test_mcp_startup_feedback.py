@@ -16,7 +16,6 @@ from zmqruntime.messages import (
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration,
     DescribeFunctionCapability,
     GenerateSyntheticPlateCapability,
     InspectPlatePathCapability,
@@ -339,19 +338,15 @@ def test_new_catalog_declarations_and_cooperative_hooks_use_unchanged_generated_
             return page
 
     context = SimpleNamespace(function_catalog=Catalog(), audit=[])
-    try:
-        built = build_server(context)
+    built = build_server(context)
 
-        async def exercise():
-            for declaration in (NewBefore, NewAfter):
-                progress = RecordingContext()
-                tool = built._tool_manager.get_tool(declaration.name)
-                result = await tool.fn(mcp_context=progress, query="new-case")
-                assert result["revision"] == "new-case"
-                assert "New declaration feedback" in progress.messages[-1][1]
-
-        asyncio.run(exercise())
-        assert context.audit == [NewBefore.name]
-    finally:
+    async def exercise():
         for declaration in (NewBefore, NewAfter):
-            AgentCapabilityDeclaration.__registry__.pop(declaration.name)
+            progress = RecordingContext()
+            tool = built._tool_manager.get_tool(declaration.name)
+            result = await tool.fn(mcp_context=progress, query="new-case")
+            assert result["revision"] == "new-case"
+            assert "New declaration feedback" in progress.messages[-1][1]
+
+    asyncio.run(exercise())
+    assert context.audit == [NewBefore.name]

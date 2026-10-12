@@ -9,7 +9,6 @@ from types import SimpleNamespace
 
 import pytest
 from objectstate.context_manager import config_context
-from objectstate.global_config import GlobalContextValues
 
 import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.native_batch_contracts import NativeBatchRequest
@@ -26,7 +25,6 @@ from benchmark.matched_cellprofiler_batch import (
     _worker_axis_evidence,
 )
 from openhcs.core.config import (
-    GlobalPipelineConfig,
     MultiprocessingStartMethod,
     PipelineConfig,
 )
@@ -38,14 +36,6 @@ from benchmark.equivalence.runtime import (
     RuntimeTableSnapshot,
     runtime_measurement_equivalence,
 )
-
-
-@pytest.fixture(autouse=True)
-def restore_benchmark_global_context():
-    """Restore both saved and live projections changed by config rebuilding."""
-    previous = GlobalContextValues.capture(GlobalPipelineConfig)
-    yield
-    previous.apply()
 
 
 @pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))

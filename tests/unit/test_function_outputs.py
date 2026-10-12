@@ -1526,33 +1526,26 @@ def test_image_persistence_skips_object_label_main_flow_payloads():
 def test_metadata_target_family_discovers_new_declaration_without_consumer_edits(
     tmp_path,
 ):
-    registry = OpenHCSMetadataTarget.__registry__
-    original_keys = set(registry)
-    try:
+    class SupplementalImageMetadataTarget(OpenHCSMetadataTarget):
+        @classmethod
+        def from_plan(cls, plan):
+            return cls(
+                output_dir=tmp_path,
+                backend=Backend.DISK.value,
+                dataset_root=str(tmp_path),
+                sub_dir="supplemental",
+                results_dir=None,
+            )
 
-        class SupplementalImageMetadataTarget(OpenHCSMetadataTarget):
-            @classmethod
-            def from_plan(cls, plan):
-                return cls(
-                    output_dir=tmp_path,
-                    backend=Backend.DISK.value,
-                    dataset_root=str(tmp_path),
-                    sub_dir="supplemental",
-                    results_dir=None,
-                )
-
-        plan = function_step_plan("memory-only")
-        plan.write_backend = Backend.MEMORY.value
-        context = context_stub(FileManagerStub({}))
-        (target,) = OpenHCSMetadataTarget.for_plan(plan)
-        assert type(target) is SupplementalImageMetadataTarget
-        assert OpenHCSMetadataTarget.for_execution(context, plan) == (
-            replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),
-        )
-        assert target.produced_projection_entries(context, plan).entries == {}
-    finally:
-        for key in set(registry) - original_keys:
-            del registry[key]
+    plan = function_step_plan("memory-only")
+    plan.write_backend = Backend.MEMORY.value
+    context = context_stub(FileManagerStub({}))
+    (target,) = OpenHCSMetadataTarget.for_plan(plan)
+    assert type(target) is SupplementalImageMetadataTarget
+    assert OpenHCSMetadataTarget.for_execution(context, plan) == (
+        replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),
+    )
+    assert target.produced_projection_entries(context, plan).entries == {}
 
 
 def test_metadata_writer_skips_owner_without_image_outputs():

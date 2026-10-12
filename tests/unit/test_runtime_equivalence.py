@@ -2769,9 +2769,7 @@ def test_cellprofiler_descriptor_profile_accepts_native_intensity_zernike_names(
         )
 
 
-def test_calculated_object_identifier_profile_is_most_derived(stand_in_members) -> None:
-    stand_in_members(PlainMeasurementDialect)
-
+def test_calculated_object_identifier_profile_is_most_derived() -> None:
     class CalculatedDialect(PlainMeasurementDialect):
         dialect_name = "calculated"
 

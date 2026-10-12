@@ -321,10 +321,6 @@ def test_compilation_debug_enabled_field_is_inherited_from_enableable() -> None:
         assert state.get_resolved_value("compilation_debug_config.enabled") is False
     finally:
         ObjectStateRegistry.clear()
-        ensure_global_config_context(
-            GlobalPipelineConfig,
-            GlobalPipelineConfig(),
-        )
 
 
 def test_compilation_debug_is_last_in_generated_pipeline_config_order() -> None:

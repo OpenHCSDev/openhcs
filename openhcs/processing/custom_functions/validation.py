@@ -11,6 +11,7 @@ exec(). Custom functions execute with full Python privileges.
 
 import ast
 import inspect
+import traceback
 from dataclasses import dataclass, replace
 from typing import Callable
 
@@ -43,11 +44,37 @@ class ValidationError(Exception):
             parts.append(f"Code: {self.code_snippet}")
         return " | ".join(parts)
 
+    @classmethod
+    def at_line(cls, message: str, code: str, line_number: int) -> "ValidationError":
+        """The error for one line of ``code`` (0 for none), quoting that line."""
+        lines = code.splitlines()
+        on_a_line = 0 < line_number <= len(lines)
+        return cls(message, line_number, lines[line_number - 1].strip() if on_a_line else "")
+
     def __copy__(self) -> "ValidationError":
         """Copy declared values without reformatting an already formatted arg."""
         error = type(self)(self.message, self.line_number, self.code_snippet)
         error.__dict__.update(self.__dict__)
         return error
+
+
+def failing_source_line(error: BaseException, source_filename: str) -> int:
+    """Innermost line of the executed source in an error's traceback, 0 for none."""
+    lines = [
+        frame.lineno
+        for frame in traceback.extract_tb(error.__traceback__)
+        if frame.filename == source_filename
+    ]
+    return lines[-1] if lines else 0
+
+
+def declaration_line(code: str, function_name: str) -> int:
+    """Line of the module-level ``def`` of ``function_name`` in ``code``."""
+    return next(
+        node.lineno
+        for node in ast.parse(code).body
+        if isinstance(node, ast.FunctionDef) and node.name == function_name
+    )
 
 
 @dataclass(frozen=True)
@@ -60,12 +87,14 @@ class ValidationResult:
         errors: List of validation error messages
         warnings: List of non-fatal warning messages
         function_names: List of function names found in the code
+        line_number: Source line of the first error, 0 when it has none
     """
 
     is_valid: bool
     errors: list[str]
     warnings: list[str]
     function_names: list[str]
+    line_number: int = 0
 
 
 def validate_syntax(code: str) -> ValidationResult:
@@ -93,7 +122,11 @@ def validate_syntax(code: str) -> ValidationResult:
     except SyntaxError as e:
         error_msg = f"Syntax error: {e.msg}"
         return ValidationResult(
-            is_valid=False, errors=[error_msg], warnings=[], function_names=[]
+            is_valid=False,
+            errors=[error_msg],
+            warnings=[],
+            function_names=[],
+            line_number=e.lineno or 0,
         )
 
 
@@ -125,6 +158,7 @@ def validate_imports(code: str) -> ValidationResult:
     }
 
     errors: list[str] = []
+    error_lines: list[int] = []
     warnings: list[str] = []
 
     try:
@@ -144,6 +178,7 @@ def validate_imports(code: str) -> ValidationResult:
                         f"Dangerous import detected: '{alias.name}'. "
                         f"Module '{module_name}' is not allowed in custom functions."
                     )
+                    error_lines.append(node.lineno)
 
         elif isinstance(node, ast.ImportFrom):
             if node.module:
@@ -153,10 +188,15 @@ def validate_imports(code: str) -> ValidationResult:
                         f"Dangerous import detected: 'from {node.module}'. "
                         f"Module '{module_name}' is not allowed in custom functions."
                     )
+                    error_lines.append(node.lineno)
 
     is_valid = len(errors) == 0
     return ValidationResult(
-        is_valid=is_valid, errors=errors, warnings=warnings, function_names=[]
+        is_valid=is_valid,
+        errors=errors,
+        warnings=warnings,
+        function_names=[],
+        line_number=min(error_lines, default=0),
     )
 
 

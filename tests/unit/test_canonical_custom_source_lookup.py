@@ -205,24 +205,21 @@ def test_new_nominal_registry_and_independent_capabilities_use_real_cooperative_
     def independently_declared(image):
         raise AssertionError("canonical resolution must not execute scientific work")
 
-    try:
-        registry = IndependentCanonicalRegistry()
-        registry_type = type(registry)
-        registry_type.probe = FunctionMetadata(
-            name="independently_declared", func=independently_declared,
-            contract=FlexibleContract, registry=registry,
-            original_name="independently_declared", module=__name__,
-        )
-        assert get_function(registry_type.probe.composite_key) is independently_declared
-        assert events == ["trace-enter", "declaration", "trace-exit"]
-        assert registry_type.__mro__.index(TraceClaims) < registry_type.__mro__.index(DeclaredClaims)
-        assert registry_type.__mro__.index(OpenHCSRegistry) < registry_type.__mro__.index(LibraryRegistryBase)
-        events.clear()
-        with pytest.raises(KeyError, match="Unknown canonical function ID"):
-            get_function(f"{registry.library_name}:missing")
-        assert events == ["trace-enter", "declaration", "trace-exit"]
-    finally:
-        dict.pop(LibraryRegistryBase.__registry__, IndependentCanonicalRegistry._registry_name, None)
+    registry = IndependentCanonicalRegistry()
+    registry_type = type(registry)
+    registry_type.probe = FunctionMetadata(
+        name="independently_declared", func=independently_declared,
+        contract=FlexibleContract, registry=registry,
+        original_name="independently_declared", module=__name__,
+    )
+    assert get_function(registry_type.probe.composite_key) is independently_declared
+    assert events == ["trace-enter", "declaration", "trace-exit"]
+    assert registry_type.__mro__.index(TraceClaims) < registry_type.__mro__.index(DeclaredClaims)
+    assert registry_type.__mro__.index(OpenHCSRegistry) < registry_type.__mro__.index(LibraryRegistryBase)
+    events.clear()
+    with pytest.raises(KeyError, match="Unknown canonical function ID"):
+        get_function(f"{registry.library_name}:missing")
+    assert events == ["trace-enter", "declaration", "trace-exit"]
 
 
 def test_shared_consumer_has_no_concrete_owner_dispatch():

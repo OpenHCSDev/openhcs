@@ -13,7 +13,15 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
 
+from openhcs.core.native_threading import configure_native_thread_environment
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
+
+# Tests run pipeline workers inside the pytest process, and a worker sets the
+# native thread count of its process to one. Numba launches its threads once
+# and refuses any later count, so a worker that ran in a test whose environment
+# was then restored broke the first Numba compilation of a later test. The
+# pytest process is an execution process from the start.
+configure_native_thread_environment(1)
 
 # Every socket and lock file of this pytest process, and of the servers and
 # viewers it starts, lives under a root no other run sees. Each xdist worker
@@ -23,12 +31,13 @@ use_private_socket_root()
 import psutil
 import pytest
 from metaclass_registry.testing import restored_registry
-from zmqruntime.messages import AckReturnRoute, ProcessIdentity
-
 from polystore.imagej_distribution import (
     FijiArchiveDistribution,
     ImageJArchiveDownloadPolicy,
 )
+from zmqruntime.messages import AckReturnRoute, ProcessIdentity
+
+from tests import family_registries
 
 # Configure before test collection imports any ImageJ runtime. Tests may change
 # XDG_CACHE_HOME later; the immutable bundle must not follow those run caches.
@@ -149,6 +158,53 @@ def _marked_processes(marker: str) -> list[psutil.Process]:
         except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
             continue
     return found
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_make_collect_report(collector):
+    """Members a test module declares at import leave their families after the import."""
+    report = yield
+    if isinstance(collector, pytest.Module):
+        family_registries.withdraw_module_members()
+    return report
+
+
+@pytest.fixture(scope="module", autouse=True)
+def module_family_members(request) -> Iterator[None]:
+    """Members a test module declares at import are members while its tests run."""
+    family_registries.join_module_members(request.module)
+    yield
+    family_registries.leave_module_members()
+
+
+@pytest.fixture(autouse=True)
+def restored_family_registries(module_family_members) -> Iterator[None]:
+    """Every family registry is, after a test, what it was before it."""
+    before = family_registries.registry_snapshot()
+    yield
+    family_registries.restore_registries(before)
+
+
+@pytest.fixture(autouse=True)
+def restored_global_configs() -> Iterator[None]:
+    """The saved and live global config of every config type is, after a test, what it was before it."""
+    from objectstate import global_config
+
+    def config_types() -> set[type]:
+        return {
+            *global_config._saved_global_config_contexts,
+            *global_config._live_global_config_contexts,
+        }
+
+    before = {
+        config_type: global_config.GlobalContextValues.capture(config_type)
+        for config_type in config_types()
+    }
+    yield
+    for config_type in config_types():
+        before.get(
+            config_type, global_config.GlobalContextValues(config_type, None, None)
+        ).apply()
 
 
 @pytest.fixture
