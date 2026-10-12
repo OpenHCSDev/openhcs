@@ -43,6 +43,7 @@ from openhcs.core.artifacts.specs import (
 )
 from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 from openhcs.core.callable_contract import (
+    CallableProjection,
     CallableContract,
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
@@ -409,7 +410,7 @@ class NormalizedFunctionGroup:
             kwargs = {} if kwargs is None else kwargs
             if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
                 continue
-            contract = CallableContract.from_prepared_callable(func)
+            contract = CallableProjection.from_callable(func).declared_contract()
             normalized_items.append(
                 NormalizedFunctionItem(
                     key=FunctionInvocationKey.from_contract(
@@ -1551,6 +1552,28 @@ def normalize_function_pattern(
         groups=tuple(group for group in groups if group.items or not is_grouped),
         is_grouped=is_grouped,
     )
+
+
+def normalize_prepared_function_pattern(
+    pattern: FunctionPatternSyntax | NormalizedFunctionPattern,
+) -> NormalizedFunctionPattern:
+    """Prepare every enabled callable, then lower the syntax: the compiler's entry.
+
+    Lowering alone prepares nothing, so authoring and validation never compile a
+    kernel. A pipeline about to be compiled for execution prepares first, and the
+    contracts are read afterwards. A process that ran catalog preparation has
+    nothing left to prepare here.
+    """
+    if isinstance(pattern, NormalizedFunctionPattern):
+        for item in pattern.iter_items():
+            CallableProjection.from_callable(item.func).prepared_callable()
+        return pattern
+    for _, chain in AuthoredFunctionPattern.groups(pattern):
+        for leaf in chain:
+            func, kwargs = AuthoredFunctionPattern.split_leaf(leaf)
+            if not RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs or {}):
+                CallableProjection.from_callable(func).prepared_callable()
+    return normalize_function_pattern(pattern)
 
 
 def compile_function_pattern(

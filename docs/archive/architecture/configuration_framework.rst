@@ -146,7 +146,7 @@ From ``tests/integration/test_main.py``:
        )
    )
 
-The lazy configs resolve through dual-axis algorithm: check ``PipelineConfig`` context first, then ``GlobalPipelineConfig`` context, walking MRO at each level.
+The lazy configs resolve class first, not scope first. The order is stated once, with an example, in ObjectState's ``context_system.rst`` under "Precedence Order" (``external/ObjectState/src/objectstate/docs/context_system.rst``).
 
 Framework Modules
 ----------------

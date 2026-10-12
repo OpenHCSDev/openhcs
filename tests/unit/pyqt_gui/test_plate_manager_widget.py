@@ -1030,7 +1030,7 @@ def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -
         assert dataset_state.parameters["num_workers"] == 3
         assert dataset_state._saved_parameters["num_workers"] is None
         assert dataset_state.get_resolved_value("num_workers") == 3
-        assert dataset_state.get_saved_resolved_value("num_workers") == 1
+        assert dataset_state.get_saved_resolved_value("num_workers") == 7
         assert dataset_state.dirty_fields == {"num_workers"}
         assert emitted == [(scope_id, 7)]
 

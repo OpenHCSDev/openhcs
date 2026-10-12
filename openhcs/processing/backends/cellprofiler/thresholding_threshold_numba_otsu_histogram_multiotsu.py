@@ -480,64 +480,6 @@ def _multiotsu_interval_score_numba(
 
 
 @njit(cache=True)
-def _minimum_cross_entropy_threshold_numba(
-    values: np.ndarray,
-    bin_count: int,
-) -> float:
-    if values.size == 0:
-        return 0.0
-    if bin_count < 2:
-        bin_count = 2
-    minimum, maximum = _histogram_range_numba(values)
-    if maximum == minimum:
-        return float(minimum)
-
-    counts = _histogram_counts_numba(values, bin_count, minimum, maximum)
-    width = (maximum - minimum) / float(bin_count)
-    cumulative_count = np.zeros(bin_count, dtype=np.float64)
-    cumulative_weighted = np.zeros(bin_count, dtype=np.float64)
-    total_count = 0.0
-    total_weighted = 0.0
-    for index in range(bin_count):
-        center = minimum + (float(index) + 0.5) * width
-        count = float(counts[index])
-        total_count += count
-        total_weighted += count * center
-        cumulative_count[index] = total_count
-        cumulative_weighted[index] = total_weighted
-
-    if total_count == 0.0:
-        return 0.0
-
-    best_index = 0
-    best_cross_entropy = np.inf
-    for index in range(bin_count - 1):
-        foreground_count = cumulative_count[index]
-        background_count = total_count - foreground_count
-        foreground_weighted = cumulative_weighted[index]
-        background_weighted = total_weighted - foreground_weighted
-        if (
-            foreground_count <= 0.0
-            or background_count <= 0.0
-            or foreground_weighted <= 0.0
-            or background_weighted <= 0.0
-        ):
-            continue
-        foreground_mean = foreground_weighted / foreground_count
-        background_mean = background_weighted / background_count
-        if foreground_mean <= 0.0 or background_mean <= 0.0:
-            continue
-        cross_entropy = -(
-            foreground_weighted * math.log(foreground_mean)
-            + background_weighted * math.log(background_mean)
-        )
-        if cross_entropy < best_cross_entropy:
-            best_cross_entropy = cross_entropy
-            best_index = index
-    return minimum + (float(best_index) + 0.5) * width
-
-
-@njit(cache=True)
 def _sauvola_threshold_image_numba(
     image: np.ndarray,
     window_size: int,

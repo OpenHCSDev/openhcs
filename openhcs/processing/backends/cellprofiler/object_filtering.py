@@ -23,7 +23,10 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from python_introspect import public_names_from_objects
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable_contract import (
+    KeywordRuntimeParameter,
+    processing_prepare,
+)
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
@@ -2374,6 +2377,20 @@ def filter_border_objects(
         image,
         DataclassMeasurementColumnarRows((stats,), row_type=FilterObjectsStats),
         filtered_object_payload(source_labels, label_mapping[label_array]),
+    )
+
+
+@processing_prepare(filter_objects)
+def _prepare_filter_objects() -> None:
+    """Compile the most-overlap parent assignment before timed execution."""
+    ParentWithMostOverlapAssignmentStrategy().indexes_to_keep(
+        PerObjectAssignmentRequest(
+            child_labels=np.array([[1, 1, 2], [0, 2, 2]], dtype=np.int32),
+            enclosing_labels=np.array([[1, 1, 1], [0, 2, 2]], dtype=np.int32),
+            measurement_values=np.array([0.0, 1.0, 2.0]),
+            child_count=2,
+            keep_max=True,
+        )
     )
 
 

@@ -53,21 +53,182 @@ def _numpy_124_scalar_arccos(typing_context, value):
     return signature, codegen
 
 
+if _NUMPY_124_SVML_ACOS_AVAILABLE:
+    # Defined only where it can run: a kernel that exists is one preparation compiles.
+    @njit(cache=True)
+    def _numpy_124_svml_arccos(values: np.ndarray) -> np.ndarray:
+        """Return NumPy 1.24 standard-SVML arccos values for a flat array."""
+        result = np.empty(values.size, dtype=np.float64)
+        for index in range(values.size):
+            result[index] = _numpy_124_scalar_arccos(values[index])
+        return result
+
+
+_DEKKER_SPLITTER = 134217729.0  # 2**27 + 1
+_HALF_PI_PARTS = (1.5707963267948966, 6.123233995736766e-17, -1.4973849048591698e-33)
+_ARCSINE_SERIES_TERMS = 24
+_SINE_COSINE_SERIES_TERMS = 15
+_ARCCOS_NEWTON_STEP_LIMIT = 8
+
+
+@njit(cache=True, inline="always")
+def _exact_sum(left: float, right: float) -> tuple[float, float]:
+    """Return the rounded sum and its exact rounding error."""
+    total = left + right
+    right_part = total - left
+    return total, (left - (total - right_part)) + (right - right_part)
+
+
+@njit(cache=True, inline="always")
+def _exact_product(left: float, right: float) -> tuple[float, float]:
+    """Return the rounded product and its exact rounding error, without fused multiply-add."""
+    product = left * right
+    scaled = _DEKKER_SPLITTER * left
+    left_high = scaled - (scaled - left)
+    left_low = left - left_high
+    scaled = _DEKKER_SPLITTER * right
+    right_high = scaled - (scaled - right)
+    right_low = right - right_high
+    error = (
+        (left_high * right_high - product) + left_high * right_low + left_low * right_high
+    ) + left_low * right_low
+    return product, error
+
+
+@njit(cache=True, inline="always")
+def _pair_sum(
+    left_high: float, left_low: float, right_high: float, right_low: float
+) -> tuple[float, float]:
+    """Add two (high, low) double pairs."""
+    total, error = _exact_sum(left_high, right_high)
+    return _exact_sum(total, error + (left_low + right_low))
+
+
+@njit(cache=True, inline="always")
+def _pair_product(
+    left_high: float, left_low: float, right_high: float, right_low: float
+) -> tuple[float, float]:
+    """Multiply two (high, low) double pairs."""
+    product, error = _exact_product(left_high, right_high)
+    return _exact_sum(product, error + (left_high * right_low + left_low * right_high))
+
+
+@njit(cache=True, inline="always")
+def _pair_quotient(
+    left_high: float, left_low: float, right_high: float, right_low: float
+) -> tuple[float, float]:
+    """Divide two (high, low) double pairs."""
+    first = left_high / right_high
+    product_high, product_low = _pair_product(right_high, right_low, first, 0.0)
+    rest_high, rest_low = _pair_sum(left_high, left_low, -product_high, -product_low)
+    second = rest_high / right_high
+    product_high, product_low = _pair_product(right_high, right_low, second, 0.0)
+    rest_high, rest_low = _pair_sum(rest_high, rest_low, -product_high, -product_low)
+    third = rest_high / right_high
+    quotient_high, quotient_low = _exact_sum(first, second)
+    return _pair_sum(quotient_high, quotient_low, third, 0.0)
+
+
 @njit(cache=True)
-def _numpy_124_svml_arccos(values: np.ndarray) -> np.ndarray:
-    """Return NumPy 1.24 standard-SVML arccos values for a flat array."""
-    result = np.empty(values.size, dtype=np.float64)
-    for index in range(values.size):
-        result[index] = _numpy_124_scalar_arccos(values[index])
-    return result
+def _sine_cosine_pairs(angle: float) -> tuple[float, float, float, float]:
+    """Return sin and cos of an angle in [0, pi], each as a (high, low) double pair."""
+    quarter_turns = 0
+    if angle >= 2.356194490192345:
+        quarter_turns = 2
+    elif angle >= 0.7853981633974483:
+        quarter_turns = 1
+    reduced_high, reduced_low = _exact_sum(angle, -quarter_turns * _HALF_PI_PARTS[0])
+    reduced_high, reduced_low = _pair_sum(
+        reduced_high,
+        reduced_low,
+        -quarter_turns * _HALF_PI_PARTS[1],
+        -quarter_turns * _HALF_PI_PARTS[2],
+    )
+    square_high, square_low = _pair_product(
+        reduced_high, reduced_low, reduced_high, reduced_low
+    )
+    sine_high, sine_low = reduced_high, reduced_low
+    sine_term_high, sine_term_low = reduced_high, reduced_low
+    cosine_high, cosine_low = 1.0, 0.0
+    cosine_term_high, cosine_term_low = 1.0, 0.0
+    for term in range(1, _SINE_COSINE_SERIES_TERMS + 1):
+        cosine_term_high, cosine_term_low = _pair_product(
+            cosine_term_high, cosine_term_low, square_high, square_low
+        )
+        cosine_term_high, cosine_term_low = _pair_quotient(
+            cosine_term_high, cosine_term_low, -float((2 * term - 1) * (2 * term)), 0.0
+        )
+        cosine_high, cosine_low = _pair_sum(
+            cosine_high, cosine_low, cosine_term_high, cosine_term_low
+        )
+        sine_term_high, sine_term_low = _pair_product(
+            sine_term_high, sine_term_low, square_high, square_low
+        )
+        sine_term_high, sine_term_low = _pair_quotient(
+            sine_term_high, sine_term_low, -float((2 * term) * (2 * term + 1)), 0.0
+        )
+        sine_high, sine_low = _pair_sum(sine_high, sine_low, sine_term_high, sine_term_low)
+    if quarter_turns == 0:
+        return sine_high, sine_low, cosine_high, cosine_low
+    if quarter_turns == 1:
+        return cosine_high, cosine_low, -sine_high, -sine_low
+    return -sine_high, -sine_low, -cosine_high, -cosine_low
+
+
+@njit(cache=True)
+def _arcsine_series(value: float) -> float:
+    """Return a plain-double arcsine estimate for |value| <= sqrt(1/2)."""
+    square = value * value
+    term = value
+    total = value
+    for index in range(_ARCSINE_SERIES_TERMS):
+        odd = 2.0 * index + 1.0
+        term = term * square * (odd * odd) / ((odd + 1.0) * (odd + 2.0))
+        total += term
+    return total
+
+
+@njit(cache=True)
+def _platform_independent_arccos(value: float) -> float:
+    """Return arccos rounded to nearest using only IEEE add, multiply, divide and sqrt.
+
+    Every platform computes the same bits, because no math-library function and
+    no fused multiply-add takes part: a series estimate is refined by Newton
+    steps on ``cos(angle) - value`` in double-pair arithmetic until the rounded
+    angle stops changing.
+    """
+    if value != value or value > 1.0 or value < -1.0:
+        return np.nan
+    if value == 1.0:
+        return 0.0
+    if value == -1.0:
+        return 2.0 * _HALF_PI_PARTS[0]
+    if value > 0.5:
+        angle = 2.0 * _arcsine_series(np.sqrt((1.0 - value) / 2.0))
+    elif value < -0.5:
+        angle = 2.0 * _HALF_PI_PARTS[0] - 2.0 * _arcsine_series(
+            np.sqrt((1.0 + value) / 2.0)
+        )
+    else:
+        angle = _HALF_PI_PARTS[0] - _arcsine_series(value)
+    for _step in range(_ARCCOS_NEWTON_STEP_LIMIT):
+        sine_high, sine_low, cosine_high, cosine_low = _sine_cosine_pairs(angle)
+        excess_high, excess_low = _pair_sum(cosine_high, cosine_low, -value, 0.0)
+        step_high, step_low = _pair_quotient(excess_high, excess_low, sine_high, sine_low)
+        refined, remainder = _exact_sum(angle, step_high)
+        refined, remainder = _exact_sum(refined, remainder + step_low)
+        if refined == angle:
+            break
+        angle = refined
+    return angle
 
 
 @njit(cache=True)
 def _numpy_124_portable_arccos(values: np.ndarray) -> np.ndarray:
-    """Return NumPy 1.24 scalar-libm arccos values for a flat array."""
+    """Return arccos values that are the same bits on every platform."""
     result = np.empty(values.size, dtype=np.float64)
     for index in range(values.size):
-        result[index] = math.acos(values[index])
+        result[index] = _platform_independent_arccos(values[index])
     return result
 
 
@@ -77,6 +238,17 @@ def _numpy_124_arccos(values: np.ndarray) -> np.ndarray:
     if _NUMPY_124_SVML_ACOS_AVAILABLE:
         return _numpy_124_svml_arccos(value_array)
     return _numpy_124_portable_arccos(value_array)
+
+
+def prepare_arccos_kernels() -> None:
+    """Compile the arccos kernel this CPU uses, and the portable one.
+
+    A process started with AVX-512 disabled shares the Numba cache and uses the
+    portable kernel, so it is compiled on every machine.
+    """
+    values = np.zeros(1, dtype=np.float64)
+    _numpy_124_arccos(values)
+    _numpy_124_portable_arccos(values)
 
 
 def feret_diameters_from_labels(
