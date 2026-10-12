@@ -38,12 +38,12 @@ from openhcs.core.steps.function_outputs import (
     RuntimeArtifactMetadataTarget,
 )
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, METADATA_CONFIG, MetadataWriteError
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     MaterializationSpec,
     _WRITERS_BY_OPTIONS,
     prepare_materialization,
 )
-from openhcs.processing.materialization.options import FileBundleOptions
+from openhcs.core.materialization.options import FileBundleOptions
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
 

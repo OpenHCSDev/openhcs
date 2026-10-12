@@ -35,8 +35,8 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
-from openhcs.processing.materialization.core import ColumnarCsvOutput
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.core import ColumnarCsvOutput
 from python_introspect import (
     dataclass_from_mapping,
     to_jsonable,

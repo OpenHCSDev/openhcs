@@ -47,7 +47,7 @@ from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes import Axis, PartitionAxis
 
 if TYPE_CHECKING:
-    from openhcs.processing.materialization.core import Output
+    from openhcs.core.materialization.core import Output
 
 
 @dataclass(frozen=True, slots=True)

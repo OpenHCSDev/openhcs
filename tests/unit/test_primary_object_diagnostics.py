@@ -28,7 +28,7 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
     SelectedDiagnosticPlaneImageOutput,
     UnexecutedDeclumpingEvidence,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     NameByArtifactName,
 )

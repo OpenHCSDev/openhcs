@@ -15,7 +15,11 @@ from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
-from openhcs.constants.constants import FileFormat
+from openhcs.core.result_file_formats import (
+    NumpyResultFile,
+    ResultFileFormat,
+    TiffResultFile,
+)
 from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
 from openhcs.core.image_quantization_numba import quantize_image_uint8
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
@@ -251,7 +255,7 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
     __skip_if_no_key__ = True
     format_key: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
-    browser_file_format: ClassVar[FileFormat] = FileFormat.TIFF
+    browser_file_format: ClassVar[type[ResultFileFormat]] = TiffResultFile
 
     @classmethod
     def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
@@ -461,7 +465,7 @@ class NumpyImageFileFormat(ImageFileFormat):
 
     format_key = "numpy"
     suffixes = (".npy",)
-    browser_file_format = FileFormat.NUMPY
+    browser_file_format = NumpyResultFile
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
         del source_dtype

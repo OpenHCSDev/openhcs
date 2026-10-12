@@ -22,7 +22,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     JsonOptions,
     MaterializationSpec,

@@ -55,7 +55,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
     SelectedDiagnosticPlaneImageOutput,
 )
-from openhcs.processing.materialization import materialize
+from openhcs.core.materialization import materialize
 
 from test_function_artifact_materialization import (
     _context,

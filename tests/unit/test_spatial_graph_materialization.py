@@ -32,7 +32,7 @@ from openhcs.core.runtime_spatial_graph import (
 
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     BackendSaver,
     MaterializationSpec,
     Output,

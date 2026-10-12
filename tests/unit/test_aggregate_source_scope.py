@@ -32,8 +32,8 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
-from openhcs.processing.materialization.core import Output, materialization_outputs
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.core import Output, materialization_outputs
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 

@@ -42,7 +42,7 @@ class MaterializationSpecFormatter(SourceFormatter):
     priority = 110
 
     def can_format(self, value) -> bool:
-        from openhcs.processing.materialization.core import MaterializationSpec
+        from openhcs.core.materialization.core import MaterializationSpec
 
         return isinstance(value, MaterializationSpec)
 
@@ -63,7 +63,7 @@ class MaterializationSpecFormatter(SourceFormatter):
             args.append(f"allowed_backends={allowed_backends_frag.code}")
         if value.primary != 0:
             args.append(f"primary={value.primary}")
-        from openhcs.processing.materialization.constants import WriteMode
+        from openhcs.core.materialization.constants import WriteMode
 
         if value.write_mode is not WriteMode.OVERWRITE:
             write_mode_frag = to_source(value.write_mode, item_ctx)

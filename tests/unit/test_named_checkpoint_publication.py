@@ -4,7 +4,7 @@ The numerical outputs are synthetic, not a BaSiCPy fit. The actual public
 compiler, runtime materialization, metadata reconciliation and reopen are used.
 """
 
-from openhcs.processing.materialization.options import NameByArtifactName
+from openhcs.core.materialization.options import NameByArtifactName
 from dataclasses import dataclass, replace
 import json
 
@@ -40,7 +40,7 @@ from openhcs.core.virtual_workspace_metadata import MetadataWriteError
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions, MaterializationSpec,
 )
 from openhcs.core.axes import TileAxis

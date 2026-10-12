@@ -21,7 +21,7 @@ from openhcs.processing.backends.analysis.skan_axon_analysis import (
     _compute_summary_metrics,
     skan_axon_skeletonize_and_analyze,
 )
-from openhcs.processing.materialization import TiffStackOptions
+from openhcs.core.materialization import TiffStackOptions
 
 
 def test_skan_axon_declares_split_typed_outputs_and_object_subject() -> None:

@@ -17,14 +17,14 @@ from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     FileBundleOptions,
     FileOutputOptions,
     ImageFileOptions,
     MaterializationSpec,
 )
-from openhcs.processing.materialization.core import materialization_is_empty
+from openhcs.core.materialization.core import materialization_is_empty
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation

@@ -123,9 +123,17 @@ def test_template_crop_persists_each_source_channel(
         set_progress_queue(None)
     assert result["A01"].is_success(), result["A01"].error_message
     images = sorted((tmp_path / "output" / "plate_openhcs" / "images").glob("A01*.tif"))
+    # The main-flow checkpoint keeps the source filename (0dd77da46); the named
+    # ``cropped_stack`` artifact is materialized separately under results.
+    named = sorted(
+        (tmp_path / "output" / "plate_openhcs" / "results").glob(
+            "A01_*_cropped_stack_step*_slice_*.tif"
+        )
+    )
+    assert len(named) == len(channels), named
     assert len(images) == len(channels), images
     assert {path.name for path in images} == {
-        f"A01_s001_w{channel}_z001_t001_cropped_stack.tif" for channel in channels
+        f"A01_s001_w{channel}_z001_t001.tif" for channel in channels
     }
     for path in images:
         channel = int(path.name.split("_w")[1].split("_")[0])

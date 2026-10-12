@@ -30,7 +30,7 @@ from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
     UneditedLabels,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     TerminalMaterializationSpec,
     NameByArtifactName,

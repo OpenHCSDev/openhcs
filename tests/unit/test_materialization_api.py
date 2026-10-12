@@ -1,4 +1,4 @@
-from openhcs.processing.materialization import MaterializationSpec, csv_materializer
+from openhcs.core.materialization import MaterializationSpec, csv_materializer
 
 
 def test_csv_materializer_uses_analysis_type_suffix() -> None:

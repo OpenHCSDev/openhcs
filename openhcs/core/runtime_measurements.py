@@ -101,6 +101,16 @@ class MeasurementTable(
         self.rows.validate_fields()
         self.validate_runtime_slice_axis()
 
+    def unowned_feature_names(self, names: Iterable[str]) -> list[str]:
+        """Return the names this table's feature owner does not own; none without an owner."""
+        if self.measurement_feature_owner is None:
+            return []
+        return [
+            name
+            for name in names
+            if not self.measurement_feature_owner.owns_measurement_feature_name(name)
+        ]
+
     def runtime_slice_row_domain(self) -> tuple[int, ...] | None:
         """Return the runtime-slice indices these rows carry, if they carry the axis."""
         return MeasurementTable.shared_row_axis_domain(

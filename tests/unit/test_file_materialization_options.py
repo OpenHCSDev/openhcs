@@ -13,14 +13,14 @@ from polystore.memory import MemoryStorageBackend
 
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.processing.materialization import options as materialization_options
-from openhcs.processing.materialization.constants import WriteMode
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization import options as materialization_options
+from openhcs.core.materialization.constants import WriteMode
+from openhcs.core.materialization.core import (
     MaterializationSpec,
     materialization_outputs,
     materialize,
 )
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.options import (
     FileOutputOptions,
     NameByArtifactName,
     NameBySourceIdentity,

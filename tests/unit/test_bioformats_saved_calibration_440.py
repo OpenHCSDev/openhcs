@@ -32,7 +32,7 @@ from types import SimpleNamespace
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.dataset_sources.plane_stores import PlaneStoreUnavailableError
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     ROIOptions,
     materialize,

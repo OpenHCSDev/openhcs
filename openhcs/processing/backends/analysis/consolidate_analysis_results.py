@@ -34,7 +34,7 @@ from openhcs.domains.microscopy.config import (
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.vfs_protocol import PlateInputDirectory
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
 
 if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import FilenameParser

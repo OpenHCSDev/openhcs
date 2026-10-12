@@ -7,7 +7,7 @@ rounding, grid inference, or changing the positions consumed by assemblers.
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     JsonOptions,
     MaterializationSpec,
     NameByArtifactName,

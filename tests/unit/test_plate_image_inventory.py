@@ -9,7 +9,13 @@ import tifffile
 import pytest
 
 from openhcs.constants import Backend
-from openhcs.constants.constants import FileFormat
+from openhcs.core.result_file_formats import (
+    CsvResultFile,
+    NumpyResultFile,
+    RoiArchiveResultFile,
+    TextResultFile,
+    TiffResultFile,
+)
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
 from openhcs.core.plate_image_inventory import (
@@ -134,7 +140,7 @@ def test_plate_result_inventory_exposes_swc_as_text_result(
         query.records[0].relative_path
         == "images_results/A01_neurite_morphology_step1.swc"
     )
-    assert query.records[0].file_format is FileFormat.TEXT
+    assert query.records[0].file_format is TextResultFile
     preview = PlateResultFilePreviewReader.preview(results.records[0])
     assert preview is not None
     assert preview.text_lines == (
@@ -169,7 +175,7 @@ def test_native_image_secondaries_are_admitted_as_streamable_results(tmp_path, s
     record = inventory.require_file_record(image_path.name)
     assert record.kind is PlateFileKind.RESULT
     assert record.file_format is (
-        FileFormat.NUMPY if suffix == ".npy" else FileFormat.TIFF
+        NumpyResultFile if suffix == ".npy" else TiffResultFile
     )
     assert record.streamable_image_path == str(image_path)
     assert record.require_image_source_ref() == SourcePixelRef(
@@ -195,8 +201,8 @@ def test_nonimage_results_do_not_claim_pixel_source_references(tmp_path):
         parser=None,
     )
     assert {record.file_format for record in results.records} == {
-        FileFormat.CSV,
-        FileFormat.ROI,
+        CsvResultFile,
+        RoiArchiveResultFile,
     }
     assert all(record.source_ref is None for record in results.records)
 
@@ -240,7 +246,7 @@ def test_stream_record_uses_declared_address_for_dual_image_result_projection():
             PlateResultFileRecord(
                 relative_path=relative_path,
                 full_path=full_path,
-                file_format=FileFormat.TIFF,
+                file_format=TiffResultFile,
                 source_ref=SourcePixelRef(
                     backend=Backend.DISK.value,
                     backend_address=full_path,
