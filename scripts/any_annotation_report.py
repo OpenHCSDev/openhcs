@@ -167,7 +167,7 @@ def main() -> int:
     })
     text, uses = report(args.roots, OwnerKinds(live), args.top)
     print(text)
-    if args.json is not None:
+    if args.json:
         args.json.write_text(json.dumps([asdict(use) for use in uses], indent=1))
     return 0
 

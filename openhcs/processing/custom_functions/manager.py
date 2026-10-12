@@ -562,13 +562,9 @@ class CustomFunctionManager:
         """
         Create controlled namespace for exec().
 
-        The values are ``object`` because user code binds whatever it defines.
-
         Includes all memory type decorators and common imports.
         Does not restrict builtins (custom functions need full Python).
-
-        Returns:
-            Namespace dict for exec()
+        The values are ``object`` because user code binds whatever it defines.
         """
         from openhcs.core.memory import decorators
 

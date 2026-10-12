@@ -762,8 +762,6 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         )
 
         for module_name, module in modules:
-            import inspect
-
             module_function_count = 0
 
             if isinstance(module, OpenHCSFunctionCatalogModule):
