@@ -763,7 +763,7 @@ class AlignExecution:
         """Return aligned image payloads followed by shift measurements."""
         input_data = np.asarray(self.image.data)
         input_metadata = self.image.metadata
-        if input_metadata.plane_axis is None:
+        if input_metadata.plane_axis.unstacked:
             raise ValueError("Align requires a declared input image plane axis.")
         plane_count = input_metadata.source_provenance.source_plane_count
         if plane_count < 2:

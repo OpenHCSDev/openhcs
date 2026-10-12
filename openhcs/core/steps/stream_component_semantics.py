@@ -185,10 +185,10 @@ class StreamImagePayloadMetadataProjector:
         colour_axis_position = metadata.axis_position(ColourAxis)
         if colour_axis_position is not None:
             item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = colour_axis_position
-        if metadata.plane_axis is None:
+        if metadata.plane_axis.unstacked:
             return item_fields
 
-        item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.value
+        item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.name
         plane_component_values = metadata.retained_plane_component_values()
         if (
             not plane_component_values
@@ -442,7 +442,7 @@ class StreamSourceComponentMetadataItems:
                 provenance.for_source_plane(index).scalar_source_identity
                 for index in range(provenance.source_plane_count)
             )
-            if metadata.plane_axis is not None and provenance.source_plane_count
+            if metadata.plane_axis.leads_data and provenance.source_plane_count
             else (provenance.scalar_source_identity,)
         )
         return cls.from_source_identities(

@@ -1,6 +1,7 @@
 """Object-label derived runtime measurement projection."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 
 from openhcs.core.equivalence.measurement_features import (
     RuntimeMeasurementFactCounterMapping,
@@ -190,7 +191,7 @@ class ObjectLabelMeasurementContext(ObjectLabelMeasurementState):
 
     def owns_payload_spatial_location(self) -> bool:
         """Return whether this payload is authoritative for dimensional locations."""
-        if self.domain.scope is not ObjectLabelDomainScope.PAYLOAD:
+        if self.domain.scope.ids_per_plane:
             return False
         projections = ObjectLabelMeasurementProjectionStrategy.for_scope(
             self.domain.scope
@@ -322,7 +323,7 @@ class ObjectLabelMeasurementProjectionStrategy(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_scope(
         cls,
-        scope: ObjectLabelDomainScope,
+        scope: type[ObjectLabelDomainScope],
     ) -> "ObjectLabelMeasurementProjectionStrategy":
         matches = tuple(
             strategy_type()
@@ -367,7 +368,7 @@ class ObjectLabelMeasurementProjectionStrategy(ABC, metaclass=AutoRegisterMeta):
     ) -> tuple[tuple[int, ...], ...]:
         """Return declared ObjectNumber domains aligned to measurement planes."""
         domain = context.object_labels.domain
-        if domain.scope is ObjectLabelDomainScope.PAYLOAD:
+        if domain.scope.ids_span_payload:
             return context.dense_identity_domains()
         return domain.declared_object_id_domains
 
@@ -377,8 +378,8 @@ class PayloadObjectLabelMeasurementProjectionStrategy(
 ):
     """Payload-scoped labels measure the dense object payload as one domain."""
 
-    scope = ObjectLabelDomainScope.PAYLOAD
-    strategy_label = ObjectLabelDomainScope.PAYLOAD.value
+    scope = PayloadLabelScope
+    strategy_label = PayloadLabelScope.name
 
     def projections(
         self,
@@ -401,8 +402,8 @@ class PlaneObjectLabelMeasurementProjectionStrategy(
 ):
     """Plane-scoped labels measure each dense XY plane independently."""
 
-    scope = ObjectLabelDomainScope.PLANE
-    strategy_label = ObjectLabelDomainScope.PLANE.value
+    scope = PlaneLabelScope
+    strategy_label = PlaneLabelScope.name
 
     def projections(
         self,

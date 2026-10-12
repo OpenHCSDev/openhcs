@@ -4,6 +4,7 @@ Measures the total area in an image that is occupied by objects or foreground.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -39,7 +40,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,
 )
@@ -862,19 +862,17 @@ def _binary_images_from_payload(
     if not binary_image_names:
         return ()
     metadata = image.metadata
-    if metadata.plane_axis is None:
+    if metadata.plane_axis.unstacked:
         if len(binary_image_names) != 1:
             raise ValueError(
                 "MeasureImageAreaOccupied requires a declared source-binding "
                 "axis for multiple binary-image rows."
             )
         return (np.asarray(image.data),)
-    if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
-        raise ValueError(
-            "MeasureImageAreaOccupied binary-image composition requires a "
-            "source-binding image axis, got "
-            f"{metadata.plane_axis.value!r}."
-        )
+    metadata.plane_axis.require_source_bindings(
+        "MeasureImageAreaOccupied binary-image composition requires a "
+        f"source-binding image axis, got {metadata.plane_axis.name!r}."
+    )
     source_aliases = metadata.source_image_names
     if source_aliases != binary_image_names:
         raise ValueError(
@@ -882,7 +880,7 @@ def _binary_images_from_payload(
             f"declared source aliases: {binary_image_names!r} != {source_aliases!r}."
         )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=len(source_aliases),
         source_aliases=source_aliases,
     )
@@ -895,7 +893,7 @@ def _binary_images_from_payload(
             (RuntimeSliceProjection.value_for_slice(
                     image,
                     RuntimePlaneAxisValueProjection.from_selected_plane(
-                        axis=RuntimePlaneAxis.SOURCE_BINDING,
+                        axis=SourceBindingPlaneAxis,
                         plane_index=index,
                         axis_size=projection.axis_size,
                         source_aliases=projection.source_aliases,

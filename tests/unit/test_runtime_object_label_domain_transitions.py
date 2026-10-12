@@ -1,9 +1,10 @@
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_object_labels import (
@@ -13,9 +14,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
@@ -36,10 +35,10 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
         name="erodedDownsizedNuclei",
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1, 2)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     transformed = object_label_value_with_dense_labels(
@@ -49,10 +48,10 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
     )
 
     assert transformed.domain == ObjectLabelDomain.declared(
-        scope=ObjectLabelDomainScope.PAYLOAD,
+        scope=PayloadLabelScope,
         declared_object_ids=(1, 2),
     )
-    assert transformed.plane_axis is None
+    assert transformed.plane_axis.unstacked
     np.testing.assert_array_equal(transformed.labels, labels)
 
 
@@ -67,10 +66,10 @@ def test_explicit_payload_domain_plane_axis_remains_invalid() -> None:
                 labels=np.zeros((2, 2, 2), dtype=np.int32)
             ),
             domain=ObjectLabelDomain.declared(
-                scope=ObjectLabelDomainScope.PAYLOAD,
+                scope=PayloadLabelScope,
                 declared_object_count=0,
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
 
 
@@ -92,7 +91,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
             source_image_names=("MembFinal",) * 3,
         ),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_count=0,
         ),
     )
@@ -100,7 +99,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
     reference_image = labels.measurement_reference_image()
     reference_metadata = reference_image.metadata
 
-    assert reference_metadata.plane_axis is None
+    assert reference_metadata.plane_axis.unstacked
     assert reference_metadata.source_provenance.source_plane_count == 0
     assert reference_metadata.source_image_provenance_planes.contributor_count == 3
     assert reference_metadata.source_image_names == ()
@@ -109,12 +108,12 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
     )
     composed = ImagePayloadMetadata.compose(
         (reference_image,),
-        mode=ImagePayloadMetadataCompositionMode.BUNDLE,
+        mode=SourceBindingPlaneAxis,
     )
     assert composed.source_provenance.represented_source_image_names == ("MembFinal",)
 
 
-@pytest.mark.parametrize("axis", [RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING])
+@pytest.mark.parametrize("axis", [RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
 @pytest.mark.parametrize("plane_count", [1, 2])
 def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
     monkeypatch, axis, plane_count
@@ -136,7 +135,7 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
         representation=ObjectLabelRepresentation.SPARSE_IJV,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),) if plane_count == 1 else ((1, 2), (3,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=axis,
     )
@@ -147,7 +146,7 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
         axis=axis, axis_size=plane_count,
     )
     projected = RuntimeSliceProjection.value_for_slice(labels, preserved.selected_plane(0))
-    assert projected.plane_axis is None
+    assert projected.plane_axis.unstacked
     assert projected.domain.declared_object_ids == (1, 2)
     np.testing.assert_array_equal(projected.labels.as_array(), first.as_array())
     assert labels.plane_axis is axis

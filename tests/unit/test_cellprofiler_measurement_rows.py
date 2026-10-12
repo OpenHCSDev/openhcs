@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 import ast
 import inspect
 import textwrap
@@ -33,7 +34,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -127,10 +127,10 @@ def test_measurement_source_name_projects_exact_runtime_metadata_plane() -> None
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/plate/A01_{name}.tif" for name in source_names),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=len(source_names),
         source_aliases=source_names,
     )
@@ -150,10 +150,10 @@ def test_measurement_source_name_does_not_fall_back_to_projection_alias_order() 
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/plate/A01_{name}.tif" for name in source_aliases),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=len(source_aliases),
         source_aliases=source_aliases,
     )

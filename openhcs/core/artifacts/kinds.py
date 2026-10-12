@@ -7,6 +7,7 @@ a kind with one nominal payload type declares it once.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -26,7 +27,6 @@ from openhcs.core.artifacts.payloads import (
 from openhcs.core.axes import AxisFamily
 from openhcs.core.memory import detect_memory_type
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import (
@@ -341,7 +341,7 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
                 )
             plane_projection = RuntimePlaneAxisValueProjection.require_from_projector(
                 plane_projector,
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
             )
         return cls.contextualize_output(
             source_payload,
@@ -633,9 +633,9 @@ class ImagePayloadArtifactKind(SourceContextKind, ArtifactType):
 
     @classmethod
     def materialization_image_metadata(cls, value: RuntimeValue) -> ImagePayloadMetadata:
-        from openhcs.core.runtime_image_values import image_metadata_of
+        from openhcs.core.runtime_image_values import as_runtime_value
 
-        return image_metadata_of(cls.materialization_payload(value))
+        return as_runtime_value(cls.materialization_payload(value)).image_metadata
 
 
 class ImageArtifactType(ImagePayloadArtifactKind):
@@ -732,15 +732,14 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         ):
             output_value = output_value.with_undeclared_plane_axis(plane_projection)
         if target.collapses_runtime_slices():
-            if output_value.declared_plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            if output_value.declared_plane_axis.one_plane_per_runtime_slice:
                 output_value = RuntimeSliceProjection.value_for_singleton_slice(
                     output_value,
                     source_description=f"Image output {target.describe()}",
                 )
-            if (
-                RuntimeSliceProjection.declared_plane_axis(source_payload)
-                is RuntimePlaneAxis.RUNTIME_SLICE
-            ):
+            if RuntimeSliceProjection.declared_plane_axis(
+                source_payload
+            ).one_plane_per_runtime_slice:
                 source_ref = target.source_context_source()
                 if source_ref is None:
                     raise ValueError(
@@ -860,7 +859,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         keeps_memory_type: bool,
     ) -> object:
         from openhcs.core.aligned_image_payload import stack_image_payloads
-        from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
 
         components = {value.key.scope.component for value in values}
         if None in components or len(components) != 1:
@@ -869,9 +867,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                 f"axis, got {components!r}."
             )
         payloads = tuple(value.data for value in values)
-        metadata_mode = ImagePayloadMetadataCompositionMode.for_plane_axis(
-            RuntimePlaneAxis.RUNTIME_SLICE
-        )
+        metadata_mode = RuntimeSlicePlaneAxis
         if not keeps_memory_type:
             return stack_image_payloads(payloads, metadata_mode=metadata_mode)
         return stack_image_payloads(
@@ -1102,7 +1098,7 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
         aggregated = ObjectLabelPure2DSliceAggregator.aggregate(
             labels,
             detect_memory_type(labels[0].labels),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
         return cls._bind_compiled_name(name, aggregated)
 
@@ -1225,12 +1221,12 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     ) -> object:
         """Own returned rows as this output's table, in the source's context."""
 
-        from openhcs.core.runtime_image_values import image_metadata_of
+        from openhcs.core.runtime_image_values import as_runtime_value
         from openhcs.core.runtime_measurements import MeasurementTable
 
         del plane_projection
         subject = target.require_measurement_subject()
-        source_provenance = image_metadata_of(source_payload).source_provenance
+        source_provenance = as_runtime_value(source_payload).image_metadata.source_provenance
         if cls.accepts_runtime_payload(output_value):
             cls._validate_table(output_value, target, subject)
             contextualized_provenance = (

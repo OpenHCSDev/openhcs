@@ -1,5 +1,6 @@
 """Dense full-stack ABI must consume aligned source/artifact values correctly."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -18,7 +19,6 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
@@ -47,7 +47,7 @@ from openhcs.core.image_payload_execution_mode import (
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():
     data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(data, None)
     composition = compose_aligned_image_payload(
         "synthetic source inputs", (source, source)
@@ -72,7 +72,7 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     mask = np.ones(pixels.shape, dtype=bool)
     mask[:, 0, 0] = False
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_voxel_spacing=SourceVoxelSpacing(
             (1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS,
         ),
@@ -84,17 +84,17 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     )
     dense = metadata.payload_with(pixels, mask)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=60,
+        axis=RuntimeSlicePlaneAxis, axis_size=60,
     )
     literal = ImagePayloadSliceStack.from_output_slices(
         tuple(RuntimeSliceProjection.value_for_slice(dense, projection.selected_plane(index))
               for index in range(60)),
-        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
     )
     assert not isinstance(literal, AlignedImageStack)
     composition = compose_aligned_image_payload("literal volume", (literal,))
     assert composition.execution_mode is NaturalExecution
-    assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert composition.plane_axis is RuntimeSlicePlaneAxis
     assert literal._composed_payload is None
     contract = CallableContract.from_callable(function)
     contract = replace(contract, artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),))
@@ -173,7 +173,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
         paths = tuple(f"/synthetic/A01_s{site}_w{channel}.tif" for site in (1, 2))
         expected_paths.extend(paths)
         metadata = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_names=(alias,),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=paths,
@@ -199,7 +199,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
     dense = RuntimeSliceProjection.full_stack_value(composed)
     assert dense.shape == (2, 2, 3, 4)
     metadata = dense.metadata
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.source_voxel_spacing == spacing
     assert metadata.source_spatial_shape_yx == (3, 4)
     assert set(metadata.source_provenance.represented_source_image_names) == {
@@ -223,7 +223,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
         projected = RuntimeSliceProjection.value_for_slice(
             dense,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=index, axis_size=2
+                axis=RuntimeSlicePlaneAxis, plane_index=index, axis_size=2
             ),
         )
         np.testing.assert_array_equal(
@@ -246,7 +246,7 @@ def test_named_output_bundle_materializes_its_own_source_binding_axis():
         ),
     )
     dense = RuntimeSliceProjection.full_stack_value(bundle)
-    assert dense.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert dense.metadata.plane_axis is SourceBindingPlaneAxis
     assert dense.metadata.source_provenance.represented_source_image_names == ("red", "green")
     np.testing.assert_array_equal(dense.data, np.stack(planes))
     assert all(
@@ -260,7 +260,7 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
     payloads = []
     for channel, alias in enumerate(("red", "green"), start=1):
         metadata = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_names=(alias,),
             source_voxel_spacing=spacing,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -277,7 +277,7 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
     )
     dense = RuntimeSliceProjection.full_stack_value(bundle)
     metadata = dense.metadata
-    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.plane_axis is SourceBindingPlaneAxis
     assert metadata.source_image_names == ("red", "green")
     assert metadata.source_provenance.source_plane_count == 2
     assert metadata.source_voxel_spacing == spacing
@@ -285,7 +285,7 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
         selected = RuntimeSliceProjection.value_for_slice(
             dense,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.SOURCE_BINDING, plane_index=index, axis_size=2
+                axis=SourceBindingPlaneAxis, plane_index=index, axis_size=2
             ),
         )
         np.testing.assert_array_equal(
@@ -328,7 +328,7 @@ def test_new_calibrated_nominal_stack_reaches_real_callable_without_dispatch_edi
     )
     np.testing.assert_allclose(result.data, data / 23.0)
     metadata = result.metadata
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.source_voxel_spacing == spacing
     assert {
         identity.path

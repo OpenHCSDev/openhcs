@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
@@ -8,7 +9,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axes import ColourAxis
@@ -43,7 +43,7 @@ def _singleton_owner(owner_kind: str):
     if owner_kind == "runtime_payload":
         return ImagePayloadMetadata(
             source_spatial_domain=_SPATIAL_DOMAIN,
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.full((1, 4, 5), 11, dtype=np.float32),
             _SINGLETON_MASK[np.newaxis, ...],
@@ -69,7 +69,7 @@ def test_scalar_image_aligns_with_nominal_singleton_owner(
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 1
     bundle = composition.payload.slices[0]
-    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.metadata.plane_axis is SourceBindingPlaneAxis
     assert bundle.data.shape == (2, 4, 5)
     expected_values = (11, 7) if singleton_first else (7, 11)
     for index, expected_value in enumerate(expected_values):
@@ -89,7 +89,7 @@ def test_scalar_image_still_requires_owner_for_multi_slice_alignment(
     else:
         aligned = ImagePayloadMetadata(
             source_spatial_domain=_SPATIAL_DOMAIN,
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.stack(
                 (
@@ -116,7 +116,7 @@ def test_same_shaped_scalar_images_do_not_invent_runtime_alignment() -> None:
     assert composition.execution_mode is FullStackExecution
     assert not isinstance(composition.payload, AlignedImageStack)
     assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.SOURCE_BINDING
+        SourceBindingPlaneAxis
     )
 
 
@@ -126,7 +126,7 @@ def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together(
     payload = ImagePayloadMetadata(
         source_spatial_domain=_SPATIAL_DOMAIN,
         axes=PayloadAxes.colour_samples(3),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(
         np.zeros((1, 4, 5, 3), dtype=np.float32),
         _SINGLETON_MASK[np.newaxis, ...],
@@ -141,14 +141,14 @@ def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together(
     assert projected.data.shape == (4, 5, 3)
     np.testing.assert_array_equal(projected.mask, _SINGLETON_MASK)
     projected_metadata = projected.metadata
-    assert projected_metadata.plane_axis is None
+    assert projected_metadata.plane_axis.unstacked
     assert projected_metadata.axis_index(ColourAxis, projected) == 2
 
 
 def test_singleton_runtime_projection_rejects_multi_slice_payload() -> None:
     payload = ImagePayloadMetadata(
         source_spatial_domain=_SPATIAL_DOMAIN,
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(
         np.zeros((2, 4, 5), dtype=np.float32),
         None,

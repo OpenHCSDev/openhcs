@@ -1,6 +1,7 @@
 """Agent-facing plate file streaming service."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 from dataclasses import replace
@@ -39,7 +40,6 @@ from openhcs.core.plate_image_inventory import (
     PlateFileRecord,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -424,7 +424,7 @@ class PlateStreamingService:
                 ref=source_ref,
                 source_metadata=first_components,
                 image_metadata=ImagePayloadMetadata(
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     source_provenance=SourceImageProvenance(
                         source_path=image_path,
                         source_component_metadata=record.components,

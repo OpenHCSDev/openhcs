@@ -20,7 +20,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
-from openhcs.core.runtime_image_values import array_data_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 
 def test_area_occupied_accepts_object_label_payload_input() -> None:
@@ -84,7 +84,7 @@ def test_convert_objects_to_image_accepts_object_label_payload_input() -> None:
     )
 
     # The rendered image carries the labels' image context, so it is a payload.
-    pixels = array_data_of(converted)
+    pixels = as_runtime_value(converted).array_data
     assert pixels.dtype == np.float32
     assert pixels.sum() == 1.0
 

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from inspect import unwrap
 from types import SimpleNamespace
@@ -28,11 +30,9 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting
@@ -434,14 +434,14 @@ def test_track_objects_unsupported_methods_fail_before_contract_emission(
 
 def _timepoint_labels(labels: np.ndarray) -> ObjectLabelPayload:
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=labels.shape[0],
     )
     return ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=PresentObjectLabelIdsDomainDeclaration(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             plane_projection=projection,
         ).declared_domain(None, labels),
     )

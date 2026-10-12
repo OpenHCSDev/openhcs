@@ -887,7 +887,7 @@ class IlluminationCalculationRequest:
         output_metadata = (
             metadata.collapse_leading_plane_axis()
             if self.calculation_scope.uses_all_images
-            and metadata.plane_axis is not None
+            and metadata.plane_axis.leads_data
             else metadata
         )
         return self.payload_result(

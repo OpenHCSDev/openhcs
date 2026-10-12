@@ -6,6 +6,7 @@ visualization of tensors during pipeline execution.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis, RuntimePlaneAxis
 
 import logging
 import os
@@ -84,7 +85,6 @@ from openhcs.runtime.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -657,7 +657,12 @@ class NapariStreamLayerContext(ViewerComponentAxisSemantics):
         if data_type_value is None:
             data_type_value = DEFAULT_IMAGE_DATA_TYPE
         source_channel_axis = payload.optional(ViewerWireField.SOURCE_CHANNEL_AXIS)
-        plane_axis = payload.optional(ViewerWireField.PLANE_AXIS)
+        plane_axis_name = payload.optional(ViewerWireField.PLANE_AXIS)
+        plane_axis = (
+            NoPlaneAxis
+            if plane_axis_name is None
+            else RuntimePlaneAxis.named(plane_axis_name)
+        )
         return cls(
             entries=layer_axis_projection_semantics.entries,
             layout=layer_axis_projection_semantics.layout,
@@ -857,7 +862,7 @@ class NapariImagePayloadLayoutRole(str, Enum):
             return None
         metadata = stream_layer_context.image_metadata
         has_channel_axis = metadata.axis_position(ColourAxis) is not None
-        has_plane_axis = metadata.plane_axis is not None
+        has_plane_axis = metadata.plane_axis.leads_data
         if has_channel_axis:
             return cls.COLOR_STACK if has_plane_axis else cls.COLOR_PLANE
         return cls.SCALAR_STACK if has_plane_axis else cls.SCALAR_PLANE
