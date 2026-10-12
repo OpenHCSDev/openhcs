@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Iterator
 from contextlib import ExitStack
 from dataclasses import dataclass, field
-from itertools import islice
+from itertools import chain, islice
 from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
 from threading import Lock
@@ -37,13 +37,16 @@ class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
 
     @classmethod
     def can_prepare_in_child(cls) -> bool:
-        if not OpenHCSProcessEnvironment.cpu_only_mode():
-            return False
-        if not cls.requires_persistent_kernel_cache():
-            return False
-        from numba import config as numba_config
+        """A forked child compiles for the server wherever Numba persists.
 
-        return bool(numba_config.CACHE_DIR)
+        Numba always has a cache for a ``cache=True`` kernel: ``NUMBA_CACHE_DIR``,
+        else ``__pycache__`` beside the source, else its per-user directory. It
+        refuses to define the kernel otherwise.
+        """
+        return (
+            OpenHCSProcessEnvironment.cpu_only_mode()
+            and cls.requires_persistent_kernel_cache()
+        )
 
 
 class PreparationOperation(ABC):
@@ -166,6 +169,17 @@ class DeclaredHookPreparation(PreparationOperation):
     def execute(self) -> None:
         self.hook()
 
+    def cache_operations(self) -> tuple[PreparationOperation, ...]:
+        """A hook bound to a declared operation is that operation's cache work."""
+        operation = getattr(self.hook, "__self__", None)
+        if isinstance(operation, PreparationOperation):
+            return operation.cache_operations()
+        return (self,)
+
+    def can_prepare_in_child(self) -> bool:
+        """A hook's kernels reach the server through the persistent Numba cache."""
+        return PersistentNumbaKernelPreparation.can_prepare_in_child()
+
 
 @dataclass(frozen=True, slots=True)
 class ModuleHookPreparation(DeclaredHookPreparation):
@@ -255,6 +269,14 @@ class CallablePreparation:
         if module_name is None:
             return ()
         return (ModuleRegistryPreparation(module_name),)
+
+    def hooks(self) -> tuple[DeclaredHookPreparation, ...]:
+        """The declared hooks, which load the kernels the registries cached."""
+        return tuple(
+            operation
+            for operation in self.operations()
+            if isinstance(operation, DeclaredHookPreparation)
+        )
 
 
 def _execute_cache_preparation(
@@ -352,20 +374,34 @@ def _schedulable_cpu_count() -> int:
 
 @dataclass(frozen=True, slots=True)
 class PreparationCacheBatch:
-    """Schedule derived cache operations without interpreting backend families."""
+    """Schedule derived cache operations without interpreting backend families.
+
+    Stages run in order and each finishes before the next starts, so a later
+    stage loads from the persistent cache what an earlier one compiled.
+    """
 
     preparations: tuple[PreparationOperation, ...]
+    hooks: tuple[PreparationOperation, ...] = ()
 
     @classmethod
     def from_callables(
         cls, callables: Iterable[Callable[..., object]]
     ) -> PreparationCacheBatch:
+        """Registry kernels first, then the hooks that call them."""
+        preparations = tuple(
+            CallablePreparation.from_callable(func) for func in callables
+        )
         sources = {
             operation.identity: operation
-            for func in callables
-            for operation in CallablePreparation.from_callable(func).cache_sources()
+            for preparation in preparations
+            for operation in preparation.cache_sources()
         }
-        return cls(tuple(sources.values()))
+        hooks = {
+            operation.hook: operation
+            for preparation in preparations
+            for operation in preparation.hooks()
+        }
+        return cls(tuple(sources.values()), tuple(hooks.values()))
 
     def populate_child_caches(
         self,
@@ -373,29 +409,55 @@ class PreparationCacheBatch:
         max_workers: int = 1,
         status_callback: Callable[[str], None] | None = None,
     ) -> None:
-        """Isolate admitted cache work, never parent process-local readiness."""
+        """Isolate declared cache work, never parent process-local readiness."""
         if max_workers < 1:
             raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
             return
         worker_capacity = min(max_workers, _schedulable_cpu_count())
-        operations = {
+        context = multiprocessing.get_context("fork")
+        registry_operations = {
             operation.identity: operation
             for preparation in self.preparations
             for operation in preparation.cache_operations()
         }
-        children = tuple(
+        hook_operations = dict.fromkeys(
             operation
-            for operation in operations.values()
-            if operation.can_prepare_in_child()
+            for hook in self.hooks
+            for operation in hook.cache_operations()
+            if operation.identity not in registry_operations
         )
-        if not children:
-            return
-        context = multiprocessing.get_context("fork")
+        registries, hooks = (
+            tuple(
+                operation
+                for operation in operations
+                if operation.can_prepare_in_child()
+            )
+            for operations in (registry_operations.values(), hook_operations)
+        )
+        # A registry operation compiles for seconds, so each gets a child. A
+        # hook mostly loads what the registries cached, and a child costs about
+        # a second before it does anything: hooks share one child per CPU.
+        for tasks in (
+            tuple((operation,) for operation in registries),
+            tuple(hooks[index::worker_capacity] for index in range(worker_capacity)),
+        ):
+            self._run_children(
+                context, tuple(filter(None, tasks)), worker_capacity, status_callback
+            )
+
+    @staticmethod
+    def _run_children(
+        context,
+        tasks: tuple[tuple[PreparationOperation, ...], ...],
+        worker_capacity: int,
+        status_callback: Callable[[str], None] | None,
+    ) -> None:
+        """Run each task in its own child, or all in one child on a single CPU."""
         pending = (
-            iter((children,))
+            iter(filter(None, (tuple(chain.from_iterable(tasks)),)))
             if worker_capacity == 1
-            else iter((operation,) for operation in children)
+            else iter(tasks)
         )
         with ExitStack() as resources:
             workers: list[PreparationCacheWorker] = []

@@ -145,6 +145,18 @@ AVX512F-only, and non-x86 hosts select the leaf's portable implementation before
 Numba lowers the call; there is no operating-system table, signal recovery,
 runtime retry, or silent substitution with an unrelated backend.
 
+A portable implementation must not call the platform math library where a
+last-bit difference decides a result. CellProfiler's minimum enclosing circle
+picks between hull vertices that subtend equal angles by the last bit of
+``pi - arccos(a) - arccos(b)``, and its Zernike basis then zeroes every pixel
+with ``r**2 > 1``, which includes the pixels that define the circle when the
+radius comes out one ulp short. One differing ``arccos`` bit therefore moves a
+shape Zernike of a small object by more than 0.1. The portable angle primitive
+in ``label_geometry`` is ``arccos`` rounded to nearest, built only from IEEE
+add, multiply, divide and square root, so Linux, macOS and Windows make the
+same choice. CellProfiler's own choice at such a tie is rounding noise; the
+fixed references record the choice glibc made.
+
 Exact compile-time reconstruction
 ---------------------------------
 

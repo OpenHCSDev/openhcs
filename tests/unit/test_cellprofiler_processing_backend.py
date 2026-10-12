@@ -2354,7 +2354,7 @@ def test_numpy_124_arccos_matches_cp_angle_order_bits() -> None:
     )
 
 
-def test_numpy_124_arccos_preserves_scalar_libm_bits_and_ties_without_svml(
+def test_numpy_124_arccos_keeps_reference_bits_and_ties_without_svml(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from openhcs.processing.backends.cellprofiler import label_geometry
@@ -2393,6 +2393,112 @@ def test_numpy_124_arccos_preserves_scalar_libm_bits_and_ties_without_svml(
         ),
         np.asarray((0,), dtype=int),
     )
+
+
+def test_portable_arccos_is_rounded_to_nearest_where_math_libraries_disagree() -> None:
+    """The angle primitive is the same bits on every platform.
+
+    The expected values are arccos rounded to nearest (400-bit reference). On
+    the first six inputs glibc's ``acos`` returns a neighbouring double, so a
+    kernel that called the platform library could not pass on Linux.
+    """
+    from openhcs.processing.backends.cellprofiler import label_geometry
+
+    cases = (
+        ("0x1.d010bc0692fcap-1", "0x1.bea28a544ed43p-2"),
+        ("-0x1.1841d4c4bebacp-1", "0x1.1333f785b4691p+1"),
+        ("0x1.7ab959eb2ea58p-1", "0x1.79f2914a0a0d5p-1"),
+        ("-0x1.35bbf83aadac6p-1", "0x1.1c395012696aep+1"),
+        ("0x1.9e6db38b686f6p-1", "0x1.4156aacc3e0a1p-1"),
+        ("-0x1.8dcb5d9c37bcep-1", "0x1.3af4a1298250dp+1"),
+        ("0x1.0000000000000p-1", "0x1.0c152382d7366p+0"),
+        ("-0x1.0000000000000p-1", "0x1.0c152382d7366p+1"),
+        ("0x1.fffffffffffffp-1", "0x1.0000000000000p-26"),
+        ("-0x1.fffffffffffffp-1", "0x1.921fb52442d18p+1"),
+        ("0x1.56e1fc2f8f359p-997", "0x1.921fb54442d18p+0"),
+        ("0x1.b7095010f9354p-1", "0x1.14b1dd5f90ce3p-1"),
+        ("0x1.0p+0", "0x0.0p+0"),
+        ("-0x1.0p+0", "0x1.921fb54442d18p+1"),
+    )
+    inputs = np.asarray([float.fromhex(value) for value, _angle in cases])
+    expected = np.asarray([float.fromhex(angle) for _value, angle in cases])
+
+    np.testing.assert_array_equal(
+        label_geometry._numpy_124_portable_arccos(inputs),
+        expected,
+    )
+    assert np.isnan(
+        label_geometry._numpy_124_portable_arccos(np.asarray((np.nan, 1.5, -1.5)))
+    ).all()
+
+
+def _mirror_tied_object_labels() -> np.ndarray:
+    """A 17-pixel object, symmetric about its diagonal.
+
+    Two hull vertices are mirror images, so they subtend the same angle and
+    CellProfiler's enclosing-circle search separates them only by the last
+    bit of ``pi - arccos(a) - arccos(b)``.
+    """
+    labels = np.zeros((7, 7), dtype=np.int32)
+    labels[1, 3] = 1
+    labels[2, 2:6] = 1
+    labels[3, 1:6] = 1
+    labels[4, 2:6] = 1
+    labels[5, 2:5] = 1
+    return labels
+
+
+@pytest.mark.parametrize("direction", (-np.inf, np.inf))
+def test_enclosing_circle_tie_does_not_follow_the_platform_math_library(
+    monkeypatch: pytest.MonkeyPatch,
+    direction: float,
+) -> None:
+    """One last-bit arccos difference moves shape Zernikes by 0.13; ours is pinned.
+
+    Forcing another platform's rounding of a single arccos value shortens the
+    radius by one ulp, which puts the two pixels that define the circle outside
+    the unit disk, where CellProfiler's ``r**2 > 1`` cut zeroes them.
+    """
+    from openhcs.processing.backends.cellprofiler import label_geometry
+    from openhcs.processing.backends.cellprofiler import zernike
+
+    labels = _mirror_tied_object_labels()
+    label_ids = np.asarray((1,), dtype=np.int32)
+    zernike_numbers = zernike._zernike_indexes_array(9)
+    monkeypatch.setattr(label_geometry, "_NUMPY_124_SVML_ACOS_AVAILABLE", False)
+
+    def circle_and_moments() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        centers, radii = label_geometry.minimum_enclosing_circle_from_labels(
+            labels, label_ids
+        )
+        moments = zernike._shape_zernike_moments_with_geometry(
+            zernike_numbers, labels, label_ids, centers, radii
+        )
+        return centers, radii, moments
+
+    centers, radii, moments = circle_and_moments()
+    assert [value.hex() for value in centers[0]] == ["0x1.9555555555555p+1"] * 2
+    assert radii[0].hex() == "0x1.1627132664436p+1"
+
+    tied_cosine = float.fromhex("0x1.b7095010f9354p-1")
+    portable_arccos = label_geometry._numpy_124_arccos
+    forced_values = []
+
+    def other_platform_arccos(values: np.ndarray) -> np.ndarray:
+        value_array = np.asarray(values, dtype=np.float64)
+        angles = np.array(portable_arccos(value_array))
+        tied = value_array == tied_cosine
+        forced_values.append(int(tied.sum()))
+        angles[tied] = np.nextafter(angles[tied], direction)
+        return angles
+
+    monkeypatch.setattr(label_geometry, "_numpy_124_arccos", other_platform_arccos)
+    other_centers, other_radii, other_moments = circle_and_moments()
+
+    assert sum(forced_values) > 0
+    np.testing.assert_array_equal(other_centers, centers)
+    assert other_radii[0].hex() == "0x1.1627132664435p+1"
+    assert np.abs(other_moments - moments).max() == pytest.approx(0.1348136, abs=1e-6)
 
 
 def test_numpy_124_power_two_selection_matches_detected_capability() -> None:

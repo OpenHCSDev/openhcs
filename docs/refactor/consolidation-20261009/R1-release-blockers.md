@@ -28,35 +28,52 @@ Each failure fixed at its cause, in its own PR. No global loosening of the parit
 - **B6's PR #1195 is still open.** Every log from run `38155492658` comes from B6's branch, which carries fixes main does not have.
 - **`workflow_dispatch` cannot start a workflow that is absent from the default branch.** `.github/workflows/r1-debug.yml` therefore also runs on a push to `refactor/R1-*` whose head commit message contains a tag: `[r1 parity-macos]`, `[r1 parity-windows]` or `[r1 cold-intel]`. Trigger with, for example, `git commit --allow-empty -m "WIP: rerun [r1 parity-macos]" && git push`. Once the file is on main, `gh workflow run r1-debug.yml --ref <branch> -f target=parity-macos` (or `parity-windows`, `cold-intel`; optional `-f case="<names>"`) works too.
 - Read results with `gh run view <id> --log` and `gh run download <id> -n r1-parity-macos` (or `r1-parity-windows`, `r1-cold-intel`).
-- **Delete `.github/workflows/r1-debug.yml` and `.github/r1-debug/` before a PR is final.** They exist on the zernike and cold-start branches only.
+- **Delete `.github/workflows/r1-debug.yml` and `.github/r1-debug/` before a PR is final.** Deleted on the zernike branch (Item 1); the cold-start branch still carries its copy.
 - Actions was stalled for most of the session. At checkpoint, run `38196784224` (zernike branch) had finished its Windows job and its macOS job was still queued; run `38198397594` (cold-start branch, `cold-intel`) was queued. **Check both first.**
 - The local machine had load average 24 to 28; local wall times are inflated. CPU seconds are the usable local measure.
 
-### Item 1: Zernike parity off Linux — branch `refactor/R1-zernike-parity`, debug tooling only, no fix yet
+### Item 1: Zernike parity off Linux — branch `refactor/R1z-zernike-parity` (surface R1z)
 
-**Found**
+**Cause.** CellProfiler's minimum enclosing circle (`minimum_enclosing_circle_from_labels`, a port of centrosome's) picks the hull vertex with the smallest value of `pi - arccos(a) - arccos(b)`. Vertices that subtend equal angles (mirror images, co-circular points) are separated only by the last bit of that expression. The pick changes the radius by one ulp. CellProfiler's Zernike basis then zeroes pixels with `r**2 > 1`, and the pixels that define the circle sit at `r**2 = 1 ± one ulp`. The portable path called the platform `acos`, so each platform's rounding made its own pick.
 
-- The CI logs and artifacts of run `38155492658` name the columns but carry no values. macOS: ExampleHuman `cells/zernike_N_M` and `cytoplasm/zernike_N_M` (all 30 orders, 60 differences); ExampleImagingFlowCytometryObjectsInGrid `bf_cells_on_grid` shape Zernikes, `zernike_magnitude_*` and `zernike_phase_*` (103 differences). Windows: `ssc/zernike_phase_N_M_df_image` for m ≠ 0 only, magnitudes equal. **Both platforms also fail `cp_tutorial_translocation_final` `sample/thumbnail_raw_dna` and `thumbnail_raw_gfp`, which B6's table does not mention.**
-- The default backend (`NativeNumpyShapeZernikeBackendStrategy`, `openhcs/processing/backends/cellprofiler/zernike.py`) zeroes the radial term where `radius_squared > 1`. The two or three pixels that define each enclosing circle sit at radius 1 ± one ulp, so a last-bit change in the circle moves a pixel in or out of the disk.
-- The circle (`minimum_enclosing_circle_from_labels`, `label_geometry.py`) uses only exact IEEE operations except `arccos`, which decides ties. With AVX512 disabled (as parity requires) `arccos` is the platform libm's `acos`.
-- **Linux reproduction (a hypothesis for macOS, not yet confirmed there):** on the labels the two workflows produce, perturbing `arccos` results by ±1 ulp at random changes 1 to 3 circles per image by a relative 1e-15, and shape Zernikes of those objects move by 1.6e-3 to 2.0e-2 (tolerance 1e-6). That would make this a magnitude difference caused by a discontinuity, not phase wrapping. Script: `.github/r1-debug/real_sens.py <directory of circle dumps>`.
-- glibc `acos` is not correctly rounded: it differs from round-to-nearest on 301 of 209,874 distinct inputs recorded from the two workflows (`.github/r1-debug/cmp_dump.py`), and those 301 flip no decision there.
-- A round-to-nearest `arccos` built only from `+ - * /` (double-double Newton step on `cos(y) - x`, Taylor `sin`/`cos`, three-part π/2, iterated to a fixed point) gave 0 wrong results in 70,000 inputs against mpmath, independent of the seed. Prototype: `.github/r1-debug/cracos.py` (run its self-check with `uv run --no-project --with mpmath python .github/r1-debug/cracos.py 40000`).
-- **Windows cannot be debugged from main yet:** the Windows debug job on main fails before any Zernike with `ValueError: queue_rows must be a C-contiguous 1-D array with format I and writable` (fixed on B6's branch by `47724ccd4`). Cherry-pick that commit onto the debug branch, or wait for #1195.
-- The Windows phase-only failure is probably a different cause: the phase of a near-zero moment is ill-conditioned (magnitude within 1e-6, phase free). Not examined.
+**CellProfiler's own choice is ill-conditioned.** Its result at such a tie is rounding noise; the fixed references record what glibc produced. A robust rule (exact integer comparison, no pixel of the object outside its own enclosing circle) cannot match the references, because it would disagree with CellProfiler wherever CellProfiler dropped a defining pixel.
 
-**Done**
+**Fix.** `_numpy_124_portable_arccos` is now `arccos` rounded to nearest, built from IEEE add, multiply, divide and square root only (series estimate, Newton steps on `cos(angle) - value` in double-pair arithmetic to a fixed point). No math-library call and no fused multiply-add takes part, so every platform computes the same bits. The AVX-512 SVML path is unchanged. The global tolerance is unchanged.
 
-- `.github/workflows/r1-debug.yml`, `.github/r1-debug/run_case.py` (runs named cases, prints environment, `np.show_config()`, libm probes and a per-column value diff) and `.github/r1-debug/sitecustomize.py` (records labels, ids, centers, radii and every `arccos` input with the kernel's, `math.acos`'s and `np.arccos`'s result into `circles/*.npz`). Verified locally on Linux: both cases equivalent, 18 circle dumps, 9 intensity traces.
-- The per-column diff in `run_case.py` compares rows by position and is wrong for wide tables such as `BF_cells_on_grid.csv`; diff the uploaded CSVs locally instead.
+**Observed**
+
+- Windows runner, before (run `38218984347`): ExampleImagingFlowCytometryObjectsInGrid not equivalent; 25 columns `ssc/zernike_phase_N_M_df_image` (every m ≠ 0). One object of 900 (row 636) differs: same centre, radius one ulp apart (3.6e-15). Its magnitudes differ by at most 4.8e-7 (inside 1e-6; the moments are about 1e-5), its phases by up to 0.52. No difference is a 2π wrap. The Windows `acos` differs from round-to-nearest on 4262 of 92866 distinct recorded inputs (glibc: 136).
+- Windows runner, after (run `38220967518`): `equivalent=True` in both steps; that object's magnitudes equal Linux exactly and phases agree to 4.4e-16. The job is red only because `tests/conftest.py` called `os.getpgid` at teardown, which main has since fixed.
+- Linux, after: the two cases equivalent; full 30-case parity under flock passed (1 passed, 673 s). glibc differs from round-to-nearest on 301 of 209890 distinct inputs of the two cases, and none of them decides a tie there.
+- Synthetic labels: a consistent one-ulp change of one `arccos` value moves a shape Zernike of a 17-pixel object by 0.135 (two of its 17 pixels leave the unit disk). This is the unit test.
+- macOS: **not observed.** The macOS jobs of runs `38218984347` (before) and `38220967518` (after) were still queued when checked on 2026-10-12; no macOS runner has executed the fix. The claim for macOS rests on the kernel using only IEEE add, multiply, divide and square root, and on the pinned bits in the unit test, which the regular macOS unit job runs.
+
+**Guards**: `test_portable_arccos_is_rounded_to_nearest_where_math_libraries_disagree` (bits pinned, including six inputs glibc rounds the other way) and `test_enclosing_circle_tie_does_not_follow_the_platform_math_library` (forces another platform's rounding of one value and shows the 0.135 move; pins our circle).
+
+**Supply map** (`--focus Zernike`): 21 classes matched; the existing owners of tolerance are `ZernikeDescriptorSparseNumericTolerance` and the `CellProfilerEquivalencePolicy` fields, which this change does not touch.
+
+**Deleted** (runner experiments; nothing on main referred to them)
+
+- `.github/workflows/r1-debug.yml`: **unused** (existed on this branch only; no workflow, script or test names it).
+- `.github/workflows/r1-debug-case.yml`: **unused** (same; it also failed the guardrail that requires a `concurrency` key).
+- `.github/r1-debug/` (`cmp_dump.py`, `cracos.py`, `probe.py`, `real_sens.py`, `sitecustomize.py`): **unused** (imported only by the two workflows above).
+- `tests/integration/test_r1_debug_case.py`: **unused** (ran only when the debug workflow set `R1_CASES`; the 30-case parity test runs the same cases). The unit test that forces another platform's rounding stays.
+
+**Thumbnails (not this cause, not fixed here).** In run `38155492658`, `cp_tutorial_translocation_final` also differed on macOS and Windows in `sample/thumbnail_raw_dna` and `sample/thumbnail_raw_gfp`. These are ExportToDatabase's `Image_Thumbnail_*` columns: the base64 text of a whole 200x200 PNG file (`_thumbnail_png_base64` in `openhcs/interop/cellprofiler/analyst_export.py`), compared as text. No `arccos` and no label geometry is involved. The encoder is integer work after an IEEE division (scale to uint8, Pillow resize, PNG save), and no other measurement of that case differed, so the input pixels were the same. Re-encoding the recorded pixels with the local Pillow (Linux x86-64) reproduces the recorded bytes exactly. The likely difference is therefore the compressed byte stream that the Pillow wheel's bundled zlib writes on each platform, not the picture; this was inferred, not observed, because the runner's thumbnail bytes were not kept. It is a parity-comparison question (compare decoded pixels instead of file bytes) and belongs to the surface that owns the equivalence policy. **The macOS and Windows 30-case parity jobs will stay red on this case after this PR.**
+
+**Gates on head `6a835c3cf`** (origin/main `d927ce673` merged)
+
+- `verify_branch.sh r1z`: `suite: = 36 failed, 11651 passed, 25 skipped, 359 warnings, 2 errors, 6 subtests passed in 1070.26s (0:17:50) =`; `collected 11711, reported 11688, crash lines 0`; `new vs known: 2`; `only on r1z:` (empty). The two new ones (`test_mcp_dev_client_terminal_input.py::test_long_terminal_command_reuses_original_parser_and_client[...]`, `test_skan_axon_artifact_contract.py::test_skan_axon_returns_columnar_rows_and_exact_label_plane_stack`) passed when rerun alone on this branch.
+- `smoke_local.sh`: `smoke pytest exit 0 (131 s): 7 passed, 2 warnings in 128.05s (0:02:08)`; `smoke gui exit 0 (30 s):`; `smoke rc=0`.
+- `guardrails_local.sh`: ratchet openhcs, scripts, benchmark exit 0; `38 passed`; `nra-r1 exit 0: "increased": []`; `guardrails rc=0`.
+- 30-case parity under the official30 lock: `1 passed, 2 warnings in 810.30s (0:13:30)`, `rc=0`.
+- The same four gates also passed on the previous head `01d1326d2` (parity `1 passed ... in 677.30s`), except guardrails, whose pinned tools could not import that hour because `metaclass-registry` 0.4.0 had just been published; the shared script now bounds it.
 
 **Remains**
 
-1. Get the macOS artifact. Compare its `arccos_libm` with glibc on the same inputs, and its `labels` with Linux, to confirm or refute the `acos` hypothesis.
-2. If confirmed: replace the libm branch of `_numpy_124_arccos` with the round-to-nearest implementation (Numba), run the full 30-case parity under flock on Linux (it must stay 30/30, since round-to-nearest differs from glibc on about 0.14% of inputs), then rerun the macOS job.
-3. Cherry-pick `47724ccd4`, rerun Windows, and examine the `ssc` phase columns with the intensity traces (`OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR` is already set by the workflow).
-4. Find the cause of the `thumbnail_raw_*` differences.
-5. Add the Linux sensitivity test, remove the debug files, run guardrails, open the PR.
+1. macOS: read the two queued runs if they ever start (`gh run view <id> --json jobs`), or read the macOS job of the next full matrix run.
+2. Thumbnail comparison, above.
+3. Hosts with AVX-512 enabled still use SVML's `arccos`, by the documented design. Parity disables AVX-512.
 
 ### Item 2: Intel macOS cold start — branch `refactor/R1-cold-start`, measurements only, no fix yet
 
