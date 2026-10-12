@@ -16,6 +16,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
+from typing import ClassVar
+
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.runtime.environment_provenance import InstalledDistributionVersion
 
@@ -84,14 +87,20 @@ class ModuleLibraries:
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionIdentity:
+class FunctionIdentity(metaclass=AutoRegisterMeta):
     """A function exported by an installed module.
+
+    The identities are registered under ``defined_by``; a stored identity names
+    its class by that key.
 
     ``key`` is the registry key (``registry:name``) or the import path
     (``python:module:name``); ``defined_in`` is the distribution and version of
     the module that defines it; ``imports`` are the distributions that module
     imports.
     """
+
+    __registry_key__ = "defined_by"
+    defined_by: ClassVar[str] = "installed_module"
 
     key: str
     module: str
@@ -121,6 +130,8 @@ class FunctionIdentity:
 @dataclass(frozen=True, slots=True)
 class CustomFunctionIdentity(FunctionIdentity):
     """A function defined by user-written source text, identified by that text's hash."""
+
+    defined_by: ClassVar[str] = "source_text"
 
     source_sha256: str
 

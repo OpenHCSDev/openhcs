@@ -228,6 +228,14 @@ def test_stored_json_reads_back_as_the_same_record(tmp_path, register):
     assert RunRecord.from_json(stored).record_id == record.record_id
     (norm_parameter, *_rest) = stored["steps"][0]["calls"]["functions"][0]["parameters"]
     assert norm_parameter == {"name": "stack", "value": None, "source": "run_time"}
+    # Each family member names its class by its registry key, not by its fields.
+    library, custom = (step["calls"]["functions"][0] for step in stored["steps"])
+    assert list(library["identity"]) == ["installed_module"]
+    assert list(custom["identity"]) == ["source_text"]
+    assert [list(declared["content"]) for declared in custom["declared_files"]] == [
+        ["hashed"],
+        ["not_hashed"],
+    ]
 
 
 def test_saved_pipeline_text_stays_short_and_the_record_copy_is_complete(tmp_path):

@@ -156,15 +156,15 @@ def test_dataset_root_returns_what_each_step_ran_by_default(dataset, read):
         {"record_id": RECORD_ID, "steps": [as_json(STEP)], "record": None}
     ]
     (function,) = result["records"][0]["steps"][0]["functions"]
-    assert function["identity"]["source_sha256"] == CUSTOM_SOURCE_SHA256
+    # A family member is stored under the key its class is registered with.
+    assert function["identity"]["source_text"]["source_sha256"] == CUSTOM_SOURCE_SHA256
     assert function["parameters"][1] == {
         "name": "weights",
         "value": "'weights.bin'",
         "source": "pipeline",
     }
     assert function["declared_files"][0]["content"] == {
-        "sha256": "0" * 64,
-        "size_bytes": 7,
+        "hashed": {"sha256": "0" * 64, "size_bytes": 7}
     }
 
 

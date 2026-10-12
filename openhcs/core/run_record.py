@@ -19,7 +19,9 @@ resolved values, each with the declaration that supplied it.
 The stored form is the JSON ``python_introspect.to_jsonable`` writes for these
 dataclasses and ``python_introspect.dataclass_from_mapping`` reads back; there
 is no other encoder or decoder. A class of a registered family (a parameter's
-or a configuration value's source) is stored as its registry key.
+or a configuration value's source) is stored as its registry key. A member of
+a registered family that carries data (a function identity, a file's content)
+is stored as ``{registry key: fields}``, so the stored form names its class.
 """
 
 from __future__ import annotations
@@ -36,11 +38,11 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pycodify
 from metaclass_registry import AutoRegisterMeta
-from polystore.file_content import HashedFileContent, UnhashedFileContent
+from polystore.file_content import FileContent
 from polystore.streaming.identity import StreamProducerIdentity
 from python_introspect import JsonObject, JsonValue, dataclass_from_mapping, to_jsonable
 
-from openhcs.core.function_identity import CustomFunctionIdentity, FunctionIdentity
+from openhcs.core.function_identity import FunctionIdentity
 
 from openhcs.core.vfs_protocol import FileManagerLike
 
@@ -314,14 +316,14 @@ class DeclaredFile:
     parameter: str
     declared_as: str
     path: str
-    content: HashedFileContent | UnhashedFileContent
+    content: FileContent
 
 
 @dataclass(frozen=True, slots=True)
 class FunctionRecord:
     """One function call of a step: which function, with which values and files."""
 
-    identity: FunctionIdentity | CustomFunctionIdentity
+    identity: FunctionIdentity
     group: str
     position: int
     input_memory_type: str | None
