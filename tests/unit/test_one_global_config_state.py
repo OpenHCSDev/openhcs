@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
 from objectstate import (
     ObjectState,
     ObjectStateRegistry,
@@ -98,13 +96,8 @@ class ServerStandIn:
         self.submitted_global_configs.append(request.global_config)
 
 
-@pytest.fixture
-def empty_registry() -> Iterator[None]:
-    yield
-
-
 def test_headless_session_keeps_one_global_state_until_it_closes(
-    empty_registry: None, tmp_path: Path
+    tmp_path: Path
 ) -> None:
     with OpenHCSAgentContext(
         path_policy=AgentPathPolicy.with_roots(

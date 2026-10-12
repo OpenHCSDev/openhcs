@@ -8,10 +8,8 @@ states built before must read the new value, the same as states built after.
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
 from arraybridge.decorators import DtypeConversion
 from objectstate import ObjectState, ObjectStateRegistry
 from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
@@ -57,13 +55,8 @@ def _states_below(scope_id: str) -> list[ObjectState]:
     ]
 
 
-@pytest.fixture
-def empty_registry() -> Iterator[None]:
-    yield
-
-
 def test_headless_session_global_config_reaches_existing_step_states(
-    empty_registry: None, tmp_path: Path
+    tmp_path: Path
 ) -> None:
     """A session started without a GUI, as the MCP server starts its own."""
 
@@ -100,7 +93,7 @@ def test_headless_session_global_config_reaches_existing_step_states(
 
 
 def test_saved_global_config_reaches_saved_values_of_existing_step_states(
-    empty_registry: None, qapp
+    qapp
 ) -> None:
     from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
     from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
