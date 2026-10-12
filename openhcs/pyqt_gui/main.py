@@ -1546,6 +1546,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self._object_state_unregister_subscription.release()
         self.time_travel_widget.close()
 
+    @singledispatchmethod
     def on_session_event(self, event: SessionEvent) -> None:
         del event
 
