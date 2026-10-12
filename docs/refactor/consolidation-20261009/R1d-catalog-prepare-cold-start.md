@@ -157,3 +157,18 @@ Pipeline `total_seconds` inside those runs is unchanged (1.14 to 1.22 s with 1 w
 ## Done when
 
 Gates in the PR description.
+
+## Probe size on the GPU libraries (checked on the desktop, read-only, 2026-10-12)
+
+Run against the desktop's installed libraries (cupy-cuda12x 13.3.0, cucim-cu12 25.6.0,
+pyclesperanto 0.19.0, RTX 2070 SUPER) with the registries of its checkout (`97bc871cb`),
+classifying every candidate function at several probe sizes and comparing with 3x20x20:
+
+| Registry | Functions | Differ at 3x8x8 | Differ at 3x6x6 | Differ at 2x8x8 |
+| --- | --- | --- | --- | --- |
+| pyclesperanto | 273 (168 flexible, 24 volumetric-to-slice, 2 pure 3D, 79 rejected) | 0 | 0 | 0 |
+| CuPy / cuCIM | 133 (70 flexible, 25 pure 2D, 5 volumetric-to-slice, 1 pure 3D, 32 rejected) | 0 | 0 | 0 |
+
+The smaller probe did not make pyclesperanto discovery faster in that run (5.2 s at edge
+20, 27.7 s at edge 8, run in that order in one process); not investigated, the sizes ran
+once each.
