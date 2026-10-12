@@ -28,7 +28,7 @@ Each failure fixed at its cause, in its own PR. No global loosening of the parit
 - **B6's PR #1195 is still open.** Every log from run `38155492658` comes from B6's branch, which carries fixes main does not have.
 - **`workflow_dispatch` cannot start a workflow that is absent from the default branch.** `.github/workflows/r1-debug.yml` therefore also runs on a push to `refactor/R1-*` whose head commit message contains a tag: `[r1 parity-macos]`, `[r1 parity-windows]` or `[r1 cold-intel]`. Trigger with, for example, `git commit --allow-empty -m "WIP: rerun [r1 parity-macos]" && git push`. Once the file is on main, `gh workflow run r1-debug.yml --ref <branch> -f target=parity-macos` (or `parity-windows`, `cold-intel`; optional `-f case="<names>"`) works too.
 - Read results with `gh run view <id> --log` and `gh run download <id> -n r1-parity-macos` (or `r1-parity-windows`, `r1-cold-intel`).
-- **Delete `.github/workflows/r1-debug.yml` and `.github/r1-debug/` before a PR is final.** They exist on the zernike and cold-start branches only.
+- **Delete `.github/workflows/r1-debug.yml` and `.github/r1-debug/` before a PR is final.** Deleted on the zernike branch (Item 1); the cold-start branch still carries its copy.
 - Actions was stalled for most of the session. At checkpoint, run `38196784224` (zernike branch) had finished its Windows job and its macOS job was still queued; run `38198397594` (cold-start branch, `cold-intel`) was queued. **Check both first.**
 - The local machine had load average 24 to 28; local wall times are inflated. CPU seconds are the usable local measure.
 
@@ -46,18 +46,34 @@ Each failure fixed at its cause, in its own PR. No global loosening of the parit
 - Windows runner, after (run `38220967518`): `equivalent=True` in both steps; that object's magnitudes equal Linux exactly and phases agree to 4.4e-16. The job is red only because `tests/conftest.py` called `os.getpgid` at teardown, which main has since fixed.
 - Linux, after: the two cases equivalent; full 30-case parity under flock passed (1 passed, 673 s). glibc differs from round-to-nearest on 301 of 209890 distinct inputs of the two cases, and none of them decides a tie there.
 - Synthetic labels: a consistent one-ulp change of one `arccos` value moves a shape Zernike of a 17-pixel object by 0.135 (two of its 17 pixels leave the unit disk). This is the unit test.
-- macOS: see Remains.
+- macOS: **not observed.** The macOS jobs of runs `38218984347` (before) and `38220967518` (after) were still queued when checked on 2026-10-12; no macOS runner has executed the fix. The claim for macOS rests on the kernel using only IEEE add, multiply, divide and square root, and on the pinned bits in the unit test, which the regular macOS unit job runs.
 
 **Guards**: `test_portable_arccos_is_rounded_to_nearest_where_math_libraries_disagree` (bits pinned, including six inputs glibc rounds the other way) and `test_enclosing_circle_tie_does_not_follow_the_platform_math_library` (forces another platform's rounding of one value and shows the 0.135 move; pins our circle).
 
 **Supply map** (`--focus Zernike`): 21 classes matched; the existing owners of tolerance are `ZernikeDescriptorSparseNumericTolerance` and the `CellProfilerEquivalencePolicy` fields, which this change does not touch.
 
+**Deleted** (runner experiments; nothing on main referred to them)
+
+- `.github/workflows/r1-debug.yml`: **unused** (existed on this branch only; no workflow, script or test names it).
+- `.github/workflows/r1-debug-case.yml`: **unused** (same; it also failed the guardrail that requires a `concurrency` key).
+- `.github/r1-debug/` (`cmp_dump.py`, `cracos.py`, `probe.py`, `real_sens.py`, `sitecustomize.py`): **unused** (imported only by the two workflows above).
+- `tests/integration/test_r1_debug_case.py`: **unused** (ran only when the debug workflow set `R1_CASES`; the 30-case parity test runs the same cases). The unit test that forces another platform's rounding stays.
+
+**Thumbnails (not this cause, not fixed here).** In run `38155492658`, `cp_tutorial_translocation_final` also differed on macOS and Windows in `sample/thumbnail_raw_dna` and `sample/thumbnail_raw_gfp`. These are ExportToDatabase's `Image_Thumbnail_*` columns: the base64 text of a whole 200x200 PNG file (`_thumbnail_png_base64` in `openhcs/interop/cellprofiler/analyst_export.py`), compared as text. No `arccos` and no label geometry is involved. The encoder is integer work after an IEEE division (scale to uint8, Pillow resize, PNG save), and no other measurement of that case differed, so the input pixels were the same. Re-encoding the recorded pixels with the local Pillow (Linux x86-64) reproduces the recorded bytes exactly. The likely difference is therefore the compressed byte stream that the Pillow wheel's bundled zlib writes on each platform, not the picture; this was inferred, not observed, because the runner's thumbnail bytes were not kept. It is a parity-comparison question (compare decoded pixels instead of file bytes) and belongs to the surface that owns the equivalence policy. **The macOS and Windows 30-case parity jobs will stay red on this case after this PR.**
+
+**Gates on head `6a835c3cf`** (origin/main `d927ce673` merged)
+
+- `verify_branch.sh r1z`: `suite: = 36 failed, 11651 passed, 25 skipped, 359 warnings, 2 errors, 6 subtests passed in 1070.26s (0:17:50) =`; `collected 11711, reported 11688, crash lines 0`; `new vs known: 2`; `only on r1z:` (empty). The two new ones (`test_mcp_dev_client_terminal_input.py::test_long_terminal_command_reuses_original_parser_and_client[...]`, `test_skan_axon_artifact_contract.py::test_skan_axon_returns_columnar_rows_and_exact_label_plane_stack`) passed when rerun alone on this branch.
+- `smoke_local.sh`: `smoke pytest exit 0 (131 s): 7 passed, 2 warnings in 128.05s (0:02:08)`; `smoke gui exit 0 (30 s):`; `smoke rc=0`.
+- `guardrails_local.sh`: ratchet openhcs, scripts, benchmark exit 0; `38 passed`; `nra-r1 exit 0: "increased": []`; `guardrails rc=0`.
+- 30-case parity under the official30 lock: `1 passed, 2 warnings in 810.30s (0:13:30)`, `rc=0`.
+- The same four gates also passed on the previous head `01d1326d2` (parity `1 passed ... in 677.30s`), except guardrails, whose pinned tools could not import that hour because `metaclass-registry` 0.4.0 had just been published; the shared script now bounds it.
+
 **Remains**
 
-1. macOS: runs `38218984347` (before) and `38220967518` (after) were still queued when this was written. Read them with `gh run download <id> -n r1-parity-macos`; the report files say `equivalent=`, and `report-unit.txt` (later pushes only) shows whether the kernel's pinned bits hold on arm64. To rerun: `git commit --allow-empty -m "rerun [r1 parity-macos]" && git push`.
-2. After macOS is verified, delete `.github/workflows/r1-debug.yml`, `.github/workflows/r1-debug-case.yml`, `.github/r1-debug/` and `tests/integration/test_r1_debug_case.py`. Guardrails fail on `r1-debug-case.yml` (no `concurrency` key) until then.
-3. `cp_tutorial_translocation_final` `sample/thumbnail_raw_dna` and `thumbnail_raw_gfp` failed on both platforms in run `38155492658`. Not examined here; not a Zernike column.
-4. Hosts with AVX-512 enabled still use SVML's `arccos`, by the documented design. Parity disables AVX-512.
+1. macOS: read the two queued runs if they ever start (`gh run view <id> --json jobs`), or read the macOS job of the next full matrix run.
+2. Thumbnail comparison, above.
+3. Hosts with AVX-512 enabled still use SVML's `arccos`, by the documented design. Parity disables AVX-512.
 
 ### Item 2: Intel macOS cold start — branch `refactor/R1-cold-start`, measurements only, no fix yet
 
