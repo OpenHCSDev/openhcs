@@ -62,7 +62,7 @@ def failing_source_line(error: BaseException, source_filename: str) -> int:
     lines = [
         frame.lineno
         for frame in traceback.extract_tb(error.__traceback__)
-        if frame.filename == source_filename and frame.lineno is not None
+        if frame.filename == source_filename
     ]
     return lines[-1] if lines else 0
 
