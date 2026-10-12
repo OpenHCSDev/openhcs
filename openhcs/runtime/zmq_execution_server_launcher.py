@@ -199,8 +199,9 @@ def main(
         server = execution_server_type(
             log_file_path=args.log_file_path,
             config=config,
-            launch=args.launch,
         )
+        if args.launch is not None:
+            server.launched_by(args.launch)
 
         status_reporter.emit(
             EndpointStartupPhase.PREPARING_CAPABILITIES,

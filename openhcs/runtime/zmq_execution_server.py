@@ -15,7 +15,6 @@ from polystore import cleanup_backend_connections
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
-    EndpointLaunch,
     ExecuteRequest,
     ExecutionRecord,
     ExecutionStatus,
@@ -175,7 +174,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         log_file_path: str | None = None,
         transport_mode: TransportMode | None = None,
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
-        launch: EndpointLaunch | None = None,
     ):
         super().__init__(
             port=config.default_port if port is None else port,
@@ -186,7 +184,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
             ),
             config=config,
             application=OPENHCS_ENDPOINT_APPLICATION,
-            launch=launch,
         )
         self._compile_status: str | None = None
         self._compile_message: str | None = None
