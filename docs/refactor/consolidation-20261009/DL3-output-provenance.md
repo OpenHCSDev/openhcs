@@ -141,4 +141,40 @@ version and the device; the N2V2 denoise example records the model file's hash; 
 
 ## Progress notes
 
-(filled in as work proceeds)
+**Wired (commit `c2d689e61`).** `CompiledExecutionBundle.run_declaration` (required; built in
+`compile_pipelines` before `_resolve_pipeline_once`, step values added after it; pickles with the
+bundle). `StepExecutionObservation.producer_by_saved_path`, filled by
+`OpenHCSMetadataTarget.saved_path_producers` at the two places a step's observation is built.
+`execute_bundle_request` calls `RunRecord.at_run_start` before workers exist and passes the record
+to `finalize_completed_dataset`; `reconcile_completed_dataset` writes it inside its one `update`.
+A dataset root that received only non-image files gets a document; a document the run saved
+nothing under (the input plate) is left untouched. The real ZMQ journey writes a record (59 kB for
+one step, of which 246 installed distributions are most).
+
+**What the design had wrong, and what was done instead.**
+- `clean_mode=False` did not write a parameter the pipeline leaves out (it only stopped dropping
+  written ones). Complete rendering now adds the signature default of every parameter of every
+  pattern function (`with_every_parameter_written`, `pycodify_formatters.py`), except parameters
+  the platform supplies when it calls the function (artifact inputs, `slice_by_slice`,
+  `dtype_config`): writing their signature default would replace the supplied value.
+- Two default kinds had no formatter and would have stopped compilation (`range` in
+  `skimage:filters.frangi`, `numpy.sum` in `skimage:measure.block_reduce`). Both now have one;
+  `test_every_registered_function_default_can_be_written_in_the_record` guards the registry
+  installed here (283 functions; CuPy and pyclesperanto are not installed on this machine).
+- The WIP stored the *effective* config as the global document. Rebuilding against it gave equal
+  values but different sources (everything inherited from the global scope). The record now stores
+  the saved global config (`global_config_code`, as this design says); with none set it stores the
+  default-constructed one, which the round trip shows resolves identically.
+- A step's values are read from `AbstractStep.configuration_parameters()` (the function pattern is
+  not configuration). An inherited path is checked before descending: a nested config the step
+  leaves unset is inherited whole and ObjectState lists it as one path.
+- The producer of a main-flow image is the step that produced the pixels. A step that returns its
+  image unchanged saves a file whose producer is the earlier step: the same identity the viewer
+  item carries.
+- A rebuilt run writes every parameter, so its record says `pipeline` where the first said
+  `function_default`. Nothing else differs apart from the plate path and the submission scope
+  (`submission_<id>` in step scope ids). Output files (TIFF and CSV) are byte-identical.
+
+**Not done.** `changed_during_run` (asking again for size and modification time at the end of the
+run). The agent capability `openhcs_read_run_record` is being written separately and reads
+`effective_config_code`; that key is now `global_config_code`.
