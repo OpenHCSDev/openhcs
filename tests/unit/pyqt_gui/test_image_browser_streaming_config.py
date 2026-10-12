@@ -82,7 +82,6 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
             assert browser_state.get_resolved_value(path) == f"browser-{config_key}"
     finally:
         ObjectStateRegistry.clear()
-        set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_right_panel_replacement_releases_previous_server_browser(

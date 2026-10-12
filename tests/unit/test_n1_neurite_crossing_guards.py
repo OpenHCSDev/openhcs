@@ -50,9 +50,6 @@ def test_topology_classes_are_one_family_and_a_new_class_needs_one_declaration()
         def pixels(topology, cell_body_labels):
             return np.array([[1, 2]])
 
-    try:
-        assert NeuriteTopologyClass.value_table()["probe"] == 250
-        plane = NeuriteTopologyClass.render(_empty_topology(), np.zeros((4, 4), dtype=np.int32))
-        assert plane[1, 2] == 250
-    finally:
-        del NeuriteTopologyClass.__registry__[250]
+    assert NeuriteTopologyClass.value_table()["probe"] == 250
+    plane = NeuriteTopologyClass.render(_empty_topology(), np.zeros((4, 4), dtype=np.int32))
+    assert plane[1, 2] == 250

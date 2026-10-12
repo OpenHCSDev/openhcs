@@ -170,7 +170,6 @@ def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> 
         PathIsImage,
         SourceFilterClause,
         SourceFilterSubject,
-        SourceSetPairing,
     )
 
     app = QApplication.instance() or QApplication([])
@@ -185,38 +184,34 @@ def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> 
     class ThrowawayPairing(PairByMetadata):
         name = "u6b_throwaway_pairing"
 
-    try:
-        widget = editor_module.SourceBindingsEditorWidget.for_value(
-            StepSourceBindingsConfig()
-        )
-        emitted: list[object] = []
-        widget.connect_change_signal(emitted.append)
+    widget = editor_module.SourceBindingsEditorWidget.for_value(
+        StepSourceBindingsConfig()
+    )
+    emitted: list[object] = []
+    widget.connect_change_signal(emitted.append)
 
-        widget.add_row("source_filters", SourceFilterClause(ThrowawaySubject, PathIsImage))
-        widget.add_row(
-            "match_plan", editor_module.SourceSetPairingRow(method=ThrowawayPairing)
-        )
-        app.processEvents()
+    widget.add_row("source_filters", SourceFilterClause(ThrowawaySubject, PathIsImage))
+    widget.add_row(
+        "match_plan", editor_module.SourceSetPairingRow(method=ThrowawayPairing)
+    )
+    app.processEvents()
 
-        value = widget.get_value()
-        assert value.source_filters[-1].subject is ThrowawaySubject
-        assert type(value.match_plan) is ThrowawayPairing
-        assert len(emitted) == 2
+    value = widget.get_value()
+    assert value.source_filters[-1].subject is ThrowawaySubject
+    assert type(value.match_plan) is ThrowawayPairing
+    assert len(emitted) == 2
 
-        def choice_texts(field_name: str, row_type: type, column: str) -> set[str]:
-            combo = widget.table(field_name).cellWidget(
-                0, DataclassFieldColumns.of(row_type).named(column).index
-            )
-            assert isinstance(combo, QComboBox)
-            return {combo.itemText(index) for index in range(combo.count())}
+    def choice_texts(field_name: str, row_type: type, column: str) -> set[str]:
+        combo = widget.table(field_name).cellWidget(
+            0, DataclassFieldColumns.of(row_type).named(column).index
+        )
+        assert isinstance(combo, QComboBox)
+        return {combo.itemText(index) for index in range(combo.count())}
 
-        assert "u6b_throwaway_subject" in choice_texts(
-            "source_filters", SourceFilterClause, "subject"
-        )
-        assert "u6b_throwaway_pairing" in choice_texts(
-            "match_plan", editor_module.SourceSetPairingRow, "method"
-        )
-        widget.deleteLater()
-    finally:
-        del SourceFilterSubject.__registry__["u6b_throwaway_subject"]
-        del SourceSetPairing.__registry__["u6b_throwaway_pairing"]
+    assert "u6b_throwaway_subject" in choice_texts(
+        "source_filters", SourceFilterClause, "subject"
+    )
+    assert "u6b_throwaway_pairing" in choice_texts(
+        "match_plan", editor_module.SourceSetPairingRow, "method"
+    )
+    widget.deleteLater()

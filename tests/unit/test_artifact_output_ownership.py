@@ -81,9 +81,7 @@ def test_arbitrary_return_owner_does_not_inherit_cellprofiler_passthrough(
 
 
 @pytest.fixture
-def materialized_output_kind(monkeypatch):
-    # Isolate the declaration, not the compiler or its registration mechanism.
-    monkeypatch.setattr(ArtifactType, "__registry__", dict(ArtifactType.__registry__))
+def materialized_output_kind():
 
     class MaterializedAuditArtifactType(ArtifactType):
         value = "materialized_output_policy_audit"

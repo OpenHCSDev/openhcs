@@ -10,7 +10,6 @@ import pytest
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration,
     GetKnowledgeDocumentCapability,
     InspectPipelineSourceArtifactPlanCapability,
     MainThreadProgressCapability,
@@ -180,8 +179,6 @@ def test_independent_new_leaf_cooperative_hooks_need_no_consumer_edits():
         assert len(service.calls) == 2
     finally:
         executor.close()
-        for declaration in (NewBefore, NewAfter):
-            AgentCapabilityDeclaration.__registry__.pop(declaration.name)
 
 
 def test_started_dispatch_waits_authoritative_completion_beyond_prestart_limit():

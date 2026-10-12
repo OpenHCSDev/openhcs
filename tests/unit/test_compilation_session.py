@@ -170,7 +170,6 @@ def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_worker
         assert captured.num_workers == expected_workers
     finally:
         ObjectStateRegistry.clear()
-        ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
