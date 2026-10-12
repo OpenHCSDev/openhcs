@@ -161,18 +161,21 @@ native GUI snapshots for each installed desktop acceptance pass, including a
 partial journal when a deadline or process failure interrupts the pass.
 
 Before publication begins, the tag workflow resolves one annotated tag to its
-exact commit and requires successful Integration Tests and Documentation push
-runs for that commit. Every installer, package, recovery, and Registry job then
+exact commit and requires a successful Integration Tests run and a successful
+Documentation run for that commit. Every installer, package, recovery, and Registry job then
 checks out the resolved commit rather than the workflow-dispatch branch. The
 publish job repeats the installed-wheel smoke before upload and rejects a tag
 whose version differs from the package authority or generated release metadata.
 
-Integration and Documentation runs are concurrent per event and Git ref. A new
-push to the same branch cancels its superseded push run, and an updated pull
-request cancels its earlier pull-request run. Manual dispatches use a separate
-event group and therefore do not displace push evidence. Release readiness still
-accepts only a completed successful push run for the exact release commit; a
-cancelled predecessor is neither a failure to repair nor release evidence.
+Pull requests do not run the Integration Tests matrix or the Documentation
+workflow. They run ``pr-checks.yml`` (a unit subset and the smoke paths on
+Linux) and ``refactor-guardrails.yml``. The matrix and the Documentation
+workflow run on manual dispatch, on ``v*`` tags, and nightly against ``main``.
+Before tagging, dispatch both on the release commit unless the nightly run
+already covered it. Release readiness accepts a completed successful run for
+the exact release commit from any of those events; runs are concurrent per
+event and Git ref, and a cancelled predecessor is neither a failure to repair
+nor release evidence.
 
 External workflow actions are pinned to full commit SHAs. The
 ``github-actions`` entry in ``.github/dependabot.yml`` proposes grouped weekly
