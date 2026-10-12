@@ -60,7 +60,7 @@ from openhcs.core.config import (
     PipelineConfig,
     StreamingConfig,
 )
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import AxisFamily, GroupingDeclaration
@@ -313,7 +313,7 @@ class ConfigService:
         return RenderedSource(
             schema_version=SCHEMA_VERSION,
             title=f"{type(instance).__name__} source",
-            source=ConfigDocumentAuthority.render(
+            source=ConfigDocumentCodec.render(
                 instance,
                 expected_config_type=type(instance),
                 clean_mode=clean,

@@ -42,9 +42,9 @@ from openhcs.core.config import (
     PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.pipeline_document_fields import PipelineDocumentField
+from openhcs.core.function_step_transport import PipelineStepsDocument
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
@@ -389,7 +389,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         == FakeZMQExecutionClient.submitted[1].pipeline_code
     )
     assert all(
-        submission.global_config_code == ConfigDocumentAuthority.render(
+        submission.global_config_code == ConfigDocumentCodec.render(
             global_config, expected_config_type=GlobalPipelineConfig
         )
         for submission in FakeZMQExecutionClient.submitted
@@ -638,5 +638,5 @@ def test_benchmark_submission_matches_pyqt_submission_payload() -> None:
         for target in node.targets
         if isinstance(target, ast.Name)
     }
-    assert PipelineDocumentField.PIPELINE_STEPS.value in assigned_names
+    assert set(PipelineStepsDocument.assignment_names()) <= assigned_names
     assert "__openhcs_step_invocation_contracts" not in assigned_names

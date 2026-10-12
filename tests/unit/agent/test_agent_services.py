@@ -96,7 +96,7 @@ from openhcs.core.config import (
     PipelineConfig,
     LazySourceBindingsConfig,
 )
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -2588,7 +2588,7 @@ def test_config_service_validates_and_renders_config_source():
     assert result.valid is True
     assert "num_workers=2" in rendered.source
     assert (
-        ConfigDocumentAuthority.from_source(
+        ConfigDocumentCodec.from_source(
             rendered.source,
             expected_config_type=type(config),
         )

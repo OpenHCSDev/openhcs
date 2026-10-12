@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.cellprofiler.illumination import (
@@ -41,12 +40,6 @@ def test_raw_callable_signatures_expose_behavior_not_canonical_identity() -> Non
     assert track_parameters["name_the_output_image"].default == "TrackedCells"
     assert "runtime_invocation_options" not in calculate_math_parameters
     assert "output_name" in calculate_math_parameters
-
-
-def test_step_fragment_transport_uses_pipeline_document_field_authority() -> None:
-    assert callable(FunctionStepTransportAuthority.source_from_pipeline)
-    assert callable(FunctionStepTransportAuthority.pipeline_steps_from_namespace)
-    assert PipelineDocumentField.PIPELINE_STEPS.value == "pipeline_steps"
 
 
 def test_pycodified_public_cp_pipeline_reconstructs_in_fresh_process(
