@@ -82,6 +82,25 @@ Guards pass; G6 viewer guards and `test_k8_materialization_guards.py` pass; `gua
 
 ## Progress notes
 
-- [ ] library owners
-- [ ] OpenHCS widget rewritten
-- [ ] tests and guards
+**Done**
+
+- pyqt-reactive branch `refactor/U6c-record-browser` (commit `b32314b`, local, not yet pushed, no PR yet): `RowFilter` + `add_row_filter`/`apply_row_filters`/`reveal_key`/`reveal_path`/`item_noun` on `AbstractTableBrowser`; `record_table_browser.py` (`RecordTableBrowser`, `ValueLabels`, `LabelledValue`, `ValueLabelSource`) replacing `image_table_browser.py`; `folder_tree.py`; `grid_column_filter.py`; `detachable_panel.py`; `config_action_tabs.py`; `tests/test_record_browser.py` (7 passed), `test_column_presentation.py` updated. The submodule pointer in OpenHCS is set to that commit.
+
+**Next (OpenHCS side, nothing written yet)**
+
+1. Rewrite `openhcs/pyqt_gui/widgets/image_browser.py` on those parts:
+   - `BrowsedDataset(ValueLabelSource)` state family: `NoDataset`, `OrchestratorDataset(orchestrator, scope_parent)` with `config_state`, `release_state`, `records`, `viewer_ports`, `grid_positions` (parser coordinates + `axis.grid_position`), `reveal`, `view(batch, config, status, failed)` (ROIs then images, synchronous `stream_rois`/`stream_images`; `StreamingService` as a `cached_property`). On `cleanup` the widget releases the state and becomes `NoDataset` (replaces the `scope_id = None` flag).
+   - `BrowsedFile(Mapping)` row family: `ImageFile`, `ResultFile`; `BrowsedFile.of(record)` is the one boundary that reads `PlateFileRecord`'s optional fields. `ViewerBatch(ResultFileOpener)` collects ROI paths through `ResultFileFormat.open_with` (no `streams_rois` flag read); `ResultFileBrowserOpener` stays for double-click.
+   - Columns: name column from a `FILE_NAME_FIELD` constant to add in `core/plate_image_inventory.py` (two `"filename"` literals at `:323`, `:985`); then the active family's axes in family order (`axis.label`, width 70 when `OrdinalValued`); then the remaining record keys alphabetically, title-cased. All but the name column filterable.
+   - Grid panels: one `GridSelectorWidget` + `DetachablePanel` + `GridColumnFilterLink` per `family.with_role(GridAddressed)` axis, titled `f"{axis.label} Grid"`.
+   - Folder tree: `FolderTreeWidget(companion_suffixes=(ANALYSIS_RESULTS_DIR_SUFFIX,))`; declare that constant in `core/pipeline/path_planner.py` beside `_cached_analysis_results_dir_for` (`:2317`).
+   - Viewer tabs: `ConfigActionTabs(state, [ConfigAction(key, display, f"View in {display}") for key in StreamingConfig.supported_config_keys()])`.
+   - Constructor `ImageBrowserWidget(dataset, *, color_scheme, zmq_config, progress_config, parent=None)`; `set_dataset` replaces `set_orchestrator`. Callers: `windows/managed_windows.py:85,122`, `windows/plate_viewer_window.py:253`, `windows/live_measurements_window.py:297`.
+   - The table's own `search_input` moves into the header row (the widget's second search box is deleted).
+2. Tests: delete `tests/pyqt_gui/test_image_browser_filter_controller.py` browser-coupled tests (keep the `PlateFileInventory` ones), rewrite `tests/unit/pyqt_gui/test_image_browser_column_presentation.py` and `test_image_browser_streaming_config.py`; update stubs in `tests/pyqt_gui/test_managed_windows.py:44` and `tests/unit/pyqt_gui/test_live_measurements_window.py:42`; `tests/unit/test_grid_addressed_axis.py` and `tests/unit/pyqt_gui/test_plate_view_grid_model.py` import `active_grid_axis`/`GridAxisAddressing`. Remove the `('PlateFileKind', 'openhcs/pyqt_gui/widgets/image_browser.py')` entry from `tests/unit/test_e1_enum_dispatch_guards.py:120` (a stale entry fails).
+3. New-case test under `RemoteSensing` (fixture pattern in `tests/unit/test_axis_family_witness.py`); guard file `tests/unit/test_u6c_image_browser_guards.py`.
+4. Verify (G6 guards, K8 guards, `guardrails_local.sh`, `smoke_local.sh`, pyqt-reactive suite), push both branches, open both PRs.
+
+Test runner used: `bash .claude/u6c_pytest.sh <subdir> <pytest args>` (untracked; sets `PYTHONPATH` to this worktree's `external/*/src`, offscreen Qt).
+
+**Behaviour changes to report:** status line reads `Showing f/t files`; default column order is axes then record fields; the fixed widths for `extension`/`size`/`time` are gone; the grid panel is titled from the axis label; an inactive column filter shows as no selected grid cell; `set_items` keeps the search text; viewer batches send ROI files by full path.
