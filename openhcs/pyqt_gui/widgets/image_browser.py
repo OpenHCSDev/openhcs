@@ -1,64 +1,126 @@
-"""
-Image Browser Widget for PyQt6 GUI.
+"""Browse a dataset's files and send selections to viewers.
 
-Displays a table of all image files from plate metadata and allows users to
-view them in Napari with configurable display settings.
+pyqt-reactive does the browsing (record table, folder tree, grid selector,
+detachable panel, config-action tabs). This module declares what OpenHCS puts
+in them: the dataset being browsed, the kinds of file row, the columns the
+active axis family and the file records give, and the registered viewers.
 """
 
-from openhcs.core.axes import Axis, AxisFamily, GridAddressed
-from pyqt_reactive.widgets.grid_selector import GridAddressing, GridSelectorWidget
-from objectstate import ScopeKey
+from __future__ import annotations
+
 import logging
 import subprocess
-import time
-from collections.abc import Iterator, Mapping
+from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field, make_dataclass
+from functools import cached_property
 from pathlib import Path
-from typing import Callable, Dict, Optional, Set
+from typing import ClassVar
 
+from objectstate import ScopeKey, spawn_thread_with_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from polystore.base import storage_registry
-from polystore.filemanager import FileManager
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMessageBox,
     QPushButton,
     QSplitter,
-    QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 from pyqt_reactive.theming import ColorScheme
-from pyqt_reactive.widgets.shared import TabbedFormConfig, TabbedFormWidget, TabConfig
-from pyqt_reactive.widgets.shared.image_table_browser import (
-    ImageTableBrowser,
-    ImageTableValue,
+from pyqt_reactive.widgets.grid_selector import GridAddressing, GridSelectorWidget
+from pyqt_reactive.widgets.shared.abstract_table_browser import ColumnDef
+from pyqt_reactive.widgets.shared.config_action_tabs import ConfigAction, ConfigActionTabs
+from pyqt_reactive.widgets.shared.detachable_panel import DetachablePanel
+from pyqt_reactive.widgets.shared.folder_tree import FolderRowFilter, FolderTreeWidget
+from pyqt_reactive.widgets.shared.grid_column_filter import GridColumnFilterLink
+from pyqt_reactive.widgets.shared.record_table_browser import (
+    LabelledValue,
+    RecordTableBrowser,
+    RecordValue,
+    ValueLabels,
+    ValueLabelSource,
 )
 
+from openhcs.core.axes import Axis, AxisFamily, GridAddressed, OrdinalValued
 from openhcs.core.config import StreamingConfig
-from openhcs.core.result_file_formats import ResultFileFormat, ResultFileOpener
+from openhcs.core.pipeline.path_planner import ANALYSIS_RESULTS_DIR_SUFFIX
 from openhcs.core.plate_image_inventory import (
+    FILE_NAME_FIELD,
     PlateFileInventory,
-    PlateFileKind,
     PlateFileRecord,
-    PlateResultFileInventory,
 )
+from openhcs.core.result_file_formats import ResultFileFormat, ResultFileOpener
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
 
+ORDINAL_COLUMN_WIDTH = 70
+NAME_COLUMN_WIDTH = 200
 
-def active_grid_axis() -> type[Axis] | None:
-    """The active family's grid-addressed axis, if it declares one."""
 
-    grid_axes = AxisFamily.active().with_role(GridAddressed)
-    return grid_axes[0] if grid_axes else None
+# --- Declarations derived from registries -----------------------------------
+
+ImageBrowserConfig = make_dataclass(
+    "ImageBrowserConfig",
+    tuple(
+        (
+            config_key,
+            StreamingConfig.config_type_for_key(config_key),
+            field(default_factory=StreamingConfig.config_type_for_key(config_key)),
+        )
+        for config_key in StreamingConfig.supported_config_keys()
+    ),
+    frozen=False,
+    slots=True,
+)
+"""One nested streaming config per registered viewer."""
+
+
+def viewer_actions() -> tuple[ConfigAction, ...]:
+    """One "view in" action per registered streaming config."""
+
+    return tuple(
+        ConfigAction(
+            field_name=config_key,
+            title=StreamingConfig.display_name_for_config_key(config_key),
+            button_text=f"View in {StreamingConfig.display_name_for_config_key(config_key)}",
+        )
+        for config_key in StreamingConfig.supported_config_keys()
+    )
+
+
+def file_columns(record_fields: set[str]) -> tuple[ColumnDef, ...]:
+    """Table columns: the file name, the active family's axes, then other record fields.
+
+    An axis column is headed by the axis's label; the remaining fields are the
+    file records' own and are headed by their title-cased key.
+    """
+
+    family = AxisFamily.active()
+    axes = tuple(family.named(name) for name in family.names() if name in record_fields)
+    other_fields = sorted(record_fields - set(family.names()) - {FILE_NAME_FIELD})
+    return (
+        ColumnDef(name="Filename", key=FILE_NAME_FIELD, width=NAME_COLUMN_WIDTH),
+        *(
+            ColumnDef(
+                name=axis.label,
+                key=axis.name,
+                width=ORDINAL_COLUMN_WIDTH if issubclass(axis, OrdinalValued) else None,
+                filterable=True,
+            )
+            for axis in axes
+        ),
+        *(
+            ColumnDef(name=key.replace("_", " ").title(), key=key, filterable=True)
+            for key in other_fields
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,707 +140,451 @@ class GridAxisAddressing(GridAddressing):
         return self.axis.row_label(row)
 
 
-def require_grid_axis() -> type[Axis]:
-    """The grid axis the plate view lays out; a plate view needs one."""
-
-    grid_axis = active_grid_axis()
-    if grid_axis is None:
-        raise TypeError(
-            f"Axis family {AxisFamily.active().__qualname__} declares no "
-            "GridAddressed axis; it has no plate grid."
-        )
-    return grid_axis
-
-
-
-def _streaming_config_field_names() -> tuple[str, ...]:
-    """Registered streaming-config field names used by image-browser controls."""
-    return StreamingConfig.supported_config_keys()
+# --- File rows --------------------------------------------------------------
 
 
 @dataclass(slots=True)
-class ImageBrowserItem(Mapping[str, ImageTableValue]):
-    """One image/result row plus optional result-file action metadata."""
+class ViewerBatch(ResultFileOpener):
+    """What a selection of files sends to one viewer.
 
-    key: str
-    metadata: dict[str, ImageTableValue]
-    file_kind: PlateFileKind = PlateFileKind.IMAGE
-    streamable_image_path: str | None = None
-    result_file_type: type[ResultFileFormat] | None = None
-    full_path: Path | None = None
+    A result file joins the batch the way its format opens: a format that
+    streams ROIs adds its path, a format that opens in the desktop's default
+    application adds nothing.
+    """
+
+    image_paths: list[str] = field(default_factory=list)
+    roi_paths: list[str] = field(default_factory=list)
+
+    def open_in_default_app(self, file_path: Path) -> None:
+        """Nothing in such a file goes to a viewer."""
+
+    def stream_rois(self, file_path: Path) -> None:
+        self.roi_paths.append(str(file_path))
+
+
+@dataclass(frozen=True)
+class BrowsedFile(Mapping[str, RecordValue], ABC):
+    """One table row: a file record. Each kind says how it opens and what it streams."""
+
+    kind_noun: ClassVar[str]
+    """Plural name of this kind in the summary line."""
+
+    record: PlateFileRecord
+
+    @classmethod
+    def of(cls, record: PlateFileRecord) -> tuple[BrowsedFile, ...]:
+        """The row a record gives; a record that is neither kind gives none."""
+
+        image_path = record.streamable_image_path
+        if image_path is not None:
+            return (ImageFile(record, image_path),)
+        if record.file_format is not None and record.full_path is not None:
+            return (ResultFile(record, record.file_format, Path(record.full_path)),)
+        return ()
 
     @property
-    def is_result(self) -> bool:
-        return self.file_kind is PlateFileKind.RESULT
+    def key(self) -> str:
+        return self.record.key
 
-    @property
-    def filename(self) -> str:
-        return str(self.metadata["filename"])
+    @abstractmethod
+    def open(self, browser: ImageBrowserWidget) -> None:
+        """What double-clicking the row does."""
 
-    def result_path(self) -> Path:
-        if self.full_path is None:
-            raise RuntimeError(f"Image browser item {self.key!r} is not a result file.")
-        return self.full_path
+    @abstractmethod
+    def add_to(self, batch: ViewerBatch) -> None:
+        """Add what this file sends to a viewer."""
 
-    def __getitem__(self, key: str) -> ImageTableValue:
-        return self.metadata[key]
+    def __getitem__(self, key: str) -> RecordValue:
+        return self.record.metadata[key]
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self.metadata)
+        return iter(self.record.metadata)
 
     def __len__(self) -> int:
-        return len(self.metadata)
+        return len(self.record.metadata)
+
+
+@dataclass(frozen=True)
+class ImageFile(BrowsedFile):
+    """A file a viewer can show as an image."""
+
+    kind_noun: ClassVar[str] = "images"
+
+    image_path: str
+
+    def open(self, browser: ImageBrowserWidget) -> None:
+        browser.view_in_enabled_viewers(browser.selected_files(), "images")
+
+    def add_to(self, batch: ViewerBatch) -> None:
+        batch.image_paths.append(self.image_path)
+
+
+@dataclass(frozen=True)
+class ResultFile(BrowsedFile):
+    """A result file; its declared format decides how it opens."""
+
+    kind_noun: ClassVar[str] = "results"
+
+    file_format: type[ResultFileFormat]
+    path: Path
+
+    def open(self, browser: ImageBrowserWidget) -> None:
+        self.file_format.open_with(ResultFileBrowserOpener(browser, self), self.path)
+
+    def add_to(self, batch: ViewerBatch) -> None:
+        self.file_format.open_with(batch, self.path)
 
 
 @dataclass(frozen=True)
 class ResultFileBrowserOpener(ResultFileOpener):
     """What the image browser does when a result file is opened."""
 
-    browser: "ImageBrowserWidget"
+    browser: ImageBrowserWidget
+    file: ResultFile
 
     def open_in_default_app(self, file_path: Path) -> None:
         subprocess.run(["xdg-open", str(file_path)], check=False)
 
     def stream_rois(self, file_path: Path) -> None:
-        self.browser._stream_roi_file(file_path)
+        self.browser.view_in_enabled_viewers((self.file,), "ROIs")
+
+
+# --- The dataset being browsed ----------------------------------------------
+
+
+class BrowsedDataset(ValueLabelSource):
+    """The dataset whose files the browser shows, or the lack of one."""
+
+    @abstractmethod
+    def config_state(self, config: object) -> ObjectState:
+        """The viewer-config state for this dataset."""
+
+    @abstractmethod
+    def release_state(self, state: ObjectState) -> None:
+        """Undo whatever ``config_state`` registered."""
+
+    @abstractmethod
+    def records(self) -> tuple[PlateFileRecord, ...]:
+        """Every image and result file record."""
+
+    @abstractmethod
+    def viewer_ports(self, ports_per_type: int) -> list[int]:
+        """Ports on which this dataset's viewers may listen."""
+
+    @abstractmethod
+    def grid_positions(
+        self, axis: type[Axis], values: set[str]
+    ) -> dict[tuple[int, int], str]:
+        """Where each value of a grid-addressed axis sits."""
+
+    @abstractmethod
+    def reveal(self, table: RecordTableBrowser, file_path: str | Path) -> bool:
+        """Select the table row a file path names."""
+
+    @abstractmethod
+    def view(
+        self,
+        batch: ViewerBatch,
+        config: StreamingConfig,
+        status: Callable[[str], None],
+        failed: Callable[[str], None],
+    ) -> None:
+        """Send a batch to the viewer a streaming config names. Blocks until sent."""
+
+
+class NoDataset(BrowsedDataset):
+    """Nothing is loaded: no files, and a viewer config that belongs to no scope."""
+
+    def labelled(self, column_key: str, raw: str) -> LabelledValue:
+        return LabelledValue(column_key, raw)
+
+    def config_state(self, config: object) -> ObjectState:
+        return ObjectState(object_instance=config)
+
+    def release_state(self, state: ObjectState) -> None:
+        """An unscoped state was never registered."""
+
+    def records(self) -> tuple[PlateFileRecord, ...]:
+        return ()
+
+    def viewer_ports(self, ports_per_type: int) -> list[int]:
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+
+        return get_all_streaming_ports(num_ports_per_type=ports_per_type)
+
+    def grid_positions(
+        self, axis: type[Axis], values: set[str]
+    ) -> dict[tuple[int, int], str]:
+        return {}
+
+    def reveal(self, table: RecordTableBrowser, file_path: str | Path) -> bool:
+        return table.reveal_path(file_path)
+
+    def view(self, batch, config, status, failed) -> None:
+        raise RuntimeError("No dataset is loaded; there is nothing to view.")
+
+
+class OrchestratorDataset(BrowsedDataset):
+    """A dataset opened by an orchestrator.
+
+    ``scope_parent`` is the ObjectState scope the browser's viewer config
+    lives under (the dataset itself, or the window that embeds the browser).
+    """
+
+    def __init__(self, orchestrator, scope_parent: str) -> None:
+        self.orchestrator = orchestrator
+        self.scope_parent = scope_parent
+
+    @classmethod
+    def scoped_to_dataset(cls, orchestrator) -> OrchestratorDataset:
+        return cls(orchestrator, str(orchestrator.dataset_root))
+
+    @cached_property
+    def streaming(self):
+        from openhcs.core.viewer_streaming_service import StreamingService
+
+        return StreamingService(
+            filemanager=self.orchestrator.filemanager,
+            microscope_handler=self.orchestrator.microscope_handler,
+            plate_path=self.orchestrator.dataset_root,
+            transport_config=self.orchestrator.transport_config,
+        )
+
+    def labelled(self, column_key: str, raw: str) -> LabelledValue:
+        family = AxisFamily.active()
+        if column_key not in family.names():
+            return LabelledValue(column_key, raw)
+        axis = family.named(column_key)
+        try:
+            label = self.orchestrator.metadata_cache.get_component_metadata(axis, raw)
+        except Exception:
+            logger.warning("Could not read the label of %s %s", column_key, raw, exc_info=True)
+            return LabelledValue(column_key, raw)
+        if not label or label == "None":
+            return LabelledValue(column_key, raw)
+        return LabelledValue(column_key, raw, label=label, source=axis)
+
+    def config_state(self, config: object) -> ObjectState:
+        state = ObjectState(
+            object_instance=config,
+            scope_id=ScopeKey(self.scope_parent).child(OpenHCSUiWindowId.image_browser),
+            parent_state=ObjectStateRegistry.get_by_scope(str(self.orchestrator.dataset_root)),
+        )
+        ObjectStateRegistry.register(state, _skip_snapshot=True)
+        return state
+
+    def release_state(self, state: ObjectState) -> None:
+        ObjectStateRegistry.unregister(state, _skip_snapshot=True)
+
+    def records(self) -> tuple[PlateFileRecord, ...]:
+        return PlateFileInventory.from_orchestrator(
+            self.orchestrator, all_subdirs=True
+        ).file_records()
+
+    def viewer_ports(self, ports_per_type: int) -> list[int]:
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+
+        return get_all_streaming_ports(
+            config=self.orchestrator.pipeline_config,
+            num_ports_per_type=ports_per_type,
+        )
+
+    def grid_positions(
+        self, axis: type[Axis], values: set[str]
+    ) -> dict[tuple[int, int], str]:
+        # The dataset's filename parser spells each value's row and column; the
+        # axis places those labels on the grid.
+        parser = self.orchestrator.microscope_handler.parser
+        return {
+            axis.grid_position(*parser.extract_component_coordinates(value)): value
+            for value in values
+        }
+
+    def reveal(self, table: RecordTableBrowser, file_path: str | Path) -> bool:
+        return table.reveal_path(file_path, root=self.orchestrator.dataset_root)
+
+    def view(self, batch, config, status, failed) -> None:
+        from openhcs.core.viewer_streaming_service import (
+            ImageStreamingRequest,
+            RoiStreamingRequest,
+        )
+
+        viewer = self.orchestrator.get_or_create_visualizer(config)
+        if batch.roi_paths:
+            self.streaming.stream_rois(
+                RoiStreamingRequest(
+                    viewer=viewer,
+                    config=config,
+                    status_callback=status,
+                    error_callback=failed,
+                    roi_filenames=tuple(batch.roi_paths),
+                )
+            )
+        if batch.image_paths:
+            self.streaming.stream_images(
+                ImageStreamingRequest(
+                    viewer=viewer,
+                    config=config,
+                    status_callback=status,
+                    error_callback=failed,
+                    filenames=tuple(batch.image_paths),
+                    read_backend=self.orchestrator.microscope_handler.get_primary_backend(
+                        Path(self.orchestrator.dataset_root),
+                        self.orchestrator.filemanager,
+                    ),
+                )
+            )
+
+
+# --- The widget -------------------------------------------------------------
 
 
 @dataclass(frozen=True)
-class StreamingViewerField:
-    """Display metadata for one registered streaming viewer field."""
+class AxisGrid:
+    """A grid-addressed axis shown as a detachable grid joined to its table column."""
 
-    field_name: str
+    axis: type[Axis]
+    panel: DetachablePanel
+    link: GridColumnFilterLink
 
-    @property
-    def display_name(self) -> str:
-        return StreamingConfig.display_name_for_config_key(self.field_name)
-
-
-def streaming_viewer_fields() -> tuple[StreamingViewerField, ...]:
-    """Registered streaming-viewer fields with display metadata."""
-    return tuple(
-        StreamingViewerField(field_name)
-        for field_name in _streaming_config_field_names()
-    )
-
-
-ImageBrowserConfig = make_dataclass(
-    "ImageBrowserConfig",
-    tuple(
-        (
-            field_name,
-            StreamingConfig.config_type_for_key(field_name),
-            field(default_factory=StreamingConfig.config_type_for_key(field_name)),
-        )
-        for field_name in _streaming_config_field_names()
-    ),
-    frozen=False,
-    slots=True,
-)
-
-
-class ImageBrowserViewerControls:
-    """Own viewer button construction and enabled-state projection."""
-
-    def __init__(
-        self,
-        state: ObjectState,
-        color_scheme: ColorScheme,
-        view_requested: Callable[[str], None],
-    ):
-        self.state = state
-        self.color_scheme = color_scheme
-        self.view_requested = view_requested
-        self.buttons: Dict[str, QPushButton] = {}
-
-    def create_header_buttons(self) -> list[QPushButton]:
-        self.buttons.clear()
-        buttons = []
-        for viewer_field in streaming_viewer_fields():
-            button = QPushButton(f"View in {viewer_field.display_name}")
-            button.clicked.connect(
-                lambda checked, fn=viewer_field.field_name: self.view_requested(fn)
-            )
-            button.setStyleSheet(self.color_scheme.styles.generate_button_style())
-            button.setEnabled(False)
-            self.buttons[viewer_field.field_name] = button
-            buttons.append(button)
-        return buttons
-
-    def is_enabled(self, config_key: str) -> bool:
-        enabled_path = f"{config_key}.enabled"
-        return self.state.get_resolved_value(enabled_path) is True
-
-    def enabled_viewers(self) -> list[str]:
-        return [
-            field.field_name
-            for field in streaming_viewer_fields()
-            if self.is_enabled(field.field_name)
-        ]
-
-    def update_button_state(self, config_key: str, has_selection: bool) -> None:
-        button = self.buttons.get(config_key)
-        if button is None:
-            logger.warning("Streaming config key %s not in view buttons", config_key)
-            return
-        button.setEnabled(has_selection and self.is_enabled(config_key))
-
-    def update_all_button_states(self, selected_keys: list) -> None:
-        has_selection = len(selected_keys) > 0
-        for config_key in self.buttons:
-            self.update_button_state(config_key, has_selection)
-
-
-class ImageBrowserMetadataDisplayResolver:
-    """Resolve and cache domain display values for image metadata cells."""
-
-    def __init__(self, orchestrator_getter: Callable[[], object | None]):
-        self.orchestrator_getter = orchestrator_getter
-        self._cache: dict[tuple[str, str], str] = {}
-        self._raw_by_display: dict[tuple[str, str], str] = {}
-
-    def clear(self) -> None:
-        self._cache.clear()
-        self._raw_by_display.clear()
-
-    def display_value(self, metadata_key: str, raw_value: ImageTableValue) -> str:
-        if raw_value is None:
-            return "N/A"
-
-        value_str = str(raw_value)
-        cache_key = (metadata_key, value_str)
-        cached_value = self._cache.get(cache_key)
-        if cached_value is not None:
-            return cached_value
-
-        display_value = self._resolve_display_value(metadata_key, value_str)
-        self._cache[cache_key] = display_value
-        self._raw_by_display[(metadata_key, display_value)] = value_str
-        return display_value
-
-    def display_values(
-        self,
-        metadata_key: str,
-        raw_values: Set[str],
-    ) -> tuple[str, ...]:
-        """Format semantic values through the same table-cell projection."""
-        return tuple(
-            self.display_value(metadata_key, raw_value) for raw_value in raw_values
-        )
-
-    def raw_values(
-        self,
-        metadata_key: str,
-        display_values: Set[str],
-    ) -> Set[str]:
-        """Recover semantic values already published by the cell projection."""
-        return {
-            self._raw_by_display[(metadata_key, display_value)]
-            for display_value in display_values
-            if (metadata_key, display_value) in self._raw_by_display
-        }
-
-    def _resolve_display_value(self, metadata_key: str, value_str: str) -> str:
-        orchestrator = self.orchestrator_getter()
-        if orchestrator is None:
-            return value_str
-
-        try:
-            family = AxisFamily.active()
-            if metadata_key not in family.names():
-                return value_str
-            component = family.named(metadata_key)
-            metadata_name = orchestrator.metadata_cache.get_component_metadata(
-                component,
-                value_str,
-            )
-            if metadata_name and metadata_name != "None":
-                return f"{value_str} | {metadata_name}"
-            logger.debug("No metadata name found for %s %s", metadata_key, value_str)
-            return value_str
-        except Exception as exc:
-            logger.warning(
-                "Could not get metadata for %s %s: %s",
-                metadata_key,
-                value_str,
-                exc,
-                exc_info=True,
-            )
-            return value_str
-
-
-class ImageBrowserFilterController:
-    """Own search, folder, and plate-well filtering for ImageBrowserWidget."""
-
-    def __init__(self, browser: "ImageBrowserWidget"):
-        self.browser = browser
-
-    def apply_combined_filters(self) -> None:
-        """Apply search, folder, and plate-well filters in one pass."""
-        browser = self.browser
-        selected_items = browser.folder_tree.selectedItems()
-        folder_path = None
-        results_folder_path = None
-        if selected_items:
-            folder_path = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-            if folder_path:
-                results_folder_path = f"{folder_path}_results"
-
-        if not browser.file_items:
-            browser._set_visible_files({}, rebuild_index=False)
-            return
-
-        search_items = browser.image_table_browser.search_items(
-            browser.search_input.text()
-        )
-        result = {}
-        for filename, item in search_items.items():
-            include = True
-            metadata = item.metadata
-
-            if folder_path and include:
-                include = (
-                    str(Path(filename).parent) == folder_path
-                    or filename.startswith(folder_path + "/")
-                    or str(Path(filename).parent) == results_folder_path
-                    or filename.startswith(results_folder_path + "/")
-                )
-
-            if browser.selected_wells and include:
-                include = self._matches_wells(filename, metadata)
-
-            if include:
-                result[filename] = item
-
-        browser._set_visible_files(result, rebuild_index=False)
-        logger.debug("Combined filters: %s images shown", len(result))
-
-    def filter_images(self, _search_term: str) -> None:
-        """Compose text search with folder and plate-well filters."""
-        self.apply_combined_filters()
-
-    def _matches_wells(self, filename: str, metadata: dict) -> bool:
-        try:
-            well_id = self.browser._extract_well_id(metadata)
-            matches = well_id in self.browser.selected_wells
-            if not matches:
-                logger.debug("[MATCH] Well %s not in selected_wells", well_id)
-            return matches
-        except (KeyError, ValueError) as exc:
-            logger.debug("[MATCH] No well metadata for %s: %s", filename, exc)
-            return False
-
-
-class ImageBrowserFileFocusController:
-    """Own semantic file focusing for ImageBrowserWidget."""
-
-    def __init__(self, browser: "ImageBrowserWidget"):
-        self.browser = browser
-
-    def focus_path(self, file_path: str | Path) -> bool:
-        browser = self.browser
-        if not browser.file_items and browser.orchestrator:
-            browser.load_images()
-
-        for key in self._candidate_keys(file_path):
-            if key in browser.file_items:
-                return self._focus_key(key)
-        unique_basename_key = self._unique_basename_key(file_path)
-        if unique_basename_key is not None:
-            return self._focus_key(unique_basename_key)
-        return False
-
-    def _candidate_keys(self, file_path: str | Path) -> tuple[str, ...]:
-        browser = self.browser
-        path = Path(file_path)
-        candidates = [str(file_path)]
-        if browser.orchestrator and path.is_absolute():
-            try:
-                candidates.append(
-                    str(path.relative_to(browser.orchestrator.dataset_root))
-                )
-            except ValueError:
-                pass
-        candidates.append(path.name)
-        return tuple(dict.fromkeys(candidate for candidate in candidates if candidate))
-
-    def _focus_key(self, key: str) -> bool:
-        browser = self.browser
-        if key not in browser.image_table_browser.filtered_items:
-            browser._set_visible_files(
-                {key: browser.file_items[key]}, rebuild_index=False
-            )
-        return browser.image_table_browser.select_key(key)
-
-    def _unique_basename_key(self, file_path: str | Path) -> str | None:
-        basename = Path(file_path).name
-        if not basename:
-            return None
-        matches = [key for key in self.browser.file_items if Path(key).name == basename]
-        if len(matches) == 1:
-            return matches[0]
-        return None
+    def offer_cells(self, dataset: BrowsedDataset) -> None:
+        self.link.offer_cells(dataset.grid_positions(self.axis, self.link.column_values()))
 
 
 class ImageBrowserWidget(QWidget):
-    """
-    Image browser widget that displays all image files from plate metadata.
+    """Shows a dataset's image and result files and sends selections to viewers."""
 
-    Users can click on files to view them in Napari with configurable settings
-    from the current PipelineConfig.
-    """
-
-    # Signals
-    image_selected = pyqtSignal(str)  # Emitted when an image is selected
-    _status_update_signal = pyqtSignal(
-        str
-    )  # Internal signal for thread-safe status updates
+    _stream_status = pyqtSignal(str)
+    _stream_failed = pyqtSignal(str, str)
 
     def __init__(
         self,
-        orchestrator=None,
-        color_scheme: Optional[ColorScheme] = None,
-        zmq_config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
-        progress_config: ProgressUIConfig | None = None,
-        state_scope_parent_id: str | None = None,
+        dataset: BrowsedDataset,
+        *,
+        color_scheme: ColorScheme,
+        zmq_config: OpenHCSZMQConfig,
+        progress_config: ProgressUIConfig,
         parent=None,
     ):
         super().__init__(parent)
-
-        self.orchestrator = orchestrator
-        self._state_scope_parent_id = state_scope_parent_id
+        self.dataset = dataset
+        self.color_scheme = color_scheme
         self._zmq_config = zmq_config
-        self._progress_config = (
-            ProgressUIConfig() if progress_config is None else progress_config
-        )
-        self.color_scheme = color_scheme or ColorScheme()
-        # Fallback for standalone browsing; orchestrator-owned runs derive their
-        # FileManager from the orchestrator property below.
-        self._fallback_filemanager = FileManager(storage_registry)
+        self._progress_config = progress_config
+        self.state = dataset.config_state(ImageBrowserConfig())
 
-        # Create root ObjectState from dynamically generated config container
-        # This gives us a single registered state with nested configs via dotted paths
-        self.config = ImageBrowserConfig()
-        self.scope_id: Optional[str] = None
-        self.state = self._create_state_for_orchestrator(orchestrator)
-
-        # TabbedFormWidget will be created lazily in _create_right_panel
-        # to avoid heavy initialization during widget construction.
-        self.tabbed_form = None
-
-        self.viewer_controls = ImageBrowserViewerControls(
-            self.state,
-            self.color_scheme,
-            self._view_selected_in_viewer,
-        )
-        # View buttons are keyed by the ObjectState streaming config field.
-        self.view_buttons: Dict[str, QPushButton] = self.viewer_controls.buttons
-
-        # File data tracking (images + results)
-        self.file_items: dict[str, ImageBrowserItem] = {}
-        self.selected_wells = set()  # Selected wells for filtering
-        self.metadata_keys = []  # Column names from parser metadata (union of all keys)
-        self.metadata_display_resolver = ImageBrowserMetadataDisplayResolver(
-            lambda: self.orchestrator
-        )
-        self._syncing_plate_filter_selection = False
-        self.filter_controller = ImageBrowserFilterController(self)
-        self.file_focus_controller = ImageBrowserFileFocusController(self)
-
-        # Plate view widget (will be created in init_ui)
-        self.plate_view_widget = None
-        self.plate_view_detached_window = None
-        self.middle_splitter = None  # Reference to splitter for reattaching
-
-        # ZMQ manager widget (may be created in init_ui)
-        self.zmq_manager = None
-        self.main_splitter = None
-        self.right_panel = None
-
-        # Streaming service for unified Napari/Fiji streaming.
-        self._streaming_service_cache = None
-        self._streaming_service_orchestrator = None
-
-        self.init_ui()
-
-        # Connect internal signal for thread-safe status updates
-        self._status_update_signal.connect(self._update_status_label)
-
-        # Load images if orchestrator is provided
-        if self.orchestrator:
-            QTimer.singleShot(0, self.load_images)
-
-    @property
-    def filemanager(self):
-        """Current FileManager derived from orchestrator when available."""
-        if self.orchestrator:
-            return self.orchestrator.filemanager
-        return self._fallback_filemanager
-
-    @property
-    def streaming_service(self):
-        """Streaming service derived from the current orchestrator."""
-        if not self.orchestrator:
-            return None
-        if self._streaming_service_orchestrator is not self.orchestrator:
-            from openhcs.core.viewer_streaming_service import StreamingService
-
-            self._streaming_service_cache = StreamingService(
-                filemanager=self.filemanager,
-                microscope_handler=self.orchestrator.microscope_handler,
-                plate_path=self.orchestrator.dataset_root,
-                transport_config=self.orchestrator.transport_config,
-            )
-            self._streaming_service_orchestrator = self.orchestrator
-        return self._streaming_service_cache
-
-    def init_ui(self):
-        """Initialize the user interface."""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(5, 5, 5, 5)  # Reduced margins
-        layout.setSpacing(5)  # Reduced spacing between rows
-
-        # Search input row with buttons on the right
-        search_layout = QHBoxLayout()
-        search_layout.setSpacing(10)
-
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search images by filename or metadata...")
-        self.search_input.textChanged.connect(self.filter_controller.filter_images)
-        # Apply same styling as function selector
-        self.search_input.setStyleSheet(f"""
-            QLineEdit {{
-                background-color: {self.color_scheme.to_hex(self.color_scheme.input_bg)};
-                color: {self.color_scheme.to_hex(self.color_scheme.input_text)};
-                border: 1px solid {self.color_scheme.to_hex(self.color_scheme.input_border)};
-                border-radius: 3px;
-                padding: 5px;
-            }}
-            QLineEdit:focus {{
-                border: 1px solid {self.color_scheme.to_hex(self.color_scheme.input_focus_border)};
-            }}
-        """)
-        search_layout.addWidget(self.search_input, 1)  # Stretch factor 1 - can compress
-
-        # Plate view toggle button (moved from bottom)
-        self.plate_view_toggle_btn = QPushButton("Show Plate View")
-        self.plate_view_toggle_btn.setCheckable(True)
-        # A family without a grid-addressed axis has no plate grid to show.
-        self.plate_view_toggle_btn.setVisible(active_grid_axis() is not None)
-        self.plate_view_toggle_btn.clicked.connect(self._toggle_plate_view)
-        self.plate_view_toggle_btn.setStyleSheet(
-            self.color_scheme.styles.generate_button_style()
-        )
-        search_layout.addWidget(self.plate_view_toggle_btn, 0)  # No stretch
-
-        # Refresh button (moved from bottom)
-        self.refresh_btn = QPushButton("Refresh")
-        self.refresh_btn.clicked.connect(self.load_images)
-        self.refresh_btn.setStyleSheet(self.color_scheme.styles.generate_button_style())
-        search_layout.addWidget(self.refresh_btn, 0)  # No stretch
-
-        # Info label (moved from bottom)
-        self.info_label = QLabel("No images loaded")
-        self.info_label.setStyleSheet(
-            f"color: {self.color_scheme.to_hex(self.color_scheme.text_disabled)};"
-        )
-        search_layout.addWidget(self.info_label, 0)  # No stretch
-
-        layout.addLayout(search_layout)
-
-        # Create main splitter ((tree above filters) | table | config)
-        main_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.main_splitter = main_splitter
-
-        # The generic table owner keeps its filter panel and table side by side;
-        # contribute the folder navigator as spatial context above that exact
-        # filter-panel instance.
-        tree_widget = self._create_folder_tree()
-
-        # Middle: Vertical splitter for plate view and tabs
-        self.middle_splitter = QSplitter(Qt.Orientation.Vertical)
-
-        # Plate view (initially hidden; built only for a family with a grid axis)
-        if active_grid_axis() is not None:
-            grid_axis = require_grid_axis()
-            self.plate_view_widget = GridSelectorWidget(
-                addressing=GridAxisAddressing(grid_axis),
-                title="Plate View",
-                cell_noun=f"{grid_axis.label.lower()}s",
-                color_scheme=self.color_scheme,
-                parent=self,
-            )
-            self.plate_view_widget.cells_selected.connect(self._on_wells_selected)
-            self.plate_view_widget.detach_requested.connect(self._detach_plate_view)
-            self.plate_view_widget.setVisible(False)
-            self.middle_splitter.addWidget(self.plate_view_widget)
-
-        # Single table for both images and results (no tabs needed)
-        image_table_widget = self._create_table_widget()
-        image_table_widget.set_column_filter_context_widget(tree_widget)
-        self.middle_splitter.addWidget(image_table_widget)
-
-        # Set initial sizes (30% plate view, 70% table when visible)
-        self.middle_splitter.setSizes([150, 350])
-
-        main_splitter.addWidget(self.middle_splitter)
-
-        # Right: Napari config panel + instance manager
-        right_panel = self._create_right_panel()
-        self.right_panel = right_panel
-        main_splitter.addWidget(right_panel)
-
-        # The browser consumes the flexible space; viewer controls remain right.
-        main_splitter.setSizes([2000, 400])
-
-        # Add splitter with stretch factor to fill vertical space
-        layout.addWidget(main_splitter, 1)
-
-        # Note: Selection and double-click signals are connected in _create_table_widget()
-
-    def _create_folder_tree(self):
-        """Create folder tree widget for filtering images by directory."""
-        tree = QTreeWidget()
-        tree.setHeaderLabel("Folders")
-        tree.setMinimumWidth(150)
-
-        # Apply styling
-        tree.setStyleSheet(self.color_scheme.styles.generate_tree_widget_style())
-
-        # Connect selection to filter table
-        tree.itemSelectionChanged.connect(self.on_folder_selection_changed)
-
-        # Store reference
-        self.folder_tree = tree
-
-        return tree
-
-    def _create_table_widget(self):
-        """Create and configure the unified file table widget (images + results)."""
-        # Use ImageTableBrowser for unified table (multi-select, dynamic columns)
-        self.image_table_browser = ImageTableBrowser(
-            color_scheme=self.color_scheme,
-            metadata_value_formatter=self.metadata_display_resolver.display_value,
+        self.table = RecordTableBrowser(
+            color_scheme=color_scheme,
+            value_labels=ValueLabels(dataset),
+            item_noun="files",
             parent=self,
         )
-        self.image_table_browser.search_input.setVisible(False)
-        self.image_table_browser.column_filter_selection_changed.connect(
-            self._on_table_filter_selection_changed
+        self.folder_tree = FolderTreeWidget(
+            color_scheme, companion_suffixes=(ANALYSIS_RESULTS_DIR_SUFFIX,)
+        )
+        self.table.add_row_filter(FolderRowFilter(self.folder_tree))
+        self.table.set_column_filter_context_widget(self.folder_tree)
+        self.folder_tree.folder_changed.connect(lambda _folder: self.table.apply_row_filters())
+        self.table.item_double_clicked.connect(lambda _key, file: file.open(self))
+        self.table.items_selected.connect(
+            lambda keys: self.viewer_tabs.set_target_available(bool(keys))
         )
 
-        # Connect signals
-        self.image_table_browser.item_double_clicked.connect(
-            self._on_file_double_clicked
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setStyleSheet(color_scheme.styles.generate_button_style())
+        self.refresh_button.clicked.connect(self.load_files)
+        self.info_label = QLabel()
+        self.info_label.setStyleSheet(
+            f"color: {color_scheme.to_hex(color_scheme.text_disabled)};"
         )
-        self.image_table_browser.items_selected.connect(self._on_files_selected)
 
-        return self.image_table_browser
+        self.middle_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.middle_splitter.addWidget(self.table)
+        self.grids = tuple(
+            self._grid_for(axis, index)
+            for index, axis in enumerate(AxisFamily.active().with_role(GridAddressed))
+        )
+        self.middle_splitter.setSizes([*(150 for _grid in self.grids), 350])
 
-    # Removed _create_results_widget - now using unified file table
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.addWidget(self.middle_splitter)
+        self.main_splitter.addWidget(self._build_viewer_panel())
+        self.main_splitter.setSizes([2000, 400])
 
-    def _create_right_panel(self):
-        """Create the right panel with streaming config forms and instance manager.
+        header = QHBoxLayout()
+        header.setSpacing(10)
+        header.addWidget(self.table.search_input, 1)
+        for grid in self.grids:
+            header.addWidget(grid.panel.toggle_button)
+        header.addWidget(self.refresh_button)
+        header.addWidget(self.info_label)
 
-        Uses TabbedFormWidget to show each streaming config in its own tab.
-        """
-        container = QWidget()
-        container.setMinimumWidth(
-            360
-        )  # Wider minimum for better config visibility (80% increase from 200)
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
+        layout.addLayout(header)
+        layout.addWidget(self.main_splitter, 1)
 
-        # Vertical splitter: tabbed config form on top, instance manager below
-        splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.setChildrenCollapsible(True)  # Allow collapsing to 0
+        self._stream_status.connect(self.info_label.setText)
+        self._stream_failed.connect(self._show_streaming_error)
+        QTimer.singleShot(0, self.load_files)
 
-        # Top panel: Tabbed streaming config forms
-        # Create view buttons for each streaming config (will be added to tab bar row)
-        header_widgets = self.viewer_controls.create_header_buttons()
-
-        # Create a tab for each streaming config type
-        tabs = []
-        for viewer_field in streaming_viewer_fields():
-            tabs.append(
-                TabConfig(
-                    name=viewer_field.display_name,
-                    field_ids=[viewer_field.field_name],
-                )
-            )
-
-        tabbed_config = TabbedFormConfig(
-            tabs=tabs,
+    def _grid_for(self, axis: type[Axis], index: int) -> AxisGrid:
+        selector = GridSelectorWidget(
+            addressing=GridAxisAddressing(axis),
+            title=f"{axis.label} Grid",
+            cell_noun=f"{axis.label.lower()}s",
             color_scheme=self.color_scheme,
-            use_scroll_area=True,  # Each tab gets its own scroll area
-            header_widgets=header_widgets,  # View buttons on same row as tabs
+            parent=self,
         )
+        panel = DetachablePanel(
+            selector, self.middle_splitter, index, f"{axis.label} Grid", self.color_scheme
+        )
+        grid = AxisGrid(axis, panel, GridColumnFilterLink(selector, self.table, axis.name, self))
+        selector.detach_requested.connect(panel.detach)
+        panel.shown.connect(lambda: grid.offer_cells(self.dataset))
+        return grid
 
-        self.tabbed_form = TabbedFormWidget(state=self.state, config=tabbed_config)
-        splitter.addWidget(self.tabbed_form)
-
-        # Connect to parameter changes to update view button states
-        self.tabbed_form.parameter_changed.connect(self._on_parameter_changed)
-
-        # Bottom panel: Instance manager (ZMQ server browser)
-        instance_panel = self._create_instance_manager_panel()
-        splitter.addWidget(instance_panel)
-
-        # Set initial splitter sizes (70% config, 30% instance manager)
-        splitter.setSizes([350, 150])
-
-        layout.addWidget(splitter, 1)  # stretch factor = 1
-
-        return container
-
-    def _create_instance_manager_panel(self):
-        """Create the viewer instance manager panel using ZMQServerManagerWidget."""
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+    def _build_viewer_panel(self) -> QWidget:
+        """Viewer config tabs with their "view in" buttons, above the viewer instances."""
         from openhcs.pyqt_gui.widgets.shared.zmq_server_manager import (
             ZMQServerManagerWidget,
         )
 
-        ports_to_scan = get_all_streaming_ports(
-            config=self.orchestrator.pipeline_config if self.orchestrator else None,
-            num_ports_per_type=self._zmq_config.ports_per_server_type,
+        self.viewer_tabs = ConfigActionTabs(self.state, viewer_actions(), self.color_scheme)
+        self.viewer_tabs.action_requested.connect(
+            lambda action: self.view_in(action, self.selected_files())
         )
-
-        # Create ZMQ server manager widget
-        zmq_manager = ZMQServerManagerWidget(
-            ports_to_scan=ports_to_scan,
+        self.viewer_tabs.set_target_available(bool(self.table.get_selected_keys()))
+        self.zmq_manager = ZMQServerManagerWidget(
+            ports_to_scan=self.dataset.viewer_ports(self._zmq_config.ports_per_server_type),
             title="Viewer Instances",
             color_scheme=self.color_scheme,
             config=self._zmq_config,
             progress_config=self._progress_config,
             parent=self,
         )
-        self.zmq_manager = zmq_manager
-        return zmq_manager
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        splitter.setChildrenCollapsible(True)
+        splitter.addWidget(self.viewer_tabs)
+        splitter.addWidget(self.zmq_manager)
+        splitter.setSizes([350, 150])
+        splitter.setMinimumWidth(360)
+        return splitter
+
+    # --- configuration pushed by the owning window ---
 
     def set_zmq_config(self, config: OpenHCSZMQConfig) -> None:
         """Use the resolved process transport config for viewer discovery."""
-
         self._zmq_config = config
-        if self.zmq_manager is None:
-            return
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
-
         self.zmq_manager.set_zmq_config(
-            config,
-            get_all_streaming_ports(
-                config=(
-                    self.orchestrator.pipeline_config if self.orchestrator else None
-                ),
-                num_ports_per_type=config.ports_per_server_type,
-            ),
+            config, self.dataset.viewer_ports(config.ports_per_server_type)
         )
 
     def set_progress_config(self, config: ProgressUIConfig) -> None:
         """Use the resolved progress refresh configuration."""
-
         self._progress_config = config
-        if self.zmq_manager is not None:
-            self.zmq_manager.set_progress_config(config)
+        self.zmq_manager.set_progress_config(config)
 
     def set_ui_config(
         self,
@@ -787,774 +593,107 @@ class ImageBrowserWidget(QWidget):
         progress_config: ProgressUIConfig,
     ) -> None:
         """Apply the process-owned transport and progress configuration."""
-
         self.set_zmq_config(zmq_config)
         self.set_progress_config(progress_config)
 
-    def _create_state_for_orchestrator(self, orchestrator):
-        """Create browser config state under the selected plate hierarchy."""
-        if orchestrator is None:
-            self.scope_id = None
-        else:
-            state_parent_scope = self._state_scope_parent_id or str(
-                orchestrator.dataset_root
+    # --- the dataset ---
+
+    def set_dataset(self, dataset: BrowsedDataset) -> None:
+        """Browse another dataset: its own viewer config, viewer ports and files."""
+        self.dataset.release_state(self.state)
+        self.dataset = dataset
+        self.state = dataset.config_state(ImageBrowserConfig())
+        self.table.value_labels.source = dataset
+
+        previous_panel = self.main_splitter.widget(1)
+        previous_manager = self.zmq_manager
+        self.main_splitter.replaceWidget(1, self._build_viewer_panel())
+        previous_manager.cleanup()
+        previous_panel.deleteLater()
+        self.load_files()
+
+    def load_files(self) -> None:
+        """Read the dataset's file records into the table, tree and grids."""
+        self.table.value_labels.clear()
+        kinds = BrowsedFile.__subclasses__()
+        try:
+            rows = sorted(
+                (row for record in self.dataset.records() for row in BrowsedFile.of(record)),
+                key=lambda row: kinds.index(type(row)),
             )
-            self.scope_id = ScopeKey(state_parent_scope).child(
-                OpenHCSUiWindowId.image_browser
-            )
-        parent_state = (
-            ObjectStateRegistry.get_by_scope(str(orchestrator.dataset_root))
-            if orchestrator
-            else None
-        )
-        state = ObjectState(
-            object_instance=self.config,
-            scope_id=self.scope_id,
-            parent_state=parent_state,
-        )
-        if self.scope_id:
-            ObjectStateRegistry.register(state, _skip_snapshot=True)
-        return state
+        except Exception as error:
+            logger.error("Failed to load files: %s", error, exc_info=True)
+            QMessageBox.warning(self, "Error", f"Failed to load files: {error}")
+            rows = []
+        files = {row.key: row for row in rows}
 
-    def _replace_state_for_orchestrator(self, orchestrator) -> None:
-        if self.scope_id:
-            ObjectStateRegistry.unregister(self.state, _skip_snapshot=True)
-        self.config = ImageBrowserConfig()
-        self.state = self._create_state_for_orchestrator(orchestrator)
-        self.viewer_controls.state = self.state
+        self.table.set_columns(file_columns({key for row in rows for key in row}))
+        self.folder_tree.set_keys(files)
+        self.table.set_items(files)
+        for grid in self.grids:
+            if grid.panel.is_shown:
+                grid.offer_cells(self.dataset)
 
-    def _rebuild_right_panel(self) -> None:
-        if self.main_splitter is None or self.right_panel is None:
-            return
-        old_panel = self.right_panel
-        panel_index = self.main_splitter.indexOf(old_panel)
-        if panel_index < 0:
-            return
-
-        previous_zmq_manager = self.zmq_manager
-        self.tabbed_form = None
-        self.zmq_manager = None
-        new_panel = self._create_right_panel()
-        self.right_panel = new_panel
-        replaced_panel = self.main_splitter.replaceWidget(panel_index, new_panel)
-        if replaced_panel is not None:
-            if previous_zmq_manager is not None:
-                previous_zmq_manager.cleanup()
-            replaced_panel.deleteLater()
-
-    def set_orchestrator(self, orchestrator):
-        """Set the orchestrator and load images."""
-        self.orchestrator = orchestrator
-        self._replace_state_for_orchestrator(orchestrator)
-        self._rebuild_right_panel()
-        self.load_images()
+        counts = Counter(type(row) for row in rows)
+        summary = ", ".join(f"{counts[kind]} {kind.kind_noun}" for kind in kinds)
+        self.info_label.setText(f"{len(files)} files loaded ({summary})")
 
     def focus_file_by_path(self, file_path: str | Path) -> bool:
-        """Focus a loaded image/result file by semantic artifact path."""
-        return self.file_focus_controller.focus_path(file_path)
+        """Select the row of a file, loading the files first when none are."""
+        if not self.table.all_items:
+            self.load_files()
+        return self.dataset.reveal(self.table, file_path)
 
-    def _restore_folder_selection(self, folder_path: str, folder_items: Dict):
-        """Restore folder selection after tree rebuild."""
-        if folder_path in folder_items:
-            item = folder_items[folder_path]
-            item.setSelected(True)
-            # Expand parents to make selection visible
-            parent = item.parent()
-            while parent:
-                parent.setExpanded(True)
-                parent = parent.parent()
+    def cleanup(self) -> None:
+        """Release the viewer browser and the viewer-config state."""
+        self.zmq_manager.cleanup()
+        self.dataset.release_state(self.state)
+        self.dataset = NoDataset()
 
-    def on_folder_selection_changed(self):
-        """Handle folder tree selection changes to filter table."""
-        # Apply folder filter on top of search filter
-        self.filter_controller.apply_combined_filters()
+    # --- sending files to viewers ---
 
-        # Update plate view for new folder
-        if self.plate_view_widget and self.plate_view_widget.isVisible():
-            self._update_plate_view()
+    def selected_files(self) -> tuple[BrowsedFile, ...]:
+        return tuple(self.table.all_items[key] for key in self.table.get_selected_keys())
 
-    def load_images(self):
-        """Load image files from the orchestrator's metadata."""
-        if not self.orchestrator:
-            self.info_label.setText("No plate loaded")
-            return
-
-        image_items: dict[str, ImageBrowserItem] = {}
-        result_items: dict[str, ImageBrowserItem] = {}
-        try:
-            self.metadata_display_resolver.clear()
-            logger.info("IMAGE BROWSER: Starting load_images()")
-            inventory = PlateFileInventory.from_orchestrator(
-                self.orchestrator,
-                all_subdirs=True,
-            )
-            logger.info(
-                "IMAGE BROWSER: plate file inventory returned %s images and %s results",
-                len(inventory.image_records),
-                len(inventory.result_records),
-            )
-
-            image_items, result_items = self._items_from_file_records(
-                inventory.file_records()
-            )
-
-            logger.info(
-                "IMAGE BROWSER: Built file item set with %s images and %s results",
-                len(image_items),
-                len(result_items),
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to load plate files: {e}", exc_info=True)
-            QMessageBox.warning(self, "Error", f"Failed to load plate files: {e}")
-            self.info_label.setText("Error loading plate files")
-            image_items.clear()
-            result_items.clear()
-
-        self.file_items = {**image_items, **result_items}
-
-        all_keys = set()
-        for item in self.file_items.values():
-            all_keys.update(item.metadata.keys())
-
-        all_keys.discard("filename")
-        self.metadata_keys = sorted(all_keys, key=lambda k: (k != "extension", k))
-
-        self.image_table_browser.set_metadata_keys(self.metadata_keys)
-
-        folder_start = time.perf_counter()
-        self._build_folder_tree()
-        logger.info(
-            "IMAGE BROWSER: Built folder tree in %.3fs",
-            time.perf_counter() - folder_start,
-        )
-
-        populate_start = time.perf_counter()
-        self._set_visible_files(self.file_items, rebuild_index=True)
-        logger.info(
-            "IMAGE BROWSER: Populated table in %.3fs",
-            time.perf_counter() - populate_start,
-        )
-
-        total_files = len(self.file_items)
-        num_images = sum(1 for item in self.file_items.values() if not item.is_result)
-        num_results = sum(1 for item in self.file_items.values() if item.is_result)
-        self.info_label.setText(
-            f"{total_files} files loaded ({num_images} images, {num_results} results)"
-        )
-
-        # Update plate view if visible
-        if self.plate_view_widget and self.plate_view_widget.isVisible():
-            self._update_plate_view()
-
-    def load_results(self) -> dict[str, ImageBrowserItem]:
-        """Load result files (ROI JSON, CSV) from the results directory."""
-        if not self.orchestrator:
-            logger.warning("IMAGE BROWSER RESULTS: No orchestrator available")
-            return {}
-
-        try:
-            inventory = PlateResultFileInventory.from_orchestrator(self.orchestrator)
-            return self._result_items_from_inventory(inventory)
-
-        except Exception as e:
-            logger.error(
-                f"IMAGE BROWSER RESULTS: Failed to load results: {e}", exc_info=True
-            )
-        return {}
-
-    @staticmethod
-    def _items_from_file_records(
-        file_records: tuple[PlateFileRecord, ...],
-    ) -> tuple[dict[str, ImageBrowserItem], dict[str, ImageBrowserItem]]:
-        """Project shared file inventory records into browser rows."""
-        image_items: dict[str, ImageBrowserItem] = {}
-        result_items: dict[str, ImageBrowserItem] = {}
-        for record in file_records:
-            streamable_image_path = record.streamable_image_path
-            if streamable_image_path is not None:
-                image_items[record.key] = ImageBrowserItem(
-                    key=record.key,
-                    metadata=dict(record.metadata),
-                    file_kind=record.kind,
-                    streamable_image_path=streamable_image_path,
-                    full_path=(
-                        Path(record.full_path) if record.full_path is not None else None
-                    ),
-                )
-            elif (
-                record.kind is PlateFileKind.RESULT
-                and record.file_format is not None
-                and record.full_path is not None
-            ):
-                logger.info(
-                    "IMAGE BROWSER RESULTS: matched as %s: %s",
-                    record.file_format.name,
-                    record.key,
-                )
-                result_items[record.key] = ImageBrowserItem(
-                    key=record.key,
-                    metadata=dict(record.metadata),
-                    file_kind=record.kind,
-                    result_file_type=record.file_format,
-                    full_path=Path(record.full_path),
-                )
-        return image_items, result_items
-
-    @staticmethod
-    def _result_items_from_inventory(
-        inventory: PlateFileInventory | PlateResultFileInventory,
-    ) -> dict[str, ImageBrowserItem]:
-        """Project shared result-file inventory records into browser rows."""
-        result_records = (
-            inventory.result_records
-            if isinstance(inventory, PlateFileInventory)
-            else inventory.records
-        )
-        scanned_file_count = (
-            inventory.scanned_result_file_count
-            if isinstance(inventory, PlateFileInventory)
-            else inventory.scanned_file_count
-        )
-        if not result_records:
-            logger.warning("IMAGE BROWSER RESULTS: No declared analysis result files")
-            return {}
-
-        image_items, result_items = ImageBrowserWidget._items_from_file_records(
-            tuple(PlateFileRecord.from_result(record) for record in result_records)
-        )
-        projected_items = {**image_items, **result_items}
-
-        logger.info(
-            "IMAGE BROWSER RESULTS: Scanned %s total files, matched %s result files",
-            scanned_file_count,
-            len(projected_items),
-        )
-        return projected_items
-
-    # Removed _populate_results_table - now using unified file table
-    # Removed on_result_double_clicked - now using unified on_file_double_clicked
-
-    def _stream_roi_file(self, roi_zip_path: Path):
-        """Stream ROI .roi.zip file to enabled viewer(s) asynchronously.
-
-        This method now only performs lightweight UI-thread work:
-        - Checks which viewers are enabled.
-        - Resolves streaming configs and viewers.
-        - Spawns background workers that do all heavy ROI loading + streaming.
-        """
-        try:
-            # Check which viewers are enabled by querying ObjectState
-            enabled_viewers = self.viewer_controls.enabled_viewers()
-
-            if not enabled_viewers:
-                QMessageBox.information(
-                    self,
-                    "No Viewer Enabled",
-                    "Please enable at least one viewer streaming to view ROIs.",
-                )
-                return
-
-            if not self.orchestrator:
-                raise RuntimeError("No orchestrator set")
-
-            from objectstate import spawn_thread_with_context
-
-            for viewer_field_name in enabled_viewers:
-
-                def _stream_to_viewer(field_name=viewer_field_name):
-                    try:
-                        self._stream_rois_to_viewer([str(roi_zip_path)], field_name)
-                    except Exception as e:
-                        logger.error(
-                            f"Failed to start ROI streaming to {field_name}: {e}",
-                            exc_info=True,
-                        )
-                        QTimer.singleShot(
-                            0,
-                            lambda field_name=field_name, e=e: QMessageBox.warning(
-                                self,
-                                "Error",
-                                f"Failed to stream ROI to {field_name}: {e}",
-                            ),
-                        )
-
-                spawn_thread_with_context(
-                    _stream_to_viewer,
-                    name=f"stream_roi_{viewer_field_name}",
-                )
-
-            logger.info(f"Started async streaming of ROI file {roi_zip_path.name}")
-
-        except Exception as e:
-            logger.error(f"Failed to start ROI streaming: {e}")
-            QMessageBox.warning(self, "Error", f"Failed to stream ROI file: {e}")
-
-    def _set_visible_files(
-        self,
-        files_dict: dict[str, ImageBrowserItem],
-        *,
-        rebuild_index: bool,
-    ):
-        """Project visible file rows into ImageTableBrowser and status text."""
-        if rebuild_index:
-            self.image_table_browser.set_items(files_dict)
-        else:
-            self.image_table_browser.set_filtered_items(files_dict)
-
-        total = len(self.file_items)
-        filtered = len(self.image_table_browser.filtered_items)
-        self.image_table_browser.status_label.setText(f"Files: {filtered}/{total}")
-
-    def _build_folder_tree(self):
-        """Build folder tree from file paths (images + results)."""
-        # Save current selection before rebuilding
-        selected_folder = None
-        selected_items = self.folder_tree.selectedItems()
-        if selected_items:
-            selected_folder = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-
-        self.folder_tree.clear()
-
-        # Extract unique folder paths (exclude *_results folders since they're auto-included)
-        folders: Set[str] = set()
-        for filename in self.file_items:
-            path = Path(filename)
-            # Add all parent directories
-            for parent in path.parents:
-                parent_str = str(parent)
-                if parent_str != "." and not parent_str.endswith("_results"):
-                    folders.add(parent_str)
-
-        # Build tree structure
-        root_item = QTreeWidgetItem(["All Files"])
-        root_item.setData(0, Qt.ItemDataRole.UserRole, None)
-        self.folder_tree.addTopLevelItem(root_item)
-
-        # Sort folders for consistent display
-        sorted_folders = sorted(folders)
-
-        # Create tree items for each folder
-        folder_items = {}
-        for folder in sorted_folders:
-            parts = Path(folder).parts
-            if len(parts) == 1:
-                # Top-level folder
-                item = QTreeWidgetItem([folder])
-                item.setData(0, Qt.ItemDataRole.UserRole, folder)
-                root_item.addChild(item)
-                folder_items[folder] = item
-            else:
-                # Nested folder - find parent
-                parent_path = str(Path(folder).parent)
-                if parent_path in folder_items:
-                    item = QTreeWidgetItem([Path(folder).name])
-                    item.setData(0, Qt.ItemDataRole.UserRole, folder)
-                    folder_items[parent_path].addChild(item)
-                    folder_items[folder] = item
-
-        # Start with everything collapsed (user can expand to explore)
-        root_item.setExpanded(False)
-
-        # Restore previous selection if it still exists
-        if selected_folder is not None:
-            self._restore_folder_selection(selected_folder, folder_items)
-
-    def _on_parameter_changed(self, param_name: str, value: object):
-        """Handle parameter changes from the tabbed form.
-
-        Updates view button states when streaming config 'enabled' fields change.
-        """
-        logger.info(
-            f"🔔 ImageBrowser._on_parameter_changed: param_name={param_name}, value={value}"
-        )
-
-        # Strip leading dot if present (root PFM with field_id='' emits paths like ".napari_streaming_config.enabled")
-        normalized_param = param_name.lstrip(".")
-
-        # Streaming controls are a live surface rather than a save/cancel editor.
-        # Advance the ObjectState baseline with every edit so current and saved
-        # resolution stay identical and no false unsaved marker is presented.
-        self.state.mark_saved()
-
-        # Check if this is an 'enabled' field for any streaming config
-        for config_key in _streaming_config_field_names():
-            enabled_path = f"{config_key}.enabled"
-            logger.debug(f"  Checking if {normalized_param} == {enabled_path}")
-            if normalized_param == enabled_path:
-                logger.info(f"  ✅ Match! Updating button state for {config_key}")
-                self.viewer_controls.update_button_state(
-                    config_key,
-                    len(self.image_table_browser.get_selected_keys()) > 0,
-                )
-                break
-
-    def _on_files_selected(self, keys: list):
-        """Handle selection change from ImageTableBrowser."""
-        self.viewer_controls.update_all_button_states(keys)
-
-    def _on_file_double_clicked(self, key: str, item: ImageBrowserItem):
-        """Handle double-click from ImageTableBrowser."""
-        if item.streamable_image_path is not None:
-            self._handle_image_double_click()
-        elif item.is_result:
-            self._handle_result_double_click(item)
-
-    def _handle_image_double_click(self):
-        """Handle double-click on an image - stream to enabled viewer(s)."""
-        # Find all enabled viewers by querying ObjectState
-        enabled_viewers = self.viewer_controls.enabled_viewers()
-
-        # Stream to whichever viewer(s) are enabled
-        if enabled_viewers:
-            for config_key in enabled_viewers:
-                self._view_selected_in_viewer(config_key)
-        else:
-            # No viewers enabled - show message
+    def view_in_enabled_viewers(self, files: tuple[BrowsedFile, ...], noun: str) -> None:
+        """Send the files to every viewer whose config is switched on."""
+        enabled = self.viewer_tabs.enabled_actions()
+        if not enabled:
             QMessageBox.information(
                 self,
                 "No Viewer Enabled",
-                "Please enable at least one viewer streaming to view images.",
+                f"Please enable at least one viewer streaming to view {noun}.",
             )
+        for action in enabled:
+            self.view_in(action, files)
 
-    def _handle_result_double_click(self, item: ImageBrowserItem):
-        """Handle double-click on a result file - stream ROIs or display CSV."""
-        if item.result_file_type is None:
-            raise RuntimeError(f"Image browser item {item.key!r} has no result type.")
-        item.result_file_type.open_with(ResultFileBrowserOpener(self), item.result_path())
-
-    def _view_selected_in_viewer(self, config_key: str):
-        """View all selected images in the specified viewer as a batch (builds hyperstack)."""
-        selected_keys = self.image_table_browser.get_selected_keys()
-        if not selected_keys:
+    def view_in(self, action: ConfigAction, files: tuple[BrowsedFile, ...]) -> None:
+        """Send the files to one viewer as a batch, off the UI thread."""
+        batch = ViewerBatch()
+        for file in files:
+            file.add_to(batch)
+        if not (batch.image_paths or batch.roi_paths):
             return
+        # The resolved config carries inherited values; its viewer family names the viewer.
+        config = self.state.get_resolved_value(action.field_name)
+        viewer_name = config.viewer_family.display_name
+        dataset = self.dataset
 
-        selected_items = tuple(self.file_items[key] for key in selected_keys)
-        image_filenames = [
-            item.streamable_image_path
-            for item in selected_items
-            if item.streamable_image_path is not None
-        ]
-        roi_filenames = [
-            item.key
-            for item in selected_items
-            if item.is_result and item.result_file_type.streams_rois
-        ]
-
-        logger.info(
-            f"🎯 IMAGE BROWSER: User selected {len(image_filenames)} images and {len(roi_filenames)} ROI files to view in {config_key}"
-        )
-        if image_filenames:
-            logger.info(
-                f"🎯 IMAGE BROWSER: Image filenames: {image_filenames[:5]}{'...' if len(image_filenames) > 5 else ''}"
-            )
-        if roi_filenames:
-            logger.info(f"🎯 IMAGE BROWSER: ROI filenames: {roi_filenames}")
-
-        from objectstate import spawn_thread_with_context
-
-        def _view_async():
-            # Stream ROI files in a batch (get viewer once, stream all ROIs)
-            if roi_filenames:
-                self._stream_rois_to_viewer(roi_filenames, config_key)
-
-            # Stream image files as a batch
-            if image_filenames:
-                self._stream_images_to_viewer(image_filenames, config_key)
-
-        spawn_thread_with_context(_view_async, name=f"view_{config_key}")
-
-    def _prepare_streaming(self, config_key: str) -> tuple:
-        """Prepare for streaming: resolve config, get viewer, get read backend.
-
-        Returns: (viewer, read_backend, config)
-        """
-        if not self.orchestrator:
-            raise RuntimeError("No orchestrator set")
-
-        plate_path = Path(self.orchestrator.dataset_root)
-
-        # Resolve backend
-        read_backend = self.orchestrator.microscope_handler.get_primary_backend(
-            plate_path, self.orchestrator.filemanager
-        )
-
-        # Get fully resolved streaming config from ObjectState (includes inheritance)
-        # get_resolved_value now returns reconstructed dataclass with all sub-fields populated
-        config = self.state.get_resolved_value(config_key)
-
-        viewer = self.orchestrator.get_or_create_visualizer(config)
-        return viewer, read_backend, config
-
-    def _stream_images_to_viewer(self, filenames: list, config_key: str):
-        """Load and stream images to specified viewer type."""
-        viewer, read_backend, config = self._prepare_streaming(config_key)
-        from openhcs.core.viewer_streaming_service import (
-            ImageStreamingRequest,
-        )
-
-        streaming_service = self.streaming_service
-        if streaming_service is None:
-            raise RuntimeError("No orchestrator set")
-
-        streaming_service.stream_images(
-            ImageStreamingRequest(
-                viewer=viewer,
-                config=config,
-                status_callback=self._status_update_signal.emit,
-                error_callback=lambda e: self._show_streaming_error(
-                    config.viewer_family.display_name,
-                    e,
-                ),
-                filenames=tuple(filenames),
-                read_backend=read_backend,
-            )
-        )
-        logger.info(f"Streaming {len(filenames)} images to {config.viewer_family.display_name}...")
-
-    def _show_streaming_error(self, viewer_name: str, error_msg: str):
-        """Show streaming error in UI thread."""
-        QMessageBox.warning(
-            self,
-            "Streaming Error",
-            f"Failed to stream images to {viewer_name}: {error_msg}",
-        )
-
-    def _stream_rois_to_viewer(self, roi_filenames: list, config_key: str):
-        """Stream ROI files to specified viewer type."""
-        viewer, _, config = self._prepare_streaming(config_key)
-        from openhcs.core.viewer_streaming_service import (
-            RoiStreamingRequest,
-        )
-
-        streaming_service = self.streaming_service
-        if streaming_service is None:
-            raise RuntimeError("No orchestrator set")
-
-        streaming_service.stream_rois(
-            RoiStreamingRequest(
-                viewer=viewer,
-                config=config,
-                status_callback=self._status_update_signal.emit,
-                error_callback=lambda e: self._show_streaming_error(
-                    config.viewer_family.display_name,
-                    e,
-                ),
-                roi_filenames=tuple(roi_filenames),
-            )
-        )
-        logger.info(
-            f"Streaming {len(roi_filenames)} ROI files to {config.viewer_family.display_name}..."
-        )
-
-    def cleanup(self):
-        """Clean up resources before widget destruction."""
-        # Cleanup ZMQ server manager widget (always initialized to None in __init__)
-        if self.zmq_manager is not None:
-            self.zmq_manager.cleanup()
-        if self.scope_id:
-            ObjectStateRegistry.unregister(self.state, _skip_snapshot=True)
-            self.scope_id = None
-
-    # ========== Plate View Methods ==========
-
-    def _toggle_plate_view(self, checked: bool):
-        """Toggle plate view visibility."""
-        # If detached, just show/hide the window
-        if self.plate_view_detached_window:
-            self.plate_view_detached_window.setVisible(checked)
-            if checked:
-                self.plate_view_toggle_btn.setText("Hide Plate View")
-            else:
-                self.plate_view_toggle_btn.setText("Show Plate View")
-            return
-
-        # Otherwise toggle in main layout
-        self.plate_view_widget.setVisible(checked)
-
-        if checked:
-            self.plate_view_toggle_btn.setText("Hide Plate View")
-            # Update plate view with current images
-            self._update_plate_view()
-        else:
-            self.plate_view_toggle_btn.setText("Show Plate View")
-
-    def _detach_plate_view(self):
-        """Detach plate view to external window."""
-        if self.plate_view_detached_window:
-            # Already detached, just show it
-            self.plate_view_detached_window.show()
-            self.plate_view_detached_window.raise_()
-            return
-
-        from PyQt6.QtWidgets import QDialog
-
-        # Create detached window
-        self.plate_view_detached_window = QDialog(self)
-        self.plate_view_detached_window.setWindowTitle("Plate View")
-        self.plate_view_detached_window.setWindowFlags(Qt.WindowType.Dialog)
-        self.plate_view_detached_window.setMinimumSize(600, 400)
-        self.plate_view_detached_window.resize(800, 600)
-
-        # Create layout for window
-        window_layout = QVBoxLayout(self.plate_view_detached_window)
-        window_layout.setContentsMargins(10, 10, 10, 10)
-
-        # Add reattach button
-        reattach_btn = QPushButton("⬅ Reattach to Main Window")
-        reattach_btn.setStyleSheet(self.color_scheme.styles.generate_button_style())
-        reattach_btn.clicked.connect(self._reattach_plate_view)
-        window_layout.addWidget(reattach_btn)
-
-        # Move plate view widget to window
-        self.plate_view_widget.setParent(self.plate_view_detached_window)
-        self.plate_view_widget.setVisible(True)
-        window_layout.addWidget(self.plate_view_widget)
-
-        # Connect close event to reattach
-        self.plate_view_detached_window.closeEvent = (
-            lambda event: self._on_detached_window_closed(event)
-        )
-
-        # Show window
-        self.plate_view_detached_window.show()
-
-        logger.info("Plate view detached to external window")
-
-    def _reattach_plate_view(self):
-        """Reattach plate view to main layout."""
-        if not self.plate_view_detached_window:
-            return
-
-        # Store reference before clearing
-        window = self.plate_view_detached_window
-        self.plate_view_detached_window = None
-
-        # Move plate view widget back to splitter
-        self.plate_view_widget.setParent(self)
-        self.middle_splitter.insertWidget(0, self.plate_view_widget)
-        self.plate_view_widget.setVisible(self.plate_view_toggle_btn.isChecked())
-
-        # Close and cleanup detached window
-        window.close()
-        window.deleteLater()
-
-        logger.info("Plate view reattached to main window")
-
-    def _on_detached_window_closed(self, event):
-        """Handle detached window close event - reattach automatically."""
-        # Only reattach if window still exists (not already reattached)
-        if self.plate_view_detached_window:
-            # Clear reference first to prevent double-close
-            self.plate_view_detached_window = None
-
-            # Move plate view widget back to splitter
-            self.plate_view_widget.setParent(self)
-            self.middle_splitter.insertWidget(0, self.plate_view_widget)
-            self.plate_view_widget.setVisible(self.plate_view_toggle_btn.isChecked())
-
-            logger.info("Plate view reattached to main window (window closed)")
-
-        event.accept()
-
-    def _on_wells_selected(self, well_ids: Set[str]):
-        """Handle well selection from plate view."""
-        logger.info(f"[WELLS_SELECTED] Received {len(well_ids)} wells: {well_ids}")
-        well_key = require_grid_axis().name
-        self._syncing_plate_filter_selection = True
-        try:
-            synced = self.image_table_browser.set_column_filter_selection(
-                well_key,
-                (
-                    self.metadata_display_resolver.display_values(well_key, well_ids)
-                    if well_ids
-                    else None
-                ),
-            )
-        finally:
-            self._syncing_plate_filter_selection = False
-        self.selected_wells = set() if synced else well_ids
-        self.filter_controller.apply_combined_filters()
-
-    def _on_table_filter_selection_changed(
-        self,
-        column_key: str,
-        selected_values: frozenset[str],
-    ) -> None:
-        """Compose the generic Well filter selection into the plate view."""
-        well_key = require_grid_axis().name
-
-        if (
-            self._syncing_plate_filter_selection
-            or column_key != well_key
-            or self.plate_view_widget is None
-        ):
-            return
-        self.selected_wells = set()
-        self.plate_view_widget.select_cells(
-            self.metadata_display_resolver.raw_values(
-                well_key,
-                set(selected_values),
-            ),
-            emit_signal=False,
-        )
-        self.filter_controller.apply_combined_filters()
-
-    def _update_plate_view(self):
-        """Update plate view with current file data (images + results)."""
-        # Extract all well IDs from current files (filter out failures)
-        well_ids = set()
-        for filename, item in self.file_items.items():
+        def send() -> None:
             try:
-                well_id = self._extract_well_id(item.metadata)
-                well_ids.add(well_id)
-            except (KeyError, ValueError):
-                # Skip files without well metadata (e.g., plate-level files)
-                pass
+                dataset.view(
+                    batch,
+                    config,
+                    self._stream_status.emit,
+                    lambda error: self._stream_failed.emit(viewer_name, str(error)),
+                )
+            except Exception as error:
+                logger.error("Failed to stream to %s: %s", viewer_name, error, exc_info=True)
+                self._stream_failed.emit(viewer_name, str(error))
 
-        # The microscope parser spells each value's row and column; the grid
-        # axis places those labels on the grid (A01 and R01C01 alike).
-        grid_axis = require_grid_axis()
-        parser = self.orchestrator.microscope_handler.parser
-        coord_to_well = {
-            grid_axis.grid_position(*parser.extract_component_coordinates(well_id)): well_id
-            for well_id in well_ids
-        }
-        plate_dimensions = (
-            (
-                max(row for row, _column in coord_to_well),
-                max(column for _row, column in coord_to_well),
-            )
-            if coord_to_well
-            else None
+        spawn_thread_with_context(send, name=f"view_{action.field_name}")
+
+    def _show_streaming_error(self, viewer_name: str, message: str) -> None:
+        QMessageBox.warning(
+            self, "Streaming Error", f"Failed to stream to {viewer_name}: {message}"
         )
-
-        # Update plate view with well IDs, dimensions, and coordinate mapping
-        self.plate_view_widget.set_available_cells(
-            well_ids, plate_dimensions, coord_to_well
-        )
-
-    # ========== Plate View Helper Methods ==========
-
-    def _extract_well_id(self, metadata: dict) -> str:
-        """
-        Extract well ID from metadata.
-
-        Returns well ID like 'A01', 'B03', 'R01C03', etc.
-        Raises KeyError if metadata missing 'well' component.
-        """
-        # Well ID is a single component in metadata
-        return str(metadata[require_grid_axis().name])
-
-    def _update_status_threadsafe(self, message: str):
-        """Update status label from any thread (thread-safe).
-
-        Args:
-            message: Status message to display
-        """
-        self._status_update_signal.emit(message)
-
-    @pyqtSlot(str)
-    def _update_status_label(self, message: str):
-        """Update status label (called on main thread via signal)."""
-        self.info_label.setText(message)

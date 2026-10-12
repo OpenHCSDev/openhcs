@@ -292,16 +292,21 @@ class LiveMeasurementsWindow(QDialog):
         if self._orchestrator is None or self._image_browser_tab_index is None:
             return
 
-        from openhcs.pyqt_gui.widgets.image_browser import ImageBrowserWidget
+        from openhcs.pyqt_gui.widgets.image_browser import (
+            ImageBrowserWidget,
+            OrchestratorDataset,
+        )
 
         image_browser = ImageBrowserWidget(
-            orchestrator=self._orchestrator,
+            OrchestratorDataset(
+                self._orchestrator,
+                scope_parent=ScopeKey(str(self._orchestrator.dataset_root)).child(
+                    self.STATE_SCOPE_SEGMENT
+                ),
+            ),
             color_scheme=self.color_scheme,
             zmq_config=self._zmq_config,
             progress_config=self._progress_config,
-            state_scope_parent_id=ScopeKey(str(self._orchestrator.dataset_root)).child(
-                self.STATE_SCOPE_SEGMENT
-            ),
             parent=self,
         )
         tab_index = self._image_browser_tab_index
