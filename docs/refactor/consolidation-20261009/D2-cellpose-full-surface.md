@@ -589,6 +589,63 @@ Platform corrections this needs (found, not worked around):
    false and the assertion holds; the registry file must not import Cellpose at module level
    (`:887`).
 
+### Corrections to this design, made while building sub-job 1
+
+The table and prose above are the design as decided; these are the points where the code
+showed it wrong or incomplete. Each was fixed at its owner, not worked around.
+
+1. **The statement family has two more members.** `Derived` is what is said of every
+   parameter the declaration does not mention (a control typed by the library), so "no
+   statement" is a member with behaviour, not a `None` mode. `Forwarded(call)` is a `**kwargs`
+   parameter the library passes to another declared call: `models.Cellpose.eval(**kwargs)`
+   goes to `CellposeModel.eval`, and contributes that call's parameters that `Cellpose.eval`
+   does not name itself (20 controls no signature shows).
+2. **A `Stated` statement replaces rules 1 to 3 for its parameter**; it is not a fourth
+   fallback. `model_type` has a documented scalar type (`str`) and is still stated as the
+   enum. Rules 1 to 3 apply to parameters without a statement. `Stated` carries both
+   directions: `to_library` for the value and `from_library` for the library's default
+   (`"cyto3"` to the enum member, `[0, 0]` to `(0, 0)`, `True` to `NormalizeOptions()`);
+   an unset (`None`) value passes the library's own default (`False` for `pretrained_model`).
+3. **`Supplied` means "never passed"** (the library default applies). "Or is filled by the
+   function" is dropped: nothing in the five functions needs it.
+4. **Docstrings:** Cellpose uses `Parameters:` as well as `Args:` (`CellposeModel.__init__`),
+   and writes `z_axis  (int, optional)` with two spaces; both are read. Text is taken from the
+   callable's own docstring, its class and its constructor first, then from the other declared
+   callables in declaration order. Five constructor parameters have no description anywhere in
+   Cellpose (`pretrained_model_ortho`, `backbone`, `restore_type`, `chan2_restore`,
+   `pretrained_size`); their controls have none.
+5. **The declaration is one module.** It names Cellpose's callables, so it imports Cellpose;
+   `cellpose_registry.py` therefore holds only the registry class (distribution name,
+   declaration module, CPU-only answer) and `derived/cellpose.py` holds the whole declaration.
+   `derived/` is a sub-package because registry discovery imports every module directly in
+   `lib_registry/` and must not import Cellpose. `test_processing_module_liveness.py` reaches
+   it honestly: the registry class is a discovered family member and names the module.
+6. **The array contract is one line of the declaration:**
+   `one_image_when_set=("z_axis", "channel_axis")`. Results are read "per image Cellpose was
+   given" (N planes, or the one volume or multi-channel image), which is the only shape rule;
+   channels are moved last, a single channel is dropped (restored images are `(Y, X, 1)`).
+7. **Outputs, against the table above:** `segment` has no diameter column, because
+   `CellposeModel.eval` returns none (`segment_estimating_diameter` has it). The table has one
+   row per image Cellpose was given: per plane for a list of planes, one row for a volume or a
+   multi-channel image, whose object count is the count of the whole stitched or 3D volume.
+   The style vector is tabulated when it is a vector per image; for a volume Cellpose returns a
+   matrix (`(Z, 256)` stitched, `(136, 256)` for `do_3D` on three planes), which is left out.
+   With `compute_masks=False` Cellpose returns empty masks; the labels output is then all
+   zeros in the shape of the cell probability.
+8. **The measurement row dataclass is made when the first result arrives**, because the style
+   vector's width is the network's and is not readable before a model is built. It is placed
+   in the declaration module. Whether rows cross a process boundary before they are written
+   must be checked by the pipeline sub-job; if they do, the width has to be read at
+   preparation instead.
+9. **Platform correction 1 as built:** `OpenHCSRegistry.owns_module` is the predicate (inside
+   `openhcs.processing.backends`, outside `lib_registry`) and `_get_openhcs_modules` filters
+   its walk with that same predicate; `get_module_patterns` returns the backends package.
+   The old filter was the substring test `"lib_registry" in module_name`.
+10. **Platform correction 2 as built, more general than planned:**
+    `LibraryRegistryBase.cache_source_mtimes` tracks the source file of every registry class in
+    the registry's ancestry, so any registry built on an intermediate base is invalidated when
+    that base changes; the derived registry adds only its declaration module.
+
 ## 5. Dependencies on work in progress (code against main; a test marked expected-to-fail for each)
 
 | Need | Branch | Today on main | Expected-to-fail test |
@@ -617,10 +674,94 @@ when run.
 
 ## Progress
 
-Done: sections 1 to 7 (measurement, matrix, design); draft PR #1234. Nothing is built yet.
+Done: sections 1 to 7 (measurement, matrix, design); draft PR #1234.
+
+**Sub-job 1 is built** (2026-10-12): the generic derivation, the Cellpose registry and
+declaration, five inference functions, the three platform corrections, and their tests.
+Design corrections are in section 4, "Corrections to this design".
+
+| Function | Cellpose call | Controls | Supplied (with reason) | Resources | Outputs |
+|---|---|---|---|---|---|
+| `cellpose:segment` | `models.CellposeModel.eval` | 31 | 2 (`device`, `progress`) | 1 | input image; labels, cell probability, flow field, RGB flows, measurements |
+| `cellpose:segment_estimating_diameter` | `models.Cellpose.eval` (`**kwargs` forwarded to `CellposeModel.eval`) | 27 | 2 (`device`, `progress`) | 1 | the same, with a diameter column |
+| `cellpose:estimate_diameter` | `models.SizeModel.eval` | 15 | 4 (`device` twice, `progress`, `SizeModel(**kwargs)`) | 2 (nested) | input image; diameters table |
+| `cellpose:restore` | `denoise.DenoiseModel.eval` | 17 | 1 (`device`) | 1 | restored image |
+| `cellpose:restore_and_segment` | `denoise.CellposeDenoiseModel.eval` | 27 | 1 (`device`) | 1 | restored image; labels, cell probability, flow field, RGB flows, measurements |
+
+117 controls. Every control also carries the platform's `dtype_config` and `enabled`.
+
+Lines (total / non-blank non-comment / without docstrings too):
+
+| Part | Files | Total | Non-blank non-comment | Code only |
+|---|---|---|---|---|
+| Generic derivation | `lib_registry/model_library.py` | 773 | 614 | 538 |
+| Cellpose-specific | `lib_registry/cellpose_registry.py`, `lib_registry/derived/__init__.py`, `lib_registry/derived/cellpose.py` | 156 | 132 | 122 |
+| Platform corrections | `openhcs_registry.py`, `unified_registry.py`, `pyproject.toml` | +32 -24 | | |
+| Tests | `test_model_library_derivation.py`, `test_cellpose_derived_functions.py`, `test_cellpose_catalogue.py`, one test added to `test_library_registry_discovery.py` | 796 | 659 | 628 |
+
+Cellpose-specific lines per exposed control: 132 / 117 = 1.13.
+
+Tests observed (one file at a time; private venv has Cellpose 3.1.1.3, the shared `.venv` has
+neither Cellpose nor torch):
+
+| File | Private venv (Cellpose) | Shared `.venv` (no Cellpose) |
+|---|---|---|
+| `test_model_library_derivation.py` (new, needs no Cellpose) | 12 passed | 12 passed |
+| `test_cellpose_derived_functions.py` (new) | 15 passed, 2 warnings | 1 skipped ("Cellpose is an optional dependency") |
+| `test_cellpose_catalogue.py` (new) | 13 passed | 1 skipped (same reason) |
+| `test_library_registry_discovery.py` | 31 passed | 31 passed |
+| `test_processing_module_liveness.py` | 3 passed | 3 passed |
+| `test_catalog_optional_libraries.py` | 6 passed | 6 passed |
+| `test_registry_keys_unique.py` | 8 passed | 8 passed |
+| `test_e1_enum_dispatch_guards.py` | 6 passed | 6 passed |
+| `test_example_custom_functions.py` | 4 passed, 2 warnings | 2 passed, 2 skipped |
+| `test_pycodify_formatters.py` | 20 passed | 20 passed |
+| `test_ci_package_boundaries.py`, `test_install_ci_candidate.py` | 29 passed, 9 passed | 29 passed, 9 passed |
+| callers of `metadata_for_declared_callable`: `test_plane_nlm_declaration.py`, `test_source_tile_geometry.py`, `test_assembly_acquisition_placement.py`, `test_function_reference_identity.py`, `test_canonical_custom_source_lookup.py` | 12 passed; 31 passed, 2 skipped; 13 passed, 12 skipped; 7 passed; 18 passed | the same |
+
+Failing tests written first: the `OpenHCSRegistry` claim test failed with 547 extra claimed
+modules (every module under `openhcs.*`), then with the one extra `openhcs.processing.backends`
+after the first fix; the cache-source test failed with `model_library.py` missing from the
+tracked files.
+
+Not run in this sub-job: the full suite, `verify_branch.sh`, `smoke_local.sh`,
+`guardrails_local.sh`, parity, any pipeline through the execution server, any GPU run.
+
+Open points for the coordinator:
+
+- **`cellpose:estimate_diameter` fails at its defaults, inside Cellpose.**
+  `SizeModel(cp_model)` without `pretrained_size` has no size parameters and `eval` raises
+  `AttributeError: 'SizeModel' object has no attribute 'params'` (`models.py:793`). With a
+  size-model file it equals Cellpose (tested with `size_nucleitorch_0.npy`). Cellpose pairs a
+  built-in model with its size model only inside `models.Cellpose` (`size_model_path`). The
+  alternative declaration, one line, is `self = Resource(library.call(models.Cellpose),
+  attribute="sz")`: usable with every built-in name, but without the custom size-model file.
+  The nested form was kept because the brief asked for it; choose one.
+- **A frozen-dataclass parameter cannot be set through MCP authoring.**
+  `decode_public_kwargs` (`callable_contract.py:1539-1551`) converts enum values only:
+  `{"model_type": "nuclei"}` becomes the enum member, while
+  `{"normalize": {"percentile": [2.0, 98.0]}}` passes `_validate_callable_kwargs` and stays a
+  dict, so the step would fail when the function converts it (`dataclasses.asdict` of a dict).
+  `channels` given as a list and `pretrained_model` given as a string also stay as given, and
+  work. Not fixed here: the owner is `decode_public_kwargs`, which has to descend dataclass
+  annotations the way it descends enums.
+- **Preparation downloads the default models.** The hook builds each function's default
+  resource (memoized: `segment` and `estimate_diameter` share one `CellposeModel()`), which
+  for the defaults is `cyto3`, its size model and `denoise_cyto3`; only the nuclei models are
+  on this machine. Not exercised here (the test uses a fake library).
+- **Texts pooled across callables can describe a sibling's parameter** when a constructor has
+  no docstring (`models.Cellpose`, `CellposeDenoiseModel`): they take `CellposeModel`'s text.
+- The `cellpose` extra adds no lock change (the repository tracks no root `uv.lock`).
+  Cellpose pins `numpy<2.1`; OpenHCS requires `numpy>=1.26.4`; they resolve together.
+- `tests/unit/test_cellpose_catalogue.py` loads the Cellpose functions into
+  `RegistryService._metadata_cache` directly; it does not build the whole catalogue (about
+  four minutes cold). The whole catalogue was built once by hand: 311 functions, five
+  `cellpose:` keys.
+
 Scratch (untracked, in the worktree): `.claude/venv` (CPU venv with Cellpose 3.1.1.3; delete at
-the end), `.claude/scripts/matrix.py` (renders section 2), `.claude/scripts/probe_eval.py`
-(return shapes), `.claude/platform-clones/` (delete at the end).
+the end), `.claude/scripts/` (`matrix.py`, `probe_eval.py`, `tally.py` for the table above,
+`count.py` for the line counts, `guards.sh` for the guard runs), `.claude/platform-clones/`
+(delete at the end).
 
 ### Facts the implementation must respect (measured on this branch)
 
@@ -695,16 +836,20 @@ Cellpose (from `.claude/scripts/probe_eval.py`):
 
 ### What remains, in order
 
-1. `model_library.py` (generic), `cellpose_registry.py`, `derived/cellpose.py`, the
-   `OpenHCSRegistry` claim correction, `cache_source_mtimes`, the `cellpose` extra.
-   Functions: `segment`, `segment_estimating_diameter`, `estimate_diameter`, `restore`,
-   `restore_and_segment`; then `train_segmentation`, `train_size`, `train_restoration`; then the
-   module functions (`dynamics.resize_and_compute_masks`, `utils.*`, `metrics.*` listed in
-   `.claude/scripts/matrix.py`).
-2. Tests of section 6, including the four expected-to-fail tests of section 5.
-3. Pipeline runs through the execution server on CPU with a few fields of
-   `/home/ts/code/projects/openhcs/.claude/cellpose-demo/data` (copy, do not modify).
-4. GPU run commands (the 8 GB GPU venv does not fit: `/home` has 9 GB free).
-5. Gates: `verify_branch.sh d2 <worktree>`, `smoke_local.sh`, `guardrails_local.sh`.
-6. Update the matrix's last column to what was built; record the StarDist experiment or say it
+1. Decide the two open points above (`estimate_diameter` declaration; dataclass values through
+   MCP authoring).
+2. Training: `train_segmentation`, `train_size`, `train_restoration` (resources built fresh with
+   `Resource(..., attribute="net", shared=False)`, which exist and are tested on a fake
+   library; stated types for `save_path`, `train_probs`, `test_probs`, `lam`; the labels input).
+   Then the module functions (`dynamics.resize_and_compute_masks`, `utils.*`, `metrics.*` listed
+   in `.claude/scripts/matrix.py`): calls with no resource.
+3. The four expected-to-fail tests of section 5.
+4. Pipeline runs through the execution server on CPU with a few fields of
+   `/home/ts/code/projects/openhcs/.claude/cellpose-demo/data` (copy, do not modify). This is
+   the first place the output declarations are compiled and materialized: check the image
+   sidecars (`cell_probability`, `flow_field`, `flow_rgb`), the label artifact, and correction 8
+   (the row dataclass made at run time).
+5. GPU run commands (the 8 GB GPU venv does not fit: `/home` has little free space).
+6. Gates: `verify_branch.sh d2 <worktree>`, `smoke_local.sh`, `guardrails_local.sh`.
+7. Update the matrix's last column to what was built; record the StarDist experiment or say it
    was not run.
