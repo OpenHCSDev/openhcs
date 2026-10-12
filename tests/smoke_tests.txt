@@ -1,0 +1,11 @@
+# Fast end-to-end smoke: datasets run through the real entry points.
+# One pytest path or node id per line. Read by the pull-request smoke job and
+# by the local merge gate; keep the whole list under about five minutes on two
+# workers.
+tests/integration/test_session_journey.py::test_headless_mcp_journey_adds_compiles_and_runs_a_dataset
+tests/integration/test_session_journey.py::test_read_only_dataset_initializes_in_a_mirrored_workspace
+tests/pyqt_gui/test_session_gui_journey.py
+tests/integration/test_agent_observation_export_zmq.py::test_headless_observation_export_uses_ordinary_execution
+tests/integration/test_agent_observation_export_zmq.py::test_ordinary_execution_can_export_outcomes_without_value_observation
+tests/integration/test_agent_observation_export_zmq.py::test_measured_cli_uses_ordinary_source_session_and_shared_finalizer
+tests/integration/test_measured_cli_session.py::test_read_only_source_plate_completes_and_stays_byte_identical
