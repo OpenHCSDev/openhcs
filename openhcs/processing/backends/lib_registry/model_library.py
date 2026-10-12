@@ -28,7 +28,6 @@ import numpy as np
 
 from openhcs.constants import MemoryType
 from openhcs.core.artifacts.kinds import (
-    ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
