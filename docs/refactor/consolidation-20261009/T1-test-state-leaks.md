@@ -36,7 +36,7 @@ rebuilt (runs k1..r1z) plus `known.fail`:
 * (a) order/state dependent: 44 ids (40 from `known.fail`, 3 in
   `test_source_binding_workspace.py`, 1 in `test_skan_axon_artifact_contract.py`).
   All fixed here.
-* (b) load/timing dependent: 10 ids seen once to three times each, never alone
+* (b) load/timing dependent: 11 ids seen once to three times each, never alone
   (not all have a traceback, so some may be class (a) with a rare order).
   Not fixed; see Remainder 2.
 * (c) fail alone on main: 2 ids,
@@ -127,7 +127,9 @@ observed failure yet except item 2.
    (twice, both while the other worker ran `agent/test_mcp_server.py`),
    `test_axis_family_witness.py::...[zmq]`, `test_cellprofiler_closing_hotpath.py::...[numba]`
    (this one may be row 4 instead: it compiles with Numba).
-   166 literal timeouts in `tests/unit`.
+   `test_mcp_dev_client_persistent_session.py::test_stdio_session_reads_json_message_larger_than_stream_separator_limit`
+   (`read_message(timeout_seconds=1.0)` from a child interpreter; failed once, in
+   the post-merge suite t1e, passed alone). 166 literal timeouts in `tests/unit`.
    Proposed owner: one session deadline (`pytest-timeout` is installed locally
    but not declared and not used in CI); declare it, set it in `pytest.ini`,
    delete the per-test start deadlines. Not done: needs a dependency and lock
