@@ -250,6 +250,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         submitted: list[OpenHCSExecutionSubmission] = []
         waits: list[str] = []
 
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
+
         def __init__(self, *, port, persistent, progress_callback):
             assert port is None
             self.progress_callback = progress_callback
@@ -419,6 +423,10 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
     tmp_path: Path,
 ) -> None:
     class IncompatibleZMQExecutionClient:
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
+
         def __init__(self, *, port, persistent, progress_callback):
             self.connected_endpoint = SimpleNamespace(
                 application=EndpointApplication("openhcs", "0.8.4"),
