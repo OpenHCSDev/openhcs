@@ -41,8 +41,9 @@ on:
 permissions:
   contents: read
 
+# One group per ref: a push to main must not cancel a pull request's validation.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
