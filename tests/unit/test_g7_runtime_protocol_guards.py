@@ -115,6 +115,7 @@ def test_every_worker_message_is_a_declared_family_member() -> None:
         "WorkerCommand",
         "AnsweredWorkerCommand",
         "PrepareWorker",
+        "PrepareStartedWorker",
         "LoadPipelineResources",
         "ExecuteInheritedLane",
         "ExecuteShippedLane",

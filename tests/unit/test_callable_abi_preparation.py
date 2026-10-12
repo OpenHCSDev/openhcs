@@ -113,6 +113,8 @@ def test_prepared_composition_default_survives_transport_without_introspection(
 def fake_preparation(monkeypatch):
     prepare = Mock()
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
+    # A compile prepares for the call it compiles.
+    monkeypatch.setattr(CallablePreparation, "prepare_for_call", prepare)
     monkeypatch.setattr(PreparationCacheBatch, "populate_child_caches", lambda *a, **k: None)
     return prepare
 
@@ -176,10 +178,10 @@ def test_authored_compilation_prepares_before_signature_and_refreshes_each_compi
 
     desired_annotations = [ArrayPayload, np.ndarray]
 
-    def prepare(owner):
+    def prepare(owner, kwargs):
         raw.__annotations__["image"] = desired_annotations.pop(0)
 
-    monkeypatch.setattr(CallablePreparation, "prepare", prepare)
+    monkeypatch.setattr(CallablePreparation, "prepare_for_call", prepare)
     first = next(normalize_prepared_function_pattern([raw]).iter_items()).contract
     second = next(normalize_prepared_function_pattern([raw]).iter_items()).contract
     assert first.canonical_parameter_annotations["image"] is ArrayPayload

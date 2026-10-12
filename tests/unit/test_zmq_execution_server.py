@@ -618,7 +618,7 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
     server = object.__new__(ZMQExecutionServer)
     events: list[object] = []
     server.active_executions = {}
-    server._prepared_worker_runner = None
+    server._workers = SimpleNamespace(close=lambda: events.append("workers"))
     server._function_catalog_preparation = SimpleNamespace(
         cancel_and_join=lambda: events.append("catalog")
     )
@@ -639,7 +639,7 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
     with pytest.raises(RuntimeError, match="transport stop failed"):
         server.stop()
 
-    assert events == ["transport", "catalog", ("process_resources", True)]
+    assert events == ["workers", "transport", "catalog", ("process_resources", True)]
 
 
 def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_gate(

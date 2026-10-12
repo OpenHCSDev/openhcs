@@ -1578,8 +1578,6 @@ class PipelineCompiler:
                 path_resolver,
                 owner="PipelineConfig",
             )
-            num_workers = effective_config.num_workers
-            num_workers = debug_execution_policy.compile_worker_count(num_workers)
             resolved_steps = tuple(
                 resolve_declared_dataclass_paths(
                     step,
@@ -1632,16 +1630,20 @@ class PipelineCompiler:
                 axis_request,
                 axis_values_to_process,
             )
-            worker_assignments = PipelineCompiler._calculate_worker_assignments(
-                list(compiled_contexts.keys()),
-                num_workers,
-            )
+            # The worker limit depends on the compiled steps (an accelerator
+            # step bounds it), so the lanes are assigned after it is known.
             runtime_environment = debug_execution_policy.compiled_runtime_environment(
                 CompiledRuntimeEnvironmentPlan.from_global_config(
                     effective_config,
                     compiled_contexts=compiled_contexts,
                     server_mode=is_zmq_execution,
                 )
+            )
+            worker_assignments = PipelineCompiler._calculate_worker_assignments(
+                list(compiled_contexts.keys()),
+                debug_execution_policy.compile_worker_count(
+                    runtime_environment.configured_num_workers
+                ),
             )
             PipelineCompiler._finalize_compilation(
                 orchestrator,

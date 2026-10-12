@@ -196,6 +196,11 @@ class DeclaredHookPreparation(PreparationOperation):
     def execute(self) -> None:
         self.hook()
 
+    @property
+    def call(self) -> Hashable:
+        """The call this operation makes: the same call is made once per batch."""
+        return self.hook
+
     def cache_operations(self) -> tuple[PreparationOperation, ...]:
         """A hook bound to a declared operation is that operation's cache work."""
         operation = getattr(self.hook, "__self__", None)
@@ -310,6 +315,10 @@ class CallableHookPreparation(DeclaredHookPreparation):
 
     def execute(self) -> None:
         self.hook(**dict(self.arguments))
+
+    @property
+    def call(self) -> Hashable:
+        return (self.hook, self.arguments)
 
     def is_completed(self) -> bool:
         with self._lock:
@@ -705,7 +714,7 @@ class PreparationCacheBatch:
             for operation in preparation.cache_sources()
         }
         hooks = {
-            operation.identity: operation
+            operation.call: operation
             for preparation in preparations
             for operation in preparation.hooks()
         }

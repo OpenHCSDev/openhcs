@@ -52,6 +52,17 @@ class WorkerStartExecutionFacts:
                     return cls(gpu_enabled=True)
         return cls()
 
+    def worker_limit(self, num_workers: int, accelerator_workers: int) -> int:
+        """How many workers the execution may have.
+
+        ``accelerator_workers`` bounds an execution with an accelerator step:
+        each of its workers holds its own copy of what the pipeline loads
+        onto the device.
+        """
+        if self.gpu_enabled:
+            return min(num_workers, accelerator_workers)
+        return num_workers
+
 
 @dataclass(frozen=True)
 class WorkerStartPlatform:

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import concurrent.futures
 import contextlib
+import functools
 import logging
 import multiprocessing
+from multiprocessing.connection import Connection
 from multiprocessing.connection import wait as wait_for_worker_connections
 import pickle
 import signal
@@ -15,6 +17,7 @@ from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Dict,
     Hashable,
     Iterable,
@@ -459,7 +462,9 @@ class ProcessWorkerExecutorResources(PooledWorkerExecutorResources):
         """Nothing: this pool's processes start with the execution and end with it.
 
         They inherit nothing from this process, so a load here would be held
-        by a process that runs no lane.
+        by a process that runs no lane. Only an execution without kept
+        workers (``PerExecutionWorkers``) uses this pool; a server keeps
+        workers that prepare themselves at their start.
         """
         return 0
 
@@ -486,6 +491,36 @@ class ThreadedWorkerExecutorResources(PooledWorkerExecutorResources):
         return dict(execution_bundle.runtime_contexts)
 
 
+class WorkerSupply(ABC):
+    """Where the worker processes of an execution come from."""
+
+    @abstractmethod
+    def process_resources(
+        self, need: WorkerNeed, factory: WorkerExecutorFactory
+    ) -> WorkerExecutorResources:
+        """The resources that run the pipeline's lanes in worker processes."""
+
+
+class PerExecutionWorkers(WorkerSupply):
+    """Workers that start with one execution and end with it."""
+
+    def process_resources(
+        self, need: WorkerNeed, factory: WorkerExecutorFactory
+    ) -> WorkerExecutorResources:
+        if need.start_method is MultiprocessingStartMethod.FORK:
+            return ForkInheritedWorkerExecutorResources(
+                multiprocessing_context=need.multiprocessing_context,
+                use_multiprocessing=True,
+                _runner=ForkInheritedWorkerLaneRunner(need.multiprocessing_context),
+            )
+        return ProcessWorkerExecutorResources(
+            multiprocessing_context=need.multiprocessing_context,
+            use_multiprocessing=True,
+            _executor=factory.process_pool_executor(need),
+            cancellation=None,
+        )
+
+
 class WorkerExecutorFactory:
     """Create the worker resources matching the effective runtime config."""
 
@@ -496,79 +531,47 @@ class WorkerExecutorFactory:
         progress_queue: ProgressQueue,
         cancellation: ExecutionCancellationSignal,
     ) -> None:
-        self._log_file_base = log_file_base
-        self._progress_queue = progress_queue
-        self._cancellation = cancellation
+        self.log_file_base = log_file_base
+        self.progress_queue = progress_queue
+        self.cancellation = cancellation
 
     def create(
         self,
         *,
         runtime_environment: CompiledRuntimeEnvironmentPlan,
         actual_max_workers: int,
-        prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None,
+        workers: WorkerSupply = PerExecutionWorkers(),
     ) -> WorkerExecutorResources:
-        multiprocessing_context = multiprocessing.get_context(
-            runtime_environment.multiprocessing_start_method.value
-        )
+        need = WorkerNeed(runtime_environment, actual_max_workers)
         if actual_max_workers == 1:
             configure_native_thread_count(1)
             return InlineWorkerExecutorResources(
-                multiprocessing_context=multiprocessing_context,
+                multiprocessing_context=need.multiprocessing_context,
                 use_multiprocessing=not runtime_environment.use_threading,
-                cancellation=self._cancellation,
-            )
-        if (
-            not runtime_environment.use_threading
-            and runtime_environment.multiprocessing_start_method
-            is MultiprocessingStartMethod.FORK
-        ):
-            if prepared_worker_runner is not None:
-                return PreparedForkWorkerExecutorResources(
-                    multiprocessing_context=multiprocessing_context,
-                    use_multiprocessing=True,
-                    _runner=prepared_worker_runner,
-                    cancellation=self._cancellation,
-                    log_file_base=self._log_file_base,
-                    progress_queue=self._progress_queue,
-                )
-            return ForkInheritedWorkerExecutorResources(
-                multiprocessing_context=multiprocessing_context,
-                use_multiprocessing=True,
-                _runner=ForkInheritedWorkerLaneRunner(multiprocessing_context),
+                cancellation=self.cancellation,
             )
         if runtime_environment.use_threading:
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=actual_max_workers
             )
             return ThreadedWorkerExecutorResources(
-                multiprocessing_context=multiprocessing_context,
+                multiprocessing_context=need.multiprocessing_context,
                 use_multiprocessing=False,
                 _executor=executor,
-                cancellation=self._cancellation,
+                cancellation=self.cancellation,
             )
-        executor = self._process_pool_executor(
-            multiprocessing_context,
-            actual_max_workers,
-        )
-        return ProcessWorkerExecutorResources(
-            multiprocessing_context=multiprocessing_context,
-            use_multiprocessing=True,
-            _executor=executor,
-            cancellation=None,
-        )
+        return workers.process_resources(need, self)
 
-    def _process_pool_executor(
-        self,
-        multiprocessing_context: Any,
-        actual_max_workers: int,
+    def process_pool_executor(
+        self, need: WorkerNeed
     ) -> concurrent.futures.ProcessPoolExecutor:
         return concurrent.futures.ProcessPoolExecutor(
-            max_workers=actual_max_workers,
-            mp_context=multiprocessing_context,
+            max_workers=need.worker_count,
+            mp_context=need.multiprocessing_context,
             initializer=_configure_worker_process,
             initargs=(
-                self._log_file_base,
-                self._progress_queue,
+                self.log_file_base,
+                self.progress_queue,
             ),
         )
 
@@ -747,6 +750,29 @@ class PrepareWorker(AnsweredWorkerCommand):
         set_progress_queue(WorkerConnectionProgressQueue(connection))
 
 
+@dataclass(frozen=True)
+class PrepareStartedWorker(PrepareWorker):
+    """Make a process that inherited nothing hold what its server prepared.
+
+    A forked worker inherits the server's catalogue, custom functions and
+    registries. A process started on its own configures itself as a worker
+    and loads them here, in its first command, so no lane and no first use
+    loads a source or completes a registry.
+    """
+
+    def run(self, connection: Connection) -> None:
+        from polystore.base import ensure_storage_registry
+
+        from openhcs.core.dataset_sources.discovery import discover_domain_registries
+        from openhcs.processing.func_registry import initialize_registry
+
+        _configure_worker_process(None)
+        initialize_registry()
+        ensure_storage_registry()
+        discover_domain_registries()
+        PrepareWorker.run(self, connection)
+
+
 def compiled_invocations(
     execution_bundle: CompiledExecutionBundle,
 ) -> Iterator[CompiledFunctionInvocation]:
@@ -829,7 +855,7 @@ class LoadPipelineResources(AnsweredWorkerCommand):
 
     invocations_payload: bytes
 
-    def run(self, connection: Any) -> int:
+    def run(self, connection: Connection) -> int:
         return PipelineResourceLoads.run(pickle.loads(self.invocations_payload))
 
 
@@ -897,8 +923,8 @@ class StopWorker(WorkerCommand):
 
 
 def _serve_worker(
-    connection: Any,
-    inherited_parent_connections: tuple[Any, ...],
+    connection: Connection,
+    inherited_parent_connections: tuple[Connection, ...],
     first_command: WorkerCommand,
 ) -> None:
     """Worker process entrypoint: serve commands until stopped or orphaned."""
@@ -960,13 +986,19 @@ class ForkInheritedWorkerLaneRunner:
         self._multiprocessing_context = multiprocessing_context
         self.workers: list[WorkerProcess] = []
 
+    def connections_inherited_by_a_worker(
+        self, parent_connection: Connection
+    ) -> tuple[Connection, ...]:
+        """The parent ends a forked worker inherits and must close."""
+        return (parent_connection, *(worker.connection for worker in self.workers))
+
     def start_worker(self, slot: str, first_command: WorkerCommand) -> WorkerProcess:
         parent_connection, child_connection = self._multiprocessing_context.Pipe()
         process = self._multiprocessing_context.Process(
             target=_serve_worker,
             args=(
                 child_connection,
-                (parent_connection, *(worker.connection for worker in self.workers)),
+                self.connections_inherited_by_a_worker(parent_connection),
                 first_command,
             ),
         )
@@ -1076,10 +1108,39 @@ class ForkInheritedWorkerLaneRunner:
         ).run(None)
 
 
-class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
-    """Own reusable physical processes independently of individual lane jobs."""
+@dataclass(frozen=True)
+class WorkerNeed:
+    """What one pipeline asks of the processes that run its lanes."""
 
-    def __init__(self, multiprocessing_context: Any, capacity: int):
+    runtime_environment: CompiledRuntimeEnvironmentPlan
+    worker_count: int
+
+    @property
+    def start_method(self) -> MultiprocessingStartMethod:
+        return self.runtime_environment.multiprocessing_start_method
+
+    @functools.cached_property
+    def multiprocessing_context(self) -> multiprocessing.context.BaseContext:
+        return multiprocessing.get_context(self.start_method.value)
+
+
+class PreparedWorkerLaneRunner(ForkInheritedWorkerLaneRunner, ABC):
+    """Own reusable worker processes that hold what their server prepared.
+
+    The members are the ways a worker comes to hold it, and each way decides
+    how long the workers are kept:
+
+    - ``PreparedForkWorkerLaneRunner``: a worker inherits it at fork. The
+      workers serve every pipeline and live as long as the server.
+    - ``SelfPreparedWorkerLaneRunner``: a worker inherits nothing and prepares
+      itself in its first command. The workers belong to the pipelines with
+      the same worker count, and one that holds a load the next pipeline does
+      not select is ended and started again.
+    """
+
+    def __init__(
+        self, multiprocessing_context: multiprocessing.context.BaseContext, capacity: int
+    ) -> None:
         super().__init__(multiprocessing_context)
         if capacity < 1:
             raise ValueError("Prepared worker capacity must be positive.")
@@ -1090,46 +1151,87 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
         self._next_worker_id = 0
         self._outdated_process_ids: set[int] = set()
 
-    @classmethod
-    def prepared(
-        cls, multiprocessing_context: multiprocessing.context.BaseContext, capacity: int
-    ) -> Self:
-        """A runner whose idle workers are started, or nothing if one fails."""
-        runner = cls(multiprocessing_context=multiprocessing_context, capacity=capacity)
-        try:
-            runner.prepare()
-        except BaseException:
-            runner.close()
-            raise
-        return runner
+    @abstractmethod
+    def first_command(self) -> WorkerCommand:
+        """The command that makes a new worker hold what the server prepared."""
 
-    def _start_prepared_worker(self) -> WorkerProcess:
-        worker = self.start_worker(f"prepared_{self._next_worker_id}", PrepareWorker())
-        self._next_worker_id += 1
+    @abstractmethod
+    def holds(self, need: WorkerNeed) -> bool:
+        """Whether a pipeline with this need is given these workers."""
+
+    @abstractmethod
+    def keeps(self, worker: WorkerProcess, loads: frozenset[Hashable]) -> bool:
+        """Whether an idle worker stays for a pipeline that selects these loads."""
+
+    @abstractmethod
+    def hold_new_acquisitions(self) -> None:
+        """Make the workers hold what the server acquired after they started."""
+
+    @abstractmethod
+    def sources_changed(self) -> None:
+        """The server loaded, replaced or withdrew a custom function."""
+
+    def starts_like(self, need: WorkerNeed) -> bool:
+        """Whether the pipeline's workers start the way these workers did."""
+        return (
+            need.multiprocessing_context.get_start_method()
+            == self._multiprocessing_context.get_start_method()
+        )
+
+    def serves(self, need: WorkerNeed) -> bool:
+        """Whether the pipeline runs in these workers."""
+        return not self._closed and self.starts_like(need) and self.holds(need)
+
+    @property
+    def is_closed(self) -> bool:
+        return self._closed
+
+    def started(self) -> Self:
+        """This runner with its idle workers started, or nothing if one fails."""
         try:
-            worker.result()
+            self.prepare()
         except BaseException:
-            self.release([worker], retire=True)
+            self.close()
             raise
-        return worker
+        return self
+
+    def _start_prepared_workers(self, count: int) -> list[WorkerProcess]:
+        """Start this many workers at once; all hold the prepared state, or none stays."""
+        started: list[WorkerProcess] = []
+        try:
+            for _ in range(count):
+                started.append(
+                    self.start_worker(
+                        f"prepared_{self._next_worker_id}", self.first_command()
+                    )
+                )
+                self._next_worker_id += 1
+            for worker in started:
+                worker.result()
+        except BaseException:
+            self.release(started, retire=True)
+            raise
+        return started
 
     def prepare(self) -> None:
-        """Start idle processes before endpoint readiness, with no job payload."""
+        """Start idle processes up to capacity, with no job payload."""
         configure_native_thread_count(1)
         with self._ownership_lock:
             if self._closed:
                 raise RuntimeError("Prepared worker resources are closed.")
-            while len(self.workers) < self._capacity:
-                self._available.append(self._start_prepared_worker())
+            self._available.extend(
+                self._start_prepared_workers(max(self._capacity - len(self.workers), 0))
+            )
 
-    def replace_with_current_forks(self) -> None:
-        """Fork the idle workers again; leased ones are replaced on return.
+    def retire(self) -> None:
+        """End the idle workers now and each leased worker when it is returned."""
+        with self._ownership_lock:
+            self._closed = True
+            idle, self._available = self._available, []
+            self.release(idle, retire=True)
 
-        A worker holds what the server had prepared when it was forked. After
-        the server prepares something more (a function registered while it is
-        serving), new forks inherit it, so no worker prepares or loads it
-        inside an execution.
-        """
+    def replace_workers(self) -> None:
+        """Start the idle workers again; leased ones are replaced on return."""
         with self._ownership_lock:
             if self._closed:
                 return
@@ -1143,23 +1245,35 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
             self.release(idle, retire=True)
             self.prepare()
 
-    def acquire(self, worker_count: int) -> list[WorkerProcess]:
-        """Transfer process ownership without locking any execution work."""
+    def acquire(
+        self, worker_count: int, loads: frozenset[Hashable] = frozenset()
+    ) -> list[WorkerProcess]:
+        """Transfer process ownership without locking any execution work.
+
+        ``loads`` are the identities the leasing pipeline selects. An idle
+        worker that is dead, or that this runner does not keep for them, is
+        ended first, and the workers then missing are started.
+        """
         with self._ownership_lock:
             if self._closed:
                 raise RuntimeError("Prepared worker resources are closed.")
-            dead_workers = [
-                worker for worker in self._available if not worker.process.is_alive()
+            ended = [
+                worker
+                for worker in self._available
+                if not (worker.process.is_alive() and self.keeps(worker, loads))
             ]
-            if dead_workers:
+            if ended:
                 self._available = [
-                    worker for worker in self._available if worker.process.is_alive()
+                    worker
+                    for worker in self._available
+                    if all(worker is not gone for gone in ended)
                 ]
-                self.release(dead_workers, retire=True)
-            while len(self._available) < worker_count:
-                # Larger or concurrent jobs preserve their requested worker count.
-                # Any extra creation is paid inside that job's execution clock.
-                self._available.append(self._start_prepared_worker())
+                self.release(ended, retire=True)
+            # Larger or concurrent jobs preserve their requested worker count:
+            # the workers they lack are started here, by the phase that leases.
+            self._available.extend(
+                self._start_prepared_workers(max(worker_count - len(self._available), 0))
+            )
             workers = self._available[:worker_count]
             del self._available[:worker_count]
             return workers
@@ -1206,11 +1320,97 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 worker.connection.close()
 
 
+class PreparedForkWorkerLaneRunner(PreparedWorkerLaneRunner):
+    """Workers that inherit what the server prepared when they are forked."""
+
+    @classmethod
+    def prepared(
+        cls, multiprocessing_context: multiprocessing.context.BaseContext, capacity: int
+    ) -> Self:
+        """A runner whose idle workers are started, or nothing if one fails."""
+        return cls(multiprocessing_context, capacity).started()
+
+    def first_command(self) -> WorkerCommand:
+        return PrepareWorker()
+
+    def holds(self, need: WorkerNeed) -> bool:
+        """Every pipeline: a fork holds all the server prepared, and loads on request."""
+        return True
+
+    def keeps(self, worker: WorkerProcess, loads: frozenset[Hashable]) -> bool:
+        return True
+
+    def replace_with_current_forks(self) -> None:
+        """Fork the idle workers again; leased ones are replaced on return.
+
+        A worker holds what the server had prepared when it was forked. After
+        the server prepares something more (a function registered while it is
+        serving), new forks inherit it, so no worker prepares or loads it
+        inside an execution.
+        """
+        self.replace_workers()
+
+    def hold_new_acquisitions(self) -> None:
+        self.replace_with_current_forks()
+
+    def sources_changed(self) -> None:
+        self.replace_with_current_forks()
+
+
+class SelfPreparedWorkerLaneRunner(PreparedWorkerLaneRunner):
+    """Workers that inherit nothing and prepare themselves when they start.
+
+    They are started by the first phase that leases them (the load phase of
+    "prepare this pipeline" or of an execution nobody prepared), all at once,
+    and each holds its own copy of the catalogue and of every load. So there
+    are exactly as many as the pipeline has lanes, and a worker never keeps a
+    load the next pipeline does not select.
+    """
+
+    def __init__(self, need: WorkerNeed) -> None:
+        super().__init__(need.multiprocessing_context, need.worker_count)
+
+    def connections_inherited_by_a_worker(
+        self, parent_connection: Connection
+    ) -> tuple[Connection, ...]:
+        """None: a started process holds only the connection it is given."""
+        return ()
+
+    def first_command(self) -> WorkerCommand:
+        return PrepareStartedWorker()
+
+    def holds(self, need: WorkerNeed) -> bool:
+        return need.worker_count == self._capacity
+
+    def keeps(self, worker: WorkerProcess, loads: frozenset[Hashable]) -> bool:
+        return worker.loaded <= loads
+
+    def hold_new_acquisitions(self) -> None:
+        """Nothing: an acquisition is on the machine, where a started worker reads it."""
+
+    def sources_changed(self) -> None:
+        """End these workers: the next pipeline's workers load the current sources."""
+        self.retire()
+
+
 @dataclass(frozen=True, slots=True)
-class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
+class PreparedWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
     """Prepared process resources with isolated ownership for each execution."""
 
-    _runner: PreparedForkWorkerLaneRunner = field(repr=False, compare=False)
+    _runner: PreparedWorkerLaneRunner = field(repr=False, compare=False)
+
+    @classmethod
+    def leasing_from(
+        cls, runner: PreparedWorkerLaneRunner, need: WorkerNeed, factory: WorkerExecutorFactory
+    ) -> Self:
+        return cls(
+            multiprocessing_context=need.multiprocessing_context,
+            use_multiprocessing=True,
+            _runner=runner,
+            cancellation=factory.cancellation,
+            log_file_base=factory.log_file_base,
+            progress_queue=factory.progress_queue,
+        )
     cancellation: ExecutionCancellationSignal
     progress_queue: ProgressQueue
     log_file_base: str | None = None
@@ -1254,7 +1454,10 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
             )
         self.cancellation.raise_if_requested("before prepared worker checkout")
         lane_items = list(worker_lane_execution_plan.active_lane_items())
-        self._lease(len(lane_items))
+        self._lease(
+            len(lane_items),
+            PipelineResourceLoads.from_bundle(execution_bundle).by_identity.keys(),
+        )
         submitted: list[WorkerProcess] = []
         for (worker_slot, lane_keys), worker in zip(lane_items, self._leased):
             self.cancellation.raise_if_requested("before prepared worker submission")
@@ -1288,24 +1491,26 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
         self.cancellation.raise_if_requested("after prepared worker execution")
         return results
 
-    def _lease(self, worker_count: int) -> None:
+    def _lease(self, worker_count: int, loads: Iterable[Hashable]) -> None:
         """Hold this many workers from here until the execution context ends."""
         missing = worker_count - len(self._leased)
         if missing > 0:
-            self._leased.extend(self._runner.acquire(missing))
+            self._leased.extend(self._runner.acquire(missing, frozenset(loads)))
 
     def hold_new_acquisitions(self) -> None:
-        """Fork the prepared workers again, before any is leased for this pipeline."""
-        self._runner.replace_with_current_forks()
+        """Before any worker is leased for this pipeline."""
+        self._runner.hold_new_acquisitions()
 
     def load_pipeline_resources(
         self, execution_bundle: CompiledExecutionBundle, worker_count: int
     ) -> int:
-        """Load in the workers leased for this pipeline what each does not hold."""
+        """Load in the workers leased for this pipeline what each does not hold.
+
+        The lease is taken here even when the pipeline loads nothing, so a
+        worker that has to start does so in this phase and not in a lane.
+        """
         loads = PipelineResourceLoads.from_bundle(execution_bundle).by_identity
-        if not loads:
-            return 0
-        self._lease(worker_count)
+        self._lease(worker_count, loads)
         sent: list[tuple[WorkerProcess, set[Hashable]]] = []
         for worker in self._leased[:worker_count]:
             missing = loads.keys() - worker.loaded

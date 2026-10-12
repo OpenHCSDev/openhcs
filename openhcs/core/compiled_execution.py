@@ -93,7 +93,9 @@ class CompiledRuntimeEnvironmentPlan:
                 execution_facts=execution_facts,
             ),
             use_threading=global_config.use_threading,
-            configured_num_workers=global_config.num_workers,
+            configured_num_workers=execution_facts.worker_limit(
+                global_config.num_workers, global_config.accelerator_workers
+            ),
         )
 
     @property

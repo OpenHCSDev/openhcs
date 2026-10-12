@@ -429,3 +429,166 @@ def test_load_phase_of_a_prepared_pipeline_is_empty_in_both_executions(
     """The loads ran in "prepare this pipeline", so no execution reports one."""
     for run in _run_times(custom_function_events, PROBE):
         assert run["prepared"] and run["loads"] == 0
+
+
+# Spawn workers: a worker inherits nothing, prepares itself when it starts and
+# is kept by the server from "prepare this pipeline" through every execution
+# of the pipeline.
+SPAWN_STAGES = (
+    "prepared 1", "prepared 2", "unprepared 1", "unprepared 2",
+    "other worker count", "kernel 1", "kernel 2",
+)
+
+
+@pytest.fixture(scope="module")
+def spawn_worker_run(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[dict]]:
+    """The probe pipelines over one server with spawn workers, Numba counted too."""
+    root = tmp_path_factory.mktemp("spawned_workers")
+    trace = root / "trace.jsonl"
+    numba_trace = root / "numba_trace"
+    numba_trace.mkdir()
+    completed = subprocess.run(
+        [sys.executable, str(PREPARED_RESOURCE / "run_spawned_worker_pipelines.py"), str(root)],
+        cwd=REPOSITORY,
+        env={
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(
+                (
+                    str(PREPARED_RESOURCE), str(TRACER), str(REPOSITORY),
+                    os.environ.get("PYTHONPATH", ""),
+                )
+            ),
+            "OPENHCS_PREPARED_RESOURCE_TRACE": str(trace),
+            "OPENHCS_NUMBA_TRACE_DIR": str(numba_trace),
+            "NUMBA_CACHE_DIR": str(root / "numba"),
+            "XDG_DATA_HOME": str(root / "data"),
+            "OPENHCS_CPU_ONLY": "1",
+            "QT_QPA_PLATFORM": "offscreen",
+            "DISPLAY": "",
+            "WAYLAND_DISPLAY": "",
+        },
+        capture_output=True,
+        text=True,
+        timeout=3600,
+    )
+    assert completed.returncode == 0, completed.stdout[-2000:] + completed.stderr[-4000:]
+
+    def by_time(lines) -> list[dict]:
+        return sorted(map(json.loads, lines), key=lambda event: event["time"])
+
+    return {
+        "events": by_time(trace.read_text().splitlines()),
+        "numba": by_time(
+            line
+            for path in numba_trace.glob("*.jsonl")
+            for line in path.read_text().splitlines()
+        ),
+    }
+
+
+@pytest.fixture(scope="module")
+def spawn_worker_events(spawn_worker_run: dict[str, list[dict]]) -> list[dict]:
+    return spawn_worker_run["events"]
+
+
+def _stage(events: list[dict], name: str) -> list[dict]:
+    """The events from this stage's marker to the next stage's."""
+    markers = _kinds(events, "stage")
+    [start] = [marker for marker in markers if marker["function"] == name]
+    later = [marker["time"] for marker in markers if marker["time"] > start["time"]]
+    end = min(later, default=float("inf"))
+    return [event for event in events if start["time"] <= event["time"] < end]
+
+
+def _pids(events: list[dict], kind: str) -> set[int]:
+    return {event["pid"] for event in _kinds(events, kind)}
+
+
+def test_spawn_workers_of_a_prepared_pipeline_load_once_and_execute_both_runs(
+    spawn_worker_events: list[dict],
+) -> None:
+    first, second = (_stage(spawn_worker_events, f"prepared {run}") for run in (1, 2))
+    loads = _kinds(first, "load", PROBE)
+    assert [event["model"] for event in loads] == ["large", "large"]
+    assert len(_pids(loads, "load")) == 2, "one load per worker"
+    [start] = _kinds(first, "pipeline_preparation_start")
+    [end] = _kinds(first, "pipeline_preparation_end")
+    assert all(start["time"] < event["time"] < end["time"] for event in loads), (
+        "the loads happen inside the pipeline's own preparation"
+    )
+    assert _kinds(second, "load") == [], "the second run loads nothing"
+    assert _pids(first, "call") == _pids(second, "call") == _pids(loads, "load"), (
+        "the workers that were prepared are the workers that execute, in both runs"
+    )
+    assert all(
+        run["loads"] == 0 for run in _kinds(first + second, "run_times")
+    ), "no execution of a prepared pipeline reports a load"
+
+
+def test_spawn_workers_of_an_unprepared_pipeline_load_once_in_the_first_load_phase(
+    spawn_worker_events: list[dict],
+) -> None:
+    first, second = (_stage(spawn_worker_events, f"unprepared {run}") for run in (1, 2))
+    [first_run] = _kinds(first, "run_times")
+    [second_run] = _kinds(second, "run_times")
+    loads = _kinds(first, "load", UNPREPARED_PROBE)
+    assert len(loads) == first_run["loads"] == 2 and len(_pids(loads, "load")) == 2
+    assert loads == _inside(
+        loads, [(first_run["load_started_at"], first_run["load_ended_at"])], "load"
+    ), "every load is inside the load phase the first execution reports"
+    assert _kinds(second, "load") == [] and second_run["loads"] == 0
+    assert _pids(first, "call") == _pids(second, "call") == _pids(loads, "load"), (
+        "the workers that loaded are the workers that execute, in both runs"
+    )
+
+
+def test_spawn_reported_windows_hold_no_load_and_no_acquisition(
+    spawn_worker_events: list[dict],
+) -> None:
+    events = spawn_worker_events
+    runs = _kinds(events, "run_times")
+    assert [run["stage"] for run in runs] == list(SPAWN_STAGES)
+    for run in runs:
+        windows = _timed_windows(run)
+        assert _inside(events, windows["execute"], "call"), (
+            "the execute window holds no call, so the counter proves nothing"
+        )
+        for name, window in windows.items():
+            late = [
+                f"{event['kind']} {event['function']} pid {event['pid']}"
+                for event in _inside(events, window, "prepare", "acquire", "load")
+            ]
+            assert late == [], (
+                f"inside the reported {name} window of {run['stage']}:\n" + "\n".join(late)
+            )
+    [ready] = _kinds(events, "ready")
+    acquisitions = _kinds(events, "acquire")
+    assert acquisitions and all(
+        event["time"] < ready["time"] for event in acquisitions
+    ), "every acquisition is before readiness"
+    assert len(_pids(acquisitions, "acquire")) == 1, "only the server acquires"
+    assert not _pids(acquisitions, "acquire") & _pids(events, "call"), (
+        "a spawned worker loads the sources without acquiring"
+    )
+
+
+def test_spawn_workers_are_replaced_when_the_worker_count_changes(
+    spawn_worker_events: list[dict],
+) -> None:
+    events = spawn_worker_events
+    before = _pids(_stage(events, "unprepared 2"), "call")
+    stage = _stage(events, "other worker count")
+    workers = _pids(stage, "call")
+    assert len(workers) == 4 and not workers & before, "four new worker processes"
+    loads = _kinds(stage, "load", UNPREPARED_PROBE)
+    assert sorted(event["pid"] for event in loads) == sorted(workers), (
+        "each new worker loads exactly once"
+    )
+    [census] = _kinds(stage, "worker_census")
+    assert set(map(int, census["alive"])) == workers, (
+        "the workers kept for the old worker count are gone"
+    )
+    [earlier] = _kinds(_stage(events, "unprepared 2"), "worker_census")
+    assert set(map(int, earlier["alive"])) == before, (
+        "a pipeline that selects other loads ended the workers that held them"
+    )

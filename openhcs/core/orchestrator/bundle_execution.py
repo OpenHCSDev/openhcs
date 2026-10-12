@@ -50,8 +50,9 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
-    PreparedForkWorkerLaneRunner,
+    PerExecutionWorkers,
     WorkerExecutorFactory,
+    WorkerSupply,
     WorkerExecutorResources,
 )
 from openhcs.core.orchestrator.worker_lanes import (
@@ -182,7 +183,7 @@ class BundleExecutionRequest(ProgressExecutionContext):
     progress_queue: ProgressQueue
     runtime_observation_mode: type[RuntimeObservationMode]
     debug_execution_policy: DebugExecutionPolicy
-    prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
+    workers: WorkerSupply = PerExecutionWorkers()
 
     @property
     def pipeline_definition(self) -> List[AbstractStep]:
@@ -261,7 +262,7 @@ def execute_bundle_request(
         ).create(
             runtime_environment=validated.runtime_environment,
             actual_max_workers=validated.actual_max_workers,
-            prepared_worker_runner=request.prepared_worker_runner,
+            workers=request.workers,
         )
 
         execution_bundle = request.execution_bundle

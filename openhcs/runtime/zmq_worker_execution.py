@@ -17,7 +17,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
-from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
+from openhcs.core.orchestrator.worker_execution import PerExecutionWorkers, WorkerSupply
 from openhcs.core.progress import ProgressExecutionContext
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 
@@ -36,7 +36,7 @@ class ZMQWorkerExecutionRequest:
     debug_execution_policy: Any
     active_execution_record: Any
     forward_worker_progress: Callable[[Any], None]
-    prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
+    workers: WorkerSupply = PerExecutionWorkers()
 
     def execute(self) -> Any:
         log_dir = get_openhcs_log_dir()
@@ -79,7 +79,7 @@ class ZMQWorkerExecutionRequest:
                     progress_context=self.progress_context,
                     runtime_observation_mode=self.runtime_observation_mode,
                     debug_execution_policy=self.debug_execution_policy,
-                    prepared_worker_runner=self.prepared_worker_runner,
+                    workers=self.workers,
                 )
             )
             self.active_execution_record.set_extra(

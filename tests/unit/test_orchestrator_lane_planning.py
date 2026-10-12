@@ -1536,3 +1536,74 @@ def test_execution_visualizer_readiness_timeout_is_fatal(monkeypatch):
         )
 
     assert events[-1].status is FailedProgressStatus
+
+
+def _spawn_need(worker_count: int) -> worker_execution_module.WorkerNeed:
+    return worker_execution_module.WorkerNeed(
+        _runtime_environment(
+            use_threading=False, start_method=MultiprocessingStartMethod.SPAWN
+        ),
+        worker_count,
+    )
+
+
+def test_kept_workers_give_a_pipeline_the_same_self_prepared_workers_until_its_count_changes():
+    """Lifetime of workers that inherit nothing; no process is started here."""
+    from openhcs.runtime.kept_workers import KeptWorkers
+
+    kept = KeptWorkers()
+    first = kept.runner_for(_spawn_need(2))
+    assert isinstance(first, worker_execution_module.SelfPreparedWorkerLaneRunner)
+    assert first.workers == [], "workers start when a load phase leases them"
+    assert kept.runner_for(_spawn_need(2)) is first
+
+    second = kept.runner_for(_spawn_need(4))
+    assert second is not first and first.is_closed, "a different worker count releases"
+    assert kept.runner_for(_spawn_need(4)) is second
+
+    kept.sources_changed()
+    assert second.is_closed, "a custom-function change releases"
+    third = kept.runner_for(_spawn_need(4))
+    kept.close()
+    assert third.is_closed, "server stop releases"
+
+
+def test_a_self_prepared_worker_is_kept_only_while_the_pipeline_selects_what_it_holds():
+    runner = worker_execution_module.SelfPreparedWorkerLaneRunner(_spawn_need(2))
+    worker = worker_execution_module.WorkerProcess("prepared_0", None, None)
+    assert runner.keeps(worker, frozenset())
+    worker.loaded.add("model a")
+    assert runner.keeps(worker, frozenset({"model a", "model b"}))
+    assert not runner.keeps(worker, frozenset({"model b"}))
+    assert runner.connections_inherited_by_a_worker(object()) == ()
+    assert isinstance(runner.first_command(), worker_execution_module.PrepareStartedWorker)
+
+
+def test_a_forked_worker_serves_every_pipeline_whose_workers_fork():
+    fork = worker_execution_module.PreparedForkWorkerLaneRunner(
+        multiprocessing.get_context("fork"), 2
+    )
+    fork_need = worker_execution_module.WorkerNeed(
+        _runtime_environment(
+            use_threading=False, start_method=MultiprocessingStartMethod.FORK
+        ),
+        7,
+    )
+    worker = worker_execution_module.WorkerProcess("prepared_0", None, None)
+    worker.loaded.add("model a")
+    assert fork.serves(fork_need) and fork.keeps(worker, frozenset())
+    assert not fork.serves(_spawn_need(2))
+    assert type(fork.first_command()) is worker_execution_module.PrepareWorker
+
+
+@pytest.mark.parametrize(
+    ("gpu_enabled", "expected"), [(False, 6), (True, 2)]
+)
+def test_accelerator_workers_bound_only_an_execution_with_an_accelerator_step(
+    gpu_enabled, expected
+):
+    from openhcs.core.worker_start_policy import WorkerStartExecutionFacts
+
+    facts = WorkerStartExecutionFacts(gpu_enabled=gpu_enabled)
+    assert facts.worker_limit(6, 2) == expected
+    assert WorkerStartExecutionFacts(gpu_enabled=True).worker_limit(1, 2) == 1

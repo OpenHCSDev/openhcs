@@ -979,7 +979,7 @@ def test_execution_server_runtime_capability_preparation_uses_single_owner(
 ) -> None:
     events = []
     server = ZMQExecutionServer()
-    monkeypatch.setattr(server, "_prepare_worker_resources", lambda: None)
+    monkeypatch.setattr(server._workers, "start_inheriting_workers", lambda: None)
     monkeypatch.setattr(
         server._function_catalog_preparation,
         "prepare_before_serving",

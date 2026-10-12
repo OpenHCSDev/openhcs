@@ -36,6 +36,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.cancellation import ExecutionCancellationAuthority
+from openhcs.core.orchestrator.worker_execution import PerExecutionWorkers, WorkerSupply
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionRequest,
     execute_bundle_request,
@@ -51,7 +52,6 @@ from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
-    from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
     from openhcs.core.config import PipelineConfig
 
 # Zarr backend is CPU-only; always import it (even in subprocess/no-GPU mode)
@@ -770,7 +770,7 @@ class PipelineOrchestrator:
         log_file_base: Optional[str] = None,
         runtime_observation_mode: type[RuntimeObservationMode] | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
-        prepared_worker_runner: "PreparedForkWorkerLaneRunner | None" = None,
+        workers: WorkerSupply = PerExecutionWorkers(),
     ) -> Dict[str, ExecutionResult]:
         """Run the compiled bundle's contexts through the worker lanes.
 
@@ -794,7 +794,7 @@ class PipelineOrchestrator:
                     else runtime_observation_mode
                 ),
                 debug_execution_policy=debug_execution_policy,
-                prepared_worker_runner=prepared_worker_runner,
+                workers=workers,
             ),
         )
 

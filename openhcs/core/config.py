@@ -257,6 +257,18 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     limit.
     """
 
+    accelerator_workers: Annotated[PositiveInteger, abbreviation("accel_W")] = 1
+    """Maximum worker count for a pipeline with a step that runs on an accelerator.
+
+    Each worker of such a pipeline is its own process and holds its own copy
+    of everything the pipeline loads onto the device (a model, a memory
+    pool), so the device's memory bounds the count, not the CPU count. The
+    pipeline runs with the smaller of this and ``num_workers``. The default
+    of one is the only count that fits every device that fits the pipeline
+    at all; raise it when that many copies of the pipeline's loads fit the
+    device's memory.
+    """
+
     dataset_source: Annotated[
         type[DatasetSourceChoice], abbreviation("source"), DatasetSourceChoices()
     ] = field(default_factory=lambda: AutoDetectedSource)

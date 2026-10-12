@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import logging
-import multiprocessing
-import os
 import sys
-import queue
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
@@ -30,22 +27,14 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.dataset_sources.discovery import discover_domain_registries
-from openhcs.core.orchestrator.bundle_execution import actual_max_workers
-from openhcs.core.orchestrator.cancellation import (
-    ExecutionCancellationSignal,
-    ExecutionCancelledError,
-)
-from openhcs.core.orchestrator.worker_execution import (
-    PreparedForkWorkerLaneRunner,
-    WorkerExecutorFactory,
-)
-from openhcs.processing.custom_functions.events import custom_function_changed
+from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.import_authority import ImportRootEndpoint
+from openhcs.runtime.kept_workers import KeptWorkers
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_compilation import (
     ZMQCompilationRequest,
@@ -212,34 +201,14 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
         self._server_environment = RuntimeEnvironmentSnapshot.current()
-        self._prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
+        self._workers = KeptWorkers()
 
     def prepare_runtime_capabilities(
         self,
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
         super().prepare_runtime_capabilities(status_callback)
-        self._prepare_worker_resources()
-
-    def _prepare_worker_resources(self) -> None:
-        """Prepare inherited workers before endpoint execution threads start."""
-        if self._prepared_worker_runner is not None:
-            return
-        if "fork" not in multiprocessing.get_all_start_methods():
-            return
-        capacity = (
-            len(os.sched_getaffinity(0))
-            if sys.platform.startswith("linux")
-            else (os.cpu_count() or 1)
-        )
-        self._prepared_worker_runner = PreparedForkWorkerLaneRunner.prepared(
-            multiprocessing.get_context("fork"), capacity
-        )
-        # A custom function this server loads later is prepared here; workers
-        # forked before that do not hold it.
-        custom_function_changed.subscribe(
-            self._prepared_worker_runner.replace_with_current_forks
-        )
+        self._workers.start_inheriting_workers()
 
     def stop(self) -> None:
         """Stop transport and every exact process resource owned by this server."""
@@ -249,9 +218,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
             try:
                 ZMQWorkerCleanup(self.active_executions).cancel_orchestrators()
             finally:
-                if self._prepared_worker_runner is not None:
-                    self._prepared_worker_runner.close()
-                    self._prepared_worker_runner = None
+                self._workers.close()
         finally:
             try:
                 super().stop()
@@ -798,7 +765,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 compilation=compilation,
             )
         if request_context.auxiliary_params.prepare_workers_only:
-            return self._prepare_pipeline_workers(
+            return self._workers.prepare_pipeline(
                 request_context.execution_id, compilation.execution_bundle
             )
         execution_results = ZMQWorkerExecutionRequest(
@@ -816,7 +783,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 request_context.execution_id
             ],
             forward_worker_progress=self._forward_worker_progress,
-            prepared_worker_runner=self._prepared_worker_runner,
+            workers=self._workers,
         ).execute()
         self._export_runtime_observation(
             request_context=request_context,
@@ -825,40 +792,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         )
         execution_results.require_success()
         return execution_results
-
-    def _prepare_pipeline_workers(
-        self, execution_id: str, execution_bundle: CompiledExecutionBundle
-    ) -> dict[str, int]:
-        """Load what the pipeline selects into the workers that will run it.
-
-        Before any worker loads, this server tries again the acquisitions the
-        pipeline's steps select that failed; one that fails again fails this
-        job with the function, the value and the cause.
-
-        The workers are returned to the front of the prepared set, so the
-        execution of this pipeline is given the same processes.
-        """
-        worker_count = actual_max_workers(execution_bundle, None)
-        resources = WorkerExecutorFactory(
-            log_file_base=None,
-            progress_queue=queue.SimpleQueue(),
-            cancellation=ExecutionCancellationSignal(),
-        ).create(
-            runtime_environment=execution_bundle.runtime_environment,
-            actual_max_workers=worker_count,
-            prepared_worker_runner=self._prepared_worker_runner,
-        )
-        started = time.perf_counter()
-        with resources.execution_context():
-            loads = resources.prepare_pipeline(execution_bundle, worker_count)
-        logger.info(
-            "[%s] Prepared pipeline: %d resource load(s) across %d worker(s) in %.3fs",
-            execution_id,
-            loads,
-            worker_count,
-            time.perf_counter() - started,
-        )
-        return {"resource_loads": loads, "workers": worker_count}
 
     def _export_runtime_observation(
         self,

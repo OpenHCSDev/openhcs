@@ -5,6 +5,7 @@ holds this directory. It does nothing unless ``OPENHCS_NUMBA_TRACE_DIR`` is set.
 Forked children inherit it. Each process appends JSON lines to ``<dir>/<pid>.jsonl``:
 
 - ``compiled``: Numba finished a JIT compilation (its ``numba:compile`` event).
+  ``seconds`` is how long it took, as for ``loaded``.
 - ``loaded``: Numba looked a kernel up in its disk cache (``hit`` says whether it
   was there). A hit after readiness is a first-use cost too; a miss is followed
   by a compilation.
@@ -40,12 +41,14 @@ if _DIRECTORY:
         load = caching.Cache.load_overload
 
         def load_overload(self, sig, target_context):
+            started = time.perf_counter()
             found = load(self, sig, target_context)
             _record(
                 "loaded",
                 kernel=_kernel_name(self._py_func),
                 signature=str(sig),
                 hit=found is not None,
+                seconds=time.perf_counter() - started,
             )
             return found
 
@@ -53,8 +56,11 @@ if _DIRECTORY:
 
     def _count_compilations(event):
         class CompilationListener(event.Listener):
+            def __init__(self):
+                self.started = []
+
             def on_start(self, event):
-                pass
+                self.started.append(time.perf_counter())
 
             def on_end(self, event):
                 dispatcher = event.data.get("dispatcher")
@@ -62,6 +68,8 @@ if _DIRECTORY:
                     "compiled",
                     kernel=_kernel_name(getattr(dispatcher, "py_func", None)),
                     signature=str(event.data.get("args")),
+                    # Includes the compilations nested in this one.
+                    seconds=time.perf_counter() - self.started.pop(),
                 )
 
         event.register("numba:compile", CompilationListener())
