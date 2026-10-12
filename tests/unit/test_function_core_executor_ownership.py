@@ -12,7 +12,9 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MetadataArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import (
     CompiledMetadataArtifactInputEdgePlan,
     InvocationArtifactInputEdgePlan,
@@ -67,7 +69,7 @@ def _executor():
         axis_id="A01",
         input_memory_type="numpy",
         output_memory_type="numpy",
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
     artifacts = ({edge.key: edge for edge in edges}, {})

@@ -182,10 +182,10 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
             raise ValueError("Measurement source context requires declared artifacts.")
         artifact_values = tuple(self.declared_artifact_value(spec) for spec in specs)
         metadata = tuple(value.metadata for value in artifact_values)
-        source_group_component = self.output_plan.group_component
         identity_policy = SourceImageSetIdentityPolicy(
             frozenset(
-                () if source_group_component is None else (source_group_component,)
+                grouped.component
+                for grouped in self.output_plan.group_scope.as_grouped()
             )
         )
         image_set_axes = tuple(

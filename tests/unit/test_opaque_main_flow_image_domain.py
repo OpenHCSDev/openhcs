@@ -9,7 +9,9 @@ import pytest
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -17,15 +19,17 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
 from openhcs.core.runtime_image_values import ImagePayload
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def _identity(image):
@@ -35,7 +39,7 @@ def _identity(image):
 def _runtime():
     pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
     runtime = PatternGroupExecutionRequest(
-        context=ProcessingContext(axis_id="A01"),
+        context=executing_context(axis_id="A01"),
         pattern_group_info="", component_index=0, component_count=1,
         compiled_group=pattern.default_group,
         execution_plan=CompiledStepPlan(
@@ -47,7 +51,7 @@ def _runtime():
             variable_components=(),
             artifact_inputs={},
             artifact_outputs={},
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
         ),
         component_value=None,
     )
@@ -129,8 +133,13 @@ def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
 @pytest.mark.parametrize("count", [1, 3])
 def test_raw_array_fallback_keeps_explicit_runtime_unstack_contract(count):
     runtime = _runtime()
-    runtime = replace(runtime, context=ProcessingContext(axis_id="A01"))
-    runtime.context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    runtime = replace(
+        runtime,
+        context=executing_context(
+            axis_id="A01",
+            microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
+        ),
+    )
     pixels = ImagePayload.of(np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5))
     projected = runtime._project_output_slices(pixels, [f"source-{i}.tif" for i in range(count)])
     payloads = tuple(payload for payload, _context in projected)
@@ -190,8 +199,8 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="whole-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
-    context = ProcessingContext(axis_id="A01", filemanager=files)
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01", filemanager=files)
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     producer = replace(producer, context=context)
     producer = replace(producer, pattern_group_info="whole")
     output = (
@@ -347,8 +356,8 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="mixed-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
-    context = ProcessingContext(axis_id="A01", filemanager=files)
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01", filemanager=files)
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     producer = replace(producer, context=context)
     producer = replace(producer, pattern_group_info="mixed")
 

@@ -95,6 +95,10 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
     ExportToDatabaseModule,
 )
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 OFFICIAL30_NATIVE_REFS = Path(__file__).parents[2] / "benchmark" / "native_refs"
 OFFICIAL30_DATABASE_PIPELINES = (
@@ -155,7 +159,7 @@ def _projection_builder() -> CellProfilerAnalystProjectionBuilder:
 
 
 def _export_context() -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={
             0: CompiledStepPlan(
                 step_index=0,
@@ -165,7 +169,7 @@ def _export_context() -> ProcessingContext:
             )
         }
     )
-    context.dataset_root = Path("/")
+    context = with_facts(context, dataset_root=Path("/"))
     return context
 
 

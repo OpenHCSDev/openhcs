@@ -20,6 +20,9 @@ from openhcs.runtime.zmq_compilation import (
     ZMQCompilationResult,
     ZMQCompileArtifactRecord,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 
 class _StrippedStepShell:
@@ -136,7 +139,7 @@ def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
 
 
 def _compiled_context(axis_id: str) -> ProcessingContext:
-    return ProcessingContext(
+    return executing_context(
         axis_id=axis_id,
         step_plans={
             1: CompiledStepPlan(

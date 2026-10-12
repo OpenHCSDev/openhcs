@@ -38,7 +38,7 @@ from openhcs.core.source_tile_geometry import SourceTileLayout
 from openhcs.core.axes import Axis, AxisFamily, ColourAxis
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 
 
@@ -218,7 +218,7 @@ class AtomicMetadataWriter:
     def reconcile_completed_dataset(
         self,
         metadata_path: str | Path,
-        target_contexts: Mapping[OpenHCSMetadataTarget, ProcessingContext],
+        target_contexts: Mapping[OpenHCSMetadataTarget, ExecutingContext],
         *,
         produced_entries_by_target: Mapping[
             OpenHCSMetadataTarget, VirtualWorkspaceSourceProjectionEntries

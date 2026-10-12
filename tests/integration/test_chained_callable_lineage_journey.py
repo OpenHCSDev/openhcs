@@ -23,7 +23,9 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.function_patterns import MainFlowInputProjection
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.runtime_object_labels import object_label_dense_array
@@ -151,10 +153,10 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         image_plan, labels_plan, rows_plan = invocation.artifact_output_plans
         records = []
         for plan in (image_plan, labels_plan, rows_plan):
-            [record] = context.runtime_value_store.find_matching(
+            [record] = results.executed_contexts["A01"].runtime_value_store.find_matching(
                 RuntimeArtifactQuery.from_output_plan(
                     plan, axis_id="A01", backend="memory",
-                    group_key=plan.group_scope().select_runtime_key(
+                    group_key=plan.group_scope.select_runtime_key(
                         invocation.key.group_key
                     ),
                 )
