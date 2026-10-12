@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -166,11 +167,12 @@ IN_PROCESS = GlobalPipelineConfig(num_workers=1, use_threading=True)
     ids=["in-process", "threads", "worker-processes"],
 )
 def test_a_numpy_jax_numpy_run_returns_the_conversions_its_plan_states(
-    tmp_path, execution
+    tmp_path, execution, caplog
 ):
     observer_before = ConversionObserver.current
 
-    planned, observed = _planned_and_observed(tmp_path, "numpy_jax_numpy", execution)
+    with caplog.at_level(logging.INFO, logger="openhcs.core.orchestrator.bundle_execution"):
+        planned, observed = _planned_and_observed(tmp_path, "numpy_jax_numpy", execution)
 
     assert _planned_keys(planned) == {
         (1, ("numpy", "host", "jax", "host", "host copy")),
@@ -181,6 +183,14 @@ def test_a_numpy_jax_numpy_run_returns_the_conversions_its_plan_states(
     ), format_planned_and_observed(planned, observed)
     assert ConversionObserver.current is observer_before
     assert not ConversionObserver.current.wants_records
+    [logged] = [
+        record.getMessage()
+        for record in caplog.records
+        if record.getMessage().startswith("Array conversions of this run")
+    ]
+    assert logged.splitlines()[1:] == format_planned_and_observed(
+        planned, observed
+    ).splitlines()
 
 
 def _cuda_device_present() -> bool:
