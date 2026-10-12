@@ -1,11 +1,13 @@
-"""Family registries and global configs do not carry one test's state into the next."""
+"""Family registries and ObjectState do not carry one test's state into the next."""
 
 from abc import ABC
 
 from metaclass_registry import AutoRegisterMeta
-from objectstate.global_config import (
-    get_current_global_config,
-    set_global_config_for_editing,
+from objectstate import (
+    ObjectState,
+    ObjectStateRegistry,
+    get_saved_global_config,
+    set_global_config,
 )
 
 from openhcs.core.config import GlobalPipelineConfig
@@ -55,12 +57,18 @@ def test_restore_removes_declared_members_and_returns_removed_and_replaced_ones(
     assert not {"declared_in_test", "no_module", "other"} & set(_Family.__registry__)
 
 
-def test_a_global_config_set_by_a_test_is_put_back_after_it():
-    """Runs the fixture around a body that sets the config, as pytest does around a test."""
-    around_a_test = conftest.restored_global_configs.__wrapped__()
-    before = get_current_global_config(GlobalPipelineConfig)
+def test_object_state_changed_by_a_test_is_put_back_after_it():
+    """Runs the fixture around a body that stores a config and registers the
+    global state, as pytest does around a test."""
+    around_a_test = conftest.restored_object_states.__wrapped__()
+    stored_before = get_saved_global_config(GlobalPipelineConfig)
+    state_before = ObjectStateRegistry.global_config_state(GlobalPipelineConfig)
     next(around_a_test)
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
-    assert get_current_global_config(GlobalPipelineConfig) is not before
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
+    assert get_saved_global_config(GlobalPipelineConfig) is not stored_before
+    state = ObjectState(object_instance=GlobalPipelineConfig(), scope_id="")
+    ObjectStateRegistry.register(state, _skip_snapshot=True)
+    assert ObjectStateRegistry.global_config_state(GlobalPipelineConfig) is state
     next(around_a_test, None)
-    assert get_current_global_config(GlobalPipelineConfig) is before
+    assert ObjectStateRegistry.global_config_state(GlobalPipelineConfig) is state_before
+    assert get_saved_global_config(GlobalPipelineConfig) is stored_before
