@@ -72,6 +72,7 @@ def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
+    from openhcs.utils.declared_requirements import DeclaredRequirements
 
     package_name = "native_catalog_distribution_probe"
     package = tmp_path / package_name
@@ -88,8 +89,10 @@ def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "1")
     monkeypatch.setattr(
         openhcs_registry,
-        "_openhcs_requirements",
-        lambda: (Requirement(requirement),),
+        "declared_requirements",
+        lambda: DeclaredRequirements(
+            requirements=(Requirement(requirement),), extras=()
+        ),
     )
     registry = OpenHCSRegistry()
     registry.MODULES_TO_SCAN = [f"{package_name}.processing"]
@@ -97,7 +100,7 @@ def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here
     if outcome == "excluded":
         assert registry.get_modules_to_scan() == []
         assert registry.cache_discovery_context()[
-            "distributions_excluded_by_package_metadata"
+            "distributions_excluded_by_declared_requirements"
         ] == ["absent-catalog-probe"]
     elif outcome == "broken":
         with pytest.raises(ModuleNotFoundError, match="absent_catalog_probe"):
@@ -125,7 +128,7 @@ def test_basicpy_catalog_module_follows_the_package_basicpy_marker(
     import packaging.markers
 
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
-        _module_distributions_excluded_by_package_metadata,
+        _module_distributions_excluded_by_declared_requirements,
     )
 
     environment = packaging.markers.default_environment()
@@ -149,7 +152,7 @@ def test_basicpy_catalog_module_follows_the_package_basicpy_marker(
         importlib.metadata, "distribution", distribution_without_basicpy
     )
 
-    assert _module_distributions_excluded_by_package_metadata(
+    assert _module_distributions_excluded_by_declared_requirements(
         "openhcs.processing.backends.enhance.basic_processor_jax"
     ) == (("openhcs-basicpy",) if excluded else ())
 
@@ -1001,22 +1004,23 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
     assert {"openhcs", "skimage"}.issubset(result["library_roots"])
 
 
-def test_installed_requirements_are_parsed_once_per_process(monkeypatch):
-    """Every module's distribution question reads one parse of the metadata."""
+def test_declared_requirements_are_parsed_once_per_process(monkeypatch):
+    """Every module's distribution question reads one parse of the declaration."""
     from openhcs.processing.backends.lib_registry import openhcs_registry
+    from openhcs.utils import declared_requirements as owner
 
     reads = []
-    real_requires = openhcs_registry.importlib.metadata.requires
+    real_of = owner.RequirementsDeclaration.of
 
-    def counted(name):
-        reads.append(name)
-        return real_requires(name)
+    def counted(package_directory):
+        reads.append(package_directory.name)
+        return real_of(package_directory)
 
-    openhcs_registry._openhcs_requirements.cache_clear()
-    monkeypatch.setattr(openhcs_registry.importlib.metadata, "requires", counted)
+    owner.declared_requirements.cache_clear()
+    monkeypatch.setattr(owner.RequirementsDeclaration, "of", staticmethod(counted))
     try:
         for _ in range(3):
             openhcs_registry._catalog_policy_context()
         assert reads == ["openhcs"]
     finally:
-        openhcs_registry._openhcs_requirements.cache_clear()
+        owner.declared_requirements.cache_clear()

@@ -12,12 +12,10 @@ from __future__ import annotations
 
 import inspect
 import json
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from packaging.requirements import Requirement
 
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.pipeline.funcstep_contract_validator import (
@@ -548,29 +546,6 @@ _BLOCKS = (
 _REQUIRING_A_DISTRIBUTION = {RunCellposeModule: "cellpose", RunStarDistModule: "stardist"}
 
 blocks = pytest.mark.parametrize("block", _BLOCKS, ids=lambda block: block.name)
-
-
-@pytest.fixture(autouse=True)
-def package_metadata_of_this_source_tree(monkeypatch) -> None:
-    """Read OpenHCS's extras from ``pyproject.toml``.
-
-    The installed metadata is what the environment was built from, which can
-    predate an extra this source tree declares.
-    """
-
-    project = tomllib.loads((_REPOSITORY / "pyproject.toml").read_text())["project"]
-    extras = project["optional-dependencies"]
-    requirements = tuple(
-        Requirement(
-            f"{name}; ({marker}) and extra == '{extra}'"
-            if marker
-            else f"{name}; extra == '{extra}'"
-        )
-        for extra, entries in extras.items()
-        for name, _separator, marker in (entry.partition(";") for entry in entries)
-    )
-    monkeypatch.setattr(openhcs_registry, "_openhcs_requirements", lambda: requirements)
-    monkeypatch.setattr(openhcs_registry, "_openhcs_extras", lambda: tuple(extras))
 
 
 @blocks

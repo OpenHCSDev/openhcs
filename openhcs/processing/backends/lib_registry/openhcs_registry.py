@@ -24,7 +24,6 @@ from weakref import WeakKeyDictionary
 
 import numpy as np
 from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
-from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
@@ -42,6 +41,7 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
     ProcessingContract,
 )
+from openhcs.utils.declared_requirements import declared_requirements
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionCanonicalLookup,
@@ -349,20 +349,7 @@ def _module_declares_allowed_memory_type(
 _REQUIRED_DISTRIBUTIONS_NAME = "REQUIRED_DISTRIBUTIONS"
 
 
-@lru_cache(maxsize=1)
-def _openhcs_requirements() -> tuple[Requirement, ...]:
-    """Return the installed OpenHCS distribution's declared requirements.
-
-    Installed metadata is fixed for the life of the process; parsing it once
-    serves every module the catalog asks about.
-    """
-
-    return tuple(
-        Requirement(value) for value in importlib.metadata.requires("openhcs") or ()
-    )
-
-
-def _distribution_excluded_by_package_metadata(name: str) -> bool:
+def _distribution_excluded_by_declared_requirements(name: str) -> bool:
     """Return whether OpenHCS's own requirement markers leave ``name`` out here.
 
     A distribution is legitimately absent only when no OpenHCS requirement for
@@ -374,7 +361,7 @@ def _distribution_excluded_by_package_metadata(name: str) -> bool:
     canonical = canonicalize_name(name)
     requirements = tuple(
         requirement
-        for requirement in _openhcs_requirements()
+        for requirement in declared_requirements().requirements
         if canonicalize_name(requirement.name) == canonical
     )
     if not requirements:
@@ -396,13 +383,6 @@ def _distribution_installed(name: str) -> bool:
     except importlib.metadata.PackageNotFoundError:
         return False
     return True
-
-
-@lru_cache(maxsize=1)
-def _openhcs_extras() -> tuple[str, ...]:
-    """Return the extras the installed OpenHCS distribution declares."""
-
-    return tuple(importlib.metadata.metadata("openhcs").get_all("Provides-Extra") or ())
 
 
 def distributions_not_installed(func: Callable[..., object]) -> tuple[str, ...]:
@@ -431,7 +411,7 @@ def install_command_for_distributions(names: tuple[str, ...]) -> str:
     distribution no extra brings is installed by its own name.
     """
 
-    requirements = _openhcs_requirements()
+    requirements = declared_requirements().requirements
 
     def brought_by(extra: str) -> tuple[str, ...]:
         return tuple(
@@ -447,7 +427,7 @@ def install_command_for_distributions(names: tuple[str, ...]) -> str:
     for name in names:
         providing = tuple(
             extra
-            for extra in _openhcs_extras()
+            for extra in declared_requirements().extras
             if canonicalize_name(name) in brought_by(extra)
         )
         if providing:
@@ -504,7 +484,7 @@ def _module_in_this_catalog(
             "Skipping OpenHCS module %s - no allowed memory decorators", module_name
         )
         return False
-    excluded = _module_distributions_excluded_by_package_metadata(module_name)
+    excluded = _module_distributions_excluded_by_declared_requirements(module_name)
     if excluded:
         logger.info(
             "Skipping OpenHCS module %s - package requirements exclude %s here",
@@ -519,17 +499,17 @@ def _catalog_policy_context() -> dict[str, Any]:
 
     return {
         "allowed_memory_types": sorted(_allowed_openhcs_memory_types()),
-        "distributions_excluded_by_package_metadata": sorted(
+        "distributions_excluded_by_declared_requirements": sorted(
             {
                 canonicalize_name(requirement.name)
-                for requirement in _openhcs_requirements()
-                if _distribution_excluded_by_package_metadata(requirement.name)
+                for requirement in declared_requirements().requirements
+                if _distribution_excluded_by_declared_requirements(requirement.name)
             }
         ),
     }
 
 
-def _module_distributions_excluded_by_package_metadata(
+def _module_distributions_excluded_by_declared_requirements(
     module_name: str,
 ) -> tuple[str, ...]:
     """Return the module's declared distributions this installation excludes."""
@@ -540,7 +520,7 @@ def _module_distributions_excluded_by_package_metadata(
     return tuple(
         name
         for name in _source_required_distributions(*module_source)
-        if _distribution_excluded_by_package_metadata(name)
+        if _distribution_excluded_by_declared_requirements(name)
     )
 
 
@@ -836,7 +816,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             module_name: tuple(
                 func
                 for func in module.openhcs_registry_functions()
-                if not _module_distributions_excluded_by_package_metadata(
+                if not _module_distributions_excluded_by_declared_requirements(
                     inspect.unwrap(func).__module__
                 )
             )

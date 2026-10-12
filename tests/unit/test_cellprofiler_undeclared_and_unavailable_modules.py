@@ -46,6 +46,7 @@ from openhcs.processing.backends.cellprofiler.undeclared_module import (
     undeclared_module,
 )
 from openhcs.processing.backends.lib_registry import openhcs_registry
+from openhcs.utils.declared_requirements import DeclaredRequirements
 from tests.context_support import executing_context
 
 _SOURCE = """CellProfiler Pipeline: https://cellprofiler.org
@@ -336,15 +337,15 @@ def test_declared_pipeline_takes_no_undeclared_path(monkeypatch) -> None:
 def _absent_distribution_requirements(monkeypatch) -> None:
     monkeypatch.setattr(
         openhcs_registry,
-        "_openhcs_requirements",
-        lambda: (
-            Requirement('absent-probe>=1; extra == "probe"'),
-            Requirement('absent-probe>=1; extra == "everything"'),
-            Requirement('numpy>=1; extra == "everything"'),
+        "declared_requirements",
+        lambda: DeclaredRequirements(
+            requirements=(
+                Requirement('absent-probe>=1; extra == "probe"'),
+                Requirement('absent-probe>=1; extra == "everything"'),
+                Requirement('numpy>=1; extra == "everything"'),
+            ),
+            extras=("everything", "probe"),
         ),
-    )
-    monkeypatch.setattr(
-        openhcs_registry, "_openhcs_extras", lambda: ("everything", "probe")
     )
 
 
@@ -440,8 +441,10 @@ def test_catalog_module_cannot_hand_over_a_function_its_file_excludes(
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "1")
     monkeypatch.setattr(
         openhcs_registry,
-        "_openhcs_requirements",
-        lambda: (Requirement(requirement),),
+        "declared_requirements",
+        lambda: DeclaredRequirements(
+            requirements=(Requirement(requirement),), extras=()
+        ),
     )
     registry = openhcs_registry.OpenHCSRegistry()
     registry.MODULES_TO_SCAN = [package_name, f"{package_name}.implementation"]
