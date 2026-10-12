@@ -55,11 +55,8 @@ class SurveyDialect(MeasurementDialect):
 
 @pytest.fixture
 def survey() -> Iterator[type[Survey]]:
-    Survey.activate()
-    try:
+    with Survey.activated():
         yield Survey
-    finally:
-        Microscopy.activate()
 
 
 def test_a_family_without_its_own_dialect_writes_kernel_names() -> None:

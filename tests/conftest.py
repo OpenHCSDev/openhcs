@@ -187,6 +187,15 @@ def restored_family_registries(module_family_members) -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
+def restored_active_axis_family() -> Iterator[None]:
+    """The axis family active after a test is the one that was active before it."""
+    from openhcs.core.axes import AxisFamily
+
+    with AxisFamily.active().activated():
+        yield
+
+
+@pytest.fixture(autouse=True)
 def restored_object_states() -> Iterator[None]:
     """After a test, ObjectState holds what it held before it.
 

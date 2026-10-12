@@ -15,7 +15,8 @@ from __future__ import annotations
 import importlib
 import os
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import ClassVar, TypeGuard
 
@@ -526,6 +527,27 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
             raise TypeError("Activate a declared family, not the AxisFamily base.")
         AxisFamily._active = cls
         os.environ[ACTIVE_FAMILY_VARIABLE] = cls.family_name
+
+    @classmethod
+    @contextmanager
+    def activated(cls) -> Iterator[None]:
+        """Make this family active inside the block.
+
+        Afterwards the process is as it was before the block: the family that
+        was active then is active again, and children inherit that one.
+        """
+
+        family_before = AxisFamily._active
+        inherited_before = os.environ.get(ACTIVE_FAMILY_VARIABLE)
+        cls.activate()
+        try:
+            yield
+        finally:
+            AxisFamily._active = family_before
+            if inherited_before is None:
+                os.environ.pop(ACTIVE_FAMILY_VARIABLE, None)
+            else:
+                os.environ[ACTIVE_FAMILY_VARIABLE] = inherited_before
 
     @classmethod
     def activate_entry_point(cls) -> None:

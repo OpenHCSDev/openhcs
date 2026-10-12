@@ -43,11 +43,8 @@ from tests.unit.remote_sensing_witness_domain import RemoteSensing
 
 @pytest.fixture
 def remote_sensing() -> Iterator[type[RemoteSensing]]:
-    RemoteSensing.activate()
-    try:
+    with RemoteSensing.activated():
         yield RemoteSensing
-    finally:
-        Microscopy.activate()
 
 
 def test_child_processes_serve_the_parent_family(remote_sensing) -> None:
@@ -142,29 +139,29 @@ def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> Non
     napari_payload = _streamed_display_config(NapariDisplayConfig())
 
     # The viewer process runs with its own (microscopy) family active.
-    Microscopy.activate()
-    fiji = ViewerMappingDisplayConfigInput(fiji_payload).layout()
-    assert fiji.declared_axes.names() == ("tile", "band", "date", "scene")
-    assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
-    assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
-    assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
-    assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
-        lut="Fire"
-    )
+    with Microscopy.activated():
+        fiji = ViewerMappingDisplayConfigInput(fiji_payload).layout()
+        assert fiji.declared_axes.names() == ("tile", "band", "date", "scene")
+        assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
+        assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
+        assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
+        assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
+            lut="Fire"
+        )
 
-    napari = ViewerMappingDisplayConfigInput(napari_payload).layout()
-    assert napari.components_in(NapariSlots.Stack) == ("tile", "band", "date", "scene")
-    assert napari.names_with_role(PartitionAxis) == ("scene",)
-    assert napari.names_with_role(StackAxis) == ()
+        napari = ViewerMappingDisplayConfigInput(napari_payload).layout()
+        assert napari.components_in(NapariSlots.Stack) == ("tile", "band", "date", "scene")
+        assert napari.names_with_role(PartitionAxis) == ("scene",)
+        assert napari.names_with_role(StackAxis) == ()
 
-    names = ViewerComponentNameMetadata.from_wire_mapping(
-        {"band": {"3": "NIR"}, "scene": {"S07": "Lake"}},
-        declared_axes=fiji.declared_axes,
-        context="remote sensing names",
-    )
-    assert names.axis_label("band", 3) == "Band 3: NIR"
-    assert names.axis_label("date", 14) == "Date 14"
-    assert names.axis_label("scene", "S07") == "Lake"
+        names = ViewerComponentNameMetadata.from_wire_mapping(
+            {"band": {"3": "NIR"}, "scene": {"S07": "Lake"}},
+            declared_axes=fiji.declared_axes,
+            context="remote sensing names",
+        )
+        assert names.axis_label("band", 3) == "Band 3: NIR"
+        assert names.axis_label("date", 14) == "Date 14"
+        assert names.axis_label("scene", "S07") == "Lake"
 
 
 def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
@@ -410,11 +407,8 @@ class Telemetry(AxisFamily):
 
 @pytest.fixture
 def telemetry() -> Iterator[type[Telemetry]]:
-    Telemetry.activate()
-    try:
+    with Telemetry.activated():
         yield Telemetry
-    finally:
-        Microscopy.activate()
 
 
 def _signal(offset: float):

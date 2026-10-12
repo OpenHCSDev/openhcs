@@ -105,12 +105,9 @@ def synchronous_threads(monkeypatch) -> None:
 def remote_sensing() -> Iterator[type[RemoteSensing]]:
     # Config defaults name the active family's axes, so the global config other
     # tests left behind is rebuilt under each family.
-    RemoteSensing.activate()
-    _reset_global_config()
-    try:
+    with RemoteSensing.activated():
+        _reset_global_config()
         yield RemoteSensing
-    finally:
-        Microscopy.activate()
 
 
 def _reset_global_config() -> None:
