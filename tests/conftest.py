@@ -23,14 +23,13 @@ use_private_socket_root()
 import psutil
 import pytest
 from metaclass_registry.testing import restored_registry
-from zmqruntime.messages import AckReturnRoute, ProcessIdentity
-
-from tests import family_registries
-
 from polystore.imagej_distribution import (
     FijiArchiveDistribution,
     ImageJArchiveDownloadPolicy,
 )
+from zmqruntime.messages import AckReturnRoute, ProcessIdentity
+
+from tests import family_registries
 
 # Configure before test collection imports any ImageJ runtime. Tests may change
 # XDG_CACHE_HOME later; the immutable bundle must not follow those run caches.
