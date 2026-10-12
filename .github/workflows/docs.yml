@@ -1,9 +1,14 @@
 name: Documentation
 
+# Release gate, like integration-tests.yml: on demand, on release tags and
+# nightly against main; not on pull requests or pushes to main.
 on:
-  pull_request:
   push:
-    branches: [main]
+    tags:
+      - "v*"
+  schedule:
+    - cron: "53 2 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read

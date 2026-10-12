@@ -193,6 +193,93 @@ def _valid_sha256(value: object) -> bool:
     )
 
 
+class AuthoritySymbolError(ValueError):
+    """A pinned symbol cannot be read from its authority file."""
+
+
+@dataclass(frozen=True)
+class AuthorityPin:
+    """One authority of an audit entry, as written in the audit file."""
+
+    path: object
+    sha256: object
+    role: object
+    symbols: object = None
+
+
+class _DefinitionsNamed(ast.NodeVisitor):
+    """Collect the statements of one body that define a given name."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.found: list[ast.stmt] = []
+        self.class_bodies: list[list[ast.stmt]] = []
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """Do not descend: only the statements handed to ``visit`` count."""
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+            self.class_bodies.append(node.body)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        if node.name == self.name:
+            self.found.append(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        if any(ast.unparse(target) == self.name for target in node.targets):
+            self.found.append(node)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        if ast.unparse(node.target) == self.name:
+            self.found.append(node)
+
+
+def authority_digest_of(authority_path: Path, symbols: list[str] | None = None) -> str:
+    """Return the digest an audit pins for one authority.
+
+    Without ``symbols`` the whole file is pinned. With ``symbols`` (dotted
+    names such as ``Compiler.compile`` in a Python file) only the source text
+    of those definitions is pinned, decorators included, so edits elsewhere in
+    the file and line shifts leave the pin valid.
+    """
+    content = authority_path.read_bytes()
+    if not symbols:
+        return hashlib.sha256(content).hexdigest()
+    text = content.decode("utf-8")
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as exc:
+        raise AuthoritySymbolError(f"cannot parse authority: {exc.msg}") from exc
+    lines = text.splitlines(keepends=True)
+    digest = hashlib.sha256()
+    for symbol in sorted(symbols):
+        bodies = [tree.body]
+        nodes: list[ast.stmt] = []
+        for part in symbol.split("."):
+            definitions = _DefinitionsNamed(part)
+            for body in bodies:
+                for statement in body:
+                    definitions.visit(statement)
+            nodes, bodies = definitions.found, definitions.class_bodies
+        if not nodes:
+            raise AuthoritySymbolError(f"symbol is not defined: {symbol}")
+        digest.update(symbol.encode("utf-8") + b"\0")
+        for node in nodes:
+            first = min(
+                [node.lineno]
+                + [d.lineno for d in getattr(node, "decorator_list", [])]
+            )
+            segment = "".join(lines[first - 1 : node.end_lineno])
+            digest.update(textwrap.dedent(segment).encode("utf-8") + b"\0")
+    return digest.hexdigest()
+
+
 def validate_documentation_audit(
     doc_root: Path,
     audit_root: Path,
@@ -343,7 +430,9 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                if set(authority) != {"path", "sha256", "role"}:
+                try:
+                    pin = AuthorityPin(**authority)
+                except TypeError:
                     findings.append(
                         Finding(
                             audit_file,
@@ -352,9 +441,9 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                authority_relative = authority["path"]
-                authority_role = authority["role"]
-                authority_digest = authority["sha256"]
+                authority_relative = pin.path
+                authority_role = pin.role
+                authority_digest = pin.sha256
                 if (
                     not isinstance(authority_relative, str)
                     or not authority_relative.strip()
@@ -428,18 +517,36 @@ def validate_documentation_audit(
                         )
                     )
                     continue
-                actual_authority_digest = hashlib.sha256(
-                    authority_path.read_bytes()
-                ).hexdigest()
-                if authority_digest != actual_authority_digest:
+                authority_symbols = pin.symbols
+                if authority_symbols is not None and (
+                    not _nonempty_string_list(authority_symbols)
+                    or authority_path.suffix != ".py"
+                ):
                     findings.append(
                         Finding(
                             audit_file,
                             1,
-                            f"{source_path}: authority changed after review: "
-                            f"{authority_relative}",
+                            f"{source_path}: authority symbols must be a non-empty "
+                            f"list of names in a Python file: {authority_relative}",
                         )
                     )
+                else:
+                    try:
+                        unchanged = authority_digest == authority_digest_of(
+                            authority_path, authority_symbols
+                        )
+                        reason = ""
+                    except AuthoritySymbolError as exc:
+                        unchanged, reason = False, f": {exc}"
+                    if not unchanged:
+                        findings.append(
+                            Finding(
+                                audit_file,
+                                1,
+                                f"{source_path}: authority changed after review: "
+                                f"{authority_relative}{reason}",
+                            )
+                        )
                 if not authority_relative.startswith("docs/source/"):
                     has_non_documentation_authority = True
             if not has_non_documentation_authority:
@@ -794,7 +901,20 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_DOC_ROOT,
         help="active documentation file or root (default: docs/source)",
     )
+    parser.add_argument(
+        "--authority-digest",
+        nargs="+",
+        metavar=("PATH", "SYMBOL"),
+        help=(
+            "print the sha256 an audit entry pins for an authority file, "
+            "scoped to the given symbols when any are named, and exit"
+        ),
+    )
     args = parser.parse_args(argv)
+    if args.authority_digest:
+        authority_file, *symbols = args.authority_digest
+        print(authority_digest_of(Path(authority_file), symbols))
+        return 0
     doc_root = args.doc_root.resolve()
     if not doc_root.exists() or not (doc_root.is_dir() or doc_root.is_file()):
         parser.error(f"documentation target does not exist: {doc_root}")
