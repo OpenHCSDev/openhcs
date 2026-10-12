@@ -196,3 +196,20 @@ Caller clean-up this enables, not done in this pin (see ObjectState #56):
 `session.py:468`, `:1030`, `:1055`; `pyqt_gui/app.py:235-249`;
 `pyqt_gui/services/window_handlers.py:100`; `pyqt_gui/windows/dual_editor_tabs.py:52`;
 pyqt-reactive `config_window.py:182`, `:214-226`.
+
+## One assertion changed
+
+`test_adopting_a_global_config_preserves_a_dirty_dataset_override` asserted that after
+`Session.adopt_global_config(config)` the dataset's saved resolved `num_workers` was
+still the old global value (1) and became 7 only at `global_state.mark_saved()`.
+`adopt_global_config` stores `config` as both the live and the saved global config
+("A saved global config: every dataset now resolves against it"), so the old value was a
+stale read: before 3.0.3 no state was told that the saved store had been replaced. The
+assertion is now 7. The other assertions (override kept at 3, dirty, the emitted event,
+the state after `mark_saved`) are unchanged and pass.
+
+## Gates on `a2c704d5e` (ObjectState submodule `01f3a5d` at start and end)
+
+- Full suite: complete (11,696 of 11,719 reported, no crash); 5 ids outside the known
+  list; 4 pass alone on the branch; the fifth is the test above.
+- Smoke rc=0 (GUI included). Guardrails rc=0. Official30 parity 30/30.
