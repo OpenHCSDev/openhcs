@@ -6,6 +6,8 @@ import ast
 from collections.abc import Sequence
 from pathlib import Path
 
+from polystore.file_content import FileContent, HashedFileContent
+
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -35,6 +37,10 @@ class FilesystemFileManager(FileManagerLike):
     def is_dir(self, path: str | Path, backend: str) -> bool:
         del backend
         return Path(path).is_dir()
+
+    def file_content(self, file_path: str | Path, backend: str) -> FileContent:
+        del backend
+        return HashedFileContent.of_physical_file(Path(file_path))
 
     def load(self, file_path: str | Path, backend: str, **kwargs: object) -> object:
         raise NotImplementedError

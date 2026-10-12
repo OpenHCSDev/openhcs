@@ -84,6 +84,7 @@ from openhcs.core.progress.types import (
 from tests.context_support import (
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 PROGRESS_CONTEXT = ProgressExecutionContext(
     execution_id="exec",
@@ -248,6 +249,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         transport_contexts={"A01": context},
         worker_assignments={},
         runtime_environment=runtime_environment,
+        run_declaration=minimal_run_declaration(),
     )
     request = BundleExecutionRequest(
         execution_id="exec",
@@ -315,6 +317,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         _state=None,
         is_initialized=lambda: True,
         microscope_handler=object(),
+        filemanager=object(),
     )
     return execute_bundle_request(orchestrator, request)
 
@@ -385,6 +388,7 @@ def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
         transport_contexts={"A01": context},
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=runtime_environment,
+        run_declaration=minimal_run_declaration(),
     )
     request = BundleExecutionRequest(
         execution_id="exec",
@@ -422,6 +426,7 @@ def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
         transport_contexts={"A01": context},
         worker_assignments=None,
         runtime_environment=runtime_environment,
+        run_declaration=minimal_run_declaration(),
     )
     request = BundleExecutionRequest(
         execution_id="exec",
@@ -539,6 +544,7 @@ def test_resource_modes_select_prepared_runtime_or_serial_transport_contexts():
             use_threading=False,
             start_method=MultiprocessingStartMethod.SPAWN,
         ),
+        run_declaration=minimal_run_declaration(),
     )
     cancellation = ExecutionCancellationSignal()
     resources = (
@@ -1026,6 +1032,7 @@ def test_fork_inherited_runner_executes_single_lane_without_self_merge(monkeypat
                 use_threading=False,
                 start_method=MultiprocessingStartMethod.FORK,
             ),
+            run_declaration=minimal_run_declaration(),
         )
     )
     try:
@@ -1335,7 +1342,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     monkeypatch.setattr(
         compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_dataset",
-        lambda _contexts, *, runtime_observations: events.append("metadata"),
+        lambda _contexts, *, runtime_observations, run_record: events.append("metadata"),
     )
     response = ViewerControlResponse(
         payload={

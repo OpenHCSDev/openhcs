@@ -11,6 +11,7 @@ from typing import get_type_hints
 
 import pytest
 from objectstate import ObjectState, ObjectStateRegistry
+from polystore.file_content import FileContent, UnhashedFileContent
 from python_introspect import Enableable
 
 from tests.artifact_graphs import admitted_graph
@@ -69,6 +70,12 @@ class RecordingFileManager(FileManagerLike):
         target = Path(path)
         self.validation_calls.append(("is_dir", target, backend))
         return target in self.directories
+
+    def file_content(self, file_path: str | Path, backend: str) -> FileContent:
+        del backend
+        return UnhashedFileContent(
+            f"{type(self).__name__} names {Path(file_path)} without holding its bytes."
+        )
 
     def load(self, file_path: str | Path, backend: str, **kwargs: object) -> object:
         raise NotImplementedError

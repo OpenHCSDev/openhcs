@@ -56,6 +56,7 @@ from openhcs.core.source_projection import (
     SourceProjection,
     SourceProjectionMetadataSerializer,
 )
+from openhcs.core.run_record import ProducedFiles, RunRecord
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
@@ -122,6 +123,9 @@ def finalize_function_step_outputs(
         projection_entries = OpenHCSMetadataTarget.observe_for_step(
             context, plan, artifact_materializations=materializations
         )
+        producers = OpenHCSMetadataTarget.saved_path_producers(
+            context, plan, artifact_materializations=materializations
+        )
     else:
         _profile_finalization_phase(
             "finalize_memory_outputs",
@@ -150,11 +154,19 @@ def finalize_function_step_outputs(
             ),
             plan,
         )
+        producers = _profile_finalization_phase(
+            "finalize_saved_path_producers",
+            lambda: OpenHCSMetadataTarget.saved_path_producers(
+                context, plan, artifact_materializations=materializations
+            ),
+            plan,
+        )
     return replace(
         StepExecutionObservation.combine(
             item.observation(plan, context) for item in materializations
         ),
         source_projection_entries_by_target=projection_entries,
+        producer_by_saved_path=producers,
     )
 
 
@@ -1059,21 +1071,79 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         return MappingProxyType(observations)
 
     @classmethod
+    def saved_path_producers(
+        cls,
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        *,
+        artifact_materializations: tuple[MaterializedRuntimeArtifact, ...],
+    ) -> Mapping[Path, StreamProducerIdentity]:
+        """The producer identity of each file this step saved under a metadata document.
+
+        Both statements are the ones the viewer stream uses: a main-flow record
+        carries its own identity; a saved artifact's comes from its output plan.
+        """
+        producers: dict[Path, StreamProducerIdentity] = {}
+        for target in cls.for_execution(
+            context, plan, artifact_materializations=artifact_materializations
+        ):
+            if not cls.hosts_metadata_document(target.backend):
+                continue
+            for record in target.produced_records(context, plan):
+                producers[Path(record.path_under(target.output_dir))] = (
+                    record.producer_identity
+                )
+        artifact_target = plan.runtime_artifact_materialization
+        if artifact_target.has_persistent_target:
+            backend = artifact_target.require_persistent_backend()
+            if cls.hosts_metadata_document(backend):
+                for saved in artifact_materializations:
+                    producer = plan.producer_identity_for_artifact(
+                        saved.materialization.output_plan
+                    )
+                    for output in saved.outputs_for_backend(backend):
+                        producers[Path(output.path)] = producer
+        return MappingProxyType(producers)
+
+    @classmethod
     def finalize_completed_dataset(
         cls,
         compiled_contexts: Mapping[str, ExecutingContext],
         *,
         runtime_observations: Iterable[RuntimeExecutionObservation] = (),
+        run_record: RunRecord,
     ) -> None:
-        """Publish completed or partial saved outputs once at the receiving boundary."""
+        """Publish completed or partial saved outputs once at the receiving boundary.
 
+        Each output dataset's document also receives the run's record and the
+        producer of every file the run saved under that dataset root.
+        """
+
+        runtime_observations = tuple(runtime_observations)
         target_contexts: dict[OpenHCSMetadataTarget, ExecutingContext] = {}
+        declared_dataset_roots: set[Path] = set()
         for context in compiled_contexts.values():
             for plan in context.step_plans.values():
+                targets = cls.for_plan(plan)
+                declared_dataset_roots.update(
+                    Path(target.dataset_root) for target in targets
+                )
                 if not plan.create_openhcs_metadata:
                     continue
-                for target in cls.for_plan(plan):
+                for target in targets:
                     target_contexts.setdefault(target, context)
+        produced_files_by_document = {
+            METADATA_CONFIG.metadata_path(dataset_root): produced_files
+            for dataset_root, produced_files in ProducedFiles(
+                StepExecutionObservation.combine(
+                    context_observation.outputs
+                    for observation in runtime_observations
+                    for context_observation in observation.contexts
+                ).producer_by_saved_path
+            )
+            .by_dataset_root(declared_dataset_roots)
+            .items()
+        }
 
         produced_by_document: dict[Path, dict[OpenHCSMetadataTarget, list[VirtualWorkspaceSourceProjectionEntries]]] = {}
         for observation in runtime_observations:
@@ -1093,7 +1163,9 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             targets_by_document.setdefault(
                 METADATA_CONFIG.metadata_path(owner.dataset_root), {}
             )[owner] = context
-        for metadata_path in dict.fromkeys((*targets_by_document, *produced_by_document)):
+        for metadata_path in dict.fromkeys(
+            (*targets_by_document, *produced_by_document, *produced_files_by_document)
+        ):
             AtomicMetadataWriter().reconcile_completed_dataset(
                 metadata_path,
                 targets_by_document.get(metadata_path, {}),
@@ -1101,6 +1173,10 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                     target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
                     for target, entries in produced_by_document.get(metadata_path, {}).items()
                 },
+                produced_files=produced_files_by_document.get(
+                    metadata_path, ProducedFiles(MappingProxyType({}))
+                ),
+                run_record=run_record,
             )
 
 

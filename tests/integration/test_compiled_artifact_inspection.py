@@ -69,6 +69,7 @@ from openhcs.core.progress.types import (
 from tests.context_support import (
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 @contextmanager
@@ -191,6 +192,7 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
         transport_contexts={"A01": context},
         worker_assignments={},
         runtime_environment=object(),
+        run_declaration=minimal_run_declaration(),
     )
     return (
         ZMQCompileArtifactRecord(

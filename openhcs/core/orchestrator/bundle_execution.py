@@ -84,6 +84,7 @@ from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
 )
+from openhcs.core.run_record import RunRecord
 from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataTarget,
 )
@@ -251,6 +252,13 @@ def execute_bundle_request(
             f"with max_workers={validated.actual_max_workers}."
         )
 
+        # Before any worker exists: each declared input file is hashed once,
+        # and the hash is of the bytes this run reads.
+        run_record = RunRecord.at_run_start(
+            request.execution_bundle,
+            filemanager=orchestrator.filemanager,
+            backend=Backend.DISK.value,
+        )
         executor_resources = WorkerExecutorFactory(
             log_file_base=request.log_file_base,
             progress_queue=validated.progress_queue,
@@ -340,6 +348,7 @@ def execute_bundle_request(
                         executing_contexts
                     ),
                 ),
+                run_record=run_record,
             )
         if execution_results.is_success():
             viewer_states_by_port = settle_viewer_state(
@@ -644,6 +653,13 @@ def execute_dataset_scoped_steps(
                     StepExecutionObservation(
                         materialized_locations_by_address=MappingProxyType({}),
                         source_projection_entries_by_target=projection_entries,
+                        producer_by_saved_path=(
+                            OpenHCSMetadataTarget.saved_path_producers(
+                                owner_context,
+                                owner_plan.require_function_execution_ready(),
+                                artifact_materializations=materializations,
+                            )
+                        ),
                     ),
                 )
             )

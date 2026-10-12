@@ -57,6 +57,13 @@ class FunctionStep(AbstractStep):
         step.func = func
         return step
 
+    def configuration_parameters(self) -> dict[str, object]:
+        """The function pattern is what the step computes, not its configuration."""
+
+        parameters = self.declaration_parameters()
+        del parameters["func"]
+        return parameters
+
     def occurrence_authorities(self) -> tuple[object, ...]:
         """Prefer callable-pattern authority before nominal step authority."""
 

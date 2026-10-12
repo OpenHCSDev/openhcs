@@ -38,6 +38,7 @@ from openhcs.core.source_tile_geometry import SourceTileLayout
 from openhcs.core.axes import Axis, AxisFamily, ColourAxis
 
 if TYPE_CHECKING:
+    from openhcs.core.run_record import ProducedFiles, RunRecord
     from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 
@@ -223,11 +224,22 @@ class AtomicMetadataWriter:
         produced_entries_by_target: Mapping[
             OpenHCSMetadataTarget, VirtualWorkspaceSourceProjectionEntries
         ] = MappingProxyType({}),
+        produced_files: ProducedFiles,
+        run_record: RunRecord,
     ) -> None:
-        """Admit and reconcile all targets from one locked plate document."""
-        if not produced_entries_by_target and not Path(metadata_path).is_file() and not any(
+        """Admit and reconcile all targets from one locked plate document.
+
+        The same transaction stores the run's record with the files the run
+        saved under this document's dataset root.
+        """
+        if (
+            not produced_entries_by_target
+            and not produced_files.producer_by_path
+            and not Path(metadata_path).is_file()
+            and not any(
             target.contains_outputs(context)
-            for target, context in target_contexts.items()
+                for target, context in target_contexts.items()
+            )
         ):
             return
 
@@ -268,6 +280,9 @@ class AtomicMetadataWriter:
                             VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
                         ),
                     )
+            produced_files.write_into(
+                data, dataset_root=Path(metadata_path).parent, record=run_record
+            )
             return data
 
         self._execute_update(metadata_path, update)

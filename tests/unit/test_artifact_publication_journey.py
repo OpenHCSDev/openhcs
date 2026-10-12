@@ -57,6 +57,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
+from tests.run_records import minimal_run_record
 
 
 @artifact_outputs(ArtifactSpec.output("objects", ObjectLabelsArtifactType))
@@ -177,7 +178,8 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path
         for index, step in enumerate(steps)
     ))
     OpenHCSMetadataTarget.finalize_completed_dataset(
-        contexts, runtime_observations=(observations,)
+        contexts, runtime_observations=(observations,),
+        run_record=minimal_run_record(),
     )
     saved = tmp_path / "source_out" / "converted"
     files = tuple(saved.glob("*.tif"))

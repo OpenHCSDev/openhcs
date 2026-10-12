@@ -12,7 +12,7 @@ Three stages, each with one owner:
   ``openhcs_metadata.json`` by its one writer and read back from there.
 
 Two read kinds are kept apart on purpose. ``pipeline_code`` and
-``effective_config_code`` are stored documents: executing them rebuilds the
+``global_config_code`` are stored documents: executing them rebuilds the
 run. ``configuration``, ``steps[].configuration`` and ``parameters`` are the
 resolved values, each with the declaration that supplied it.
 """
@@ -115,18 +115,22 @@ class InheritedFrom(ValueSource):
 
     kind: ClassVar[str] = "inherited"
     scope_id: str | None
-    source_type: type | None
+    source_type_name: str | None
+
+    @classmethod
+    def reported_by_object_state(
+        cls, scope_id: str | None, source_type: type | None
+    ) -> "InheritedFrom":
+        """Keep the class by name: the declaration is pickled with the compiled bundle."""
+        return cls(
+            scope_id,
+            None
+            if source_type is None
+            else f"{source_type.__module__}.{source_type.__qualname__}",
+        )
 
     def details(self) -> JsonRecord:
-        source_type = self.source_type
-        return {
-            "scope": self.scope_id,
-            "type": (
-                None
-                if source_type is None
-                else f"{source_type.__module__}.{source_type.__qualname__}"
-            ),
-        }
+        return {"scope": self.scope_id, "type": self.source_type_name}
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,20 +152,12 @@ class RecordedValue:
 ObjectStateProvenance = Mapping[str, tuple[str | None, type | None]]
 
 
-def _declared_names(configured: object) -> tuple[str, ...]:
-    """The names a configured object is constructed from."""
-    if is_dataclass(configured):
-        return tuple(item.name for item in fields(configured))
-    return tuple(
-        name
-        for name, parameter in inspect.signature(type(configured)).parameters.items()
-        if parameter.kind
-        not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
-    )
+def _field_values(configured: object) -> dict[str, object]:
+    return {item.name: getattr(configured, item.name) for item in fields(configured)}
 
 
 def resolved_values(
-    resolved: object,
+    values: Mapping[str, object],
     provenance: ObjectStateProvenance,
     *,
     scope_id: str | None,
@@ -169,18 +165,21 @@ def resolved_values(
 ) -> Iterator[RecordedValue]:
     """Every leaf value of a resolved object, with the source ObjectState reported.
 
-    ObjectState lists the fields it inherited; a field it does not list is held
-    by the object itself. A nested config that was inherited whole is one value.
+    ObjectState lists the paths it inherited; a path it does not list is held
+    by the object itself. A nested config the object leaves unset is inherited
+    whole and listed as one path, so the inherited check comes before descent.
     """
-    for name in _declared_names(resolved):
+    for name, value in values.items():
         path = f"{prefix}{name}"
-        value = getattr(resolved, name)
-        inherited = provenance.get(path)
-        if inherited is not None:
-            yield RecordedValue(path, python_expression(value), InheritedFrom(*inherited))
-        elif is_dataclass(value) and not isinstance(value, type) and fields(value):
+        if path in provenance:
+            yield RecordedValue(
+                path,
+                python_expression(value),
+                InheritedFrom.reported_by_object_state(*provenance[path]),
+            )
+        elif is_dataclass(value) and not isinstance(value, type):
             yield from resolved_values(
-                value, provenance, scope_id=scope_id, prefix=f"{path}."
+                _field_values(value), provenance, scope_id=scope_id, prefix=f"{path}."
             )
         else:
             yield RecordedValue(path, python_expression(value), SetOnObject(scope_id))
@@ -191,9 +190,10 @@ class RunDeclaration:
     """What the compiler alone knows about a run: documents and resolved configuration."""
 
     pipeline_code: str
-    effective_config_code: str
+    global_config_code: str
     configuration: tuple[RecordedValue, ...]
-    step_configurations: Mapping[int, tuple[RecordedValue, ...]] = MappingProxyType({})
+    step_configurations: tuple[tuple[RecordedValue, ...], ...] = ()
+    """Resolved values of each enabled step, by compiled step index."""
 
     @classmethod
     def before_step_resolution(
@@ -203,11 +203,17 @@ class RunDeclaration:
     ) -> "RunDeclaration":
         """Render the documents as submitted, before the compiler resolves the steps in place."""
         from objectstate import ObjectState, ObjectStateRegistry
+        from objectstate.global_config import get_saved_global_config
 
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.config_document import ConfigDocumentCodec
         from openhcs.core.pipeline_document import PipelineDocumentCodec
 
+        # With no saved global config set, ObjectState resolves against the
+        # declared defaults: the document a default-constructed config states.
+        saved_global_config = (
+            get_saved_global_config(GlobalPipelineConfig) or GlobalPipelineConfig()
+        )
         effective_config, provenance = ObjectState.resolve_saved_object(
             orchestrator.pipeline_config,
             ancestor_objects_with_scopes=(
@@ -222,14 +228,14 @@ class RunDeclaration:
                 ),
                 clean_mode=False,
             ),
-            effective_config_code=ConfigDocumentCodec.render(
-                effective_config,
+            global_config_code=ConfigDocumentCodec.render(
+                saved_global_config,
                 expected_config_type=GlobalPipelineConfig,
                 clean_mode=False,
             ),
             configuration=tuple(
                 resolved_values(
-                    effective_config,
+                    _field_values(effective_config),
                     provenance,
                     scope_id=str(orchestrator.dataset_root),
                 )
@@ -242,17 +248,15 @@ class RunDeclaration:
         """Add each enabled step's resolved values from the compiler's one resolution."""
         return replace(
             self,
-            step_configurations=MappingProxyType(
-                {
-                    index: tuple(
-                        resolved_values(
-                            step,
-                            pipeline.step_provenance[index],
-                            scope_id=pipeline.step_scope_ids[index],
-                        )
+            step_configurations=tuple(
+                tuple(
+                    resolved_values(
+                        step.configuration_parameters(),
+                        pipeline.step_provenance[index],
+                        scope_id=pipeline.step_scope_ids[index],
                     )
-                    for index, step in enumerate(pipeline.steps)
-                }
+                )
+                for index, step in enumerate(pipeline.steps)
             ),
         )
 
@@ -283,6 +287,11 @@ def _parameters(invocation: "CompiledFunctionInvocation", function_key: str) -> 
                     FunctionDefault(function_key),
                 )
             )
+    recorded.extend(
+        RecordedValue(name, python_expression(value), WrittenInPipeline())
+        for name, value in written.items()
+        if name not in contract.canonical_signature.parameters
+    )
     return [value.to_record() for value in recorded]
 
 
@@ -411,7 +420,7 @@ class RunRecord:
                     continue
                 steps[index], sources = _step_record(
                     plan,
-                    declaration.step_configurations.get(index, ()),
+                    declaration.step_configurations[index],
                     filemanager=filemanager,
                     backend=backend,
                 )
@@ -431,7 +440,7 @@ class RunRecord:
                     },
                 },
                 "pipeline_code": declaration.pipeline_code,
-                "effective_config_code": declaration.effective_config_code,
+                "global_config_code": declaration.global_config_code,
                 "configuration": [value.to_record() for value in declaration.configuration],
                 "steps": [steps[index] for index in sorted(steps)],
                 "custom_sources": custom_sources,
@@ -533,7 +542,7 @@ class RunRecord:
         return (
             PipelineDocumentCodec.from_source(self.content["pipeline_code"]),
             ConfigDocumentCodec.from_source(
-                self.content["effective_config_code"],
+                self.content["global_config_code"],
                 expected_config_type=GlobalPipelineConfig,
             ),
         )
@@ -564,6 +573,30 @@ class ProducedFiles:
 
     producer_by_path: Mapping[Path, StreamProducerIdentity]
 
+    def by_dataset_root(
+        self, dataset_roots: Iterable[Path]
+    ) -> Mapping[Path, "ProducedFiles"]:
+        """Split the files by the declared output dataset root each one lies under.
+
+        The roots are the ones the compiled plans declare. Where one declared
+        root contains another, a file belongs to the nearest.
+        """
+        nearest_first = sorted(set(dataset_roots), key=lambda root: -len(root.parts))
+        by_root: dict[Path, dict[Path, StreamProducerIdentity]] = {}
+        for path, producer in self.producer_by_path.items():
+            root = next(
+                (root for root in nearest_first if path.is_relative_to(root)), None
+            )
+            if root is None:
+                raise ValueError(
+                    f"Saved file {path} lies under no declared output dataset root "
+                    f"({', '.join(map(str, nearest_first))})."
+                )
+            by_root.setdefault(root, {})[path] = producer
+        return MappingProxyType(
+            {root: ProducedFiles(MappingProxyType(files)) for root, files in by_root.items()}
+        )
+
     def write_into(
         self,
         document: dict[str, Any],
@@ -571,18 +604,22 @@ class ProducedFiles:
         dataset_root: Path,
         record: RunRecord,
     ) -> None:
-        """Store the record and this run's files; drop records no file refers to any more."""
+        """Store the record with the files this run saved under this dataset root.
+
+        A document the run saved nothing under is left as it is. A record no
+        file refers to any more is dropped.
+        """
+        if not self.producer_by_path:
+            return
         records = document.setdefault(RUN_RECORDS_KEY, {})
         produced = document.setdefault(PRODUCED_FILES_KEY, {})
         record_id = record.record_id
         records[record_id] = dict(record.content)
         for path, producer in self.producer_by_path.items():
-            if not path.is_relative_to(dataset_root):
-                continue
             produced[path.relative_to(dataset_root).as_posix()] = {
                 "run_record": record_id,
                 "producer": dict(producer.to_payload()),
             }
-        referenced = {entry["run_record"] for entry in produced.values()} | {record_id}
+        referenced = {entry["run_record"] for entry in produced.values()}
         for stale in set(records) - referenced:
             del records[stale]

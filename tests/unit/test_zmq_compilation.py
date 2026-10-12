@@ -23,6 +23,7 @@ from openhcs.runtime.zmq_compilation import (
 from tests.context_support import (
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 class _StrippedStepShell:
@@ -164,6 +165,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         transport_contexts={},
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
     compilation = ZMQCompilationResult(execution_bundle=bundle)
     artifacts = {
@@ -217,6 +219,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
         transport_contexts={},
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
     orchestrator = _FreshCompileOrchestrator(bundle)
 
@@ -277,6 +280,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
         transport_contexts={},
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
     artifact = ZMQCompileArtifactRecord(
         configs=OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig()),
