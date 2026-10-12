@@ -57,7 +57,7 @@ from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.processing.materialization import csv_only
+from openhcs.core.materialization import csv_only
 from openhcs.domains.microscopy.axes import Microscopy
 
 

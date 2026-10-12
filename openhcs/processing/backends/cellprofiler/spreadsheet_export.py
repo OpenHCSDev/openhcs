@@ -100,14 +100,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     FileBundleOptions,
     MaterializationSpec,
     WriteMode,
 )
 
-from openhcs.processing.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
+from openhcs.core.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey

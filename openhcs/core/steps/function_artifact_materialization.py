@@ -50,7 +50,7 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamSourceComponentMetadataItems,
 )
 from openhcs.core.streaming_config_factory import StreamingViewerSurface
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     BackendKwargs,
     BackendKwargsAuthority,
     MaterializationSpec,

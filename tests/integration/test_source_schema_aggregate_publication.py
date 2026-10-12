@@ -50,7 +50,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     register_custom_function,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource

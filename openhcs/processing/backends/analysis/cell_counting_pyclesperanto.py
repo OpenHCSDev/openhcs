@@ -19,7 +19,7 @@ from scipy.spatial.distance import cdist
 # OpenHCS imports
 from openhcs.core.memory import pyclesperanto as pyclesperanto_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     CsvOptions,
     JsonOptions,

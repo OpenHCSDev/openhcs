@@ -47,7 +47,7 @@ from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_spatial_graph import SpatialGraph,SpatialGraphNode,SpatialGraphEdge
 from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
-from openhcs.processing.materialization import MaterializationSpec,SpatialGraphROIOptions,materialize
+from openhcs.core.materialization import MaterializationSpec,SpatialGraphROIOptions,materialize
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import PlateFileStreamRequest

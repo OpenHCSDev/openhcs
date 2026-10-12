@@ -66,7 +66,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
-from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
+from openhcs.core.materialization import FileBundleOptions, MaterializationSpec
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (

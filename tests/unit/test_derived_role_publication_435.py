@@ -1,6 +1,6 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
-from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
+from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
 import json
 
@@ -41,7 +41,7 @@ from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions, MaterializationSpec,
 )
 from openhcs.domains.microscopy.axes import Microscopy

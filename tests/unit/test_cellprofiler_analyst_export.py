@@ -97,7 +97,7 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
     ExportToDatabaseModule,
     export_to_database,
 )
-from openhcs.processing.materialization import FileBundleOptions
+from openhcs.core.materialization import FileBundleOptions
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (

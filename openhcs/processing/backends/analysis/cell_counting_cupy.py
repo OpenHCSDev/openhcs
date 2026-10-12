@@ -27,7 +27,7 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     colocalization_analyzer_catalog,
     detection_method_catalog,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     JsonOptions,
     MaterializationSpec,

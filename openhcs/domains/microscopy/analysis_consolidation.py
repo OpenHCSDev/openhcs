@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         MaterializedRuntimeArtifact,
         RuntimeArtifactMaterialization,
     )
-    from openhcs.processing.materialization.core import Output
+    from openhcs.core.materialization.core import Output
 
 
 @dataclass(frozen=True, slots=True)

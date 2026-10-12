@@ -33,7 +33,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
 
 from openhcs.core.viewer_streaming_service import RoiStreamingRequest, StreamingService
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     MaterializationSpec,
     SpatialGraphROIOptions,
     materialization_outputs,

@@ -35,7 +35,7 @@ from openhcs.core.runtime_adapters import RuntimeAdapterSpec, runtime_adapter
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
 from tests.context_support import (
     executing_context,
 )

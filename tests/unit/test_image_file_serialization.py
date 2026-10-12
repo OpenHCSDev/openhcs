@@ -721,7 +721,7 @@ def test_runtime_plane_tiff_write_retains_scalar_frames_and_declared_channels(
     tmp_path, plane_count, dtype, channel_axis
 ):
     from polystore.config import TiffCompression, TiffConfig, TiffPhotometric
-    from openhcs.processing.materialization.core import Output, RawBackendKwargs
+    from openhcs.core.materialization.core import Output, RawBackendKwargs
 
     shape = (
         (plane_count, 5, 7) if channel_axis is None

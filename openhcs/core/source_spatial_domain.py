@@ -92,6 +92,25 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
     spatial_rank: ClassVar[int] = 2
     axis_names: ClassVar[tuple[str, ...]] = ("y", "x")
 
+    def with_undeclared_shape_from(
+        self, local_shape_yx: Callable[[], tuple[int, int] | None]
+    ) -> "SourceSpatialDomain":
+        """Declare the source shape from the array when none is declared.
+
+        ``local_shape_yx`` is called only when this domain declares no shape.
+        """
+        if self.source_shape_yx is not None:
+            return self
+        shape_yx = local_shape_yx()
+        if shape_yx is None:
+            return self
+        return SourceSpatialDomain(
+            origin_yx=self.origin_yx if self.origin_yx is not None else (0, 0),
+            source_shape_yx=shape_yx,
+            fill_value=self.fill_value,
+            value_name=self.value_name,
+        )
+
     @classmethod
     def for_rank(cls, spatial_rank: int) -> type["SourceSpatialDomain"]:
         """Return the declared spatial domain of one rank."""

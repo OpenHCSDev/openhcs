@@ -220,6 +220,12 @@ class ExecutingContext(CompiledContext):
             self._runtime_source_workspace_projections = authority
         return authority
 
+    def execution_axis_count(self) -> int:
+        """Return how many axis values this execution's lane runs; 0 without a lane."""
+        if self.execution_runtime is None:
+            return 0
+        return len(self.execution_runtime.execution_axis_values)
+
     def record_completed_step_outputs(
         self, observation: "StepExecutionObservation"
     ) -> None:

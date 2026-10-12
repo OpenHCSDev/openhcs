@@ -99,8 +99,8 @@ from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 from openhcs.core.dataset_sources.interfaces import MetadataHandler
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.processing.materialization.core import Output
-from openhcs.processing.materialization import (
+from openhcs.core.materialization.core import Output
+from openhcs.core.materialization import (
     ImageFileOptions,
     MaterializationSpec,
     NameBySourceIdentity,

@@ -59,7 +59,7 @@ Production (Python under `openhcs/`): −1331 +1248. The net is small because th
 
 | Item | Evidence | Belongs to |
 |---|---|---|
-| Annotations `ProcessingContext` on functions that read `execution_runtime` | `processing/materialization/core.py`, `path_scopes.py` | K8: annotate `ExecutingContext` |
+| Annotations `ProcessingContext` on functions that read `execution_runtime` | `core/materialization/core.py`, `path_scopes.py` (moved by K8 #1208) | done here after K8 merged: annotated `ExecutingContext`; K8's `execution_axis_count()` lives on `ExecutingContext` |
 | `RuntimeExecutionAxisScope(component=None, value=None)` packs "no group coordinate" the same way the scope did. Not small: 88 production references in 16 files and 388 test references, and it is the `scope` of every runtime record key (`key.scope.component` is compared across `runtime_stores.py`, `kinds.py`, materialization) | `core/component_group_scope.py` | follow-up surface, not started here |
 | E1 (#1203, merged first) converted `ExecutionStatus` and `RuntimeObservationMode` | `execution_result.py` | resolved in the merge of `625150118`: E1's observation-mode family is kept as written; its `ExecutionStatus`/`AxisSucceeded`/`AxisFailed`/`AxisCancelled` family is deleted for the result subclasses and its readers migrated. E1's guard table had no row for anything deleted here |
 | `PipelineOrchestrator.execute_compiled_bundle(runtime_observation_mode=None)` derives the mode when `None` | `orchestrator.py:765` | G7 follow-up, not assigned |

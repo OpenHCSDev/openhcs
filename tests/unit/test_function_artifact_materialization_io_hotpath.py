@@ -20,12 +20,12 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.processing.materialization.core import (
+from openhcs.core.materialization.core import (
     MaterializationSpec,
     Output,
     RawBackendKwargs,
 )
-from openhcs.processing.materialization.options import ImageFileOptions
+from openhcs.core.materialization.options import ImageFileOptions
 
 
 class _PersistentBackend(DataSink):
