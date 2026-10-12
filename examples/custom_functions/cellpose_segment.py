@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Optional
 
 import numpy as np
+import torch
 from cellpose import models
 
 from openhcs.core.artifacts.kinds import (
@@ -29,7 +30,7 @@ from openhcs.core.materialization import (
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.memory import numpy
+from openhcs.core.memory import torch as torch_function
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 
 
@@ -54,21 +55,24 @@ class CellposeCount:
 _LOADED_MODELS: dict = {}
 
 
-def _load(model: CellposeModel, use_gpu: bool):
-    key = (model, use_gpu)
+def _load(model: CellposeModel, device: torch.device):
+    key = (model, str(device))
     if key not in _LOADED_MODELS:
-        _LOADED_MODELS[key] = models.CellposeModel(gpu=use_gpu, model_type=model.value)
+        _LOADED_MODELS[key] = models.CellposeModel(
+            gpu=device.type == "cuda", device=device, model_type=model.value
+        )
     return _LOADED_MODELS[key]
 
 
 def _warm_up() -> None:
     """Download the default weights, load them and run one small image."""
-    _load(CellposeModel.NUCLEI, False).eval(
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    _load(CellposeModel.NUCLEI, device).eval(
         np.zeros((64, 64), dtype=np.float32), channels=[0, 0]
     )
 
 
-@numpy(prepare=_warm_up)
+@torch_function(prepare=_warm_up)
 @artifact_outputs(
     ArtifactSpec(
         "cellpose_counts",
@@ -93,13 +97,19 @@ def cellpose_segment(
     flow_threshold: float = 0.4,
     cellprob_threshold: float = 0.0,
     do_3D: bool = False,
-    use_gpu: bool = False,
-) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, np.ndarray]:
+) -> tuple[torch.Tensor, DataclassMeasurementColumnarRows, np.ndarray]:
     """Segment cells or nuclei with a pretrained Cellpose model.
 
     Each plane of the input stack is segmented on its own unless ``do_3D`` is
     set, in which case the stack is treated as one Z volume. The input image is
     passed on unchanged; labels and per-plane counts are extra outputs.
+
+    The function is declared with the torch memory type: OpenHCS hands it a
+    tensor on the device it assigned to this step, and the network runs on that
+    device. Cellpose's own ``eval`` takes and returns NumPy arrays (3.x and
+    4.x), so the pixels are copied to host memory once before the network runs;
+    that copy is Cellpose's, not OpenHCS's. The labels stay the NumPy array
+    Cellpose returned: OpenHCS builds label artifacts from host arrays.
 
     Args:
         image: Image stack (planes, Y, X).
@@ -111,12 +121,12 @@ def cellpose_segment(
         flow_threshold: Maximum flow error per mask; raise it to keep more masks.
         cellprob_threshold: Minimum cell probability; lower it to keep more pixels.
         do_3D: Segment the stack as one 3D volume instead of plane by plane.
-        use_gpu: Run on the first CUDA device instead of the CPU.
 
     Returns:
         The unchanged image, per-plane counts and the label stack.
     """
-    network = _load(model, use_gpu)
+    network = _load(model, image.device)
+    pixels = image.detach().cpu().numpy()
     settings = dict(
         diameter=diameter,
         channels=list(channels),
@@ -124,13 +134,13 @@ def cellpose_segment(
         cellprob_threshold=cellprob_threshold,
     )
     if do_3D:
-        labels, _, _ = network.eval(np.asarray(image), do_3D=True, z_axis=0, **settings)
+        labels, _, _ = network.eval(pixels, do_3D=True, z_axis=0, **settings)
         labels = np.asarray(labels, dtype=np.int32)
     else:
         labels = np.stack(
             [
                 np.asarray(network.eval(plane, **settings)[0], dtype=np.int32)
-                for plane in np.asarray(image)
+                for plane in pixels
             ]
         )
     used_diameter = float(diameter if diameter is not None else network.diam_mean)
