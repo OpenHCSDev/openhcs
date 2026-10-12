@@ -53,11 +53,7 @@ class ViewerEndpointRecord:
 def viewer_ipc_directory() -> Path:
     """Return the OpenHCS IPC socket directory for the configured transport."""
 
-    return (
-        Path.home()
-        / f".{OPENHCS_ZMQ_CONFIG.app_name}"
-        / OPENHCS_ZMQ_CONFIG.ipc_socket_dir
-    )
+    return OPENHCS_ZMQ_CONFIG.socket_root() / OPENHCS_ZMQ_CONFIG.ipc_socket_dir
 
 
 def candidate_viewer_ports() -> tuple[int, ...]:

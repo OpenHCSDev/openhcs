@@ -201,10 +201,6 @@ def _assert_manifest_reference_parity(
             persistent=False,
         ),
     )
-    execution_port = _free_zmq_port_pair(
-        set(),
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    )
     observations = run_comparison_suite(
         cases,
         output_root=output_root,
@@ -214,7 +210,6 @@ def _assert_manifest_reference_parity(
         openhcs_global_config=global_config,
         discard_openhcs_outputs=True,
         continue_on_error=True,
-        openhcs_execution_port=execution_port,
     )
 
     assert len(observations) == expected_case_count
@@ -592,10 +587,6 @@ def test_official30_nonpersistent_napari_isolated_per_case(
     native_reference_root = _native_reference_root()
     assert len(_OFFICIAL30_CASES) == 30
     excluded_ports: set[int] = set()
-    execution_port = _free_zmq_port_pair(
-        excluded_ports,
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    )
     viewer_transport_mode = TransportMode.default()
     viewer_port = _free_zmq_port_pair(
         excluded_ports,
@@ -651,7 +642,6 @@ def test_official30_nonpersistent_napari_isolated_per_case(
             native_reference_root=native_reference_root,
             require_native_reference=True,
             openhcs_global_config=global_config,
-            openhcs_execution_port=execution_port,
             discard_openhcs_outputs=False,
             continue_on_error=True,
         )
@@ -742,10 +732,6 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
     assert len(_OFFICIAL30_CASES) == 30
 
     excluded_ports: set[int] = set()
-    execution_port = _free_zmq_port_pair(
-        excluded_ports,
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    )
     ports_by_viewer = {
         viewer: _free_zmq_port_pair(
             excluded_ports,
@@ -799,7 +785,6 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
                 native_reference_root=native_reference_root,
                 require_native_reference=True,
                 openhcs_global_config=global_config,
-                openhcs_execution_port=execution_port,
                 discard_openhcs_outputs=False,
                 continue_on_error=True,
             )

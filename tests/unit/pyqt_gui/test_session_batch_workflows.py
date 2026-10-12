@@ -241,9 +241,19 @@ def test_compile_connection_failure_releases_only_its_reserved_dataset(
         async def connect():
             raise RuntimeError("controlled connection failure")
 
+        failures = []
+        session.subscribe(
+            lambda record: failures.append(record.event)
+            if isinstance(record.event, CompilationFailed)
+            else None
+        )
         monkeypatch.setattr(session, "connect_client", connect)
         with pytest.raises(RuntimeError, match="controlled connection failure"):
             asyncio.run(session.compile_datasets((other,)))
+        # A caller waiting for this compilation is told it ended.
+        (failure,) = failures
+        assert failure.scope_id == other
+        assert "controlled connection failure" in failure.message
         assert not session.compile_pending
         assert session.batch.execution_id(running) == "original-run"
 

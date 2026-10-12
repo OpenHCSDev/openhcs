@@ -67,3 +67,16 @@ class OpenHCSRuntimeImportAuthority:
         """Project one module launch to interpreter arguments."""
 
         return "-c", self.module_bootstrap_code(module_name)
+
+
+class ImportRootEndpoint:
+    """A ZMQ client or server whose code root is the OpenHCS import root.
+
+    Both sides of an execution endpoint inherit this, so the root a server
+    reports and the root a client expects are one declaration: the root every
+    OpenHCS child process is launched from.
+    """
+
+    @classmethod
+    def code_root(cls) -> str:
+        return str(OpenHCSRuntimeImportAuthority.current().import_root)
