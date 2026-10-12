@@ -16,6 +16,7 @@ failure outside `known.fail`.
 | 1 | Collection itself. `tests/unit` had no `__init__.py`, so pytest imported `tests/unit/test_x.py` as module `test_x`, while 26 test modules import each other as `tests.unit.test_x`. Every such module was executed twice, as two module objects. | `test_source_round_trip.py` (10 ids), `test_classification_two_vector_authoring.py` (collection error) | `sys.modules`: two identities for one file; every class in it exists twice and registers twice | The test tree (module identity is declared by the package structure) | `__init__.py` in `tests/unit`, its six subdirectories and `tests/core`. One file, one module, one name. |
 | 2 | 13 test modules and 2 test support modules that declare members of production families at module level (for example `_IndependentPriorConsumerModule` in `test_classification_interop_boundaries.py`, a `CellProfilerModule`). Importing them during collection registers the member for the rest of the process. | 21 ids in `test_cellprofiler_{backend_public_api,comparison,compatibility_matrix,export_to_database,generic_special_input_binding,library_loading,processing_backend,special_io_declarations}.py`: every test that walks all registered modules meets a stand-in with no callable. Intermittent with file order: `test_cellprofiler_label_hull.py` (5), `test_object_measurement_empty_labels.py` (1), `agent/test_config_schema_authority.py` (1) | `Family.__registry__` of metaclass-registry families (300 registries, about 1470 members in a full session) | Legitimately process-wide (a class registry). Tests had no owned way to add to it: 20 tests hand-rolled `try/finally: del X.__registry__[k]`, the rest leaked. | `tests/family_registries.py`, wired in `tests/conftest.py`: members a test module declares at import are withdrawn after the import and are members only while that module's tests run; after every test each registry is put back (declared members removed, removed or replaced members returned). |
 | 3 | Any test that sets the ObjectState global config and does not unset it. Bisected: `test_routed_composite_execution.py::test_reduced_channel_stack_is_the_next_steps_only_input[...]` | `test_source_binding_workspace.py::test_prepared_workspace_admits_declared_source_universe_without_rewriting_provenance[*]` (3 ids, failed in 7 of the last 11 suites, exactly the runs where the leaker ran earlier on the same worker) | `objectstate.global_config._saved_global_config_contexts` / `_live_global_config_contexts` (thread-local value per config type) | ObjectState: a process-wide value with no scope. Not changed here (library release); see Remainder 1. | Autouse fixture `restored_global_configs` in `tests/conftest.py`: captures every config type's saved and live value before a test and applies it after, with the library's own `GlobalContextValues.capture/apply`. |
+| 4 | A pipeline worker run inside the pytest process (`worker_execution.py` calls `configure_native_thread_count(1)`, which writes `NUMBA_NUM_THREADS=1` and seven more variables into `os.environ`) in a test whose environment is restored afterwards. Not narrowed to one test: reproduced by replaying the worker's 323-file order of suite t1a in one process. | `test_skan_axon_artifact_contract.py::test_skan_axon_returns_columnar_rows_and_exact_label_plane_stack` (r1z, t1a): `RuntimeError: Cannot set NUMBA_NUM_THREADS to a different value once the threads have been launched (currently have 1, trying to set 12)` | `os.environ` plus Numba's launched thread pool, which cannot be changed once started | `openhcs.core.native_threading`: correct for a worker process, but tests run workers in the host process | `tests/conftest.py` calls the owner's `configure_native_thread_environment(1)` before anything is imported: the pytest process is an execution process from the start, so the worker's `setdefault` changes nothing. The same replay then passes. |
 
 How each was established:
 
@@ -32,9 +33,11 @@ How each was established:
 Counted over ids that failed in a suite since the known-failure list was last
 rebuilt (runs k1..r1z) plus `known.fail`:
 
-* (a) order/state dependent: 43 ids (40 from `known.fail`, 3 in
-  `test_source_binding_workspace.py`). All fixed here.
-* (b) load/timing dependent: 9 ids seen once or twice each, never alone.
+* (a) order/state dependent: 44 ids (40 from `known.fail`, 3 in
+  `test_source_binding_workspace.py`, 1 in `test_skan_axon_artifact_contract.py`).
+  All fixed here.
+* (b) load/timing dependent: 10 ids seen once to three times each, never alone
+  (not all have a traceback, so some may be class (a) with a rare order).
   Not fixed; see Remainder 2.
 * (c) fail alone on main: 2 ids,
   `test_bioformats_microscope_handler.py::test_openhcs_output_subdirectory_initializes_from_metadata_root`
@@ -87,7 +90,9 @@ All **derived** (the conftest mechanism now does what the copy did), tests only:
 `stand_in_members(member, *keys)` with keys stays: freeing a production key
 for a stand-in is the test's own statement, not cleanup.
 
-No production code changed.
+No production code changed. Row 4's production question (a worker that runs
+in the host process changes that process's environment and thread pools) is
+Remainder 5.
 
 ## `known.fail` after this PR
 
@@ -120,8 +125,9 @@ observed failure yet except item 2.
    and probably `pyqt_gui/test_function_catalog_projection.py` (3 ids),
    `pyqt_gui/test_ui_agent_bridge.py::test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance`
    (twice, both while the other worker ran `agent/test_mcp_server.py`),
-   `test_axis_family_witness.py::...[zmq]`, `test_cellprofiler_closing_hotpath.py::...[numba]`,
-   `test_skan_axon_artifact_contract.py`. 166 literal timeouts in `tests/unit`.
+   `test_axis_family_witness.py::...[zmq]`, `test_cellprofiler_closing_hotpath.py::...[numba]`
+   (this one may be row 4 instead: it compiles with Numba).
+   166 literal timeouts in `tests/unit`.
    Proposed owner: one session deadline (`pytest-timeout` is installed locally
    but not declared and not used in CI); declare it, set it in `pytest.ini`,
    delete the per-test start deadlines. Not done: needs a dependency and lock

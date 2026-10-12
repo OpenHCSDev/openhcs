@@ -13,7 +13,15 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
 
+from openhcs.core.native_threading import configure_native_thread_environment
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
+
+# Tests run pipeline workers inside the pytest process, and a worker sets the
+# native thread count of its process to one. Numba launches its threads once
+# and refuses any later count, so a worker that ran in a test whose environment
+# was then restored broke the first Numba compilation of a later test. The
+# pytest process is an execution process from the start.
+configure_native_thread_environment(1)
 
 # Every socket and lock file of this pytest process, and of the servers and
 # viewers it starts, lives under a root no other run sees. Each xdist worker
