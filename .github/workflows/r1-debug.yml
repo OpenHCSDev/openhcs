@@ -1,0 +1,240 @@
+# TEMPORARY (surface R1). Runs one failing piece on one failing runner.
+# Deleted before the PR is final.
+#
+# Dispatch:  gh workflow run r1-debug.yml --ref <branch> -f target=parity-macos
+# GitHub only dispatches workflows that exist on the default branch, so a push
+# to an R1 branch whose head commit message contains "[r1 <target>]" runs the
+# same job. A push without a tag starts nothing.
+name: R1 debug
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: parity-macos | parity-windows | cold-intel
+        required: true
+        type: choice
+        options: [parity-macos, parity-windows, cold-intel]
+      case:
+        description: Official30 case names (space separated); empty uses the failing case for the runner
+        required: false
+        default: ""
+  push:
+    branches: ["refactor/R1-*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r1-debug-${{ github.ref }}-${{ github.event.inputs.target || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  parity-macos:
+    name: parity ExampleHuman (macos-latest)
+    if: >-
+      github.event.inputs.target == 'parity-macos' ||
+      contains(github.event.head_commit.message, '[r1 parity-macos]')
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      OPENHCS_CP_NATIVE_REFERENCE_ROOT: ${{ github.workspace }}/benchmark/native_refs/official30_scoped_rows
+      OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT: ${{ github.workspace }}/benchmark/reference_exports/official30_value_completion_20260914
+      OPENHCS_CPU_ONLY: true
+      QT_QPA_PLATFORM: offscreen
+      MPLBACKEND: Agg
+      NUMBA_DISABLE_INTEL_SVML: ${{ 'macos-latest' == 'macos-latest' && '1' || '0' }}
+      NPY_DISABLE_CPU_FEATURES: AVX512_SKX,X86_V4
+      R1_CASES: ${{ github.event.inputs.case || 'ExampleHuman' }}
+    steps:
+      - name: Enable Windows long paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Build and install the candidate wheels
+        run: |
+          python -m pip install --upgrade pip build
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --extras dev,cellprofiler-compat
+
+      - name: Materialize inputs
+        env:
+          OPENHCS_BENCHMARK_AUTO_ACQUIRE: "1"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
+        run: |
+          python -c "from benchmark.cellprofiler_comparison import load_comparison_cases; print(len(load_comparison_cases('benchmark/manifests/official30_portable_axis1.json')))"
+
+      - name: Run the case and print value differences
+        env:
+          OPENHCS_BENCHMARK_AUTO_ACQUIRE: "0"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
+          PYTHONPATH: ${{ github.workspace }}/.github/r1-debug
+          R1_DEBUG_DUMP_DIR: ${{ runner.temp }}/r1/circles
+          OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR: ${{ runner.temp }}/r1/intensity-traces
+        run: |
+          mkdir -p "$RUNNER_TEMP/r1"
+          cd "$RUNNER_TEMP/r1"
+          python "$GITHUB_WORKSPACE/.github/r1-debug/run_case.py" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/r1/out" $R1_CASES 2>&1 | tee "$RUNNER_TEMP/r1/report.txt"
+
+      - name: Upload measurement tables and dumps
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: r1-parity-macos
+          path: |
+            ${{ runner.temp }}/r1/report.txt
+            ${{ runner.temp }}/r1/circles
+            ${{ runner.temp }}/r1/intensity-traces
+            ${{ runner.temp }}/r1/out/**/*.csv
+            ${{ runner.temp }}/r1/out/**/*.jsonl
+          if-no-files-found: warn
+          retention-days: 7
+
+  parity-windows:
+    name: parity ExampleImagingFlowCytometryObjectsInGrid (windows-latest)
+    if: >-
+      github.event.inputs.target == 'parity-windows' ||
+      contains(github.event.head_commit.message, '[r1 parity-windows]')
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      OPENHCS_CP_NATIVE_REFERENCE_ROOT: ${{ github.workspace }}/benchmark/native_refs/official30_scoped_rows
+      OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT: ${{ github.workspace }}/benchmark/reference_exports/official30_value_completion_20260914
+      OPENHCS_CPU_ONLY: true
+      QT_QPA_PLATFORM: offscreen
+      MPLBACKEND: Agg
+      NUMBA_DISABLE_INTEL_SVML: ${{ 'windows-latest' == 'macos-latest' && '1' || '0' }}
+      NPY_DISABLE_CPU_FEATURES: AVX512_SKX,X86_V4
+      R1_CASES: ${{ github.event.inputs.case || 'ExampleImagingFlowCytometryObjectsInGrid' }}
+    steps:
+      - name: Enable Windows long paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Build and install the candidate wheels
+        run: |
+          python -m pip install --upgrade pip build
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --extras dev,cellprofiler-compat
+
+      - name: Materialize inputs
+        env:
+          OPENHCS_BENCHMARK_AUTO_ACQUIRE: "1"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
+        run: |
+          python -c "from benchmark.cellprofiler_comparison import load_comparison_cases; print(len(load_comparison_cases('benchmark/manifests/official30_portable_axis1.json')))"
+
+      - name: Run the case and print value differences
+        env:
+          OPENHCS_BENCHMARK_AUTO_ACQUIRE: "0"
+          CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
+          OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
+          PYTHONPATH: ${{ github.workspace }}/.github/r1-debug
+          R1_DEBUG_DUMP_DIR: ${{ runner.temp }}/r1/circles
+          OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR: ${{ runner.temp }}/r1/intensity-traces
+        run: |
+          mkdir -p "$RUNNER_TEMP/r1"
+          cd "$RUNNER_TEMP/r1"
+          python "$GITHUB_WORKSPACE/.github/r1-debug/run_case.py" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/r1/out" $R1_CASES 2>&1 | tee "$RUNNER_TEMP/r1/report.txt"
+
+      - name: Upload measurement tables and dumps
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: r1-parity-windows
+          path: |
+            ${{ runner.temp }}/r1/report.txt
+            ${{ runner.temp }}/r1/circles
+            ${{ runner.temp }}/r1/intensity-traces
+            ${{ runner.temp }}/r1/out/**/*.csv
+            ${{ runner.temp }}/r1/out/**/*.jsonl
+          if-no-files-found: warn
+          retention-days: 7
+
+  cold-intel:
+    name: cold catalog preparation (macos-15-intel)
+    if: >-
+      github.event.inputs.target == 'cold-intel' ||
+      contains(github.event.head_commit.message, '[r1 cold-intel]')
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      OPENHCS_CPU_ONLY: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Build and install the desktop candidate wheels
+        run: |
+          python -m pip install --upgrade pip build
+          desktop_extras=$(python "$GITHUB_WORKSPACE/scripts/sync_mcp_release_metadata.py" --print-desktop-extras)
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-desktop-candidate-wheels" \
+            --extras "$desktop_extras"
+
+      - name: Cold preparation as the installed GUI smoke starts it
+        run: |
+          mkdir -p "$RUNNER_TEMP/r1" && cd "$RUNNER_TEMP/r1"
+          sysctl -n machdep.cpu.brand_string hw.ncpu || true
+          XDG_CACHE_HOME="$RUNNER_TEMP/r1/a-cache" XDG_CONFIG_HOME="$RUNNER_TEMP/r1/a-config" XDG_DATA_HOME="$RUNNER_TEMP/r1/a-data" \
+            python -I "$GITHUB_WORKSPACE/.github/r1-debug/cold_prep.py" "$RUNNER_TEMP/r1/cold-default.jsonl"
+
+      - name: Second start on the same caches
+        run: |
+          cd "$RUNNER_TEMP/r1"
+          XDG_CACHE_HOME="$RUNNER_TEMP/r1/a-cache" XDG_CONFIG_HOME="$RUNNER_TEMP/r1/a-config" XDG_DATA_HOME="$RUNNER_TEMP/r1/a-data" \
+            python -I "$GITHUB_WORKSPACE/.github/r1-debug/cold_prep.py" "$RUNNER_TEMP/r1/warm-default.jsonl"
+
+      - name: Profile of catalog discovery on a cold function catalog
+        run: |
+          cd "$RUNNER_TEMP/r1"
+          R1_PROFILE=1 XDG_CACHE_HOME="$RUNNER_TEMP/r1/b-cache" XDG_CONFIG_HOME="$RUNNER_TEMP/r1/b-config" XDG_DATA_HOME="$RUNNER_TEMP/r1/b-data" \
+            python -I "$GITHUB_WORKSPACE/.github/r1-debug/cold_prep.py" "$RUNNER_TEMP/r1/profile.jsonl" | head -150
+
+      - name: Upload timelines
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: r1-cold-intel
+          path: ${{ runner.temp }}/r1/*.jsonl
+          retention-days: 7
