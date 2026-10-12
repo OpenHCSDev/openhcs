@@ -1,6 +1,8 @@
 """Global pytest configuration for OpenHCS integration tests."""
 
+import atexit
 import os
+import shutil
 import signal
 import tempfile
 import uuid
@@ -10,6 +12,16 @@ from pathlib import Path
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
 
 ensure_source_checkout_external_paths()
+
+from openhcs.runtime.zmq_config import SOCKET_ROOT_ENV
+
+# Every socket and lock file of this pytest process, and of the servers and
+# viewers it starts, lives under a root no other run sees. Each xdist worker
+# imports this module, so each has its own. The path is short: ``sun_path``
+# holds about 104-108 bytes.
+_SOCKET_ROOT = tempfile.mkdtemp(prefix="ohcs-sock-")
+os.environ[SOCKET_ROOT_ENV] = _SOCKET_ROOT
+atexit.register(shutil.rmtree, _SOCKET_ROOT, ignore_errors=True)
 
 import psutil
 import pytest

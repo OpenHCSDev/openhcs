@@ -986,6 +986,10 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         )
 
     @classmethod
+    def code_root(cls) -> str:
+        return str(OpenHCSRuntimeImportAuthority.current().import_root)
+
+    @classmethod
     @contextmanager
     def with_private_server(
         cls,
@@ -1002,12 +1006,17 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
 
         private_endpoint = config.transport_mode.declaration.private_endpoint
         with private_endpoint(config) as private_config:
-            with cls(
+            client = cls(
                 persistent=False,
                 progress_callback=progress_callback,
                 config=private_config,
-            ) as client:
+            )
+            if not client.connect():
+                raise RuntimeError("The private execution server did not start")
+            try:
                 yield client
+            finally:
+                client.disconnect()
 
     def connect(
         self,
