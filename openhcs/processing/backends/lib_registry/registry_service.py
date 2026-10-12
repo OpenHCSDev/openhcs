@@ -197,12 +197,7 @@ class RegistryService:
             max_workers=os.cpu_count() or 1,
             status_callback=emit_status,
         )
-        for func in callables:
-            preparation = CallablePreparation.from_callable(func)
-            preparation.prepare()
-            emit_status(
-                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
-            )
+        CallablePreparation.prepare_for_serving(callables, emit_status)
         emit_status("Resolving prepared callable signatures")
         for func in callables:
             CallableProjection.from_callable(func).warm_canonical_signature()
