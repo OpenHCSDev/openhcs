@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, List, Tuple
 
 from openhcs.core.memory import torch as torch_func  # Changed from numpy_func
 from openhcs.utils.import_utils import create_placeholder_class, optional_import_or_none
@@ -20,30 +20,6 @@ from openhcs.core.lazy_gpu_imports import torch
 nn = optional_import_or_none("torch.nn") if torch else None
 F = optional_import_or_none("torch.nn.functional") if torch else None
 HAS_TORCH = torch is not None
-
-# CuPy
-if TYPE_CHECKING:
-    import cupy as cp
-
-cp = optional_import_or_none("cupy")
-HAS_CUPY = cp is not None
-
-# JAX
-if TYPE_CHECKING:
-    import jax
-    import jax.numpy as jnp
-
-from openhcs.core.lazy_gpu_imports import jax
-
-jnp = optional_import_or_none("jax.numpy") if jax else None
-HAS_JAX = jax is not None
-
-# TensorFlow
-if TYPE_CHECKING:
-    import tensorflow as tf
-
-tf = optional_import_or_none("tensorflow")
-HAS_TENSORFLOW = tf is not None
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +289,7 @@ def dxf_mask_pipeline(
     masking_mode: DxfMaskingMode = DxfMaskingMode.ZERO_OUT,
     smoothing_sigma_z: float = 0.0,
     **kwargs,
-) -> Union["torch.Tensor", "cp.ndarray", "jnp.ndarray", "tf.Tensor"]:  # type: ignore
+) -> torch.Tensor:
     """Register DXF polygons across a stack and return or apply the aligned mask.
 
     Args:
