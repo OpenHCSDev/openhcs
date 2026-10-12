@@ -17,11 +17,11 @@ Tests named here fail on main `ae6ddace5` and pass on this branch unless marked 
 | The one-plane label projection belongs to every plane label mode | it lived only on `MatchImageStackLabels` | `test_singleton_rgb_label_invocation_477.py` (`SliceAlignedLabels` case) |
 | Benchmark adapter keeps the imported config's inheritance and declared output policy | `dataclasses.replace` froze unset fields; a results path was forced | `test_openhcs_adapter.py::test_openhcs_adapter_preserves_declared_main_flow_output_policy` |
 | Packaged knowledge recipes are placed by case name within a path budget | installed paths exceeded Windows MAX_PATH | `test_build_mcp_knowledge_assets.py` (does not import on main) |
-| GUI smoke waits for the window's endpoint start; reports the status name | the catalog was read before the endpoint existed; the result held a class | `test_smoke_installed_gui.py` (does not import on main); `smoke_local.sh` GUI step |
-| Unit session creates its `QApplication` first; sibling test modules import through `tests` | an MCP transport created a `QCoreApplication`; bare imports fail under importlib mode | `test_ci_import_guards.py` (passes on main only because the session order hides it) |
-| STEP_INPUT filters match stored source paths | they matched virtual workspace names | covered by the backend-microscope CI jobs; no local test fails on main |
+| GUI smoke waits for the window's endpoint start, reports the status name, and gives the bridge connection its transport config | the catalog was read before the endpoint existed; the result held a class; U4 moved the connection spec to formbridge, where `transport_endpoint` takes the config | `test_smoke_installed_gui.py` (does not import on main); `smoke_local.sh` GUI step |
+| Unit session creates its `QApplication` first; sibling test modules import through `tests` | an MCP transport created a `QCoreApplication`; bare imports fail under importlib mode | `test_ci_import_guards.py` guards the imports; it passes on main once the test files are fixed, so no production test fails on main |
+| STEP_INPUT filters match stored source paths | they matched virtual workspace names | no touched local test fails on main; B6 found it in the backend-microscope CI jobs |
 | Passthrough outputs keep their producer's filename qualifier | sibling surfaces merged into one file | same |
-| BaSiC reads metadata through `ImagePayload.of` | `.metadata` was read off plain arrays | `test_basicpy_real_fit.py` (needs `openhcs-basicpy`) |
+| BaSiC reads metadata through `ImagePayload.of` | `.metadata` was read off plain arrays | not shown failing on main locally; B6 found it in CI |
 | Dataset rows carry the finished execution's error; demo reads `ViewerType.value` | the installed demo failed without a reason | installed demo job only |
 | Measured-run silence is counted from `begin_run` | server startup time counted as execution silence | not isolated by a local test |
 | `mahotas` is a core dependency | core catalog modules import it; it sat in an extra | packaging; python-314 job |
