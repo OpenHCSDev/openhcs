@@ -2893,7 +2893,7 @@
       },
       {
         "path": "scripts/smoke_installed_gui.py",
-        "sha256": "2c08452db78f38d06aac4b78b4ffffb88d031dbb414894048646e7b294e4278e",
+        "sha256": "c6cca9ad8a248e63949c3556562ec4760d6aaeeaba215bb21ef556c8a8cb726d",
         "role": "Owns the installed-GUI acceptance timing and single terminal completion, applies the declared logging configuration, constructs the application on declaration-allocated endpoints, proves the background function catalogue and advertised endpoint log are usable, drives the GUI through packaged MCP, validates retained window snapshots, and cleans up exact owned resources outside the checkout."
       },
       {
@@ -2935,6 +2935,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), scripts/smoke_installed_gui.py changed after docs/source/guides/testing_guide.rst was reviewed: the GUI smoke compares the action status to ActionAccepted; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml, scripts/smoke_installed_gui.py: the export scope crosses the request boundary as its enum view and reaches the session as the family, the GUI smoke reads the action-status family, and the unit job runs as three serial groups. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/config.py; the diff renames AgentRuntimePlatformAuthority to AgentRuntimePlatform and adds GuiLogLevel.emits_records; LoggingConfig and its default log directory, which the debugging section relies on, are unchanged, so no correction was needed.",
