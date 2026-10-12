@@ -104,7 +104,7 @@ dependencies = [
     # External dependencies (PyPI versions for production builds)
     "zmqruntime>=0.6.4,<0.7",
     "pycodify>=0.2.1,<0.3",
-    "objectstate>=3.0.2,<4",
+    "objectstate>=3.0.3,<4",
     "python-introspect>=0.2.8,<0.3",
     "metaclass-registry>=0.4.0,<0.5",
     "arraybridge>=0.4.1,<0.5",

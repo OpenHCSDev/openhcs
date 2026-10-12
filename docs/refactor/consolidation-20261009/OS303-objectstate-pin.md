@@ -159,3 +159,24 @@ No site was found where a value comes only from an entered `config_context`.
 - No PR opened.
 - The untraced unit suite was not run on the `Session` change; the traced subset above is
   the only run that covers it.
+
+## Coordinator correction (2026-10-12): pinned to 3.0.3, session change reverted
+
+- The `Session.__init__` registration and the two deleted `None` branches are reverted.
+  They made `test_restart_reconciles_saved_document_after_history_materialization` fail
+  (`'NoneType' object has no attribute 'to_object'`: a session whose registry is cleared
+  after it is built), raised the `Session` god-class ratchet by 5, and registered the
+  global state conditionally in a second place (`pyqt_gui/app.py` being the first).
+- The branch now pins ObjectState 3.0.3 (`9e711f8`). With 3.0.3 a replaced global config
+  reaches existing states on their next read, so both wrong values found here (headless
+  session, config-window save) are fixed with no OpenHCS change; their two tests pass
+  and carry no expected-failure marker.
+- The first gate run on this branch does not count: verify_branch's "also fails on main"
+  check was wrong for the desktop restart test, because a stale `openhcs.egg-info` from
+  2026-09-30 in the main checkout shadowed the installed metadata (it lacks
+  `openhcs-basicpy`, so discovery raised there). It is moved to
+  `.claude/stale-openhcs.egg-info-20260930`. The submodule in this worktree had also
+  been moved to 3.0.3 during that run.
+- Still open, for the job that follows ObjectState 3.0.4: one owner for the global
+  config in OpenHCS (the registered global state), one registration site, and removal of
+  `Session.global_config` as a second holder.

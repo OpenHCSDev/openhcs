@@ -109,14 +109,6 @@ def test_headless_session_global_config_reaches_existing_step_states(
         session.close()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "ObjectState #53 item 2: the config window saves the global state, which "
-        "resolves its descendants' saved values against the saved global config "
-        "of before, and replaces that config afterwards without telling them."
-    ),
-)
 def test_saved_global_config_reaches_saved_values_of_existing_step_states(
     empty_registry: None, qapp
 ) -> None:

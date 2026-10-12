@@ -336,13 +336,6 @@ class Session:
         self.renderer: Renderer = NoRenderer()
         self.event_log = SessionEventLog()
         self.global_config = global_config
-        if ObjectStateRegistry.get_by_scope("") is None:
-            # Every dataset, step and function state resolves below the global
-            # state, and a replaced global config reaches them through it.
-            ObjectStateRegistry.register(
-                ObjectState(object_instance=global_config, scope_id=""),
-                _skip_snapshot=True,
-            )
         self.client = ZMQClientService(
             config=transport_config,
             status_callback=lambda status: self.publish(ServerConnectionChanged(status)),
@@ -484,7 +477,9 @@ class Session:
         """Write ``config`` into the global ObjectState and adopt it."""
 
         self.require_definition_mutation_allowed()
-        ObjectStateRegistry.get_by_scope("").update_object_instance(config)
+        global_state = ObjectStateRegistry.get_by_scope("")
+        if global_state is not None:
+            global_state.update_object_instance(config)
         self.adopt_global_config(config)
         self.publish(GlobalConfigChanged(config))
 
