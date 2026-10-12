@@ -56,6 +56,14 @@ REMOVED_MEMBERS = {
             "register_theme_change_callback",
         }
     ),
+    "OpenHCSMainWindow": frozenset(
+        {
+            "switch_to_dark_theme",
+            "switch_to_light_theme",
+            "load_theme_from_file",
+            "save_theme_to_file",
+        }
+    ),
 }
 MAIN_WINDOW_SERVICE_ALIASES = frozenset(
     {

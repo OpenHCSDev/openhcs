@@ -13,7 +13,11 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from test_function_outputs import context_stub, function_step_plan, record_output_path
+from tests.unit.test_function_outputs import (
+    context_stub,
+    function_step_plan,
+    record_output_path,
+)
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, ImagePayloadBundleContext
 from openhcs.core.artifacts.plans import ArtifactOutputPlan

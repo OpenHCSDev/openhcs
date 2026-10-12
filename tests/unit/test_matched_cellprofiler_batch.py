@@ -361,9 +361,10 @@ def test_native_reference_preflight_never_acquires_an_execution_endpoint(
 
     monkeypatch.setattr(matched_batch, "_run_case", admitted_case)
     monkeypatch.setattr(
-        matched_batch.DataControlPortPairAuthority, "acquire", reject_endpoint
+        matched_batch,
+        "ZMQExecutionClient",
+        SimpleNamespace(with_private_server=reject_endpoint),
     )
-    monkeypatch.setattr(matched_batch, "ZMQExecutionClient", reject_endpoint)
     output = tmp_path / "preflight"
     assert (
         matched_batch.main(

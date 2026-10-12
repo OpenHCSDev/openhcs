@@ -8,6 +8,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import (
     dataclass,
     field,
@@ -15,7 +16,6 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
-from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import PongResponse
 
 from benchmark.contracts.measured_run_receipt import (
@@ -34,7 +34,6 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionRequestBuilder,
     OpenHCSExecutionSubmission,
@@ -134,7 +133,12 @@ class _ZMQProgressTimingObserver:
     compile_completed_at: float | None = None
     execution_started_at: float | None = None
     execution_completed_at: float | None = None
-    last_progress_monotonic: float = field(default_factory=time.monotonic)
+    last_progress_monotonic: float | None = None
+    """Monotonic time of the latest progress; None until a run is submitted.
+
+    Starting the execution server is not execution: its client owns the
+    startup readiness timeout, so silence is measured from begin_run.
+    """
     last_progress_phase: str = ""
     last_progress_status: str = ""
     on_event: Callable[[Mapping[str, Any]], None] | None = None
@@ -217,6 +221,8 @@ class _ZMQProgressTimingObserver:
 
     def inactivity_seconds(self, *, observed_at: float | None = None) -> float:
         """Return elapsed monotonic time since the latest server progress event."""
+        if self.last_progress_monotonic is None:
+            return 0.0
         current = time.monotonic() if observed_at is None else observed_at
         return max(0.0, current - self.last_progress_monotonic)
 
@@ -247,6 +253,29 @@ def _require_measured_submission(
         raise ValueError("Measured OpenHCS observation export path must be absolute.")
 
 
+def measured_execution_client(
+    *,
+    execution_port: int | None,
+    progress_callback=None,
+) -> AbstractContextManager[ZMQExecutionClient]:
+    """The client of one measured run.
+
+    With no port the run starts a server at an address of its own. A port is
+    an address the caller named; the client still refuses a server there that
+    another process started for its own use or that runs other code.
+    """
+
+    if execution_port is None:
+        return ZMQExecutionClient.with_private_server(
+            progress_callback=progress_callback
+        )
+    return ZMQExecutionClient(
+        port=execution_port,
+        persistent=False,
+        progress_callback=progress_callback,
+    )
+
+
 def execute_measured_openhcs_pipeline(
     *,
     submission: OpenHCSExecutionSubmission,
@@ -259,18 +288,9 @@ def execute_measured_openhcs_pipeline(
     """Measure an ordinary pipeline submission with its requested observation."""
 
     _require_measured_submission(submission, expected_axis_count)
-    client_port = execution_port
-    if client_port is None and require_owned_server:
-        client_port = DataControlPortPairAuthority.acquire(
-            OPENHCS_ZMQ_CONFIG,
-            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-        ).data_port
-    client = ZMQExecutionClient(
-        port=client_port,
-        persistent=False,
-        progress_callback=timing_observer,
-    )
-    with client:
+    with measured_execution_client(
+        execution_port=execution_port, progress_callback=timing_observer
+    ) as client:
         return execute_measured_openhcs_pipeline_on_client(
             client=client,
             submission=submission,

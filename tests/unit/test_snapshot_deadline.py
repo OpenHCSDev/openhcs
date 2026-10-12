@@ -8,7 +8,7 @@ from dataclasses import replace
 
 import pytest
 
-from test_napari_render_snapshot import queued_viewer
+from tests.unit.test_napari_render_snapshot import queued_viewer
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
 from openhcs.agent.services import viewer_window_service as service_module

@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Any
 
 import psutil
 from objectstate.lazy_factory import rebuild_lazy_config_with_new_global_reference
-from zmqruntime import DataControlPortPairAuthority
 
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
@@ -34,6 +33,7 @@ from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline,
     execute_measured_openhcs_pipeline_on_client,
+    measured_execution_client,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
@@ -68,7 +68,6 @@ from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -2001,16 +2000,9 @@ def run_well_throughput_suite(
                 if observation_key in completed or observation_key in skipped:
                     continue
                 if reuse_execution_server and shared_client is None:
-                    client_port = execution_port
-                    if client_port is None:
-                        client_port = DataControlPortPairAuthority.acquire(
-                            OPENHCS_ZMQ_CONFIG,
-                            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-                        ).data_port
                     shared_client = client_stack.enter_context(
-                        ZMQExecutionClient(
-                            port=client_port,
-                            persistent=False,
+                        measured_execution_client(
+                            execution_port=execution_port,
                             progress_callback=shared_observer,
                         )
                     )

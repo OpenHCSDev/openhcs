@@ -1,8 +1,9 @@
-"""One dataset through the session, headless over MCP and in the Qt GUI.
+"""One dataset through the session, headless over MCP.
 
-Both journeys add a synthetic dataset, give it a pipeline, initialize, compile
-and run it on a real execution server, following the session's events. They
-use the same SessionOperation classes; only the client differs.
+The journey adds a synthetic dataset, gives it a pipeline, initializes,
+compiles and runs it on a real execution server, following the session's
+events. tests/pyqt_gui/test_session_gui_journey.py runs the same
+SessionOperation classes through the Qt widgets.
 """
 
 from __future__ import annotations
@@ -18,12 +19,9 @@ from objectstate.object_state import ObjectStateRegistry
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.authoring.session.operations.datasets import (
     AddDatasets,
-    CompileDatasets,
     InitializeDatasets,
-    RunDatasets,
 )
 from openhcs.authoring.session.session import CallerThread
-from openhcs.authoring.session.views import DatasetListView
 from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps import FunctionStep
@@ -152,91 +150,9 @@ def test_headless_mcp_journey_adds_compiles_and_runs_a_dataset(tmp_path: Path) -
         context.session.close()
 
 
-def test_gui_journey_runs_the_same_operations_through_the_widgets(
-    tmp_path: Path,
-) -> None:
-    pytest.importorskip("PyQt6")
-    from PyQt6.QtWidgets import QApplication
-    from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
-
-    from openhcs.authoring.session.session import DispatcherThread, Session
-    from openhcs.core.config import GlobalPipelineConfig
-    from openhcs.pyqt_gui.config import get_default_ui_config
-    from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-    from tests.unit.pyqt_gui.session_harness import GuiServiceStub, release_widgets
-
-    application = QApplication.instance() or QApplication([])
-    root, source = _synthetic_dataset(tmp_path)
-    dispatcher = UiThreadDispatcher()
-    session = Session(
-        transport_config=OpenHCSZMQConfig(default_port=_port(1), persistent=False),
-        global_config=GlobalPipelineConfig(),
-        main_thread=DispatcherThread(dispatcher),
-    )
-    services = GuiServiceStub()
-    manager = PlateManagerWidget(
-        services, session, gui_config=get_default_ui_config()
-    )
-    try:
-        assert session.invoke(AddDatasets, AddDatasets.request(roots=(str(root),))).accepted
-        (scope_id,) = session.dataset_scope_ids()
-        session.set_pipeline_source(scope_id, source)
-        application.processEvents()
-        assert [row.scope_id for row in manager.plates] == [scope_id]
-        manager.item_list.setCurrentRow(0)
-        application.processEvents()
-        assert manager.selection_scope_ids() == (scope_id,)
-
-        def wait_until(condition, label) -> None:
-            deadline = time.monotonic() + STAGE_TIMEOUT_SECONDS
-            while not condition():
-                application.processEvents()
-                assert time.monotonic() < deadline, label
-                time.sleep(0.05)
-
-        for operation, finished in (
-            (InitializeDatasets, lambda row: row.initialized and not row.init_pending),
-            (CompileDatasets, lambda row: row.compiled and not row.compile_pending),
-            (
-                RunDatasets,
-                lambda row: row.terminal_status is not None and not row.execution_active,
-            ),
-        ):
-            if operation is CompileDatasets:
-                # Disconnected, the compile button is Connect; connect first.
-                assert manager.buttons[operation.operation_id].text() == "Connect"
-                manager.handle_button_action(operation.operation_id)
-                wait_until(
-                    lambda: CompileDatasets.resolved(session) is CompileDatasets,
-                    "connect",
-                )
-                manager.update_button_states()
-            assert manager.buttons[operation.operation_id].isEnabled(), operation
-            manager.handle_button_action(operation.operation_id)
-            deadline = time.monotonic() + STAGE_TIMEOUT_SECONDS
-            while True:
-                application.processEvents()
-                (row,) = DatasetListView.state_of(session).rows
-                if finished(row):
-                    break
-                assert time.monotonic() < deadline, (operation, row)
-                time.sleep(0.05)
-        assert row.terminal_status == "complete", row
-        wait_until(lambda: not session.execution_state.busy, "batch finished")
-        application.processEvents()
-        assert manager.buttons[RunDatasets.operation_id].text() == "Run"
-    finally:
-        manager.cleanup()
-        manager.close()
-        release_widgets(application, manager)
-        session.close()
-        dispatcher.close()
-
-
 def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -> None:
     """Initialization never writes into a source it may not write."""
 
-    from openhcs.authoring.session.operations.datasets import AddDatasets
     from openhcs.authoring.session.session import Session
     from openhcs.core.config import GlobalPipelineConfig
 
@@ -272,7 +188,7 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
             assert not failures, failures
             assert time.monotonic() < deadline
             time.sleep(0.05)
-        assert session.orchestrator(scope_id).plate_path.is_relative_to(workspaces)
+        assert session.orchestrator(scope_id).dataset_root.is_relative_to(workspaces)
         assert _source_state(root) == before
     finally:
         session.close()

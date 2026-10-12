@@ -42,9 +42,9 @@ from openhcs.core.config import (
     PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.pipeline_document_fields import PipelineDocumentField
+from openhcs.core.function_step_transport import PipelineStepsDocument
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
@@ -153,7 +153,6 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     configured = adapter._execution_global_config(
         request,
         output_suffix="_candidate",
-        output_dataset_root=tmp_path / "candidate-plate",
         compilation_debug_config=CompilationDebugConfig(),
     )
 
@@ -168,6 +167,8 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     assert (
         configured.analysis_consolidation_config.output_filename == "custom-summary.csv"
     )
+    # Analysis results resolve inside the compiled output root by default.
+    assert configured.materialization_results_path == Path("results")
     assert base_config.path_planning_config.global_output_folder is None
     assert base_config.analysis_consolidation_config.enabled is True
 
@@ -249,6 +250,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
     class FakeZMQExecutionClient:
         submitted: list[OpenHCSExecutionSubmission] = []
         waits: list[str] = []
+
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
 
         def __init__(self, *, port, persistent, progress_callback):
             assert port is None
@@ -388,7 +393,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         == FakeZMQExecutionClient.submitted[1].pipeline_code
     )
     assert all(
-        submission.global_config_code == ConfigDocumentAuthority.render(
+        submission.global_config_code == ConfigDocumentCodec.render(
             global_config, expected_config_type=GlobalPipelineConfig
         )
         for submission in FakeZMQExecutionClient.submitted
@@ -419,6 +424,10 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
     tmp_path: Path,
 ) -> None:
     class IncompatibleZMQExecutionClient:
+        @classmethod
+        def with_private_server(cls, *, progress_callback=None):
+            return cls(port=None, persistent=False, progress_callback=progress_callback)
+
         def __init__(self, *, port, persistent, progress_callback):
             self.connected_endpoint = SimpleNamespace(
                 application=EndpointApplication("openhcs", "0.8.4"),
@@ -484,6 +493,19 @@ def test_openhcs_progress_observer_tracks_every_server_event(
     assert observer.last_progress_monotonic == 14.5
     assert observer.inactivity_seconds(observed_at=17.0) == 2.5
     assert observer.progress_description() == "artifact_transfer/running"
+
+
+def test_openhcs_progress_silence_is_measured_from_run_submission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Server startup belongs to the client's readiness timeout, not the watchdog."""
+    observer = _ZMQProgressTimingObserver()
+    assert observer.inactivity_seconds(observed_at=500.0) == 0.0
+
+    monkeypatch.setattr("benchmark.openhcs_measured_run.time.monotonic", lambda: 200.0)
+    observer.begin_run()
+
+    assert observer.inactivity_seconds(observed_at=321.0) == 121.0
 
 
 def test_openhcs_watchdog_allows_execution_without_interval_timer(
@@ -624,5 +646,5 @@ def test_benchmark_submission_matches_pyqt_submission_payload() -> None:
         for target in node.targets
         if isinstance(target, ast.Name)
     }
-    assert PipelineDocumentField.PIPELINE_STEPS.value in assigned_names
+    assert set(PipelineStepsDocument.assignment_names()) <= assigned_names
     assert "__openhcs_step_invocation_contracts" not in assigned_names

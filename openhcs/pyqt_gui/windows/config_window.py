@@ -6,22 +6,22 @@ from typing import ClassVar
 
 from pyqt_reactive.windows.config_window import ConfigDocumentFormat, ConfigWindow
 
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
 
 class OpenHCSConfigDocument(ConfigDocumentFormat):
-    """The OpenHCS configuration document (``ConfigDocumentAuthority``)."""
+    """The OpenHCS configuration document (``ConfigDocumentCodec``)."""
 
     def render(self, config: object, *, expected_config_type: type, clean_mode: bool) -> str:
-        return ConfigDocumentAuthority.render(
+        return ConfigDocumentCodec.render(
             config,
             expected_config_type=expected_config_type,
             clean_mode=clean_mode,
         )
 
     def from_source(self, source: str, *, expected_config_type: type) -> object:
-        return ConfigDocumentAuthority.from_source(
+        return ConfigDocumentCodec.from_source(
             source,
             expected_config_type=expected_config_type,
         )

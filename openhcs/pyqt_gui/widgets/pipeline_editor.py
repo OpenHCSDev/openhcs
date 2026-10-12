@@ -103,6 +103,7 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorDebugWorkflow,
     PipelineEditorFunctionPresentation,
 )
+from openhcs.pyqt_gui.windows.dual_editor_tabs import ArtifactsTab, StepSettingsTab
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from openhcs.core.axes import Axis, GroupingDeclaration
 
@@ -643,7 +644,6 @@ class PipelineEditorWidget(
             on_save_callback=on_save,
             orchestrator=self._get_current_orchestrator(),
             parent=self,
-            service_adapter=self.service_adapter,
             plate_scope=scope_id,
             source_bindings=self._current_source_bindings(),
             source_binding_context=self.current_source_binding_context(),
@@ -658,12 +658,11 @@ class PipelineEditorWidget(
             ),
             **({} if step_index is None else {"step_index": step_index}),
         )
-        editor.set_original_step_for_change_detection()
         editor.connect_session_events(self.session)
-        editor.connect_orchestrator_config_signal(
+        editor.tab(StepSettingsTab).follow_orchestrator_config(
             plate_manager.orchestrator_config_changed
         )
-        editor.connect_artifact_signals(
+        editor.tab(ArtifactsTab).follow_artifact_signals(
             compiled_artifact_signal=plate_manager.compiled_artifact_inspection_changed,
             runtime_artifact_signal=plate_manager.runtime_artifact_available,
             debug_snapshot_signal=plate_manager.debug_snapshot_available,

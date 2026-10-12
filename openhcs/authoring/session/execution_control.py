@@ -46,9 +46,14 @@ class ExecutionControl:
 
     async def handle_execution_failure(self) -> None:
         session = self._session
-        for scope_id in tuple(session.batch.active_plates):
-            session.batch.mark_terminal(scope_id, ExecutionFailed)
-            session.set_dataset_state(scope_id, OrchestratorExecFailed)
+        if session.execution_state.stop_pending:
+            # The batch was stopped (for example while it was still compiling):
+            # the error is the stop arriving, so its datasets end cancelled.
+            self.cancel_active_datasets()
+        else:
+            for scope_id in tuple(session.batch.active_plates):
+                session.batch.mark_terminal(scope_id, ExecutionFailed)
+                session.set_dataset_state(scope_id, OrchestratorExecFailed)
         session.execution_state = ManagerExecutionState.IDLE
         try:
             await session.client.disconnect()

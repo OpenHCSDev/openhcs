@@ -15,7 +15,7 @@ from typing import (
 )
 
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def load_config_sync(spec: ConfigCacheSpec[ConfigT]) -> ConfigT | None:
     try:
         if not spec.cache_file.exists():
             return None
-        cached_config = ConfigDocumentAuthority.from_source(
+        cached_config = ConfigDocumentCodec.from_source(
             spec.cache_file.read_text(encoding="utf-8"),
             expected_config_type=spec.config_type,
         )
@@ -91,7 +91,7 @@ def save_config_sync(config: ConfigT, spec: ConfigCacheSpec[ConfigT]) -> bool:
         )
     try:
         spec.cache_file.parent.mkdir(parents=True, exist_ok=True)
-        payload = ConfigDocumentAuthority.render(
+        payload = ConfigDocumentCodec.render(
             config,
             expected_config_type=spec.config_type,
         ).encode("utf-8")

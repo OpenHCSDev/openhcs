@@ -20,14 +20,17 @@ from pyqt_reactive.services.scope_window_factory import (
 )
 from pyqt_reactive.services.scope_window_navigation import ScopeWindowNavigationService
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.window_navigation import WindowNavigationRequest
+from pyqt_reactive.services.window_navigation import (
+    NavigationTargetClaimedTwiceError,
+    WindowNavigationRequest,
+)
 from pyqt_reactive.theming.color_scheme import ColorScheme
 
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
 )
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.pyqt_gui.config import UIConfig, get_default_ui_config
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.services.window_handlers import (
@@ -192,11 +195,11 @@ def test_ui_config_pycodify_round_trip_preserves_exact_zmq_type() -> None:
             ports_per_server_type=4,
         ),
     )
-    source = ConfigDocumentAuthority.render(
+    source = ConfigDocumentCodec.render(
         config,
         expected_config_type=UIConfig,
     )
-    restored = ConfigDocumentAuthority.from_source(
+    restored = ConfigDocumentCodec.from_source(
         source,
         expected_config_type=UIConfig,
     )
@@ -280,7 +283,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         assert plate_window._tab_body.tab_bar.isHidden()
         assert plate_window._tab_body.current_widget() is plate_window._tabs[0].content
         assert plate_window.windowTitle() == "Config PipelineConfig"
-        assert plate_window._header_label.text() == "Config PipelineConfig"
+        assert plate_window.header_label.text() == "Config PipelineConfig"
         assert configurable_root_fields <= {
             parameter.name
             for parameter in plate_window._tabs[
@@ -289,7 +292,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         }
         code_document = plate_window.window_code_document_driver().read_document()
         assert (
-            ConfigDocumentAuthority.from_source(
+            ConfigDocumentCodec.from_source(
                 code_document.source,
                 expected_config_type=PipelineConfig,
             )
@@ -541,7 +544,7 @@ config = PipelineConfig(
             "partition_filter_config.partition_filter",
         }
         assert source == authored_source
-        restored = ConfigDocumentAuthority.from_source(
+        restored = ConfigDocumentCodec.from_source(
             source,
             expected_config_type=PipelineConfig,
         )
@@ -738,15 +741,15 @@ def test_config_window_save_button_starts_disabled_and_styles_disabled_state(
     try:
         qapp.processEvents()
 
-        assert window._save_button is not None
-        assert not window._save_button.isEnabled()
-        assert "QPushButton:disabled" in window._save_button.styleSheet()
+        assert window.save_button is not None
+        assert not window.save_button.isEnabled()
+        assert "QPushButton:disabled" in window.save_button.styleSheet()
 
         state.update_parameter("num_workers", state.parameters["num_workers"] + 1)
         qapp.processEvents()
         window.detect_changes()
 
-        assert window._save_button.isEnabled()
+        assert window.save_button.isEnabled()
     finally:
         window.close()
         ObjectStateRegistry.clear()
@@ -1092,14 +1095,13 @@ def test_config_navigation_rejects_ambiguous_field_without_state_scope(qapp) -> 
         window.show()
         qapp.processEvents()
 
-        ambiguous = WindowManager.focus_and_navigate_result(
-            OpenHCSUiWindowId.global_config,
-            field_path="shared",
-            requested_scope_id=OpenHCSUiWindowId.global_config,
-        )
-        assert ambiguous.focused
-        assert not ambiguous.target_accepted
-        assert not ambiguous.navigated
+        # Two tabs claim ``shared`` and the request names neither state: refused, by name.
+        with pytest.raises(NavigationTargetClaimedTwiceError, match="'shared'"):
+            WindowManager.focus_and_navigate_result(
+                OpenHCSUiWindowId.global_config,
+                field_path="shared",
+                requested_scope_id=OpenHCSUiWindowId.global_config,
+            )
 
         declared = WindowManager.focus_and_navigate_result(
             OpenHCSUiWindowId.global_config,

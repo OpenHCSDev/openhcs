@@ -175,7 +175,6 @@ def test_registry_deferred_invalidations_coalesce_until_flush(monkeypatch) -> No
         classmethod(record_invalidation),
     )
     ObjectStateRegistry._deferred_invalidations.clear()
-    ObjectStateRegistry._deferred_invalidation_depth = 0
 
     with ObjectStateRegistry.defer_live_invalidations():
         ObjectStateRegistry.invalidate_by_type_and_scope("", str, "name")
@@ -432,7 +431,7 @@ def test_local_structural_child_edit_uses_resolved_change_flash() -> None:
 
         flashes: list[str] = []
         manager.queue_flash_local_batch = flashes.extend
-        widget.add_binding_row(NamedSourceBinding(alias="DNA"))
+        widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
         QApplication.processEvents()
 
         assert flashes == ["source_bindings.bindings"]

@@ -21,7 +21,9 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.runtime_server_service import RuntimeServerService
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from zmqruntime.messages import EndpointAudience, EndpointLaunch
+
+from openhcs.runtime.zmq_config import SOCKET_ROOT_ENV, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ExecutionRuntimeLaunchPlan,
     ZMQExecutionClient,
@@ -55,6 +57,7 @@ class Child(EndpointProcess):
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv(SOCKET_ROOT_ENV)
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
     policy = AgentPathPolicy.with_roots(
@@ -127,7 +130,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
 ):
     import subprocess
     import sys
-    from openhcs.core.config_document import ConfigDocumentAuthority
+    from openhcs.core.config_document import ConfigDocumentCodec
     from openhcs.runtime import zmq_execution_client as module
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
@@ -160,7 +163,15 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
         module.MemoryType, "subprocess_environment", lambda: environment
     )
 
-    assert plan.spawn(endpoint, config, persistent=persistent) is native_process
+    launch_record = EndpointLaunch.by_this_process(
+        "/code", EndpointAudience.of_persistent(persistent)
+    )
+    assert (
+        plan.spawn(endpoint, config, persistent=persistent, launch=launch_record)
+        is native_process
+    )
+    command = launch.call_args.args[0]
+    assert command[command.index("--launch") + 1] == launch_record.to_argument()
     intercepted_spawn.assert_not_called()
     launch.assert_called_once()
     policy_selection.assert_called_once_with(detached=persistent)
@@ -172,7 +183,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
             "openhcs.runtime.zmq_execution_server_launcher"
         )
     )
-    child_config = ConfigDocumentAuthority.from_source(
+    child_config = ConfigDocumentCodec.from_source(
         command[command.index("--config-source") + 1],
         expected_config_type=OpenHCSZMQConfig,
     )
@@ -203,7 +214,8 @@ def test_client_consumes_exact_admitted_plan_on_spawn_failure(setup, monkeypatch
 
     calls = []
 
-    def consume(selected_plan, endpoint, config, *, persistent):
+    def consume(selected_plan, endpoint, config, *, persistent, launch):
+        assert launch == client.launch()
         calls.append((selected_plan, endpoint, config, persistent))
         raise OSError("controlled no-child spawn failure")
 
@@ -657,6 +669,7 @@ def test_close_native_transport_write_admission_precedes_lifecycle(
     new_home = tmp_path / "not-authorised"
     new_home.mkdir()
     monkeypatch.setenv("HOME", str(new_home))
+    monkeypatch.delenv(SOCKET_ROOT_ENV, raising=False)
     policy = AgentPathPolicy.with_roots(
         readable_roots=(tmp_path,),
         writable_roots=(tmp_path / "data", tmp_path / "cache", tmp_path / ".openhcs"),

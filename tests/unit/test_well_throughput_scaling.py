@@ -90,19 +90,12 @@ def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
     monkeypatch.setattr(
         well_throughput_scaling, "load_comparison_cases", lambda _: cases
     )
-    monkeypatch.setattr(
-        well_throughput_scaling,
-        "DataControlPortPairAuthority",
-        SimpleNamespace(
-            acquire=lambda *_args, **_kwargs: SimpleNamespace(data_port=7801)
-        ),
-    )
     opened: list[object] = []
     closed: list[object] = []
 
     class FakeClient:
         def __init__(self, *, port, persistent, progress_callback):
-            assert (port, persistent) == (7801, False)
+            assert (port, persistent) == (None, False)
             self.progress_callback = progress_callback
 
         def __enter__(self):
@@ -112,7 +105,13 @@ def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
         def __exit__(self, *_args):
             closed.append(self)
 
-    monkeypatch.setattr(well_throughput_scaling, "ZMQExecutionClient", FakeClient)
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "measured_execution_client",
+        lambda *, execution_port, progress_callback: FakeClient(
+            port=execution_port, persistent=False, progress_callback=progress_callback
+        ),
+    )
     observed: list[tuple[str, object]] = []
 
     def fake_run_case_well_throughput(**kwargs):

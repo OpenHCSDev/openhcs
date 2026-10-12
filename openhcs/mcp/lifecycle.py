@@ -13,7 +13,6 @@ from abc import ABC
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import errno
-from enum import Enum
 from hashlib import sha256
 import json
 import os
@@ -100,12 +99,6 @@ class SourceAndInstallationChanged(McpProcessRecoveryReason):
     name = "source_and_installation_changed"
 
 
-class McpReconnectOwner(str, Enum):
-    """Protocol participant responsible for opening a new stdio session."""
-
-    CLIENT = "mcp_client"
-
-
 @dataclass(frozen=True, slots=True)
 class McpInstallationPointerSnapshot:
     """Identity of the installer-owned current-environment pointer."""
@@ -180,11 +173,23 @@ class McpProcessRecoveryStatus:
     restart_required: bool
     restart_command: tuple[str, ...]
     restart_command_is_stable: bool
-    reconnect_required: bool
-    reconnect_owner: McpReconnectOwner | None
-    retry_after_reconnect: bool
     automatic_recovery_on_reconnect: bool
     hint: str | None
+
+    @property
+    def reconnect_required(self) -> bool:
+        """A restarted stdio server is a new session, so the client reconnects."""
+        return self.restart_required
+
+    @property
+    def reconnect_owner(self) -> str | None:
+        """Who opens the new stdio session: in MCP, always the client."""
+        return "mcp_client" if self.restart_required else None
+
+    @property
+    def retry_after_reconnect(self) -> bool:
+        """The refused call is safe to repeat on the new session."""
+        return self.restart_required
 
 
 def _validated_absolute_path(raw_path: str, *, variable_name: str) -> Path:
@@ -342,9 +347,6 @@ class McpProcessLifecycle:
             restart_required=restart_required,
             restart_command=restart_command if restart_required else (),
             restart_command_is_stable=command_is_stable,
-            reconnect_required=restart_required,
-            reconnect_owner=(McpReconnectOwner.CLIENT if restart_required else None),
-            retry_after_reconnect=restart_required,
             automatic_recovery_on_reconnect=automatic_recovery,
             hint=hint,
         )

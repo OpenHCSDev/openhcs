@@ -280,7 +280,7 @@ async def _run_measured_execution_protocol_smoke(
                     "wavelengths": 1,
                     "z_stack_levels": 1,
                     "num_cells": 2,
-                    "wells": ["A01"],
+                    "partition_values": ["A01"],
                     "format": "ImageXpress",
                     "random_seed": 7,
                 },

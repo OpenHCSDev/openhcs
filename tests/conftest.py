@@ -9,8 +9,16 @@ from contextlib import ExitStack
 from pathlib import Path
 
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
+
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
+
+# Every socket and lock file of this pytest process, and of the servers and
+# viewers it starts, lives under a root no other run sees. Each xdist worker
+# imports this module, so each has its own.
+use_private_socket_root()
 
 import psutil
 import pytest
@@ -65,7 +73,7 @@ def pytest_sessionstart(session):
 
 
 # Conditionally import pytest-qt only when not in CPU-only mode
-CPU_ONLY_MODE = os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true"
+CPU_ONLY_MODE = OpenHCSProcessEnvironment.cpu_only_mode()
 if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
 else:
@@ -100,12 +108,14 @@ def cleanup_test_runtime_resources():
 
 @pytest.fixture
 def unix_socket_dir():
-    """A short private directory for AF_UNIX/IPC sockets.
+    """A private directory for AF_UNIX/IPC sockets, beneath the socket root.
 
     ``sun_path`` holds about 104-108 bytes, so a socket under a deep
     ``tmp_path`` (long ``--basetemp`` or ``TMPDIR``) cannot bind.
     """
-    with tempfile.TemporaryDirectory(prefix="ohcs-sock-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="s-", dir=OPENHCS_ZMQ_CONFIG.socket_root()
+    ) as directory:
         yield Path(directory)
 
 
@@ -171,25 +181,30 @@ def reap_spawned_processes(monkeypatch) -> Iterator[None]:
     marker = uuid.uuid4().hex
     monkeypatch.setenv(SPAWN_MARKER_VARIABLE, marker)
     yield
-    own_group = os.getpgid(0)
     survivors = _marked_processes(marker)
     for process in survivors:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGTERM)
-            else:
-                process.terminate()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
+        _stop_marked_process(process, force=False)
     _gone, alive = psutil.wait_procs(survivors, timeout=10)
     for process in alive:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGKILL)
-            else:
-                process.kill()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
+        _stop_marked_process(process, force=True)
     psutil.wait_procs(alive, timeout=10)
+
+
+def _stop_marked_process(process: psutil.Process, *, force: bool) -> None:
+    """Signal a detached POSIX session's whole group, else the process itself.
+
+    Windows has no process groups; every descendant carries the marker, so
+    stopping each marked process covers the tree there.
+    """
+    try:
+        if os.name == "posix":
+            group = os.getpgid(process.pid)
+            if group != os.getpgid(0):
+                os.killpg(group, signal.SIGKILL if force else signal.SIGTERM)
+                return
+        if force:
+            process.kill()
+        else:
+            process.terminate()
+    except (ProcessLookupError, psutil.NoSuchProcess):
+        return

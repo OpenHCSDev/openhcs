@@ -28,6 +28,8 @@ from openhcs.core.image_payload_execution_mode import (
 )
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
+    MatchImageStackLabels,
+    SliceAlignedLabels,
 )
 
 
@@ -71,7 +73,14 @@ def _execute(case, invocation):
     )
 
 
-def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
+@pytest.mark.parametrize("label_mode", (MatchImageStackLabels, SliceAlignedLabels))
+def test_plane_label_modes_consume_declared_singleton_root_for_scalar_rgb(
+    monkeypatch, label_mode
+):
+    raw = OverlayOutlinesModule.require_callable()
+    monkeypatch.setattr(
+        raw, FunctionContractAttribute.object_label_input_execution_mode, label_mode
+    )
     case = _invocation_case()
     raw, contract, image, labels, *_ = case
     image_before = image.data.copy()
