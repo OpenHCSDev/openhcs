@@ -7,7 +7,6 @@ import pytest
 from openhcs.core.function_step_document import (
     FunctionStepDocument,
     FunctionStepDocumentCodec,
-    FunctionStepDocumentField,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
@@ -18,10 +17,6 @@ from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
 
 def _step() -> FunctionStep:
     return FunctionStep(func=cellprofiler_backend.crop, name="Crop")
-
-
-def test_function_step_document_field_owns_exact_public_name() -> None:
-    assert tuple(field.value for field in FunctionStepDocumentField) == ("step",)
 
 
 def test_default_function_patterns_are_not_shared_between_steps() -> None:

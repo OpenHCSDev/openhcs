@@ -60,7 +60,7 @@ def test_source_change_requires_client_owned_reconnect():
     )
     assert changed.restart_command_is_stable is False
     assert changed.reconnect_required is True
-    assert changed.reconnect_owner.value == "mcp_client"
+    assert changed.reconnect_owner == "mcp_client"
     assert changed.retry_after_reconnect is True
     assert changed.automatic_recovery_on_reconnect is False
     assert "new MCP initialize handshake" in changed.hint

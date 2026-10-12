@@ -1657,7 +1657,9 @@ class UiBridgeOperationExecution(AgentCapabilityInvocation):
 
     def execute(self, context: object, *arguments: object) -> object:
         *request, connection = arguments
-        return context.ui_bridge_service.invoke(self.operation, *request, connection)
+        return context.ui_bridge_service.invoke(
+            self.operation, *request, connection=connection
+        )
 
 
 @dataclass(frozen=True, slots=True)

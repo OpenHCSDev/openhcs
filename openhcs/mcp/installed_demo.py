@@ -398,7 +398,8 @@ def _execute_pipeline(
     (row,) = (row for row in datasets.rows if row.root == str(plate_path))
     if row.terminal_status != ExecutionCompleted.name:
         raise InstalledDemoFailure(
-            f"Portable neurite execution ended with {row.terminal_status}: {row}"
+            f"Portable neurite execution ended with {row.terminal_status}: "
+            f"{row.finished_execution_error}; row={row}"
         )
     return row
 
@@ -609,7 +610,7 @@ def run_installed_demo(
     viewer_type = (
         None
         if viewer_payload is None or viewer_payload.viewer is None
-        else viewer_payload.viewer.viewer_type.wire_value
+        else viewer_payload.viewer.viewer_type.value
     )
     result = InstalledDemoResult(
         openhcs_version=distribution("openhcs").version,

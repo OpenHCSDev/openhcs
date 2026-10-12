@@ -9,7 +9,6 @@ from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.pipeline_document import (
     PipelineDocument,
     PipelineDocumentCodec,
-    PipelineDocumentField,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
@@ -18,13 +17,6 @@ from openhcs.processing.backends.lib_registry.registry_service import RegistrySe
 
 def _step() -> FunctionStep:
     return FunctionStep(func=cellprofiler_backend.crop, name="Crop")
-
-
-def test_pipeline_document_fields_own_exact_public_names() -> None:
-    assert tuple(field.value for field in PipelineDocumentField) == (
-        "pipeline_config",
-        "pipeline_steps",
-    )
 
 
 def test_pipeline_document_round_trip_renders_config_and_normalized_steps() -> None:
@@ -45,7 +37,7 @@ def test_pipeline_document_round_trip_renders_config_and_normalized_steps() -> N
         cellprofiler_backend.crop
     )
     assert PipelineDocumentCodec.render(restored) == source
-    assert restored.original_source == source
+    assert restored.source_text == source
     assert PipelineDocumentCodec.execution_source(restored) == source
 
 
@@ -87,7 +79,7 @@ def test_execution_source_preserves_reviewed_source_without_parallel_state() -> 
 
     document = PipelineDocumentCodec.from_source(reviewed_source)
 
-    assert document.original_source == reviewed_source
+    assert document.source_text == reviewed_source
     assert PipelineDocumentCodec.execution_source(document) == reviewed_source
 
 

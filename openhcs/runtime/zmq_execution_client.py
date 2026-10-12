@@ -57,7 +57,7 @@ from zmqruntime.transport import TransportEndpoint
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.debug import DebugExecutionConfig
 from openhcs.core.execution_state import ExecutionOutputSummary
 from openhcs.core.pipeline_document import (
@@ -257,9 +257,8 @@ class OpenHCSExecutionSubmission:
             pipeline_config=pipeline_document.pipeline_config,
             pipeline_steps=pipeline_document.pipeline_steps,
         )
-        normalized_document = replace(
-            normalized_document,
-            original_source=pipeline_document.original_source,
+        normalized_document = normalized_document.read_from(
+            pipeline_document.source_text
         )
         self._set_parts(
             identity=ZMQExecutionIdentity(
@@ -503,7 +502,7 @@ def run_compiled_pipeline(
 def _pycodify_config_source(
     config: GlobalPipelineConfig | OpenHCSZMQConfig,
 ) -> str:
-    return ConfigDocumentAuthority.render(
+    return ConfigDocumentCodec.render(
         config,
         expected_config_type=type(config),
     )

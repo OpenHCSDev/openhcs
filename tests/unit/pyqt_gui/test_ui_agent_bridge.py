@@ -120,7 +120,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     PipelineConfig,
 )
-from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.debug import (
     DebugCursor,
     DebugProgressContext,
@@ -306,7 +306,7 @@ def replacement_function(image, threshold: int = 2):
 
 def test_config_code_document_honors_clean_flag() -> None:
     driver = ConfigCodeDocumentDriver(
-        document_format=ConfigDocumentAuthority,
+        document_format=ConfigDocumentCodec,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: GlobalPipelineConfig(num_workers=2),
@@ -325,7 +325,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     replacement = GlobalPipelineConfig(num_workers=3)
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
-        document_format=ConfigDocumentAuthority,
+        document_format=ConfigDocumentCodec,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: original,
@@ -333,7 +333,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     )
 
     document = driver.read_document()
-    replacement_source = ConfigDocumentAuthority.render(
+    replacement_source = ConfigDocumentCodec.render(
         replacement,
         expected_config_type=GlobalPipelineConfig,
     )
@@ -341,7 +341,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     driver.apply_source(replacement_source)
 
     assert (
-        ConfigDocumentAuthority.from_source(
+        ConfigDocumentCodec.from_source(
             document.source,
             expected_config_type=GlobalPipelineConfig,
         )
@@ -353,7 +353,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
 def test_pycodified_config_document_authorizes_before_apply() -> None:
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
-        document_format=ConfigDocumentAuthority,
+        document_format=ConfigDocumentCodec,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=GlobalPipelineConfig,
@@ -370,7 +370,7 @@ def test_pycodified_config_document_authorizes_before_apply() -> None:
 
 def test_pyqt_codegen_provider_delegates_config_documents() -> None:
     config = GlobalPipelineConfig(num_workers=4)
-    source = ConfigDocumentAuthority.render(
+    source = ConfigDocumentCodec.render(
         config,
         expected_config_type=GlobalPipelineConfig,
     )
@@ -382,7 +382,7 @@ def test_pyqt_codegen_provider_delegates_config_documents() -> None:
     )
 
     assert (
-        ConfigDocumentAuthority.from_source(
+        ConfigDocumentCodec.from_source(
             normalized_source,
             expected_config_type=GlobalPipelineConfig,
         )
