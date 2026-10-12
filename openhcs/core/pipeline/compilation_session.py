@@ -159,7 +159,7 @@ class ProducedFiles(ProducedFileLookup):
     ``OutputFileOf`` argument resolves through it to the producer's path.
     """
 
-    step_indexes_by_name: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
+    step_names: tuple[str, ...] = ()
     parameters: tuple[OutputFileParameter, ...] = ()
 
     @classmethod
@@ -170,23 +170,14 @@ class ProducedFiles(ProducedFileLookup):
     ) -> "ProducedFiles":
         """Collect the output files of every step, then check every link."""
 
-        step_indexes_by_name: dict[str, tuple[int, ...]] = {}
         parameters: list[OutputFileParameter] = []
         step_items = tuple(
-            (
-                index,
-                f"step {step.name!r} (index {index})",
-                () if graph.pattern is None else tuple(graph.pattern.iter_items()),
-            )
+            (index, f"step {step.name!r} (index {index})", graph.invocation_items())
             for index, (step, graph) in enumerate(
                 zip(pipeline.steps, pipeline.artifact_graphs)
             )
         )
         for (index, step_label, items), step in zip(step_items, pipeline.steps):
-            step_indexes_by_name[step.name] = (
-                *step_indexes_by_name.get(step.name, ()),
-                index,
-            )
             for item in items:
                 contract = item.contract
                 values = contract.declared_path_values(item.kwargs_dict)
@@ -209,7 +200,7 @@ class ProducedFiles(ProducedFileLookup):
                         else OutputFileParameter(*identity)
                     )
         produced = cls(
-            step_indexes_by_name=step_indexes_by_name,
+            step_names=tuple(step.name for step in pipeline.steps),
             parameters=tuple(parameters),
         )
         linking = replace(resolver, produced_files=produced)
@@ -232,11 +223,13 @@ class ProducedFiles(ProducedFileLookup):
         *,
         owner: str,
     ) -> LinkedInputFile:
-        step_indexes = self.step_indexes_by_name.get(link.step, ())
+        step_indexes = tuple(
+            index for index, name in enumerate(self.step_names) if name == link.step
+        )
         if not step_indexes:
             raise DeclaredFileLinkError(
                 f"{owner} reads {link!r}, but the pipeline has no step named "
-                f"{link.step!r}; steps: {sorted(self.step_indexes_by_name)}."
+                f"{link.step!r}; steps: {sorted(set(self.step_names))}."
             )
         if len(step_indexes) > 1:
             raise DeclaredFileLinkError(
@@ -331,6 +324,55 @@ class CompilationPathResolver(InputDatasetPathResolver):
     def output_dataset_root(self) -> Path:
         return self.output_dataset.path
 
+    @classmethod
+    def for_dataset(
+        cls,
+        dataset_root: Path | str | None,
+        global_config: "GlobalPipelineConfig",
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> tuple["CompilationPathResolver", "GlobalPipelineConfig"]:
+        """Return the resolver of one dataset and the config with paths resolved.
+
+        The path planning config defines the output dataset root, so its
+        declared paths resolve first, against the input dataset.
+        """
+        from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
+
+        input_dataset = CompilationDatasetScope.from_path(dataset_root)
+        path_planning_config = resolve_declared_dataclass_paths(
+            global_config.path_planning_config,
+            InputDatasetPathResolver(
+                input_dataset=input_dataset, filemanager=filemanager, backend=backend
+            ),
+            owner="PipelineConfig.path_planning_config",
+        )
+        resolver = cls(
+            input_dataset=input_dataset,
+            filemanager=filemanager,
+            backend=backend,
+            output_dataset=CompilationDatasetScope.from_path(
+                PathPlannerPathAuthority.build_output_dataset_root(
+                    input_dataset.path, path_planning_config
+                )
+            ),
+        )
+        return resolver, resolve_declared_dataclass_paths(
+            replace(global_config, path_planning_config=path_planning_config),
+            resolver,
+            owner="PipelineConfig",
+        )
+
+    def reading_files_of(
+        self, pipeline: "ResolvedPipelineDefinition"
+    ) -> "CompilationPathResolver":
+        """Return this resolver with the pipeline's table of produced files."""
+
+        return replace(
+            self, produced_files=ProducedFiles.from_pipeline(pipeline, self)
+        )
+
     def declared_file(
         self,
         parameter: str,
@@ -389,10 +431,9 @@ def require_one_writer_per_declared_file(
     writers_by_path: dict[Path, list[DeclaredFileWriter]] = {}
     for context in compiled_contexts.values():
         for plan in context.step_plans.values():
-            pattern = plan.compiled_function_pattern
-            if pattern is None or not plan.owns_runtime_outputs:
+            if not plan.owns_runtime_outputs:
                 continue
-            for invocation in pattern.iter_invocations():
+            for invocation in plan.compiled_function_pattern.iter_invocations():
                 for declared in invocation.declared_files:
                     if declared.declaration.writes_file:
                         writers_by_path.setdefault(declared.path, []).append(
@@ -536,9 +577,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 step,
                 index,
                 execution_scope=FunctionStepExecutionScope.require_uniform(
-                    () if graph.pattern is None else (
-                        item.contract for item in graph.pattern.iter_items()
-                    )
+                    item.contract for item in graph.invocation_items()
                 ),
                 source_bindings=step.source_bindings,
                 context=context,

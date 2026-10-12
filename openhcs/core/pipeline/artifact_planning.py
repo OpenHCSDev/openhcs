@@ -262,6 +262,11 @@ class ArtifactGraph:
         default=None, init=False, repr=False, compare=False
     )
 
+    def invocation_items(self) -> tuple[NormalizedFunctionItem, ...]:
+        """Return the step's callables in run order; none for a non-function step."""
+
+        return () if self.pattern is None else tuple(self.pattern.iter_items())
+
     def resolve_main_input_dependency(
         self,
         step: "AbstractStep",

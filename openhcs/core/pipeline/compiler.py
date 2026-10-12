@@ -58,10 +58,7 @@ from openhcs.core.axis_filter import (
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
-    CompilationDatasetScope,
     CompilationSession,
-    InputDatasetPathResolver,
-    ProducedFiles,
     ResolvedPipelineDefinition,
     require_one_writer_per_declared_file,
     resolve_declared_dataclass_paths,
@@ -1571,36 +1568,11 @@ class PipelineCompiler:
                         server_mode=is_zmq_execution,
                     ),
                 )
-            input_dataset = CompilationDatasetScope.from_path(orchestrator.dataset_root)
-            input_dataset_resolver = InputDatasetPathResolver(
-                input_dataset=input_dataset,
-                filemanager=orchestrator.filemanager,
-                backend=Backend.DISK.value,
-            )
-            # The path planning config defines the output dataset root, so its
-            # declared paths resolve first, against the input plate.
-            path_planning_config = resolve_declared_dataclass_paths(
-                effective_config.path_planning_config,
-                input_dataset_resolver,
-                owner="PipelineConfig.path_planning_config",
-            )
-            effective_config = replace(
-                effective_config, path_planning_config=path_planning_config
-            )
-            path_resolver = CompilationPathResolver(
-                input_dataset=input_dataset,
-                filemanager=orchestrator.filemanager,
-                backend=Backend.DISK.value,
-                output_dataset=CompilationDatasetScope.from_path(
-                    PipelinePathPlanner.build_output_dataset_root(
-                        input_dataset.path, path_planning_config
-                    )
-                ),
-            )
-            effective_config = resolve_declared_dataclass_paths(
+            path_resolver, effective_config = CompilationPathResolver.for_dataset(
+                orchestrator.dataset_root,
                 effective_config,
-                path_resolver,
-                owner="PipelineConfig",
+                filemanager=orchestrator.filemanager,
+                backend=Backend.DISK.value,
             )
             num_workers = effective_config.num_workers
             num_workers = debug_execution_policy.compile_worker_count(num_workers)
@@ -1616,12 +1588,7 @@ class PipelineCompiler:
                 pipeline_inputs,
                 steps=resolved_steps,
             )
-            path_resolver = replace(
-                path_resolver,
-                produced_files=ProducedFiles.from_pipeline(
-                    pipeline_inputs, path_resolver
-                ),
-            )
+            path_resolver = path_resolver.reading_files_of(pipeline_inputs)
             PipelineCompiler.validate_backend_compatibility(
                 orchestrator,
                 effective_config.vfs_config,
