@@ -504,8 +504,7 @@ def _compiled_custom_contexts(payload, runtime):
 def _spawn(path):
     import multiprocessing
     from openhcs.core.compiled_execution import (
-        CompiledRuntimeEnvironmentPlan,
-        CompiledWorkerStartPlan,
+        CompiledRuntimeEnvironmentPlan, CompiledWorkerStartPlan,
     )
     from openhcs.core.config import MultiprocessingStartMethod
     from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
@@ -523,25 +522,19 @@ def _spawn(path):
     payload = _load(path)
     method = MultiprocessingStartMethod.SPAWN
     runtime = CompiledRuntimeEnvironmentPlan(
-        worker_start=CompiledWorkerStartPlan(
-            method, method, "source fixture", False, False
-        ),
-        use_threading=False,
-        configured_num_workers=2,
+        worker_start=CompiledWorkerStartPlan(method, method, "source fixture", False, False),
+        use_threading=False, configured_num_workers=2,
     )
     queue = multiprocessing.get_context(method.value).Queue()
     resources = WorkerExecutorFactory(
-        log_file_base=None,
-        progress_queue=queue,
+        log_file_base=None, progress_queue=queue,
         cancellation=ExecutionCancellationSignal(),
     ).create(runtime_environment=runtime, actual_max_workers=2)
     contexts = _compiled_custom_contexts(payload, runtime)
     try:
         with resources.execution_context():
             tasks = tuple(
-                resources.executor.submit(
-                    _spawned_compiled_custom_task, lane_context, helpers
-                )
+                resources.executor.submit(_spawned_compiled_custom_task, lane_context, helpers)
                 for lane_context, (_reference, helpers) in zip(
                     contexts.values(), payload, strict=True
                 )
@@ -555,10 +548,7 @@ def _spawn(path):
                 assert values == [[0, 1, 2], [3, 4, 5]]
                 assert type(row) is helpers[4] and row == helpers[5]
             pid, rows = resources.executor.submit(
-                _spawned_custom_task,
-                payload,
-                context.execution_id,
-                context.subject_id,
+                _spawned_custom_task, payload, context.execution_id, context.subject_id,
             ).result(timeout=15)
         assert pid != os.getpid()
         for row, (_reference, helpers) in zip(rows, payload, strict=True):

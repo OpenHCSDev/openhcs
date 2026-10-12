@@ -1110,9 +1110,7 @@ class SourceImageProvenance:
                     continue
                 if len({values[component][0] for values in domains}) > 1:
                     reduced.add(component.name)
-        return tuple(
-            component for component in component_order if component not in reduced
-        )
+        return tuple(component for component in component_order if component not in reduced)
 
     def image_set_identities(
         self,

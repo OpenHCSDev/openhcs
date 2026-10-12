@@ -1513,6 +1513,7 @@ class Session:
                 terminal_status=(
                     None
                     if (status := self.batch.terminal_status(scope_id)) is None
+
                     else status.name
                 ),
             ),

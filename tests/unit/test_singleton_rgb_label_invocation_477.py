@@ -84,21 +84,15 @@ def test_plane_label_modes_consume_declared_singleton_root_for_scalar_rgb(
     image_before = image.data.copy()
     labels_before = object_label_dense_array(labels).copy()
     invocation = _bind(case)
-    selected = invocation.kwargs["object_labels"][0]
+    selected = invocation.kwargs['object_labels'][0]
     assert invocation.execution_mode is NaturalExecution
     assert invocation.plane_projection is None
     assert invocation.payload.metadata.axis_position(ColourAxis) == 2
     assert selected.plane_axis is None
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)
-    scalar_labels = ObjectLabelSet(
-        name="Nuclei",
-        variant_data=ObjectLabelVariantData(labels=labels_before[0]),
-        domain=ObjectLabelDomain(
-            declared_object_ids=(1,), scope=ObjectLabelDomainScope.PAYLOAD
-        ),
-    )
-    expected = raw(image, object_labels=(scalar_labels,), outline_colors=("#21FFFF",))
+    scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=ObjectLabelDomainScope.PAYLOAD))
+    expected = raw(image, object_labels=(scalar_labels,), outline_colors=('#21FFFF',))
     np.testing.assert_array_equal(output.data, expected.data)
     np.testing.assert_array_equal(image.data, image_before)
     np.testing.assert_array_equal(object_label_dense_array(labels), labels_before)

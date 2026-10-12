@@ -323,9 +323,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
                 )
                 return 130
             except MeasuredRunEnded as ended:
-                print(
-                    json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr
-                )
+                print(json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr)
                 raise RuntimeError(
                     f"Ordinary pipeline run did not complete: {ended}"
                 ) from ended

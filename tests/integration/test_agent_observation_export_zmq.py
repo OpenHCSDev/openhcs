@@ -346,7 +346,10 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     assert exported.server_environment is not None
     assert exported.server_environment.python_executable
     assert completed.observation is None
-    assert completed.receipt.observation_export_scope is ExportRuntimeOutcomes
+    assert (
+        completed.receipt.observation_export_scope
+        is ExportRuntimeOutcomes
+    )
     assert {
         BenchmarkPhase.COMPILE_OPENHCS,
         BenchmarkPhase.EXECUTE_OPENHCS,

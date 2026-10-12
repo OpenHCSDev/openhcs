@@ -461,3 +461,4 @@ class ShowDatasetImages(InitializedTargetsOperation, RendererOperation):
     tooltip = "Browse dataset images and metadata"
     description = "Opens the image and metadata browser of the selected datasets."
     side_effects = ("opens_dataset_viewer_window",)
+

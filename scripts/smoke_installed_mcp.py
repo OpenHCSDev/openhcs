@@ -302,7 +302,6 @@ async def _run_measured_execution_protocol_smoke(
     pipeline_source = PipelineDocumentCodec.render(document)
     source_file = output_dir / "pipeline.py"
     source_file.write_text(pipeline_source, encoding="utf-8")
-
     async def call(name: str, arguments: dict, timeout: float = 90) -> dict:
         return _tool_payload(
             await asyncio.wait_for(session.call_tool(name, arguments), timeout=timeout)
@@ -331,9 +330,7 @@ async def _run_measured_execution_protocol_smoke(
             "openhcs_run_datasets",
             {
                 "runtime_observation_export_path": str(
-                    MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
-                        evidence_dir
-                    )
+                    MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(evidence_dir)
                 ),
                 "runtime_observation_export_scope": "outcomes",
             },
@@ -343,9 +340,7 @@ async def _run_measured_execution_protocol_smoke(
     ):
         started = await call(tool, {"scope_ids": [scope_id], **arguments})
         if started.get("status") != "accepted":
-            raise AssertionError(
-                f"Installed MCP rejected {tool}: {started} {connected}"
-            )
+            raise AssertionError(f"Installed MCP rejected {tool}: {started} {connected}")
         sequence = started["event_sequence"]
         deadline = time.monotonic() + 180
         while True:

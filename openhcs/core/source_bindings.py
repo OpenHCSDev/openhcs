@@ -984,12 +984,12 @@ class SourceSelector:
         """Apply the same selectors to identities carried by current pixels."""
         identities = provenance.represented_source_identities
         return (
-            not self.filters
-            or self.path_filters_match(
+            (not self.filters or self.path_filters_match(
                 tuple(path for identity in identities for path in identity.filter_paths)
+            ))
+            and self.metadata_candidates_match(
+                tuple(identity.component_metadata or {} for identity in identities)
             )
-        ) and self.metadata_candidates_match(
-            tuple(identity.component_metadata or {} for identity in identities)
         )
 
 

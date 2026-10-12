@@ -221,7 +221,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         progress_events = []
         while True:
             try:
-                progress_events.append(progress_queue.get_nowait())
+                progress_events.append(
+                    progress_queue.get_nowait()
+                )
             except queue.Empty:
                 break
         live_payloads = tuple(
