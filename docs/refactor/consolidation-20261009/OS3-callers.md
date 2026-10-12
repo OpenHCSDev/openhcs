@@ -145,7 +145,7 @@ Observed locally, CPython 3.12, the three submodules at the commits above.
 | `guardrails_local.sh` | `guardrails rc=0` (at `543c56eb8`) |
 | `SMOKE_SKIP_GUI=1 smoke_local.sh` | `smoke rc=0`, 5 passed (at `543c56eb8`) |
 | official30 parity, run 1 | 28/30 equivalent, not a valid run: `cp_tutorial_pixel_based_classification` was compiled by an execution server of another worktree (`agent-a05d025a19446fcd4`, `cannot import name 'LazyAnalysisConsolidationConfig'` from that worktree's file) and `cp_tutorial_translocation_final` was skipped after it |
-| official30 parity, run 2 | PARITY2 |
+| official30 parity, run 2 | 29/30 equivalent, not a clean run either: `ExampleYeastColonies` ended with `OpenHCS ZMQ execution failed: Execution was cancelled` (nothing in this branch cancels; other agents' runs were active on the machine). It was equivalent in run 1, and the two cases that failed in run 1 are equivalent here, so every case was equivalent in one of the two runs and no value mismatch was seen in either |
 
 MCP tool contract: `test_mcp_tool_contract.py` passes with no schema file changed.
 
@@ -175,7 +175,6 @@ submodules moved to the release tags.
 Done: the three library and application changes, the three PRs, every check
 in the table above.
 
-Next: a clean parity run. Run 2 is queued on `official30.lock`
-(`.claude/parity.sh` in the worktree; result in `.claude/logs/parity.done` and
-`parity.txt`). Then move the submodules to the release tags once the libraries
-are published.
+Next: one clean 30/30 parity run on a quiet machine (`.claude/parity.sh` in the
+worktree, under `official30.lock`). Then move the submodules to the release
+tags once the libraries are published.
