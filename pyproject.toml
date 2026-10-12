@@ -184,6 +184,12 @@ bioformats = [
     "polystore[bioformats]",
 ]
 
+# Cellpose segmentation, size estimation and restoration as catalogue functions.
+# The 3.x line has the nuclear, size and restoration models; it pins numpy<2.1.
+cellpose = [
+    "cellpose>=3.1.1.3,<4",
+]
+
 # All visualization tools (napari + fiji)
 viz = [
     "napari>=0.7.1",
