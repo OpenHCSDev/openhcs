@@ -662,9 +662,7 @@ class CustomFunctionManager:
             dir=self.storage_dir,
         )
         try:
-            # Persist the exact bytes the revision digest was computed from;
-            # text-mode newline translation would change them on Windows.
-            with os.fdopen(file_descriptor, "wb") as stream:
+            with os.fdopen(file_descriptor, "wb") as stream:  # the digested bytes
                 stream.write(code.encode("utf-8"))
                 stream.flush()
                 os.fsync(stream.fileno())

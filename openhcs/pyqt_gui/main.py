@@ -20,7 +20,6 @@ from PyQt6.QtGui import QAction, QKeySequence, QShowEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
-    QFileDialog,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -1550,60 +1549,6 @@ class OpenHCSMainWindow(QMainWindow):
         self._object_state_unregister_subscription.release()
         self.time_travel_widget.close()
 
-    # ========== THEME MANAGEMENT METHODS ==========
-
-    def switch_to_dark_theme(self):
-        """Switch to dark theme variant."""
-        self.service_adapter.theme_manager.switch_to_dark_theme()
-        self.status_message.emit("Switched to dark theme")
-
-    def switch_to_light_theme(self):
-        """Switch to light theme variant."""
-        self.service_adapter.theme_manager.switch_to_light_theme()
-        self.status_message.emit("Switched to light theme")
-
-    def load_theme_from_file(self):
-        """Load theme from JSON configuration file."""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Load Theme Configuration", "", "JSON Files (*.json);;All Files (*)"
-        )
-
-        if file_path:
-            theme_loaded = self.service_adapter.theme_manager.load_theme_from_config(
-                file_path
-            )
-            if theme_loaded:
-                self.status_message.emit(f"Loaded theme from {Path(file_path).name}")
-            else:
-                QMessageBox.warning(
-                    self,
-                    "Theme Load Error",
-                    f"Failed to load theme from {Path(file_path).name}",
-                )
-
-    def save_theme_to_file(self):
-        """Save current theme to JSON configuration file."""
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save Theme Configuration",
-            "pyqt6_color_scheme.json",
-            "JSON Files (*.json);;All Files (*)",
-        )
-
-        if file_path:
-            theme_saved = self.service_adapter.theme_manager.save_current_theme(
-                file_path
-            )
-            if theme_saved:
-                self.status_message.emit(f"Saved theme to {Path(file_path).name}")
-            else:
-                QMessageBox.warning(
-                    self,
-                    "Theme Save Error",
-                    f"Failed to save theme to {Path(file_path).name}",
-                )
-
-    @singledispatchmethod
     def on_session_event(self, event: SessionEvent) -> None:
         del event
 

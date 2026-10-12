@@ -324,6 +324,35 @@ class PatternGroupExecutionScope:
             self.component_key,
         )
 
+    def _unwrapped_main_flow_output_context(
+        self,
+    ) -> AlignedImageSliceContext | None:
+        ArtifactInputPlan.require_exact_map(
+            self.execution_plan.artifact_inputs,
+            boundary="Component artifact input",
+        )
+        return self.compiled_group.unwrapped_main_flow_output_context(
+            self.selected_artifact_output_plans()
+        )
+
+    def _passes_producer_outputs_through(
+        self,
+        processed_stack: ImagePayload,
+        output_count: int,
+        input_count: int,
+    ) -> bool:
+        """Whether each published slice is the producer's aligned output, passed on.
+
+        A declared passthrough chain names no output of its own, so its slices
+        keep the exact producer declaration (context and filename qualifier)
+        of the input file they are aligned to.
+        """
+        if processed_stack.owns_output_surfaces:
+            return False
+        if self._unwrapped_main_flow_output_context() is not None:
+            return False
+        return output_count == input_count
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PatternGroupExecutionRequest(PatternGroupExecutionScope):
@@ -547,21 +576,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             matching_files,
             self.context.microscope_handler.parser,
         )
-
-    def _producer_filename_qualifiers(
-        self,
-        matching_files: Sequence[str],
-    ) -> tuple[str | None, ...]:
-        """Resolve the filename qualifier each producer gave the loaded paths."""
-
-        records = step_output_manifest(self.context).producer_output_records_for_paths(
-            self.execution_plan,
-            matching_files,
-            self.context.microscope_handler.parser,
-        )
-        if records is None:
-            return (None,) * len(matching_files)
-        return tuple(record.filename_qualifier for record in records)
 
     def load_input_stack(
         self,
@@ -1016,24 +1030,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
         return binding.apply_loaded_payload(payload, source_context)
 
-    def _passes_producer_outputs_through(
-        self,
-        processed_stack: ImagePayload,
-        output_count: int,
-        input_count: int,
-    ) -> bool:
-        """Whether each published slice is the producer's aligned output, passed on.
-
-        A declared passthrough chain names no output of its own, so its slices
-        keep the exact producer declaration (context and filename qualifier)
-        of the input file they are aligned to.
-        """
-        if processed_stack.owns_output_surfaces:
-            return False
-        if self._unwrapped_main_flow_output_context() is not None:
-            return False
-        return output_count == input_count
-
     def _project_output_slices(
         self,
         processed_stack: ImagePayload,
@@ -1099,17 +1095,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 f"{output_shape}"
             ) from exc
 
-    def _unwrapped_main_flow_output_context(
-        self,
-    ) -> AlignedImageSliceContext | None:
-        ArtifactInputPlan.require_exact_map(
-            self.execution_plan.artifact_inputs,
-            boundary="Component artifact input",
-        )
-        return self.compiled_group.unwrapped_main_flow_output_context(
-            self.selected_artifact_output_plans()
-        )
-
     def _save_outputs(
         self,
         processed_stack: RuntimeArrayData,
@@ -1146,12 +1131,14 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         output_slices = tuple(payload for payload, _context in projected_outputs)
         num_outputs = len(output_slices)
         num_inputs = len(matching_files)
-        passed_through_qualifiers = (
-            self._producer_filename_qualifiers(matching_files)
+        passed_through_records = (
+            step_output_manifest(context).producer_output_records_for_paths(
+                self.execution_plan, matching_files, context.microscope_handler.parser
+            )
             if self._passes_producer_outputs_through(
                 processed_stack, num_outputs, num_inputs
             )
-            else (None,) * num_outputs
+            else None
         )
 
         if num_outputs < num_inputs:
@@ -1213,11 +1200,14 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 output_identity = output_identity.with_filename_qualifier(
                     output_context.output_key
                 )
-            elif passed_through_qualifiers[i] is not None:
+            elif (
+                passed_through_records is not None
+                and passed_through_records[i].filename_qualifier is not None
+            ):
                 # A passed-through surface keeps the qualifier its producer
                 # published it under; dropping it would merge sibling surfaces.
                 output_identity = output_identity.with_filename_qualifier(
-                    passed_through_qualifiers[i]
+                    passed_through_records[i].filename_qualifier
                 )
             output_path = output_identity.path_for_request(output_path_request)
             output_path_text = str(output_path)
