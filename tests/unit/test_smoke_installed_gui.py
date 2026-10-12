@@ -35,7 +35,7 @@ from scripts.smoke_installed_gui import (
     InstalledGuiSnapshotEvidenceAuthority,
     _StartupObservation,
     assert_not_source_checkout_import,
-    require_ui_action_accepted,
+    accepted_ui_action_status,
     verify_installed_function_catalog,
     with_isolated_runtime_topology,
 )
@@ -444,7 +444,7 @@ def test_gui_smoke_accepts_only_an_accepted_ui_action(
     action_result = SimpleNamespace(status=status)
 
     if status is ActionAccepted:
-        require_ui_action_accepted(action_result)
+        assert json.dumps(accepted_ui_action_status(action_result)) == '"accepted"'
     else:
         with pytest.raises(AssertionError, match="not accepted"):
-            require_ui_action_accepted(action_result)
+            accepted_ui_action_status(action_result)

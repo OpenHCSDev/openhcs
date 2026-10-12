@@ -458,13 +458,14 @@ def _typed_tool_payload(
     return payload
 
 
-def require_ui_action_accepted(action_result: UiActionInvokeResult) -> None:
-    """Fail the smoke unless the live GUI took the requested action."""
+def accepted_ui_action_status(action_result: UiActionInvokeResult) -> str:
+    """The wire name of the accepted status; fail unless the GUI took the action."""
 
     from openhcs.agent.dto.ui_bridge import ActionAccepted
 
     if action_result.status is not ActionAccepted:
         raise AssertionError(f"Installed UI action was not accepted: {action_result}")
+    return action_result.status.name
 
 
 def _window_ids(catalog: UiWindowCatalog) -> frozenset[str]:
@@ -717,7 +718,7 @@ def run_installed_live_mcp_smoke(
             capability=agent_capabilities.ui_invoke_action,
             payload_type=UiActionInvokeResult,
         )
-        require_ui_action_accepted(action_result)
+        action_status = accepted_ui_action_status(action_result)
 
         timeout_text = f"{deadline.remaining_seconds():g}"
         windows_execution = client.execute(
@@ -757,7 +758,7 @@ def run_installed_live_mcp_smoke(
 
     journal.record(InstalledGuiSmokePhase.LIVE_MCP_COMPLETE)
     return InstalledLiveMcpSmokeResult(
-        action_status=action_result.status,
+        action_status=action_status,
         bridge_count=len(bridge_catalog.bridges),
         bridge_port=bridge_status.connection.require_port("Installed UI bridge smoke"),
         bridge_reachable=bridge_status.reachable,
