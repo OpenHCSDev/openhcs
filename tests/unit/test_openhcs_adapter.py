@@ -153,7 +153,6 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     configured = adapter._execution_global_config(
         request,
         output_suffix="_candidate",
-        output_dataset_root=tmp_path / "candidate-plate",
         compilation_debug_config=CompilationDebugConfig(),
     )
 
@@ -168,6 +167,8 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     assert (
         configured.analysis_consolidation_config.output_filename == "custom-summary.csv"
     )
+    # Analysis results resolve inside the compiled output root by default.
+    assert configured.materialization_results_path == Path("results")
     assert base_config.path_planning_config.global_output_folder is None
     assert base_config.analysis_consolidation_config.enabled is True
 
@@ -484,6 +485,19 @@ def test_openhcs_progress_observer_tracks_every_server_event(
     assert observer.last_progress_monotonic == 14.5
     assert observer.inactivity_seconds(observed_at=17.0) == 2.5
     assert observer.progress_description() == "artifact_transfer/running"
+
+
+def test_openhcs_progress_silence_is_measured_from_run_submission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Server startup belongs to the client's readiness timeout, not the watchdog."""
+    observer = _ZMQProgressTimingObserver()
+    assert observer.inactivity_seconds(observed_at=500.0) == 0.0
+
+    monkeypatch.setattr("benchmark.openhcs_measured_run.time.monotonic", lambda: 200.0)
+    observer.begin_run()
+
+    assert observer.inactivity_seconds(observed_at=321.0) == 121.0
 
 
 def test_openhcs_watchdog_allows_execution_without_interval_timer(

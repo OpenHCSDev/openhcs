@@ -17,6 +17,8 @@ from metaclass_registry import (
     RegistryFamily,
     extract_key_from_class_name,
 )
+from polystore.backend_registry import STORAGE_BACKENDS
+from polystore.base import VirtualBackend
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer, ViewerStreamSourceMetadata
 from polystore.virtual_workspace import SourcePixelRef
@@ -664,6 +666,15 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     def from_plan(cls, plan: CompiledStepPlan) -> OpenHCSMetadataTarget | None:
         """Resolve this declaration's independently compiled storage target."""
 
+    @staticmethod
+    def hosts_metadata_document(backend: str) -> bool:
+        """The metadata document lives in the output root's local directory.
+
+        A virtual backend (for example OMERO) declares that its paths name
+        remote objects, so its output root has no directory to hold it.
+        """
+        return not issubclass(STORAGE_BACKENDS[backend], VirtualBackend)
+
     @classmethod
     def for_plan(cls, plan: CompiledStepPlan) -> tuple[OpenHCSMetadataTarget, ...]:
         """Derive targets from their declarations, without a consumer roster."""
@@ -1119,12 +1130,14 @@ class PrimaryImageMetadataTarget(
 
     @classmethod
     def from_plan(cls, plan: CompiledStepPlan) -> PrimaryImageMetadataTarget | None:
-        if plan.write_backend in (Backend.OMERO_LOCAL.value, Backend.MEMORY.value):
+        if plan.write_backend == Backend.MEMORY.value:
             return None
         if plan.write_backend is None:
             raise ValueError(
                 f"Step {plan.step_index} ({plan.step_name}) has no write backend."
             )
+        if not cls.hosts_metadata_document(plan.write_backend):
+            return None
         if plan.output_dir is None:
             raise ValueError(
                 f"Step {plan.step_index} ({plan.step_name}) has no output directory."
@@ -1153,10 +1166,7 @@ class MaterializedImageMetadataTarget(
         cls, plan: CompiledStepPlan
     ) -> MaterializedImageMetadataTarget | None:
         output = plan.materialized_output
-        if output is None or output.backend in (
-            Backend.OMERO_LOCAL.value,
-            Backend.MEMORY.value,
-        ):
+        if output is None or not cls.hosts_metadata_document(output.backend):
             return None
         return cls(
             output_dir=output.output_dir,
@@ -1227,7 +1237,12 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
     @classmethod
     def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:
         materialization = plan.runtime_artifact_materialization
-        if not materialization.has_persistent_target:
+        if not (
+            materialization.has_persistent_target
+            and cls.hosts_metadata_document(
+                materialization.require_persistent_backend()
+            )
+        ):
             return None
         output_dir = plan.artifact_analysis_output_dir
         dataset_root = plan.artifact_output_dataset_root

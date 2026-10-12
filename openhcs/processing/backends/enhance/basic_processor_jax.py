@@ -32,6 +32,10 @@ from openhcs.core.materialization import (
     NameByArtifactName,
 )
 
+# The OpenHCS requirement markers decide where this distribution is installed;
+# the function catalog leaves this module out wherever they exclude it.
+REQUIRED_DISTRIBUTIONS = ("openhcs-basicpy",)
+
 
 def _fitted_field_output(name: str) -> ArtifactSpec:
     """Project group lineage; runtime field owns aggregate contributor context."""

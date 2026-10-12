@@ -33,7 +33,7 @@ class _PlateManagerStub(QWidget):
         self._orchestrator = orchestrator
         self.plate_selected = _Signal()
 
-    def get_selected_orchestrator(self) -> _OrchestratorStub:
+    def _get_current_orchestrator(self) -> _OrchestratorStub:
         return self._orchestrator
 
     def select(self, orchestrator: _OrchestratorStub) -> None:
@@ -145,12 +145,14 @@ def test_managed_plate_window_passes_resolved_ui_config(
         def __init__(
             self,
             service_adapter,
+            session,
             color_scheme,
             *,
             gui_config,
         ) -> None:
             super().__init__()
             del service_adapter, color_scheme
+            captured["session"] = session
             captured["gui_config"] = gui_config
 
         def cleanup(self) -> None:
@@ -163,11 +165,13 @@ def test_managed_plate_window_passes_resolved_ui_config(
         "PlateManagerWidget",
         PlateManagerStub,
     )
-    monkeypatch.setattr(PlateManagerWindow, "_setup_connections", lambda self: None)
 
+    session = object()
     main_window = QWidget()
+    main_window.session = session
     window = PlateManagerWindow(main_window, ServiceAdapterStub())
     qtbot.addWidget(main_window)
     qtbot.addWidget(window)
 
     assert captured["gui_config"] is resolved_ui_config
+    assert captured["session"] is session
