@@ -10,6 +10,11 @@ layout) or on a branch that neither pipeline nor any preparation exercises; the
 second test narrows that to signatures, since it fails for any kernel that
 preparation leaves with no compiled signature at all. GPU kernels (CuPy,
 pyclesperanto program builds) are not counted: the run is CPU-only.
+
+The last three tests count a resource that is not a Numba kernel: two custom
+functions whose declared preparation loads something into memory, one stored
+before the server starts and one stored while it is ready. They run with fork
+workers only; with spawn workers every execution still starts new processes.
 """
 
 from __future__ import annotations
