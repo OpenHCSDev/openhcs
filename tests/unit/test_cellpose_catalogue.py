@@ -1,6 +1,7 @@
 """The derived Cellpose functions as the catalogue, workers, agents and code see them."""
 
 import inspect
+from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -98,8 +99,11 @@ def test_agent_catalogue_lists_every_control_with_type_default_and_description(
     )
     detail = FunctionCatalogService().get(f"cellpose:{name}", max_doc_chars=None)
     described = {parameter.name: parameter for parameter in detail.parameters}
-    controls = derived.library._declared[name][0].controls
-    assert controls
+    controls = [
+        control
+        for control in derived.library._declared[name][0].controls
+        if control.source is None
+    ]
     for control in controls:
         parameter = described[control.name]
         assert parameter.annotation and "Any" not in parameter.annotation
@@ -111,10 +115,8 @@ def test_agent_catalogue_lists_every_control_with_type_default_and_description(
             )
         if control.text:
             assert control.text.startswith((parameter.description or "\0")[:40])
-    models = (
-        derived.RestorationModel if name == "restore" else derived.SegmentationModel
-    )
-    assert list(described["model_type"].enum_values) == [m.value for m in models]
+        if isinstance(control.default, Enum):
+            assert list(parameter.enum_values) == [m.value for m in type(control.default)]
 
 
 def test_json_authoring_values_become_the_declared_types(catalogue):

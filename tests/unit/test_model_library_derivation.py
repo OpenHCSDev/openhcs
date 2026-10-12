@@ -1,26 +1,35 @@
 """Deriving catalogue functions from a library's calls, on a small library defined here."""
 
+import dataclasses
 import inspect
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
 import pytest
 
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.memory import numpy as numpy_function
 from openhcs.processing.backends.lib_registry import model_library
 from openhcs.processing.backends.lib_registry.model_library import (
+    Converted,
     DerivationError,
     DerivedLibraryRegistry,
+    EachPlane,
     Forwarded,
+    FromEarlierStep,
     Image,
     ImageStack,
     Labels,
     Library,
     Measurements,
     Pixels,
+    PlanesWithOneResult,
     Required,
     Resource,
+    RowsAlong,
+    SameControl,
     Stated,
     Supplied,
     enum_of_names,
@@ -96,7 +105,7 @@ def _scaling(library: Library, network: type = Network, **resource):
         "scale",
         call,
         Image("halves", Pixels((1,), channel_axis=0)),
-        Measurements("means", __name__, {"mean": (2,)}),
+        Measurements("means", {"mean": (2,)}),
         main=Pixels((0,)),
     )
     return library.functions["scale"]
@@ -213,7 +222,7 @@ def test_an_unshared_resource_is_built_for_every_call_and_can_be_a_part():
     )
     library.function("weigh", call, main=Pixels(()))
     stack = np.ones((1, 2, 2), np.float32)
-    assert np.array_equal(library.functions["weigh"](stack, scale=4.0)[0], stack * 4)
+    assert np.array_equal(library.functions["weigh"](stack, scale=4.0), stack * 4)
     library.functions["weigh"](stack, scale=4.0)
     assert BUILT == [("small", 4.0), ("small", 4.0)]
 
@@ -238,8 +247,8 @@ def test_nested_resources_forwarded_parameters_stated_types_and_missing_labels()
         library.call(
             Wrapper.predict, {"self": Resource(wrapper), "kwargs": Forwarded(inner)}
         ),
+        Measurements("means", {"mean": (1,)}, counted=(0,)),
         Labels("objects", Pixels((0,)), like=Pixels((0,))),
-        Measurements("means", __name__, {"mean": (1,)}, counted=(0,)),
     )
     detect = library.functions["detect"]
     parameters = inspect.signature(detect).parameters
@@ -251,7 +260,7 @@ def test_nested_resources_forwarded_parameters_stated_types_and_missing_labels()
         kinds.SMALL,
     )
     stack = np.stack([np.zeros((2, 2), np.float32), np.ones((2, 2), np.float32)])
-    image, labels, rows = detect(stack, name=kinds.LARGE_V2, offset=1, threshold=2.0)
+    image, rows, labels = detect(stack, name=kinds.LARGE_V2, offset=1, threshold=2.0)
     assert BUILT == [("large-v2", 2)]
     assert image is not None and np.array_equal(image, stack)
     assert labels.dtype == np.int32
@@ -349,3 +358,90 @@ def test_registry_projects_the_declared_functions_and_tracks_its_sources(tmp_pat
         Path(inspect.getsourcefile(LibraryRegistryBase)),
         Path(__file__),
     } <= tracked
+
+
+# ---- artifacts of earlier steps, calls per plane, rows per element ----------------
+
+
+def grow(masks, flow, amount=1):
+    """Grow objects.
+
+    Args:
+        masks (array): Labels of one plane, changed in place.
+        flow (array): Channels first.
+        amount (int, optional): Added to every labelled pixel.
+    """
+    assert flow.shape[0] == 2 and masks.ndim == 2
+    masks[masks > 0] += amount
+    return masks, [float(masks.max())] * int(masks.max()), flow.sum()
+
+
+def test_earlier_artifacts_are_given_as_the_stack_is_and_never_changed():
+    labels_made = Labels("objects", Pixels((0,)), like=Pixels((0,)))
+    flow_made = Image("flow", Pixels((1,), channel_axis=0))
+    library = _library(masks=FromEarlierStep(labels_made), flow=FromEarlierStep(flow_made))
+    library.function(
+        "grow",
+        library.call(grow),
+        RowsAlong("sizes", {"size": (1,), "flow_sum": (2,)}, along="object"),
+        labels_made,
+        use=EachPlane(),
+    )
+    function = library.functions["grow"]
+    contract = CallableContract.from_callable(function)
+    assert [
+        (spec.name, spec.parameter_name, spec.sidecar_role)
+        for spec in contract.artifact_inputs
+    ] == [("objects", "masks", None), ("flow", "flow", flow_made.spec().sidecar_role)]
+    assert list(inspect.signature(function).parameters)[:4] == ["image", "masks", "flow", "amount"]
+    stack = np.zeros((2, 2, 2), np.float32)
+    masks = np.array([[[0, 1], [1, 1]], [[0, 0], [0, 0]]], np.int32)
+    flow = np.ones((2, 2, 2, 2), np.float32)
+    published = masks.copy()
+    image, rows, grown = function(stack, masks=masks, flow=flow, amount=2)
+    assert np.array_equal(masks, published)
+    assert np.array_equal(grown, np.where(published > 0, published + 2, 0))
+    assert [dataclasses.astuple(row) for row in rows.rows] == [
+        (0, 0, 3.0, 8.0),
+        (0, 1, 3.0, 8.0),
+        (0, 2, 3.0, 8.0),
+    ]
+    assert rows.row_type is getattr(sys.modules[__name__], "grow_sizes_row")
+
+
+def test_a_first_output_of_the_main_image_flow_is_a_derivation_error():
+    made = Labels("objects", Pixels(()), like=Pixels(()))
+    library = _library(masks=FromEarlierStep(made), flow=FromEarlierStep(made))
+    library.function("grow", library.call(grow), Labels("grown", Pixels((0,)), like=Pixels((0,))))
+    with pytest.raises(DerivationError, match="first output"):
+        library.functions
+
+
+def fit(net, x, rate=0.5, name="unused"):
+    """Fit.
+
+    Args:
+        rate (float, optional): Step size.
+    """
+    return name, [rate * len(image) for image in x], x[0].shape
+
+
+def test_one_result_for_all_planes_a_converted_argument_and_a_shared_control():
+    library = _library()
+    library.function(
+        "fit",
+        library.call(
+            fit,
+            {
+                "net": Resource(library.call(Network), "weights", shared=False),
+                "x": Converted(ImageStack(), lambda planes: [plane[None] for plane in planes]),
+                "name": SameControl(str.upper),
+            },
+        ),
+        RowsAlong("losses", {"loss": (1,)}, along="epoch"),
+        use=PlanesWithOneResult(),
+    )
+    function = library.functions["fit"]
+    assert list(inspect.signature(function).parameters)[:4] == ["image", "name", "scale", "rate"]
+    image, rows = function(np.zeros((3, 2, 2), np.float32), rate=2.0)
+    assert [dataclasses.astuple(row) for row in rows.rows] == [(0, 0, 2.0), (0, 1, 2.0), (0, 2, 2.0)]

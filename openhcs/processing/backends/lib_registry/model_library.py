@@ -22,19 +22,21 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache, cached_property, reduce
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
 from openhcs.constants import MemoryType
 from openhcs.core.artifacts.kinds import (
+    ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
 from openhcs.core.artifacts.sidecars import QaCheckpoint
-from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
 from openhcs.core.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -46,8 +48,13 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.memory import numpy as numpy_function
-from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.pipeline.function_contracts import (
+    artifact_inputs,
+    artifact_outputs,
+)
 from openhcs.core.processing_contracts import Pure3DContract
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,
@@ -131,6 +138,8 @@ class Control:
     annotation: object
     default: object
     text: str
+    source: ArtifactSpec | None = None
+    """The artifact of an earlier step that fills this parameter, if one does."""
 
 
 def _optional_when_unset(annotation: object, default: object) -> object:
@@ -187,7 +196,7 @@ class Statement(ABC):
 
     @abstractmethod
     def arguments(
-        self, site: Site, values: Mapping[str, object], images: object
+        self, site: Site, values: Mapping[str, object], give: "Give"
     ) -> dict[str, object]:
         """The library arguments this parameter contributes to one call."""
 
@@ -198,7 +207,7 @@ class Derived(Statement):
     def controls(self, site):
         return (site.control(site.derived_annotation(), site.parameter.default),)
 
-    def arguments(self, site, values, images):
+    def arguments(self, site, values, give):
         return {site.name: values[site.name]}
 
 
@@ -208,8 +217,32 @@ class ImageStack(Statement):
     def controls(self, site):
         return ()
 
-    def arguments(self, site, values, images):
-        return {site.name: images}
+    def arguments(self, site, values, give):
+        return {site.name: give(values["image"])}
+
+
+@dataclass(frozen=True)
+class FromEarlierStep(Statement):
+    """This parameter receives what an earlier step published as ``made``.
+
+    It is given the way the stack is, with channels where the library put them.
+    """
+
+    made: "Image | Labels"
+
+    def controls(self, site):
+        source = dataclasses.replace(
+            self.made.spec().for_plan_type(ArtifactInputPlan), parameter_name=site.name
+        )
+        accepted = Union[source.artifact_type.runtime_parameter_types()]
+        return (
+            Control(site.name, accepted, site.parameter.empty, site.documented.text, source),
+        )
+
+    def arguments(self, site, values, give):
+        return {
+            site.name: give(np.array(values[site.name]), self.made.pixels.channel_axis)
+        }
 
 
 @dataclass(frozen=True)
@@ -221,7 +254,7 @@ class Supplied(Statement):
     def controls(self, site):
         return ()
 
-    def arguments(self, site, values, images):
+    def arguments(self, site, values, give):
         return {}
 
 
@@ -246,7 +279,7 @@ class Stated(Statement):
             ),
         )
 
-    def arguments(self, site, values, images):
+    def arguments(self, site, values, give):
         value = values[site.name]
         return {
             site.name: site.parameter.default
@@ -261,7 +294,36 @@ class Required(Stated):
     def controls(self, site):
         return (site.control(self.annotation, inspect.Parameter.empty),)
 
-    def arguments(self, site, values, images):
+    def arguments(self, site, values, give):
+        return {site.name: self.to_library(values[site.name])}
+
+
+@dataclass(frozen=True)
+class Converted(Statement):
+    """Another statement's argument, in the form one library call wants it."""
+
+    statement: Statement
+    to_library: Callable[[object], object]
+
+    def controls(self, site):
+        return self.statement.controls(site)
+
+    def arguments(self, site, values, give):
+        given = self.statement.arguments(site, values, give)
+        return {name: self.to_library(value) for name, value in given.items()}
+
+
+@dataclass(frozen=True)
+class SameControl(Statement):
+    """No control of its own: the function already has one of this name, and
+    the library means the same value by both."""
+
+    to_library: Callable[[object], object]
+
+    def controls(self, site):
+        return ()
+
+    def arguments(self, site, values, give):
         return {site.name: self.to_library(values[site.name])}
 
 
@@ -284,8 +346,8 @@ class Resource(Statement):
     def controls(self, site):
         return self.factory.controls
 
-    def arguments(self, site, values, images):
-        arguments = self.factory.arguments(values, images)
+    def arguments(self, site, values, give):
+        arguments = self.factory.arguments(values, give)
         key = (self.factory.target, *sorted(arguments.items()))
         built = _SHARED_RESOURCES.get(key) if self.shared else None
         if built is None:
@@ -315,8 +377,8 @@ class Forwarded(Statement):
     def controls(self, site):
         return self._forwarded(site).controls
 
-    def arguments(self, site, values, images):
-        return self._forwarded(site).arguments(values, images)
+    def arguments(self, site, values, give):
+        return self._forwarded(site).arguments(values, give)
 
 
 @dataclass(frozen=True)
@@ -334,18 +396,82 @@ class Call:
             for control in statement.controls(site)
         )
 
-    def arguments(self, values: Mapping[str, object], images: object) -> dict:
+    def arguments(self, values: Mapping[str, object], give: "Give") -> dict:
         return {
             name: argument
             for site, statement in self.bound
-            for name, argument in statement.arguments(site, values, images).items()
+            for name, argument in statement.arguments(site, values, give).items()
         }
 
 
-# ---- what the library returns, declared as outputs -----------------------------
+# ---- how the stack is handed to the library and its result read ----------------
 
 PerImage = Callable[[Where], list]
 """Reads the value at a path, as one entry for each image the library was given."""
+Give = Callable[..., object]
+"""Turns a stack (planes first, channels last) into what the library is given."""
+
+
+def _at(value: object, at: Where) -> object:
+    return reduce(lambda part, index: part[index], at, value)
+
+
+def _image(array: np.ndarray, channel_axis: int | None = None) -> np.ndarray:
+    return array if channel_axis is None else np.moveaxis(array, -1, channel_axis)
+
+
+class StackUse(ABC):
+    """How a function hands the step's stack to the library and reads the result."""
+
+    @abstractmethod
+    def per_image(self, run: Callable[[Give], object], planes: int) -> PerImage:
+        """Call the library through ``run`` and return the reader of its result."""
+
+
+class ListOfPlanes(StackUse):
+    """One call with a list of planes; each result has one entry for each plane.
+
+    A value the library returns once is repeated for every plane.
+    """
+
+    def per_image(self, run, planes):
+        result = run(lambda stack, axis=None: [_image(plane, axis) for plane in stack])
+
+        def read(at: Where) -> list:
+            part = _at(result, at[:1])
+            return [_at(one, at[1:]) for one in ([part] if np.isscalar(part) else part)]
+
+        return read
+
+
+class EachPlane(StackUse):
+    """One call for each plane."""
+
+    def per_image(self, run, planes):
+        results = [
+            run(lambda stack, axis=None, plane=plane: _image(stack[plane], axis))
+            for plane in range(planes)
+        ]
+        return lambda at: [_at(result, at) for result in results]
+
+
+class OneImage(StackUse):
+    """One call with the whole stack as one image (a volume, or channels)."""
+
+    def per_image(self, run, planes):
+        result = run(_image)
+        return lambda at: [_at(result, at)]
+
+
+class PlanesWithOneResult(StackUse):
+    """One call with a list of planes whose result is about all of them."""
+
+    def per_image(self, run, planes):
+        result = run(lambda stack, axis=None: [_image(plane, axis) for plane in stack])
+        return lambda at: [_at(result, at)]
+
+
+# ---- what the library returns, declared as outputs -----------------------------
 
 
 @dataclass(frozen=True)
@@ -390,8 +516,8 @@ class Output(ABC):
         """The existing OpenHCS declaration this output uses."""
 
     @abstractmethod
-    def value(self, per_image: PerImage) -> object:
-        """The output's value from what the library returned."""
+    def value(self, per_image: PerImage, function: Callable) -> object:
+        """The output's value from what the library returned to ``function``."""
 
 
 @dataclass(frozen=True)
@@ -401,15 +527,20 @@ class Image(Output):
     pixels: Pixels
 
     def spec(self):
-        return ArtifactSpec.output(
+        return MainFlowStackOutputSpec.output(
             self.name,
             ImageArtifactType,
             sidecar_role=QaCheckpoint,
             materialization=MaterializationSpec(_image_files(self.name)),
         )
 
-    def value(self, per_image):
-        return self.pixels.stack(per_image)
+    def value(self, per_image, function):
+        pixels = self.pixels.stack(per_image)
+        if self.pixels.channel_axis is None:
+            return pixels
+        # The image writer needs the last axis declared as samples of one image.
+        metadata = ImagePayloadMetadata.for_array(pixels)
+        return metadata.with_axis(ColourSampleAxisSpec(), -1).payload_with(pixels)
 
 
 @dataclass(frozen=True)
@@ -426,7 +557,7 @@ class Labels(Output):
             materialization=MaterializationSpec(ROIOptions(), _image_files(self.name)),
         )
 
-    def value(self, per_image):
+    def value(self, per_image, function):
         labels = self.pixels.stack(per_image)
         if not labels.size:
             labels = np.zeros(self.like.stack(per_image).shape)
@@ -448,10 +579,9 @@ class Measurements(Output):
     numbered columns, a value the library returns once is repeated for every
     image, and a value of higher rank is left out. ``counted`` is where the
     labels are whose objects are counted. The row dataclass is made from the
-    columns and placed in ``module``.
+    columns and placed beside the function, under the function's name.
     """
 
-    module: str
     columns: Mapping[str, Where] = field(default_factory=dict)
     counted: Where | None = None
 
@@ -477,20 +607,52 @@ class Measurements(Output):
                 for index in range(len(values[0])):
                     yield f"{column}_{index}", [value[index].item() for value in values]
 
-    def value(self, per_image):
+    def table(self, per_image: PerImage) -> dict[str, list]:
+        """The table's columns, each with one value for every row."""
+
         cells = dict(self._cells(per_image))
         count = max(map(len, cells.values()))
-        cells = {
+        return {
             "slice_index": list(range(count)),
             **{column: values * (count // len(values)) for column, values in cells.items()},
         }
+
+    def value(self, per_image, function):
+        cells = {column: np.asarray(values) for column, values in self.table(per_image).items()}
         row_type = _row_type(
-            self.module,
-            f"{self.name}_row",
-            tuple((column, type(values[0])) for column, values in cells.items()),
+            function.__module__,
+            f"{function.__name__}_{self.name}_row",
+            tuple((column, type(values.dtype.type().item())) for column, values in cells.items()),
         )
-        rows = [row_type(*row) for row in zip(*cells.values(), strict=True)]
+        rows = [row_type(*row) for row in zip(*map(np.ndarray.tolist, cells.values()), strict=True)]
         return DataclassMeasurementColumnarRows(rows, row_type)
+
+
+@dataclass(frozen=True)
+class RowsAlong(Measurements):
+    """One table row for each element of an image's vectors: an object, an epoch.
+
+    ``along`` names the column that numbers the elements; a scalar is repeated.
+    """
+
+    along: str = "index"
+
+    def table(self, per_image):
+        columns = {column: per_image(at) for column, at in self.columns.items()}
+        lengths = [
+            max((np.size(value) for value in image if np.ndim(value)), default=1)
+            for image in zip(*columns.values(), strict=True)
+        ]
+        return {
+            "slice_index": np.repeat(np.arange(len(lengths)), lengths),
+            self.along: np.concatenate([np.arange(length) for length in lengths]),
+            **{
+                column: np.concatenate(
+                    [np.broadcast_to(value, length) for value, length in zip(values, lengths)]
+                )
+                for column, values in columns.items()
+            },
+        }
 
 
 # ---- a library's declaration and the functions derived from it -----------------
@@ -546,11 +708,16 @@ class Library:
         )
 
     def function(
-        self, name: str, call: Call, *outputs: Output, main: Pixels | None = None
+        self,
+        name: str,
+        call: Call,
+        *outputs: Output,
+        main: Pixels | None = None,
+        use: StackUse = ListOfPlanes(),
     ) -> None:
         """Declare one catalogue function; ``main`` is its image, else the input's."""
 
-        self._declared[name] = (call, outputs, main)
+        self._declared[name] = (call, outputs, main, use)
 
     @cached_property
     def functions(self) -> dict[str, Callable]:
@@ -562,7 +729,12 @@ class Library:
         }
 
     def _derive(
-        self, name: str, call: Call, outputs: Sequence[Output], main: Pixels | None
+        self,
+        name: str,
+        call: Call,
+        outputs: Sequence[Output],
+        main: Pixels | None,
+        use: StackUse,
     ) -> Callable:
         image_control = Control(
             "image", np.ndarray, inspect.Parameter.empty, "Image stack (planes, Y, X)."
@@ -596,30 +768,21 @@ class Library:
             bound.apply_defaults()
             values = bound.arguments
             image = values["image"]
-            as_planes = all(values.get(control) is None for control in whole_stack)
-            result = call.target(
-                **call.arguments(values, list(image) if as_planes else image)
+            as_declared = all(values.get(control) is None for control in whole_stack)
+            per_image = (use if as_declared else OneImage()).per_image(
+                lambda give: call.target(**call.arguments(values, give)), len(image)
             )
-
-            def per_image(at: Where) -> list:
-                part = result if not at else result[at[0]]
-                images = part if as_planes and not np.isscalar(part) else [part]
-                return [
-                    reduce(lambda value, index: value[index], at[1:], one)
-                    for one in images
-                ]
-
-            return (
-                image if main is None else main.stack(per_image),
-                *(output.value(per_image) for output in outputs),
-            )
+            result = image if main is None else main.stack(per_image)
+            if not outputs:
+                return result
+            return (result, *(output.value(per_image, derived) for output in outputs))
 
         def prepare() -> None:
-            """Build the default resources; a required control leaves none to build."""
+            """Build the default resources, unless a parameter has no default."""
 
             defaults = {control.name: control.default for control in call.controls}
             if inspect.Parameter.empty not in defaults.values():
-                call.arguments(defaults, None)
+                call.arguments({"image": None, **defaults}, lambda stack, axis=None: None)
 
         target = call.target
         summary = (inspect.getdoc(target) or "").partition("\n")[0]
@@ -635,11 +798,20 @@ class Library:
                 f"{summary} Derived from ``{target.__module__}.{target.__qualname__}``.",
                 "",
                 "Args:",
-                *(f"    {control.name}: {control.text}" for control in controls),
+                *(f"    {c.name}: {c.text}" for c in controls if c.text),
             )
         )
+        specs = [output.spec() for output in outputs]
+        if specs and specs[0].participates_in_main_flow:
+            raise DerivationError(
+                f"{self.module}.{name}: the platform reads a first output that takes "
+                "part in the main image flow as the function's image; declare an "
+                "output that does not before it."
+            )
+        declared = artifact_outputs(*specs)(derived)
+        sources = [control.source for control in controls if control.source]
         return numpy_function(
-            artifact_outputs(*(output.spec() for output in outputs))(derived),
+            artifact_inputs(*sources)(declared) if sources else declared,
             contract=Pure3DContract,
             prepare=prepare,
         )
