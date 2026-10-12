@@ -35,6 +35,7 @@ from openhcs.core.runtime_array_values import (
     RuntimeArrayData,
     RuntimeArrayPayload,
     array_geometry,
+    host_array,
     is_array_payload,
     mask_array,
     runtime_array_operand,
@@ -1365,8 +1366,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         return self.metadata
 
     @property
-    def array_data(self) -> Any:
-        return self.data
+    def array_data(self) -> np.ndarray:
+        """Return the host array a writer stores for this image."""
+        return host_array(self.data)
 
     @property
     def mask(self) -> Any | None:
@@ -1663,7 +1665,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
 
         return SourceImageObjectLabelBuildRequest(
             image=source,
-            labels=self.data,
+            labels=host_array(self.data),
             plane_projection=plane_projection,
         ).payload()
 

@@ -140,7 +140,7 @@ def test_runtime_slice_projection_accepts_arraybridge_payloads(monkeypatch) -> N
 
     value = ExternalArray()
     monkeypatch.setattr(
-        "openhcs.core.memory.detect_memory_type",
+        "openhcs.core.runtime_array_values.detect_memory_type",
         lambda candidate: "tensor" if candidate is value else None,
     )
 

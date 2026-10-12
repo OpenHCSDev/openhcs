@@ -989,10 +989,12 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     def _materialization_payloads_are_equivalent(left: object, right: object) -> bool:
         import numpy as np
 
+        from openhcs.core.runtime_array_values import host_array
+
         if left.metadata != right.metadata:
             return False
-        left_data = np.asarray(left.data)
-        right_data = np.asarray(right.data)
+        left_data = host_array(left.data)
+        right_data = host_array(right.data)
         return left_data.dtype == right_data.dtype and np.array_equal(
             left_data, right_data, equal_nan=True
         )

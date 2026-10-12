@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-import numpy as np
+from openhcs.core.runtime_array_values import array_geometry
 
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
@@ -158,9 +158,9 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
                 f"aligned source count: {plane_projection.axis_size} != "
                 f"{self.slice_count}."
             )
-        output_array = np.asarray(output.data)
+        output_planes = output.data
         plane_projection.validate_shape(
-            output_array.shape,
+            array_geometry(output).shape,
             value_name="Runtime-slice-aligned image output",
         )
         from openhcs.core.aligned_image_payload import stack_image_payloads
@@ -169,7 +169,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             self.map_indexed_slices(
                 lambda index, source: source.contextualize_image_output(
                     output.slice_payload(
-                        output_array[index], index, plane_axis=plane_projection.axis,
+                        output_planes[index], index, plane_axis=plane_projection.axis,
                     ),
                     None,
                 )

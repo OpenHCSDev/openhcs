@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
 
 import numpy as np
-from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
@@ -30,7 +29,7 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.runtime_array_values import array_geometry, host_array
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
@@ -302,9 +301,7 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
     def prepare(self, payload: Any) -> Any:
         """Project runtime pixels onto the host before format-specific encoding."""
         payload = ImagePayload.of(payload)
-        pixels = payload.data
-        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
-        host_payload = payload.metadata.payload_with(host_pixels)
+        host_payload = payload.metadata.payload_with(host_array(payload))
         return self.prepare_host_payload(host_payload)
 
     @abstractmethod

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any, Self
 
 import numpy as np
-from arraybridge import ArrayGeometry, ArrayPayload
+from arraybridge import ArrayGeometry, ArrayPayload, MemoryType, detect_memory_type
 
 
 def runtime_array_ufunc_result(
@@ -58,6 +58,10 @@ class RuntimeArrayPayload(ArrayPayload, ABC):
 
     @abstractmethod
     def with_data(self, data: Any) -> Self: ...
+
+    def __array__(self, dtype: Any | None = None, copy: bool | None = None) -> Any:
+        data = np.asarray(host_array(self), dtype=dtype)
+        return data.copy() if copy else data
 
     def array_ufunc_result(self, result: Any) -> Any:
         if isinstance(result, tuple):
@@ -119,11 +123,6 @@ class DataBackedRuntimeArrayPayload(RuntimeArrayPayload):
     def dtype(self) -> Any:
         return self.data.dtype
 
-    def __array__(self, dtype: Any | None = None) -> Any:
-        import numpy as np
-
-        return np.asarray(self.data, dtype=dtype)
-
     def array_payload_data(self) -> Any:
         return self.data
 
@@ -144,6 +143,17 @@ def runtime_array_operand(value: Any) -> Any:
     return value
 
 
+def host_array(value: Any) -> np.ndarray:
+    """Return an array, or a payload's array, as the NumPy array OpenHCS stores.
+
+    Files, object labels and NumPy readers all hold host arrays. A function may
+    return its outputs in any array library, on any device; this is where such
+    an array is copied to host memory, by the library the array itself belongs to.
+    """
+    data = runtime_array_operand(value)
+    return MemoryType(detect_memory_type(data)).to_numpy(data)
+
+
 def array_geometry(value: Any) -> ArrayGeometry:
     """Return the geometry of an array or runtime payload without realizing it."""
     if isinstance(value, RuntimeArrayPayload):
@@ -161,8 +171,6 @@ def is_array_payload(data: Any) -> bool:
     """Return whether OpenHCS or ArrayBridge owns this array payload type."""
     if isinstance(data, RuntimeArrayPayload):
         return True
-    from openhcs.core.memory import detect_memory_type
-
     try:
         detect_memory_type(data)
     except ValueError:

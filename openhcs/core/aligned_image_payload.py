@@ -1125,10 +1125,6 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
     def dtype(self) -> Any:
         return self.compose().data.dtype
 
-    def __array__(self, dtype: Any | None = None, copy: bool | None = None) -> Any:
-        data = np.asarray(self.array_payload_data(), dtype=dtype)
-        return data.copy() if copy else data
-
     def __getitem__(self, key: Any) -> Any:
         return self.array_payload_data()[key]
 
