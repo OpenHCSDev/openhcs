@@ -19,13 +19,11 @@ def test_public_pipeline_view_follows_registered_declarations() -> None:
         description = "A test-only benchmark scenario"
         parameters: ClassVar[BenchmarkParameterMap] = {"cppipe_reference_index": 2}
 
-    try:
-        declared = AdditionalPipeline.to_spec()
-        assert name in PIPELINE_REGISTRY
-        assert PIPELINE_REGISTRY[name] == declared
-        assert get_pipeline_spec(name) == declared
-        assert declared in pipeline_specs()
-    finally:
-        BenchmarkPipelineDeclaration.__registry__.pop(name)
+    declared = AdditionalPipeline.to_spec()
+    assert name in PIPELINE_REGISTRY
+    assert PIPELINE_REGISTRY[name] == declared
+    assert get_pipeline_spec(name) == declared
+    assert declared in pipeline_specs()
+    BenchmarkPipelineDeclaration.__registry__.pop(name)
 
     assert name not in PIPELINE_REGISTRY

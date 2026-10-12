@@ -254,17 +254,14 @@ def test_independent_source_declaration_composes_cooperative_preparation(monkeyp
 
     source = "# exact independent source\nµ = 'unchanged'"
     monkeypatch.setattr(sys, "stdin", io.StringIO(source))
-    try:
-        args = cli._build_parser().parse_args([
-            IndependentSource.command, "--source-file", "-",
-        ])
-        # Original generic ingress discovers the new declaration and composes
-        # both hooks without a consumer edit or a parallel command roster.
-        calls = cli._calls_from_args(args)
-        assert calls[0].arguments == {"source": source}
-        assert events == [("before", "-"), ("after", "-")]
-        assert args.source_file is None
-        assert args.source_text == source
-        assert sys.stdin.read() == ""
-    finally:
-        McpDevCommandSpec.__registry__.pop(IndependentSource.command)
+    args = cli._build_parser().parse_args([
+        IndependentSource.command, "--source-file", "-",
+    ])
+    # Original generic ingress discovers the new declaration and composes
+    # both hooks without a consumer edit or a parallel command roster.
+    calls = cli._calls_from_args(args)
+    assert calls[0].arguments == {"source": source}
+    assert events == [("before", "-"), ("after", "-")]
+    assert args.source_file is None
+    assert args.source_text == source
+    assert sys.stdin.read() == ""

@@ -16,6 +16,7 @@ test needs cleanup code of its own.
 """
 
 import sys
+from abc import ABCMeta
 from collections import defaultdict
 from collections.abc import Hashable, Iterator
 from types import ModuleType
@@ -35,10 +36,16 @@ _module_members: defaultdict[str, list[Entry]] = defaultdict(list)
 
 
 def declared_by_tests(member: object) -> bool:
-    """Whether ``member`` is a class defined in the tests package."""
-    return (
-        isinstance(member, type)
-        and member.__module__.partition(".")[0] == TESTS_PACKAGE
+    """Whether ``member`` is a class a test declared.
+
+    That is a class defined in the tests package, or one a test made by calling
+    the registering metaclass (``type(name, bases, namespace)``): such a class
+    has no declaring module and ``ABCMeta`` names it after its own, ``abc``.
+    No production member is made that way.
+    """
+    return isinstance(member, type) and (
+        member.__module__.partition(".")[0] == TESTS_PACKAGE
+        or member.__module__ == ABCMeta.__module__
     )
 
 

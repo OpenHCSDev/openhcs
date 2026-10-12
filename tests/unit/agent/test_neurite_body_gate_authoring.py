@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration,
     AgentDataclassRequestServiceInvocation,
     ConfigDraftCapability,
 )
@@ -100,22 +99,19 @@ def test_independent_declaration_gets_real_mcp_schema_and_cooperative_validation
             method=validate_and_echo,
         )
 
-    try:
-        built = build_server()
+    built = build_server()
 
-        async def exercise():
-            tools = await built.list_tools()
-            probe = next(tool for tool in tools if tool.name == BodyGateProbeCapability.name)
-            schema = probe.inputSchema["properties"]["minimum_inscribed_diameter_px"]
-            assert schema["type"] == "number"
-            assert schema["default"] == 10
-            return await built.call_tool(
-                BodyGateProbeCapability.name,
-                {"minimum_inscribed_diameter_px": 5.0},
-            )
+    async def exercise():
+        tools = await built.list_tools()
+        probe = next(tool for tool in tools if tool.name == BodyGateProbeCapability.name)
+        schema = probe.inputSchema["properties"]["minimum_inscribed_diameter_px"]
+        assert schema["type"] == "number"
+        assert schema["default"] == 10
+        return await built.call_tool(
+            BodyGateProbeCapability.name,
+            {"minimum_inscribed_diameter_px": 5.0},
+        )
 
-        content, _structured = asyncio.run(exercise())
-        assert json.loads(content[0].text)["minimum_inscribed_diameter_px"] == 5.0
-        assert events == ["before", "after"]
-    finally:
-        del AgentCapabilityDeclaration.__registry__[BodyGateProbeCapability.name]
+    content, _structured = asyncio.run(exercise())
+    assert json.loads(content[0].text)["minimum_inscribed_diameter_px"] == 5.0
+    assert events == ["before", "after"]
