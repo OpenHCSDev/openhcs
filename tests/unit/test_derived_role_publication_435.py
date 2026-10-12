@@ -93,7 +93,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         components.update(channel="1", z_index="0")
         plan.variable_components = (Microscopy.ZIndex,)
         plan.group_by = Microscopy.Channel
-        plan.execution_group_scope = ComponentGroupScope.from_raw(
+        plan.execution_group_scope = ComponentGroupScope.of(
             ("1",), component=Microscopy.Channel,
         )
         source_planes = []
@@ -141,7 +141,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         )
         if aggregate:
             output_plan = replace(
-                output_plan, group_keys=("1",), group_component=Microscopy.Channel,
+                output_plan, group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel), 
                 variable_components=(Microscopy.ZIndex,),
             )
         plan.artifact_outputs[output_plan.ref()] = output_plan

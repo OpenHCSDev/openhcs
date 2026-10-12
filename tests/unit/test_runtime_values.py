@@ -22,7 +22,10 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    RuntimeExecutionAxisScope,
+)
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
@@ -2846,8 +2849,7 @@ def test_normalize_artifact_value_builds_key_for_nominal_payload():
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("DAPI",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
     )
     table = MeasurementTable(
         name="measurements",
@@ -2889,8 +2891,7 @@ def test_group_scoped_artifact_consumes_singleton_payload_axis() -> None:
         name="Corrected",
         path="/memory/Corrected.tif",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
     )
 
     value = RuntimeValue.normalize(
@@ -2908,8 +2909,7 @@ def test_group_scoped_artifact_rejects_multi_plane_payload_axis() -> None:
         name="Corrected",
         path="/memory/Corrected.tif",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
     )
 
     with pytest.raises(ValueError, match="cannot retain a declared runtime-slice"):
@@ -2925,8 +2925,7 @@ def test_group_scoped_stack_artifact_preserves_declared_payload_axis() -> None:
         name="Corrected",
         path="/memory/Corrected.tif",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         variable_components=(Microscopy.Site,),
     )
 
@@ -2947,8 +2946,7 @@ def test_group_scoped_measurements_preserve_runtime_row_axis() -> None:
         name="Measurements",
         path="/memory/Measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
     )
     table = MeasurementTable(
         name="Measurements",
@@ -2979,8 +2977,7 @@ def test_grouped_scalar_artifact_records_compose_one_runtime_axis() -> None:
                 name="Corrected",
                 path=f"/memory/Corrected_{site}.tif",
                 artifact_type=ImageArtifactType,
-                group_keys=(site,),
-                group_component=Microscopy.Site,
+                group_scope=ComponentGroupScope.of((site,), component=Microscopy.Site),
             ),
             ImagePayloadMetadata().payload_with(
                 np.zeros((4, 5), dtype=np.float32),

@@ -11,7 +11,7 @@ import pickle
 import signal
 import threading
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
 
 from openhcs.core.compiled_execution import (
@@ -25,12 +25,18 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.config import MultiprocessingStartMethod
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    CompiledContext,
+    ExecutingContext,
+)
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.orchestrator.execution_result import (
+    ExecutionCancelled,
+    ExecutionFailed,
     ExecutionResult,
+    ExecutionSucceeded,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     MergeAllRuntimeRecords,
@@ -72,8 +78,6 @@ from openhcs.core.progress.types import (
     AxisCompletedProgressPhase,
     AxisErrorProgressPhase,
     AxisStartedProgressPhase,
-    CancelledProgressPhase,
-    CancelledProgressStatus,
     ErrorProgressStatus,
     StartedProgressStatus,
     StepCompletedProgressPhase,
@@ -154,7 +158,7 @@ class WorkerExecutorResources(ABC):
     def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         """Return the context map consumed by lane planning for this mode."""
 
     @abstractmethod
@@ -163,7 +167,7 @@ class WorkerExecutorResources(ABC):
         *,
         pipeline_definition: List[AbstractStep],
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         """Execute all lane work for this mode."""
 
@@ -203,7 +207,7 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
     def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         return dict(execution_bundle.runtime_contexts)
 
     def run_worker_lanes(
@@ -211,7 +215,7 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
         *,
         pipeline_definition: List[AbstractStep],
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         lane_results = InlineWorkerLaneRunner(self.cancellation).run(
             pipeline_definition,
@@ -296,7 +300,7 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         return dict(execution_bundle.runtime_contexts)
 
     def install_execution_bundle(
@@ -312,7 +316,7 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
         *,
         pipeline_definition: List[AbstractStep],
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         return self._runner.run(worker_lane_execution_plan)
 
@@ -343,7 +347,7 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
     def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         return dict(execution_bundle.transport_contexts)
 
     def run_worker_lanes(
@@ -351,7 +355,7 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
         *,
         pipeline_definition: List[AbstractStep],
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         return PooledWorkerLaneRunner(
             self._executor,
@@ -420,7 +424,7 @@ class ThreadedWorkerExecutorResources(PooledWorkerExecutorResources):
     def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         return dict(execution_bundle.runtime_contexts)
 
 
@@ -1045,7 +1049,7 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
         *,
         pipeline_definition: List[AbstractStep],
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         execution_bundle = self._execution_bundle
         if execution_bundle is None:
@@ -1179,7 +1183,7 @@ class PooledWorkerLaneRunner:
         self,
         pipeline_definition: List[AbstractStep],
         execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         future_to_worker_slot = self._submit_lanes(
             pipeline_definition,
@@ -1226,7 +1230,7 @@ class PooledWorkerLaneRunner:
         future_to_worker_slot: Mapping[concurrent.futures.Future, str],
         pipeline_definition: List[AbstractStep],
         execution_plan: WorkerLaneExecutionPlan,
-        parent_contexts: Mapping[str, ProcessingContext],
+        parent_contexts: Mapping[str, ExecutingContext],
     ) -> Dict[str, ExecutionResult]:
         execution_results: Dict[str, ExecutionResult] = {}
         lane_errors: list[Exception] = []
@@ -1314,51 +1318,47 @@ def _execute_axis_with_sequential_combinations(
     )
 
     runtime_observations: list[RuntimeContextObservation] = []
-    for context_key, frozen_context in axis_contexts:
+    for context_key, compiled_context in axis_contexts:
         if cancellation is not None:
             try:
                 cancellation.raise_if_requested(f"before context {context_key}")
             except ExecutionCancelledError as exc:
-                return ExecutionResult.cancelled(
+                return ExecutionCancelled(
                     axis_id=axis_id,
                     error_message=str(exc),
                     runtime_observation=RuntimeExecutionObservation(
                         contexts=tuple(runtime_observations),
                     ),
                 )
-        runtime_store = frozen_context.runtime_value_store
-        execution_observation_cursor = runtime_store.observation_cursor()
+        context = compiled_context.executing(lane_context)
         try:
             result = _execute_single_axis_static(
                 pipeline_definition,
-                frozen_context,
+                context,
                 lane_context,
                 context_key=context_key,
                 cancellation=cancellation,
                 runtime_observation_mode=runtime_observation_mode,
             )
-            observed_records = runtime_store.observed_values_after(
-                execution_observation_cursor
-            )
             observation = RuntimeContextObservation.from_context(
                 context_key=context_key,
-                context=frozen_context,
-                records=observed_records,
+                context=context,
+                records=tuple(context.runtime_value_store.observed_values),
                 runtime_observation_mode=runtime_observation_mode,
                 outputs=StepExecutionObservation.combine(
                     item.outputs for item in result.runtime_observation.contexts
                 ),
             )
         finally:
-            # This cache is context-local even when lanes share a process.
-            # Required records and table projections now belong to the observation.
-            frozen_context.release_execution_image_cache()
+            # Required records and table projections now belong to the
+            # observation. This execution ends here: release its image cache
+            # and records now instead of waiting for the context to be collected.
+            context.release_execution_image_cache()
             if release_axis_resources:
-                _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
-            frozen_context.runtime_value_store.clear()
+                _release_runtime_resources((context,), owner=f"axis {axis_id}")
+            context.runtime_value_store.clear()
         if observation.records or not observation.outputs.is_empty:
             runtime_observations.append(observation)
-        del observed_records
 
         if not result.is_success():
             logger.error(
@@ -1367,27 +1367,16 @@ def _execute_axis_with_sequential_combinations(
             lane_context.emit(
                 axis_id=axis_id,
                 step_name=PIPELINE_PROGRESS_STEP_NAME,
-                phase=(
-                    CancelledProgressPhase
-                    if result.is_cancelled()
-                    else AxisErrorProgressPhase
-                ),
-                status=(
-                    CancelledProgressStatus
-                    if result.is_cancelled()
-                    else ErrorProgressStatus
-                ),
+                phase=result.progress_phase,
+                status=result.progress_status,
                 completed=0,
                 total=total_steps,
                 percent=0.0,
                 message=result.error_message,
             )
-            return replace(
-                result,
-                failed_combination=context_key,
-                runtime_observation=RuntimeExecutionObservation(
-                    contexts=tuple(runtime_observations),
-                ),
+            return result.at_combination(
+                context_key,
+                RuntimeExecutionObservation(contexts=tuple(runtime_observations)),
             )
 
     lane_context.emit(
@@ -1399,7 +1388,7 @@ def _execute_axis_with_sequential_combinations(
         total=total_steps,
         percent=(completed_axis_steps / total_steps) * 100.0,
     )
-    return ExecutionResult.success(
+    return ExecutionSucceeded(
         axis_id=axis_id,
         runtime_observation=RuntimeExecutionObservation(
             contexts=tuple(runtime_observations),
@@ -1408,7 +1397,7 @@ def _execute_axis_with_sequential_combinations(
 
 
 def _release_runtime_resources(
-    contexts: Iterable[ProcessingContext],
+    contexts: Iterable[CompiledContext],
     *,
     owner: str,
 ) -> None:
@@ -1442,7 +1431,7 @@ def _release_runtime_resources(
 
 
 def _completed_axis_step_count(
-    context: ProcessingContext,
+    context: CompiledContext,
     total_steps: int,
 ) -> int:
     """Return the pipeline position where terminal dataset-scoped processing begins."""
@@ -1459,31 +1448,24 @@ def _completed_axis_step_count(
 
 def _execute_single_axis_static(
     pipeline_definition: List[AbstractStep],
-    frozen_context: ProcessingContext,
+    context: ExecutingContext,
     lane_context: WorkerLaneExecutionContext,
     *,
     context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
     runtime_observation_mode: type[RuntimeObservationMode] = MergeAllRuntimeRecords,
 ) -> ExecutionResult:
-    """Execute one frozen axis context against the compiled pipeline."""
+    """Execute one compiled axis context against the compiled pipeline."""
 
-    axis_id = frozen_context.axis_id
+    axis_id = context.axis_id
     total_steps = len(pipeline_definition)
-
-    if not frozen_context.is_frozen():
-        error_msg = f"Context for axis {axis_id} is not frozen before execution"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
 
     if not pipeline_definition:
         error_msg = f"Empty pipeline_definition for axis {axis_id}"
         logger.error(error_msg)
         raise RuntimeError(error_msg)
 
-    frozen_context.bind_execution_runtime(lane_context)
-    lane_context.install_debug_sink(frozen_context)
-    runtime_value_store = frozen_context.runtime_value_store
+    runtime_value_store = context.runtime_value_store
     # Full-value observations, debug replay and viewer histories own their
     # original retention contract. Ordinary execution can retire dead inputs
     # only after the step's output/progress consumers have completed.
@@ -1492,14 +1474,14 @@ def _execute_single_axis_static(
         and isinstance(lane_context.debug_execution_policy, NoOpDebugExecutionPolicy)
         and not any(
             plan.visualize or plan.streaming_configs
-            for plan in frozen_context.step_plans.values()
+            for plan in context.step_plans.values()
         )
     )
     checkpoint_refs = (
         frozenset(
             output.ref().for_plan_type(ArtifactInputPlan)
-            for plan in frozen_context.step_plans.values()
-            if plan.requires_main_flow_checkpoint(frozen_context.step_plans)
+            for plan in context.step_plans.values()
+            if plan.requires_main_flow_checkpoint(context.step_plans)
             for output in plan.artifact_outputs.values()
         )
         if release_consumed
@@ -1510,7 +1492,7 @@ def _execute_single_axis_static(
         for step_index, step in enumerate(pipeline_definition):
             if cancellation is not None:
                 cancellation.raise_if_requested(f"before step {step_index + 1}")
-            step_plan = frozen_context.step_plans[step_index]
+            step_plan = context.step_plans[step_index]
             compiled_pattern = step_plan.compiled_function_pattern
             if (
                 compiled_pattern is not None
@@ -1527,7 +1509,7 @@ def _execute_single_axis_static(
                         step_index=step_index,
                         step_name=step_name,
                         step_scope_id=step_plan.step_scope_id,
-                        context=frozen_context,
+                        context=context,
                         artifact_outputs=step_plan.artifact_outputs,
                     )
                     observed_records = runtime_value_store.observed_values_after(
@@ -1535,14 +1517,14 @@ def _execute_single_axis_static(
                     )
                     reused_outputs = preview_reused_step_outputs(
                         step_plan,
-                        frozen_context,
+                        context,
                         observed_records,
                     )
                     runtime_progress_context = _runtime_observation_progress_context(
                         observed_records,
                         materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                     )
-                    frozen_context.record_completed_step_outputs(reused_outputs)
+                    context.record_completed_step_outputs(reused_outputs)
                     lane_context.emit(
                         axis_id=axis_id,
                         step_name=step_name,
@@ -1567,8 +1549,8 @@ def _execute_single_axis_static(
             )
 
             observation_cursor = runtime_value_store.observation_cursor()
-            step_observation = step.process(frozen_context, step_index)
-            frozen_context.record_completed_step_outputs(step_observation)
+            step_observation = step.process(context, step_index)
+            context.record_completed_step_outputs(step_observation)
             observed_records = runtime_value_store.observed_values_after(
                 observation_cursor
             )
@@ -1598,36 +1580,36 @@ def _execute_single_axis_static(
                     step_plan.future_artifact_inputs | checkpoint_refs,
                     runtime_observation_mode.retain_records(
                         runtime_value_store.observed_values,
-                        frozen_context,
+                        context,
                     ),
-                    filemanager=frozen_context.filemanager,
+                    filemanager=context.filemanager,
                 )
 
     except ExecutionCancelledError as exc:
-        return ExecutionResult.cancelled(
+        return ExecutionCancelled(
             axis_id=axis_id,
             error_message=str(exc),
             runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
-                {context_key: frozen_context}
+                {context_key: context}
             ),
         )
     except Exception as exc:
         logger.exception(
             "Axis %s failed while retaining completed output facts", axis_id
         )
-        return ExecutionResult.error(
+        return ExecutionFailed(
             axis_id=axis_id,
             failed_combination=context_key,
             error_message=str(exc),
             runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
-                {context_key: frozen_context}
+                {context_key: context}
             ),
         )
 
-    return ExecutionResult.success(
+    return ExecutionSucceeded(
         axis_id=axis_id,
         runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
-            {context_key: frozen_context}
+            {context_key: context}
         ),
     )
 
@@ -1655,7 +1637,7 @@ def execute_worker_lane(
                 try:
                     cancellation.raise_if_requested(f"before axis {axis_id}")
                 except ExecutionCancelledError as exc:
-                    lane_results[axis_id] = ExecutionResult.cancelled(
+                    lane_results[axis_id] = ExecutionCancelled(
                         axis_id=axis_id,
                         error_message=str(exc),
                     )
@@ -1668,6 +1650,6 @@ def execute_worker_lane(
                 cancellation=cancellation,
                 release_axis_resources=release_axis_resources,
             )
-            if lane_results[axis_id].is_cancelled():
+            if lane_results[axis_id].stops_lane:
                 break
         return lane_results

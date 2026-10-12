@@ -14,7 +14,10 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    RuntimeExecutionAxisScope,
+)
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
@@ -93,8 +96,7 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
         name=measurements.name,
         path="/artifacts/CombinedMeasurements",
         artifact_type=measurements.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
     )
     adapter = CellProfilerRuntimeAdapter(
         runtime_adapter_request_for_test(

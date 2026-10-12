@@ -41,7 +41,9 @@ from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
@@ -333,6 +335,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
     if any(name in ("DNA", "Actin") for name in image_names):
         assert selected is None  # Raw STEP_INPUT aliases need the current image carrier.
     results = _execute(tmp_path, document, bundle)
+    context = results.executed_contexts["A01"]
     assert results['A01'].is_success(), results['A01'].error_message
     (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
     foreground = object_label_dense_array(labels.data).squeeze() == 1
@@ -375,6 +378,7 @@ def test_label_only_measurement_keeps_stored_cohort(tmp_path):
     assert cohort is not None
     assert tuple(edge.spec.name for edge in cohort) == ("Cells",)
     results = _execute(tmp_path, document, bundle)
+    context = results.executed_contexts["A01"]
     assert results["A01"].is_success(), results["A01"].error_message
     (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
     (invocation,) = group.invocations
@@ -435,6 +439,7 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     assert "labels" not in invocation.kwargs_dict
 
     results = _execute(tmp_path, reconstructed, bundle)
+    context = results.executed_contexts["A01"]
     assert results["A01"].is_success(), results["A01"].error_message
     store = context.runtime_value_store
     [primary] = store.find(name="Nuclei", axis_id="A01")
@@ -505,7 +510,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
     )
     document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
-    context = bundle.runtime_contexts["A01"]
+    context = bundle.runtime_contexts["A01"].executing()
     executor = FunctionStepExecutor(context, 2)
     prepared = executor._prepare_groups(executor._detect_patterns())
     expected_keys = (None,) if producer_group_by is Ungrouped else ("1", "2")
@@ -517,6 +522,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
         spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
     ) == ("DNA", "Actin")
     results = _execute(tmp_path, document, bundle)
+    context = results.executed_contexts["A01"]
     assert results["A01"].is_success(), results["A01"].error_message
     (output,) = invocation.artifact_output_plans
     measurements = context.runtime_value_store.find(
@@ -615,7 +621,7 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
     bundle = _compile(tmp_path, document, global_config)
     results = _execute(tmp_path, document, bundle)
     assert results["A01"].is_success(), results["A01"].error_message
-    store = bundle.runtime_contexts["A01"].runtime_value_store
+    store = results.executed_contexts["A01"].runtime_value_store
     [counts] = store.find(name="PixelCounts", axis_id="A01")
     [image] = store.find(name="CountedImage", axis_id="A01")
     assert image.key.artifact_type is ImageArtifactType

@@ -16,14 +16,19 @@ from openhcs.core.aligned_image_payload import (
     ImagePayloadStackComposition,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.component_group_scope import (
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.runtime_image_values import ImagePayload
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 SOURCE = "/source/A01_s001_w1_z001_t001.tif"
@@ -35,8 +40,8 @@ def _identity(image):
 
 def _runtime(tmp_path):
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-    context = ProcessingContext(axis_id="A01", filemanager=filemanager)
-    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    context = executing_context(axis_id="A01", filemanager=filemanager)
+    context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
     plan = CompiledStepPlan(
         step_index=0,
         step_name="OutputOwnership",
@@ -48,7 +53,7 @@ def _runtime(tmp_path):
         variable_components=(),
         artifact_inputs={},
         artifact_outputs={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
     )
     runtime = PatternGroupExecutionRequest(context=context,
             execution_plan=plan,

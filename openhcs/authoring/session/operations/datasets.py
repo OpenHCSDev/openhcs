@@ -406,7 +406,7 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
             tuple(request.scope_ids),
             auxiliary_params=session.observation_export_params(
                 request.runtime_observation_export_path,
-                request.runtime_observation_export_scope,
+                request.runtime_observation_export_scope.scope,
             ),
             submit_timeout_ms=request.submit_timeout_ms,
             wait_timeout_ms=request.wait_timeout_ms,
