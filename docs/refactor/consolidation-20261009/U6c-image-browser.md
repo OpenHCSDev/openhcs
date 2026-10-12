@@ -80,27 +80,45 @@ With `RemoteSensing` active (no `GridAddressed` axis; axes scene, tile, band, da
 
 Guards pass; G6 viewer guards and `test_k8_materialization_guards.py` pass; `guardrails rc=0`; smoke passes; pyqt-reactive suite passes.
 
-## Progress notes
+## Result
 
-**Done**
+`image_browser.py`: 1,560 → 702 lines; `ImageBrowserWidget` 1,138 lines / 46 methods → 246 lines / 14 methods. Production (`openhcs/`) −1,379 +538. pyqt-reactive PR OpenHCSDev/PyQT-reactive#24 (+917 −121, no version bump); the submodule points at its branch head.
 
-- pyqt-reactive branch `refactor/U6c-record-browser` (commit `b32314b`, local, not yet pushed, no PR yet): `RowFilter` + `add_row_filter`/`apply_row_filters`/`reveal_key`/`reveal_path`/`item_noun` on `AbstractTableBrowser`; `record_table_browser.py` (`RecordTableBrowser`, `ValueLabels`, `LabelledValue`, `ValueLabelSource`) replacing `image_table_browser.py`; `folder_tree.py`; `grid_column_filter.py`; `detachable_panel.py`; `config_action_tabs.py`; `tests/test_record_browser.py` (7 passed), `test_column_presentation.py` updated. The submodule pointer in OpenHCS is set to that commit.
+Removed, by kind:
 
-**Next (OpenHCS side, nothing written yet)**
+- **`None` modes (5):** absent dataset (`orchestrator is None`, 10 checks → `NoDataset`/`OrchestratorDataset`); absent grid (`plate_view_widget = None` → one `AxisGrid` per `GridAddressed` axis, possibly none); detached window (`plate_view_detached_window` → `Docked`/`Floating`); row kind (`streamable_image_path`/`result_file_type`/`full_path` optionals → `ImageFile`/`ResultFile`); lazily built `tabbed_form`/`zmq_manager`/splitter handles. `is None` checks in the file: 29 → 2 lines, both in `BrowsedFile.of`, the one boundary that reads `PlateFileRecord`.
+- **Flags (3):** `_syncing_plate_filter_selection`; `scope_id = None` as "already released" (the widget becomes `NoDataset`); `_streaming_service_orchestrator` cache key (`cached_property` on the dataset).
+- **Forwarding helper classes (4)** and the forwarded methods through them (`focus_file_by_path` → controller, `filter_images` → `apply_combined_filters`, `view_buttons` alias, resolver getter lambda).
+- **Kind switches (3):** double-click on `streamable_image_path`/`is_result`; batch selection on `is_result and result_file_type.streams_rois` (now `ResultFileFormat.open_with` into `ViewerBatch`); `isinstance(inventory, PlateFileInventory)` in `_result_items_from_inventory`.
+- **Second owners (3):** `selected_wells`, `file_items`, `metadata_keys`.
 
-1. Rewrite `openhcs/pyqt_gui/widgets/image_browser.py` on those parts:
-   - `BrowsedDataset(ValueLabelSource)` state family: `NoDataset`, `OrchestratorDataset(orchestrator, scope_parent)` with `config_state`, `release_state`, `records`, `viewer_ports`, `grid_positions` (parser coordinates + `axis.grid_position`), `reveal`, `view(batch, config, status, failed)` (ROIs then images, synchronous `stream_rois`/`stream_images`; `StreamingService` as a `cached_property`). On `cleanup` the widget releases the state and becomes `NoDataset` (replaces the `scope_id = None` flag).
-   - `BrowsedFile(Mapping)` row family: `ImageFile`, `ResultFile`; `BrowsedFile.of(record)` is the one boundary that reads `PlateFileRecord`'s optional fields. `ViewerBatch(ResultFileOpener)` collects ROI paths through `ResultFileFormat.open_with` (no `streams_rois` flag read); `ResultFileBrowserOpener` stays for double-click.
-   - Columns: name column from a `FILE_NAME_FIELD` constant to add in `core/plate_image_inventory.py` (two `"filename"` literals at `:323`, `:985`); then the active family's axes in family order (`axis.label`, width 70 when `OrdinalValued`); then the remaining record keys alphabetically, title-cased. All but the name column filterable.
-   - Grid panels: one `GridSelectorWidget` + `DetachablePanel` + `GridColumnFilterLink` per `family.with_role(GridAddressed)` axis, titled `f"{axis.label} Grid"`.
-   - Folder tree: `FolderTreeWidget(companion_suffixes=(ANALYSIS_RESULTS_DIR_SUFFIX,))`; declare that constant in `core/pipeline/path_planner.py` beside `_cached_analysis_results_dir_for` (`:2317`).
-   - Viewer tabs: `ConfigActionTabs(state, [ConfigAction(key, display, f"View in {display}") for key in StreamingConfig.supported_config_keys()])`.
-   - Constructor `ImageBrowserWidget(dataset, *, color_scheme, zmq_config, progress_config, parent=None)`; `set_dataset` replaces `set_orchestrator`. Callers: `windows/managed_windows.py:85,122`, `windows/plate_viewer_window.py:253`, `windows/live_measurements_window.py:297`.
-   - The table's own `search_input` moves into the header row (the widget's second search box is deleted).
-2. Tests: delete `tests/pyqt_gui/test_image_browser_filter_controller.py` browser-coupled tests (keep the `PlateFileInventory` ones), rewrite `tests/unit/pyqt_gui/test_image_browser_column_presentation.py` and `test_image_browser_streaming_config.py`; update stubs in `tests/pyqt_gui/test_managed_windows.py:44` and `tests/unit/pyqt_gui/test_live_measurements_window.py:42`; `tests/unit/test_grid_addressed_axis.py` and `tests/unit/pyqt_gui/test_plate_view_grid_model.py` import `active_grid_axis`/`GridAxisAddressing`. Remove the `('PlateFileKind', 'openhcs/pyqt_gui/widgets/image_browser.py')` entry from `tests/unit/test_e1_enum_dispatch_guards.py:120` (a stale entry fails).
-3. New-case test under `RemoteSensing` (fixture pattern in `tests/unit/test_axis_family_witness.py`); guard file `tests/unit/test_u6c_image_browser_guards.py`.
-4. Verify (G6 guards, K8 guards, `guardrails_local.sh`, `smoke_local.sh`, pyqt-reactive suite), push both branches, open both PRs.
+### Deletion certificates
 
-Test runner used: `bash .claude/u6c_pytest.sh <subdir> <pytest args>` (untracked; sets `PYTHONPATH` to this worktree's `external/*/src`, offscreen Qt).
+| Deleted | Certificate |
+|---|---|
+| `selected_wells` and `_matches_wells` | derived: the column filter owns the selection (`GridColumnFilterLink`). The fallback ran only when the table had no column for the grid axis, where every row failed the well lookup and the grid offered no cell to select. |
+| `_fallback_filemanager`, `filemanager` property | unused: read only by `streaming_service`, which returned early without an orchestrator. |
+| `image_selected` signal, `_update_status_threadsafe`, `load_results`, `_result_items_from_inventory` | unused in production (the last two had test callers only). |
+| `ImageTableBrowser._COLUMN_WIDTHS` (pyqt-reactive) | contract: the kernel and libraries name no microscopy axis (G1). Axis columns take width 70 when `OrdinalValued`; `extension`, `size`, `time`, `timestamp` lose their fixed widths. |
+| `orchestrator=None` default, optional `color_scheme`/`progress_config` | derived: every caller passes them; absence of a dataset is `NoDataset`. |
+| the widget's own search `QLineEdit` and its stylesheet | derived: the table's `search_input` is the one search box, moved into the header row. tests-only for the look of the box (application theme instead of the inline stylesheet). |
+| `state_scope_parent_id` | derived: `OrchestratorDataset.scope_parent`, required. |
 
-**Behaviour changes to report:** status line reads `Showing f/t files`; default column order is axes then record fields; the fixed widths for `extension`/`size`/`time` are gone; the grid panel is titled from the axis label; an inactive column filter shows as no selected grid cell; `set_items` keeps the search text; viewer batches send ROI files by full path.
+### Behaviour changes
+
+- Status line reads `Showing f/t files` (was `Files: f/t`, overwritten by the library's text after a column-filter change).
+- Default column order: file name, the family's axes in family order, then the other record fields alphabetically (was all keys alphabetically with `extension` first). Axis columns are headed by `axis.label`.
+- The grid panel and its button are titled from the axis label (`Well Grid`), not `Plate View`.
+- A column filter that admits every value shows as no selected grid cell.
+- `set_items` keeps the search text.
+- A viewer batch names ROI archives by full path (double-click already did).
+- Streaming errors reach the UI through a signal on the UI thread; the empty-dataset label reads `0 files loaded (0 images, 0 results)`.
+- A load failure leaves the summary at zero files after the warning box.
+
+### Out of scope, found
+
+- `PlateFileRecord` (`core/plate_image_inventory.py`) is a kind enum plus optional fields; it should be a record family so `BrowsedFile.of` needs no null tests. Owner: U2 (it already holds the `PlateFileKind` entries in `test_e1_enum_dispatch_guards.py`).
+- `tests/pyqt_gui/test_managed_windows.py`: two tests fail on `main` too (`_PlateManagerStub` lacks `_get_current_orchestrator`; `PlateManagerWindow` has no `_setup_connections`). Owner: the surface that owns `windows/managed_windows.py`.
+- `AbstractTableBrowser.reveal_key` keeps the old behaviour that an active column filter can still hide the revealed row.
+- `function_selector_dialog.py` computes its own filtered set and calls `set_filtered_items`; it could declare `RowFilter`s. Owner: the surface that owns the function selector.
+- `scripts/smoke_installed_gui` fails on `main` at `ae6ddace5` with `FunctionCatalogEndpointUnavailableError` (function catalog control timeout).
