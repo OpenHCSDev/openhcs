@@ -1,6 +1,8 @@
 """Project OpenHCS virtual-workspace metadata for runtime source binding."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -13,7 +15,6 @@ from openhcs.core.source_path_identity import source_path_identity, source_path_
 from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
@@ -47,7 +48,7 @@ from openhcs.core.axes import AxisFamily
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
@@ -240,7 +241,7 @@ class VirtualWorkspaceSourceProjection:
     def payload_composition_mode(
         self,
         lookups: tuple[VirtualWorkspacePathLookup, ...],
-    ) -> ImagePayloadMetadataCompositionMode:
+    ) -> type[RuntimePlaneAxis]:
         """Return the leading-axis topology declared by workspace projections."""
         projections = tuple(
             self.require_source_projection_for(lookup) for lookup in lookups
@@ -255,8 +256,8 @@ class VirtualWorkspaceSourceProjection:
             and len(source_aliases) > 1
             and len(set(source_aliases)) == len(source_aliases)
         ):
-            return ImagePayloadMetadataCompositionMode.BUNDLE
-        return ImagePayloadMetadataCompositionMode.STACK
+            return SourceBindingPlaneAxis
+        return RuntimeSlicePlaneAxis
 
     def project_payload(
         self,
@@ -841,7 +842,7 @@ class WorkspaceSourceProjections:
     @classmethod
     def from_context(
         cls,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         *,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
     ) -> "WorkspaceSourceProjections":
@@ -874,7 +875,7 @@ class WorkspaceSourceProjections:
             source_bindings=source_bindings,
         )
 
-    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
         """Compare actual owners, never identities of already-released objects."""
         if not (
             self.dataset_root == Path(context.dataset_root)
@@ -966,9 +967,9 @@ class RuntimeWorkspaceSourceProjections(
 ):
     """Read completed same-plate outputs from their execution observation owner."""
 
-    context: "ProcessingContext" = field(kw_only=True, compare=False, repr=False)
+    context: "ExecutingContext" = field(kw_only=True, compare=False, repr=False)
 
-    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
         return self.context is context and super(
             RuntimeWorkspaceSourceProjections, self
         ).is_bound_to_context(context)

@@ -5,7 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import replace
 
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from python_introspect import JsonObject, registered_class_from_key, to_jsonable
 from openhcs.agent.dto.execution import (
     RuntimeDebugArtifactExportRequest,

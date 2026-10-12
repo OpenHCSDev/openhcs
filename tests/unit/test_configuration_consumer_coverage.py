@@ -139,6 +139,7 @@ def _production_syntax_units() -> tuple[_SyntaxUnit, ...]:
     repository_root = Path(__file__).resolve().parents[2]
     roots = (
         repository_root / "openhcs",
+        repository_root / "external" / "formbridge" / "src",
         repository_root / "external" / "pyqt-reactive" / "src",
         repository_root / "external" / "zmqruntime" / "src",
         repository_root / "external" / "arraybridge" / "src",

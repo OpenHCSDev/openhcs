@@ -15,7 +15,6 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline.path_planner import PathPlannerGroupScope
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_step import FunctionStep
@@ -23,6 +22,9 @@ from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.imagexpress import ImageXpressHandler
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
@@ -88,7 +90,7 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         source_step_index=0,
         source_step_scope_id=native_plan.step_scope_id,
     )
-    assert threshold_plan.execution_group_scope == PathPlannerGroupScope.from_raw(
+    assert threshold_plan.execution_group_scope == ComponentGroupScope.of(
         ("1", "2", "4"),
         component=Microscopy.Channel,
     )

@@ -55,7 +55,7 @@ from openhcs.core.dataset_sources.interfaces import (
 from openhcs.core.axes import Axis, AxisFamily
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 
 logger = logging.getLogger(__name__)
 
@@ -1041,7 +1041,7 @@ def _optional_metadata_field(
 class OpenHCSMetadataGenerationRequest:
     """Request for writing one OpenHCS metadata subdirectory."""
 
-    context: "ProcessingContext"
+    context: "ExecutingContext"
     output_dir: str
     write_backend: str
     is_main: bool
@@ -1074,7 +1074,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
 
     def create_metadata(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         output_dir: str,
         write_backend: str,
         is_main: bool = False,
@@ -1155,7 +1155,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
 
         if context.metadata_cache is None:
             raise RuntimeError(
-                "ProcessingContext metadata_cache must be populated by create_context()"
+                "ExecutingContext metadata_cache must be populated by create_context()"
             )
 
         actual_files = self.filemanager.list_image_files(

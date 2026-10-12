@@ -1,3 +1,5 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -20,9 +22,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
@@ -570,9 +570,9 @@ def test_measure_object_intensity_distribution_rejects_repeated_plane_domains():
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     with pytest.raises(ValueError, match="already projected to one 2-D plane"):

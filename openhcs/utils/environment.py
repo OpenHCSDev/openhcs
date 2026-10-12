@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 
 if TYPE_CHECKING:
-    from openhcs.agent.runtime_platform import AgentRuntimePlatform
+    from formbridge.runtime_platform import AgentRuntimePlatform
 
 
 class OpenHCSProcessEnvironment:
@@ -44,7 +44,7 @@ class OpenHCSProcessEnvironment:
     def current_numba_cache_path(cls) -> Path:
         """Return the compiled-code cache for the current host platform."""
 
-        from openhcs.agent.runtime_platform import AgentRuntimePlatform
+        from formbridge.runtime_platform import AgentRuntimePlatform
 
         return cls.numba_cache_path(AgentRuntimePlatform.current())
 

@@ -16,15 +16,25 @@ from openhcs.agent.capabilities import (
     UiBridgeCapability,
     agent_capability_declarations,
 )
-from openhcs.agent.services.ui_bridge_service import UiBridgeOperation
+from formbridge.bridge.service import UiBridgeOperation
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 PRODUCTION = REPOSITORY / "openhcs"
+# The generic bridge lives in formbridge (Qt-free) and pyqt-reactive (Qt).
+BRIDGE_SOURCES = (
+    PRODUCTION,
+    REPOSITORY / "external" / "formbridge" / "src" / "formbridge",
+    REPOSITORY / "external" / "pyqt-reactive" / "src" / "pyqt_reactive",
+)
+
+
+def _sources() -> tuple[Path, ...]:
+    return tuple(path for root in BRIDGE_SOURCES for path in root.rglob("*.py"))
 
 
 def _classes() -> dict[str, tuple[Path, ast.ClassDef]]:
     classes = {}
-    for path in PRODUCTION.rglob("*.py"):
+    for path in _sources():
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.ClassDef):
                 classes[node.name] = (path, node)
@@ -97,10 +107,10 @@ def test_service_defines_no_per_operation_method() -> None:
 
 
 def test_every_wire_operation_has_one_running_ui_implementation() -> None:
-    from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
+    from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
     wire = set(UiBridgeOperation.__registry__.values())
-    assert set(UiAgentBridgeService.served_operations) == wire
+    assert set(OpenHCSUiAgentBridgeService.served_operations) == wire
 
 
 def test_every_operation_answers_its_own_failure() -> None:
@@ -171,7 +181,7 @@ def test_deleted_bridge_mechanisms_stay_deleted() -> None:
     )
     offenders = [
         f"{path.relative_to(REPOSITORY)}:{number}"
-        for path in PRODUCTION.rglob("*.py")
+        for path in _sources()
         for number, line in enumerate(
             path.read_text(encoding="utf-8").splitlines(), start=1
         )

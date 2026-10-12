@@ -1052,7 +1052,7 @@ def test_plate_action_waits_for_accepted_receipt(monkeypatch) -> None:
         lambda _ctx, _action: demo.UiActionSummary(
             schema_version="openhcs.agent.v1",
             identity=demo.UiActionIdentity(
-                widget_id="plate_manager", action_id=action.operation_id
+                widget_id="datasets", action_id=action.operation_id
             ),
             title="Action",
             enabled=True,

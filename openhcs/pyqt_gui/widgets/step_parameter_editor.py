@@ -47,19 +47,19 @@ from pyqt_reactive.widgets.shared.scrollable_form_body import (
 )
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.services.parameter_ops_service import ParameterOpsService
-from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
-from pyqt_reactive.services.window_code_document import (
+from formbridge.services.code_editor_form_updater import CodeEditorFormUpdater
+from formbridge.services.window_code_document import (
     WindowCodeDocumentDriver,
     use_external_code_editor,
 )
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.theming import ColorScheme, WidgetTheme
-from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
+from formbridge.forms.layout_constants import CURRENT_LAYOUT
 from openhcs.pyqt_gui.services.function_step_code_document import (
     FunctionStepCodeDocumentDriver,
 )
 
-from pyqt_reactive.forms.parameter_type_utils import ParameterTypeUtils
+from formbridge.forms.parameter_type_utils import ParameterTypeUtils
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 
 logger = logging.getLogger(__name__)
@@ -258,6 +258,18 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
         )
 
         apply_scope_color_scheme_to_widget_tree(self.form_manager, scheme)
+
+    def use_pipeline_config(self, pipeline_config) -> None:
+        """Resolve inherited placeholders against a replaced pipeline config."""
+        self.pipeline_config = pipeline_config
+
+        def retarget(form_manager) -> None:
+            form_manager.context_obj = pipeline_config
+            for nested_manager in form_manager.nested_managers.values():
+                retarget(nested_manager)
+
+        retarget(self.form_manager)
+        ObjectStateRegistry.increment_token()
 
     def code_document_driver(self) -> WindowCodeDocumentDriver:
         """Return this step editor's pycodified code-mode document driver."""

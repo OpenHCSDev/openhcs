@@ -17,7 +17,6 @@ from openhcs.core.config import (
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.sidecars import MaterializedImageCopy
@@ -46,13 +45,16 @@ from openhcs.processing.backends.cellprofiler import (
     save_images,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _compilation_session_for_steps(
     steps: list[FunctionStep],
 ) -> CompilationSession:
     return CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 
-from pyqt_reactive.services.window_snapshot import (
-    QtWindowSnapshot,
-    QtWindowSnapshotService,
+from pyqt_reactive.services.window_snapshot import QtWindowSnapshot, QtWindowSnapshotService
+from formbridge.services.window_snapshot import (
     WindowSnapshotObservationFailure,
     WindowVisualObservation,
 )
 from zmqruntime.messages import ControlErrorResponse
 
-from openhcs.agent.dto.common import AgentResourceRef
+from formbridge.contracts import AgentResourceRef
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor
 from python_introspect import to_jsonable
 

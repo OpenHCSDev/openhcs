@@ -1,6 +1,7 @@
 """Runtime artifact binding authorities for CellProfiler modules."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -43,8 +44,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisStrategy,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.variable_component_stack_requirement import (
@@ -393,16 +392,14 @@ class RuntimeInputBindingRequest:
         payload: ObjectLabelValue,
     ) -> ObjectLabelValue:
         """Project loaded object labels to the invocation's current plane."""
-        if payload.plane_axis is None:
+        if payload.plane_axis.unstacked:
             return payload
         plane_count = payload.declared_plane_count()
         if plane_count is None:
             raise ValueError(
                 "Slice-aligned object labels require a declared plane count."
             )
-        plane_index = RuntimePlaneAxisStrategy.for_enum_member(
-            payload.plane_axis
-        ).plane_index(
+        plane_index = payload.plane_axis.plane_index(
             self.adapter,
             payload.source_aliases,
         )
@@ -483,27 +480,11 @@ class RuntimeInputBindingRequest:
 
     def object_inputs_projected_by_source_binding_axis(self) -> bool:
         """Return whether object inputs are already scoped by source binding."""
-        for spec in self.object_inputs:
-            labels = self.label_payload_for(spec)
-            if labels.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
-                continue
-            aliases = labels.source_aliases
-            if not aliases:
-                raise ValueError(
-                    "Source-binding object labels require explicit source aliases."
-                )
-            declared_projection = labels.declared_plane_projection()
-            if declared_projection is None:
-                raise ValueError(
-                    "Source-binding object labels require a declared plane projection."
-                )
-            source_plane_index = labels.source_alias_plane_index(
-                aliases,
-                declared_projection.axis_size,
-            )
-            if source_plane_index is not None:
-                return True
-        return False
+        return any(
+            labels.plane_axis.one_plane_per_source_binding
+            and labels.source_aliases_select_one_plane()
+            for labels in map(self.label_payload_for, self.object_inputs)
+        )
 
     def runtime_value(
         self,
@@ -536,12 +517,12 @@ class RuntimeInputBindingRequest:
             return value
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             self.adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         if (
             runtime_projection is not None
-            and runtime_projection.plane_index is not None
+            and runtime_projection.selects_one_plane
             and runtime_projection.axis_size == slice_count
         ):
             return cast(
@@ -584,7 +565,7 @@ class RuntimeInputBindingRequest:
             RuntimeSliceProjection.value_for_slice(
                 value,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     plane_index=selected_indices[0],
                     axis_size=slice_count,
                 ),

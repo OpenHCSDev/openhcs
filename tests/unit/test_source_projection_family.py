@@ -1,5 +1,6 @@
 """Selection and aggregation own different source-projection contracts."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import dataclass, field, replace
 
 import numpy as np
@@ -12,7 +13,6 @@ from openhcs.core.projected_image_output import (
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -26,7 +26,7 @@ class AggregateField(SourceProjectedImageOutput):
         return replace(self, data=data)
 
     def resolve_source_context(self, source, projection):
-        assert projection is not None and projection.plane_index is None
+        assert projection is not None and projection.preserves_complete_axis
         assert projection.axis_size == source.shape[0]
         return source.metadata.collapse_leading_plane_axis().payload_with(
             self.data, None
@@ -35,7 +35,7 @@ class AggregateField(SourceProjectedImageOutput):
 
 def observation_source():
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/synthetic/observation_{i}.tif" for i in range(3)),
             component_metadata=tuple(
@@ -61,12 +61,12 @@ def test_aggregate_context_retains_all_contributors_without_a_pixel_axis():
     result = field.resolve_source_context(
         source,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
+            axis=RuntimeSlicePlaneAxis, axis_size=3
         ),
     )
     metadata = result.metadata
     assert result.shape == (3, 4)
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.source_image_provenance_planes.contributor_count == 3
     assert metadata.source_image_paths == source.metadata.source_image_paths
     np.testing.assert_array_equal(np.asarray(result), np.asarray(field))
@@ -101,7 +101,7 @@ def test_independent_selection_member_composes_the_shared_projection(indices):
     result = output.resolve_source_context(
         source,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
+            axis=RuntimeSlicePlaneAxis, axis_size=3
         ),
     )
     metadata = result.metadata
@@ -110,9 +110,9 @@ def test_independent_selection_member_composes_the_shared_projection(indices):
     assert output.calls == ["before", "after"]
     if len(indices) == 1:
         assert result.shape == (3, 4)
-        assert metadata.plane_axis is None
+        assert metadata.plane_axis.unstacked
         np.testing.assert_array_equal(np.asarray(result), data[0])
     else:
         assert result.shape == (2, 3, 4)
-        assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+        assert metadata.plane_axis is RuntimeSlicePlaneAxis
         np.testing.assert_array_equal(np.asarray(result), data)

@@ -24,10 +24,10 @@ from openhcs.agent.ui_bridge_identities import (
     KnowledgeBaseWindowIdentity,
     LogViewerWindowIdentity,
     PipelineEditorWidgetIdentity,
-    PlateManagerWidgetIdentity,
-    UiStableWindowIdentityDeclaration,
+    DatasetListWidgetIdentity,
     ZmqServerManagerWindowIdentity,
 )
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 from openhcs.agent.dto.session import PipelineFileRequest
 from openhcs.authoring.session.operations.pipelines import LoadPipelineFile
 from openhcs.core.config import GlobalPipelineConfig
@@ -42,7 +42,7 @@ from openhcs.pyqt_gui.services.window_config import (
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.config import AgentUiBridgeConfig
     from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-    from openhcs.pyqt_gui.services.ui_bridge_server import UiBridgeControlServer
+    from formbridge.bridge.server import UiBridgeControlServer
     from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
     from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
@@ -85,7 +85,7 @@ def build_main_window_specs() -> dict[str, WindowSpec]:
 
     definitions = (
         MainWindowSpecDefinition(
-            PlateManagerWidgetIdentity,
+            DatasetListWidgetIdentity,
             PlateManagerWindow,
             True,
         ),

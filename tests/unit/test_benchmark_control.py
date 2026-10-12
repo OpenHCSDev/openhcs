@@ -64,7 +64,10 @@ from openhcs.runtime.environment_provenance import (
     RuntimeEnvironmentSnapshot,
 )
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
+)
 
 
 def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None:
@@ -1308,3 +1311,46 @@ def _run_receipt(
         completed_observation_count=completed_observation_count,
         updated_at_epoch_seconds=updated_at,
     )
+
+
+@pytest.mark.parametrize(
+    "scope_name", tuple(ZMQRuntimeObservationExportScope.__registry__)
+)
+def test_measured_cli_builds_its_run_request_for_every_observation_scope(
+    scope_name: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class RequestWasBuilt(Exception):
+        """Raised by the first step after the run request, to stop before execution."""
+
+    def stop_after_request(*_args, **_kwargs):
+        raise RequestWasBuilt
+
+    monkeypatch.setattr(
+        "openhcs.core.input_workspace.mirror_input_workspace", stop_after_request
+    )
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    source_file = tmp_path / "pipeline.py"
+    source_file.write_text("pipeline_steps = []\n", encoding="utf-8")
+    args = create_benchmark_argument_parser().parse_args(
+        [
+            "run-measured",
+            "--plate",
+            str(plate),
+            "--pipeline-source-file",
+            str(source_file),
+            "--output-dir",
+            str(tmp_path / "evidence"),
+            "--run-id",
+            "test",
+            "--observation-scope",
+            scope_name,
+            "--wait-timeout-ms",
+            "1000",
+        ]
+    )
+
+    with pytest.raises(RequestWasBuilt):
+        args.cli_command.run(args)

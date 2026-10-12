@@ -7,7 +7,7 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 
 from objectstate import ObjectState
-from pyqt_reactive.services.parameter_help_service import (
+from formbridge.services.parameter_help_service import (
     dataclass_parameter_descriptions,
     docstring_info_for_target,
 )
@@ -527,6 +527,7 @@ def test_help_projection_has_no_semantic_mirror_or_name_dispatch() -> None:
     production_roots = (
         REPOSITORY_ROOT / "openhcs",
         REPOSITORY_ROOT / "external/arraybridge/src",
+        REPOSITORY_ROOT / "external/formbridge/src",
         REPOSITORY_ROOT / "external/pyqt-reactive/src",
         REPOSITORY_ROOT / "external/python-introspect/src",
         REPOSITORY_ROOT / "scripts",

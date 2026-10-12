@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.config import ZarrConfig
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.source import DatasetSource
 
 logger = logging.getLogger(__name__)
@@ -267,7 +267,7 @@ def save_materialized_data(
     materialized_paths: Sequence[str],
     materialized_backend: str,
     zarr_config: ZarrBackendConfig | None,
-    context: ProcessingContext,
+    context: ExecutingContext,
     axis_id: str,
     *,
     output_identities: Sequence[FunctionOutputIdentity] = (),
@@ -374,7 +374,7 @@ def update_metadata_for_zarr_conversion(
     dataset_root: Path,
     original_subdir: str,
     zarr_subdir: str | None,
-    context: ProcessingContext,
+    context: ExecutingContext,
 ) -> None:
     """Update OpenHCS metadata after a Zarr input conversion."""
     from openhcs.core.virtual_workspace_metadata import (

@@ -33,7 +33,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -395,7 +394,7 @@ class DebugArtifactIdentity:
         return cls(
             name=plan.name,
             kind=plan.artifact_type,
-            group_keys=tuple(plan.group_keys or (None,)),
+            group_keys=plan.group_scope.keys,
             producer_step_index=(
                 None
                 if output_plan is None or output_plan.producer_step_index is None
@@ -528,7 +527,7 @@ class DebugInvocationParameter:
             facts.extend(
                 (
                     f"representation={value.representation.value!r}",
-                    f"domain_scope={domain.scope.value!r}",
+                    f"domain_scope={domain.scope.name!r}",
                     f"declared_object_count={domain.declared_object_count!r}",
                     f"declared_object_id_count={len(domain.declared_object_ids)}",
                     "declared_object_plane_count="
@@ -541,7 +540,7 @@ class DebugInvocationParameter:
             facts.extend(
                 (
                     "declared_plane_axis="
-                    f"{None if value.plane_axis is None else value.plane_axis.value!r}",
+                    f"{value.plane_axis.name!r}",
                     "declared_cardinality="
                     f"{None if projection is None else projection.axis_size!r}",
                 )
@@ -568,10 +567,10 @@ class DebugInvocationParameter:
                         f"{len(metadata.source_image_names)}",
                     )
                 )
-            if metadata.plane_axis is not None:
+            if metadata.plane_axis.leads_data:
                 payload_shape = tuple(int(axis_size) for axis_size in value.shape)
                 if plane_projector is not None and (
-                    metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+                    metadata.plane_axis.one_plane_per_runtime_slice
                     or not isinstance(plane_projector, RuntimePlaneProjection)
                 ):
                     projection = RuntimePlaneAxisValueProjection.from_projector(
@@ -580,20 +579,16 @@ class DebugInvocationParameter:
                         metadata.source_image_names,
                     )
                 if projection is None:
-                    facts.append(f"plane_axis={metadata.plane_axis.value!r}")
-                facts.extend(
-                    (
-                        f"declared_plane_axis={metadata.plane_axis.value!r}",
-                        f"declared_cardinality={payload_shape[0]}",
-                    )
-                )
+                    facts.append(f"plane_axis={metadata.plane_axis.name!r}")
+                declared_cardinality = payload_shape[0]
             else:
-                facts.extend(
-                    (
-                        "declared_plane_axis=None",
-                        "declared_cardinality=None",
-                    )
+                declared_cardinality = None
+            facts.extend(
+                (
+                    f"declared_plane_axis={metadata.plane_axis.name!r}",
+                    f"declared_cardinality={declared_cardinality}",
                 )
+            )
         elif isinstance(value, np.ndarray):
             facts.extend(
                 (
@@ -630,11 +625,11 @@ class DebugInvocationParameter:
         if projection is not None:
             plane_coordinate = (
                 "preserved"
-                if projection.plane_index is None
+                if projection.preserves_complete_axis
                 else str(projection.plane_index)
             )
             projection_facts = (
-                f"plane_axis={projection.axis.value!r}",
+                f"plane_axis={projection.axis.name!r}",
                 f"plane_index={plane_coordinate}",
                 f"axis_size={projection.axis_size}",
                 f"source_alias_count={len(projection.source_aliases)}",

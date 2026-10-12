@@ -4,12 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentDataclassCliRequest,
-    AgentError,
-    AgentWarning,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentDataclassCliRequest, AgentError, AgentWarning
 from enum import Enum
 
 from python_introspect import validate_annotated_dataclass
@@ -165,6 +161,14 @@ class DatasetRowState:
     finished_execution_id: str | None = None
     """The dataset's latest finished ordinary execution (its evidence id)."""
     scope_accent_color: str | None = None
+
+    @property
+    def queued(self) -> bool:
+        return self.queue_position is not None
+
+    @property
+    def has_terminal_status(self) -> bool:
+        return self.terminal_status is not None
 
 
 @dataclass(frozen=True, slots=True)

@@ -24,7 +24,7 @@ from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttr
 from packaging.utils import canonicalize_name
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.agent.runtime_platform import (
+from formbridge.runtime_platform import (
     AgentRuntimePlatform,
     MacOSRuntimePlatform,
     WindowsRuntimePlatform,

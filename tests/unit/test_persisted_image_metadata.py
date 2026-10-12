@@ -1,5 +1,6 @@
 """Saved-pixel facts and complete, nominal metadata replay."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import fields
@@ -20,7 +21,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImageUnitIntervalIntensityMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
@@ -80,7 +80,7 @@ def test_complete_metadata_codec_uses_declarations_and_preserves_contributors():
     restored = ImagePayloadMetadata.from_mapping(wire)
     assert restored == metadata
     assert len(restored.source_provenance.represented_source_identities) == 9
-    assert restored.plane_axis is None  # Contributors are not a runtime SITE axis.
+    assert restored.plane_axis.unstacked  # Contributors are not a runtime SITE axis.
     assert restored.source_image_names == ("neurite", "nucleus")
 
 
@@ -108,7 +108,7 @@ def test_saved_format_metadata_is_native_and_does_not_reencode(
     assert restored.source_voxel_spacing == metadata.source_voxel_spacing
     assert restored.source_spatial_domain == metadata.source_spatial_domain
     assert restored.source_provenance == metadata.source_provenance
-    assert restored.plane_axis is None
+    assert restored.plane_axis.unstacked
     if extension in (".png", ".bmp"):
         assert restored.unit_interval_intensity is None
         assert restored.physical_border_edges_yx is None
@@ -125,7 +125,7 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
 ):
     contributors = metadata_fixture().source_image_provenance_planes.planes
     metadata = metadata_fixture().replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes(
             tuple(
                 RuntimeSourceImageProvenancePlane(
@@ -146,7 +146,7 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
         to_jsonable(image_format.persisted_metadata(path, payload))
     )
     assert image_format.read(path).shape == (2, 4, 5)
-    assert restored.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert restored.plane_axis is RuntimeSlicePlaneAxis
     assert restored.axis_position(ColourAxis) is None
     assert restored.source_provenance.source_plane_count == 2
     assert all(

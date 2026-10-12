@@ -27,7 +27,7 @@ from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
 )
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
@@ -108,7 +108,7 @@ def stream_payload_summary(data: object) -> str:
 
 
 def finalize_function_step_outputs(
-    context: ProcessingContext,
+    context: ExecutingContext,
     plan: CompiledStepPlan,
 ) -> StepExecutionObservation:
     """Save and publish one step's actual outputs before releasing their payloads."""
@@ -183,7 +183,7 @@ class MemoryOutputWriter:
     @classmethod
     def write_if_needed(
         cls,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> None:
         if plan.write_backend == Backend.MEMORY.value:
@@ -251,7 +251,7 @@ class MaterializedImageOutputWriter:
 
     @staticmethod
     def write_if_needed(
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> None:
         materialized_output = plan.materialized_output
@@ -549,7 +549,7 @@ class StreamOutputsAuthority:
 
     @staticmethod
     def stream_outputs(
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> None:
         for config_instance in plan.streaming_configs.values():
@@ -675,7 +675,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def from_execution(
-        cls, context: ProcessingContext, plan: CompiledStepPlan
+        cls, context: ExecutingContext, plan: CompiledStepPlan
     ) -> OpenHCSMetadataTarget | None:
         """Resolve the target participating in this step's publication."""
         return cls.from_plan(plan)
@@ -683,7 +683,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_execution(
         cls,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         *,
         artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = (),
@@ -700,7 +700,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def production_targets(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> tuple[OpenHCSMetadataTarget, ...]:
         """Project this declaration's exact storage destinations for the step."""
@@ -708,7 +708,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def reconciliation_targets(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
         accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
@@ -717,14 +717,14 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         return (self,)
 
     def produced_records(
-        self, context: ProcessingContext, plan: CompiledStepPlan
+        self, context: ExecutingContext, plan: CompiledStepPlan
     ) -> tuple[ProducedOutputSemantics, ...]:
         """Targets without main-flow image storage have no produced records."""
         return ()
 
     def runtime_artifact_projection_paths(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         *,
         produced_projections: Mapping[
@@ -739,13 +739,13 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             )
         return ()
 
-    def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
+    def stored_output_paths(self, context: ExecutingContext) -> tuple[str, ...]:
         """Return this declaration's outputs eligible for publication."""
         return tuple(
             context.filemanager.list_image_files(self.output_dir, self.backend)
         )
 
-    def contains_outputs(self, context: ProcessingContext) -> bool:
+    def contains_outputs(self, context: ExecutingContext) -> bool:
         """Return whether this declared destination has publishable outputs."""
 
         if context.filemanager is None:
@@ -756,7 +756,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def write(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         *,
         produced_plan: CompiledStepPlan | None = None,
         metadata_writer: AtomicMetadataWriter | None = None,
@@ -805,7 +805,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def produced_projection_entries(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> VirtualWorkspaceSourceProjectionEntries:
         """Project this step's update, including an empty non-image update.
@@ -918,7 +918,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def project_runtime_artifacts(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         *,
         produced_projections: Mapping[
@@ -994,7 +994,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     def persisted_image_metadata(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         *,
         destination: str,
         payload,
@@ -1032,7 +1032,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def observe_for_step(
         cls,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         *,
         artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = (),
@@ -1050,13 +1050,13 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def finalize_completed_dataset(
         cls,
-        compiled_contexts: Mapping[str, ProcessingContext],
+        compiled_contexts: Mapping[str, ExecutingContext],
         *,
         runtime_observations: Iterable[RuntimeExecutionObservation] = (),
     ) -> None:
         """Publish completed or partial saved outputs once at the receiving boundary."""
 
-        target_contexts: dict[OpenHCSMetadataTarget, ProcessingContext] = {}
+        target_contexts: dict[OpenHCSMetadataTarget, ExecutingContext] = {}
         for context in compiled_contexts.values():
             for plan in context.step_plans.values():
                 if not plan.create_openhcs_metadata:
@@ -1076,7 +1076,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                         target_contexts.setdefault(target, context)
 
         targets_by_document: dict[
-            Path, dict[OpenHCSMetadataTarget, ProcessingContext]
+            Path, dict[OpenHCSMetadataTarget, ExecutingContext]
         ] = {}
         for owner, context in target_contexts.items():
             targets_by_document.setdefault(
@@ -1097,7 +1097,7 @@ class ProducedImageMetadataCapability:
     """Main-flow and checkpoint targets share the typed image-record projection."""
 
     def produced_records(
-        self, context: ProcessingContext, plan: CompiledStepPlan
+        self, context: ExecutingContext, plan: CompiledStepPlan
     ) -> tuple[ProducedOutputSemantics, ...]:
         return step_output_manifest(context).image_records_for(plan)
 
@@ -1111,7 +1111,7 @@ class PrimaryImageMetadataTarget(
 
     @classmethod
     def from_execution(
-        cls, context: ProcessingContext, plan: CompiledStepPlan
+        cls, context: ExecutingContext, plan: CompiledStepPlan
     ) -> PrimaryImageMetadataTarget | None:
         if not step_output_manifest(context).image_records_for(plan):
             return None
@@ -1170,13 +1170,13 @@ class MaterializedImageMetadataTarget(
 class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
     """Saved artifacts own result destinations independently of image storage."""
 
-    def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
+    def stored_output_paths(self, context: ExecutingContext) -> tuple[str, ...]:
         """Include every saved format in this declared result destination."""
         return tuple(context.filemanager.list_files(self.output_dir, self.backend))
 
     def production_targets(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Derive directories from the same writer outputs used to save artifacts."""
@@ -1190,7 +1190,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
 
     def reconciliation_targets(
         self,
-        context: ProcessingContext,
+        context: ExecutingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
         accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,

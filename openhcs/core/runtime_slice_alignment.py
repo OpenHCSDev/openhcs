@@ -1,6 +1,7 @@
 """Non-image values aligned to runtime slices."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import abstractmethod
 from collections.abc import Callable
@@ -10,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 import numpy as np
 
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceProjectableValue,
 )
@@ -102,11 +102,11 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         return self.slice_count
 
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
-        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            return self
-        return self.value_for_aligned_slice(
-            context.require_plane_index(), context.axis_size,
-        )
+        if context.axis.one_plane_per_runtime_slice:
+            return self.value_for_aligned_slice(
+                context.require_plane_index(), context.axis_size,
+            )
+        return self
 
     def aligned_value(self, resolver: "AlignedImageStackKwargResolver") -> Any:
         return self.value_for_aligned_slice(
@@ -116,6 +116,9 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
 
     def alignment_slices(self) -> tuple[SliceValueT, ...]:
         return self.values
+
+    def slice_source_provenances(self) -> tuple[Any, ...]:
+        return tuple(value.scalar_source_provenance() for value in self.values)
 
     def project_declared_source(
         self, source_image_name: str,
@@ -161,9 +164,6 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             value_name="Runtime-slice-aligned image output",
         )
         from openhcs.core.aligned_image_payload import stack_image_payloads
-        from openhcs.core.runtime_image_values import (
-            ImagePayloadMetadataCompositionMode,
-        )
 
         return stack_image_payloads(
             self.map_indexed_slices(
@@ -174,7 +174,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
                     None,
                 )
             ).values,
-            metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+            metadata_mode=RuntimeSlicePlaneAxis,
         )
 
     def object_label_output(

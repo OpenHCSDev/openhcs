@@ -20,10 +20,7 @@ from python_introspect import (
 )
 from python_introspect.validation import validate_annotation_value
 from polystore.streaming.identity import StreamProducerIdentity
-from pyqt_reactive.services.window_snapshot import (
-    WindowSnapshotCaptureSpec,
-    WindowVisualObservation,
-)
+from formbridge.services.window_snapshot import WindowSnapshotCaptureSpec, WindowVisualObservation
 from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
@@ -36,12 +33,8 @@ from zmqruntime.viewer_protocol import (
 )
 
 import openhcs.core.plate_image_inventory as core_plate_image_inventory
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentError,
-    AgentResourceRef,
-    AgentWarning,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentResourceRef, AgentWarning
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     ViewerWindowPolylineMeasurementRequest,

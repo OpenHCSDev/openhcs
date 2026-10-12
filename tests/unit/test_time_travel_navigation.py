@@ -1,17 +1,11 @@
 from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
-from pyqt_reactive.services.function_navigation import build_function_token_field_path
+from formbridge.services.function_navigation import build_function_token_field_path
 from pyqt_reactive.services.window_navigation import (
-    NavigationWaitReason,
-    RegisteredWindowNavigationReadiness,
-    RegisteredWindowNavigationRequest,
-    WindowNavigationDriver,
     WindowNavigationResult,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import (
-    DualEditorWindowNavigationDriver,
     step_function_scope,
 )
 
@@ -21,24 +15,6 @@ NAVIGATOR = TimeTravelNavigator(function_scope=step_function_scope)
 class RuntimeCallable:
     def __call__(self, image, threshold: int = 1):
         return image
-
-
-class _DualEditorTabWidget:
-    """Minimal live-label projection used by dual-editor navigation tests."""
-
-    def __init__(self) -> None:
-        self.indices: list[int] = []
-        self.tab_bar = self
-        self._labels = tuple(tab.label for tab in DualEditorTab)
-
-    def count(self) -> int:
-        return len(self._labels)
-
-    def tabText(self, index: int) -> str:
-        return self._labels[index]
-
-    def setCurrentIndex(self, index: int) -> None:
-        self.indices.append(index)
 
 
 def _reset_registry() -> None:
@@ -251,118 +227,6 @@ def test_time_travel_step_source_bindings_child_targets_step_settings() -> None:
     assert request.target is not None
     assert not request.target.is_function_target
     assert request.target.to_field_path() == field_path
-
-
-def test_dual_editor_navigation_uses_step_editor_readiness_for_step_fields() -> None:
-    class StepDriver(WindowNavigationDriver):
-        def __init__(self) -> None:
-            self.executed: list[str | None] = []
-            self.callbacks: list[object] = []
-
-        def readiness(self, request):
-            return RegisteredWindowNavigationReadiness(
-                wait_reason=NavigationWaitReason.FIELD_TARGET
-            )
-
-        def register_readiness_callback(self, request, callback):
-            del request
-            self.callbacks.append(callback)
-            return True
-
-        def execute(self, request):
-            self.executed.append(request.field_path)
-
-    class StepEditor:
-        def __init__(self, driver: StepDriver) -> None:
-            self.driver = driver
-
-        def window_navigation_driver(self):
-            return self.driver
-
-    class Owner:
-        def __init__(self, step_driver: StepDriver) -> None:
-            self.step_editor = StepEditor(step_driver)
-            self.func_editor = None
-            self.tab_widget = _DualEditorTabWidget()
-
-    step_driver = StepDriver()
-    owner = Owner(step_driver)
-    driver = DualEditorWindowNavigationDriver(owner)
-    request = RegisteredWindowNavigationRequest(
-        window=None,
-        requested_scope_id="step_scope",
-        field_path="source_bindings.source_filters",
-    )
-
-    assert driver.readiness(request).wait_reason is NavigationWaitReason.FIELD_TARGET
-
-    def retry_callback() -> None:
-        pass
-
-    assert driver.register_readiness_callback(request, retry_callback)
-    assert step_driver.callbacks == [retry_callback]
-
-    driver.prepare(request)
-    driver.execute(request)
-
-    assert owner.tab_widget.indices == [0]
-    assert step_driver.executed == ["source_bindings.source_filters"]
-
-
-def test_dual_editor_function_navigation_does_not_use_step_build_callbacks(
-    qapp,
-) -> None:
-    from PyQt6.QtWidgets import QWidget
-
-    class StepDriver(WindowNavigationDriver):
-        def __init__(self) -> None:
-            self.callbacks: list[object] = []
-
-        def register_readiness_callback(self, request, callback):
-            del request
-            self.callbacks.append(callback)
-            return True
-
-    class StepEditor:
-        def __init__(self, driver: StepDriver) -> None:
-            self.driver = driver
-
-        def window_navigation_driver(self):
-            return self.driver
-
-    class FunctionEditor:
-        def __init__(self) -> None:
-            self.selected: list[str] = []
-
-        def select_and_scroll_to_field(self, field_path: str) -> None:
-            self.selected.append(field_path)
-
-    class Owner:
-        def __init__(self) -> None:
-            self.step_driver = StepDriver()
-            self.step_editor = StepEditor(self.step_driver)
-            self.func_editor = FunctionEditor()
-            self.tab_widget = _DualEditorTabWidget()
-
-    owner = Owner()
-    driver = DualEditorWindowNavigationDriver(owner)
-    window = QWidget()
-    request = RegisteredWindowNavigationRequest(
-        window=window,
-        requested_scope_id="step_scope",
-        field_path="func.threshold",
-    )
-
-    assert driver.accepts(request)
-    assert not driver.register_readiness_callback(request, lambda: None)
-
-    driver.prepare(request)
-    driver.execute(request)
-
-    assert owner.tab_widget.indices == [1]
-    assert owner.func_editor.selected == ["func.threshold"]
-    assert owner.step_driver.callbacks == []
-    window.close()
 
 
 def test_time_travel_unknown_trigger_prefers_source_bindings_field_over_function_scope() -> (

@@ -247,15 +247,17 @@ class PlateViewerWindow(BaseFormDialog):
 
     def _create_image_browser_tab(self) -> QWidget:
         """Create the image browser tab."""
-        from openhcs.pyqt_gui.widgets.image_browser import ImageBrowserWidget
+        from openhcs.pyqt_gui.widgets.image_browser import (
+            ImageBrowserWidget,
+            OrchestratorDataset,
+        )
 
         # Create image browser widget
         browser = ImageBrowserWidget(
-            orchestrator=self.orchestrator,
+            OrchestratorDataset(self.orchestrator, scope_parent=self.scope_id),
             color_scheme=self.color_scheme,
             zmq_config=self.zmq_config,
             progress_config=self.progress_config,
-            state_scope_parent_id=self.scope_id,
             parent=self,
         )
 

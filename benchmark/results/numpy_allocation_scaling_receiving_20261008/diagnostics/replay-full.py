@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import os,sys,time,json,resource,ctypes,gc
 from pathlib import Path
 from multiprocessing import get_context
@@ -6,7 +7,6 @@ sys.path.insert(0,'/home/ts/code/projects/openhcs-cohort-qualification-main429-2
 import numpy as np
 from PIL import Image
 from openhcs.core.runtime_image_values import ImageMetadataPayload,ImagePayloadMetadata,image_payload_data
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
 from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
 from openhcs.processing.backends.cellprofiler.color import combine_color_to_gray
@@ -15,12 +15,12 @@ mode=sys.argv[1]; advice=int(sys.argv[2]); np._core.multiarray._set_madvise_huge
 os.sched_setaffinity(0,{0})
 root=Path('/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images')
 data=np.stack([np.asarray(Image.open(root/name)) for name in ('DMSO_B5_t0.JPG','DMSO_B5_t24.JPG')])
-metadata=ImagePayloadMetadata(source_channel_axis=-1,plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_plane_intensity_scales=(255,255),source_plane_dtypes=('uint8','uint8'))
+metadata=ImagePayloadMetadata(source_channel_axis=-1,plane_axis=RuntimeSlicePlaneAxis,source_plane_intensity_scales=(255,255),source_plane_dtypes=('uint8','uint8'))
 payload=ImageMetadataPayload(data,metadata)
 def chain():
     normalized=normalize_cellprofiler_image_payload(payload)
     gray=[combine_color_to_gray(normalized.metadata.for_leading_source_plane(i).payload_with(image_payload_data(normalized)[i]),(0,1,2),(1.,1.,1.)) for i in range(2)]
-    produced=ImagePayloadSliceStack.from_output_slices(gray,memory_type='numpy',plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+    produced=ImagePayloadSliceStack.from_output_slices(gray,memory_type='numpy',plane_axis=RuntimeSlicePlaneAxis)
     composed=produced.compose()
     normalized_gray=normalize_cellprofiler_image_payload(composed)
     smoothed=[smooth_image(image_payload_data(normalized_gray)[i],auto_object_size=False,object_size=20.) for i in range(2)]
@@ -44,7 +44,7 @@ def worker(slot,connection):
         barrier.wait(); total_start=time.perf_counter(); before=usage(); phases={}
         start=time.perf_counter(); normalized=normalize_cellprofiler_image_payload(payload); phases['normalize']=time.perf_counter()-start
         start=time.perf_counter(); gray=[combine_color_to_gray(normalized.metadata.for_leading_source_plane(i).payload_with(image_payload_data(normalized)[i]),(0,1,2),(1.,1.,1.)) for i in range(2)]; phases['color']=time.perf_counter()-start
-        start=time.perf_counter(); produced=ImagePayloadSliceStack.from_output_slices(gray,memory_type='numpy',plane_axis=RuntimePlaneAxis.RUNTIME_SLICE); composed=produced.compose(); normalized_gray=normalize_cellprofiler_image_payload(composed); phases['publication_normalize']=time.perf_counter()-start
+        start=time.perf_counter(); produced=ImagePayloadSliceStack.from_output_slices(gray,memory_type='numpy',plane_axis=RuntimeSlicePlaneAxis); composed=produced.compose(); normalized_gray=normalize_cellprofiler_image_payload(composed); phases['publication_normalize']=time.perf_counter()-start
         start=time.perf_counter(); smoothed=[smooth_image(image_payload_data(normalized_gray)[i],auto_object_size=False,object_size=20.) for i in range(2)]; phases['smooth']=time.perf_counter()-start
         digest=[float(image_payload_data(a).sum(dtype=np.float64)) for a in smoothed]
         del normalized,gray,smoothed,produced,composed,normalized_gray

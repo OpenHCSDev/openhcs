@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import ast
 import json
 import threading
@@ -13,8 +14,11 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.callable_contract import CallableContract
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import (
     NoOpDebugExecutionPolicy,
@@ -87,9 +91,6 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
     ObjectRelationshipDeclaration,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_object_labels import (
@@ -307,12 +308,12 @@ class DebugRuntimeFixture:
                     spec=spec,
                     storage_plan=plan,
                     projection=ArtifactInputProjectionPlan(
-                        invocation_scope=ComponentGroupScope.ungrouped(),
-                        producer_selection_scope=plan.producer_group_scope(),
+                        invocation_scope=UngroupedScope(),
+                        producer_selection_scope=plan.group_scope,
                         component_scopes=(
                             ()
-                            if plan.producer_group_scope().is_ungrouped
-                            else (plan.producer_group_scope(),)
+                            if not plan.group_scope.as_grouped()
+                            else (plan.group_scope,)
                         ),
                     ),
                 )
@@ -334,7 +335,7 @@ class DebugRuntimeFixture:
             input_memory_type=MEMORY_TYPE_NUMPY,
             source_binding_plan=CompiledSourceBindingPlan(),
             variable_components=(),
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
             compiled_function_pattern=SimpleNamespace(is_grouped=False),
             artifact_inputs=artifact_inputs,
             artifact_outputs=artifact_outputs,
@@ -714,7 +715,7 @@ def test_before_invocation_observes_exact_bound_call_boundary():
     context = DebugExecutionContextStub(debug_event_sink=sink)
     main_image = ImagePayloadMetadata(
         source_image_names=("Orig",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.arange(6, dtype=np.uint16).reshape(1, 2, 3), None)
     auxiliary_output = ArtifactOutputPlan(
         name="auxiliary",
@@ -1063,7 +1064,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
     )
     image = ImagePayloadMetadata(
         source_image_names=("OrigStain1", "OrigStain2"),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
     try:
         DebugRuntimeFixture.execute_function_chain(
@@ -1501,8 +1502,7 @@ def test_debug_snapshot_round_trips_invocation_parameters_and_artifact_identity(
         name="objects",
         path="/tmp/objects.json",
         artifact_type=ObjectLabelsArtifactType,
-        group_component=Microscopy.Well,
-        group_keys=("A01",),
+        group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
     )
     event = DebugEvent(
         event_type=AfterInvocationDebugBoundary,
@@ -1546,8 +1546,7 @@ def test_paused_worker_runtime_inspection_projects_runtime_value_store():
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
-            group_keys=("DAPI",),
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
         ),
         measurements,
         axis_id=DebugRuntimeFixture.AXIS_ID,

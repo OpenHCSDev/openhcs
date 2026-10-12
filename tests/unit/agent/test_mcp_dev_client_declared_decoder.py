@@ -7,7 +7,8 @@ import sys
 import pytest
 
 from openhcs.agent.capabilities import AgentResultFamilyContract, StartOwnedRuntimeCapability
-from openhcs.agent.dto.common import AgentError, AgentResultEnvelope, SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentResultEnvelope
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.execution import RuntimeBootstrapState, RuntimeBootstrapHandle
 from openhcs.agent.dto.mcp import McpToolErrorResult
 from openhcs.mcp.dev_client_core import (

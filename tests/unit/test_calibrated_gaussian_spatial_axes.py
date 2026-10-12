@@ -1,5 +1,7 @@
 """Gaussian consumes declared physical axes, not assembled payload rank."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -11,7 +13,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadAxisFields,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain, VolumeSourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -41,7 +42,7 @@ def _source(pixels, *, domain=None, spacing=(0.5, 0.75), channel_axis=None, coho
         source_voxel_spacing=SourceVoxelSpacing(values_zyx=spacing),
         source_spatial_domain=SourceSpatialDomain() if domain is None else domain,
         axes=PayloadAxes.colour_samples(channel_axis),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE if cohort else None,
+        plane_axis=RuntimeSlicePlaneAxis if cohort else NoPlaneAxis,
     )
     return metadata.payload_with(pixels, np.ones(pixels.shape, dtype=bool))
 
@@ -156,7 +157,7 @@ def test_axis_capability_is_inherited_without_metadata_overrides():
         assert getattr(ImagePayloadMetadata, name) is getattr(ImagePayloadAxisFields, name)
     metadata = ImagePayloadMetadata()
     assert metadata.axis_position(ColourAxis) is None
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.undeclared_axes(np.zeros((3, 7, 9))) == (0, 1, 2)
 
 
@@ -190,7 +191,7 @@ def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
         for index in range(3)
     )
     metadata = ImagePayloadMetadata.compose(planes).replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     if physical_volume:
         metadata = metadata.replace_fields(

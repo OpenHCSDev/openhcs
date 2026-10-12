@@ -1,5 +1,7 @@
 """Prior child measurements select their producer domain, not the child channel."""
 
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import pytest
@@ -24,7 +26,6 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.pipeline.path_planner import (
     PathPlannerArtifactStage,
-    PathPlannerGroupScope,
 )
 from openhcs.core.config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
@@ -69,8 +70,7 @@ def _compiled_edge(*, dynamic=False, declared=True):
         name=spec.name,
         path="/memory/intensity.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=(None,) if dynamic else ("1", "2", "5", "3"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,) if dynamic else ("1", "2", "5", "3"), component=Microscopy.Channel),
         paths_by_group=(
             None
             if dynamic
@@ -92,7 +92,7 @@ def _compiled_edge(*, dynamic=False, declared=True):
         InvocationArtifactInputProjectionKey(invocation.key, index),
         input_spec=spec,
         storage_plan=storage,
-        invocation_scope=PathPlannerGroupScope.from_raw(
+        invocation_scope=ComponentGroupScope.of(
             ("3",), component=Microscopy.Channel
         ),
         relation_source_scopes={},
@@ -108,14 +108,14 @@ def test_relate_prior_child_measurements_compile_all_source_channels():
     edge, _ = _compiled_edge()
     assert (
         edge.projection.producer_selection_scope
-        == edge.storage_plan.producer_group_scope()
+        == edge.storage_plan.group_scope
     )
     assert edge.projection.consumer_variable_components == (Microscopy.Site,)
 
 
 def test_ordinary_measurement_input_still_selects_invocation_channel():
     edge, _ = _compiled_edge(declared=False)
-    assert edge.projection.producer_selection_scope == ComponentGroupScope.from_raw(
+    assert edge.projection.producer_selection_scope == ComponentGroupScope.of(
         ("3",),
         component=Microscopy.Channel,
     )
@@ -153,8 +153,7 @@ def _measurement_store(edge, *, well="A01", fixed=()):
             name="intensity",
             path=path,
             artifact_type=MeasurementsArtifactType,
-            group_keys=(channel,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
         )
         for subject in ("Children", "Unrelated"):
             table = MeasurementTable(
@@ -320,10 +319,8 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     )
     from openhcs.core.runtime_object_label_domains import (
         ObjectLabelDomain,
-        ObjectLabelDomainScope,
     )
     from openhcs.core.runtime_plane_projection import (
-        RuntimePlaneAxis,
         RuntimePlaneProjection,
     )
     from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
@@ -364,18 +361,17 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             labels=np.array([[[1, 2], [0, 0]], [[1, 2], [0, 0]]], dtype=np.int32)
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2), (1, 2)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=child_planes,
     )
     storage = ArtifactInputPlan(
         name=child.name,
         path="/memory/children.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         source_step_id=1,
     )
@@ -387,7 +383,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         storage_plan=storage,
         projection=replace(
             measurement_edge.projection,
-            producer_selection_scope=storage.producer_group_scope(),
+            producer_selection_scope=storage.group_scope,
         ),
     )
     store = RuntimeValueStore()
@@ -395,8 +391,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         name=child.name,
         path=storage.path,
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         variable_components=(Microscopy.Site,),
     )
     store.record(
@@ -424,8 +419,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             name="intensity",
             path=path,
             artifact_type=MeasurementsArtifactType,
-            group_keys=(channel,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
         )
         for subject in ("Children", "Unrelated"):
             table = MeasurementTable(
@@ -457,7 +451,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
                 backend="memory",
             )
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=child_planes,
     ).payload_with(np.ones((2, 2, 2), dtype=np.float32))
     bindings = CompiledSourceBindingPlan(
@@ -640,7 +634,7 @@ def test_plate_projection_keeps_complete_producer_scope(dynamic):
         invocation_key=edge.key.invocation_key,
         execution_scope=FunctionStepExecutionScope.PLATE,
     )
-    assert scope == edge.storage_plan.producer_group_scope()
+    assert scope == edge.storage_plan.group_scope
 
 
 def test_compiled_input_cannot_silently_narrow_complete_declaration():
@@ -649,7 +643,7 @@ def test_compiled_input_cannot_silently_narrow_complete_declaration():
         edge,
         projection=replace(
             edge.projection,
-            producer_selection_scope=ComponentGroupScope.from_raw(
+            producer_selection_scope=ComponentGroupScope.of(
                 ("3",), component=Microscopy.Channel
             ),
         ),
@@ -715,7 +709,7 @@ def test_relation_selection_conflicts_fail_without_last_writer_precedence():
         target_plan_type = ArtifactInputPlan
 
         def input_producer_selection_scope(self, producer_scope):
-            return ComponentGroupScope.from_raw(("1",), component=Microscopy.Channel)
+            return ComponentGroupScope.of(("1",), component=Microscopy.Channel)
 
     spec = replace(
         edge.spec, relations=(*edge.spec.relations, SingleChannelRelation(child.ref()))

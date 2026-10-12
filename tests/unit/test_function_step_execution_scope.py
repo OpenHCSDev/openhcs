@@ -27,7 +27,10 @@ from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    RuntimeExecutionAxisScope,
+    UngroupedScope,
+)
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
@@ -45,7 +48,11 @@ from openhcs.core.orchestrator.bundle_execution import (
     execute_dataset_scoped_steps,
     validate_dataset_scoped_contexts,
 )
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+    MergeDatasetInputRecords,
+    OmitRuntimeRecords,
+)
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
@@ -87,13 +94,17 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     StepStartedProgressPhase,
 )
+from tests.context_support import (
+    executing_context,
+    with_facts,
+)
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
     class Counter:
         pass
 
-    context = ProcessingContext()
+    context = executing_context()
     with pytest.raises(RuntimeError, match="active FunctionStep"):
         context.runtime_step_value(Counter)
 
@@ -395,9 +406,9 @@ def _plate_step_plan(
         compiled_pattern,
         artifact_inputs=input_plans,
         relation_source_scopes={
-            plan.ref(): plan.producer_group_scope() for plan in artifact_inputs
+            plan.ref(): plan.group_scope for plan in artifact_inputs
         },
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
     )
     return CompiledStepPlan(
@@ -425,13 +436,13 @@ def _plate_context(
     axis_id: str,
     plans: tuple[CompiledStepPlan, ...],
 ) -> ProcessingContext:
-    context = ProcessingContext(
+    context = executing_context(
         step_plans={plan.step_index: plan for plan in plans},
         axis_id=axis_id,
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
         post_execute_hooks=PostExecuteHook.bind_all(GlobalPipelineConfig()),
     )
-    context.microscope_handler = SimpleNamespace()
+    context = with_facts(context, microscope_handler=SimpleNamespace())
     return context
 
 
@@ -475,8 +486,7 @@ def _record_measurements(
         name=name,
         path=path,
         artifact_type=MeasurementsArtifactType,
-        group_keys=(group_key,),
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((group_key,), component=group_component),
     )
     subject = (
         MeasurementSubject(MeasurementScope.ARTIFACT, name)
@@ -591,7 +601,7 @@ def test_plate_artifact_batch_keeps_optional_source_declaration_without_record()
         MeasurementsArtifactType,
     }
     batch = _dataset_artifact_batch(
-        compiled_contexts={"A01": context},
+        executing_contexts={"A01": context},
         step_index=1,
         invocation_position=0,
         contract=CallableContract.from_callable(export),
@@ -700,7 +710,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
     retained_store.merge_observed_values(retained)
     batches = tuple(
         _dataset_artifact_batch(
-            compiled_contexts={"A01": context},
+            executing_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
             contract=CallableContract.from_callable(export),
@@ -749,7 +759,7 @@ def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
     assert MergeDatasetInputRecords.retain_records((), context) == ()
     with pytest.raises(ValueError, match="missing required input"):
         _dataset_artifact_batch(
-            compiled_contexts={"A01": context},
+            executing_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
             contract=CallableContract.from_callable(export),
@@ -913,10 +923,10 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     plan.output_dir = tmp_path / "images"
     plan.analysis_results_dir = str(tmp_path / "analysis")
     context = _plate_context("A01", (plan,))
-    context.metadata_cache = {}
-    context.microscope_handler = SimpleNamespace(
+    context = with_facts(context, metadata_cache={})
+    context = with_facts(context, microscope_handler=SimpleNamespace(
         parser=SourceSchemaFilenameParser(), source_name="test",
-    )
+    ))
     _record_measurements(
         context,
         name="prior_measurements",
@@ -988,9 +998,9 @@ def test_plate_scope_image_set_policy_includes_compiled_group_component() -> Non
         metadata_writer=True,
     )
     context = _plate_context("A01", (plan,))
-    context.source_image_set_identity_policy = SourceImageSetIdentityPolicy(
+    context = with_facts(context, source_image_set_identity_policy=SourceImageSetIdentityPolicy(
         frozenset((Microscopy.Channel,))
-    )
+    ))
     _record_measurements(
         context,
         name=measurement_spec.name,
@@ -1032,7 +1042,7 @@ def test_plate_scope_collects_runtime_discovered_component_groups() -> None:
                 name=measurement_spec.name,
                 path=input_path,
                 artifact_type=measurement_spec.artifact_type,
-                group_component=Microscopy.Channel,
+                group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                 paths_by_group={None: input_path},
             ),
         ),

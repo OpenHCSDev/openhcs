@@ -1,5 +1,8 @@
 """Loaded cohorts retain original input facts while plans and call images remain live."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import FrozenInstanceError, fields, replace
 import inspect
 import pickle
@@ -10,9 +13,11 @@ import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.component_group_scope import (
+    DynamicGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
@@ -31,6 +36,9 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _identity(image):
@@ -46,11 +54,11 @@ def _fixture():
         step_scope_id="loaded-cohort",
         input_memory_type="numpy",
         output_memory_type="numpy",
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     request = PatternGroupExecutionRequest(
         context=context,
         execution_plan=plan,
@@ -140,7 +148,7 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
     assert loaded.runtime_plane_count == 2
     assert len(loaded.matching_files) == 3
     request.execution_plan.axis_id = "B02"
-    request.execution_plan.execution_group_scope = ComponentGroupScope.dynamic(
+    request.execution_plan.execution_group_scope = DynamicGroupScope(
         Microscopy.Site
     )
     assert loaded.axis_scope.axis_id == "B02"
@@ -374,7 +382,6 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
     from openhcs.core.runtime_adapters import runtime_adapter
     from openhcs.core.runtime_artifact_values import RuntimeValue
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 
     request, _, payload = _fixture()
@@ -414,12 +421,12 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         pattern,
         artifact_inputs={input_plan.ref(): input_plan},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection((source,)),
     )
     request.execution_plan.step_index = 1
-    request.execution_plan.execution_group_scope = ComponentGroupScope.ungrouped()
+    request.execution_plan.execution_group_scope = UngroupedScope()
     request.execution_plan.artifact_inputs = {input_plan.ref(): input_plan}
     request.execution_plan.artifact_outputs = {output_plan.ref(): output_plan}
     request.execution_plan.compiled_function_pattern = pattern
@@ -438,7 +445,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     payload = (
         payload.metadata
         .replace_fields(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
         .payload_with(payload.data, np.ones((2, 3, 4), dtype=bool))
     )
@@ -775,7 +782,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.memory.decorators import numpy as numpy_memory
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
+    from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
     from openhcs.core.source_bindings import NamedSourceBinding
 
     request, paths, payload = _fixture()
@@ -800,7 +807,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
             {},
         ),
         artifact_inputs={}, relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection(
             (source,) if primary_only else (source, ArtifactSpec.input("Other", ImageArtifactType)),
@@ -812,7 +819,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     request.execution_plan.compiled_function_pattern = pattern
     request = replace(request, compiled_group=pattern.default_group)
     payload = payload.metadata.replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(payload.data, np.ones((2, 3, 4), dtype=bool))
     payload = binding.apply_loaded_payload(payload, source_context=None)
     loaded = PatternGroupData.from_loaded_group(request, paths, payload)
@@ -823,8 +830,10 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
         RuntimePlaneProjection.stack(2), payload, "numpy",
     )
     adapter = executor.runtime_adapter_request(payload)
-    adapter = replace(adapter, plane_projection=RuntimePlaneProjection(
-        plane_index=plane_index, plane_count=2,
+    adapter = replace(adapter, plane_projection=(
+        RuntimePlaneProjection.stack(2)
+        if plane_index is None
+        else RuntimePlaneProjection.selected(plane_index, 2)
     ))
 
     def forbidden_original_read(*args, **kwargs):
@@ -839,7 +848,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     np.testing.assert_array_equal(value.mask, np.ones(expected.shape, dtype=bool))
     assert value.metadata.source_provenance.has_values
     assert value.metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE if plane_index is None else None
+        RuntimeSlicePlaneAxis if plane_index is None else NoPlaneAxis
     )
 
     changed = replace(edge, main_flow_projection=None)
@@ -875,10 +884,8 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
         AlignedImageStack, aligned_image_stack_kwargs, stack_image_payloads,
     )
     from openhcs.core.callable_contract import ImagePayloadConsumption
-    from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
     from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
     from openhcs.core.source_binding_selection import SourceUniverseRequest
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
@@ -889,7 +896,7 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
         source_path="source.tif", source_image_names=("Original",),
     ).payload_with(pixels, mask)
     original = stack_image_payloads(
-        (scalar,), metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        (scalar,), metadata_mode=RuntimeSlicePlaneAxis,
     )
     held = SourceUniverseRequest.admit_source_artifact_cohort(
         scalar, source_binding_plan=plan, member_count=1,
@@ -903,14 +910,14 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     assert isinstance(composition.payload, AlignedImageStack)
     labels = ObjectLabelSet(
         name="Objects", variant_data=ObjectLabelVariantData(labels=(pixels > 5)[None].astype(np.int32)),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PLANE, declared_object_id_domains=((1,),)),
+        plane_axis=RuntimeSlicePlaneAxis,
+        domain=ObjectLabelDomain(scope=PlaneLabelScope, declared_object_id_domains=((1,),)),
     )
     projected = aligned_image_stack_kwargs(
         {"object_labels": labels}, 0, 1, reference_payload=composition.payload.slices[0],
     )["object_labels"]
     assert projected.shape == (3, 4)
-    assert projected.plane_axis is None
+    assert projected.plane_axis.unstacked
     # Already held multi-plane cohorts retain their pixel buffer, and literal
     # whole-image volumes retain their intrinsic axes independently of transport.
     retained = SourceUniverseRequest.admit_source_artifact_cohort(
@@ -924,4 +931,4 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
         volume, source_binding_plan=plan, member_count=1,
     )
     assert admitted_volume.data.shape == (2, 3, 4)
-    assert admitted_volume.metadata.plane_axis is None
+    assert admitted_volume.metadata.plane_axis.unstacked

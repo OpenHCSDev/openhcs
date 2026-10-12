@@ -7,8 +7,8 @@ from typing import Annotated
 
 import pytest
 
-from pyqt_reactive.services.help_document import HelpDocument
-from pyqt_reactive.services.parameter_help_service import docstring_info_for_target
+from formbridge.services.help_document import HelpDocument
+from formbridge.services.parameter_help_service import docstring_info_for_target
 
 from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
@@ -175,9 +175,7 @@ class AuditedPolicy(AnnotationAuditPolicy, SupplierAuditPolicy):
 
 
 def test_policy_consumer_executes_cooperative_hooks_once_in_declared_mro():
-    from pyqt_reactive.services.parameter_help_service import (
-        dataclass_type_from_annotation,
-    )
+    from formbridge.services.parameter_help_service import dataclass_type_from_annotation
     from openhcs.agent.dto.functions import (
         SuppliedByAgent,
         SuppliedFromPrimaryInput,

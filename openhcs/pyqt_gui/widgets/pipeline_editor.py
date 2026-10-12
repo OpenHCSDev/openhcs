@@ -5,7 +5,7 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
-from pyqt_reactive.services.window_code_document import use_external_code_editor
+from formbridge.services.window_code_document import use_external_code_editor
 from objectstate import ScopeKey
 import copy
 import logging
@@ -17,7 +17,7 @@ from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QSplitter, QVBoxLayout
 from pyqt_reactive.animation import WindowFlashOverlay
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
@@ -30,14 +30,11 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
     ListItemLeadingMarker,
 )
 from pyqt_reactive.widgets.shared.manager_action_controller import CodeEditorPayload
-from pyqt_reactive.widgets.shared.manager_item_hooks import (
-    AttributeItemIdProjection,
-    ManagerItemHooks,
-)
+from formbridge.managers.item_hooks import AttributeItemIdProjection, ManagerItemHooks
 from pyqt_reactive.widgets.shared.manager_selection_controller import (
     ItemSelectionPayloadProjection,
 )
-from pyqt_reactive.widgets.shared.manager_state_binding import ManagerStateBinding
+from formbridge.managers.state_binding import ManagerStateBinding
 from pyqt_reactive.widgets.shared.manager_ui_scaffold import (
     create_manager_header,
     create_manager_list_widget,
@@ -87,7 +84,7 @@ from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     UiOwnedStateSurfaceDeclaration,
     state_surface_declaration_for_identity,
 )
@@ -106,6 +103,7 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorDebugWorkflow,
     PipelineEditorFunctionPresentation,
 )
+from openhcs.pyqt_gui.windows.dual_editor_tabs import ArtifactsTab, StepSettingsTab
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from openhcs.core.axes import Axis, GroupingDeclaration
 
@@ -646,7 +644,6 @@ class PipelineEditorWidget(
             on_save_callback=on_save,
             orchestrator=self._get_current_orchestrator(),
             parent=self,
-            service_adapter=self.service_adapter,
             plate_scope=scope_id,
             source_bindings=self._current_source_bindings(),
             source_binding_context=self.current_source_binding_context(),
@@ -661,12 +658,11 @@ class PipelineEditorWidget(
             ),
             **({} if step_index is None else {"step_index": step_index}),
         )
-        editor.set_original_step_for_change_detection()
         editor.connect_session_events(self.session)
-        editor.connect_orchestrator_config_signal(
+        editor.tab(StepSettingsTab).follow_orchestrator_config(
             plate_manager.orchestrator_config_changed
         )
-        editor.connect_artifact_signals(
+        editor.tab(ArtifactsTab).follow_artifact_signals(
             compiled_artifact_signal=plate_manager.compiled_artifact_inspection_changed,
             runtime_artifact_signal=plate_manager.runtime_artifact_available,
             debug_snapshot_signal=plate_manager.debug_snapshot_available,

@@ -147,7 +147,7 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     np.testing.assert_array_equal(actual.data, pixels)
     actual_metadata = actual.metadata
     assert "site" not in actual_metadata.source_component_metadata
-    assert actual_metadata.plane_axis is None
+    assert actual_metadata.plane_axis.unstacked
     assert actual_metadata.source_voxel_spacing.values_zyx == (0.25, 0.5)
     assert actual_metadata.source_provenance.source_image_provenance_planes == metadata.source_provenance.source_image_provenance_planes
 

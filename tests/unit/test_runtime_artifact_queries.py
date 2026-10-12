@@ -1,4 +1,6 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass
 import weakref
@@ -46,10 +48,8 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -72,6 +72,9 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 AXIS_ID = "A01"
 
@@ -189,10 +192,10 @@ def object_labels(
         name="Labels",
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=declared_object_id_domains,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
 
@@ -768,7 +771,7 @@ def test_heterogeneous_shape_rows_prefer_area_over_later_volume_alias() -> None:
             labels=pytest.importorskip("numpy").array([[1, 2]], dtype="int32")
         ),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1, 2),
         ),
     )
@@ -831,7 +834,7 @@ def test_projected_payload_measurement_lookup_uses_selected_runtime_slice() -> N
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=np.array(((1, 2),), dtype="int32")),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1, 2),
         ),
     )
@@ -873,7 +876,7 @@ def test_payload_measurement_projection_ignores_source_contributor_alias_count()
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=np.array(((1, 2),), dtype="int32")),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1, 2),
         ),
         source_image_names=("Image", "Mask"),
@@ -912,7 +915,7 @@ def test_payload_measurement_lookup_rejects_unselected_runtime_stack() -> None:
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=np.array(((1,),), dtype="int32")),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1,),
         ),
     )
@@ -934,7 +937,7 @@ def test_payload_measurement_lookup_accepts_declared_singleton_runtime_stack() -
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=np.array(((1,),), dtype="int32")),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1,),
         ),
     )
@@ -1746,8 +1749,7 @@ def _record_native(
             name=native_value.name,
             path=f"/memory/{native_value.name}.pkl",
             artifact_type=kind,
-            group_keys=(group_key,) if group_key is not None else (),
-            group_component=(Microscopy.Channel if group_key is not None else None),
+            group_scope=ComponentGroupScope.of((group_key,) if group_key is not None else (), component=Microscopy.Channel if group_key is not None else None),
         ),
         native_value,
         axis_id=AXIS_ID,

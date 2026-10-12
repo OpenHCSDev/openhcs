@@ -18,7 +18,10 @@ from openhcs.core.artifacts.kinds import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
@@ -111,7 +114,7 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
     pattern_filter = _anchor_executor(
         plan=SimpleNamespace(
             source_binding_plan=source_binding_plan,
-            execution_group_scope=ComponentGroupScope.ungrouped(),
+            execution_group_scope=UngroupedScope(),
         ),
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
@@ -229,14 +232,11 @@ def _filter_source_anchors(
             name=output_spec.name,
             path=f"/memory/{output_spec.name}.pkl",
             artifact_type=output_spec.artifact_type,
-            group_keys=(
-                tuple(
+            group_scope=ComponentGroupScope.of(tuple(
                     binding.component_identity[0].value for binding in compiled_bindings
                 )
                 if shared_output or output_spec.name == "AggregateMeasurements"
-                else (binding.component_identity[0].value,)
-            ),
-            group_component=Microscopy.Channel,
+                else (binding.component_identity[0].value,), component=Microscopy.Channel),
             relations=output_spec.relations,
         )
         for output_spec, binding in zip(
@@ -256,7 +256,7 @@ def _filter_source_anchors(
         step_name="MeasureImages",
         main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             tuple(binding.component_identity[0].value for binding in compiled_bindings),
             component=Microscopy.Channel,
         ),
@@ -425,7 +425,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         step_name="GroupedMeasurements",
         main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("2", "1"),
             component=Microscopy.Channel,
         ),
@@ -485,7 +485,7 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
         step_name="NeuronBodies",
         main_input_dependency=PipelineStartInput(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,)),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("2",),
             component=Microscopy.Channel,
         ),
@@ -581,8 +581,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
         name=measurements.name,
         path="/memory/SourceSetMeasurements.pkl",
         artifact_type=measurements.artifact_type,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         relations=measurements.relations,
     )
     plan = SimpleNamespace(
@@ -594,7 +593,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
             bindings=bindings,
             match_plan=PairByOrder(),
         ),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Site,
         ),
@@ -701,8 +700,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
             name=spec.name,
             path=f"/memory/{spec.name}.pkl",
             artifact_type=spec.artifact_type,
-            group_keys=("1", "2"),
-            group_component=Microscopy.Site,
+            group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
             relations=spec.relations,
         )
         for spec in output_specs
@@ -716,7 +714,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
             bindings=bindings,
             match_plan=PairByOrder(),
         ),
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("1", "2"),
             component=Microscopy.Site,
         ),

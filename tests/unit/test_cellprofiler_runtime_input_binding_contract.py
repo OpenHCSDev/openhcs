@@ -1,6 +1,7 @@
 """Focused gates for the CellProfiler runtime input-binding boundary."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from pathlib import Path
@@ -22,13 +23,12 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -92,8 +92,8 @@ def test_binding_request_rejects_edges_from_another_callable_contract() -> None:
             artifact_type=spec.artifact_type,
         ),
         spec=spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -129,8 +129,8 @@ def test_runtime_adapter_contract_owns_active_input_selection() -> None:
             artifact_type=second.artifact_type,
         ),
         spec=second,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -173,8 +173,8 @@ def test_declared_input_occurrence_owns_callable_parameter_binding() -> None:
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -236,8 +236,8 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=mask,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(Microscopy.ZIndex,),
     )
@@ -257,7 +257,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     mask_metadata = ImagePayloadMetadata(
         source_image_names=(mask.name,),
         source_image_provenance_planes=mask_provenance,
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     mask_payload = mask_metadata.payload_with(
         np.stack(
@@ -291,7 +291,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
             paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((3, 2, 2), dtype=np.float32), None)
     source_binding_plan = CompiledSourceBindingPlan(
         source_stack_components=(
@@ -399,8 +399,8 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=mask,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(Microscopy.ZIndex,),
     )
@@ -417,7 +417,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
                 },
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 2, 2), dtype=np.float32), None)
     store = RuntimeValueStore()
     store.replace(
@@ -445,7 +445,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
             paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((3, 2, 2), dtype=np.float32), None)
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
@@ -495,8 +495,8 @@ def _artifact_availability_adapter(
             input_plan,
             spec=spec,
             input_index=input_index,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )
@@ -592,8 +592,8 @@ def test_compiled_edges_preserve_postponed_sequence_parameter_type() -> None:
             input_plan,
             spec=spec,
             input_index=index - 1,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )

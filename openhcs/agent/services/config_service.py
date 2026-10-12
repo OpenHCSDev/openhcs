@@ -24,7 +24,7 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate import get_base_type_for_lazy
-from pyqt_reactive.services.parameter_help_service import (
+from formbridge.services.parameter_help_service import (
     class_docstring_text,
     dataclass_parameter_descriptions,
     parameter_description_from_target,
@@ -39,7 +39,8 @@ from python_introspect import (
     resolve_optional,
 )
 
-from openhcs.agent.dto.common import AgentError, RenderedSource, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import RenderedSource, SCHEMA_VERSION
 from openhcs.agent.dto.config import (
     ConfigFieldSchema,
     ConfigPatch,

@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    AxisFailed,
+    ExecutionFailed,
+    ExecutionSucceeded,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
@@ -25,7 +25,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
     declared_output.write_bytes(b"sqlite evidence")
     owned_exports = RuntimeExportObservation.from_output_paths((declared_output,))
     execution_results = {
-        "A01": ExecutionResult.success(
+        "A01": ExecutionSucceeded(
             "A01",
             runtime_observation=RuntimeExecutionObservation(
                 contexts=(
@@ -37,7 +37,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
                 )
             ),
         ),
-        "B01": ExecutionResult.error(
+        "B01": ExecutionFailed(
             "B01", failed_combination="field-2", error_message="failed"
         ),
     }
@@ -61,12 +61,12 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
     assert restored.execution_id == "execution-1"
     assert restored.axis_count == 2
     assert restored.successful_axis_count == 1
-    assert restored.outcomes_by_axis["B01"].status is AxisFailed
+    assert type(restored.outcomes_by_axis["B01"]) is ExecutionFailed
     assert restored.outcomes_by_axis["B01"].failed_combination == "field-2"
     assert restored.exports is not None
     assert restored.exports.output_files == (declared_output,)
     assert runtime_value not in path.read_bytes()
-    with pytest.raises(RuntimeError, match="'B01': 'error'"):
+    with pytest.raises(RuntimeError, match="'B01': 'ExecutionFailed: failed'"):
         restored.require_successful_axes()
     with pytest.raises(
         TypeError, match="must contain ZMQRuntimeExecutionObservationExport"
@@ -77,7 +77,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
 def test_successful_outcome_export_accepts_all_axes(tmp_path: Path) -> None:
     exported = ZMQRuntimeExecutionOutcomeExport.from_execution(
         compiled_axis_ids=("A01",),
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
     )
 
@@ -87,7 +87,7 @@ def test_successful_outcome_export_accepts_all_axes(tmp_path: Path) -> None:
 def test_outcome_export_rejects_missing_and_uncompiled_axes(tmp_path: Path) -> None:
     missing = ZMQRuntimeExecutionOutcomeExport.from_execution(
         compiled_axis_ids=("A01", "B01"),
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
     )
     with pytest.raises(RuntimeError, match="compiled axes have no execution outcome"):
@@ -96,8 +96,8 @@ def test_outcome_export_rejects_missing_and_uncompiled_axes(tmp_path: Path) -> N
     unexpected = ZMQRuntimeExecutionOutcomeExport.from_execution(
         compiled_axis_ids=("A01",),
         execution_results={
-            "A01": ExecutionResult.success("A01"),
-            "B01": ExecutionResult.success("B01"),
+            "A01": ExecutionSucceeded("A01"),
+            "B01": ExecutionSucceeded("B01"),
         },
         output_roots=(tmp_path,),
     )
@@ -107,8 +107,8 @@ def test_outcome_export_rejects_missing_and_uncompiled_axes(tmp_path: Path) -> N
 
 def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
     exported = ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={},
-        execution_results={"A01": ExecutionResult.success("A01")},
+        executed_contexts={},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(),
         runtime_observations=(),
     )
@@ -121,7 +121,7 @@ def test_runtime_observation_export_never_overwrites_existing_file(
 ) -> None:
     observation_path = tmp_path / "observation.pkl.gz"
     ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={},
+        executed_contexts={},
         execution_results={},
         output_roots=(),
         execution_id="first-job",
@@ -130,7 +130,7 @@ def test_runtime_observation_export_never_overwrites_existing_file(
     retained_bytes = observation_path.read_bytes()
     with pytest.raises(FileExistsError):
         ZMQRuntimeExecutionObservationExport.from_execution(
-            compiled_contexts={},
+            executed_contexts={},
             execution_results={},
             output_roots=(),
             execution_id="other-job",

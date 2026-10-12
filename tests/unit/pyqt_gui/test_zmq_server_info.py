@@ -1,4 +1,4 @@
-from pyqt_reactive.services.zmq_server_info import (
+from formbridge.services.zmq_server_info import (
     BaseServerInfo,
     ExecutionServerInfo,
     GenericServerInfo,

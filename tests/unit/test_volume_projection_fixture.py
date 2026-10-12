@@ -4,6 +4,8 @@ These source controls do not prove BioFormats discovery, compilation, native
 execution, saved CSV/ROI publication, an installed MCP journey, or biology.
 """
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -21,7 +23,7 @@ from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_matching import source_component_metadata_value
@@ -50,7 +52,7 @@ def source_volume():
             paths=("/synthetic-unit-input/image.ome.tif",) * 3,
             component_metadata=tuple(address.as_component_metadata() for address in addresses),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     return metadata.payload_with(pixels)
 
@@ -65,26 +67,39 @@ def output_plan(declaration):
     )
 
 
-@pytest.mark.parametrize("indices", [(), (2, 0, 1), (2, 0), (1,)])
+def test_one_selected_plane_is_that_source_plane(source_volume):
+    """One selected plane consumes the stack axis and takes that plane's identity (#395)."""
+    selection = fixture.select_volume_fixture_planes_v2(source_volume, (1,))
+    projected = ImageArtifactType.contextualize_output(
+        source_volume, selection, output_plan(fixture.SELECTED_VOLUME),
+        RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3),
+    )
+    np.testing.assert_array_equal(projected.data, source_volume.data[1])
+    assert projected.metadata.plane_axis is NoPlaneAxis
+    assert (
+        projected.metadata.source_provenance
+        == source_volume.metadata.for_leading_source_plane(1).source_provenance
+    )
+
+
+@pytest.mark.parametrize("indices", [(), (2, 0, 1), (2, 0)])
 def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volume, indices):
     original_pixels = source_volume.data
     selected_indices = indices or (0, 1, 2)
     selection = fixture.select_volume_fixture_planes_v2(source_volume, indices)
     projected = ImageArtifactType.contextualize_output(
         source_volume, selection, output_plan(fixture.SELECTED_VOLUME),
-        RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3),
+        RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3),
     )
     expected = original_pixels[list(selected_indices)]
     source_metadata = source_volume.metadata
-    # for_source_planes intentionally consumes a singleton plane axis. This
-    # declaration instead returns a 3-D stack, including for one selected plane.
     expected_provenance = source_metadata.for_source_planes(selected_indices).source_provenance.with_source_image_provenance_planes(
         source_metadata.source_image_provenance_planes.select(selected_indices),
     )
     np.testing.assert_array_equal(projected.data, expected)
     assert projected.metadata.source_provenance == expected_provenance
-    assert projected.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, len(selected_indices))
+    assert projected.metadata.plane_axis is RuntimeSlicePlaneAxis
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=len(selected_indices))
     for _ in range(2):
         image, labels, rows = fixture.inspect_volume_fixture_v2(projected)
         contextual_image = ImageArtifactType.contextualize_output(
@@ -128,7 +143,7 @@ def test_projection_owner_rejects_invalid_selection(source_volume, indices):
 def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     empty = source_volume.metadata.payload_with(np.zeros((3, 8, 9), dtype=np.uint16))
     image, labels, rows = fixture.inspect_volume_fixture_v2(empty)
-    projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3)
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3)
     contextual = ObjectLabelsArtifactType.contextualize_output(
         image, labels, output_plan(fixture.VOLUME_LABELS), projection,
     )

@@ -1,6 +1,7 @@
 """Focused tests for retained CellProfiler runtime cache authorities."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from types import SimpleNamespace
@@ -21,8 +22,8 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -39,9 +40,6 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-)
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -86,8 +84,8 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
                 cellprofiler_runtime_input_edge_for_test(
                     input_plan,
                     spec=input_spec,
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=ComponentGroupScope.ungrouped(),
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=UngroupedScope(),
                     component_scopes=(),
                     consumer_variable_components=(),
                 ),
@@ -96,7 +94,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
     producer_pixels = np.full((2, 2), 1.0, dtype=np.float32)
     first_payload = AlignedImageStack.from_output_slices(
-        (producer_pixels,), memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        (producer_pixels,), memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
     )
     first_value = RuntimeValue.normalize(
         output_plan,
@@ -119,7 +117,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
 
     replacement_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(np.full((1, 2, 2), 2.0, dtype=np.float32), None)
     replacement_value = RuntimeValue.normalize(
         output_plan,
@@ -167,8 +165,8 @@ def test_runtime_adapter_measurement_queries_follow_store_revisions() -> None:
                 cellprofiler_runtime_input_edge_for_test(
                     input_plan,
                     spec=input_spec,
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=ComponentGroupScope.ungrouped(),
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=UngroupedScope(),
                     component_scopes=(),
                     consumer_variable_components=(),
                 ),
@@ -284,8 +282,8 @@ def test_relationship_replacement_invalidates_cached_child_counts() -> None:
     relationship_edge = cellprofiler_runtime_input_edge_for_test(
         relationship_input_plan,
         spec=relationship_spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )

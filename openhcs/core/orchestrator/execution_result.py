@@ -5,16 +5,27 @@ This module defines typed execution results to replace dict-based results,
 following OpenHCS standards for explicit contracts and type safety.
 """
 
-import copyreg
-from dataclasses import dataclass, field
-from abc import ABC, abstractmethod
-from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, Mapping, Optional
+from __future__ import annotations
 
-from metaclass_registry import AutoRegisterMeta
+import copyreg
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, replace
+from types import MappingProxyType
+from typing import TYPE_CHECKING, ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    ExecutingContext,
+    ProcessingContext,
+)
+from openhcs.core.progress.types import (
+    AxisErrorProgressPhase,
+    CancelledProgressPhase,
+    CancelledProgressStatus,
+    ErrorProgressStatus,
+    ProgressPhase,
+    ProgressStatus,
+)
 from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
@@ -48,29 +59,6 @@ class RuntimeExecutionTransportSerialization:
 RuntimeExecutionTransportSerialization.register()
 
 
-class ExecutionStatus(ABC, metaclass=AutoRegisterMeta):
-    """How pipeline execution ended for one axis; ``name`` is its spelling."""
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-
-    name: ClassVar[str | None] = None
-    succeeded: ClassVar[bool] = False
-
-
-class AxisSucceeded(ExecutionStatus):
-    name = "success"
-    succeeded = True
-
-
-class AxisFailed(ExecutionStatus):
-    name = "error"
-
-
-class AxisCancelled(ExecutionStatus):
-    name = "cancelled"
-
-
 @dataclass(frozen=True)
 class RuntimeContextObservation:
     """Runtime records produced for one compiled execution context."""
@@ -86,7 +74,7 @@ class RuntimeContextObservation:
         context_key: str,
         context: ProcessingContext,
         records: tuple[StoredRuntimeValue, ...],
-        runtime_observation_mode: "type[RuntimeObservationMode]",
+        runtime_observation_mode: type[RuntimeObservationMode],
         outputs: StepExecutionObservation,
     ) -> "RuntimeContextObservation":
         """Retain requested records beside the completed output projections."""
@@ -105,7 +93,7 @@ class RuntimeExecutionObservation:
 
     @classmethod
     def from_completed_outputs(
-        cls, contexts: Mapping[str, ProcessingContext]
+        cls, contexts: Mapping[str, ExecutingContext]
     ) -> "RuntimeExecutionObservation":
         """Project saved facts independently of retained runtime pixel records."""
         return cls(contexts=tuple(
@@ -118,7 +106,7 @@ class RuntimeExecutionObservation:
             if not context.completed_step_outputs.is_empty
         ))
 
-    def merge_into(self, execution_contexts: Mapping[str, ProcessingContext]) -> None:
+    def merge_into(self, execution_contexts: Mapping[str, ExecutingContext]) -> None:
         """Merge returned runtime records into parent-owned compiled contexts."""
         for context_observation in self.contexts:
             context = execution_contexts[context_observation.context_key]
@@ -219,83 +207,74 @@ class OmitRuntimeRecords(RuntimeObservationMode):
 
 
 @dataclass(frozen=True)
-class ExecutionResult:
-    """
-    Typed result of pipeline execution for a single axis.
+class ExecutionResult(ABC):
+    """Outcome of executing one axis value's compiled contexts."""
 
-    Replaces dict-based results to provide compile-time type safety
-    and explicit contracts.
+    stops_lane: ClassVar[bool] = False
 
-    Attributes:
-        status: Execution status (success, error, etc.)
-        axis_id: Identifier for the axis that was executed
-        failed_combination: Optional key of the combination that failed (for sequential mode)
-        error_message: Optional error message if status is ERROR
-    """
-
-    status: type[ExecutionStatus]
     axis_id: str
-    failed_combination: Optional[str] = None
-    error_message: Optional[str] = None
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
 
     def is_success(self) -> bool:
-        """Check if execution was successful."""
-        return self.status.succeeded
+        return False
 
-    def is_cancelled(self) -> bool:
-        return self.status is AxisCancelled
+    def describe(self) -> str:
+        """Return this outcome as one line of text."""
+        return type(self).__name__
 
-    @classmethod
-    def success(
-        cls,
-        axis_id: str,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Create a successful execution result."""
-        return cls(
-            status=AxisSucceeded,
-            axis_id=axis_id,
-            runtime_observation=runtime_observation or RuntimeExecutionObservation(),
+    def without_runtime_observation(self) -> "ExecutionResult":
+        """Return this outcome without the worker runtime records it carries."""
+        return replace(self, runtime_observation=RuntimeExecutionObservation())
+
+
+@dataclass(frozen=True)
+class ExecutionSucceeded(ExecutionResult):
+    """Every compiled context of the axis ran to completion."""
+
+    def is_success(self) -> bool:
+        return True
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExecutionStopped(ExecutionResult):
+    """Execution of the axis ended before completion."""
+
+    progress_phase: ClassVar[type[ProgressPhase]]
+    progress_status: ClassVar[type[ProgressStatus]]
+
+    error_message: str
+    failed_combination: str | None = None
+
+    def describe(self) -> str:
+        return f"{type(self).__name__}: {self.error_message}"
+
+    def at_combination(
+        self,
+        context_key: str,
+        runtime_observation: RuntimeExecutionObservation,
+    ) -> "ExecutionStopped":
+        """Attribute this stop to one compiled context with the axis's records."""
+        return replace(
+            self,
+            failed_combination=context_key,
+            runtime_observation=runtime_observation,
         )
 
-    @classmethod
-    def error(
-        cls,
-        axis_id: str,
-        failed_combination: Optional[str] = None,
-        error_message: Optional[str] = None,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Create an error execution result."""
-        return cls(
-            status=AxisFailed,
-            axis_id=axis_id,
-            failed_combination=failed_combination,
-            error_message=error_message,
-            runtime_observation=(
-                RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
-            ),
-        )
 
-    @classmethod
-    def cancelled(
-        cls,
-        axis_id: str,
-        *,
-        error_message: str,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Return completed outputs from a cooperative cancellation boundary."""
-        return cls(
-            status=AxisCancelled,
-            axis_id=axis_id,
-            error_message=error_message,
-            runtime_observation=(
-                RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
-            ),
-        )
+@dataclass(frozen=True, kw_only=True)
+class ExecutionFailed(ExecutionStopped):
+    """A step raised while executing the axis."""
+
+    progress_phase = AxisErrorProgressPhase
+    progress_status = ErrorProgressStatus
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExecutionCancelled(ExecutionStopped):
+    """Execution was cancelled cooperatively."""
+
+    stops_lane = True
+    progress_phase = CancelledProgressPhase
+    progress_status = CancelledProgressStatus

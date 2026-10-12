@@ -9,15 +9,17 @@ from typing import get_type_hints
 import pytest
 from pyqt_reactive.services.window_snapshot import (
     QtWindowSnapshotRequest,
+    WindowSnapshotRenderOwner,
+)
+from formbridge.services.window_snapshot import (
     WindowRenderFrame,
     WindowSnapshotFrameCondition,
-    WindowSnapshotRenderOwner,
     WindowVisualObservation,
 )
 from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.capabilities import ViewerSnapshotWindowCapability
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,

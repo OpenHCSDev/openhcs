@@ -77,12 +77,12 @@ def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None
                 value,
             )
 
-        source_bindings.add_source_filter_row(source_filter("first"))
+        source_bindings.add_row("source_filters", source_filter("first"))
         _process_events()
         state.mark_saved()
         ObjectStateRegistry.increment_token(notify=True)
 
-        source_bindings.add_source_filter_row(source_filter("second"))
+        source_bindings.add_row("source_filters", source_filter("second"))
         _process_events()
         changed_path = state.last_changed_field
         assert changed_path is not None
@@ -101,8 +101,8 @@ def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None
 
         assert ObjectStateRegistry.time_travel_back()
         _process_events()
-        assert source_bindings.source_filters_table is not None
-        assert source_bindings.source_filters_table.rowCount() == 1
+        assert source_bindings.table("source_filters") is not None
+        assert source_bindings.table("source_filters").rowCount() == 1
         assert scroll_area.verticalScrollBar().value() == visible_value
         assert owner._resolve_scroll_target(changed_path, warn_missing=False) is None
         fallback = owner._resolve_nearest_ancestor_scroll_target(changed_path)
@@ -114,7 +114,7 @@ def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None
 
         assert ObjectStateRegistry.time_travel_forward()
         _process_events()
-        assert source_bindings.source_filters_table.rowCount() == 2
+        assert source_bindings.table("source_filters").rowCount() == 2
         owner.select_and_scroll_to_field(changed_path)
         app.processEvents()
         assert scroll_area.verticalScrollBar().value() == visible_value

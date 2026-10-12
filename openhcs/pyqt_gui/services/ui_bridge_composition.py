@@ -1,21 +1,27 @@
-"""Composition root for the PyQt UI bridge."""
+"""Composition root for the OpenHCS GUI's UI bridge."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from openhcs.pyqt_gui.services.ui_agent_bridge import (
-    UiAgentBridgeService,
+import openhcs.pyqt_gui.services.ui_bridge_live_overview  # noqa: F401  (provider set)
+import openhcs.pyqt_gui.services.ui_bridge_pipeline_editor  # noqa: F401  (provider set)
+import openhcs.pyqt_gui.services.ui_bridge_plate_manager  # noqa: F401  (provider set)
+import openhcs.pyqt_gui.services.ui_bridge_windows  # noqa: F401  (provider set)
+import pyqt_reactive.bridge.object_state_documents  # noqa: F401  (provider set)
+from formbridge.bridge.in_process import (
     UiBridgeOperationTracker,
     UiObjectStateSnapshotProvider,
 )
-from openhcs.pyqt_gui.services.ui_bridge_registry import (
+from formbridge.bridge.registry import (
     CompositeUiBridgeProviderSet,
     UiBridgeProviderSetABC,
     UiBridgeRegistrationContext,
     UiBridgeSurfaceRegistry,
 )
+
+from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
 
 if TYPE_CHECKING:
@@ -42,7 +48,7 @@ class OpenHCSUiBridgeCompositionRoot:
             main_window.session,
         )
 
-    def build_service(self) -> UiAgentBridgeService:
+    def build_service(self) -> OpenHCSUiAgentBridgeService:
         snapshot_provider = UiObjectStateSnapshotProvider(
             before_restore=self.session.require_definition_mutation_allowed,
         )
@@ -55,7 +61,7 @@ class OpenHCSUiBridgeCompositionRoot:
                 snapshot_provider=snapshot_provider,
             )
         )
-        return UiAgentBridgeService(
+        return OpenHCSUiAgentBridgeService(
             registry=registry,
             snapshot_provider=snapshot_provider,
             operation_tracker=operation_tracker,

@@ -14,7 +14,8 @@ from openhcs.agent.dto.architecture import (
     InternalApiSymbol,
 )
 from openhcs.agent.dto.authoring import AuthoringContext
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.functions import (
     FunctionArtifactSpec,
     FunctionCatalogEntry,
@@ -33,7 +34,7 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSectionSummary,
     KnowledgeBaseSourceSpan,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     DirtyFields,
     UiCatalogPageMetadata,
     UiMutationReceipt,

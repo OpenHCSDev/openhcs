@@ -27,10 +27,13 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionFailed,
+    ExecutionSucceeded,
+    MergeAllRuntimeRecords,
+    MergeDatasetInputRecords,
+    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
-    MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_execution_observation import (
@@ -53,6 +56,10 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
     RunningProgressPhase,
     RunningProgressStatus,
+)
+from tests.context_support import (
+    executing_context,
+    with_facts,
 )
 
 
@@ -108,11 +115,11 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     server._lifecycle.enqueue(record)
     results = BundleExecutionResults(
         {
-            "A01": ExecutionResult.success("A01"),
+            "A01": ExecutionSucceeded("A01"),
             "A02": (
-                ExecutionResult.error("A02", error_message="producer lineage missing")
+                ExecutionFailed("A02", error_message="producer lineage missing")
                 if failed
-                else ExecutionResult.success("A02")
+                else ExecutionSucceeded("A02")
             ),
         }
     )
@@ -158,7 +165,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     assert exported == [results]
     assert results["A01"].is_success()
     if failed:
-        assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
+        assert "A02: ExecutionFailed: producer lineage missing" in terminal[MessageFields.ERROR]
     else:
         assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.PARTITION_VALUES] == [
             "A01",
@@ -325,7 +332,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         compilation=compilation,
         execution_results=BundleExecutionResults(
             {
-                "A01": ExecutionResult.success(
+                "A01": ExecutionSucceeded(
                     "A01",
                     runtime_observation=RuntimeExecutionObservation(
                         contexts=(
@@ -645,7 +652,6 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
@@ -679,11 +685,11 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     previous.filemanager.ensure_directory(str(tmp_path), Backend.MEMORY.value)
     previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
     handler = OpenHCSDatasetSource(previous.filemanager)
-    context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
-    context.dataset_root = tmp_path
-    context.input_dir = tmp_path
-    context.microscope_handler = handler
-    transport = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01", filemanager=previous.filemanager)
+    context = with_facts(context, dataset_root=tmp_path)
+    context = with_facts(context, input_dir=tmp_path)
+    context = with_facts(context, microscope_handler=handler)
+    transport = executing_context(axis_id="A01")
     bundle = CompiledExecutionBundle(
         pipeline_definition=[],
         runtime_contexts={"A01": context},

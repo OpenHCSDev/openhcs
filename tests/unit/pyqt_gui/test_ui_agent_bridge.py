@@ -23,10 +23,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from pyqt_reactive.protocols import register_codegen_provider
-from pyqt_reactive.services.pattern_data_manager import (
-    FUNC_EDITOR_PATTERN_TOKENS_META_KEY,
-)
+from formbridge.protocols.codegen_provider import register_codegen_provider
+from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.services.widget_tree_projection import (
     WidgetActionKind,
@@ -34,12 +32,9 @@ from pyqt_reactive.services.widget_tree_projection import (
     WidgetRect,
     WidgetTreeProjection,
 )
-from pyqt_reactive.services.window_code_document import (
-    WindowCodeDocument,
-    WindowCodeDocumentDriver,
-)
+from formbridge.services.window_code_document import WindowCodeDocument, WindowCodeDocumentDriver
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from pyqt_reactive.widgets.editors import simple_code_editor
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared import (
@@ -56,9 +51,9 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
 from zmqruntime import DataControlPortPairAuthority, EndpointApplication
 from zmqruntime.config import TransportMode
 
-from openhcs.core.selection import AllItems, SelectedItems
-from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.selection import AllItems, SelectedItems
+from formbridge.contracts import SCHEMA_VERSION
+from formbridge.bridge.dto import (
     ActionAccepted,
     ActionRejected,
     DirtyFields,
@@ -69,15 +64,11 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationStatusRequest,
     UiBridgeRequestEnvelope,
     UiCodeDocumentApplyRequest,
-    UiCodeDocumentId,
     UiCodeDocumentRequest,
     UiCodeDocumentValidationRequest,
     UiObjectStateScopeListRequest,
-    UiSelectedPlateWorkflowKind,
-    UiSelectedPlateWorkflowRequest,
     UiSnapshotListRequest,
     UiSnapshotRestoreRequest,
-    UiStateSurfaceId,
     UiStateSurfaceRequest,
     UiWidgetActionInvokeRequest,
     UiWidgetActionIssueCode,
@@ -91,13 +82,13 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotRequest,
     UiWindowSummary,
 )
-from openhcs.agent.services.ui_bridge_service import (
+from openhcs.agent.dto.ui_bridge import UiSelectedPlateWorkflowKind, UiSelectedPlateWorkflowRequest
+from formbridge.bridge.service import (
     UiBridgeGetDocumentOperation,
     UiBridgeGetStateSurfaceOperation,
     UiBridgeListDocumentsOperation,
     UiBridgeListStateSurfacesOperation,
     UiBridgeStatusOperation,
-    UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeConnectionResolution,
     UiBridgeService,
 )
@@ -161,27 +152,25 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
     MainWindowEmbeddedWidgets,
 )
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
-from openhcs.pyqt_gui.services.ui_agent_bridge import (
+from formbridge.bridge.in_process import (
     UiAgentBridgeService,
     UiBridgeOperationTracker,
-    UiCodeDocumentSourcePolicy,
     UiObjectStateSnapshotProvider,
 )
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
-    state_surface_ids_for_action,
-)
+from openhcs.pyqt_gui.services.ui_agent_bridge import UiCodeDocumentSourcePolicy
+from formbridge.bridge.contracts import state_surface_ids_for_action
 from openhcs.pyqt_gui.services.ui_bridge_composition import (
     OpenHCSUiBridgeCompositionRoot,
 )
-from openhcs.pyqt_gui.services.ui_bridge_live_overview import (
-    LiveOverviewBridgeProviderSet,
-)
-from openhcs.pyqt_gui.services.ui_bridge_object_state import (
+from openhcs.pyqt_gui.services.ui_bridge_live_overview import LiveOverviewBridgeProviderSet
+from formbridge.bridge.object_state import (
     OBJECT_STATE_SCOPE_CODE_DOCUMENT_PREFIX,
     WINDOW_CODE_DOCUMENT_PREFIX,
+    ObjectStateScopeProjectionService,
+)
+from pyqt_reactive.bridge.object_state_documents import (
     ObjectStateBridgeProviderSet,
     ObjectStateScopeCodeDocumentProvider,
-    ObjectStateScopeProjectionService,
 )
 from openhcs.pyqt_gui.services.ui_bridge_pipeline_editor import (
     PipelineEditorBridgeProviderSet,
@@ -189,18 +178,18 @@ from openhcs.pyqt_gui.services.ui_bridge_pipeline_editor import (
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import (
     PlateManagerBridgeProviderSet,
 )
-from openhcs.pyqt_gui.services.ui_bridge_registry import (
+from formbridge.bridge.registry import (
     UiBridgeProviderSetABC,
     UiBridgeRegistrationContext,
     UiBridgeSurfaceRegistry,
 )
-from openhcs.pyqt_gui.services.ui_bridge_server import (
+from formbridge.bridge.server import (
     UiBridgeControlServer,
     UiBridgeRequestDispatcher,
     UiBridgeServerBinding,
 )
-from openhcs.pyqt_gui.services.ui_bridge_windows import (
-    MainWindowBridgeProviderSet,
+from openhcs.pyqt_gui.services.ui_bridge_windows import MainWindowBridgeProviderSet
+from pyqt_reactive.bridge.windows import (
     QtTopLevelWindowProjection,
     UiWidgetTreeResultFactory,
     UiWindowProjectionService,
@@ -234,8 +223,19 @@ from openhcs.core.debug import (
     StepDebugCommand,
     StopDebugCommand,
 )
+from openhcs.agent.ui_bridge_identities import (
+    PipelineDebugSessionStateSurfaceIdentityDeclaration,
+    PipelineEditorStateSurfaceIdentityDeclaration,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+)
+from formbridge.bridge.identities import UiLiveOverviewStateSurfaceIdentityDeclaration
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
+from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
+from pyqt_reactive.bridge.host import UiBridgeHostWindow
+from openhcs.agent.ui_bridge_identities import MainWindowWidgetIdentity
 
-DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
+DOCUMENT_ID = DatasetListCodeDocumentIdentity.require_value()
 PLATE_SCOPE_ID = "plate-1"
 DATASET_SCOPE_ID = "/tmp/openhcs-ui-bridge-test/plate-1"
 PLATE_NAME = "plate 1"
@@ -676,7 +676,7 @@ def test_atomic_success_does_not_record_snapshot_on_failure() -> None:
 
 
 def test_selected_read_fails_loudly_when_no_plate_is_selected() -> None:
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
     )
 
@@ -699,7 +699,7 @@ def test_all_plate_document_context_failure_is_not_reported_as_no_selection() ->
             del selection_mode
             raise RuntimeError("context construction failed")
 
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FailingPlateManager(selected=()))
     )
 
@@ -898,7 +898,7 @@ def test_listed_embedded_window_routes_support_widget_tree_projection(
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -920,7 +920,7 @@ def test_listed_embedded_window_routes_support_widget_tree_projection(
 
     widget_tree = bridge.widget_tree(
         UiWidgetTreeRequest(
-            window_id="plate_manager",
+            window_id="datasets",
             open_policy=UiWindowOpenPolicy(),
             include_tree=True,
         )
@@ -964,7 +964,7 @@ def test_embedded_window_focus_uses_authoritative_dock_pane() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -991,9 +991,13 @@ def test_embedded_window_focus_uses_authoritative_dock_pane() -> None:
         system_pane.dock_widget.close()
 
 
+class _BridgeHostWindow(QMainWindow, UiBridgeHostWindow):
+    UI_BRIDGE_WIDGET_IDENTITY = MainWindowWidgetIdentity
+
+
 def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
     app = QtApplicationAuthority.app()
-    main_window = QMainWindow()
+    main_window = _BridgeHostWindow()
     main_window.session = BridgeSessions.get()
     embedded_widgets = MainWindowEmbeddedWidgets()
     pipeline_pane = DockPane.create(
@@ -1024,7 +1028,7 @@ def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1051,7 +1055,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
     tmp_path: Path,
 ) -> None:
     app = QtApplicationAuthority.app()
-    main_window = QMainWindow()
+    main_window = _BridgeHostWindow()
     main_window.session = BridgeSessions.get()
     main_window.setWindowTitle("OpenHCS")
     embedded_widgets = MainWindowEmbeddedWidgets()
@@ -1085,7 +1089,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1172,7 +1176,7 @@ def test_widget_tree_item_rows_carry_shared_object_state_roles() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1580,7 +1584,7 @@ def test_listed_qt_top_level_window_supports_operation_request_resolution() -> N
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1638,7 +1642,7 @@ def test_projected_widget_action_invokes_live_button_by_path_id() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1709,7 +1713,7 @@ def test_projected_widget_action_selects_live_item_view_row_by_path_id() -> None
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1791,7 +1795,7 @@ def test_projected_widget_action_selects_standalone_tab_bar_by_index() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1870,7 +1874,7 @@ def test_projected_widget_action_selects_combo_box_by_index() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -1943,7 +1947,7 @@ def test_legacy_empty_scope_window_catalogs_as_global_config(tmp_path: Path) -> 
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2035,7 +2039,7 @@ def test_managed_window_catalog_projects_object_state_status() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2090,7 +2094,7 @@ def test_open_window_code_mode_documents_are_discoverable_by_window_id() -> None
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2143,7 +2147,7 @@ def test_read_only_window_code_document_rejects_before_apply() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2211,7 +2215,7 @@ def test_semantically_unchanged_window_code_apply_needs_no_snapshot() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2270,7 +2274,7 @@ def test_rejected_window_code_apply_preserves_document_revision_token() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2336,7 +2340,7 @@ def test_open_window_code_mode_summary_uses_driver_title_when_window_title_empty
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2387,7 +2391,7 @@ def test_simple_code_editor_windows_register_code_documents(monkeypatch) -> None
                 snapshot_provider=snapshot_provider,
             )
         )
-        bridge = UiAgentBridgeService(
+        bridge = OpenHCSUiAgentBridgeService(
             registry=registry,
             dispatcher=InlineDispatcher(),
             snapshot_provider=snapshot_provider,
@@ -2461,7 +2465,7 @@ def test_object_state_code_mode_documents_are_discoverable_by_scope_id() -> None
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -2668,7 +2672,7 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
             snapshot_provider=snapshot_provider,
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=dispatcher,
         snapshot_provider=snapshot_provider,
@@ -2721,7 +2725,7 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
 
 
 def test_all_read_returns_source_hash_and_revision() -> None:
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
     )
 
@@ -2740,7 +2744,7 @@ def test_all_read_returns_source_hash_and_revision() -> None:
 
 
 def test_validation_rejects_side_effecting_source_before_execution() -> None:
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
     )
 
@@ -2757,7 +2761,7 @@ def test_validation_rejects_side_effecting_source_before_execution() -> None:
 
 
 def test_validation_rejects_legacy_pipeline_config_assignment() -> None:
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
     )
 
@@ -2778,7 +2782,7 @@ def test_validation_rejects_legacy_pipeline_config_assignment() -> None:
 
 
 def test_validation_reports_orchestrator_payload_hint() -> None:
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
     )
 
@@ -2807,7 +2811,7 @@ def test_apply_rejection_reports_current_revision_and_snapshot() -> None:
     state = ObjectState(Dummy(), scope_id=PLATE_SCOPE_ID)
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     ObjectStateRegistry.record_snapshot("before edit", scope_id=PLATE_SCOPE_ID)
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(
                 selected=(PLATE_SCOPE_ID,),
@@ -2842,7 +2846,7 @@ def test_confirmation_required_apply_rejection_reports_current_context() -> None
     state = ObjectState(Dummy(), scope_id=PLATE_SCOPE_ID)
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     ObjectStateRegistry.record_snapshot("before edit", scope_id=PLATE_SCOPE_ID)
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(
                 selected=(PLATE_SCOPE_ID,),
@@ -3038,7 +3042,7 @@ def test_apply_creates_baseline_and_edit_snapshot() -> None:
     state = ObjectState(Dummy(), scope_id=PLATE_SCOPE_ID)
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     operations = FakeOperations(state)
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(operations=operations)
         ),
@@ -3091,7 +3095,7 @@ def test_apply_document_returns_running_operation_before_queued_ui_apply_runs() 
     operations = FakeOperations(state)
     dispatcher = QueuedPostDispatcher()
     operation_tracker = UiBridgeOperationTracker()
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(operations=operations)
         ),
@@ -3136,7 +3140,7 @@ def test_queued_apply_document_error_updates_operation_status() -> None:
     operations = FakeOperations(state)
     dispatcher = QueuedPostDispatcher()
     operation_tracker = UiBridgeOperationTracker()
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(operations=operations)
         ),
@@ -3187,7 +3191,7 @@ def test_live_overview_reports_running_and_completed_bridge_operations() -> None
         context
     )
     LiveOverviewBridgeProviderSet().register(context)
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=dispatcher,
         snapshot_provider=snapshot_provider,
@@ -3209,7 +3213,7 @@ def test_live_overview_reports_running_and_completed_bridge_operations() -> None
         )
     )
     running_overview = bridge.get_state_surface(
-        UiStateSurfaceRequest(surface_id=UiStateSurfaceId.UI_LIVE_OVERVIEW.value)
+        UiStateSurfaceRequest(surface_id=UiLiveOverviewStateSurfaceIdentityDeclaration.require_value())
     )
 
     running_section = next(
@@ -3224,7 +3228,7 @@ def test_live_overview_reports_running_and_completed_bridge_operations() -> None
 
     dispatcher.run_next()
     completed_overview = bridge.get_state_surface(
-        UiStateSurfaceRequest(surface_id=UiStateSurfaceId.UI_LIVE_OVERVIEW.value)
+        UiStateSurfaceRequest(surface_id=UiLiveOverviewStateSurfaceIdentityDeclaration.require_value())
     )
     completed_section = next(
         section
@@ -3246,7 +3250,7 @@ def test_bridge_lists_and_restores_snapshots() -> None:
     before_id = ObjectStateRegistry.get_branch_history()[-1].id
     state.update_parameter("x", 2)
     ObjectStateRegistry.record_snapshot("after", scope_id=PLATE_SCOPE_ID)
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager()),
         dispatcher=InlineDispatcher(),
     )
@@ -3286,7 +3290,7 @@ def test_bridge_switches_to_preserved_future_branch() -> None:
         for branch in ObjectStateRegistry.list_branches()
         if branch["name"].startswith("auto-")
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager()),
         dispatcher=InlineDispatcher(),
     )
@@ -3321,7 +3325,7 @@ def test_snapshot_restore_authorization_rejects_before_object_state_change() -> 
             )
         )
     )
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager()),
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -3346,7 +3350,7 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
     manager = FakePlateManager(selected=(PLATE_SCOPE_ID,))
     manager.session.ensure_datasets((DATASET_SCOPE_ID,))
-    bridge = UiAgentBridgeService(
+    bridge = OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(manager),
         dispatcher=InlineDispatcher(),
     )
@@ -3378,7 +3382,7 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
         state = service.invoke(
             UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
-                surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
+                surface_id=DatasetListStateSurfaceIdentity.require_value(),
                 selection_mode=ALL_SELECTION_MODE,
             ),
             connection,
@@ -3391,7 +3395,7 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
         assert BRIDGE_AUTH_TOKEN not in set(_json_payload_values(to_jsonable(status)))
         assert catalog.documents[0].document_id == DOCUMENT_ID
         assert (
-            state_catalog.surfaces[0].surface_id == UiStateSurfaceId.PLATE_MANAGER.value
+            state_catalog.surfaces[0].surface_id == DatasetListStateSurfaceIdentity.require_value()
         )
         assert document.source == VALID_SOURCE
         assert state.payload["rows"][0]["scope_id"] == DATASET_SCOPE_ID
@@ -3416,7 +3420,7 @@ def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
     )
     descriptor_directory = tmp_path / "descriptors"
     first_server = UiBridgeControlServer(
-        UiAgentBridgeService(dispatcher=InlineDispatcher()),
+        OpenHCSUiAgentBridgeService(dispatcher=InlineDispatcher()),
         AgentUiBridgeConfig(
             port=first_pair.data_port,
             transport_mode=TransportMode.IPC,
@@ -3426,7 +3430,7 @@ def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
         ),
     )
     second_server = UiBridgeControlServer(
-        UiAgentBridgeService(dispatcher=InlineDispatcher()),
+        OpenHCSUiAgentBridgeService(dispatcher=InlineDispatcher()),
         AgentUiBridgeConfig(
             port=second_pair.data_port,
             transport_mode=TransportMode.IPC,
@@ -3467,7 +3471,7 @@ def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
 
 
 def test_ui_bridge_control_server_preserves_bad_auth_error(tmp_path: Path) -> None:
-    bridge = UiAgentBridgeService(dispatcher=InlineDispatcher())
+    bridge = OpenHCSUiAgentBridgeService(dispatcher=InlineDispatcher())
     server = UiBridgeControlServer(
         bridge,
         _bridge_server_config(tmp_path),
@@ -3502,7 +3506,7 @@ def test_ui_bridge_control_server_preserves_bad_auth_error(tmp_path: Path) -> No
             "Unsupported UI bridge protocol version",
         ),
         (
-            UI_BRIDGE_PROTOCOL_VERSION,
+            OpenHCSUiBridgeApplication.protocol_version,
             EndpointApplication(identifier="openhcs", version="0.7.22"),
             "Endpoint application mismatch",
         ),
@@ -3517,7 +3521,7 @@ def test_ui_bridge_dispatcher_rejects_stale_client_contract(
         raise AssertionError("invalid requests must not reach the bridge")
 
     dispatcher = UiBridgeRequestDispatcher(
-        UiAgentBridgeService(dispatcher=InlineDispatcher()),
+        OpenHCSUiAgentBridgeService(dispatcher=InlineDispatcher()),
         auth_token=BRIDGE_AUTH_TOKEN,
         binding_supplier=unreachable_binding,
     )
@@ -3534,7 +3538,7 @@ def test_ui_bridge_dispatcher_rejects_stale_client_contract(
     response = dispatcher.dispatch(to_jsonable(request))
 
     assert response["ok"] is False
-    assert response["bridge_protocol_version"] == UI_BRIDGE_PROTOCOL_VERSION
+    assert response["bridge_protocol_version"] == OpenHCSUiBridgeApplication.protocol_version
     assert response["application"] == to_jsonable(OPENHCS_ENDPOINT_APPLICATION)
     assert message in response["errors"][0]["message"]
 
@@ -3697,7 +3701,7 @@ def _pipeline_editor_bridge(editor) -> UiAgentBridgeService:
             snapshot_provider=snapshot_provider,
         )
     )
-    return UiAgentBridgeService(
+    return OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -3705,7 +3709,7 @@ def _pipeline_editor_bridge(editor) -> UiAgentBridgeService:
 
 
 def _plate_manager_bridge(manager, dispatcher=None) -> UiAgentBridgeService:
-    return UiAgentBridgeService(
+    return OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(manager),
         dispatcher=dispatcher or InlineDispatcher(),
     )
@@ -3714,7 +3718,7 @@ def _plate_manager_bridge(manager, dispatcher=None) -> UiAgentBridgeService:
 def _plate_manager_state(bridge, selection_mode=ALL_SELECTION_MODE, **kwargs):
     return bridge.get_state_surface(
         UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
+            surface_id=DatasetListStateSurfaceIdentity.require_value(),
             selection_mode=selection_mode,
             **kwargs,
         )
@@ -3755,7 +3759,7 @@ def _main_window_bridge(main_window) -> UiAgentBridgeService:
             snapshot_provider=snapshot_provider,
         )
     )
-    return UiAgentBridgeService(
+    return OpenHCSUiAgentBridgeService(
         registry=registry,
         dispatcher=InlineDispatcher(),
         snapshot_provider=snapshot_provider,
@@ -3951,7 +3955,7 @@ def test_plate_manager_state_surface_projects_runtime_row_status() -> None:
             bridge, base_revision_token=state.current_revision_token
         )
 
-        assert state.summary.surface_id == UiStateSurfaceId.PLATE_MANAGER.value
+        assert state.summary.surface_id == DatasetListStateSurfaceIdentity.require_value()
         row = state.payload["rows"][0]
         assert row["scope_id"] == DATASET_SCOPE_ID
         assert row["status_prefix"] == "⏳ Compile"
@@ -3980,8 +3984,8 @@ def test_every_dataset_action_relates_its_declared_state_surfaces() -> None:
                 )
             )
         assert actions[ShowLiveResults.operation_id].related_state_surface_ids == (
-            "plate_manager.state",
-            "plate_manager.live_measurements",
+            "datasets.state",
+            "datasets.live_measurements",
         )
 
 
@@ -4208,7 +4212,7 @@ def test_selected_workflow_returns_before_the_queued_operation_runs(
         assert result.action_result.status is ActionAccepted
         assert operation_id is not None
         assert result.action_result.workflow_status_surface_ids == (
-            "plate_manager.state",
+            "datasets.state",
         )
         assert started == []
         assert len(dispatcher.callbacks) == 1
@@ -4311,7 +4315,7 @@ def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
         assert result.action_result.status is ActionRejected
         assert result.errors[0].code == "confirmation_required"
         assert result.action_result.workflow_status_surface_ids == (
-            "plate_manager.state",
+            "datasets.state",
         )
         assert dispatcher.call_count == 0
         assert started == []
@@ -4430,19 +4434,19 @@ def test_pipeline_editor_state_surface_projects_steps_and_selection(
         catalog = bridge.list_state_surfaces()
         state = bridge.get_state_surface(
             UiStateSurfaceRequest(
-                surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
+                surface_id=PipelineEditorStateSurfaceIdentityDeclaration.require_value(),
                 selection_mode=ALL_SELECTION_MODE,
             )
         )
         selected_state = bridge.get_state_surface(
             UiStateSurfaceRequest(
-                surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
+                surface_id=PipelineEditorStateSurfaceIdentityDeclaration.require_value(),
                 selection_mode=SELECTED_SELECTION_MODE,
                 base_revision_token=state.current_revision_token,
             )
         )
 
-        assert catalog.surfaces[0].surface_id == UiStateSurfaceId.PIPELINE_EDITOR.value
+        assert catalog.surfaces[0].surface_id == PipelineEditorStateSurfaceIdentityDeclaration.require_value()
         assert state.summary.current_selection_count == 1
         assert state.summary.total_scope_count == 2
         assert state.payload["pipeline_scope_id"] == (
@@ -4591,7 +4595,7 @@ def _debug_cursor() -> DebugCursor:
 def _debug_state(gui):
     return _pipeline_editor_bridge(gui.pipeline_editor).get_state_surface(
         UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
+            surface_id=PipelineDebugSessionStateSurfaceIdentityDeclaration.require_value(),
             selection_mode=ALL_SELECTION_MODE,
         )
     )
@@ -4607,7 +4611,7 @@ def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> 
         state = _debug_state(gui)
         actions = {action["action_id"]: action for action in state.payload["actions"]}
 
-        assert state.summary.surface_id == UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value
+        assert state.summary.surface_id == PipelineDebugSessionStateSurfaceIdentityDeclaration.require_value()
         assert state.payload["phase"] == "active_session"
         assert state.payload["current_plate_scope_id"] == DATASET_SCOPE_ID
         assert state.payload["pipeline_scope_id"] == (

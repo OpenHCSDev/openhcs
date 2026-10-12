@@ -16,9 +16,6 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
-)
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
@@ -43,7 +40,7 @@ from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
@@ -163,9 +160,9 @@ class RelationshipMeasurementRows:
                         name=spec.name,
                         declaration=declaration,
                         payload=payload,
-                        source_provenance=image_metadata_of(
+                        source_provenance=as_runtime_value(
                             self.request.source.payload
-                        ).source_provenance,
+                        ).image_metadata.source_provenance,
                     ),
                 )
             case RuntimeSliceAlignedValues(slices=slices):
@@ -493,7 +490,7 @@ class RelationshipMeasurementRows:
                 f"got {type(labels).__name__}."
             )
         domain = labels.object_label_domain()
-        if domain.scope is not ObjectLabelDomainScope.PAYLOAD:
+        if domain.scope.ids_per_plane:
             raise ValueError(
                 f"Relationship endpoint {spec.name!r} must be projected to one "
                 "payload-scoped object-ID domain before row materialization."

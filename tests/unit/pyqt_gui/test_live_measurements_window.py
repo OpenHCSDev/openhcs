@@ -42,22 +42,24 @@ def test_image_browser_is_created_only_when_its_results_tab_is_selected(
     class FakeImageBrowserWidget(QWidget):
         def __init__(
             self,
+            dataset,
             *,
-            orchestrator,
             parent,
-            state_scope_parent_id,
             **_kwargs,
         ) -> None:
             super().__init__(parent)
-            created_for.append(orchestrator)
-            created_scope_parents.append(state_scope_parent_id)
+            created_for.append(dataset.orchestrator)
+            created_scope_parents.append(dataset.scope_parent)
 
         def cleanup(self) -> None:
             nonlocal cleanup_calls
             cleanup_calls += 1
 
     image_browser_module = ModuleType("openhcs.pyqt_gui.widgets.image_browser")
+    from openhcs.pyqt_gui.widgets.image_browser import OrchestratorDataset
+
     image_browser_module.ImageBrowserWidget = FakeImageBrowserWidget
+    image_browser_module.OrchestratorDataset = OrchestratorDataset
     monkeypatch.setitem(
         sys.modules,
         "openhcs.pyqt_gui.widgets.image_browser",

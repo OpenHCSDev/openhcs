@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from pyqt_reactive.services.help_document import HelpDocument, HelpDocumentFormat
+from formbridge.services.help_document import HelpDocument, HelpDocumentFormat
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.help_document_browser import HelpDocumentBrowser
 

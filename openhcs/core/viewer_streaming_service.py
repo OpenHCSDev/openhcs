@@ -492,7 +492,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         shape = tuple(image.data.shape)
         if (
             len(shape) != 3
-            or metadata.plane_axis is None
+            or metadata.plane_axis.unstacked
             or shape[0] != metadata.source_plane_metadata_count
             or metadata.source_spatial_domain.origin_yx != (0, 0)
             or tuple(shape[-2:]) != metadata.source_spatial_domain.source_shape_yx
@@ -516,7 +516,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
                 )
             )
             metadata = None if projection is None else projection.image_metadata
-            if metadata is not None and metadata.plane_axis is not None:
+            if metadata is not None and metadata.plane_axis.leads_data:
                 values.extend(
                     StreamSourceComponentMetadataItems.from_image_metadata(
                         metadata,

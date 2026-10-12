@@ -46,9 +46,12 @@ from openhcs.core.orchestrator.bundle_execution import (
     wait_until_visualizers_ready,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionCancelled,
+    ExecutionFailed,
+    ExecutionSucceeded,
+    MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeExecutionObservation,
-    MergeAllRuntimeRecords, OmitRuntimeRecords,
 )
 from openhcs.core.orchestrator.worker_execution import (
     ForkInheritedWorkerExecutorResources,
@@ -78,6 +81,9 @@ from openhcs.core.progress.types import (
     SuccessProgressPhase,
     ViewerSettlementProgressPhase,
 )
+from tests.context_support import (
+    executing_context,
+)
 
 PROGRESS_CONTEXT = ProgressExecutionContext(
     execution_id="exec",
@@ -100,7 +106,7 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
         worker_execution_module,
         "execute_worker_lane",
         lambda *, lane_axis_contexts, **_kwargs: {
-            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
+            axis: ExecutionSucceeded(axis) for axis, _ in lane_axis_contexts
         },
     )
     ForkInheritedWorkerExecutionState.install(
@@ -157,7 +163,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
         worker_execution_module,
         "execute_worker_lane",
         lambda *, lane_axis_contexts, **_kwargs: {
-            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
+            axis: ExecutionSucceeded(axis) for axis, _ in lane_axis_contexts
         },
     )
     ForkInheritedWorkerExecutionState.install(
@@ -207,7 +213,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
 
 
 def _compiled_context(axis_id: str) -> ProcessingContext:
-    return ProcessingContext(axis_id=axis_id)
+    return executing_context(axis_id=axis_id)
 
 
 def _runtime_environment(
@@ -271,7 +277,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
             )
 
         def run_worker_lanes(self, **_kwargs):
-            return {"A01": ExecutionResult.success("A01")}
+            return {"A01": ExecutionSucceeded("A01")}
 
         def shutdown_executor(self):
             return None
@@ -817,7 +823,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
     ):
         assert release_axis_resources is True
         axis_id = lane_context.owned_partition_values[0]
-        return {axis_id: ExecutionResult.success(axis_id)}
+        return {axis_id: ExecutionSucceeded(axis_id)}
 
     monkeypatch.setattr(
         worker_execution_module.concurrent.futures,
@@ -847,7 +853,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
         parent_contexts={},
     )
 
-    assert results == {"A01": ExecutionResult.success("A01")}
+    assert results == {"A01": ExecutionSucceeded("A01")}
 
 
 def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
@@ -866,7 +872,7 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         axis_id = axis_contexts[0][1].axis_id
         visited.append(axis_id)
         cancellation.request()
-        return ExecutionResult.success(axis_id)
+        return ExecutionSucceeded(axis_id)
 
     monkeypatch.setattr(
         worker_execution_module,
@@ -895,7 +901,7 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
 
     assert visited == ["A01"]
     assert results["A01"].is_success()
-    assert results["B01"].is_cancelled()
+    assert type(results["B01"]) is ExecutionCancelled
     assert "before axis B01" in results["B01"].error_message
 
 
@@ -942,7 +948,7 @@ def test_pooled_worker_lane_runner_submits_stripped_pipeline_shells(monkeypatch)
     ):
         assert release_axis_resources is True
         submitted_pipeline.extend(pipeline_definition)
-        return {"A01": ExecutionResult.success("A01")}
+        return {"A01": ExecutionSucceeded("A01")}
 
     monkeypatch.setattr(
         worker_execution_module.concurrent.futures,
@@ -999,7 +1005,7 @@ def test_fork_inherited_runner_executes_single_lane_without_self_merge(monkeypat
     ):
         executed.append((pipeline_definition, lane_axis_contexts))
         return {
-            "A01": ExecutionResult.success(
+            "A01": ExecutionSucceeded(
                 "A01",
                 runtime_observation=MergeForbiddenObservation(),
             )
@@ -1138,13 +1144,13 @@ def test_execution_state_projector_maps_success_and_failure():
 
     project_execution_state(
         orchestrator,
-        BundleExecutionResults({"A01": ExecutionResult.success("A01")}),
+        BundleExecutionResults({"A01": ExecutionSucceeded("A01")}),
     )
     assert orchestrator._state is OrchestratorCompleted
 
     project_execution_state(
         orchestrator,
-        BundleExecutionResults({"A01": ExecutionResult.error("A01")}),
+        BundleExecutionResults({"A01": ExecutionFailed("A01", error_message="failed")}),
     )
     assert orchestrator._state is OrchestratorExecFailed
 
@@ -1240,7 +1246,7 @@ def test_viewer_bootstrap_rolls_back_a_partially_acquired_viewer_set():
         ),
     )
 
-    def acquire(config, _visualizer_config):
+    def acquire(config):
         if config is second_config:
             raise RuntimeError("second viewer failed")
         return AcquiredViewer()
@@ -1248,7 +1254,6 @@ def test_viewer_bootstrap_rolls_back_a_partially_acquired_viewer_set():
     orchestrator = SimpleNamespace(get_or_create_visualizer=acquire)
     context = SimpleNamespace(
         required_visualizers=required_visualizers,
-        visualizer_config=None,
     )
 
     with pytest.raises(RuntimeError, match="second viewer failed"):
@@ -1277,11 +1282,10 @@ def test_viewer_bootstrap_rolls_back_after_post_launch_validation_failure(
         launch_message="Launching viewer",
     )
     orchestrator = SimpleNamespace(
-        get_or_create_visualizer=lambda _config, _visualizer_config: visualizer,
+        get_or_create_visualizer=lambda _config: visualizer,
     )
     context = SimpleNamespace(
         required_visualizers=(required_visualizer,),
-        visualizer_config=None,
     )
     monkeypatch.setattr(
         compiled_plate_execution_module,
@@ -1394,7 +1398,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     )
 
     assert isinstance(results, BundleExecutionResults)
-    assert results == {"A01": ExecutionResult.success("A01")}
+    assert results == {"A01": ExecutionSucceeded("A01")}
     assert results.extras.viewer_states_by_port == {5563: response}
     layer = results.extras.viewer_states_by_port[5563].payload["layers"][0]
     assert layer["route_key"] == "step-2:objects"
