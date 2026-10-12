@@ -193,8 +193,11 @@ def test_original_roi_geometry_semantic_dedup_stats_and_bounds_flow_to_typed_pre
     assert "area=min=0.0" in compact and "example label=0 area=0.0" in compact
 
 
-def test_independent_native_capability_executes_cooperative_validation_and_wire_hooks():
+def test_independent_native_capability_executes_cooperative_validation_and_wire_hooks(
+    stand_in_members,
+):
     calls = []
+    stand_in_members(ViewerWindowStateResult, ViewerWindowStateResult.registry_key)
 
     @dataclass(frozen=True, kw_only=True)
     class AuditCapability(ViewerProjectionRecord):

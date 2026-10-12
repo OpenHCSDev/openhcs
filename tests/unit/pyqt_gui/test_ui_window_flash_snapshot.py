@@ -261,6 +261,7 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
     qtbot,
     native_snapshot_bridge,
     prove_exposure,
+    stand_in_members,
 ):
     from formbridge.bridge.dto import UiWindowNavigateRequest, UiWindowNavigateResult
     from pyqt_reactive.bridge.windows import UiWindowProjectionService, WindowRouteIndex
@@ -276,6 +277,8 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
             if prove_exposure:
                 return form.widgets["number"].isVisibleTo(window)
             return super().target_exposed(request)
+
+    stand_in_members(UiWindowProjectionService, UiWindowProjectionService.projection_id)
 
     class ScopeOnlyProjection(UiWindowProjectionService):
         def _route_index(self):

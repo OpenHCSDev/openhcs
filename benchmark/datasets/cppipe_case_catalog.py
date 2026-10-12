@@ -26,6 +26,10 @@ def official_cp3_case(
     """Attach benchmark category metadata to an official CP3 case declaration."""
 
     def decorate(declaration: Callable[[], None]) -> Callable[[], None]:
+        if declaration.__name__ in _OFFICIAL_CP3_CASE_DECLARATIONS:
+            raise ValueError(
+                f"Official CP3 case {declaration.__name__!r} is declared twice."
+            )
         _OFFICIAL_CP3_CASE_DECLARATIONS[declaration.__name__] = BenchmarkCategory(
             assay=assay,
             module=module,

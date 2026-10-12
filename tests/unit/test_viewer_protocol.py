@@ -53,16 +53,10 @@ from openhcs.core.streaming_config_declarations import NapariViewer
 
 
 @pytest.fixture(autouse=True)
-def preserve_managed_viewer_registry():
-    """Keep function-local viewer test classes out of the production registry."""
+def stand_in_napari_viewers(stand_in_members):
+    """Tests here define their own viewer for the Napari family."""
 
-    registry = ManagedViewerLifecycleMixin.__registry__
-    registered_viewers = registry.copy()
-    try:
-        yield
-    finally:
-        registry.clear()
-        registry.update(registered_viewers)
+    stand_in_members(ManagedViewerLifecycleMixin, NapariViewer.wire_value)
 
 
 def test_managed_viewer_lifecycle_implements_nominal_execution_contract():
