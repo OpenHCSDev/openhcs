@@ -25,6 +25,8 @@ import pytest
 from metaclass_registry.testing import restored_registry
 from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 
+from tests import family_registries
+
 from polystore.imagej_distribution import (
     FijiArchiveDistribution,
     ImageJArchiveDownloadPolicy,
@@ -149,6 +151,31 @@ def _marked_processes(marker: str) -> list[psutil.Process]:
         except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
             continue
     return found
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_make_collect_report(collector):
+    """Members a test module declares at import leave their families after the import."""
+    report = yield
+    if isinstance(collector, pytest.Module):
+        family_registries.withdraw_module_members()
+    return report
+
+
+@pytest.fixture(scope="module", autouse=True)
+def module_family_members(request) -> Iterator[None]:
+    """Members a test module declares at import are members while its tests run."""
+    family_registries.join_module_members(request.module)
+    yield
+    family_registries.leave_module_members()
+
+
+@pytest.fixture(autouse=True)
+def restored_family_registries(module_family_members) -> Iterator[None]:
+    """Every family registry is, after a test, what it was before it."""
+    before = family_registries.registry_snapshot()
+    yield
+    family_registries.restore_registries(before)
 
 
 @pytest.fixture
