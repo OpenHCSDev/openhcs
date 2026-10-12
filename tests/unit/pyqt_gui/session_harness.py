@@ -25,7 +25,6 @@ class GuiServiceStub:
     errors: list[str] = field(default_factory=list)
     directory_choices: list[str] = field(default_factory=list)
     main_window: object | None = None
-    global_config: object | None = None
     file_manager: object | None = None
 
     def get_file_manager(self):
@@ -39,9 +38,6 @@ class GuiServiceStub:
 
     def show_cached_directory_dialog(self, **_kwargs) -> list[str]:
         return list(self.directory_choices)
-
-    def set_global_config(self, config) -> None:
-        self.global_config = config
 
     def execute_async_operation(self, async_func, *args, **kwargs) -> None:
         """Run widget-started work to completion on the calling thread."""

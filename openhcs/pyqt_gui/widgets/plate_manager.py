@@ -56,7 +56,6 @@ from openhcs.authoring.session.events import (
     DebugSnapshotAvailable,
     ErrorReported,
     ExecutionStateChanged,
-    GlobalConfigChanged,
     InitializationFailed,
     LiveMeasurementAvailable,
     LogsCleared,
@@ -319,10 +318,6 @@ class PlateManagerWidget(
         self.clear_subprocess_logs.emit()
         if self.live_measurements_window is not None:
             self.live_measurements_window.refresh()
-
-    @on_session_event.register
-    def _(self, event: GlobalConfigChanged) -> None:
-        self.service_adapter.set_global_config(event.config)
 
     # -- list rendering -------------------------------------------------------
 

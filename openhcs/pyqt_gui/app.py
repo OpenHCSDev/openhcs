@@ -19,7 +19,6 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from pyqt_reactive.utils.scroll_filter import install_shift_wheel_scrolling
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.core.config import GlobalPipelineConfig
 from openhcs.pyqt_gui.branding import openhcs_application_icon
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
 
@@ -198,10 +197,6 @@ class OpenHCSPyQtApp(QApplication):
         logger.info("OpenHCS PyQt6 application initialized")
 
     @property
-    def pipeline_runtime_config(self) -> GlobalPipelineConfig:
-        return self.runtime_context.pipeline_runtime
-
-    @property
     def ui_config(self):
         return self.runtime_context.ui_config
 
@@ -262,7 +257,6 @@ class OpenHCSPyQtApp(QApplication):
             )
 
             # Connect application-level signals
-            self.main_window.config_changed.connect(self.on_config_changed)
             self.main_window.ui_config_changed.connect(self.on_ui_config_changed)
 
         return self.main_window
@@ -299,16 +293,6 @@ class OpenHCSPyQtApp(QApplication):
                 startup_readiness.fail(error)
 
         QtCore.QTimer.singleShot(100, _run_deferred_initialization)
-
-    def on_config_changed(self, new_config: GlobalPipelineConfig):
-        """
-        Handle global configuration changes.
-
-        Args:
-            new_config: New global configuration
-        """
-        self.runtime_context = self.runtime_context.with_pipeline_runtime(new_config)
-        logger.info("Global configuration updated")
 
     def on_ui_config_changed(self, new_config: UIConfig) -> None:
         self.runtime_context = self.runtime_context.with_ui_config(new_config)

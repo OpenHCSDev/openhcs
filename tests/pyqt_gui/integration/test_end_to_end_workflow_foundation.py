@@ -1298,10 +1298,11 @@ class TestPyQtGUIWorkflowFoundation:
                 pipeline_runtime=_create_test_global_config(),
             ),
         )
-        if get_live_global_config(GlobalPipelineConfig) is None:
-            raise AssertionError("OpenHCS did not establish its global config context.")
-
         app.create_main_window()
+        if get_live_global_config(GlobalPipelineConfig) is None:
+            raise AssertionError(
+                "The main window's session did not register the global config."
+            )
         app.show_main_window()
         _wait_for_gui(TIMING.WINDOW_DELAY)
 
