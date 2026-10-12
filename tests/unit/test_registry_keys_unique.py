@@ -116,3 +116,31 @@ def test_streaming_config_registry_holds_the_declared_lazy_replacement() -> None
         assert config_type.viewer_family is viewer_family
         assert issubclass(config_type, replaced)
         assert config_type.__name__ == f"Lazy{replaced.__name__}"
+
+
+def test_two_axis_families_may_each_declare_the_same_axis_name() -> None:
+    from python_introspect import to_jsonable
+
+    import openhcs.core.axis_boundaries  # noqa: F401  (registers the name encoder)
+    from openhcs.core.axes import (
+        Axis,
+        AxisFamily,
+        GroupingDeclaration,
+        LabelValued,
+        PartitionAxis,
+        Ungrouped,
+    )
+    from openhcs.domains.microscopy.axes import Microscopy
+
+    class Survey(AxisFamily):
+        payload_spatial_rank = 2
+
+        class Site(Axis, PartitionAxis, LabelValued):
+            name = "site"
+
+    assert Survey.Site is not Microscopy.Site
+    assert Survey.named("site") is Survey.Site
+    assert Microscopy.named("site") is Microscopy.Site
+    assert to_jsonable(Survey.Site) == to_jsonable(Microscopy.Site) == "site"
+    assert to_jsonable(Ungrouped) == "none"
+    assert not hasattr(GroupingDeclaration, "__registry__")

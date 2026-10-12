@@ -111,12 +111,16 @@ class StreamingConfigMeta(EnableableMeta, AutoRegisterMeta):
 
     Steps, forms and the compiler hold the lazy form of a streaming config, so
     the lazy form is the registered type for its viewer: it declares that it
-    takes the key from the config it was generated from.
+    takes the key from the config it was generated from. The lazy form of a
+    config that is not registered (the abstract root) replaces nothing.
     """
 
     def __new__(mcs, name, bases, attrs, **class_kwargs):
         if LazyDataclass in bases:
-            attrs = {**attrs, REPLACES_REGISTERED_ATTRIBUTE: bases[0]}
+            generated_from = bases[0]
+            registry = getattr(generated_from, "__registry__", {})
+            if any(registered is generated_from for registered in dict.values(registry)):
+                attrs = {**attrs, REPLACES_REGISTERED_ATTRIBUTE: generated_from}
         return super().__new__(mcs, name, bases, attrs, **class_kwargs)
 
 logger = logging.getLogger(__name__)

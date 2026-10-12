@@ -293,31 +293,15 @@ class ConstantValue(AxisValueFallback):
 # ---------------------------------------------------------------------------
 
 
-class GroupingDeclarationMeta(AxisDeclarationMeta):
-    """Metaclass for grouping declarations: keyed by name, held by their family.
-
-    Two families may declare the same name (``Microscopy.Site`` and a survey
-    domain's ``Site``), so no name-keyed registry can hold every declaration:
-    the second would take the first one's key. The family owns membership and
-    decodes names (``AxisFamily.named``); the declaration only carries its key.
-    """
-
-    @staticmethod
-    def _register_class(cls, key, config, replaces=None) -> None:
-        del replaces
-        setattr(cls, config.key_attribute, key)
-
-
-class GroupingDeclaration(ABC, metaclass=GroupingDeclarationMeta):
+class GroupingDeclaration(ABC, metaclass=AxisDeclarationMeta):
     """What a step's ``group_by`` holds: one axis, or :class:`Ungrouped`.
 
-    Declarations are keyed by their boundary ``name``, which is therefore also
-    their JSON spelling. Boundaries decode names through the active family
-    (``AxisFamily.named``), never through a registry of declarations.
+    A declaration's boundary ``name`` is its JSON spelling. Names are unique
+    within one :class:`AxisFamily`, not across families (``Microscopy.Site``
+    and a survey domain's ``Site`` are both ``"site"``), so the family holds
+    its declarations and decodes names (``AxisFamily.grouping_named``). There
+    is no registry of all declarations by name.
     """
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
 
     name: ClassVar[str]
 
