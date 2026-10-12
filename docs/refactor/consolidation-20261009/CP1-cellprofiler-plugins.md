@@ -143,14 +143,83 @@ See "Done" and "Remaining, in order" below; kept current after each commit.
 
 ### Done
 
-(nothing yet)
+- **Mechanism** (`887d67920`). `CellProfilerModule.declaration_for_block` returns the
+  registered class or `UndeclaredModule`
+  (`openhcs/processing/backends/cellprofiler/undeclared_module.py`); `for_module` and
+  `require_module` are unchanged. The undeclared step keeps the written name, revision
+  and settings as kwargs. Outputs: when a later module's input resolves to nothing
+  (`UnknownArtifactInput`), the importer asks earlier blocks, nearest first, through the
+  family hook `block_providing_artifact`; only `UndeclaredModule` answers, and only for
+  names among its setting values. Inputs: setting values naming an available artifact.
+  Compile refusal: family hook `validate_compilation`, inside the existing provider
+  wrapping. Message: `CellProfiler module 'X' has no OpenHCS implementation, so this
+  step cannot run. Replace the step's function with a custom function producing image
+  'Y'.` Absent distribution: `distributions_not_installed` and
+  `install_command_for_distributions` in `openhcs_registry.py`, read by the generic
+  validator (`funcstep_contract_validator.py`), so every function gets `requires external
+  library 'D' which is not installed. … Install with: pip install 'openhcs[extra]'`;
+  the catalogue filters functions by their own file's `REQUIRED_DISTRIBUTIONS`.
+  Parity argument: for declared pipelines the lookup returns the same class, only
+  `UndeclaredModule` overrides the new hooks (asserted by a test), and the retry runs
+  only on an error that used to end the import.
+  Not covered: names consumed outside `require_available_artifact_input` (measurements,
+  sidecar files) are not derived; output lineage is declared only with exactly one image
+  input; `UndeclaredModule` appears in the compatibility matrix as a registered module.
+- **Deleted** `openhcs/processing/backends/cellprofiler/contracts.json`: certificate
+  **unused** (no reader in `openhcs`, `benchmark`, `tests`, `scripts`, `external/`).
+  The `== 91` count is compared with the registry's names.
+- **Plugins** (`0bdb355c7`): HistogramEqualization, DistanceTransform, HistogramMatching.
+  One file each (72 to 141 lines), nothing restated elsewhere. Reference: the real
+  plugins run in CellProfiler 4.2.8.1 at plugin commit `5aaa4e5`
+  (`tests/fixtures/cellprofiler_plugins/make_reference.py`); 18 cases, max difference
+  4.2e-7 (global equalization, scikit-image 0.26 versus 0.18.3), 0.0 elsewhere. Two
+  combinations the plugins crash on are refused. HistogramMatching ignores "Plane number
+  in 3d", a setting only the tglow fork writes: unverified what the fork does with it.
+- **Model plugins declared** (`ebc3f1af9`): RunCellpose, RunStarDist, Runilastik convert
+  to real steps with every setting mapped or ignored with a reason; none can run.
+  Extras `cellpose`, `stardist`. RunCellpose's parameter names and defaults follow
+  `segment` on `feature/cellpose-full-surface` (recorded at `0d127cc9f`, Cellpose
+  3.1.1.3). Real blocks tested: r3 (three layouts), r6; r1 and r8 built from the plugin
+  source; r2, r4, r5, r7 untested.
+
+### Cost of adding a module
+
+Before: one backend file, plus an entry in `contracts.json` by convention (89 of 92
+had one) and the `== 91` edit. After: one backend file. Observed for the three plugins:
+72, 141 and 121 lines, no other file. A module with an optional dependency adds a
+`REQUIRED_DISTRIBUTIONS` line and, once per distribution, an extra in `pyproject.toml`.
+
+### Blocked
+
+- RunCellpose running: needs `feature/cellpose-full-surface` (draft PR #1234). Its
+  function cannot be named as the module's callable as it stands: its module imports
+  Cellpose at top level, its model parameter is an enum defined there, and it returns
+  raw arrays under fixed names where the module family needs label values under
+  setting-named outputs. At merge: replace the body of `run_cellpose` with the call and
+  label conversion and drop the `ModuleWithoutFunction` parent.
+- GPU memory share setting: DL1 (`refactor/DL1-device-and-memory-types`, remote branch,
+  no PR seen). Preparation before readiness: DL4 (draft #1235). Provenance: DL3 (draft
+  #1236). Files between steps: DL2 (no remote branch seen).
+- Docker/Podman execution of RunCellpose and Runilastik: no branch covers an
+  out-of-process runner.
+- RunStarDist: no StarDist function exists in OpenHCS. Runilastik: no ilastik
+  distribution on PyPI; needs a function that runs an external program.
+- Revision upgrades have no owner in the family (five modules read
+  `variable_revision_number` in their own hooks). Proposed: a per-binding "value when
+  the row is absent".
 
 ### Remaining, in order
 
-1. Mechanism: undeclared-module step; dependency-absent declared module; delete
-   `contracts.json`; derive the `== 91` count.
-2. Pure plugins by rank: HistogramEqualization, CallBarcodes (barcode CSV as a declared
-   input file), DistanceTransform, CompensateColors, HistogramMatching, DeclumpObjects,
+1. In flight when this was written (agents working in the tree, not yet committed):
+   requirements read from the running source tree's `pyproject.toml` (so new extras do
+   not need an environment refresh) and the `.gitignore` `*.json` rule narrowed
+   (`tests/fixtures/cellprofiler_plugins/reference.json` is missing from history until
+   then); the four built-ins; CallBarcodes, CompensateColors, DeclumpObjects,
+   MeasureRadialEntropy, EnforceObjectsOneToOne.
+2. Gates: none run yet (`verify_branch.sh cp1`, `smoke_local.sh`, `guardrails_local.sh`,
+   official30 parity under `official30.lock`).
+3. Pure plugins by rank: HistogramEqualization (done), CallBarcodes (barcode CSV as a declared
+   input file), DistanceTransform (done), CompensateColors, HistogramMatching (done), DeclumpObjects,
    MeasureRadialEntropy, EnforceObjectsOneToOne, LaplacianOfGaussian, TopHatTransform,
    FilterObjects_StringMatch, EdgeDetection, CalculateMoments, ConvertOutlinesToObjects,
    EnhancedMeasureTexture, PixelShuffle, BlobDetection, then the zero-count ones: AddNoise,
@@ -162,7 +231,7 @@ See "Done" and "Remaining, in order" below; kept current after each commit.
    SpectralAnalysis, TestAllThresholds, Transforms). Each: settings from a real `.cppipe`
    block with its source repository and commit recorded, and a check against the plugin's
    own code.
-3. Built-ins to 94 of 94: LoadData (work out its meaning for source bindings), LabelImages,
+4. Built-ins to 94 of 94: LoadData (work out its meaning for source bindings), LabelImages,
    SaveCroppedObjects, CreateBatchFiles (a declared no-op that says why).
-4. Heavy: RunCellpose (declaration and full settings mapping onto the Cellpose surface of
+5. Heavy (declared; see Blocked): RunCellpose (declaration and full settings mapping onto the Cellpose surface of
    branch `feature/cellpose-full-surface`; no second wrapper), RunStarDist, Runilastik.
