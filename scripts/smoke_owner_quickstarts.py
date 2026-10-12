@@ -43,6 +43,7 @@ def smoke_metaclass_registry() -> None:
 
 def smoke_arraybridge() -> None:
     from arraybridge import (
+        HOST,
         convert_memory,
         detect_memory_type,
         numpy,
@@ -52,15 +53,15 @@ def smoke_arraybridge() -> None:
 
     value = np.arange(6).reshape(2, 3)
     assert detect_memory_type(value) == "numpy"
-    assert np.array_equal(convert_memory(value, "numpy", "numpy", 0), value)
+    assert np.array_equal(convert_memory(value, "numpy", "numpy", HOST), value)
 
     @numpy
     def double(image):
         return image * 2
 
     assert np.array_equal(double(value), value * 2)
-    stack = stack_slices([value, value], "numpy", 0)
-    assert len(unstack_slices(stack, "numpy", 0)) == 2
+    stack = stack_slices([value, value], "numpy", HOST)
+    assert len(unstack_slices(stack, "numpy", HOST)) == 2
 
 
 def smoke_polystore() -> None:

@@ -72,7 +72,7 @@ def _calls_shared_operation(function: ast.FunctionDef) -> bool:
 def test_each_backend_module_registers_with_its_own_leaf() -> None:
     for backend in BACKENDS:
         leaf = _processor_module(backend).OPERATIONS
-        assert leaf is ArrayLibrary.for_memory(MemoryType(backend))
+        assert leaf is MemoryType(backend).library
 
 
 def test_operations_shared_by_two_backends_are_written_once() -> None:

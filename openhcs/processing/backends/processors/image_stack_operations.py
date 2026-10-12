@@ -17,7 +17,6 @@ from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
-from arraybridge import MemoryType
 from arraybridge.libraries import ArrayLibrary
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
@@ -32,9 +31,8 @@ def require_stack(ops: ArrayLibrary, array: Any, name: str = "input") -> None:
     """Require one native array of the leaf's framework with three axes."""
 
     if not ops.accepts(array):
-        display_name = MemoryType(ops.memory_type).display_name
         raise TypeError(
-            f"{name} must be a {display_name} array, got {type(array)}. "
+            f"{name} must be a {ops.display_name} array, got {type(array)}. "
             "No automatic conversion is performed."
         )
     if len(array.shape) != 3:

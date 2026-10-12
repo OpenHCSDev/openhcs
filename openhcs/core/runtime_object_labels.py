@@ -1757,12 +1757,15 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
         labels: Sequence[object],
         memory_type: str,
     ) -> ObjectLabelData:
-        from openhcs.core.memory import stack_runtime_slices
+        from arraybridge import MemoryType
 
+        from openhcs.core.memory import stack_runtime_slices
+        from openhcs.core.runtime_array_values import ArrayPlacement
+
+        planes = tuple(cast(np.ndarray, value) for value in labels)
         return stack_runtime_slices(
-            tuple(cast(np.ndarray, value) for value in labels),
-            memory_type,
-            0,
+            planes,
+            ArrayPlacement.beside(planes[0], MemoryType(memory_type).library),
         )
 
     def validate_plane_count(
