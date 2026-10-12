@@ -50,6 +50,110 @@ def test_native_catalog_import_failures_follow_declared_memory_admission(
         assert registry.get_modules_to_scan() == []
 
 
+@pytest.mark.parametrize(
+    "requirement, outcome",
+    [
+        # The package's own marker leaves the distribution out of this environment.
+        ("absent-catalog-probe>=1; platform_system == 'NoSuchSystem'", "excluded"),
+        # Declared only for an extra this installation did not select.
+        ("absent-catalog-probe>=1; extra == 'probe'", "excluded"),
+        # Required here, yet absent: a broken installation fails loudly.
+        ("absent-catalog-probe>=1", "broken"),
+        # A module cannot claim a distribution the package never declares.
+        ("unrelated-catalog-probe>=1", "undeclared"),
+    ],
+)
+def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here(
+    tmp_path, monkeypatch, requirement, outcome
+) -> None:
+    from packaging.requirements import Requirement
+
+    from openhcs.processing.backends.lib_registry import openhcs_registry
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        OpenHCSRegistry,
+    )
+
+    package_name = "native_catalog_distribution_probe"
+    package = tmp_path / package_name
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    (package / "processing.py").write_text(
+        "from openhcs.core.memory.decorators import numpy\n"
+        "import absent_catalog_probe\n"
+        "REQUIRED_DISTRIBUTIONS = ('absent-catalog-probe',)\n"
+        "@numpy\n"
+        "def process(image):\n    return image\n"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "1")
+    monkeypatch.setattr(
+        openhcs_registry,
+        "_openhcs_requirements",
+        lambda: (Requirement(requirement),),
+    )
+    registry = OpenHCSRegistry()
+    registry.MODULES_TO_SCAN = [f"{package_name}.processing"]
+
+    if outcome == "excluded":
+        assert registry.get_modules_to_scan() == []
+        assert registry.cache_discovery_context()[
+            "distributions_excluded_by_package_metadata"
+        ] == ["absent-catalog-probe"]
+    elif outcome == "broken":
+        with pytest.raises(ModuleNotFoundError, match="absent_catalog_probe"):
+            registry.get_modules_to_scan()
+    else:
+        with pytest.raises(ValueError, match="absent-catalog-probe"):
+            registry.get_modules_to_scan()
+
+
+@pytest.mark.parametrize(
+    "platform_system, platform_machine, excluded",
+    [
+        ("Darwin", "x86_64", True),
+        ("Darwin", "arm64", False),
+        ("Linux", "x86_64", False),
+    ],
+)
+def test_basicpy_catalog_module_follows_the_package_basicpy_marker(
+    monkeypatch, platform_system, platform_machine, excluded
+) -> None:
+    """Intel macOS installs omit openhcs-basicpy; its catalog module follows."""
+
+    import importlib.metadata
+
+    import packaging.markers
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_distributions_excluded_by_package_metadata,
+    )
+
+    environment = packaging.markers.default_environment()
+    monkeypatch.setattr(
+        packaging.markers,
+        "default_environment",
+        lambda: {
+            **environment,
+            "platform_system": platform_system,
+            "platform_machine": platform_machine,
+        },
+    )
+    installed_distribution = importlib.metadata.distribution
+
+    def distribution_without_basicpy(name: str):
+        if name == "openhcs-basicpy":
+            raise importlib.metadata.PackageNotFoundError(name)
+        return installed_distribution(name)
+
+    monkeypatch.setattr(
+        importlib.metadata, "distribution", distribution_without_basicpy
+    )
+
+    assert _module_distributions_excluded_by_package_metadata(
+        "openhcs.processing.backends.enhance.basic_processor_jax"
+    ) == (("openhcs-basicpy",) if excluded else ())
+
+
 def test_concurrent_catalog_requests_share_one_metadata_load(monkeypatch) -> None:
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,

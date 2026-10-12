@@ -171,8 +171,22 @@ class ObjectLabelInputExecutionMode(ABC, metaclass=AutoRegisterMeta):
         runtime_projection: RuntimePlaneAxisValueProjection | None,
         semantic_controls: Mapping[str, Any],
     ) -> dict[str, Any]:
-        """Return the invocation kwargs once the image's execution mode is known."""
-        del execution_mode, image_projection, runtime_projection
+        """Match a scalar image to its declared singleton runtime root.
+
+        Labels can consume a singleton root only after the image's final
+        execution mode and retained plane projection have been resolved.
+        """
+        if (
+            execution_mode.per_plane
+            and image_projection is None
+            and runtime_projection is not None
+            and runtime_projection.axis_size == 1
+        ):
+            from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+            kwargs = RuntimeSliceProjection.kwargs_for_slice(
+                kwargs, runtime_projection.selected_plane(0)
+            )
         return {**kwargs, **semantic_controls}
 
     @classmethod
@@ -242,16 +256,6 @@ class FullStackLabels(ObjectLabelInputExecutionMode):
         del labels, default, runtime_slice_count
         return FullStackExecution
 
-
-class MatchImageStackLabels(ObjectLabelInputExecutionMode):
-    """Labels follow the image: a stack when the image needs one."""
-
-    key = "match_image_stack"
-
-    @classmethod
-    def preserves_full_stack(cls, *, image_stack_required: bool) -> bool:
-        return image_stack_required
-
     @classmethod
     def invocation_kwargs(
         cls,
@@ -262,23 +266,19 @@ class MatchImageStackLabels(ObjectLabelInputExecutionMode):
         runtime_projection,
         semantic_controls,
     ):
-        """Match scalar images to their declared singleton runtime root.
-
-        Matching labels can consume a singleton root only after the image's
-        final execution mode and retained plane projection have been resolved.
-        """
-        if (
-            execution_mode.per_plane
-            and image_projection is None
-            and runtime_projection is not None
-            and runtime_projection.axis_size == 1
-        ):
-            from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-            kwargs = RuntimeSliceProjection.kwargs_for_slice(
-                kwargs, runtime_projection.selected_plane(0)
-            )
+        """Full-stack label consumers keep their declared label domain."""
+        del execution_mode, image_projection, runtime_projection
         return {**kwargs, **semantic_controls}
+
+
+class MatchImageStackLabels(ObjectLabelInputExecutionMode):
+    """Labels follow the image: a stack when the image needs one."""
+
+    key = "match_image_stack"
+
+    @classmethod
+    def preserves_full_stack(cls, *, image_stack_required: bool) -> bool:
+        return image_stack_required
 
 
 def _artifact_spec_from_output_declaration(

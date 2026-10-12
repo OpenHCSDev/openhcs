@@ -79,6 +79,7 @@ from openhcs.core.steps.function_outputs import (
     MemoryOutputWriter,
     OpenHCSMetadataTarget,
     MaterializedImageMetadataTarget,
+    PrimaryImageMetadataTarget,
     RuntimeArtifactMetadataTarget,
     StreamOutputsAuthority,
     StreamOutputBatch,
@@ -186,6 +187,62 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
         "runtime_artifacts",
         "metadata",
     ]
+
+
+@pytest.mark.parametrize(
+    ("backend", "expected_targets"),
+    [
+        (
+            Backend.DISK.value,
+            {
+                PrimaryImageMetadataTarget,
+                MaterializedImageMetadataTarget,
+                RuntimeArtifactMetadataTarget,
+            },
+        ),
+        (Backend.OMERO_LOCAL.value, set()),
+    ],
+)
+def test_metadata_document_targets_follow_backend_declaration(
+    monkeypatch, backend, expected_targets
+) -> None:
+    """A virtual backend's output root holds no local metadata document."""
+    root = "/omero/plate_1_outputs"
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="count",
+        axis_id="A01",
+        output_dir=Path(root) / "images",
+        output_dataset_root=root,
+        sub_dir="images",
+        analysis_results_dir=f"{root}/results",
+        write_backend=backend,
+        materialized_output=MaterializedOutputPlan(
+            output_dir=Path(root) / "checkpoint",
+            backend=backend,
+            dataset_root=root,
+            sub_dir="checkpoint",
+            analysis_results_dir=f"{root}/results",
+        ),
+        runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True, persistent_backend=backend
+        ),
+        create_openhcs_metadata=True,
+    )
+    assert {type(t) for t in OpenHCSMetadataTarget.for_plan(plan)} == expected_targets
+
+    documents = []
+    monkeypatch.setattr(
+        AtomicMetadataWriter,
+        "reconcile_completed_dataset",
+        lambda _self, metadata_path, *_args, **_kwargs: documents.append(metadata_path),
+    )
+    OpenHCSMetadataTarget.finalize_completed_dataset(
+        {"A01": SimpleNamespace(step_plans={0: plan})}
+    )
+    assert documents == (
+        [METADATA_CONFIG.metadata_path(root)] if expected_targets else []
+    )
 
 
 def test_memory_output_writer_rejects_payload_path_cardinality_mismatch():

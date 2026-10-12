@@ -49,7 +49,7 @@ from openhcs.core.dataset_sources.plane_stores import (
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
-from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorValue
+from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -229,9 +229,9 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     assert "plate_paths =" in source
     assert payload.plate_paths == (str(tmp_path),)
     assert isinstance(pipeline_config.source_bindings_config, LazySourceBindingsConfig)
-    concrete_bindings = SourceBindingsEditorValue(
+    concrete_bindings = resolve_lazy_configurations_for_serialization(
         pipeline_config.source_bindings_config
-    ).concrete_view()
+    )
     assert [binding.alias for binding in concrete_bindings.bindings] == list(stores)
     pipeline_source = FunctionStepTransportAuthority.source_from_pipeline(
         pipeline_steps

@@ -41,7 +41,9 @@ from openhcs.runtime.viewer_component_system import (
 )
 
 # Reuse the original provider-free compiler and runtime fixtures, not a second ABI.
-from test_cellprofiler_generic_special_input_binding import _compile_public_step
+from tests.unit.test_cellprofiler_generic_special_input_binding import (
+    _compile_public_step,
+)
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )

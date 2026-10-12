@@ -3,21 +3,32 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document_fields import PipelineDocumentField
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.function_step_transport import (
+    FunctionStepTransportAuthority,
+    PipelineStepsDocument,
+)
 from openhcs.core.steps.function_step import FunctionStep
 
 
-@dataclass(frozen=True, slots=True)
-class PipelineDocument:
-    """Normalized public configuration and steps for one pipeline."""
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PipelineDocument(PipelineStepsDocument):
+    """Normalized public configuration and steps for one pipeline.
 
-    pipeline_config: PipelineConfig
-    pipeline_steps: list[FunctionStep]
-    original_source: str | None = None
+    A file that assigns only the steps is a pipeline with the default config.
+    """
+
+    pipeline_config: PipelineConfig = field(default_factory=PipelineConfig)
+    source_text: str | None = field(default=None, init=False)
+
+    def read_from(self, source_text: str | None) -> PipelineDocument:
+        """Return this document carrying the source text it was read from."""
+
+        document = replace(self)
+        object.__setattr__(document, "source_text", source_text)
+        return document
 
 
 class PipelineDocumentCodec:
@@ -34,14 +45,16 @@ class PipelineDocumentCodec:
     ) -> PipelineDocument:
         """Build a document from typed values and normalize its steps."""
 
-        cls._require_pipeline_config(pipeline_config)
-        steps = list(pipeline_steps)
-        cls._require_pipeline_steps(steps)
-        normalized_steps = FunctionStepTransportAuthority.normalize_pipeline(steps)
-        cls._require_pipeline_steps(normalized_steps)
+        if not isinstance(pipeline_config, PipelineConfig):
+            raise TypeError(
+                "pipeline_config must be a PipelineConfig, "
+                f"got {type(pipeline_config).__name__}."
+            )
         return PipelineDocument(
             pipeline_config=pipeline_config,
-            pipeline_steps=normalized_steps,
+            pipeline_steps=FunctionStepTransportAuthority.normalized_steps(
+                list(pipeline_steps)
+            ),
         )
 
     @classmethod
@@ -51,41 +64,32 @@ class PipelineDocumentCodec:
     ) -> PipelineDocument:
         """Read the public assignments from an executed namespace."""
 
-        config_field = PipelineDocumentField.PIPELINE_CONFIG.value
-        steps_field = PipelineDocumentField.PIPELINE_STEPS.value
-        if steps_field not in namespace:
-            raise ValueError(f"Pipeline document must define {steps_field!r}.")
-
-        pipeline_config = (
-            namespace[config_field] if config_field in namespace else PipelineConfig()
-        )
-        pipeline_steps = namespace[steps_field]
-        cls._require_pipeline_config(pipeline_config)
-        if type(pipeline_steps) is not list:
-            raise TypeError(
-                f"{steps_field} must be a list[FunctionStep], "
-                f"got {type(pipeline_steps).__name__}."
-            )
-        return cls.from_values(
-            pipeline_config=pipeline_config,
-            pipeline_steps=pipeline_steps,
-        )
+        return cls._validated(PipelineDocument.from_namespace(namespace))
 
     @classmethod
     def from_source(cls, source: str) -> PipelineDocument:
         """Execute Python source and read its pipeline assignments."""
 
-        namespace: dict[str, object] = {}
-        code = compile(source, "<openhcs-pipeline-document>", "exec")
-        exec(code, namespace)
-        return replace(cls.from_namespace(namespace), original_source=source)
+        return cls._validated(PipelineDocument.from_source(source)).read_from(source)
+
+    @classmethod
+    def _validated(cls, document: PipelineDocument) -> PipelineDocument:
+        if type(document.pipeline_steps) is not list:
+            raise TypeError(
+                "pipeline_steps must be a list[FunctionStep], "
+                f"got {type(document.pipeline_steps).__name__}."
+            )
+        return cls.from_values(
+            pipeline_config=document.pipeline_config,
+            pipeline_steps=document.pipeline_steps,
+        )
 
     @classmethod
     def execution_source(cls, document: PipelineDocument) -> str:
-        """Return the source it was parsed from, otherwise freshly rendered source."""
+        """Return the source it was read from, otherwise freshly rendered source."""
 
-        if document.original_source is not None:
-            return document.original_source
+        if document.source_text is not None:
+            return document.source_text
         return cls.render(document)
 
     @classmethod
@@ -98,43 +102,8 @@ class PipelineDocumentCodec:
         """Render a validated pipeline document as reviewable Python source."""
 
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
 
-        normalized = cls.from_values(
+        return cls.from_values(
             pipeline_config=document.pipeline_config,
             pipeline_steps=document.pipeline_steps,
-        )
-        body = CodeBlock.from_items(
-            (
-                Assignment(
-                    PipelineDocumentField.PIPELINE_CONFIG.value,
-                    normalized.pipeline_config,
-                ),
-                BlankLine(),
-                Assignment(
-                    PipelineDocumentField.PIPELINE_STEPS.value,
-                    normalized.pipeline_steps,
-                ),
-            )
-        )
-        return generate_python_source(
-            body,
-            header=cls.HEADER,
-            clean_mode=clean_mode,
-        )
-
-    @staticmethod
-    def _require_pipeline_config(value: object) -> None:
-        if not isinstance(value, PipelineConfig):
-            raise TypeError(
-                f"pipeline_config must be a PipelineConfig, got {type(value).__name__}."
-            )
-
-    @staticmethod
-    def _require_pipeline_steps(values: Sequence[object]) -> None:
-        for index, step in enumerate(values):
-            if not isinstance(step, FunctionStep):
-                raise TypeError(
-                    f"pipeline_steps member {index} must be FunctionStep, "
-                    f"got {type(step).__name__}."
-                )
+        ).to_source(header=cls.HEADER, clean_mode=clean_mode)
