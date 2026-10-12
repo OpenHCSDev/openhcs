@@ -471,7 +471,6 @@ def test_registered_nine_site_paired_positions_use_owned_scalar_projection():
 def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired_channels(
     tmp_path, embedded, assembly_backend, storage_backend
 ):
-    from objectstate import ObjectStateRegistry
     from objectstate import set_global_config
 
     from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
@@ -527,7 +526,6 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                 )
             else:
                 tifffile.imwrite(path, np.full((4, 6), channel, np.uint16))
-    ObjectStateRegistry.clear()
     import queue
 
     from openhcs.core.progress import set_progress_queue
@@ -702,4 +700,3 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             assert replay_result["A01"].is_success(), replay_result["A01"].error_message
     finally:
         set_progress_queue(None)
-        ObjectStateRegistry.clear()

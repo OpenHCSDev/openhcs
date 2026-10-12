@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import tifffile
-from objectstate import ObjectStateRegistry
 from objectstate import set_global_config
 
 from openhcs.agent.dto.knowledge import (
@@ -182,7 +181,6 @@ def test_neurite_example_compiles_with_declared_loose_file_identities(
 
     pipeline_config, steps = build_loose_operaphenix_neurite_pipeline(inputs)
     expected_names = [step.name for step in steps]
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
         set_global_config(

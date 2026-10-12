@@ -14,7 +14,6 @@ import time
 from pathlib import Path
 
 import pytest
-from objectstate.object_state import ObjectStateRegistry
 
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.authoring.session.operations.datasets import (
@@ -36,9 +35,7 @@ STAGE_TIMEOUT_SECONDS = 300.0
 def fresh_object_state_registry():
     """Each journey's session starts from an empty dataset list."""
 
-    ObjectStateRegistry.clear()
     yield
-    ObjectStateRegistry.clear()
 
 
 def _synthetic_dataset(tmp_path: Path) -> tuple[Path, str]:
@@ -155,7 +152,6 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
 
     from openhcs.authoring.session.lifetime import close_session, open_session
 
-    from openhcs.authoring.session.session import Session
     from openhcs.core.config import GlobalPipelineConfig
 
     from tests.integration.test_measured_cli_session import (

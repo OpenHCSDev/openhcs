@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 from arraybridge.decorators import DtypeConversion
-from objectstate import ObjectState, ObjectStateRegistry, forget_stored_global_config
+from objectstate import ObjectState, ObjectStateRegistry
 from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
 
 from openhcs.authoring.session.lifetime import close_session, open_session
@@ -60,12 +60,7 @@ def _states_below(scope_id: str) -> list[ObjectState]:
 
 @pytest.fixture
 def empty_registry() -> Iterator[None]:
-    ObjectStateRegistry.clear()
-    try:
-        yield
-    finally:
-        ObjectStateRegistry.clear()
-        forget_stored_global_config(GlobalPipelineConfig)
+    yield
 
 
 def test_headless_session_global_config_reaches_existing_step_states(

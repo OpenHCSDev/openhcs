@@ -465,7 +465,6 @@ def test_inline_source_bindings_root_reset_all_resets_child_fields() -> None:
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_source_bindings_edit_updates_flat_children_and_persists() -> None:
@@ -586,12 +585,10 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     binding = NamedSourceBinding(alias="DNA")
     state = ObjectState(PipelineConfig(), scope_id="plate")
@@ -650,12 +647,10 @@ def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
         assert "step_source_bindings_config.bindings" in queued_flashes
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     binding = NamedSourceBinding(alias="DNA")
     plate_state = ObjectState(PipelineConfig(), scope_id="plate")
@@ -728,12 +723,10 @@ def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> Non
     finally:
         pipeline_manager.deleteLater()
         step_manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     plate_state = ObjectState(PipelineConfig(), scope_id="plate")
     step_state = ObjectState(
@@ -865,12 +858,10 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
     finally:
         pipeline_manager.deleteLater()
         step_manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -959,12 +950,10 @@ def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
         assert refresh_calls == []
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_enableable_reset_to_inherited_true_is_path_scoped() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
@@ -1046,7 +1035,6 @@ def test_source_bindings_enableable_reset_to_inherited_true_is_path_scoped() -> 
         }
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_enableable_reset_from_false_to_inherited_value_is_path_scoped() -> (
@@ -1129,12 +1117,10 @@ def test_source_bindings_enableable_reset_from_false_to_inherited_value_is_path_
             assert set_value_calls == []
         finally:
             manager.deleteLater()
-            ObjectStateRegistry.clear()
 
 
 def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1271,7 +1257,6 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         assert step_widget.table("match_plan").rowCount() == 2
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_enableable_only_updates_skip_table_rebuild() -> None:
@@ -1362,7 +1347,6 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
     None
 ):
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1481,12 +1465,10 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_inherited_table_combo_activation_materializes_child() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1573,12 +1555,10 @@ def test_source_bindings_inherited_table_combo_activation_materializes_child() -
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1661,12 +1641,10 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1793,7 +1771,6 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         assert registered == []
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_child_chrome_and_reset_use_flat_state_paths() -> None:
@@ -1845,7 +1822,6 @@ def test_source_bindings_child_chrome_and_reset_use_flat_state_paths() -> None:
         assert not source_widget.child_field_reset_button("bindings").font().underline()
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_child_provenance_label_grows_on_hover() -> None:
@@ -2240,7 +2216,6 @@ def test_source_bindings_editor_editing_inherited_table_makes_lazy_child_concret
 
 def test_source_bindings_child_reset_restores_lazy_inheritance_slot() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     state = ObjectState(FunctionStep(func=lambda image: image), scope_id="step")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -2296,14 +2271,12 @@ def test_source_bindings_child_reset_restores_lazy_inheritance_slot() -> None:
         )._dirty_label_state.is_dirty
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_child_reset_noops_for_already_inherited_table_preview() -> (
     None
 ):
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_filter = SourceFilterClause(
         SourceFileName,
@@ -2392,7 +2365,6 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
     finally:
         pipeline_manager.deleteLater()
         step_manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> None:
@@ -2605,7 +2577,6 @@ def test_source_filters_fit_complete_rows_and_bar_inside_scoped_section() -> Non
 
 def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_rule = MetadataExtractionRule(
         source=FromFileName,
@@ -2681,7 +2652,6 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_editor_explains_binding_selector_and_roles() -> None:
@@ -2923,7 +2893,6 @@ def test_inline_source_bindings_widget_updates_object_state() -> None:
 
 def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     state = ObjectState(FunctionStep(func=lambda image: image), scope_id="step")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -2999,14 +2968,12 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         assert "source_bindings.source_filters" in state.dirty_fields
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirty() -> (
     None
 ):
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     saved_filter = SourceFilterClause(
         SourceFileName,
         TextEquals,
@@ -3094,7 +3061,6 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         assert widget.child_field_label("source_filters")._dirty_label_state.is_dirty
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_inline_source_bindings_edit_flashes_changed_collection() -> None:
@@ -3323,7 +3289,6 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
     None
 ):
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     step = FunctionStep(
         func=lambda image: image,
         source_bindings=LazyStepSourceBindingsConfig(
@@ -3389,7 +3354,6 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
         assert value_item.font().underline()
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_inline_source_bindings_structural_path_flash_targets_table_cell() -> None:
@@ -3792,7 +3756,6 @@ def test_source_bindings_owner_flash_masks_descendant_fields() -> None:
 
 def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -3922,12 +3885,10 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_text_time_travel_restores_widget_value() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -4033,12 +3994,10 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         assert item.text() == "*_RNA"
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -4177,7 +4136,6 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_inline_source_bindings_uses_dataclass_groupbox_chrome() -> None:

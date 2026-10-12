@@ -9,11 +9,6 @@ from types import SimpleNamespace
 
 import pytest
 from objectstate.context_manager import config_context
-from objectstate import (
-    forget_stored_global_config,
-    get_live_global_config,
-    set_global_config,
-)
 
 import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.native_batch_contracts import NativeBatchRequest
@@ -30,7 +25,6 @@ from benchmark.matched_cellprofiler_batch import (
     _worker_axis_evidence,
 )
 from openhcs.core.config import (
-    GlobalPipelineConfig,
     MultiprocessingStartMethod,
     PipelineConfig,
 )
@@ -42,17 +36,6 @@ from benchmark.equivalence.runtime import (
     RuntimeTableSnapshot,
     runtime_measurement_equivalence,
 )
-
-
-@pytest.fixture(autouse=True)
-def restore_benchmark_global_context():
-    """Restore the global config a benchmark run replaced."""
-    previous = get_live_global_config(GlobalPipelineConfig)
-    yield
-    if previous is not None:
-        set_global_config(GlobalPipelineConfig, previous)
-    else:
-        forget_stored_global_config(GlobalPipelineConfig)
 
 
 @pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))

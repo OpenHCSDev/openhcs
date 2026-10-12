@@ -369,7 +369,6 @@ def test_production_code_has_no_unresolved_empty_step_source_config_shortcuts():
 
 
 def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     metadata_fields = (FieldSpec("Dose", float, required=False),)
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
@@ -385,19 +384,16 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(func=lambda image: image)
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(func=lambda image: image)
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.bindings == (binding,)
     assert snapshot.source_bindings.source_stack_components == (Microscopy.ZIndex,)
@@ -448,7 +444,6 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
 
 
 def test_enabled_step_source_bindings_compile_inherited_bindings():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
@@ -458,29 +453,25 @@ def test_enabled_step_source_bindings_compile_inherited_bindings():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(
-            func=lambda image: image,
-            source_bindings=LazyStepSourceBindingsConfig(enabled=True),
-        )
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(
+        func=lambda image: image,
+        source_bindings=LazyStepSourceBindingsConfig(enabled=True),
+    )
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.bindings == (binding,)
     assert snapshot.source_bindings.compiled_plan().bindings == (binding,)
 
 
 def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
@@ -493,19 +484,16 @@ def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(func=lambda image: image)
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(func=lambda image: image)
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.enabled is True
     assert snapshot.source_bindings.bindings == (binding,)

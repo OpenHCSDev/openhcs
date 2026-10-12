@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from objectstate import ObjectStateRegistry
 
 from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.session import CallerThread, Session
@@ -23,10 +22,8 @@ def headless_session() -> Session:
 def restart_session():
     """A headless session over an empty ObjectState registry."""
 
-    ObjectStateRegistry.clear()
     session = headless_session()
     try:
         yield session
     finally:
         close_session(session)
-        ObjectStateRegistry.clear()

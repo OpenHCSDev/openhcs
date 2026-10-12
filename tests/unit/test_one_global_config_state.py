@@ -16,7 +16,6 @@ import pytest
 from objectstate import (
     ObjectState,
     ObjectStateRegistry,
-    forget_stored_global_config,
     get_live_global_config,
     get_saved_global_config,
 )
@@ -102,12 +101,7 @@ class ServerStandIn:
 
 @pytest.fixture
 def empty_registry() -> Iterator[None]:
-    ObjectStateRegistry.clear()
-    try:
-        yield
-    finally:
-        ObjectStateRegistry.clear()
-        forget_stored_global_config(GlobalPipelineConfig)
+    yield
 
 
 def test_headless_session_keeps_one_global_state_until_it_closes(

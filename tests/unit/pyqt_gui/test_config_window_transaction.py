@@ -55,9 +55,7 @@ class _SecondConfig:
 
 @pytest.fixture(autouse=True)
 def _clear_object_state_registry():
-    ObjectStateRegistry.clear()
     yield
-    ObjectStateRegistry.clear()
 
 
 @pytest.fixture

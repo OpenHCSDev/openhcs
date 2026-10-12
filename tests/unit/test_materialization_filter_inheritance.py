@@ -3,7 +3,6 @@ from types import SimpleNamespace
 
 from objectstate import ObjectState
 from objectstate import set_global_config
-from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import ReadPreviousStep
 from openhcs.core.compiled_step_plan import (
@@ -68,7 +67,6 @@ def _resolved_checkpoint(
 
 
 def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None:
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator, effective_config, resolved, filters = _resolved_checkpoint(
         tmp_path / "plate"
@@ -135,7 +133,6 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
 
 
 def test_explicit_checkpoint_filter_overrides_inherited_workload(tmp_path) -> None:
-    ObjectStateRegistry.clear()
     set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator, _effective_config, resolved, filters = _resolved_checkpoint(
         tmp_path / "plate",

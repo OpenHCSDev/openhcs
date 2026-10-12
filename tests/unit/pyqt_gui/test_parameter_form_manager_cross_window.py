@@ -441,7 +441,6 @@ def test_local_structural_child_edit_uses_resolved_change_flash() -> None:
 def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> None:
     """Cross-window list[Enum] inheritance refreshes from structural ObjectState paths."""
     QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
 
     global_config = GlobalPipelineConfig()
     global_state = ObjectState(global_config, scope_id="")
@@ -499,4 +498,3 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
         assert group.has_placeholder_state()
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()

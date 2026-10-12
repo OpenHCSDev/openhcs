@@ -6,7 +6,6 @@ from multiprocessing import SimpleQueue
 import numpy as np
 import pytest
 import tifffile
-from objectstate import ObjectStateRegistry
 from objectstate import set_global_config
 
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
@@ -41,7 +40,6 @@ def channel_plate(tmp_path):
 
 
 def _execute_steps(plate, steps, output_root):
-    ObjectStateRegistry.clear()
     set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(

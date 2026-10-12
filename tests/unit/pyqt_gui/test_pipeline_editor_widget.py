@@ -120,7 +120,6 @@ def test_function_pattern_form_exposes_explicit_kwargs_outside_callable_signatur
     None
 ):
     qt_app()
-    ObjectStateRegistry.clear()
     step = FunctionStep(
         func=(
             correct_illumination_apply,
@@ -137,46 +136,42 @@ def test_function_pattern_form_exposes_explicit_kwargs_outside_callable_signatur
         name="CorrectIlluminationApply",
     )
 
-    try:
-        PipelineObjectStateBinding.update_plate_steps("plate", [step])
-        editor_state = PipelineObjectStateBinding.editor_state_for_plate("plate")
-        step_state = ObjectStateRegistry.get_by_scope(editor_state.step_scope_ids[0])
-        assert step_state is not None
-        [function_token] = step_state.metadata[FUNC_EDITOR_PATTERN_TOKENS_META_KEY]
-        child_state = ObjectStateRegistry.get_by_scope(
-            f"{step_state.scope_id}::{function_token}"
-        )
-        assert child_state is not None
-        manager = ParameterFormManager(
-            child_state,
-            FormManagerConfig(color_scheme=ColorScheme()),
-        )
+    PipelineObjectStateBinding.update_plate_steps("plate", [step])
+    editor_state = PipelineObjectStateBinding.editor_state_for_plate("plate")
+    step_state = ObjectStateRegistry.get_by_scope(editor_state.step_scope_ids[0])
+    assert step_state is not None
+    [function_token] = step_state.metadata[FUNC_EDITOR_PATTERN_TOKENS_META_KEY]
+    child_state = ObjectStateRegistry.get_by_scope(
+        f"{step_state.scope_id}::{function_token}"
+    )
+    assert child_state is not None
+    manager = ParameterFormManager(
+        child_state,
+        FormManagerConfig(color_scheme=ColorScheme()),
+    )
 
-        expected = {
-            "method",
-            "truncate_low",
-            "truncate_high",
-            "enabled",
-            "select_the_input_image",
-            "select_the_illumination_function",
-            "name_the_output_image",
-        }
-        assert expected <= set(manager.parameters)
-        assert expected <= set(manager.parameter_types)
-        entry = FunctionPatternCodeDocumentService().child_scope_entry(
-            child_state.scope_id
-        )
-        assert entry.func is correct_illumination_apply
-        assert entry.kwargs["name_the_output_image"] == "CorrectedStain1"
-    finally:
-        ObjectStateRegistry.clear()
+    expected = {
+        "method",
+        "truncate_low",
+        "truncate_high",
+        "enabled",
+        "select_the_input_image",
+        "select_the_illumination_function",
+        "name_the_output_image",
+    }
+    assert expected <= set(manager.parameters)
+    assert expected <= set(manager.parameter_types)
+    entry = FunctionPatternCodeDocumentService().child_scope_entry(
+        child_state.scope_id
+    )
+    assert entry.func is correct_illumination_apply
+    assert entry.kwargs["name_the_output_image"] == "CorrectedStain1"
 
 
 def test_step_code_mode_applies_callable_pattern_through_parameter_form() -> None:
     """A parsed FunctionStep can update the live form's Callable field."""
 
     qt_app()
-    ObjectStateRegistry.clear()
     original = FunctionStep(func=stack_percentile_normalize, name="Normalize")
     replacement = FunctionStep(
         func=(stack_percentile_normalize, {"low_percentile": 0.75}),
@@ -205,7 +200,6 @@ def test_step_code_mode_applies_callable_pattern_through_parameter_form() -> Non
     finally:
         if manager is not None:
             manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 class RuntimeCallable:
@@ -228,7 +222,6 @@ def runtime_with_settings(
 
 
 def test_pipeline_binding_replaces_one_step_before_returning_projection() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
     original = FunctionStep(func=runtime_with_settings, name="Original")
     PipelineObjectStateBinding.update_plate_steps(TEST_PLATE_SCOPE, [original])
@@ -253,7 +246,6 @@ def test_pipeline_binding_replaces_one_step_before_returning_projection() -> Non
 
 
 def test_step_registration_preserves_and_updates_nested_function_kwargs() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope("plate")
     initial_settings = RuntimeSettings(threshold=3)
     replacement_settings = RuntimeSettings(threshold=7)
@@ -334,7 +326,6 @@ def test_reconstructed_pipeline_save_notifies_only_edited_step() -> None:
     from openhcs.demo.synthetic_plate_pipeline import pipeline_steps
 
     plate_scope = "synthetic-plate"
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(plate_scope)
     events: list[tuple[str, set[str]]] = []
 
@@ -359,7 +350,6 @@ def test_reconstructed_pipeline_save_notifies_only_edited_step() -> None:
         assert events == [(editor_state.step_scope_ids[2], {"name"})]
     finally:
         ObjectStateRegistry.remove_resolved_changed_callback(record_change)
-        ObjectStateRegistry.clear()
 
 
 def test_reconstructed_pipeline_preserves_explicit_default_function_kwarg() -> None:
@@ -369,24 +359,20 @@ def test_reconstructed_pipeline_preserves_explicit_default_function_kwarg() -> N
         del threshold
         return image
 
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope("plate")
-    try:
-        PipelineObjectStateBinding.update_plate_steps(
-            "plate",
-            [
-                FunctionStep(
-                    func=(threshold_image, {"threshold": 1}),
-                    name="Threshold",
-                )
-            ],
-        )
+    PipelineObjectStateBinding.update_plate_steps(
+        "plate",
+        [
+            FunctionStep(
+                func=(threshold_image, {"threshold": 1}),
+                name="Threshold",
+            )
+        ],
+    )
 
-        reconstructed = PipelineObjectStateBinding.steps_for_plate("plate")
+    reconstructed = PipelineObjectStateBinding.steps_for_plate("plate")
 
-        assert reconstructed[0].func == (threshold_image, {"threshold": 1})
-    finally:
-        ObjectStateRegistry.clear()
+    assert reconstructed[0].func == (threshold_image, {"threshold": 1})
 
 
 def test_pipeline_diff_adds_and_removes_compile_time_function_kwarg() -> None:
@@ -395,34 +381,30 @@ def test_pipeline_diff_adds_and_removes_compile_time_function_kwarg() -> None:
     def process(image):
         return image
 
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope("plate")
-    try:
-        PipelineObjectStateBinding.update_plate_steps(
-            "plate",
-            [FunctionStep(func=process, name="Process")],
-        )
-        PipelineObjectStateBinding.update_plate_steps(
-            "plate",
-            [
-                FunctionStep(
-                    func=(process, {"artifact_name": "Nuclei"}),
-                    name="Process",
-                )
-            ],
-        )
+    PipelineObjectStateBinding.update_plate_steps(
+        "plate",
+        [FunctionStep(func=process, name="Process")],
+    )
+    PipelineObjectStateBinding.update_plate_steps(
+        "plate",
+        [
+            FunctionStep(
+                func=(process, {"artifact_name": "Nuclei"}),
+                name="Process",
+            )
+        ],
+    )
 
-        [with_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
-        assert with_identity.func == (process, {"artifact_name": "Nuclei"})
+    [with_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
+    assert with_identity.func == (process, {"artifact_name": "Nuclei"})
 
-        PipelineObjectStateBinding.update_plate_steps(
-            "plate",
-            [FunctionStep(func=process, name="Process")],
-        )
-        [without_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
-        assert without_identity.func is process
-    finally:
-        ObjectStateRegistry.clear()
+    PipelineObjectStateBinding.update_plate_steps(
+        "plate",
+        [FunctionStep(func=process, name="Process")],
+    )
+    [without_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
+    assert without_identity.func is process
 
 
 def test_step_registration_persists_function_editor_scope_tokens() -> None:
@@ -457,164 +439,152 @@ def test_step_registration_persists_function_editor_scope_tokens() -> None:
 
 
 def test_complete_pipeline_diff_preserves_reordered_and_edited_step_scopes() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
-    try:
-        PipelineObjectStateBinding.update_plate_steps(
-            TEST_PLATE_SCOPE,
-            [
-                FunctionStep(func=stack_percentile_normalize, name="Normalize"),
-                FunctionStep(func=correct_illumination_apply, name="Correct"),
-            ],
-        )
-        previous_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
-            TEST_PLATE_SCOPE
-        ).step_scope_ids
-        normalize_scope, correct_scope = previous_scope_ids
-        normalize_state = ObjectStateRegistry.get_by_scope(normalize_scope)
-        assert normalize_state is not None
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        [
+            FunctionStep(func=stack_percentile_normalize, name="Normalize"),
+            FunctionStep(func=correct_illumination_apply, name="Correct"),
+        ],
+    )
+    previous_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
+        TEST_PLATE_SCOPE
+    ).step_scope_ids
+    normalize_scope, correct_scope = previous_scope_ids
+    normalize_state = ObjectStateRegistry.get_by_scope(normalize_scope)
+    assert normalize_state is not None
 
-        PipelineObjectStateBinding.update_plate_steps(
-            TEST_PLATE_SCOPE,
-            [
-                FunctionStep(func=correct_illumination_apply, name="Correct"),
-                FunctionStep(func=stack_percentile_normalize, name="New normalize"),
-            ],
-        )
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        [
+            FunctionStep(func=correct_illumination_apply, name="Correct"),
+            FunctionStep(func=stack_percentile_normalize, name="New normalize"),
+        ],
+    )
 
-        replacement = PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
-        replacement_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
-            TEST_PLATE_SCOPE
-        ).step_scope_ids
-        assert replacement_scope_ids == (correct_scope, normalize_scope)
-        assert [
-            FunctionPatternCodeDocumentService.function_and_kwargs(step.func)[0]
-            for step in replacement
-        ] == [
-            correct_illumination_apply,
-            stack_percentile_normalize,
-        ]
-        assert replacement[1].name == "New normalize"
-        assert ObjectStateRegistry.get_by_scope(normalize_scope) is normalize_state
-        assert normalize_state.dirty_fields == {"name"}
-    finally:
-        ObjectStateRegistry.clear()
+    replacement = PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
+    replacement_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
+        TEST_PLATE_SCOPE
+    ).step_scope_ids
+    assert replacement_scope_ids == (correct_scope, normalize_scope)
+    assert [
+        FunctionPatternCodeDocumentService.function_and_kwargs(step.func)[0]
+        for step in replacement
+    ] == [
+        correct_illumination_apply,
+        stack_percentile_normalize,
+    ]
+    assert replacement[1].name == "New normalize"
+    assert ObjectStateRegistry.get_by_scope(normalize_scope) is normalize_state
+    assert normalize_state.dirty_fields == {"name"}
 
 
 def test_complete_pipeline_round_trip_preserves_repeated_step_scopes() -> None:
     from openhcs.demo.synthetic_plate_pipeline import pipeline_steps
 
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
-    try:
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        list(pipeline_steps),
+    )
+    original_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
+        TEST_PLATE_SCOPE
+    ).step_scope_ids
+    original_states = tuple(
+        ObjectStateRegistry.get_by_scope(scope_id)
+        for scope_id in original_scope_ids
+    )
+    original_steps = PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
+    ObjectStateRegistry.ensure_baseline_snapshot()
+    source = PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
+            pipeline_config=PipelineConfig(),
+            pipeline_steps=original_steps,
+        )
+    )
+    edited_steps = PipelineDocumentCodec.from_source(source).pipeline_steps
+    edited_steps[0] = copy(edited_steps[0])
+    edited_steps[0].name = "Launch Readiness Enhancement"
+
+    with ObjectStateRegistry.atomic("edit complete pipeline"):
         PipelineObjectStateBinding.update_plate_steps(
             TEST_PLATE_SCOPE,
-            list(pipeline_steps),
+            edited_steps,
         )
-        original_scope_ids = PipelineObjectStateBinding.editor_state_for_plate(
+
+    assert (
+        PipelineObjectStateBinding.editor_state_for_plate(
             TEST_PLATE_SCOPE
         ).step_scope_ids
-        original_states = tuple(
-            ObjectStateRegistry.get_by_scope(scope_id)
-            for scope_id in original_scope_ids
+        == original_scope_ids
+    )
+    assert all(
+        ObjectStateRegistry.get_by_scope(scope_id) is original_state
+        for scope_id, original_state in zip(
+            original_scope_ids,
+            original_states,
         )
-        original_steps = PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
-        ObjectStateRegistry.ensure_baseline_snapshot()
-        source = PipelineDocumentCodec.render(
-            PipelineDocumentCodec.from_values(
-                pipeline_config=PipelineConfig(),
-                pipeline_steps=original_steps,
-            )
-        )
-        edited_steps = PipelineDocumentCodec.from_source(source).pipeline_steps
-        edited_steps[0] = copy(edited_steps[0])
-        edited_steps[0].name = "Launch Readiness Enhancement"
-
-        with ObjectStateRegistry.atomic("edit complete pipeline"):
-            PipelineObjectStateBinding.update_plate_steps(
-                TEST_PLATE_SCOPE,
-                edited_steps,
-            )
-
-        assert (
-            PipelineObjectStateBinding.editor_state_for_plate(
-                TEST_PLATE_SCOPE
-            ).step_scope_ids
-            == original_scope_ids
-        )
-        assert all(
-            ObjectStateRegistry.get_by_scope(scope_id) is original_state
-            for scope_id, original_state in zip(
-                original_scope_ids,
-                original_states,
-            )
-        )
-        assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
-            pipeline_steps
-        )
-        assert ObjectStateRegistry.time_travel_back()
-        assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
-            pipeline_steps
-        )
-        assert (
-            PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)[0].name
-            == "Image Enhancement Processing"
-        )
-        assert ObjectStateRegistry.time_travel_forward()
-        assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
-            pipeline_steps
-        )
-        assert (
-            PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)[0].name
-            == "Launch Readiness Enhancement"
-        )
-    finally:
-        ObjectStateRegistry.clear()
+    )
+    assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
+        pipeline_steps
+    )
+    assert ObjectStateRegistry.time_travel_back()
+    assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
+        pipeline_steps
+    )
+    assert (
+        PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)[0].name
+        == "Image Enhancement Processing"
+    )
+    assert ObjectStateRegistry.time_travel_forward()
+    assert len(PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)) == len(
+        pipeline_steps
+    )
+    assert (
+        PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)[0].name
+        == "Launch Readiness Enhancement"
+    )
 
 
 def test_complete_pipeline_diff_adds_and_removes_only_changed_occurrences() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
-    try:
-        PipelineObjectStateBinding.update_plate_steps(
-            TEST_PLATE_SCOPE,
-            [
-                FunctionStep(func=stack_percentile_normalize, name="Normalize"),
-                FunctionStep(func=correct_illumination_apply, name="Correct"),
-            ],
-        )
-        normalize_scope, correct_scope = (
-            PipelineObjectStateBinding.editor_state_for_plate(
-                TEST_PLATE_SCOPE
-            ).step_scope_ids
-        )
-
-        PipelineObjectStateBinding.update_plate_steps(
-            TEST_PLATE_SCOPE,
-            [FunctionStep(func=correct_illumination_apply, name="Correct")],
-        )
-
-        assert PipelineObjectStateBinding.editor_state_for_plate(
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        [
+            FunctionStep(func=stack_percentile_normalize, name="Normalize"),
+            FunctionStep(func=correct_illumination_apply, name="Correct"),
+        ],
+    )
+    normalize_scope, correct_scope = (
+        PipelineObjectStateBinding.editor_state_for_plate(
             TEST_PLATE_SCOPE
-        ).step_scope_ids == (correct_scope,)
-        assert ObjectStateRegistry.get_by_scope(normalize_scope) is None
+        ).step_scope_ids
+    )
 
-        PipelineObjectStateBinding.update_plate_steps(
-            TEST_PLATE_SCOPE,
-            [
-                FunctionStep(func=correct_illumination_apply, name="Correct"),
-                FunctionStep(func=stack_percentile_normalize, name="Added"),
-            ],
-        )
-        correct_after_add, added_scope = (
-            PipelineObjectStateBinding.editor_state_for_plate(
-                TEST_PLATE_SCOPE
-            ).step_scope_ids
-        )
-        assert correct_after_add == correct_scope
-        assert added_scope not in {normalize_scope, correct_scope}
-    finally:
-        ObjectStateRegistry.clear()
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        [FunctionStep(func=correct_illumination_apply, name="Correct")],
+    )
+
+    assert PipelineObjectStateBinding.editor_state_for_plate(
+        TEST_PLATE_SCOPE
+    ).step_scope_ids == (correct_scope,)
+    assert ObjectStateRegistry.get_by_scope(normalize_scope) is None
+
+    PipelineObjectStateBinding.update_plate_steps(
+        TEST_PLATE_SCOPE,
+        [
+            FunctionStep(func=correct_illumination_apply, name="Correct"),
+            FunctionStep(func=stack_percentile_normalize, name="Added"),
+        ],
+    )
+    correct_after_add, added_scope = (
+        PipelineObjectStateBinding.editor_state_for_plate(
+            TEST_PLATE_SCOPE
+        ).step_scope_ids
+    )
+    assert correct_after_add == correct_scope
+    assert added_scope not in {normalize_scope, correct_scope}
 
 
 def test_step_registration_does_not_publish_runtime_artifact_parameters() -> None:
@@ -680,7 +650,6 @@ def test_step_registration_exposes_public_cellprofiler_settings_in_function_chil
 
 
 def test_pipeline_editor_root_preserves_only_text_and_step_scope_ids() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope("plate")
 
     steps = [
@@ -742,7 +711,6 @@ def test_pipeline_object_state_binding_public_surface_is_editor_list_only() -> N
 
 
 def test_groupby_none_is_concrete_object_state_override() -> None:
-    ObjectStateRegistry.clear()
 
     assert not (Ungrouped == None)  # noqa: E711
     assert not (None == Ungrouped)  # noqa: E711
@@ -1305,7 +1273,6 @@ def test_debug_toolbar_follows_the_current_dataset_compilation(tmp_path) -> None
 
 
 def test_pipeline_update_refreshes_existing_step_scope_state() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
     original = FunctionStep(
         name="IdentifyPrimaryObjects",
@@ -1325,7 +1292,6 @@ def test_pipeline_update_refreshes_existing_step_scope_state() -> None:
 
 
 def test_pipeline_update_transfers_existing_step_scope_token_for_reapply() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
     PipelineObjectStateBinding.update_plate_steps(
         TEST_PLATE_SCOPE, [FunctionStep(name="CountCells")]
@@ -1346,7 +1312,6 @@ def test_pipeline_update_transfers_existing_step_scope_token_for_reapply() -> No
 
 
 def test_pipeline_update_unregisters_removed_step_scopes() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(TEST_PLATE_SCOPE)
     PipelineObjectStateBinding.update_plate_steps(
         TEST_PLATE_SCOPE, [FunctionStep(name="First"), FunctionStep(name="Second")]

@@ -10,7 +10,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.authoring.session.datasets import write_dataset_scope_ids
@@ -67,7 +66,6 @@ def caller_session(**kwargs) -> Iterator[Session]:
     restored from a saved workspace.
     """
 
-    ObjectStateRegistry.clear()
     global_config = kwargs.pop("global_config", GlobalPipelineConfig())
     persisted = kwargs.pop("persisted_scope_ids", None)
     if persisted is not None:
@@ -84,7 +82,6 @@ def caller_session(**kwargs) -> Iterator[Session]:
     finally:
         close_session(session)
         _forget_progress(session)
-        ObjectStateRegistry.clear()
 
 
 def _forget_progress(session: Session) -> None:

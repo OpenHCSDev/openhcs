@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import pytest
 import tifffile
-from objectstate import ObjectStateRegistry
 from objectstate import set_global_config
 
 from openhcs.core.config import (
@@ -87,7 +86,6 @@ def test_template_crop_persists_each_source_channel(
     ]
     if first_step:
         steps = steps[1:]
-    ObjectStateRegistry.clear()
     queue = SimpleQueue()
     set_progress_queue(queue)
     try:

@@ -3,7 +3,6 @@
 from multiprocessing import SimpleQueue
 
 import numpy as np
-from objectstate import ObjectStateRegistry
 import tifffile
 
 from objectstate import set_global_config
@@ -67,7 +66,6 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         ),
     ]
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
         set_global_config(GlobalPipelineConfig, global_config)

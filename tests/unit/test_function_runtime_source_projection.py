@@ -17,8 +17,6 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 from objectstate import (
-    forget_stored_global_config,
-    get_live_global_config,
     set_global_config,
 )
 from polystore.virtual_workspace import SourcePixelRef
@@ -2150,24 +2148,12 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
     }
 
 
-@pytest.fixture
-def preserve_global_pipeline_context():
-    previous = get_live_global_config(GlobalPipelineConfig)
-    yield
-    if previous is not None:
-        set_global_config(GlobalPipelineConfig, previous)
-    else:
-        forget_stored_global_config(GlobalPipelineConfig)
-
-
 def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     tmp_path: Path,
-    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
     import tifffile
-    from objectstate import ObjectStateRegistry
 
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -2213,7 +2199,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         num_workers=1,
     )
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
         set_global_config(GlobalPipelineConfig, global_config)
@@ -3245,12 +3230,10 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
 
 def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     tmp_path: Path,
-    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
     import tifffile
-    from objectstate import ObjectStateRegistry
 
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.config import (
@@ -3308,7 +3291,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
         num_workers=1,
     )
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
         set_global_config(GlobalPipelineConfig, global_config)

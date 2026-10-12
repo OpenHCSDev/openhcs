@@ -164,69 +164,66 @@ def _compiler_contracts(
     ObjectStateRegistry.clear()
     pipeline_state = ObjectState(pipeline_config, scope_id="pipeline")
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        resolved_steps: list[FunctionStep] = []
-        step_states: dict[int, ObjectState] = {}
-        for index, step in enumerate(steps):
-            step_state = ObjectState(
-                step,
-                scope_id=f"pipeline::functionstep_{index}",
-                parent_state=pipeline_state,
-            )
-            ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-            resolved_step = step_state.to_saved_resolved_object()
-            assert isinstance(resolved_step, FunctionStep)
-            resolved_steps.append(resolved_step)
-            step_states[index] = step_state
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    resolved_steps: list[FunctionStep] = []
+    step_states: dict[int, ObjectState] = {}
+    for index, step in enumerate(steps):
+        step_state = ObjectState(
+            step,
+            scope_id=f"pipeline::functionstep_{index}",
+            parent_state=pipeline_state,
+        )
+        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+        resolved_step = step_state.to_saved_resolved_object()
+        assert isinstance(resolved_step, FunctionStep)
+        resolved_steps.append(resolved_step)
+        step_states[index] = step_state
 
-        context = executing_context(
-            step_plans={
-                index: CompiledStepPlan(
-                    step_index=index,
-                    step_name=step.name,
-                    axis_id="A01",
-                )
-                for index, step in enumerate(resolved_steps)
-            },
-            axis_id="A01",
-        )
-        session = CompilationSession.from_context(
-            context=context,
-            orchestrator=SimpleNamespace(
-                pipeline_config=pipeline_state.to_object(),
-            ),
-            global_config=global_config,
-            pipeline=ResolvedPipelineDefinition(
-                steps=resolved_steps,
-                step_scope_ids={
-                    index: state.scope_id for index, state in step_states.items()
-                },
-                step_provenance={index: {} for index, state in step_states.items()},
-            ),
-        )
-        provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
-            session.pipeline,
-        )
-        contracts: list[CallableContract] = []
-        for index, snapshot in enumerate(resolved_steps):
-            invocations = tuple(normalize_function_pattern(snapshot.func).iter_items())
-            assert len(invocations) == 1
-            plan = provider(
-                invocations[0],
-                ArtifactDeclarationStepContext(
-                    step_name=snapshot.name,
-                    step_index=index,
-                    source_bindings=snapshot.source_bindings,
-                    group_by=snapshot.processing_config.group_by,
-                    input_source=snapshot.processing_config.input_source,
-                ),
+    context = executing_context(
+        step_plans={
+            index: CompiledStepPlan(
+                step_index=index,
+                step_name=step.name,
+                axis_id="A01",
             )
-            assert plan is not None
-            contracts.append(plan.contract)
-        return tuple(contracts)
-    finally:
-        ObjectStateRegistry.clear()
+            for index, step in enumerate(resolved_steps)
+        },
+        axis_id="A01",
+    )
+    session = CompilationSession.from_context(
+        context=context,
+        orchestrator=SimpleNamespace(
+            pipeline_config=pipeline_state.to_object(),
+        ),
+        global_config=global_config,
+        pipeline=ResolvedPipelineDefinition(
+            steps=resolved_steps,
+            step_scope_ids={
+                index: state.scope_id for index, state in step_states.items()
+            },
+            step_provenance={index: {} for index, state in step_states.items()},
+        ),
+    )
+    provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+        session.pipeline,
+    )
+    contracts: list[CallableContract] = []
+    for index, snapshot in enumerate(resolved_steps):
+        invocations = tuple(normalize_function_pattern(snapshot.func).iter_items())
+        assert len(invocations) == 1
+        plan = provider(
+            invocations[0],
+            ArtifactDeclarationStepContext(
+                step_name=snapshot.name,
+                step_index=index,
+                source_bindings=snapshot.source_bindings,
+                group_by=snapshot.processing_config.group_by,
+                input_source=snapshot.processing_config.input_source,
+            ),
+        )
+        assert plan is not None
+        contracts.append(plan.contract)
+    return tuple(contracts)
 
 
 def test_artifact_contract_preserves_declared_input_occurrences() -> None:

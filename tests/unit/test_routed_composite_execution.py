@@ -6,7 +6,6 @@ from multiprocessing import SimpleQueue
 import numpy as np
 import pytest
 import tifffile
-from objectstate import ObjectStateRegistry
 from objectstate import set_global_config
 
 from openhcs.constants.input_source import ReadPipelineStart
@@ -118,7 +117,6 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
                 ),
             )
         )
-    ObjectStateRegistry.clear()
     set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(

@@ -26,7 +26,6 @@ class NoSelectionProvider(FunctionSelectionProviderABC):
 
 @pytest.fixture
 def step_editor(qapp, qtbot, monkeypatch):
-    ObjectStateRegistry.clear()
     monkeypatch.setattr(
         component_selection,
         "_component_selection_provider",
@@ -61,7 +60,6 @@ def step_editor(qapp, qtbot, monkeypatch):
     qtbot.waitUntil(lambda: bool(host.func_editor.function_panes))
     yield editor, host.func_editor
     host.close()
-    ObjectStateRegistry.clear()
 
 
 @pytest.mark.parametrize("value", [99.6, 99.8, 25])

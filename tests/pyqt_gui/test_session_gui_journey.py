@@ -11,7 +11,6 @@ import time
 from pathlib import Path
 
 import pytest
-from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 
@@ -22,7 +21,7 @@ from openhcs.authoring.session.operations.datasets import (
     RunDatasets,
 )
 from openhcs.authoring.session.lifetime import close_session, open_session
-from openhcs.authoring.session.session import DispatcherThread, Session
+from openhcs.authoring.session.session import DispatcherThread
 from openhcs.authoring.session.views import DatasetListView
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.pyqt_gui.config import get_default_ui_config
@@ -40,9 +39,7 @@ from tests.unit.pyqt_gui.session_harness import GuiServiceStub, release_widgets
 def fresh_object_state_registry():
     """The session starts from an empty dataset list."""
 
-    ObjectStateRegistry.clear()
     yield
-    ObjectStateRegistry.clear()
 
 
 def test_gui_journey_runs_the_same_operations_through_the_widgets(

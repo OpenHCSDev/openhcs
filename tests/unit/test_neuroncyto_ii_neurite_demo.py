@@ -172,7 +172,6 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
     )
 
     pipeline_config, steps = build_neuroncyto_ii_crossover_demo(inputs)
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
         set_global_config(
@@ -245,7 +244,6 @@ def test_neuroncyto_demo_executes_numeric_biological_well_identity(
     execution_step = copy(steps[0])
     execution_step.napari_streaming_config = LazyNapariStreamingConfig(enabled=False)
     steps = [execution_step]
-    ObjectStateRegistry.clear()
     progress_queue = SimpleQueue()
     set_progress_queue(progress_queue)
     try:

@@ -63,7 +63,6 @@ class UIConfigHost:
 
 
 def teardown_function() -> None:
-    ObjectStateRegistry.clear()
     ScopeWindowRegistry.clear()
 
 
@@ -747,14 +746,12 @@ def test_config_window_save_button_starts_disabled_and_styles_disabled_state(
         assert window.save_button.isEnabled()
     finally:
         window.close()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
     qapp,
 ) -> None:
     """Lazy inherited streaming configs still receive enableable dimming."""
-    ObjectStateRegistry.clear()
     ObjectStateRegistry.register(
         ObjectState(GlobalPipelineConfig(), scope_id=""), _skip_snapshot=True
     )
@@ -807,7 +804,6 @@ def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
             assert dimmed_widget.graphicsEffect() is not None
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_global_config_window_registers_with_stable_window_id() -> None:

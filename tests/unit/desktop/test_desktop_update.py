@@ -1294,7 +1294,6 @@ def test_restart_reconciles_saved_document_after_history_materialization(
         assert "blend_method" not in restored_entries[0][1]
         assert "target_max" not in restored_entries[1][1]
     finally:
-        ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(plate_scope)
 
 
