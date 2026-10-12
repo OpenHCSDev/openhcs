@@ -52,8 +52,8 @@ class EndpointLaunch(WireMessage):
 ```
 
 - `ZMQServer` holds its `EndpointLaunch` and reports it in every heartbeat (`PongResponse.launch`).
-- `code_root()` is a classmethod on clients and servers. Its default is the directory the class's top-level package is imported from. OpenHCS overrides it on both with `OpenHCSRuntimeImportAuthority.current().import_root`, the root its child processes are already launched from, so a client subclass defined in a script or a test is still this checkout's client.
-- **A client that starts a server** hands it the launch (`owner` = the client process, audience from `persistent`) and connects only if the server that becomes ready reports exactly that launch.
+- `code_root()` is a classmethod on clients and servers. Its default is the directory the class's top-level package is imported from. OpenHCS's client and server both inherit `ImportRootEndpoint` (`openhcs/runtime/import_authority.py`), which states `OpenHCSRuntimeImportAuthority.current().import_root`, the root its child processes are already launched from, so a client subclass defined in a script or a test is still this checkout's client.
+- **A client that starts a server** hands it the launch (`owner` = the client process, audience from `persistent`) as the launcher's `--launch` argument, which the launcher records with `ZMQServer.launched_by`. A launcher run by hand defaults to a server its own process started. The client connects only if the server that becomes ready reports exactly that launch.
 - **A client that attaches** (an occupied endpoint in `connect`, or `connect_existing`) is refused with `EndpointLaunchMismatchError` unless the server reports a launch, its `code_root` equals the client's, and its audience admits the client process. The error names both code roots and the owner.
 - The check applies to endpoints on this host. A remote TCP host is an endpoint the user named; its paths and process ids mean nothing here.
 - **Namespace.** `ZMQConfig.socket_root()` owns where socket and lock files live. `OpenHCSZMQConfig` derives it from the import root: `~/.openhcs/<first 8 hex digits of sha256(import root)>/`. Two checkouts no longer share addresses, so the refusal is the second line, not the normal case. `OPENHCS_SOCKET_ROOT` replaces the root for one process tree; it is read at each call, and child processes inherit it. An absolute `ipc_socket_dir` still selects an explicit directory.
@@ -110,3 +110,12 @@ A new kind of server (a viewer, a bridge) that must not be shared across checkou
 | `connect` kills the listener of an unresponsive TCP address before starting its own server | `zmqruntime/client.py` `_kill_processes_on_port`; the process may be another session's | zmqruntime (L3) |
 | The application version is compared after connecting, and only by `ZMQClientService` and the catalog client | `authoring/session/execution_client.py:202`; a plain client attaches to a same-root server of another version | U1 |
 | `viewer_endpoint_discovery.py:212` names an undefined `ViewerEndpointDiscoveryResult` | ruff F821 at this head | U4 |
+
+## Result
+
+- Production (`openhcs/`): -12 +102. The additions are the socket root, the launch argument, `with_private_server` and `ImportRootEndpoint`; nothing existed to delete, because the relation was missing. zmqruntime `src`: -5 +331.
+- Guards: `tests/unit/test_b7_server_isolation_guards.py`, 6 of 6 tests pass.
+- Certificates: the three harness `acquire` + client pairs, the test-chosen execution port and the hand-built socket directory are **derived** (`private_endpoint`, `socket_root`). The shared default port for a measured run with no port is **contract** (this surface's rule). No **tests-only** deletion.
+- Files of in-flight surfaces touched: `openhcs/agent/services/viewer_endpoint_discovery.py` (U4, one expression); `openhcs/runtime/zmq_execution_client.py`, `zmq_execution_server.py`, `zmq_execution_server_launcher.py` (near K7); `benchmark/openhcs_measured_run.py`, `well_throughput_scaling.py`, `matched_cellprofiler_batch.py` (near K1 and K8, client construction only).
+
+Release order: merge OpenHCSDev/ZMQRuntime#32 and release zmqruntime 0.6.2; point `external/zmqruntime` at that merge commit; merge this PR.
