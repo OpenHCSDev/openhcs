@@ -250,4 +250,35 @@ per package, then ObjectState and pyqt-reactive value plumbing (`TypeVar`).
 
 ## Gates
 
-Filled from the runs.
+Run on `4c81f2b29` (origin/main `a51f4eab1` merged).
+
+```
+verify_branch.sh a1:
+suite: = 15 failed, 11786 passed, 25 skipped, 350 warnings, 6 subtests passed in 1834.86s (0:30:34) =
+collected 11825, reported 11801, crash lines 0
+new vs known: 13
+only on a1:
+fails on both with a different error:
+
+parity (test_official30_compile_execute_and_match_native_references_over_zmq, heavy slot + official30.lock):
+1 passed in 1186.97s (0:19:46)
+
+smoke_local.sh:
+smoke pytest exit 0 (172 s): 7 passed, 2 warnings in 166.14s (0:02:46)
+smoke gui exit 0 (55 s):
+smoke rc=0
+
+guardrails_local.sh:
+ratchet openhcs exit 0
+ratchet scripts exit 0
+ratchet benchmark exit 0
+38 passed, 22 warnings in 73.59s (0:01:13)
+nra-r1 exit 0: "increased": []
+base a51f4eab135b8b56f55f048391497fa62015b41d head 4c81f2b29646ab1ef1025e700f9dc0062c62e685 guardrails rc=0
+```
+
+A first smoke run reported `smoke rc=1` (3 failed): two source files were edited while
+it ran, which invalidated the catalogue cache mid-run. The three tests pass alone and
+the full rerun above is on the unchanged tree. The first parity invocation ran the whole
+file; its napari and Fiji per-case viewer tests failed headless and were stopped, and
+the parity test was rerun alone.
