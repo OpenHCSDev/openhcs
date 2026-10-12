@@ -118,4 +118,4 @@ A new kind of server (a viewer, a bridge) that must not be shared across checkou
 - Certificates: the three harness `acquire` + client pairs, the test-chosen execution port and the hand-built socket directory are **derived** (`private_endpoint`, `socket_root`). The shared default port for a measured run with no port is **contract** (this surface's rule). No **tests-only** deletion.
 - Files of in-flight surfaces touched: `openhcs/agent/services/viewer_endpoint_discovery.py` (U4, one expression); `openhcs/runtime/zmq_execution_client.py`, `zmq_execution_server.py`, `zmq_execution_server_launcher.py` (near K7); `benchmark/openhcs_measured_run.py`, `well_throughput_scaling.py`, `matched_cellprofiler_batch.py` (near K1 and K8, client construction only).
 
-Release order: merge OpenHCSDev/ZMQRuntime#32 and release zmqruntime 0.6.2; point `external/zmqruntime` at that merge commit; merge this PR.
+Release order: merge OpenHCSDev/ZMQRuntime#32 and release zmqruntime 0.6.3 (0.6.2 went to the Windows startup-lock fix); point `external/zmqruntime` at that merge commit; merge this PR.
