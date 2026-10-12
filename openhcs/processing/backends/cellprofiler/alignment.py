@@ -522,6 +522,9 @@ class NumbaNumpyAlignmentBackendStrategy(AlignmentBackendStrategy):
         pixels = np.arange(16, dtype=np.float64).reshape((4, 4))
         mask = np.ones(pixels.shape, dtype=np.bool_)
         self.mutual_information_offset(pixels, pixels, mask, mask)
+        partial_mask = mask.copy()
+        partial_mask[0, 0] = False
+        self.mutual_information_offset(pixels, pixels, partial_mask, mask)
 
     def mutual_information_offset(
         self,

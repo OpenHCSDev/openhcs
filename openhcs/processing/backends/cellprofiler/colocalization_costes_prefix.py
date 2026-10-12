@@ -15,13 +15,9 @@ from openhcs.processing.backends.cellprofiler.colocalization_costes_prefix_numba
     _max_pair_numba,
     _pearson_below_threshold_numba,
     _prefix_pearson_from_count_numba,
-    _prefix_pearson_from_group_count_numba,
     _prefix_pearson_numba,
     _prefix_value_numba,
     _regression_line_numba,
-    _scaled_second_channel_costes_grouped_events_numba,
-    _scaled_second_channel_costes_numba,
-    _scaled_second_channel_costes_sorted_events_numba,
 )
 
 
@@ -115,71 +111,3 @@ class UnitIntervalDenseRankSemantics:
         dense = np.ascontiguousarray(lookup[codes], dtype=np.int64)
         values = np.flatnonzero(present).astype(np.float32, copy=False)
         return dense, (values / np.float32(scale)).astype(np.float64, copy=False)
-
-
-def quantized_unit_interval_event_summaries(
-    first: np.ndarray,
-    second: np.ndarray,
-    slope: float,
-    intercept: float,
-    preferred_scale: int,
-) -> (
-    tuple[
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-    ]
-    | None
-):
-    first_code_result = UnitIntervalDenseRankSemantics.integer_codes(
-        first,
-        preferred_scale=preferred_scale,
-    )
-    second_code_result = UnitIntervalDenseRankSemantics.integer_codes(
-        second,
-        preferred_scale=preferred_scale,
-    )
-    if first_code_result is None or second_code_result is None:
-        return None
-    first_codes, first_scale = first_code_result
-    second_codes, second_scale = second_code_result
-    first_dense, first_values = UnitIntervalDenseRankSemantics.dense_codes_and_values(
-        first_codes,
-        first_scale,
-    )
-    second_dense, second_values = UnitIntervalDenseRankSemantics.dense_codes_and_values(
-        second_codes,
-        second_scale,
-    )
-    second_value_count = second_values.size
-    combined = first_dense * second_value_count + second_dense
-    pair_counts = np.bincount(
-        combined,
-        minlength=first_values.size * second_value_count,
-    )
-    active_pairs = np.flatnonzero(pair_counts)
-    if active_pairs.size == 0:
-        return None
-    first_index = active_pairs // second_value_count
-    second_index = active_pairs - first_index * second_value_count
-    counts = pair_counts[active_pairs].astype(np.float64, copy=False)
-    first_pair_values = first_values[first_index]
-    second_pair_values = second_values[second_index]
-    event_thresholds = np.minimum(
-        second_pair_values,
-        slope * first_pair_values + intercept,
-    )
-    unique_events, inverse = np.unique(event_thresholds, return_inverse=True)
-    return (
-        unique_events,
-        np.bincount(inverse, weights=counts).astype(np.int64, copy=False),
-        np.bincount(inverse, weights=counts * first_pair_values),
-        np.bincount(inverse, weights=counts * second_pair_values),
-        np.bincount(inverse, weights=counts * first_pair_values * first_pair_values),
-        np.bincount(inverse, weights=counts * second_pair_values * second_pair_values),
-        np.bincount(inverse, weights=counts * first_pair_values * second_pair_values),
-    )

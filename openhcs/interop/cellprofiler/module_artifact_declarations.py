@@ -40,6 +40,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLineageArtifactType,
 )
 from openhcs.core.callable_contract import (
+    CallableProjection,
     CallableContract,
     ImagePayloadConsumption,
 )
@@ -741,9 +742,9 @@ class MeasurementArtifactOutputModule(CellProfilerModule):
             for artifact_input in artifact_inputs.specs
         )
         invocation_domain_inputs = cls.invocation_domain_inputs(
-            CallableContract.from_prepared_callable(
+            CallableProjection.from_callable(
                 cls.require_callable(invocation_key.function_name)
-            ),
+            ).declared_contract(),
             artifact_inputs.specs,
         )
         return (

@@ -15,7 +15,6 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
     _histogram_range_numba,
     _isodata_threshold_numba,
     _mean_threshold_numba,
-    _minimum_cross_entropy_threshold_numba,
     _minimum_threshold_numba,
     _multiotsu_three_class_thresholds_numba,
     _otsu_threshold_numba,

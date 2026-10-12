@@ -1447,6 +1447,8 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
         )
         thresholded_colocalization_metrics(first, second, 15.0, True, True, True)
         self.linear_costes(first, second, 255, False)
+        # Positively correlated channels take the sorted-events search.
+        self.linear_costes(first, np.sqrt(first), 255, False)
         quantized_codes = np.arange(64 * 64, dtype=np.uint16) % 512 + 1024
         quantized = quantized_codes.astype(np.float32) / np.float32(65535)
         self.scaled_second_channel_costes(quantized, quantized.copy(), 255)

@@ -64,7 +64,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable_contract import KeywordRuntimeParameter, processing_prepare
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
@@ -3264,3 +3264,11 @@ class IdentifyDeadWormsModule(
             parse_cellprofiler_float,
         ),
     )
+
+
+@processing_prepare(untangle_worms, untangle_worms_with_overlap, untangle_worms_both)
+def prepare_untangle_worms() -> None:
+    """Compile the ordered-thinning kernel before a worm pipeline runs."""
+    mask = np.zeros((16, 16), dtype=bool)
+    mask[4:12, 3:13] = True
+    skeletonize_worm_mask(mask)
