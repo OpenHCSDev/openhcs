@@ -161,6 +161,46 @@ ObjectState submodule at the start of the gate run: `02393c4aa482da320b5c5299459
   ObjectState submodule at the end: `02393c4aa482da320b5c529945968020ce14adc4`
   (same as at the start).
 
+## Order-dependent errors in a replayed worker order
+
+- `fixture 'restart_session' not found` (four tests of
+  `tests/unit/desktop/test_desktop_restart.py`) is not a leaked session and not ours.
+  Minimal order: `tests/unit/desktop/test_desktop_restart_worker.py
+  tests/unit/test_orchestrator_lane_planning.py tests/unit/desktop/test_desktop_restart.py`
+  as explicit file arguments (any desktop file, any file of another directory, then a
+  desktop file that uses the conftest fixture). A bare three-file project reproduces
+  it with plugin autoload off. Cause, pytest 9.1.1: conftest fixtures are attached to
+  the first `Directory` node collected for the conftest's directory
+  (`_pytest/fixtures.py`, `_pending_conftests.pop`) and matched by node identity
+  (`_matchfactories`); when a file of another directory comes between two files of
+  one directory on the command line, the second file gets a new `Directory` node and
+  no longer sees them. The suite passes directories (`pytest tests/unit tests/core
+  -n 2 --dist loadfile`); every xdist worker collects those same arguments, so each
+  directory is one node and the error cannot occur there. A worker's order is
+  therefore replayed with directory arguments and a reordering plugin
+  (`.claude/os4b/replay_order.py`, untracked), not with file arguments.
+- `tests/unit/desktop/test_desktop_update.py` imported `headless_session` from the
+  directory's `conftest`; it now lives in `tests/unit/desktop/sessions.py`. (This was
+  not the cause of the error above.)
+- `tests/unit/test_family_registries_restored.py` failed at import on this branch
+  (two ObjectState 3.x names and a fixture removed in `c7bde7c74`): a collection
+  error for the suite. Its last test now runs `restored_object_states`.
+
+## Not done, candidates
+
+- `build_server(context=None)` (`openhcs/mcp/server.py`) and
+  `build_http_server(context=None)` (`openhcs/mcp/http.py`) still create a context
+  nobody can close when called without one (test call sites only; production passes
+  one). Traced over the 66 unit test files that build a server, a context or a
+  session: no test leaves a session open.
+- `ObjectStateRegistry.unregister(state)` removes whatever is registered under the
+  state's scope, not that state; `Session.close()` therefore checks identity first.
+  The check belongs in ObjectState.
+- `empty_registry` in `tests/unit/test_one_global_config_state.py` and
+  `test_replaced_global_config_reaches_registered_states.py` is a fixture that does
+  nothing since `restored_object_states`.
+- `OpenHCSMainWindow.on_session_event` is a `singledispatchmethod` over event types.
+
 ## Remaining (for the next agent)
 
 1. Decide the 29: rerun the suite with nothing else running; if they persist, find the
@@ -173,3 +213,18 @@ ObjectState submodule at the start of the gate run: `02393c4aa482da320b5c5299459
 3. The plan-inspection gateway receives the child's objects through `singledispatch`;
    the coordinator is replacing that with a message family the child constructs.
 4. Open the PR (non-draft) once the suite is clean. Do not merge.
+
+## Session-owner sub-job: observed results (head `b752458d3` plus this receipt)
+
+- Unit set (`-n 2 --dist loadfile`: `test_one_global_config_state.py`, `tests/unit/desktop`,
+  `agent/test_mcp_server.py`, `test_mcp_http.py`, `test_mcp_stdio_transport.py`,
+  `test_mcp_bounded_discovery.py`, `pyqt_gui/test_main_config_propagation.py`,
+  `test_application_cleanup.py`, `test_ui_agent_bridge.py`, `test_benchmark_control.py`,
+  `test_replaced_global_config_reaches_registered_states.py`): `514 passed, 1 skipped`.
+- Integration (`test_session_journey.py`, `test_compiled_artifact_inspection.py`,
+  `test_agent_observation_export_zmq.py`, `tests/pyqt_gui/test_session_gui_journey.py`):
+  `15 passed`.
+- Replay of the first 158 files of worker gw0's order, one process, directory
+  arguments plus the reordering plugin: `2 failed, 4222 passed, 4 skipped, 7553 deselected`;
+  the two are the ids in `known.fail`. The same order with file arguments gave
+  19 failed and 4 errors before this sub-job.
