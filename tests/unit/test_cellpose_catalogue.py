@@ -6,24 +6,24 @@ import pytest
 
 pytest.importorskip("cellpose", reason="Cellpose is an optional dependency")
 
-from openhcs.agent.services.function_catalog_service import (  # noqa: E402
+from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
 )
-from openhcs.core.function_reference import (  # noqa: E402
+from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentCodec  # noqa: E402
-from openhcs.core.steps.function_step import FunctionStep  # noqa: E402
-from openhcs.processing.backends.lib_registry.cellpose_registry import (  # noqa: E402
+from openhcs.core.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.lib_registry.cellpose_registry import (
     CellposeRegistry,
 )
-from openhcs.processing.backends.lib_registry.derived import (  # noqa: E402
+from openhcs.processing.backends.lib_registry.derived import (
     cellpose as derived,
 )
-from openhcs.processing.backends.lib_registry.registry_service import (  # noqa: E402
+from openhcs.processing.backends.lib_registry.registry_service import (
     RegistryService,
 )
-from openhcs.utils.environment import OpenHCSProcessEnvironment  # noqa: E402
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 NAMES = sorted(derived.library.functions)
 

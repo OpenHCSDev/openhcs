@@ -10,12 +10,12 @@ import pytest
 
 pytest.importorskip("cellpose", reason="Cellpose is an optional dependency")
 
-from cellpose import denoise, models  # noqa: E402
+from cellpose import denoise, models
 
-from openhcs.processing.backends.lib_registry.derived import (  # noqa: E402
+from openhcs.processing.backends.lib_registry.derived import (
     cellpose as derived,
 )
-from openhcs.processing.backends.lib_registry.model_library import (  # noqa: E402
+from openhcs.processing.backends.lib_registry.model_library import (
     Call,
     Derived,
     Forwarded,

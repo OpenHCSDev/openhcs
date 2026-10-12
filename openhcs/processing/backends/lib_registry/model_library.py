@@ -770,4 +770,4 @@ class DerivedLibraryRegistry(LibraryRegistryBase):
     def public_projection_module(self, metadata: FunctionMetadata) -> None:
         """Derived functions are imported from the declaration module itself."""
 
-        return None
+        return
