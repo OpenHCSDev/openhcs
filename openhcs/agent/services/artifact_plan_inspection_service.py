@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from functools import singledispatch
 import logging
 import multiprocessing
+from multiprocessing.connection import Connection
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -195,18 +195,13 @@ class ChildProcessCompileInspectionGateway(CompileInspectionGatewayABC):
         child.start()
         to_parent.close()
         try:
-            while True:
-                try:
-                    sent = from_child.recv()
-                except EOFError:
-                    child.join()
-                    raise RuntimeError(
-                        "The inspection compile process ended with exit code "
-                        f"{child.exitcode} before it sent a plan."
-                    ) from None
-                result = _arrived_from_child(sent, request)
-                if result is not None:
-                    return result
+            return plan_sent_by_child(from_child, request)
+        except EOFError:
+            child.join()
+            raise RuntimeError(
+                "The inspection compile process ended with exit code "
+                f"{child.exitcode} before it sent a plan."
+            ) from None
         finally:
             from_child.close()
             if child.is_alive():
@@ -225,47 +220,95 @@ class ChildCompileInspectionError(AgentFacingErrorMixin, Exception):
         return self._error
 
 
-@singledispatch
-def _arrived_from_child(
-    sent: object, request: CompileInspectionInput
-) -> CompileInspectionResult | None:
-    """Act on one object the child sent; return the plan when this is it."""
+class SentByCompileChild(ABC):
+    """One thing the compile child tells its parent over the pipe.
 
-    raise TypeError(f"The inspection compile process sent {type(sent).__name__}.")
+    The child knows what it is sending when it sends it, so it sends that
+    knowledge: a member of this family. A new kind of message is a new subclass;
+    the parent only ever calls ``deliver``.
+    """
+
+    __slots__ = ()
+
+    @classmethod
+    def received(cls, from_child: Connection) -> "SentByCompileChild":
+        """The next message on the pipe; anything else is a protocol error."""
+
+        sent = from_child.recv()
+        if not isinstance(sent, cls):
+            raise CompileChildProtocolError(
+                f"The inspection compile process sent {type(sent).__name__}, "
+                f"which is not a {cls.__name__}."
+            )
+        return sent
+
+    @abstractmethod
+    def deliver(self, request: CompileInspectionInput) -> CompileInspectionResult | None:
+        """Act on this message in the parent; return the plan when it carries it."""
 
 
-@_arrived_from_child.register
-def _(sent: CompileInspectionResult, request: CompileInspectionInput):
-    return sent
+class CompileChildProtocolError(RuntimeError):
+    """The compile child sent something that is not a message of the family."""
 
 
-@_arrived_from_child.register
-def _(sent: ProgressEvent, request: CompileInspectionInput) -> None:
-    request.progress_queue.put(sent)
+@dataclass(frozen=True, slots=True)
+class PlanCompiled(SentByCompileChild):
+    result: CompileInspectionResult
+
+    def deliver(self, request: CompileInspectionInput) -> CompileInspectionResult:
+        return self.result
 
 
-@_arrived_from_child.register
-def _(sent: EndpointStartupStatus, request: CompileInspectionInput) -> None:
-    sent.publish()
+@dataclass(frozen=True, slots=True)
+class ProgressReported(SentByCompileChild):
+    event: ProgressEvent
+
+    def deliver(self, request: CompileInspectionInput) -> None:
+        request.progress_queue.put(self.event)
 
 
-@_arrived_from_child.register
-def _(sent: AgentError, request: CompileInspectionInput) -> None:
-    raise ChildCompileInspectionError(sent)
+@dataclass(frozen=True, slots=True)
+class StartupStatusReported(SentByCompileChild):
+    status: EndpointStartupStatus
+
+    def deliver(self, request: CompileInspectionInput) -> None:
+        self.status.publish()
+
+
+@dataclass(frozen=True, slots=True)
+class CompileFailed(SentByCompileChild):
+    error: AgentError
+
+    def deliver(self, request: CompileInspectionInput) -> None:
+        raise ChildCompileInspectionError(self.error)
+
+
+def plan_sent_by_child(
+    from_child: Connection, request: CompileInspectionInput
+) -> CompileInspectionResult:
+    """Deliver the child's messages as they arrive until one of them is the plan.
+
+    ``EOFError`` means the child closed the pipe without sending one.
+    """
+
+    while True:
+        plan = SentByCompileChild.received(from_child).deliver(request)
+        if plan is not None:
+            return plan
 
 
 class ProgressSentToParent(ProgressQueue):
     """The child's progress queue: every event goes to the parent as it is put."""
 
-    def __init__(self, to_parent) -> None:
+    def __init__(self, to_parent: Connection) -> None:
         self._to_parent = to_parent
 
     def put(self, event: ProgressEvent) -> None:
-        self._to_parent.send(event)
+        self._to_parent.send(ProgressReported(event))
 
 
 def _compile_inspection_in_child(
-    to_parent,
+    to_parent: Connection,
     plate: Path,
     pipeline_source: str,
     global_pipeline_config: GlobalPipelineConfig,
@@ -277,7 +320,9 @@ def _compile_inspection_in_child(
     import openhcs.processing.func_registry as func_registry
 
     try:
-        with EndpointStartupStatus.callback_scope(to_parent.send):
+        with EndpointStartupStatus.callback_scope(
+            lambda status: to_parent.send(StartupStatusReported(status))
+        ):
             if func_registry.pipeline_source_requires_import_projection(
                 pipeline_source
             ):
@@ -294,9 +339,9 @@ def _compile_inspection_in_child(
                 )
             )
     except Exception as error:
-        to_parent.send(_compile_inspection_error(error))
+        to_parent.send(CompileFailed(_compile_inspection_error(error)))
     else:
-        to_parent.send(compiled)
+        to_parent.send(PlanCompiled(compiled))
 
 
 @dataclass(frozen=True, slots=True)
