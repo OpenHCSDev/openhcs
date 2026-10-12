@@ -217,6 +217,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                         continue
                     scope = invocation.contract.execution_scope
                     try:
+                        module_type.validate_compilation(invocation)
                         invocation_blocks, consumed_kwarg_names = (
                             module_type.module_blocks_for_invocation(
                                 invocation=invocation,

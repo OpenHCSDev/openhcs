@@ -13,6 +13,7 @@ from benchmark.converter.compatibility_matrix import (
     build_cellprofiler_compatibility_report_for_manifests,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.module_settings import (
     SettingBound,
 )
@@ -21,7 +22,10 @@ from openhcs.interop.cellprofiler.module_settings import (
 def test_compatibility_matrix_accounts_for_absorbed_modules() -> None:
     report = build_cellprofiler_compatibility_report(corpus_cases=())
 
-    assert len(report.modules) == 91
+    assert sorted(module.module_name for module in report.modules) == sorted(
+        module_type.require_module_name()
+        for module_type in CellProfilerModule.__registry__.values()
+    )
     assert all(
         module.importable or module.is_infrastructure for module in report.modules
     )

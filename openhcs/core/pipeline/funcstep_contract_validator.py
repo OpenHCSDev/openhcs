@@ -453,6 +453,23 @@ class FuncStepContractValidator:
         Raises:
             ValueError: If the external library required by the function is not installed
         """
+        from openhcs.processing.backends.lib_registry.openhcs_registry import (
+            distributions_not_installed,
+            install_command_for_distributions,
+        )
+
+        # A file's declared distributions name the extra that installs them.
+        not_installed = distributions_not_installed(func)
+        if not_installed:
+            raise ValueError(
+                missing_external_library_error(
+                    func.__name__,
+                    step_name,
+                    ", ".join(not_installed),
+                    install_command_for_distributions(not_installed),
+                )
+            )
+
         # Get the module name from the function
         module_name = func.__module__
         if module_name is None:

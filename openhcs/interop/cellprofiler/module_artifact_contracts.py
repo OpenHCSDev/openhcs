@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts.plans import (
@@ -41,6 +41,35 @@ if TYPE_CHECKING:
     )
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.core.pipeline.artifact_planning import ArtifactProducer
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactInputReference:
+    """One module block's reference to a named input artifact."""
+
+    module: "ModuleBlock"
+    name: str
+    artifact_type: type[ArtifactType]
+
+
+class UnknownArtifactInput(ValueError):
+    """A module block names an input artifact that nothing before it provides.
+
+    ``reference`` says which block reads which artifact. Callers that re-raise
+    an error with added context build it from the message alone, so such a
+    copy has no reference.
+    """
+
+    reference: ArtifactInputReference | None = None
+
+    @classmethod
+    def for_reference(cls, reference: ArtifactInputReference) -> "UnknownArtifactInput":
+        error = cls(
+            f"Module {reference.module.name} references unknown "
+            f"{reference.artifact_type.value} artifact {reference.name!r}."
+        )
+        error.reference = reference
+        return error
 
 
 class UniqueReturnSlots:
@@ -855,21 +884,21 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         )
 
     @classmethod
-    def require_available_artifact_input(
+    def available_artifact_input_specs(
         cls,
-        module: "ModuleBlock",
-        *,
-        binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
+        artifact_type: type[ArtifactType],
+        *,
         step_context: "ArtifactDeclarationStepContext",
-    ) -> ArtifactSpec:
-        """Return one exact context-owned input artifact or fail."""
+    ) -> tuple[ArtifactSpec, ...]:
+        """Return the distinct declarations that provide one named input here.
 
-        artifact_type = binding.require_artifact_type()
-        input_ref = ArtifactSpec.input(name, artifact_type).ref()
+        A source binding, the scoped main flow and earlier producers are the
+        only providers of an input artifact.
+        """
+
         source_binding = step_context.source_bindings.binding_for_artifact_ref(
-            input_ref
+            ArtifactSpec.input(name, artifact_type).ref()
         )
         main_flow_spec = step_context.main_flow_artifacts.by_name_and_artifact_type(
             name,
@@ -882,13 +911,64 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
                 step_context=step_context,
             )
         )
-        candidates = ArtifactSpecCollection(
+        return ArtifactSpecCollection(
             (
                 *((source_binding.input_spec(),) if source_binding is not None else ()),
                 *((main_flow_spec,) if main_flow_spec is not None else ()),
                 *producer_specs,
             )
         ).unique(conflict_context="available artifact input")
+
+    @classmethod
+    def block_in_artifact_context(
+        cls,
+        module: "ModuleBlock",
+        *,
+        step_context: "ArtifactDeclarationStepContext",
+    ) -> "ModuleBlock":
+        """Return the block whose rows this declaration reads in ``step_context``.
+
+        A declared module's setting rows already say which artifacts it reads.
+        """
+
+        del cls, step_context
+        return module
+
+    @classmethod
+    def block_providing_artifact(
+        cls,
+        module: "ModuleBlock",
+        *,
+        name: str,
+        artifact_type: type[ArtifactType],
+    ) -> "ModuleBlock | None":
+        """Return ``module`` extended to provide an artifact a later module reads.
+
+        A declared module's outputs are exactly the ones its setting rows name,
+        so it never gains one.
+        """
+
+        del cls, module, name, artifact_type
+        return None
+
+    @classmethod
+    def require_available_artifact_input(
+        cls,
+        module: "ModuleBlock",
+        *,
+        binding: SettingToKeywordBinding,
+        name: str,
+        invocation_key: "FunctionInvocationKey",
+        step_context: "ArtifactDeclarationStepContext",
+    ) -> ArtifactSpec:
+        """Return one exact context-owned input artifact or fail."""
+
+        artifact_type = binding.require_artifact_type()
+        candidates = cls.available_artifact_input_specs(
+            name,
+            artifact_type,
+            step_context=step_context,
+        )
         if len(candidates) == 1:
             return cls.bind_artifact_input(binding, candidates[0])
         if len(candidates) > 1:
@@ -931,9 +1011,8 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
                 f"{artifact_type.value}, but current artifacts "
                 f"declare types {conflicting_types!r}."
             )
-        raise ValueError(
-            f"Module {module.name} references unknown "
-            f"{artifact_type.value} artifact {name!r}."
+        raise UnknownArtifactInput.for_reference(
+            ArtifactInputReference(module, name, artifact_type)
         )
 
     @classmethod

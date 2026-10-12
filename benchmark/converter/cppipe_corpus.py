@@ -54,8 +54,12 @@ def in_tree_cppipe_corpus() -> tuple[CPPipeCorpusCase, ...]:
             name="ExampleFly",
             cppipe_path=pipelines_dir / "ExampleFly.cppipe",
             status=CPPipeCorpusStatus.KNOWN_INVALID,
+            # LoadData has no declaration and names its images in a CSV file,
+            # not in its settings, so the images later modules read have no
+            # provider the importer can derive.
             expected_error_substring=(
-                "No CellProfiler module declaration is registered for 'LoadData'"
+                "Module IdentifyPrimaryObjects references unknown image artifact "
+                "'OrigBlue'"
             ),
         ),
         CPPipeCorpusCase(
