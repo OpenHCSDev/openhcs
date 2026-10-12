@@ -19,6 +19,7 @@ from openhcs.processing.backends.lib_registry.model_library import (
     Library,
     Measurements,
     Pixels,
+    Required,
     Resource,
     Stated,
     Supplied,
@@ -296,6 +297,20 @@ def test_preparation_builds_the_default_resource_once_for_all_functions():
     for function in library.functions.values():
         function.__openhcs_prepare__()
     assert BUILT == [("small", 2)]
+
+
+def test_a_required_control_has_no_default_and_leaves_nothing_to_prepare():
+    library = _library(name=Required(str, str.upper))
+    scale = _scaling(library)
+    name = inspect.signature(scale).parameters["name"]
+    assert (name.annotation, name.default) == (str, inspect.Parameter.empty)
+    scale.__openhcs_prepare__()
+    assert BUILT == []
+    stack = np.ones((1, 2, 2), np.float32)
+    with pytest.raises(TypeError, match="name"):
+        scale(stack)
+    scale(stack, name="large")
+    assert BUILT == [("LARGE", 2)]
 
 
 # ---- the registry --------------------------------------------------------------

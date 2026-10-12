@@ -100,8 +100,12 @@ def test_agent_catalogue_lists_every_control_with_type_default_and_description(
     for control in controls:
         parameter = described[control.name]
         assert parameter.annotation and "Any" not in parameter.annotation
-        assert parameter.default_repr in (repr(control.default), str(control.default))
-        assert not parameter.required
+        assert parameter.required == (control.default is inspect.Parameter.empty)
+        if not parameter.required:
+            assert parameter.default_repr in (
+                repr(control.default),
+                str(control.default),
+            )
         if control.text:
             assert control.text.startswith((parameter.description or "\0")[:40])
     models = (

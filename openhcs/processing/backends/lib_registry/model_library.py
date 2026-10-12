@@ -255,6 +255,16 @@ class Stated(Statement):
         }
 
 
+class Required(Stated):
+    """A stated control the user must give: the library's default cannot work."""
+
+    def controls(self, site):
+        return (site.control(self.annotation, inspect.Parameter.empty),)
+
+    def arguments(self, site, values, images):
+        return {site.name: self.to_library(values[site.name])}
+
+
 _SHARED_RESOURCES: dict[tuple, object] = {}
 
 
@@ -565,15 +575,18 @@ class Library:
                 f"{self.module}.{name}: more than one library parameter is named "
                 f"{repeated}."
             )
+        # Controls are keyword-only: a required one may follow the library's defaults.
         signature = inspect.Signature(
             [
                 inspect.Parameter(
                     control.name,
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.KEYWORD_ONLY
+                    if position
+                    else inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     default=control.default,
                     annotation=control.annotation,
                 )
-                for control in controls
+                for position, control in enumerate(controls)
             ]
         )
         whole_stack = self.one_image_when_set
@@ -601,6 +614,13 @@ class Library:
                 *(output.value(per_image) for output in outputs),
             )
 
+        def prepare() -> None:
+            """Build the default resources; a required control leaves none to build."""
+
+            defaults = {control.name: control.default for control in call.controls}
+            if inspect.Parameter.empty not in defaults.values():
+                call.arguments(defaults, None)
+
         target = call.target
         summary = (inspect.getdoc(target) or "").partition("\n")[0]
         derived.__name__ = derived.__qualname__ = name
@@ -621,9 +641,7 @@ class Library:
         return numpy_function(
             artifact_outputs(*(output.spec() for output in outputs))(derived),
             contract=Pure3DContract,
-            prepare=lambda: call.arguments(
-                {control.name: control.default for control in call.controls}, None
-            ),
+            prepare=prepare,
         )
 
 

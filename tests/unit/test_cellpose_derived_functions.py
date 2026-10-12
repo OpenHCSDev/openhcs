@@ -12,6 +12,7 @@ pytest.importorskip("cellpose", reason="Cellpose is an optional dependency")
 
 from cellpose import denoise, models
 
+from openhcs.core.vfs_protocol import PlateInputFile
 from openhcs.processing.backends.lib_registry.derived import (
     cellpose as derived,
 )
@@ -20,6 +21,7 @@ from openhcs.processing.backends.lib_registry.model_library import (
     Derived,
     Forwarded,
     ImageStack,
+    Required,
     Resource,
     Stated,
     Supplied,
@@ -102,7 +104,9 @@ def test_no_control_is_typed_any_and_every_default_is_cellposes():
                 assert control.annotation is not Any
                 assert control.annotation is not inspect.Parameter.empty
                 library_default = site.parameter.default
-                if isinstance(statement, Stated) and control.default is not None:
+                if isinstance(statement, Required):
+                    assert control.default is inspect.Parameter.empty
+                elif isinstance(statement, Stated) and control.default is not None:
                     assert statement.to_library(control.default) == (
                         models.normalize_default
                         if control.name == "normalize"
@@ -265,8 +269,24 @@ def test_segment_estimating_diameter_equals_cellpose(stack):
     _assert_rows(outputs[-1], diameter=diameters)
 
 
-def test_estimate_diameter_equals_cellpose(stack, nuclei):
-    image, rows = derived.estimate_diameter(
+def test_estimate_diameter_with_a_built_in_model_equals_cellpose(stack):
+    image, rows = derived.estimate_diameter(stack, model_type=NUCLEI, channels=(0, 0))
+    diameters, from_style = models.Cellpose(model_type="nuclei").sz.eval(
+        list(stack), channels=[0, 0]
+    )
+    assert np.array_equal(image, stack)
+    assert all(diameter > 0 for diameter in diameters)
+    _assert_rows(rows, diameter=diameters, diameter_from_style=from_style)
+
+
+def test_estimate_diameter_with_a_size_model_file_equals_cellpose(stack, nuclei):
+    function = derived.estimate_diameter_with_size_model_file
+    required = inspect.signature(function).parameters["pretrained_size"]
+    assert required.default is inspect.Parameter.empty
+    assert required.annotation is PlateInputFile
+    with pytest.raises(TypeError, match="pretrained_size"):
+        function(stack, model_type=NUCLEI)
+    image, rows = function(
         stack, model_type=NUCLEI, pretrained_size=SIZE_MODEL, channels=(0, 0)
     )
     diameters, from_style = models.SizeModel(

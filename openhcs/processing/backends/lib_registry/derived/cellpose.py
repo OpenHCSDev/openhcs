@@ -15,6 +15,7 @@ from openhcs.processing.backends.lib_registry.model_library import (
     Library,
     Measurements,
     Pixels,
+    Required,
     Resource,
     Stated,
     Supplied,
@@ -74,17 +75,27 @@ def _measurements(**columns: tuple[int, ...]) -> Measurements:
 
 
 library.function("segment", _segment, *_segmentation, _measurements(style=(2,)))
+_with_size_model = library.call(models.Cellpose)
 library.function(
     "segment_estimating_diameter",
     library.call(
         models.Cellpose.eval,
-        {"self": Resource(library.call(models.Cellpose)), "kwargs": Forwarded(_segment)},
+        {"self": Resource(_with_size_model), "kwargs": Forwarded(_segment)},
     ),
     *_segmentation,
     _measurements(style=(2,), diameter=(3,)),
 )
+_diameters = Measurements(
+    "diameters", __name__, {"diameter": (0,), "diameter_from_style": (1,)}
+)
+# Cellpose pairs a built-in model with its size model only inside models.Cellpose.
 library.function(
     "estimate_diameter",
+    library.call(models.SizeModel.eval, {"self": Resource(_with_size_model, "sz")}),
+    _diameters,
+)
+library.function(
+    "estimate_diameter_with_size_model_file",
     library.call(
         models.SizeModel.eval,
         {
@@ -93,13 +104,14 @@ library.function(
                     models.SizeModel,
                     {
                         "cp_model": Resource(_model),
+                        "pretrained_size": Required(PlateInputFile, str),
                         "kwargs": Supplied("Passed to object(), which takes none."),
                     },
                 )
             )
         },
     ),
-    Measurements("diameters", __name__, {"diameter": (0,), "diameter_from_style": (1,)}),
+    _diameters,
 )
 library.function(
     "restore",
