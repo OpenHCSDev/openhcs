@@ -324,8 +324,13 @@ def _module_declares_allowed_memory_type(
 _REQUIRED_DISTRIBUTIONS_NAME = "REQUIRED_DISTRIBUTIONS"
 
 
+@lru_cache(maxsize=1)
 def _openhcs_requirements() -> tuple[Requirement, ...]:
-    """Return the installed OpenHCS distribution's declared requirements."""
+    """Return the installed OpenHCS distribution's declared requirements.
+
+    Installed metadata is fixed for the life of the process; parsing it once
+    serves every module the catalog asks about.
+    """
 
     return tuple(
         Requirement(value) for value in importlib.metadata.requires("openhcs") or ()

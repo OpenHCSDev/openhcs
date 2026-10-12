@@ -8,7 +8,6 @@ Follows OpenHCS generic solution principle - automatically adapts to new registr
 import gc
 import inspect
 import logging
-import os
 import subprocess
 import sys
 import tempfile
@@ -24,12 +23,7 @@ from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
-from openhcs.core.callable_contract import CallableProjection
 from openhcs.core.function_reference import ResolvedRegistryFunction
-from openhcs.core.processing_preparation import (
-    CallablePreparation,
-    PreparationCacheBatch,
-)
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -179,7 +173,14 @@ class RegistryService:
     def prepare_in_current_process(
         cls, *, status_callback: RegistryPreparationCallback | None = None
     ) -> Dict[str, FunctionMetadata]:
-        """Prepare registered declarations before publishing execution readiness."""
+        """Discover registered declarations before publishing execution readiness.
+
+        Readiness is the catalog: what callables exist and how they are called.
+        A callable's kernels are compiled when a pipeline first uses it
+        (``CallableContract.from_prepared_callable``), and Numba's persistent
+        cache carries them to later processes. Compiling every kernel here cost
+        minutes on a first start for callables the session might never run.
+        """
 
         emit_status = status_callback or logger.debug
         emit_status("Discovering registered callables")
@@ -187,32 +188,12 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        callables = tuple(dict.fromkeys(
-            target
-            for metadata in cls._metadata_cache.values()
-            for target in CallableProjection.from_callable(metadata.func).prepare_targets()
-        ))
-        emit_status("Preparing registered kernel caches")
-        PreparationCacheBatch.from_callables(callables).populate_child_caches(
-            max_workers=os.cpu_count() or 1,
-            status_callback=emit_status,
-        )
-        for func in callables:
-            preparation = CallablePreparation.from_callable(func)
-            preparation.prepare()
-            emit_status(
-                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
-            )
-        emit_status("Resolving prepared callable signatures")
-        for func in callables:
-            CallableProjection.from_callable(func).warm_canonical_signature()
         emit_status("Preparing registered configuration source declarations")
         SignatureAnalyzer.prepare_dataclass_declarations(
             declaration
             for pair in LazyDataclassFactory.registered_type_pairs()
             for declaration in pair
         )
-        emit_status(f"Registered kernels ready ({len(callables)} callables)")
         emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache
 
