@@ -2,16 +2,25 @@
 
 Branch `refactor/DL3-output-provenance`. Gap 6 of `D1-cellpose-n2v2-custom-functions.md` (PR #1230).
 
-**Lands after DL1.** The storage part is PolyStore PR OpenHCSDev/PolyStore#41. PolyStore 0.6.3 is
-taken by the arraybridge 0.5.0 migration, so #41 has to be released as **0.6.4**, which requires
-`arraybridge>=0.5.0,<0.6`. OpenHCS main is on arraybridge 0.4.1 until
-`refactor/DL1-device-and-memory-types` merges, so this branch cannot pin 0.6.4 before that. Until
-then the submodule `external/PolyStore` points at the #41 commit (`8ee8ce4`) for local tests and
-`pyproject.toml` still says `polystore>=0.6.3,<0.7`, which is wrong and must become `>=0.6.4`.
+**Lands after DL1 and after four library releases.** Two pins cannot be installed from PyPI yet:
 
-**Current state: see "Second hand-off" at the end.** The sections between here and there are the
-first agent's; where they describe the stored JSON as nested dicts with `kind` keys, the second
-hand-off replaces them.
+- `python-introspect>=0.3.0,<0.4` (set in `pyproject.toml`; 0.3.0 is on PyPI). ObjectState,
+  formbridge, pyqt-reactive and zmqruntime all declare `python-introspect<0.3`, so the resolver
+  refuses this branch until each of them releases with the bound widened to `<0.4`. Their
+  submodules run against 0.3.0 here (formbridge and ObjectState suites: no failure; zmqruntime: two
+  IPC transport tests fail with `EOFError` in `multiprocessing`, not in the codec; pyqt-reactive
+  not run).
+- PolyStore: the storage part is PolyStore PR OpenHCSDev/PolyStore#41, to be released as **0.6.4**
+  (0.6.3 is the arraybridge 0.5.0 migration and requires `arraybridge>=0.5.0,<0.6`). OpenHCS main
+  is on arraybridge 0.4.1 until `refactor/DL1-device-and-memory-types` merges. Until then the
+  submodule `external/PolyStore` points at `5301d35` (branch `feat/file-content-identity`, still
+  based on PolyStore 0.6.1 and still titled 0.6.3) and `pyproject.toml` still says
+  `polystore>=0.6.3,<0.7`, which is wrong. At that time set: `polystore>=0.6.4,<0.7`,
+  `arraybridge>=0.5.0,<0.6`, submodule at the 0.6.4 tag.
+
+**Current state: see "Third hand-off" at the end.** Earlier sections are the first two agents';
+where they describe a union decoded by its fields, one metadata transaction, or
+`OpenHCSMetadataTarget.saved_path_producers`, the third hand-off replaces them.
 
 ## What is wrong (measured on `origin/main` at `1b5fe99f5`)
 
@@ -460,3 +469,150 @@ not run after these changes.
 9. Outside this branch, unchanged: ROI zip metadata and `segmentation_summary.txt` embed absolute
    source paths; zip timestamps.
 
+## Third hand-off (2026-10-12): steps A and B done, C to E not started
+
+Commits `18c4d56ae` (A) and `1a1c8c1eb` (B), on a merge of `origin/main` at `6845c3a36`.
+
+### A. Stored family members name their class
+
+**Where the tag is declared.** python-introspect 0.3.0 (PR OpenHCSDev/python-introspect#23,
+merged, annotated tag `v0.3.0`, on PyPI through the manual script after the publish workflow sat
+queued for 34 minutes). `python_introspect.jsonable`:
+
+- `MemberFamily.declared_by(annotation)` says whether a declared field type admits several
+  classes: a union with two or more dataclass members (`UnionMembers`), an abstract dataclass
+  (`ConcreteSubclasses`: its concrete subclasses, as loaded), or a class whose metaclass is
+  `AutoRegisterMeta` (`RegisteredMembers`: the registry). The three are subclasses; each answers
+  `members()`; the registered one reads a tag through `registered_class_from_key`.
+- `class_tag(member)` is the one place a tag is derived: the registry key when the class is
+  registered (stable when the module or class is renamed), otherwise `__name__`.
+- Stored form: `{tag: fields}` (one key; no reserved field name). `to_jsonable` now follows each
+  dataclass's declared field types through optional, `Annotated`, tuple/list/sequence/set and
+  mapping declarations; `dataclass_from_mapping` reads the class from the tag.
+- Errors: unknown tag is `ValueError` naming the known members; a value outside the declared
+  family, a non-string registry key, or two members with one tag is `TypeError`; an untagged
+  object in a family field is refused, never matched by its fields.
+- A type with its own `to_jsonable.register` projection keeps its whole stored form (P1
+  Proposition 3.3 is about the guess; those types already write a nominal key of their own).
+- Cost of reading declarations when encoding: a dataclass whose field types do not resolve at run
+  time is a `TypeError` naming it. One encoded class was affected and is fixed
+  (`UiLiveMeasurementEntryState.preview`, import moved out of `TYPE_CHECKING`). A live import of
+  about 2,545 first-party dataclasses found 92 whose annotations do not resolve; none of the others
+  was found at a `to_jsonable` call, but call sites that encode arbitrary values were not all
+  traced (`formbridge/bridge/object_state.py:257`, `core/debug_view_models.py:199`,
+  `core/materialization/core.py:3015`, `mcp/dev_client_rendering.py:375,397`,
+  `agent/services/artifact_plan_inspection_service.py:443,586`). The full suite is the check.
+
+**The record's two families** are registered and the fields are declared by the family:
+`FunctionRecord.identity: FunctionIdentity` (`defined_by`: `installed_module`, `source_text`) and
+`DeclaredFile.content: FileContent` (PolyStore, `content_kind`: `hashed`, `not_hashed`).
+PolyStore's `FileContent.to_record` / `from_record`, the `hashed` flag and its hand-kept
+`_kind_by_hashed` table are deleted on the #41 branch (certificate: **derived**, the registry and
+the codec own both facts; nothing in OpenHCS called them).
+
+**Every user of the codec, checked** (live import plus `rg`; about 470 dataclasses reachable from
+about 300 decode targets):
+
+| Kind | Where | Effect |
+|---|---|---|
+| Union of dataclasses decoded by fields | only the two record fields above | now registered families |
+| Registered or abstract family with its own projection | `PositionedAxis.spec: AxisSpec` (`PayloadAxes.to_mapping`), `source_spatial_domain: SourceSpatialDomain` (`to_mapping`, key `spatial_dimensions`), `MeasurementTable.rows: ColumnarRows`, `SourceImageProvenance*` | unchanged: they write their own nominal key |
+| Field typed with one registered class, decoded | `DebugSnapshotReadResponse.snapshot: DebugSnapshot` (zmq debug response), `ViewerWindowValidationSummaryResult.state: ViewerWindowStateResult \| None` (MCP result) | now `{registry key: fields}` |
+| Registered family fields, encoded only | `SourceBindingsConfig.bindings` / `match_plan` (and the step and lazy variants), `GlobalPipelineConfig` / `PipelineConfig` streaming configs, `ObjectRelationship.declaration`, `Output.content`, CPA workspace panels and axes, `DebugProgressRecord.context` / `.snapshot`, `benchmark/openhcs_measured_run.py:101` | tagged in what they encode; `SourceBindingsConfig.declaration_identity()` hashes that JSON, so its value changes (whether it is persisted was not checked) |
+| Concrete dataclass with dataclass subclasses as the field type | formbridge `UiActionIdentity`, `UiCodeDocumentIdentity`, `UiStateSurfaceIdentity`, `UiWindowIdentity`, `UiSemanticAddress`, `EndpointConnectionSpec`; `NapariDisplayConfig`; `ViewerPayloadControlOptions`; `GallerySourceEvidence` | **not a family, unchanged.** A subclass instance in such a field is written with its own fields and the decoder then refuses the undeclared ones. Open point: either the codec refuses a subclass instance when encoding, or these bases declare a family |
+
+**Stored formats that changed:** the `run_records` section of `openhcs_metadata.json` (new on this
+branch, nothing released), MCP results and zmq debug responses that carry the fields in the third
+and fourth rows (both ends are the same version), and the source-bindings declaration identity.
+**Nothing on disk has to be regenerated:** no tracked JSON holds a run record (searched all
+12,378 `*.json` / `*.jsonl` files), the only fixture decoded through the codec
+(`tests/fixtures/mcp/start-owned-runtime-400.json`) has no family field, and MCP tools publish
+`dict[str, Any]` as their result schema. Files under `paper/figures/slas/` hold UI summaries with
+`identity` / `semantic_address` objects (the last row: unchanged form) and no code decodes them.
+`paper/**`, `validation/**`, `benchmark/results/**` were not touched.
+
+**Dependants whose upper bound excludes python-introspect 0.3.0:** ObjectState 4.0.0
+(`>=0.2.0,<0.3`), formbridge 0.1.4 (`>=0.2.7,<0.3`), pyqt-reactive 0.8.0 (`>=0.2.6,<0.3`),
+zmqruntime 0.6.4 (`>=0.2.5,<0.3`). pycodify and PolyStore do not depend on it; arraybridge has no
+upper bound. None was released from here.
+
+Tests: python-introspect 191 pass on Python 3.10, 3.12 and 3.13 (round trip per member of each
+kind of family, members with identical fields, containers and optional fields, unknown tag,
+untagged data refused, own projection kept, unresolved field type). OpenHCS: the three run-record
+test files and `test_mcp_tool_contract.py` pass; of the 2,951 tests in files that touch the codec,
+the failures were a test-order leak (`tests/unit/test_axis_family_witness.py` leaves the
+RemoteSensing axis family active for the files that follow it in the same xdist worker; with that
+file left out the 40 affected files give 1,410 passed and 1 failed,
+`test_installed_mcp_demo.py::test_portable_source_normalization_defers_catalog_and_execution_runtimes`,
+which fails inside `RegistryService.metadata_for_canonical_key` in a subprocess and was not
+compared with main).
+
+### B. The two oversized classes and the ratchet
+
+- `OpenHCSMetadataTarget` and `AtomicMetadataWriter` are byte-identical to main again
+  (`function_outputs.py` differs from main only in `finalize_function_step_outputs`, which asks
+  `ProducedFiles.stated_by_step`). Deleted: `OpenHCSMetadataTarget.saved_path_producers` (moved,
+  same body), the `run_record` / `produced_files` parameters, `ProducedFiles.write_into`
+  (certificate for all: **derived**, the same statements now run in `run_record.py`).
+- **The record is stored by its owner in a second locked update.** `RunRecord.store_with_saved_files`
+  (called in the same `finally` as `finalize_completed_dataset`, so also after a failure) asks
+  `RunRecordWriter(AtomicMetadataWriter).store` for each dataset root the run saved a file under.
+  This replaces the design text's "one locked transaction": the dataset's `subdirectories` and the
+  record are now two consecutive transactions on the same document, each under its lock. A crash
+  between them leaves a dataset without its record. That is the price of not putting the record's
+  logic into the writer's transaction; if one transaction is required, the writer needs an
+  extension point, which adds lines to it.
+- **The compiler still makes the two declaration calls.** The previous note holds: the documents
+  must be rendered before `_resolve_pipeline_once` replaces the steps, and only its result carries
+  the per-step provenance. What changed is that both empty-compilation returns go through
+  `CompiledExecutionBundle.with_nothing_to_run`, so `PipelineCompiler` is 3 lines smaller than on
+  main instead of 7 larger.
+- `StepExecutionObservation.is_empty` is `not any(field values)`, derived from the dataclass
+  fields (all six were in the hand-written chain). The absence probe in
+  `virtual_workspace_metadata.py` went with the revert; the `ModuleExportedCallableFormatter`
+  probe is not counted by the ratchet and is unchanged.
+- Two `StringSubscript` hits: `del parameters["func"]` (now a filter on the value being the
+  step's pattern) and a quoted annotation in `run_record.py`.
+  `CustomFunctionSourceNamespace.attribute_of_revision` names the namespace attribute once.
+
+Gate (the one this job runs), after merging `origin/main`:
+
+```
+ratchet openhcs exit 0
+ratchet scripts exit 0
+ratchet benchmark exit 0
+38 passed, 22 warnings in 39.28s
+nra-r1 exit 0: "increased": []
+base 6845c3a363b1d24a6eeaf006f2efce3658e7804f head 1a1c8c1ebe8ae8021fe17f463b7471388add4e44 guardrails rc=0
+```
+
+Tests run for B: the run-record files, `test_function_outputs.py`,
+`test_orchestrator_lane_planning.py`, the four publication test files restored to main's text,
+and 73 unit files that touch custom functions, observations, bundles or compilation: with the
+witness file left out, 913 passed, 1 failed
+(`test_mcp_server.py::test_mcp_stdio_server_roundtrip_returns_errors_as_payloads`, the 5 s stdio
+timeout under xdist the second hand-off describes). Full suite, smoke and parity were not run.
+
+### What remains, in order
+
+C. **Defects in what is recorded**, failing test first, none started. The second hand-off's
+   item 4 is still the exact list: (3) declared path left at its default, (4) `enabled`,
+   (5) device on a host run (depends on DL1), (6) enum defaults of custom functions, (7) direct
+   imports and the requirements closure, (8) plate-level outputs, (10) no saved global config
+   (`RunDeclaration.before_step_resolution` still falls back to `GlobalPipelineConfig()`),
+   (12) `changed_during_run`.
+D. **PolyStore 0.6.4.** Clone at `.claude/ps-clone` (branch `feat/file-content-identity`, pushed
+   at `5301d35`: #41 plus the registered family). Still to do: rebase onto PolyStore main
+   (`5fdb617`), version 0.6.4 with `uv.lock`, retitle the PR, suite in a fresh venv, merge,
+   annotated tag, publish. The pre-rebase commit `5301d35` is what the submodule needs until DL1,
+   so keep it reachable (push it under another branch name before the rebase is force-pushed).
+E. **Reader** (second hand-off item 5: dataset-root answer through the dataset access owner; the
+   capability's metadata read through `openhcs/agent/path_policy.py`), then the **acceptance
+   re-run** with the scripts in `.claude/scratch/acceptance/` moved to the typed reader, the
+   short-response size on the Cellpose record, then delete `.claude/venv-cpu` and
+   `.claude/scratch/` (both still present, with `.claude/pi-clone` and `.claude/ps-clone`).
+F. Decide the two open points above: one transaction or two for the record; concrete bases with
+   subclasses in codec fields.
+G. Gates (the landing agent's): `verify_branch.sh`, smoke, parity. The PR stays a draft.
+H. Outside this branch, unchanged: ROI zip metadata and `segmentation_summary.txt` embed absolute
+   source paths; zip timestamps; `test_axis_family_witness.py` leaks the active axis family.
