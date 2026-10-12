@@ -286,7 +286,7 @@ def execute_bundle_request(
                     # reported apart from the execution. No loads when the
                     # pipeline was prepared (or declares none).
                     load_phase = PipelineLoadPhase.timed(
-                        lambda: executor_resources.load_pipeline_resources(
+                        lambda: executor_resources.prepare_pipeline(
                             execution_bundle, validated.actual_max_workers
                         )
                     )

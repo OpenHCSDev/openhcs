@@ -21,6 +21,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     CustomFunctionRegistrationHandle,
     CustomFunctionRegistrationObservation,
+    CustomFunctionRetryRequest,
+    CustomFunctionServerState,
     FunctionCatalogControlRequest,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -192,6 +194,18 @@ class EndpointFunctionCatalogServiceABC(FunctionCatalogServiceABC):
         self, handle: FunctionCatalogPreparationHandle
     ) -> FunctionCatalogPreparationState:
         """Signal the exact native preparation owner without joining its child."""
+
+    @abstractmethod
+    def retry_custom_function(
+        self, request: CustomFunctionRetryRequest
+    ) -> CustomFunctionServerState:
+        """Have the selected server try again what failed for one custom function."""
+
+    @abstractmethod
+    def custom_function_server_state(
+        self, connection: ExecutionConnectionSpec
+    ) -> CustomFunctionServerState:
+        """Read what the selected server holds of the custom functions."""
 
 
 class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
@@ -565,6 +579,33 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
         )
         state.require_handle(handle)
         return state
+
+    def retry_custom_function(
+        self, request: CustomFunctionRetryRequest
+    ) -> CustomFunctionServerState:
+        """Send the change the manager's own retry sends; the server answers at once."""
+        from openhcs.agent.dto.common import SCHEMA_VERSION
+        from openhcs.processing.custom_functions.catalogue_changes import (
+            CustomFunctionRetried,
+        )
+
+        client = self._client_for(self._endpoint_for_connection(request.connection))
+        state = client.follow_custom_function_change(
+            CustomFunctionRetried(name=request.function_name)
+        )
+        # What the server publishes may change: the next read asks it again.
+        self.invalidate()
+        return CustomFunctionServerState(schema_version=SCHEMA_VERSION, state=state)
+
+    def custom_function_server_state(
+        self, connection: ExecutionConnectionSpec
+    ) -> CustomFunctionServerState:
+        from openhcs.agent.dto.common import SCHEMA_VERSION
+
+        client = self._client_for(self._endpoint_for_connection(connection))
+        return CustomFunctionServerState(
+            schema_version=SCHEMA_VERSION, state=client.custom_catalogue_state()
+        )
 
     def invalidate(self) -> None:
         """Discard the derived page; the next read requests the endpoint again."""

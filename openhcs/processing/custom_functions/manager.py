@@ -30,6 +30,7 @@ from openhcs.processing.custom_functions.catalogue_changes import (
     CustomFunctionCreated,
     CustomFunctionDeleted,
     CustomFunctionEdited,
+    CustomFunctionRetried,
     WriteAdmission,
 )
 from openhcs.processing.custom_functions.connected_servers import connected_servers
@@ -409,11 +410,67 @@ class CustomFunctionManager:
                     name=name,
                     file_path=self.storage_dir / f"{name}.py",
                     contract=CallableContract.from_callable(metadata.func),
-                )
+                ).with_unacquired(self._unacquired(metadata))
             )
             for name, metadata in prepared.items()
         ]
         return sorted([*loaded, *failures], key=lambda listed: listed.file_path)
+
+    @staticmethod
+    def _unacquired(metadata: "FunctionMetadata") -> tuple[str, ...]:
+        """Declared values this process tried to acquire and could not, with causes."""
+        return tuple(
+            value.describe()
+            for value in CallablePreparation.from_callable(metadata.func).unacquired()
+        )
+
+    def unacquired_values(self) -> dict[str, tuple[str, ...]]:
+        """Per function this process publishes: the values it could not acquire."""
+        return {
+            name: values
+            for name, metadata in CustomFunctionRuntimeRegistry.metadata_by_name().items()
+            if (values := self._unacquired(metadata))
+        }
+
+    def acquire_again(self, func_name: str) -> None:
+        """In this process, let what failed for ``func_name`` be tried again.
+
+        A source that failed to load is forgotten as failed, so the next load
+        runs it and its acquisitions. A published function tries again, now,
+        the declared values it could not acquire; fork workers are replaced
+        when one of them is acquired.
+        """
+        CustomFunctionRuntimeRegistry.forget_failure(func_name)
+        metadata = CustomFunctionRuntimeRegistry.metadata_by_name().get(func_name)
+        if metadata is None:
+            return
+        preparation = CallablePreparation.from_callable(metadata.func)
+        missing = preparation.unacquired()
+        preparation.acquire_unacquired_again()
+        if preparation.unacquired() != missing:
+            custom_function_changed.emit()
+
+    def retry_acquisition(self, func_name: str) -> None:
+        """Try again what failed for one listed function, here and on every server.
+
+        This is the only retry besides preparing a pipeline that selects the
+        value: nothing tries again on its own.
+
+        Raises:
+            ValueError: If the function is not listed with something that failed
+        """
+        retryable = {
+            listed.name for listed in self.list_custom_functions() if listed.can_retry
+        }
+        if func_name not in retryable:
+            raise ValueError(
+                f"Custom function '{func_name}' has no failed load or acquisition "
+                "to retry."
+            )
+        self.acquire_again(func_name)
+        self.load_all_custom_functions()
+        connected_servers.tell(CustomFunctionRetried(name=func_name))
+        custom_function_changed.emit()
 
     def load_failures(self) -> tuple[CustomFunctionLoadFailure, ...]:
         """Return the persisted sources that could not be loaded."""

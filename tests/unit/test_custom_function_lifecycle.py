@@ -1401,8 +1401,8 @@ from openhcs.processing.custom_functions.listing import (  # noqa: E402
 class _ScriptedServer(CustomFunctionServer):
     """Reports pending until released, then the state it was given."""
 
-    def __init__(self, process: str, settled: ServerCatalogueState) -> None:
-        self.process = process
+    def __init__(self, address: str, settled: ServerCatalogueState) -> None:
+        self.address = address
         self.settled = settled
         self.released = threading.Event()
         self.told: list[CustomFunctionChange] = []
@@ -1411,8 +1411,8 @@ class _ScriptedServer(CustomFunctionServer):
     def is_connected(self) -> bool:
         return self.connected
 
-    def server_process(self) -> str:
-        return self.process
+    def server_address(self) -> str:
+        return self.address
 
     def follow_custom_function_change(self, change):
         self.told.append(change)
@@ -1471,7 +1471,7 @@ def test_create_edit_and_delete_each_tell_every_connected_server_once(
         CustomFunctionCreated(name="followed", code=_FOLLOWED_SOURCE),
         CustomFunctionEdited(old_name="followed", name="followed", code=edited),
         CustomFunctionDeleted(name="followed"),
-    ], "one request per change and per server process, in order"
+    ], "one request per change and per server, in order"
     assert not_connected.told == []
 
 
@@ -1560,3 +1560,293 @@ def test_a_server_applies_each_change_to_its_own_store(isolated_custom_runtime) 
     assert not tuple(isolated_custom_runtime.glob("*.py"))
     with pytest.raises(KeyError, match="'followed_renamed' was deleted"):
         RegistryService.metadata_for_canonical_key("openhcs:followed_renamed")
+
+
+# --- A failed acquisition is recorded with its cause and retried only on request ---
+
+from openhcs.core.processing_preparation import (  # noqa: E402
+    AcquisitionFailedError,
+    CallablePreparation,
+    PreparationOperation,
+    UnpreparedValueError,
+)
+from openhcs.processing.custom_functions.catalogue_changes import (  # noqa: E402
+    CustomFunctionRetried,
+    ValuesUnacquiredOnServer,
+)
+from openhcs.processing.custom_functions.listing import (  # noqa: E402
+    CustomFunctionMissingValues,
+)
+
+
+def _attempts(log) -> list[str]:
+    return log.read_text().splitlines() if log.exists() else []
+
+
+def _acquired_at_second_attempt(name: str, log) -> str:
+    """A source whose acquisition fails the first time it runs in any process."""
+    return (
+        "from pathlib import Path\n"
+        "from openhcs.core.memory import numpy as numpy_function\n"
+        f"LOG = Path({str(log)!r})\n"
+        "def _acquire() -> None:\n"
+        "    with LOG.open('a') as attempts:\n"
+        "        attempts.write('attempt\\n')\n"
+        "    if len(LOG.read_text().splitlines()) == 1:\n"
+        "        raise ConnectionError('no route to the weights')\n"
+        "@numpy_function(prepare=_acquire)\n"
+        f"def {name}(image):\n"
+        "    return image\n"
+    )
+
+
+def _large_needs_marker(name: str, log, marker) -> str:
+    """Acquires ``small``; acquires ``large`` only once the marker file exists."""
+    return (
+        "from pathlib import Path\n"
+        "from typing import Literal\n"
+        "from openhcs.core.memory import numpy as numpy_function\n"
+        f"LOG = Path({str(log)!r})\n"
+        f"MARKER = Path({str(marker)!r})\n"
+        "def _acquire(model: Literal['small', 'large']) -> None:\n"
+        "    with LOG.open('a') as attempts:\n"
+        "        attempts.write(model + '\\n')\n"
+        "    if model == 'large' and not MARKER.exists():\n"
+        "        raise ConnectionError('no route to the weights')\n"
+        "@numpy_function(prepare=_acquire)\n"
+        f"def {name}(image, model: str = 'small'):\n"
+        "    return image\n"
+    )
+
+
+@pytest.fixture
+def no_preparation_records():
+    PreparationOperation.reset()
+    yield
+    PreparationOperation.reset()
+
+
+def _connected(servers: ConnectedServers, state: ServerCatalogueState) -> _ScriptedServer:
+    server = _ScriptedServer("server", state)
+    server.released.set()
+    servers.add(server)
+    return server
+
+
+def test_a_failed_acquisition_is_retried_only_by_the_explicit_retry(
+    isolated_custom_runtime, no_preparation_records, serving_process, servers, tmp_path,
+) -> None:
+    log = tmp_path / "attempts.log"
+    (isolated_custom_runtime / "retried.py").write_text(
+        _acquired_at_second_attempt("retried", log), encoding="utf-8"
+    )
+    server = _connected(servers, ServerCatalogueState(pending=False))
+    manager = CustomFunctionManager(create_storage=False)
+
+    assert manager.load_all_custom_functions() == 0
+    [failed] = manager.list_custom_functions()
+    assert (failed.list_label, type(failed), failed.can_retry) == (
+        "retried (failed to load)", CustomFunctionLoadFailure, True,
+    )
+    assert failed.status == (
+        "Failed to load: retried.py, line 8: Function 'retried' preparation failed: "
+        "ConnectionError: no route to the weights"
+    )
+
+    # Listing, loading and loading everything do not try again.
+    manager.list_custom_functions()
+    assert manager.load_all_custom_functions() == 0
+    with pytest.raises(ValidationError, match="no route to the weights"):
+        manager.load_custom_function("retried")
+    assert _attempts(log) == ["attempt"]
+    assert server.told == []
+
+    manager.retry_acquisition("retried")
+    assert servers.wait_until_followed(10)
+
+    assert _attempts(log) == ["attempt", "attempt"]
+    assert server.told == [CustomFunctionRetried(name="retried")]
+    [loaded] = manager.list_custom_functions()
+    assert (loaded.list_label, type(loaded), loaded.can_retry) == (
+        "retried", CustomFunctionInfo, False,
+    )
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {"retried"}
+
+    for name in ("retried", "never_stored"):
+        with pytest.raises(ValueError, match="no failed load or acquisition to retry"):
+            manager.retry_acquisition(name)
+    assert _attempts(log) == ["attempt", "attempt"]
+    assert server.told == [CustomFunctionRetried(name="retried")]
+
+
+def test_a_value_that_could_not_be_acquired_is_recorded_and_the_function_published(
+    isolated_custom_runtime, no_preparation_records, serving_process, tmp_path,
+) -> None:
+    log, marker = tmp_path / "attempts.log", tmp_path / "weights-reachable"
+    manager = CustomFunctionManager(create_storage=False)
+    [function] = manager.register_from_code(
+        _large_needs_marker("valued", log, marker), clear_caches=False, emit_signal=False
+    )
+    preparation = CallablePreparation.from_callable(function)
+
+    assert _attempts(log) == ["small", "large"], "every declared value is tried once"
+    [listed] = manager.list_custom_functions()
+    assert (listed.list_label, type(listed), listed.can_retry) == (
+        "valued (values not acquired)", CustomFunctionMissingValues, True,
+    )
+    assert listed.status == (
+        "Loaded; not acquired: model='large' (ConnectionError: no route to the weights)"
+    )
+    assert manager.unacquired_values() == {
+        "valued": ("model='large' (ConnectionError: no route to the weights)",)
+    }
+
+    # A compile: the acquired value and the failed one pass, nothing is acquired;
+    # a value the hook never declared is refused.
+    preparation.prepare_selected({})
+    preparation.prepare_selected({"model": "large"})
+    with pytest.raises(UnpreparedValueError, match="ready: model='small'\\.$"):
+        preparation.prepare_selected({"model": "undeclared"})
+    assert manager.load_all_custom_functions() == 1
+    assert _attempts(log) == ["small", "large"]
+
+    # "Prepare this pipeline": the selected failed value is tried again.
+    assert preparation.acquire_selected_again({}) is False
+    with pytest.raises(AcquisitionFailedError) as refused:
+        preparation.acquire_selected_again({"model": "large"})
+    assert str(refused.value) == (
+        "'valued' could not be acquired for model='large': "
+        "ConnectionError: no route to the weights"
+    )
+    assert _attempts(log) == ["small", "large", "large"]
+    assert [value.arguments for value in preparation.unacquired()] == ["model='large'"]
+
+    marker.touch()
+    assert preparation.acquire_selected_again({"model": "large"}) is True
+    assert preparation.acquire_selected_again({"model": "large"}) is False
+    assert _attempts(log) == ["small", "large", "large", "large"]
+    assert preparation.unacquired() == ()
+    [listed] = manager.list_custom_functions()
+    assert (listed.list_label, listed.status, listed.can_retry) == (
+        "valued", "Loaded", False,
+    )
+
+
+def test_the_explicit_retry_tries_unacquired_values_again(
+    isolated_custom_runtime, no_preparation_records, serving_process, servers, tmp_path,
+) -> None:
+    log, marker = tmp_path / "attempts.log", tmp_path / "weights-reachable"
+    manager = CustomFunctionManager(create_storage=False)
+    manager.register_from_code(_large_needs_marker("valued", log, marker))
+    server = _connected(servers, ServerCatalogueState(pending=False))
+
+    manager.retry_acquisition("valued")
+    assert servers.wait_until_followed(10)
+    assert _attempts(log) == ["small", "large", "large"]
+    [listed] = manager.list_custom_functions()
+    assert listed.can_retry and "model='large'" in listed.status
+
+    marker.touch()
+    manager.retry_acquisition("valued")
+    assert servers.wait_until_followed(10)
+    assert _attempts(log) == ["small", "large", "large", "large"]
+    assert [item.status for item in manager.list_custom_functions()] == ["Loaded"]
+    assert server.told == [CustomFunctionRetried(name="valued")] * 2
+
+
+def test_values_a_server_could_not_acquire_are_listed_and_can_be_retried(
+    isolated_custom_runtime, servers,
+) -> None:
+    server = _connected(
+        servers,
+        ServerCatalogueState(
+            pending=False,
+            unacquired=(
+                ValuesUnacquiredOnServer(
+                    name="followed",
+                    values=("model='large' (ConnectionError: no route)",),
+                ),
+            ),
+        ),
+    )
+    manager = CustomFunctionManager()
+    manager.register_from_code(_FOLLOWED_SOURCE)
+    assert servers.wait_until_followed(10)
+
+    [listed] = manager.list_custom_functions()
+    assert (listed.list_label, type(listed), listed.can_retry) == (
+        "followed (values not acquired)", CustomFunctionMissingValues, True,
+    )
+    assert listed.status == (
+        "Loaded; not acquired: on the execution server: "
+        "model='large' (ConnectionError: no route)"
+    )
+    assert listed.memory_type == MemoryType.NUMPY.value
+
+    server.settled = ServerCatalogueState(pending=False)
+    manager.retry_acquisition("followed")
+    assert servers.wait_until_followed(10)
+    assert server.told[-1] == CustomFunctionRetried(name="followed")
+    assert _listed(manager) == [("followed", CustomFunctionInfo)]
+
+
+def test_a_server_follows_a_retry_by_loading_the_failed_source_again(
+    isolated_custom_runtime, no_preparation_records, serving_process, tmp_path,
+) -> None:
+    log = tmp_path / "attempts.log"
+    (isolated_custom_runtime / "retried.py").write_text(
+        _acquired_at_second_attempt("retried", log), encoding="utf-8"
+    )
+    manager = CustomFunctionManager(create_storage=False)
+    assert manager.load_all_custom_functions() == 0
+
+    def refuse_write(path):
+        raise AssertionError(f"a retry writes nothing, not {path}")
+
+    CustomFunctionRetried(name="retried").apply_on_server(manager, refuse_write)
+
+    assert _attempts(log) == ["attempt", "attempt"]
+    assert [source.function_name for source in CustomFunctionRuntimeRegistry.published_sources()] == ["retried"]
+    assert manager.load_failures() == ()
+
+
+def test_the_manager_dialog_retries_only_an_entry_that_can_be_retried(
+    isolated_custom_runtime, no_preparation_records, serving_process, qapp, tmp_path,
+) -> None:
+    from openhcs.pyqt_gui.dialogs.custom_function_manager_dialog import (
+        CustomFunctionManagerDialog,
+    )
+
+    log = tmp_path / "attempts.log"
+    (isolated_custom_runtime / "a_retried.py").write_text(
+        _acquired_at_second_attempt("a_retried", log), encoding="utf-8"
+    )
+    (isolated_custom_runtime / "b_stable.py").write_text(
+        _source("b_stable"), encoding="utf-8"
+    )
+    assert CustomFunctionManager().load_all_custom_functions() == 1
+
+    def row_labels(dialog) -> list[str]:
+        return [
+            dialog.function_list.item(row).text()
+            for row in range(dialog.function_list.count())
+        ]
+
+    dialog = CustomFunctionManagerDialog()
+    try:
+        assert row_labels(dialog) == ["a_retried (failed to load)", "b_stable"]
+        assert not dialog.retry_btn.isEnabled()
+        dialog.function_list.setCurrentRow(1)
+        assert not dialog.retry_btn.isEnabled()
+        dialog.function_list.setCurrentRow(0)
+        assert dialog.retry_btn.isEnabled()
+
+        dialog.retry_btn.click()
+        qapp.processEvents()
+
+        assert _attempts(log) == ["attempt", "attempt"]
+        assert row_labels(dialog) == ["a_retried", "b_stable"]
+        assert not dialog.retry_btn.isEnabled()
+    finally:
+        dialog.close()
+        dialog.deleteLater()

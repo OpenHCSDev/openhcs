@@ -44,8 +44,6 @@ from zmqruntime.messages import (
     ExecutionRecord,
     MessageFields,
     PongResponse,
-    ProcessIdentity,
-    ResponseType,
     ServerRole,
     StatusRequest,
 )
@@ -1101,9 +1099,8 @@ class ZMQExecutionClient(
         )
         connected_servers.add(self)
 
-    def server_process(self) -> ProcessIdentity | None:
-        endpoint = self.connected_endpoint
-        return None if endpoint is None else endpoint.process_identity
+    def server_address(self) -> TransportEndpoint:
+        return self.endpoint
 
     def follow_custom_function_change(
         self, change: CustomFunctionChange
@@ -1123,12 +1120,13 @@ class ZMQExecutionClient(
     def _custom_catalogue_exchange(
         self, message: dict[str, object]
     ) -> ServerCatalogueState:
-        response = self._send_control_request(
-            message, timeout_ms=self.config.control_timeout_ms
-        )
-        if response.get(MessageFields.STATUS) != ResponseType.OK.value:
-            raise RuntimeError(str(response.get(MessageFields.ERROR) or response))
-        return response[ServerCatalogueState.state_key]
+        from openhcs.agent.dto.functions import CustomCatalogueStateControlResponse
+
+        return CustomCatalogueStateControlResponse.from_control_response(
+            self._send_control_request(
+                message, timeout_ms=self.config.control_timeout_ms
+            )
+        ).value
 
     @classmethod
     @contextmanager

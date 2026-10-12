@@ -32,6 +32,7 @@ from openhcs.processing.custom_functions.catalogue_changes import (
     CustomFunctionChange,
     ServerCatalogueState,
     SourceFailedOnServer,
+    ValuesUnacquiredOnServer,
 )
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
@@ -874,6 +875,10 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     line_number=failure.line_number,
                 )
                 for failure in manager.load_failures()
+            ),
+            unacquired=tuple(
+                ValuesUnacquiredOnServer(name=name, values=values)
+                for name, values in manager.unacquired_values().items()
             ),
         )
 

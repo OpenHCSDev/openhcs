@@ -22,7 +22,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
     def openhcs_decorator(
         *args: Any,
         prepare: Any = None,
-        load: Any = None,
+        load: Callable[..., object] | None = None,
         contract: Any = None,
         **kwargs: Any,
     ) -> Any:
@@ -174,7 +174,7 @@ def _attach_openhcs_metadata(
     wrapped: Any,
     *,
     prepare: Any,
-    load: Any,
+    load: Callable[..., object] | None,
     processing_contract: Any,
 ) -> None:
     from openhcs.core.callable_contract import attach_callable_contract_metadata

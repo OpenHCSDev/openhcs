@@ -11,6 +11,7 @@ import signal
 import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
+from concurrent.futures import CancelledError
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from itertools import chain, islice, product
@@ -55,6 +56,8 @@ class PreparationOperation(ABC):
     """Share successful completion while retaining each obligation's identity."""
 
     _completed: ClassVar[set[Hashable]] = set()
+    # Why an operation that ran is not completed, until a later run completes it.
+    _failure_causes: ClassVar[dict[Hashable, str]] = {}
     _lock: ClassVar[Lock] = Lock()
 
     @property
@@ -75,20 +78,41 @@ class PreparationOperation(ABC):
         return False
 
     def prepare(self) -> None:
-        """Skip completed work and leave failed operations eligible for retry."""
+        """Skip completed work; a run that raises is recorded with its cause.
+
+        A failed operation is not completed, so the next ``prepare`` runs it
+        again. Nothing here runs it again on its own.
+        """
         identity = self.identity
         with self._lock:
             if identity in self._completed:
                 return
-        self.execute()
+        try:
+            self.execute()
+        except Exception as error:
+            with self._lock:
+                self._failure_causes[identity] = f"{type(error).__name__}: {error}"
+            raise
         with self._lock:
             self._completed.add(identity)
+            self._failure_causes.pop(identity, None)
+
+    def failure_cause(self) -> str | None:
+        """What the last run raised, when this operation ran and did not complete."""
+        with self._lock:
+            return self._failure_causes.get(self.identity)
+
+    def forget_failure(self) -> None:
+        """Drop the record of a failed run: its owner reports the failure itself."""
+        with self._lock:
+            self._failure_causes.pop(self.identity, None)
 
     @classmethod
     def reset(cls) -> None:
         """Clear core readiness, preserving independently owned kernel caches."""
         with cls._lock:
             cls._completed.clear()
+            cls._failure_causes.clear()
         CallablePreparation._serves_prepared_callables = False
         AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
 
@@ -200,6 +224,21 @@ class UnpreparedValueError(ValueError):
     """A step selects a value its function's preparation did not acquire."""
 
 
+class AcquisitionFailedError(RuntimeError):
+    """A value a pipeline selects could not be acquired when it was tried again."""
+
+
+@dataclass(frozen=True, slots=True)
+class UnacquiredValue:
+    """One declared value of a published function whose acquisition failed."""
+
+    arguments: str
+    cause: str
+
+    def describe(self) -> str:
+        return f"{self.arguments} ({self.cause})"
+
+
 def declared_hook_arguments(hook: Callable[..., object]) -> tuple[HookArguments, ...]:
     """Every argument combination a hook declares it can be called with.
 
@@ -275,6 +314,10 @@ class CallableHookPreparation(DeclaredHookPreparation):
     def is_completed(self) -> bool:
         with self._lock:
             return self.identity in self._completed
+
+    def described_arguments(self) -> str:
+        """The values this call is for, as a message names them."""
+        return ", ".join(f"{name}={value!r}" for name, value in self.arguments)
 
 
 class AcquireHookPreparation(CallableHookPreparation):
@@ -377,45 +420,124 @@ class CallablePreparation:
             device_id,
         )
 
-    def prepare_selected(self, kwargs: Mapping[str, object]) -> None:
-        """Make what a step selects available to a compile, acquiring nothing late.
-
-        A serving process acquired every declared value before it reported
-        ready, so a selection outside that set is refused, naming what was
-        acquired. A process that does not serve has no readiness: it acquires
-        the selected value here, and nothing else.
-        """
+    def selected_acquisition(
+        self, kwargs: Mapping[str, object]
+    ) -> AcquireHookPreparation | None:
+        """The acquisition a step with these keyword arguments selects."""
         hook = self._hook(FunctionContractAttribute.processing_prepare)
         if hook is None:
-            return
-        selection = AcquireHookPreparation(
+            return None
+        return AcquireHookPreparation(
             hook,
             self.projection.module_name,
             self.projection.name,
             selected_hook_arguments(hook, self.projection.func, kwargs),
         )
-        if selection.is_completed():
+
+    def prepare_selected(self, kwargs: Mapping[str, object]) -> None:
+        """Make what a step selects available to a compile, acquiring nothing late.
+
+        A serving process tried every declared value before it reported ready.
+        A selection it never tried (the hook does not declare it) is refused,
+        naming what was acquired. A selection whose acquisition failed is let
+        through: "prepare this pipeline" tries it again before any worker
+        loads. A process that does not serve has no readiness: it acquires the
+        selected value here, and nothing else.
+        """
+        selection = self.selected_acquisition(kwargs)
+        if selection is None or selection.is_completed():
             return
         if not self._serves_prepared_callables:
             selection.prepare()
             return
+        if selection.failure_cause() is not None:
+            return
         acquired = [
-            ", ".join(f"{name}={value!r}" for name, value in operation.arguments)
+            operation.described_arguments()
             for operation in self.acquisitions()
             if operation.is_completed()
         ]
         raise UnpreparedValueError(
             f"{self.projection.name!r} was not prepared for "
-            + ", ".join(f"{name}={value!r}" for name, value in selection.arguments)
+            + selection.described_arguments()
             + ". Prepared before this server reported ready: "
             + ("; ".join(acquired) or "nothing")
             + "."
         )
 
+    def acquire_selected_again(self, kwargs: Mapping[str, object]) -> bool:
+        """Try again the acquisition a step selects, if it failed; say whether it ran.
+
+        A second failure names the function, the value and the cause, and
+        stays recorded for the next attempt.
+        """
+        selection = self.selected_acquisition(kwargs)
+        if selection is None or selection.failure_cause() is None:
+            return False
+        try:
+            selection.prepare()
+        except CancelledError:
+            raise
+        except Exception as error:
+            raise AcquisitionFailedError(
+                f"{self.projection.name!r} could not be acquired for "
+                f"{selection.described_arguments()}: {type(error).__name__}: {error}"
+            ) from error
+        return True
+
+    def unacquired(self) -> tuple[UnacquiredValue, ...]:
+        """The declared values whose acquisition ran and failed, with the cause."""
+        return tuple(
+            UnacquiredValue(operation.described_arguments(), cause)
+            for operation in self.acquisitions()
+            if (cause := operation.failure_cause()) is not None
+        )
+
+    def acquire_unacquired_again(self) -> None:
+        """Try again every declared value whose acquisition failed.
+
+        Each value that fails again stays recorded with its new cause.
+        """
+        self._attempt(
+            operation
+            for operation in self.acquisitions()
+            if operation.failure_cause() is not None
+        )
+
+    @staticmethod
+    def _attempt(operations: Iterable[PreparationOperation]) -> list[Exception]:
+        """Run each operation; return what the ones that failed raised."""
+        errors: list[Exception] = []
+        for operation in operations:
+            try:
+                operation.prepare()
+            except CancelledError:
+                raise
+            except Exception as error:
+                errors.append(error)
+        return errors
+
     def prepare(self) -> None:
-        """Prepare everything the callable declares: what a serving process does."""
-        for operation in self.operations():
+        """Prepare everything the callable declares: what a serving process does.
+
+        Every declared value of the acquire hook that has no outcome yet is
+        tried. A value recorded as failed is not tried here again: that takes
+        an explicit retry, or preparing a pipeline that selects it. When no
+        value could be acquired the callable is not prepared: the first cause
+        is raised and is the callable's failure, so no value keeps a record.
+        When some were acquired the callable is usable for those, and each
+        value that failed stays recorded with its cause.
+        """
+        for operation in self.module_operations():
             operation.prepare()
+        acquisitions = self.acquisitions()
+        errors = self._attempt(
+            operation for operation in acquisitions if operation.failure_cause() is None
+        )
+        if errors and not any(operation.is_completed() for operation in acquisitions):
+            for operation in acquisitions:
+                operation.forget_failure()
+            raise errors[0]
 
     def prepare_for_call(self, kwargs: Mapping[str, object]) -> None:
         """Prepare for one compiled call: the module, then what the call selects."""

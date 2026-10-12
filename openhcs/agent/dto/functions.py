@@ -23,6 +23,7 @@ from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.function_reference import FunctionReference
+from openhcs.processing.custom_functions.catalogue_changes import ServerCatalogueState
 from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000
@@ -156,6 +157,21 @@ class CustomFunctionRegistrationObservation(AgentResultEnvelope):
             published=bool(self.published_sources), persisted=self.persisted_source is not None,
             persist=self.handle.persist,
         ))
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRetryRequest(AgentDataclassCliRequest):
+    """One custom function whose failed load or acquisition a server tries again."""
+
+    function_name: str
+    connection: ExecutionConnectionSpec
+
+
+@dataclass(frozen=True, kw_only=True)
+class CustomFunctionServerState(AgentResultEnvelope):
+    """What the selected execution server holds of the custom functions."""
+
+    state: ServerCatalogueState
 
 
 class FunctionCatalogPreparationOutcome(str, Enum):
@@ -650,6 +666,14 @@ class FunctionCatalogControlResponse(
     @property
     def catalog(self) -> FunctionCatalogPage:
         return self.value
+
+
+class CustomCatalogueStateControlResponse(
+    FunctionCatalogControlResponseBase[ServerCatalogueState]
+):
+    """What a server holds of the custom functions, or that it is still preparing."""
+
+    value_type = ServerCatalogueState
 
 
 class FunctionCatalogPreparationStateControlResponse(

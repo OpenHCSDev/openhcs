@@ -264,7 +264,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
     class FakeExecutorResources:
         executor = None
 
-        def load_pipeline_resources(self, _bundle, _worker_count):
+        def prepare_pipeline(self, _bundle, _worker_count):
             return 0
 
         def install_execution_bundle(self, _bundle):

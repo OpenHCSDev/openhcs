@@ -380,6 +380,118 @@ server's store.
 Measured (same loaded machine): the server ran the acquisition 0.14 s after `create`; it
 reported pending for 6.9 s after that (the catalogue re-projection, item 7 below).
 
+### 2. A failed acquisition can be retried (done)
+
+The rule:
+
+- **Recorded with its cause.** A source that fails to load keeps its outcome and cause in
+  the registry (`prepare_source_once`, as before). An acquisition that raises is recorded
+  with its cause per value (`PreparationOperation._failure_causes`).
+- **Published or failed.** A serving process tries every declared value. If none is
+  acquired (which includes the hook without parameters) the source fails to load with the
+  first cause. Otherwise the function is published and the failed values stay recorded; the
+  manager lists it as `CustomFunctionMissingValues` ("Loaded; not acquired: model='large'
+  (ConnectionError: ...)"), also from a connected server's report
+  (`ServerCatalogueState.unacquired`).
+- **What retries.** (a) The explicit request: `CustomFunctionManager.retry_acquisition(name)`,
+  the fourth member of the change family, `CustomFunctionRetried(name)`: forget the failed
+  outcome (`CustomFunctionRuntimeRegistry.forget_failure`), try the unacquired values again,
+  load again; connected servers are told and do the same. Exposed as the dialog's "Retry"
+  button (enabled by `PersistedCustomFunction.can_retry`, an answer of the listing family)
+  and as MCP tools `openhcs_retry_custom_function` and
+  `openhcs_get_custom_function_server_state` (the retry answers at once, usually pending).
+  (b) The next "prepare this pipeline" that selects the value, as an explicit job or as the
+  implicit phase before an execution's lanes start: the server retries the selected failed
+  values once each before any worker loads (`CallablePreparation.acquire_selected_again`,
+  `WorkerExecutorResources.prepare_pipeline`), forks its prepared workers again when
+  something was acquired, and fails the job with the cause and the value named
+  (`AcquisitionFailedError`) when it fails again.
+- **What never retries.** Listing, loading, `load_all_custom_functions`, serving
+  preparation, compile. A compile lets a selection whose acquisition failed through and
+  acquires nothing; a value the hook never declared is still refused
+  (`UnpreparedValueError`). There is no background loop.
+
+The abstract step of a change was renamed `before_loading` (it was `change_store`; a retry
+changes no store).
+
+Tests: `tests/unit/test_custom_function_lifecycle.py` (six, including the headless dialog),
+`tests/unit/agent/test_mcp_server.py::test_mcp_retry_custom_function_sends_the_retry_change_to_the_selected_server`,
+and four more over the real server in `test_custom_function_changes_reach_servers.py`
+(published without the value; the compile passes and acquires nothing; the prepare job
+fails naming the value; once reachable it is acquired exactly once, in the server, and the
+execution contains no acquisition and no load): 10 passed.
+
+Open: after a prepare job acquires a value, the session's listing still shows it missing
+until the next change or retry (the session is not told by a prepare job).
+`ZMQFunctionCatalogService` calls `follow_custom_function_change` on a client typed
+`FunctionCatalogExecutionClient`, which does not declare it.
+
+### 3. Timing is honest (done)
+
+- **The load phase is a field of the execution record.** `PipelineLoadPhase(started_at,
+  ended_at, loads)` (`openhcs/core/execution_state.py`), server `time.time()` clock, is the
+  required field `BundleExecutionExtras.load_phase`, measured in `bundle_execution.py`
+  around `load_pipeline_resources` and written by `ZMQResultsSummaryEnricher` to
+  `results_summary["load_phase"]` (the record's `start_time` / `end_time` belong to
+  zmqruntime's `ExecutionRecord`; OpenHCS facts reach it through the extras).
+- **`benchmark/timing.py`** has three readers: `completed_server_job_seconds`
+  (`end_time - start_time`, for compile and prepare jobs), `completed_server_load_phase`
+  (raises when the field is missing or outside the record's bounds) and
+  `completed_server_execution_seconds` (job seconds minus load-phase seconds);
+  `BenchmarkPhase.SERVER_LOAD_PHASE` reports the phase on its own.
+- **The benchmark prepares before its clock.** `run_compiled_pipeline` is now compile +
+  execute only; the prepare job is its own call (`ZMQPipelineJobs.compile / prepare /
+  execute`, `prepare_pipeline` = compile + prepare). `well_throughput_scaling.py` connects,
+  calls `prepare_measured_openhcs_pipeline`, then starts `total_seconds`; the preparation
+  fills `prepare_seconds` (always 0.0 before). Server start is outside `total_seconds` too.
+  **Owner decision wanted:** a prepare request names a compile artifact, so a row now
+  compiles twice and the timed compile is the second one (a compile that contains no
+  first-compile cost). The alternative is one compile with the clock stopped during the
+  prepare job; `total_seconds` would then be the sum of two intervals.
+- `matched_cellprofiler_batch.py` and `adapters/openhcs.py` send no prepare request: their
+  first execution runs the load phase, which is reported and subtracted.
+- Deleted: `ZMQCompiledPipelineRun.preparation_record` (contract: the prepare job has its
+  own result, `ZMQPipelinePreparation`).
+
+Guard (`tests/integration/test_no_jit_after_readiness.py`, same server as the other custom
+tests): `test_load_phase_is_outside_what_a_record_reports_as_compile_execute_and_total`
+(for a pipeline run with and without the prepare request: no acquire and no load inside
+the windows the records report; duration equals bounds minus load phase),
+`test_load_phase_of_an_unprepared_pipeline_is_reported_by_its_first_execution_only`,
+`test_load_phase_of_a_prepared_pipeline_is_empty_in_both_executions`. Custom tests of the
+file: 10 passed.
+
+| run (2 fork workers) | loads in compile / execute / total | load phase: loads | load phase s | job s | execution s |
+| --- | --- | --- | --- | --- | --- |
+| not prepared, first | 0 / 0 / 0 | 2 | 0.0036 | 0.0630 | 0.0594 |
+| not prepared, second | 0 / 0 / 0 | 0 | 0.0006 | 0.0586 | 0.0580 |
+| prepared, first | 0 / 0 / 0 | 0 | 0.0006 | 0.0850 | 0.0844 |
+| prepared, second | 0 / 0 / 0 | 0 | 0.0007 | 0.0523 | 0.0516 |
+
+Not done: the prepare job's own record carries no load count; no real benchmark row was run.
+
+### 7. Registering one source costs one source (done)
+
+A catalogue projection is keyed by the `FunctionMetadata` object it was derived from
+(`CatalogSearchProjection.metadata`, compared by identity). The registries own that key:
+`CustomFunctionManager._clear_caches` calls `RegistryService.custom_functions_changed`,
+which keeps every library's loaded metadata and derives only the unified lookup again
+(custom functions are never in a library's disk catalogue, so dropping the registries
+rebuilt every metadata object for nothing). Deleted: the `_projections is None` state
+(derived). `tests/unit/test_function_catalog_projection_reuse.py` counts projections.
+
+Measured in-process, CPU only, 269 functions (seconds of the `prepare_projections` that
+follows / entries projected):
+
+| | before | after |
+| --- | --- | --- |
+| register a first source | 6.15 s / 270 | 0.051 s / 1 |
+| register a second | 5.17 s / 271 | 0.051 s / 1 |
+| edit | 6.53 s / 271 | 0.049 s / 1 |
+| delete | 6.02 s / 270 | 0.039 s / 0 |
+
+The registration call itself is 0.03 s before and after. Not measured in a real server.
+
 ## Gates
 
 See the PR description.

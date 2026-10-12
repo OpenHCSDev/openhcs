@@ -12,7 +12,18 @@ import signal
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Self, Sequence
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Self,
+    Sequence,
+)
 
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -132,6 +143,27 @@ class WorkerExecutorResources(ABC):
 
     def execution_context(self):
         return contextlib.nullcontext()
+
+    def prepare_pipeline(
+        self, execution_bundle: CompiledExecutionBundle, worker_count: int
+    ) -> int:
+        """Prepare this pipeline before any lane starts; return loads done.
+
+        First this process tries again, once each, the acquisitions the
+        pipeline's steps select that failed; one that fails again raises
+        ``AcquisitionFailedError`` and nothing is loaded. Then the processes
+        that will run the pipeline load what it selects.
+        """
+        if acquire_failed_selections(execution_bundle):
+            self.hold_new_acquisitions()
+        return self.load_pipeline_resources(execution_bundle, worker_count)
+
+    def hold_new_acquisitions(self) -> None:
+        """Make the processes that run lanes hold what this process just acquired.
+
+        Nothing here: the lanes of this mode run in this process, or in
+        processes started after this call.
+        """
 
     def load_pipeline_resources(
         self, execution_bundle: CompiledExecutionBundle, worker_count: int
@@ -715,6 +747,38 @@ class PrepareWorker(AnsweredWorkerCommand):
         set_progress_queue(WorkerConnectionProgressQueue(connection))
 
 
+def compiled_invocations(
+    execution_bundle: CompiledExecutionBundle,
+) -> Iterator[CompiledFunctionInvocation]:
+    """Every function invocation of the pipeline's compiled steps."""
+    for context in execution_bundle.transport_contexts.values():
+        for step_plan in context.step_plans.values():
+            pattern = step_plan.compiled_function_pattern
+            if pattern is not None:
+                yield from pattern.iter_invocations()
+
+
+def declared_preparation(invocation: CompiledFunctionInvocation) -> CallablePreparation:
+    """The preparation the invocation's function declares."""
+    return CallablePreparation(
+        CallableProjection.from_callable(invocation.contract.func).resolved()
+    )
+
+
+def acquire_failed_selections(execution_bundle: CompiledExecutionBundle) -> int:
+    """Try again, in this process, each failed acquisition the pipeline selects.
+
+    Each is tried once: an acquisition that succeeds is no longer failed when
+    a later step selects it, and one that fails again raises, naming the
+    function, the value and the cause, and stays recorded for the next
+    attempt. Returns how many were acquired.
+    """
+    return sum(
+        declared_preparation(invocation).acquire_selected_again(invocation.kwargs_dict)
+        for invocation in compiled_invocations(execution_bundle)
+    )
+
+
 @dataclass(frozen=True)
 class PipelineResourceLoads:
     """What a compiled pipeline loads into each process that runs it.
@@ -728,22 +792,17 @@ class PipelineResourceLoads:
 
     @staticmethod
     def operation(invocation: CompiledFunctionInvocation) -> LoadHookPreparation | None:
-        return CallablePreparation(
-            CallableProjection.from_callable(invocation.contract.func).resolved()
-        ).selected_load(invocation.kwargs_dict, invocation.execution_device_id)
+        return declared_preparation(invocation).selected_load(
+            invocation.kwargs_dict, invocation.execution_device_id
+        )
 
     @classmethod
     def from_bundle(cls, execution_bundle: CompiledExecutionBundle) -> Self:
         by_identity: dict[Hashable, CompiledFunctionInvocation] = {}
-        for context in execution_bundle.transport_contexts.values():
-            for step_plan in context.step_plans.values():
-                pattern = step_plan.compiled_function_pattern
-                if pattern is None:
-                    continue
-                for invocation in pattern.iter_invocations():
-                    operation = cls.operation(invocation)
-                    if operation is not None:
-                        by_identity.setdefault(operation.identity, invocation)
+        for invocation in compiled_invocations(execution_bundle):
+            operation = cls.operation(invocation)
+            if operation is not None:
+                by_identity.setdefault(operation.identity, invocation)
         return cls(by_identity)
 
     @property
@@ -1234,6 +1293,10 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
         missing = worker_count - len(self._leased)
         if missing > 0:
             self._leased.extend(self._runner.acquire(missing))
+
+    def hold_new_acquisitions(self) -> None:
+        """Fork the prepared workers again, before any is leased for this pipeline."""
+        self._runner.replace_with_current_forks()
 
     def load_pipeline_resources(
         self, execution_bundle: CompiledExecutionBundle, worker_count: int

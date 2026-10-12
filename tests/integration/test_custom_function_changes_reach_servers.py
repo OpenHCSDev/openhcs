@@ -148,7 +148,9 @@ def test_an_edit_is_acquired_again_and_the_old_revision_is_withdrawn(
         "the server publishes the new revision only"
     )
     calls_after = [
-        event for event in _all(events, "call") if _at(events, event) > _at(events, after)
+        event
+        for event in _all(events, "call", function="followed")
+        if _at(events, event) > _at(events, after)
     ]
     assert calls_after and {event["revision"] for event in calls_after} == {"two"}
     assert len(_all(events, "acquire", function="followed")) == 2, (
@@ -182,3 +184,93 @@ def test_a_deleted_function_is_withdrawn_and_a_compile_naming_it_is_refused(
     assert "followed" not in [name for name, _revision in state["loaded"]]
     assert "followed" in refused["message"]
     assert "custom function" in refused["message"].lower()
+
+
+# --- A declared value that could not be acquired (function "valued") ---
+
+
+def _between(events: list[dict], start: dict, end: dict) -> list[dict]:
+    return events[_at(events, start) + 1 : _at(events, end)]
+
+
+def test_a_function_is_published_without_the_value_that_could_not_be_acquired(
+    events: list[dict],
+) -> None:
+    state = _one(events, "server_state", moment="valued_created")
+    listed = _one(events, "listed", moment="valued_created")
+    cause = "model='large' (ConnectionError: weights are unreachable)"
+
+    assert "valued" in [name for name, _revision in state["loaded"]]
+    assert "valued" not in [name for name, _message in state["failed"]]
+    assert state["unacquired"] == [["valued", [cause]]]
+    assert dict(listed["entries"])["valued (values not acquired)"] == (
+        f"Loaded; not acquired: on the execution server: {cause}"
+    )
+    before_compile = events[: _at(events, _one(events, "valued_compile_start"))]
+    assert [
+        event["model"] for event in _all(before_compile, "acquire", function="valued")
+    ] == ["small", "large"], "every declared value is tried once when the source loads"
+
+
+def test_a_compile_selecting_the_unacquired_value_passes_and_acquires_nothing(
+    events: list[dict],
+) -> None:
+    compile_window = _between(
+        events, _one(events, "valued_compile_start"), _one(events, "valued_compile_end")
+    )
+    assert [event["kind"] for event in compile_window if event["function"] == "valued"] == []
+
+
+def test_preparing_the_pipeline_fails_naming_the_value_while_it_is_unreachable(
+    events: list[dict],
+) -> None:
+    failed = _one(events, "prepare_failed", function="valued")
+    window = _between(
+        events,
+        _one(events, "valued_prepare_start", attempt="unreachable"),
+        _one(events, "valued_prepare_end", attempt="unreachable"),
+    )
+    server = _one(events, "acquire", function="followed", revision="one")["pid"]
+
+    assert "'valued' could not be acquired for model='large'" in failed["message"]
+    assert "ConnectionError: weights are unreachable" in failed["message"]
+    assert [
+        (event["kind"], event["model"], event["pid"])
+        for event in window
+        if event["function"] == "valued" and event["kind"] != "prepare_failed"
+    ] == [("acquire", "large", server)], "tried once, in the server; no worker loaded"
+
+
+def test_once_reachable_the_next_preparation_acquires_once_and_the_execution_nothing(
+    events: list[dict],
+) -> None:
+    prepare_window = _between(
+        events,
+        _one(events, "valued_prepare_start", attempt="reachable"),
+        _one(events, "valued_prepare_end", attempt="reachable"),
+    )
+    execute_window = _between(
+        events, _one(events, "valued_execute_start"), _one(events, "valued_execute_end")
+    )
+    server = _one(events, "acquire", function="followed", revision="one")["pid"]
+    acquisitions = [event for event in prepare_window if event["kind"] == "acquire"]
+    loads = [event for event in prepare_window if event["kind"] == "load"]
+    calls = [event for event in execute_window if event["kind"] == "call"]
+
+    assert [(event["model"], event["pid"]) for event in acquisitions] == [
+        ("large", server)
+    ], "acquired exactly once, by the server"
+    assert loads and all(
+        event["model"] == "large"
+        and event["parent"] == server
+        and _at(events, event) > _at(events, acquisitions[0])
+        for event in loads
+    ), "the workers load after the server acquired"
+    assert calls and {event["pid"] for event in calls} <= {event["pid"] for event in loads}
+    assert [
+        event["kind"] for event in execute_window if event["kind"] in ("acquire", "load")
+    ] == [], "the execution contains no acquisition and no load"
+    assert len(_all(events, "acquire", function="valued", model="large")) == 3, (
+        "source load, failed preparation, successful preparation: nothing else retried"
+    )
+    assert _one(events, "server_state", moment="valued_acquired")["unacquired"] == []

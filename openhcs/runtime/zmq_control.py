@@ -15,7 +15,6 @@ from openhcs.agent.dto.functions import FunctionCatalogControlRequestABC
 from openhcs.processing.custom_functions.catalogue_changes import (
     CustomCatalogueStateRequest,
     CustomFunctionChange,
-    ServerCatalogueState,
 )
 
 if TYPE_CHECKING:
@@ -485,10 +484,11 @@ class CustomCatalogueStateMessageStrategy(ZMQControlMessageStrategy):
 
     @staticmethod
     def response(preparation: "FunctionCatalogPreparation") -> dict:
-        return {
-            MessageFields.STATUS: ResponseType.OK.value,
-            ServerCatalogueState.state_key: preparation.custom_catalogue_state(),
-        }
+        from openhcs.agent.dto.functions import CustomCatalogueStateControlResponse
+
+        return CustomCatalogueStateControlResponse(
+            value=preparation.custom_catalogue_state()
+        ).to_control_response()
 
     def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         try:

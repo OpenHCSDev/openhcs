@@ -116,6 +116,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     CustomFunctionRegistrationHandle,
     CustomFunctionRegistrationObservation,
+    CustomFunctionRetryRequest,
+    CustomFunctionServerState,
     FunctionCatalogPage,
     FunctionCatalogPreparationHandle,
     FunctionCatalogPreparationState,
@@ -2161,6 +2163,60 @@ class ObserveCustomFunctionRegistrationCapability(FunctionCatalogCapability):
     invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.observe_custom_function_registration(request),
+    )
+
+
+class RetryCustomFunctionCapability(FunctionCatalogCapability):
+    from openhcs.processing.custom_functions.catalogue_changes import (
+        CustomFunctionRetried,
+    )
+
+    name = "openhcs_retry_custom_function"
+    cli_command = "retry-custom-function"
+    title = "Retry custom function acquisition"
+    description = (
+        f"{' '.join(getdoc(CustomFunctionRetried).split())} "
+        "Sent to the execution server at the explicit port; nothing is retried "
+        "automatically. Returns at once with the server's custom-function state: "
+        "while pending is true, read openhcs_get_custom_function_server_state until "
+        "it is false; failed lists sources that did not load and unacquired lists "
+        "values a loaded function is missing, each with its cause."
+    )
+    service = "endpoint_function_catalog"
+    exposition = FunctionCatalogCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    mutating = True
+    side_effects = ("retries_custom_function_acquisition", "updates_function_registry")
+    input_contract = CustomFunctionRetryRequest
+    output_contract = CustomFunctionServerState
+    invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.retry_custom_function(request),
+    )
+
+
+class GetCustomFunctionServerStateCapability(FunctionCatalogCapability):
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+
+    name = "openhcs_get_custom_function_server_state"
+    cli_command = "get-custom-function-server-state"
+    title = "Read custom function state"
+    description = (
+        f"{getdoc(CustomFunctionServerState)} Reads the execution "
+        "server at the explicit port without changing it: pending while it loads "
+        "or acquires, then loaded sources, failed sources and unacquired values "
+        "with their causes."
+    )
+    service = "endpoint_function_catalog"
+    exposition = FunctionCatalogCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    input_contract = ExecutionConnectionSpec
+    output_contract = CustomFunctionServerState
+    invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.custom_function_server_state(request),
     )
 
 

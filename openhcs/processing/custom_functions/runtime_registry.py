@@ -502,6 +502,28 @@ class CustomFunctionRuntimeRegistry:
                 cls._source_revision = None
 
     @classmethod
+    def forget_failure(cls, function_name: str) -> bool:
+        """Forget that this function's source failed to load; say whether it had.
+
+        The next load runs the source and its acquisitions again. The
+        remembered source set is dropped with it, so that load is not skipped
+        as unchanged. A source that loaded, or is still loading, is left alone.
+        """
+        with cls._lock:
+            failed = tuple(
+                source
+                for source, outcome in cls._preparation_outcomes.items()
+                if source.function_name == function_name
+                and outcome.done()
+                and outcome.exception() is not None
+            )
+            for source in failed:
+                cls._preparation_outcomes.pop(source)
+            if failed:
+                cls._source_revision = None
+            return bool(failed)
+
+    @classmethod
     def clear(cls) -> None:
         """Clear every derived runtime projection and source revision."""
 

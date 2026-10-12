@@ -831,6 +831,10 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
     ) -> dict[str, int]:
         """Load what the pipeline selects into the workers that will run it.
 
+        Before any worker loads, this server tries again the acquisitions the
+        pipeline's steps select that failed; one that fails again fails this
+        job with the function, the value and the cause.
+
         The workers are returned to the front of the prepared set, so the
         execution of this pipeline is given the same processes.
         """
@@ -846,7 +850,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         )
         started = time.perf_counter()
         with resources.execution_context():
-            loads = resources.load_pipeline_resources(execution_bundle, worker_count)
+            loads = resources.prepare_pipeline(execution_bundle, worker_count)
         logger.info(
             "[%s] Prepared pipeline: %d resource load(s) across %d worker(s) in %.3fs",
             execution_id,

@@ -1,4 +1,4 @@
-"""Create, edit and delete custom functions while a real server is connected.
+"""Create, edit, retry and delete custom functions while a real server is connected.
 
 The driver is the session: it holds one connected client and calls the
 manager's operations, nothing else. The manager tells the server. Every
@@ -57,6 +57,39 @@ def not_acquirable(image):
     return image
 '''
 
+# One declared value cannot be acquired until a marker file exists (the network
+# comes back). The function is published for the other value meanwhile.
+VALUED = '''
+from pathlib import Path
+from typing import Literal
+from prepared_resource_trace import record
+from openhcs.core.memory import numpy as numpy_function
+
+HELD = set()
+
+def _acquire(model: Literal["small", "large"]) -> None:
+    record("acquire", "valued", model=model)
+    if model == "large" and not Path({marker!r}).exists():
+        raise ConnectionError("weights are unreachable")
+
+def _load(model: Literal["small", "large"]) -> None:
+    record("load", "valued", model=model)
+    HELD.add(model)
+
+@numpy_function(prepare=_acquire, load=_load)
+def valued(image, model: Literal["small", "large"] = "small"):
+    """Return the stack.
+
+    Args:
+        image: Image stack.
+        model: Which resource to use.
+    """
+    if model not in HELD:
+        _load(model)
+    record("call", "valued", model=model)
+    return image
+'''
+
 
 def main() -> None:
     work = Path(sys.argv[1]).resolve()
@@ -83,6 +116,7 @@ def main() -> None:
     from openhcs.runtime.zmq_execution_client import (
         OpenHCSExecutionSubmission,
         ZMQExecutionClient,
+        ZMQExecutionRequestBuilder,
     )
     from zmqruntime.execution.responses import (
         ExecutionSubmissionResponse,
@@ -168,8 +202,24 @@ def main() -> None:
             pending=state.pending,
             loaded=[[source.function_name, source.content_sha256] for source in state.loaded],
             failed=[[failure.name, failure.message] for failure in state.failed],
+            unacquired=[
+                [missing.name, list(missing.values)] for missing in state.unacquired
+            ],
         )
         listed(moment)
+
+    def prepared(task, compile_id: str) -> None:
+        """The "prepare this pipeline" job of a compiled pipeline."""
+        preparation_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_prepared_pipeline(
+                ZMQExecutionRequestBuilder.from_task(task).with_worker_preparation(
+                    compile_id
+                )
+            )
+        ).require_execution_id("prepare")
+        ExecutionWaitResult.from_wire(
+            client.wait_for_completion(preparation_id)
+        ).require_complete("prepare")
 
     try:
         if not client.connect(timeout=1800):
@@ -203,6 +253,46 @@ def main() -> None:
             compiled(naming_deleted)
         except Exception as error:
             record("refused", "followed", message=str(error))
+
+        # A value that cannot be acquired yet: published without it, tried
+        # again by "prepare this pipeline", never inside a compile or execute.
+        marker = work / "weights-reachable"
+        record("create_valued")
+        [valued] = manager.register_from_code(VALUED.format(marker=str(marker)))
+        followed("valued_created")
+        selects_large = (valued, {"model": "large"})
+        record("valued_compile_start")
+        compile_id = compiled(submission(selects_large))
+        record("valued_compile_end")
+        record("valued_prepare_start", attempt="unreachable")
+        try:
+            prepared(submission(selects_large), compile_id)
+        except Exception as error:
+            record("prepare_failed", "valued", message=str(error))
+        record("valued_prepare_end", attempt="unreachable")
+        marker.touch()
+        record("valued_prepare_start", attempt="reachable")
+        prepared(submission(selects_large), compile_id)
+        record("valued_prepare_end", attempt="reachable")
+        record("valued_execute_start")
+        execution_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_pipeline(
+                submission(selects_large, compile_artifact_id=compile_id)
+            )
+        ).require_execution_id("execute")
+        ExecutionWaitResult.from_wire(
+            client.wait_for_completion(execution_id)
+        ).require_complete("execute")
+        record("valued_execute_end")
+        state = client.custom_catalogue_state()
+        record(
+            "server_state",
+            moment="valued_acquired",
+            pending=state.pending,
+            unacquired=[
+                [missing.name, list(missing.values)] for missing in state.unacquired
+            ],
+        )
     finally:
         client.disconnect()
 

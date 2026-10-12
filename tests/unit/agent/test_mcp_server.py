@@ -1812,6 +1812,99 @@ def test_mcp_tool_error_classifies_pipeline_authoring_mistakes():
     assert generic["errors"][0]["code"] == "mcp_tool_failed"
 
 
+def test_mcp_retry_custom_function_sends_the_retry_change_to_the_selected_server():
+    """The tool sends the change the manager's retry sends and returns the server's state."""
+    if importlib.util.find_spec("mcp") is None:
+        return
+    from openhcs.agent.capabilities import RetryCustomFunctionCapability
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        ZMQFunctionCatalogService,
+    )
+    from openhcs.processing.custom_functions.catalogue_changes import (
+        CustomFunctionRetried,
+        ServerCatalogueState,
+        SourceFailedOnServer,
+        ValuesUnacquiredOnServer,
+    )
+    from openhcs.processing.custom_functions.source_namespace import (
+        CustomFunctionSource,
+    )
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+
+    settled = ServerCatalogueState(
+        pending=False,
+        loaded=(CustomFunctionSource("valued", "0" * 64),),
+        failed=(SourceFailedOnServer("broken", "ConnectionError: no route", 4),),
+        unacquired=(
+            ValuesUnacquiredOnServer(
+                "valued", ("model='large' (ConnectionError: no route)",)
+            ),
+        ),
+    )
+    told, endpoints = [], []
+
+    class _Client:
+        def follow_custom_function_change(self, change):
+            told.append(change)
+            return ServerCatalogueState(pending=True)
+
+        def custom_catalogue_state(self):
+            return settled
+
+        def disconnect(self):
+            pass
+
+    def client_for(endpoint):
+        endpoints.append(endpoint.default_port)
+        return _Client()
+
+    service = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG, client_factory=client_for
+    )
+    context = SimpleNamespace(endpoint_function_catalog=service)
+
+    async def call_tools():
+        built = server.build_server(context)
+        tools = {tool.name: tool for tool in await built.list_tools()}
+        retry_tool = tools["openhcs_retry_custom_function"]
+        assert retry_tool.description == RetryCustomFunctionCapability.description
+        assert retry_tool.description.startswith(
+            " ".join(inspect.getdoc(CustomFunctionRetried).split())
+        )
+        assert retry_tool.annotations.readOnlyHint is False
+        assert tools["openhcs_get_custom_function_server_state"].annotations.readOnlyHint
+        retried = await built.call_tool(
+            "openhcs_retry_custom_function",
+            {"function_name": "valued", "connection": {"port": 15993}},
+        )
+        state = await built.call_tool(
+            "openhcs_get_custom_function_server_state", {"port": 15993}
+        )
+        return retried, state
+
+    try:
+        retried, state = (
+            json.loads(_direct_tool_text(result)) for result in asyncio.run(call_tools())
+        )
+    finally:
+        service.close()
+
+    assert told == [CustomFunctionRetried(name="valued")]
+    assert endpoints == [15993]
+    assert not retried["errors"] and retried["state"]["pending"] is True
+    assert not state["errors"]
+    assert state["state"] == {
+        "pending": False,
+        "loaded": [{"function_name": "valued", "content_sha256": "0" * 64}],
+        "failed": [
+            {"name": "broken", "message": "ConnectionError: no route", "line_number": 4}
+        ],
+        "unacquired": [
+            {"name": "valued", "values": ["model='large' (ConnectionError: no route)"]}
+        ],
+    }
+
+
 def test_mcp_register_custom_function_delegates_to_function_catalog_service():
     if importlib.util.find_spec("mcp") is None:
         return

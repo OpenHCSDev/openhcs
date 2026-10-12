@@ -38,6 +38,11 @@ class PersistedCustomFunction(ABC):
     def status(self) -> str:
         """Whether the source is loaded, and the error when it is not."""
 
+    @property
+    def can_retry(self) -> bool:
+        """Whether something this source needs failed and can be tried again."""
+        return False
+
 
 @dataclass(frozen=True)
 class CustomFunctionLoadFailure(PersistedCustomFunction):
@@ -74,6 +79,10 @@ class CustomFunctionLoadFailure(PersistedCustomFunction):
     @property
     def status(self) -> str:
         return f"Failed to load: {self.describe()}"
+
+    @property
+    def can_retry(self) -> bool:
+        return True
 
     def describe(self) -> str:
         """File, line and error as one line of text."""
@@ -113,6 +122,44 @@ class CustomFunctionInfo(PersistedCustomFunction):
     @property
     def backend_label(self) -> str:
         return self.memory_type or self.contract.execution_scope.value
+
+    def with_unacquired(self, values: tuple[str, ...]) -> CustomFunctionInfo:
+        """This entry, also listing declared values that could not be acquired."""
+        if not values:
+            return self
+        return CustomFunctionMissingValues(
+            name=self.name,
+            file_path=self.file_path,
+            contract=self.contract,
+            unacquired=values,
+        )
+
+
+@dataclass(frozen=True)
+class CustomFunctionMissingValues(CustomFunctionInfo):
+    """A source that loaded, with declared values that could not be acquired.
+
+    A pipeline can use the values that were acquired. One that selects a
+    missing value has it tried again when the pipeline is prepared.
+    """
+
+    unacquired: tuple[str, ...]
+    """Each missing value with its cause, as ``model='large' (ConnectionError: ...)``."""
+
+    def with_unacquired(self, values: tuple[str, ...]) -> CustomFunctionInfo:
+        return CustomFunctionInfo.with_unacquired(self, (*self.unacquired, *values))
+
+    @property
+    def list_label(self) -> str:
+        return f"{self.name} (values not acquired)"
+
+    @property
+    def status(self) -> str:
+        return "Loaded; not acquired: " + "; ".join(self.unacquired)
+
+    @property
+    def can_retry(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)

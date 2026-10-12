@@ -36,6 +36,7 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         - Create new functions
         - Edit existing functions
         - Delete functions
+        - Retry a failed load or acquisition
         - Automatic refresh via signals
     """
 
@@ -112,6 +113,15 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         self.delete_btn.setEnabled(False)
         button_layout.addWidget(self.delete_btn)
 
+        self.retry_btn = QPushButton("Retry")
+        self.retry_btn.setToolTip(
+            "Try again what failed for this function, here and on the "
+            "connected execution servers. Nothing is retried automatically."
+        )
+        self.retry_btn.clicked.connect(self._on_retry_clicked)
+        self.retry_btn.setEnabled(False)
+        button_layout.addWidget(self.retry_btn)
+
         button_layout.addStretch()
 
         self.close_btn = QPushButton("Close")
@@ -151,11 +161,13 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         if func_info is None:
             self.edit_btn.setEnabled(False)
             self.delete_btn.setEnabled(False)
+            self.retry_btn.setEnabled(False)
             self._clear_details()
             return
 
         self.edit_btn.setEnabled(True)
         self.delete_btn.setEnabled(True)
+        self.retry_btn.setEnabled(func_info.can_retry)
 
         self.name_label.setText(f"Name: {func_info.name}")
         self.backend_label.setText(f"Backend: {func_info.backend_label}")
@@ -256,6 +268,17 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         except ValueError as e:
             # Function not found
             QMessageBox.warning(self, "Function Not Found", str(e))
+
+    def _on_retry_clicked(self):
+        """Try again what failed for the selected function."""
+        func_info = self._selected_function()
+        if func_info is None:
+            return
+        try:
+            self.manager.retry_acquisition(func_info.name)
+            # List will auto-refresh via signal
+        except ValueError as e:
+            QMessageBox.warning(self, "Nothing To Retry", str(e))
 
     def _on_delete_clicked(self):
         """Handle delete function button click."""

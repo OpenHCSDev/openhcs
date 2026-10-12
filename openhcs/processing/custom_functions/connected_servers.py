@@ -23,6 +23,7 @@ from openhcs.processing.custom_functions.catalogue_changes import (
 )
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.listing import (
+    CustomFunctionInfo,
     CustomFunctionLoadFailure,
     CustomFunctionPreparing,
     PersistedCustomFunction,
@@ -40,8 +41,8 @@ class CustomFunctionServer(ABC):
         """Whether this process holds a connection to the server now."""
 
     @abstractmethod
-    def server_process(self) -> Hashable:
-        """Which server process is at the other end of the connection."""
+    def server_address(self) -> Hashable:
+        """Where the server is; two connections to one address are one server."""
 
     @abstractmethod
     def follow_custom_function_change(
@@ -58,21 +59,21 @@ class ServerReport(ABC):
     """What the connected servers say about one function this process loaded."""
 
     @abstractmethod
-    def listing(self, loaded_here: PersistedCustomFunction) -> PersistedCustomFunction:
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
         """The entry the manager lists for the function."""
 
 
 class AcquiredOnServers(ServerReport):
     """Every connected server holds the function (or none is connected)."""
 
-    def listing(self, loaded_here: PersistedCustomFunction) -> PersistedCustomFunction:
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
         return loaded_here
 
 
 class PreparingOnServers(ServerReport):
     """A connected server was told and has not finished."""
 
-    def listing(self, loaded_here: PersistedCustomFunction) -> PersistedCustomFunction:
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
         return CustomFunctionPreparing(
             name=loaded_here.name, file_path=loaded_here.file_path
         )
@@ -85,13 +86,25 @@ class FailedOnServer(ServerReport):
     message: str
     line_number: int
 
-    def listing(self, loaded_here: PersistedCustomFunction) -> PersistedCustomFunction:
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
         return CustomFunctionLoadFailure(
             name=loaded_here.name,
             file_path=loaded_here.file_path,
             error=ValidationError(
                 f"On the execution server: {self.message}", self.line_number
             ),
+        )
+
+
+@dataclass(frozen=True)
+class UnacquiredOnServer(ServerReport):
+    """A connected server publishes the function without some declared values."""
+
+    values: tuple[str, ...]
+
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
+        return loaded_here.with_unacquired(
+            tuple(f"on the execution server: {value}" for value in self.values)
         )
 
 
@@ -113,11 +126,11 @@ class ConnectedServers:
             self._servers.add(server)
 
     def connected(self) -> tuple[CustomFunctionServer, ...]:
-        """One connection per server process this process is connected to."""
+        """One connection per server this process is connected to."""
         with self._lock:
             servers = tuple(self._servers)
         by_process = {
-            server.server_process(): server
+            server.server_address(): server
             for server in servers
             if server.is_connected()
         }
@@ -140,7 +153,7 @@ class ConnectedServers:
             self._followers.append(follower)
         follower.start()
 
-    def listing(self, loaded_here: PersistedCustomFunction) -> PersistedCustomFunction:
+    def listing(self, loaded_here: CustomFunctionInfo) -> PersistedCustomFunction:
         """The manager's entry for a function this process loaded."""
         with self._lock:
             report = self._reports.get(loaded_here.name, AcquiredOnServers())
@@ -161,6 +174,7 @@ class ConnectedServers:
         change: CustomFunctionChange,
     ) -> None:
         failed: dict[str, ServerReport] = {}
+        unacquired: dict[str, tuple[str, ...]] = {}
         for server in servers:
             try:
                 state = self._state_after(server, change)
@@ -177,9 +191,18 @@ class ConnectedServers:
                 failed[failure.name] = FailedOnServer(
                     failure.message, failure.line_number
                 )
+            for missing in state.unacquired:
+                unacquired[missing.name] = (
+                    *unacquired.get(missing.name, ()),
+                    *missing.values,
+                )
         with self._lock:
             for name in change.function_names:
                 self._reports.pop(name, None)
+            self._reports.update(
+                (name, UnacquiredOnServer(values))
+                for name, values in unacquired.items()
+            )
             self._reports.update(failed)
             self._followers.remove(threading.current_thread())
         custom_function_changed.emit()
