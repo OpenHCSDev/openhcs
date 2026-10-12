@@ -29,6 +29,7 @@ from zmqruntime.config import (
 from zmqruntime.transport import get_default_transport_mode
 
 from formbridge.bridge.server import UiBridgeServerConfig
+from openhcs.core.stated_types import require_stated_field_types
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_cache import ConfigCacheSpec
@@ -314,6 +315,9 @@ class UIConfig:
         """Return the ObjectState scope owned by this process-global config type."""
 
         return f"{cls.__module__}.{cls.__qualname__}"
+
+
+require_stated_field_types(UIConfig)
 
 
 @dataclass(frozen=True)

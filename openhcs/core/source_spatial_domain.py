@@ -28,6 +28,10 @@ from python_introspect import to_jsonable
 
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
 
+# The scalar written outside a crop. numpy casts it to the array's dtype, and the
+# domain is stored as JSON, so it is a Python number or a mask's ``False``.
+FillValue = bool | int | float
+
 
 def _spatial_shape_pair(value: Sequence[int], field_name: str) -> tuple[int, int]:
     """Return the leading Y/X dimensions from a spatial shape value."""
@@ -85,7 +89,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
     origin_yx: tuple[int, int] | None = None
     source_shape_yx: tuple[int, int] | None = None
-    fill_value: Any = 0
+    fill_value: FillValue = 0
     value_name: str = "Dense array"
 
     __registry_family__ = RegistryFamily("spatial_rank")
@@ -172,7 +176,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         payload: ViewerWireMapping,
         *,
         source_label: str,
-        fill_value: Any = 0,
+        fill_value: FillValue = 0,
         value_name: str = "Dense array",
     ) -> "SourceSpatialDomain":
         """Build a source-spatial domain from viewer-wire metadata."""
@@ -250,7 +254,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         domains: Iterable["SourceSpatialDomain"],
         *,
         expand_varying_domains: bool = False,
-        fill_value: Any = 0,
+        fill_value: FillValue = 0,
         value_name: str = "Dense array",
     ) -> "SourceSpatialDomain":
         """Return the shared source-spatial domain represented by many values."""
@@ -320,7 +324,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         """Return this domain with a consumer-specific value label."""
         return replace(self, value_name=value_name)
 
-    def with_fill_value(self, fill_value: Any) -> Self:
+    def with_fill_value(self, fill_value: FillValue) -> Self:
         """Return this domain with a replacement dense materialization fill."""
         return replace(self, fill_value=fill_value)
 
@@ -751,7 +755,7 @@ class SourceSpatialDomainAdapter(ABC):
         adapters: tuple["SourceSpatialDomainAdapter", ...],
         *,
         value_name: str,
-        fill_value: Any = 0,
+        fill_value: FillValue = 0,
     ) -> SourceSpatialDomain | None:
         """Return the shared source-image domain declared by these adapters."""
         source_shape = cls.common_source_shape_yx(adapters)
@@ -865,7 +869,7 @@ def dense_array_in_source_spatial_domain(
     spatial_axes_yx: tuple[int, int],
     spatial_origin_yx: tuple[int, int] | None,
     source_spatial_shape_yx: tuple[int, int] | None,
-    fill_value: Any = 0,
+    fill_value: FillValue = 0,
     value_name: str = "Dense array",
 ) -> Any:
     """Place a dense XY array payload into its declared source XY domain."""

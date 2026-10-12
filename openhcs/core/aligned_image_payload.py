@@ -49,6 +49,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import (
+    FillValue,
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
 )
@@ -101,7 +102,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         cls,
         metadata: ImagePayloadMetadata,
         *,
-        fill_value: Any = 0,
+        fill_value: FillValue = 0,
         source_domain: SourceSpatialDomain | None = None,
         value_name: str,
     ) -> SourceSpatialDomain:
