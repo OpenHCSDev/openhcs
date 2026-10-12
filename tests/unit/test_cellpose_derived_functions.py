@@ -121,6 +121,8 @@ def test_no_control_is_typed_any_and_every_default_is_cellposes():
                         if control.name == "normalize"
                         else library_default
                     )
+                elif isinstance(library_default, list):
+                    assert control.default == tuple(library_default)
                 else:
                     assert control.default == library_default or (
                         control.default is None and not library_default
@@ -403,6 +405,7 @@ def test_a_function_of_one_plane_equals_cellpose_on_every_plane(name, stack, seg
     if expected[0].ndim == 3:
         expected = [_channels_last(flow) for flow in expected]
     assert np.array_equal(image, stack)
+    result = np.asarray(result)
     assert np.array_equal(result, np.stack(expected))
     assert result.any()
     if name in LABEL_RESULTS:

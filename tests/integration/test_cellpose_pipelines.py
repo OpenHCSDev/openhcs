@@ -205,7 +205,8 @@ def test_labels_pass_through_a_mask_function_to_a_measuring_custom_function(
     )
     kept = np.stack([utils.remove_edge_masks(mask.astype(np.int32)) for mask in masks])
     assert kept.max() < np.stack(masks).max()
-    assert np.array_equal(output(root, "cellpose_labels_step1"), kept)
+    after = tifffile.imread(one(root, "*cellpose_labels_step1.cellpose_labels.tif"))
+    assert np.array_equal(after, kept)
     counts = table(root, "*object_counts_step1_details.csv")
     assert [int(row["object_count"]) for row in counts] == [plane.max() for plane in kept]
     measured = table(root, "*object_measurements_step2_details.csv")

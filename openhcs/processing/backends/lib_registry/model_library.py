@@ -201,14 +201,31 @@ class Statement(ABC):
         """The library arguments this parameter contributes to one call."""
 
 
+def _scalars_of_one_type(default: object) -> bool:
+    return (
+        isinstance(default, list)
+        and len({type(item) for item in default}) == 1
+        and type(default[0]) in _SCALAR_TYPES.values()
+    )
+
+
 class Derived(Statement):
-    """A control typed by the library itself; said of every undeclared parameter."""
+    """A control typed by the library itself; said of every undeclared parameter.
+
+    A default that lists scalars of one type is a tuple of that type, and the
+    library is given a list again.
+    """
 
     def controls(self, site):
-        return (site.control(site.derived_annotation(), site.parameter.default),)
+        default = site.parameter.default
+        if _scalars_of_one_type(default):
+            return (site.control(tuple[type(default[0]), ...], tuple(default)),)
+        return (site.control(site.derived_annotation(), default),)
 
     def arguments(self, site, values, give):
-        return {site.name: values[site.name]}
+        value = values[site.name]
+        listed = _scalars_of_one_type(site.parameter.default)
+        return {site.name: list(value) if listed else value}
 
 
 class ImageStack(Statement):
@@ -420,6 +437,10 @@ def _image(array: np.ndarray, channel_axis: int | None = None) -> np.ndarray:
     return array if channel_axis is None else np.moveaxis(array, -1, channel_axis)
 
 
+def _planes(stack: np.ndarray, channel_axis: int | None = None) -> list[np.ndarray]:
+    return [_image(plane, channel_axis) for plane in stack]
+
+
 class StackUse(ABC):
     """How a function hands the step's stack to the library and reads the result."""
 
@@ -435,7 +456,7 @@ class ListOfPlanes(StackUse):
     """
 
     def per_image(self, run, planes):
-        result = run(lambda stack, axis=None: [_image(plane, axis) for plane in stack])
+        result = run(_planes)
 
         def read(at: Where) -> list:
             part = _at(result, at[:1])
@@ -467,7 +488,7 @@ class PlanesWithOneResult(StackUse):
     """One call with a list of planes whose result is about all of them."""
 
     def per_image(self, run, planes):
-        result = run(lambda stack, axis=None: [_image(plane, axis) for plane in stack])
+        result = run(_planes)
         return lambda at: [_at(result, at)]
 
 
