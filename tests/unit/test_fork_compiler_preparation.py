@@ -99,8 +99,9 @@ def test_backend_child_preparation_requires_explicit_cpu_cache(monkeypatch, tmp_
     index.touch()
     assert ObjectIntensityBackendStrategy.can_prepare_in_child()
     index.unlink()
+    # Without a configured directory Numba caches beside the source.
     monkeypatch.setattr(numba_config, "CACHE_DIR", "")
-    assert not ObjectIntensityBackendStrategy.can_prepare_in_child()
+    assert ObjectIntensityBackendStrategy.can_prepare_in_child()
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path))
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "false")
     assert not ObjectIntensityBackendStrategy.can_prepare_in_child()

@@ -999,3 +999,24 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
     # directly without paying that work during a pipeline or catalog request.
     assert result["catalog_request_seconds"] < 5.0
     assert {"openhcs", "skimage"}.issubset(result["library_roots"])
+
+
+def test_installed_requirements_are_parsed_once_per_process(monkeypatch):
+    """Every module's distribution question reads one parse of the metadata."""
+    from openhcs.processing.backends.lib_registry import openhcs_registry
+
+    reads = []
+    real_requires = openhcs_registry.importlib.metadata.requires
+
+    def counted(name):
+        reads.append(name)
+        return real_requires(name)
+
+    openhcs_registry._openhcs_requirements.cache_clear()
+    monkeypatch.setattr(openhcs_registry.importlib.metadata, "requires", counted)
+    try:
+        for _ in range(3):
+            openhcs_registry._catalog_policy_context()
+        assert reads == ["openhcs"]
+    finally:
+        openhcs_registry._openhcs_requirements.cache_clear()
