@@ -17,9 +17,15 @@ import openhcs.processing.custom_functions as custom_functions
 import openhcs.processing.custom_functions.manager as manager_module
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.processing.custom_functions.manager import CustomFunctionManager
+from openhcs.processing.custom_functions.events import custom_function_changed
+from openhcs.processing.custom_functions.manager import (
+    CustomFunctionInfo,
+    CustomFunctionLoadFailure,
+    CustomFunctionManager,
+)
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
+    project_custom_function,
 )
 from openhcs.processing.custom_functions.templates import AVAILABLE_MEMORY_TYPES
 from openhcs.processing.custom_functions.validation import ValidationError
@@ -579,33 +585,200 @@ def test_rename_rejects_existing_runtime_target_without_mutation(
     assert vars(custom_functions)["target_probe"] is target_callable
 
 
-def test_failed_bulk_reconciliation_preserves_last_proven_projection(
-    isolated_custom_runtime,
+def _listed(manager: CustomFunctionManager) -> list[tuple[str, type]]:
+    return [(item.list_label, type(item)) for item in manager.list_custom_functions()]
+
+
+def test_each_persisted_source_loads_on_its_own(
+    isolated_custom_runtime, monkeypatch, caplog,
 ) -> None:
+    """A source that fails validation and one that fails at import hide nothing."""
     manager = CustomFunctionManager()
+    invalid_path = isolated_custom_runtime / "a_invalid.py"
+    invalid_path.write_text(
+        "@numpy\ndef a_invalid(value):\n    return value\n", encoding="utf-8"
+    )
+    missing_import_path = isolated_custom_runtime / "b_missing_import.py"
+    missing_import_path.write_text(
+        "import numpy\nimport module_that_is_not_installed\n\n"
+        + _source("b_missing_import"),
+        encoding="utf-8",
+    )
+    (isolated_custom_runtime / "c_good.py").write_text(
+        _source("c_good"), encoding="utf-8"
+    )
+    executions = []
+    prepare_source = manager._prepare_source
+    monkeypatch.setattr(
+        manager,
+        "_prepare_source",
+        lambda code: executions.append(code) or prepare_source(code),
+    )
+    changes = []
+
+    def record_change() -> None:  # the event holds its subscribers weakly
+        changes.append("changed")
+
+    subscription = custom_function_changed.subscribe(record_change)
+
+    with caplog.at_level("ERROR", logger=manager_module.__name__):
+        assert manager.load_all_custom_functions() == 1
+
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {"c_good"}
+    assert callable(vars(custom_functions)["c_good"])
+    assert changes == ["changed"]
+    assert _listed(manager) == [
+        ("a_invalid (failed to load)", CustomFunctionLoadFailure),
+        ("b_missing_import (failed to load)", CustomFunctionLoadFailure),
+        ("c_good", CustomFunctionInfo),
+    ]
+    invalid, missing_import = manager.load_failures()
+    assert (invalid.file_path, invalid.line_number) == (invalid_path, 2)
+    assert "first parameter must be 'image'" in invalid.message
+    assert (missing_import.file_path, missing_import.line_number) == (
+        missing_import_path, 2,
+    )
+    assert missing_import.message == (
+        "Code execution failed: No module named 'module_that_is_not_installed'"
+    )
+    assert missing_import.error.code_snippet == "import module_that_is_not_installed"
+    assert missing_import.status == (
+        "Failed to load: b_missing_import.py, line 2: Code execution failed: "
+        "No module named 'module_that_is_not_installed'"
+    )
+    assert [record.getMessage() for record in caplog.records] == [
+        f"Custom function failed to load: {failure.describe()}"
+        for failure in (invalid, missing_import)
+    ]
+
+    # The failed set is this revision's outcome: nothing runs or reports twice.
+    assert CustomFunctionRuntimeRegistry.source_revision() == manager.source_revision()
+    assert len(executions) == 3
+    assert manager.load_all_custom_functions() == 1
+    assert (len(executions), changes) == (3, ["changed"])
+
+    missing_import_path.write_text(_source("b_missing_import"), encoding="utf-8")
+    assert manager.load_all_custom_functions() == 2
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {
+        "b_missing_import", "c_good",
+    }
+    assert [failure.name for failure in manager.load_failures()] == ["a_invalid"]
+    subscription.cancel()
+
+
+def _hook_that_fails(declaration, **kwargs):
+    if declaration.__name__ == "failing_probe":
+        raise RuntimeError("preparation hook failed")
+    return project_custom_function(declaration, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("file_name", "content", "message"),
+    (
+        (
+            "failing_probe.py",
+            _source("failing_probe").encode(),
+            "RuntimeError: preparation hook failed",
+        ),
+        (
+            "threading.py",
+            _source("threading").encode(),
+            "ValueError: Custom function 'threading' conflicts with existing public "
+            "package export owned outside the custom-function runtime.",
+        ),
+        (
+            "not_text.py",
+            b"\xff\xfe",
+            "Persisted custom function 'not_text.py' is not UTF-8.",
+        ),
+        (
+            "renamed.py",
+            _source("another_name").encode(),
+            "Persisted custom function 'renamed.py' declares 'another_name'. "
+            "The filename and declaration name must match.",
+        ),
+    ),
+)
+def test_a_source_that_cannot_be_registered_fails_alone(
+    isolated_custom_runtime, monkeypatch, file_name, content, message,
+) -> None:
+    """Registration-time errors of one source leave every other source loaded."""
+    monkeypatch.setattr(manager_module, "project_custom_function", _hook_that_fails)
+    manager = CustomFunctionManager()
+    for name in ("aa_before", "zz_after"):
+        (isolated_custom_runtime / f"{name}.py").write_text(
+            _source(name), encoding="utf-8"
+        )
+    (isolated_custom_runtime / file_name).write_bytes(content)
+
+    assert manager.load_all_custom_functions() == 2
+
+    assert set(CustomFunctionRuntimeRegistry.metadata_by_name()) == {
+        "aa_before", "zz_after",
+    }
+    [failure] = manager.load_failures()
+    assert (failure.file_path, failure.message) == (
+        isolated_custom_runtime / file_name, message,
+    )
+    assert CustomFunctionRuntimeRegistry.source_revision() == manager.source_revision()
+
+
+def test_failed_source_is_shown_by_the_catalog_page_and_the_manager_dialog(
+    isolated_custom_runtime, qapp,
+) -> None:
+    from openhcs.agent.dto.common import SCHEMA_VERSION
+    from openhcs.agent.dto.functions import (
+        FailedCustomFunctionSource, FunctionCatalogPage,
+    )
+    from openhcs.agent.services.function_catalog_service import FunctionCatalogService
+    from openhcs.mcp.dev_client_renderers.knowledge import FunctionSearchRenderer
+    from openhcs.mcp.dev_client_rendering import McpDevOutputRenderOptions
+    from openhcs.pyqt_gui.dialogs.custom_function_manager_dialog import (
+        CustomFunctionManagerDialog,
+    )
+
+    source_path = isolated_custom_runtime / "broken_probe.py"
+    source_path.write_text(
+        "import module_that_is_not_installed\n" + _source("broken_probe"),
+        encoding="utf-8",
+    )
     (isolated_custom_runtime / "stable_probe.py").write_text(
         _source("stable_probe"), encoding="utf-8"
     )
-    assert manager.load_all_custom_functions() == 1
-    prior_revision = CustomFunctionRuntimeRegistry.source_revision()
-    prior_callable = vars(custom_functions)["stable_probe"]
-    (isolated_custom_runtime / "broken_probe.py").write_text(
-        "@numpy\ndef broken_probe(value):\n    return value\n",
-        encoding="utf-8",
+    assert CustomFunctionManager().load_all_custom_functions() == 1
+    error = "Code execution failed: No module named 'module_that_is_not_installed'"
+
+    failed_sources = FunctionCatalogService._failed_custom_sources()
+    assert failed_sources == (
+        FailedCustomFunctionSource("broken_probe", str(source_path), error, 1),
     )
-
-    with pytest.raises(ValidationError):
-        manager.load_all_custom_functions()
-
-    assert CustomFunctionRuntimeRegistry.source_revision() == prior_revision
-    assert vars(custom_functions)["stable_probe"] is prior_callable
-    assert "broken_probe" not in CustomFunctionRuntimeRegistry.metadata_by_name()
-
-    (isolated_custom_runtime / "broken_probe.py").write_text(
-        _source("broken_probe"), encoding="utf-8"
+    rendered = FunctionSearchRenderer.render_payload(
+        FunctionCatalogPage(
+            SCHEMA_VERSION, "rev", (), 0, 50, failed_custom_sources=failed_sources
+        ),
+        McpDevOutputRenderOptions(),
     )
-    assert manager.load_all_custom_functions() == 2
-    assert CustomFunctionRuntimeRegistry.source_revision() == manager.source_revision()
+    assert rendered.splitlines()[1:] == [
+        "Custom functions that failed to load:",
+        f"- broken_probe: file={source_path} line=1 error=\"{error}\"",
+    ]
+
+    dialog = CustomFunctionManagerDialog()
+    try:
+        rows = [dialog.function_list.item(row) for row in range(dialog.function_list.count())]
+        assert [row.text() for row in rows] == [
+            "broken_probe (failed to load)", "stable_probe",
+        ]
+        dialog.function_list.setCurrentItem(rows[0])
+        assert dialog.status_label.text() == (
+            f"Status: Failed to load: broken_probe.py, line 1: {error}"
+        )
+        assert dialog.edit_btn.isEnabled() and dialog.delete_btn.isEnabled()
+        dialog.function_list.setCurrentItem(rows[1])
+        assert dialog.status_label.text() == "Status: Loaded"
+    finally:
+        dialog.close()
+        dialog.deleteLater()
 
 
 def test_concurrent_lazy_imports_publish_one_callable_identity(

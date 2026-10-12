@@ -45,10 +45,10 @@ class CustomFunctionSourceRevision:
 
 @dataclass(frozen=True, slots=True)
 class CustomFunctionSourceSnapshot:
-    """Exact source bytes decoded for preparation with their content proof."""
+    """Exact source bytes with their content proof."""
 
     source: CustomFunctionSource
-    code: str
+    content: bytes
 
 
 @dataclass(frozen=True, slots=True, eq=False)

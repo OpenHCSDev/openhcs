@@ -59,12 +59,14 @@ class ValidationResult:
         errors: List of validation error messages
         warnings: List of non-fatal warning messages
         function_names: List of function names found in the code
+        line_number: Source line of the first error, 0 when it has none
     """
 
     is_valid: bool
     errors: list[str]
     warnings: list[str]
     function_names: list[str]
+    line_number: int = 0
 
 
 def validate_syntax(code: str) -> ValidationResult:
@@ -92,7 +94,11 @@ def validate_syntax(code: str) -> ValidationResult:
     except SyntaxError as e:
         error_msg = f"Syntax error: {e.msg}"
         return ValidationResult(
-            is_valid=False, errors=[error_msg], warnings=[], function_names=[]
+            is_valid=False,
+            errors=[error_msg],
+            warnings=[],
+            function_names=[],
+            line_number=e.lineno or 0,
         )
 
 
@@ -124,6 +130,7 @@ def validate_imports(code: str) -> ValidationResult:
     }
 
     errors: list[str] = []
+    error_lines: list[int] = []
     warnings: list[str] = []
 
     try:
@@ -143,6 +150,7 @@ def validate_imports(code: str) -> ValidationResult:
                         f"Dangerous import detected: '{alias.name}'. "
                         f"Module '{module_name}' is not allowed in custom functions."
                     )
+                    error_lines.append(node.lineno)
 
         elif isinstance(node, ast.ImportFrom):
             if node.module:
@@ -152,10 +160,15 @@ def validate_imports(code: str) -> ValidationResult:
                         f"Dangerous import detected: 'from {node.module}'. "
                         f"Module '{module_name}' is not allowed in custom functions."
                     )
+                    error_lines.append(node.lineno)
 
     is_valid = len(errors) == 0
     return ValidationResult(
-        is_valid=is_valid, errors=errors, warnings=warnings, function_names=[]
+        is_valid=is_valid,
+        errors=errors,
+        warnings=warnings,
+        function_names=[],
+        line_number=min(error_lines, default=0),
     )
 
 

@@ -7,7 +7,9 @@ Automatically refreshes when custom functions change via signals.
 
 from types import FunctionType
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QListWidgetItem,
     QVBoxLayout,
     QHBoxLayout,
     QListWidget,
@@ -83,10 +85,13 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         self.name_label = QLabel("Name: ")
         self.backend_label = QLabel("Backend: ")
         self.file_label = QLabel("File: ")
+        self.status_label = QLabel("Status: ")
+        self.status_label.setWordWrap(True)
 
         details_layout.addWidget(self.name_label)
         details_layout.addWidget(self.backend_label)
         details_layout.addWidget(self.file_label)
+        details_layout.addWidget(self.status_label)
 
         layout.addWidget(details_group)
 
@@ -121,10 +126,19 @@ class CustomFunctionManagerDialog(BaseFormDialog):
 
         functions = self.manager.list_custom_functions()
         for func_info in functions:
-            self.function_list.addItem(func_info.name)
+            item = QListWidgetItem(func_info.list_label)
+            item.setData(Qt.ItemDataRole.UserRole, func_info)
+            self.function_list.addItem(item)
 
         if not functions:
             self.function_list.addItem("(No custom functions)")
+
+    def _selected_function(self):
+        """The listed source of the selected row; the empty-list row has none."""
+        selected_items = self.function_list.selectedItems()
+        if not selected_items:
+            return None
+        return selected_items[0].data(Qt.ItemDataRole.UserRole)
 
     def _refresh_function_list(self):
         """Refresh function list when functions change."""
@@ -133,9 +147,8 @@ class CustomFunctionManagerDialog(BaseFormDialog):
 
     def _on_selection_changed(self):
         """Handle function selection change."""
-        selected_items = self.function_list.selectedItems()
-
-        if not selected_items or selected_items[0].text() == "(No custom functions)":
+        func_info = self._selected_function()
+        if func_info is None:
             self.edit_btn.setEnabled(False)
             self.delete_btn.setEnabled(False)
             self._clear_details()
@@ -144,22 +157,17 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         self.edit_btn.setEnabled(True)
         self.delete_btn.setEnabled(True)
 
-        # Show function details
-        func_name = selected_items[0].text()
-        functions = self.manager.list_custom_functions()
-
-        for func_info in functions:
-            if func_info.name == func_name:
-                self.name_label.setText(f"Name: {func_info.name}")
-                self.backend_label.setText(f"Backend: {func_info.backend_label}")
-                self.file_label.setText(f"File: {func_info.file_path.name}")
-                break
+        self.name_label.setText(f"Name: {func_info.name}")
+        self.backend_label.setText(f"Backend: {func_info.backend_label}")
+        self.file_label.setText(f"File: {func_info.file_path.name}")
+        self.status_label.setText(f"Status: {func_info.status}")
 
     def _clear_details(self):
         """Clear function details display."""
         self.name_label.setText("Name: ")
         self.backend_label.setText("Backend: ")
         self.file_label.setText("File: ")
+        self.status_label.setText("Status: ")
 
     def _on_create_clicked(self):
         """Handle create new function button click."""
@@ -201,11 +209,11 @@ class CustomFunctionManagerDialog(BaseFormDialog):
 
     def _on_edit_clicked(self):
         """Handle edit function button click."""
-        selected_items = self.function_list.selectedItems()
-        if not selected_items:
+        func_info = self._selected_function()
+        if func_info is None:
             return
 
-        func_name = selected_items[0].text()
+        func_name = func_info.name
 
         try:
             # Get current code
@@ -251,11 +259,11 @@ class CustomFunctionManagerDialog(BaseFormDialog):
 
     def _on_delete_clicked(self):
         """Handle delete function button click."""
-        selected_items = self.function_list.selectedItems()
-        if not selected_items:
+        func_info = self._selected_function()
+        if func_info is None:
             return
 
-        func_name = selected_items[0].text()
+        func_name = func_info.name
 
         # Confirm deletion
         reply = QMessageBox.question(

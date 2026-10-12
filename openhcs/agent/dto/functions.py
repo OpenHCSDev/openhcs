@@ -527,6 +527,16 @@ class FunctionDetail:
 
 
 @dataclass(frozen=True, slots=True)
+class FailedCustomFunctionSource:
+    """A persisted custom-function source the endpoint could not load."""
+
+    name: str
+    file_path: str
+    error: str
+    line_number: int | None
+
+
+@dataclass(frozen=True, slots=True)
 class FunctionCatalogPage:
     schema_version: str
     revision: str
@@ -535,6 +545,7 @@ class FunctionCatalogPage:
     limit: int
     query: str | None = None
     library: str | None = None
+    failed_custom_sources: tuple[FailedCustomFunctionSource, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -770,6 +781,7 @@ def catalog_page(
     limit: int,
     query: str | None,
     library: str | None,
+    failed_custom_sources: tuple[FailedCustomFunctionSource, ...],
 ) -> FunctionCatalogPage:
     return FunctionCatalogPage(
         schema_version=SCHEMA_VERSION,
@@ -779,6 +791,7 @@ def catalog_page(
         limit=limit,
         query=query,
         library=library,
+        failed_custom_sources=failed_custom_sources,
     )
 
 
