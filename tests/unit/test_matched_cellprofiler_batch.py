@@ -9,7 +9,11 @@ from types import SimpleNamespace
 
 import pytest
 from objectstate.context_manager import config_context
-from objectstate.global_config import GlobalContextValues
+from objectstate import (
+    forget_stored_global_config,
+    get_live_global_config,
+    set_global_config,
+)
 
 import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.native_batch_contracts import NativeBatchRequest
@@ -42,10 +46,13 @@ from benchmark.equivalence.runtime import (
 
 @pytest.fixture(autouse=True)
 def restore_benchmark_global_context():
-    """Restore both saved and live projections changed by config rebuilding."""
-    previous = GlobalContextValues.capture(GlobalPipelineConfig)
+    """Restore the global config a benchmark run replaced."""
+    previous = get_live_global_config(GlobalPipelineConfig)
     yield
-    previous.apply()
+    if previous is not None:
+        set_global_config(GlobalPipelineConfig, previous)
+    else:
+        forget_stored_global_config(GlobalPipelineConfig)
 
 
 @pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))
@@ -586,7 +593,7 @@ def test_candidate_pipeline_inherits_benchmark_worker_count(tmp_path: Path) -> N
             multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
         )
         candidate = _candidate_pipeline_config(
-            imported, global_config, tmp_path, ("A01", "A12")
+            imported, tmp_path, ("A01", "A12")
         )
 
         assert candidate.num_workers == 2

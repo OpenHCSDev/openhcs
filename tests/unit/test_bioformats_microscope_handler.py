@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -182,7 +182,7 @@ def test_orchestrator_exposes_prepared_virtual_source_workspace(
     tmp_path: Path,
 ) -> None:
     write_bioformats_manifest_fixture(tmp_path)
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
     orchestrator = PipelineOrchestrator(dataset_root=tmp_path).initialize()
 

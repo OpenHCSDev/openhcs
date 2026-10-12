@@ -536,9 +536,15 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 request_context.pipeline_steps,
                 request_context.compile_artifact_id,
             )
-            # This process registers no global-config state, and the queue worker
-            # runs one request at a time: the request's global config is the
-            # process's until the next request replaces it.
+            # The compiler resolves the pipeline config and every step through
+            # ObjectState.resolve_saved_object, which reads the process's global
+            # config and takes no other, so the request's is stored as the
+            # process's. Nothing else can read it in between: this process
+            # registers no global-config state, execute_task has one caller, the
+            # single queue worker thread, which finishes a request (workers
+            # joined, worker processes killed) before it takes the next, and no
+            # control message compiles or resolves configuration. Workers run
+            # the compiled bundle and read no global config.
             set_global_config(
                 GlobalPipelineConfig, request_context.configs.global_pipeline
             )

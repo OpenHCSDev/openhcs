@@ -1,8 +1,10 @@
-"""Compile a pipeline document in-process and summarize its artifact plan."""
+"""Compile a pipeline document and summarize its artifact plan."""
 
 from __future__ import annotations
 
 import logging
+import multiprocessing
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,7 +74,7 @@ class CompileInspectionInput:
     pipeline_document: PipelineDocument
     axis_filter: tuple[str, ...]
     global_pipeline_config: GlobalPipelineConfig
-    progress_queue: AgentProgressQueue
+    progress_queue: ProgressQueue
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,17 +111,30 @@ class CompileInspectionGatewayABC(ABC):
 
 
 class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
-    def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
-        from objectstate.lazy_factory import ensure_global_config_context
+    """Compile in the calling process, which must hold no session.
 
-        from openhcs.core.config import GlobalPipelineConfig
+    The compiler resolves the pipeline config and every step through
+    ``ObjectState.resolve_saved_object``, which reads the process's global config
+    and takes no other. The request's global config therefore has to be stored as
+    the process's. A process whose session registered a global state would have
+    that state's object replaced and its unsaved edits dropped, so here it is
+    refused: such a process compiles through
+    ``ChildProcessCompileInspectionGateway``.
+    """
+
+    def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
+        from objectstate import ObjectStateRegistry, set_global_config
+
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.core.progress import set_progress_queue
 
-        ensure_global_config_context(
-            GlobalPipelineConfig,
-            request.global_pipeline_config,
-        )
+        if ObjectStateRegistry.global_config_state(GlobalPipelineConfig) is not None:
+            raise RuntimeError(
+                "This process has a session that holds the global config; "
+                "compiling an inspection here would replace it. Compile through "
+                "ChildProcessCompileInspectionGateway."
+            )
+        set_global_config(GlobalPipelineConfig, request.global_pipeline_config)
         orchestrator = PipelineOrchestrator(
             dataset_root=request.plate,
             pipeline_config=request.pipeline_document.pipeline_config,
@@ -155,6 +170,110 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
             set_progress_queue(None)
 
 
+class ChildProcessCompileInspectionGateway(CompileInspectionGatewayABC):
+    """Compile in a fresh process and bring the plan back.
+
+    The calling process keeps its global config, unsaved edits included, and none
+    of its registered states takes part in the plan: the child starts with an
+    empty registry and stores the request's global config as its own.
+    """
+
+    def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
+        spawn = multiprocessing.get_context("spawn")
+        from_child, to_parent = spawn.Pipe(duplex=False)
+        child = spawn.Process(
+            target=_compile_inspection_in_child,
+            args=(
+                to_parent,
+                request.plate,
+                PipelineDocumentCodec.execution_source(request.pipeline_document),
+                request.global_pipeline_config,
+                request.axis_filter,
+            ),
+        )
+        child.start()
+        to_parent.close()
+        try:
+            while True:
+                try:
+                    sent = from_child.recv()
+                except EOFError:
+                    child.join()
+                    raise RuntimeError(
+                        "The inspection compile process ended with exit code "
+                        f"{child.exitcode} before it sent a plan."
+                    ) from None
+                if isinstance(sent, ProgressEvent):
+                    request.progress_queue.put(sent)
+                elif isinstance(sent, EndpointStartupStatus):
+                    sent.publish()
+                elif isinstance(sent, AgentError):
+                    raise ChildCompileInspectionError(sent)
+                else:
+                    return sent
+        finally:
+            from_child.close()
+            if child.is_alive():
+                child.terminate()
+            child.join()
+
+
+class ChildCompileInspectionError(AgentFacingErrorMixin, Exception):
+    """The compile failed in the child, which already described the failure."""
+
+    def __init__(self, error: AgentError) -> None:
+        super().__init__(error.message, path=error.path)
+        self._error = error
+
+    def to_agent_error(self) -> AgentError:
+        return self._error
+
+
+class ProgressSentToParent(ProgressQueue):
+    """The child's progress queue: every event goes to the parent as it is put."""
+
+    def __init__(self, to_parent) -> None:
+        self._to_parent = to_parent
+
+    def put(self, event: ProgressEvent) -> None:
+        self._to_parent.send(event)
+
+
+def _compile_inspection_in_child(
+    to_parent,
+    plate: Path,
+    pipeline_source: str,
+    global_pipeline_config: GlobalPipelineConfig,
+    axis_filter: tuple[str, ...],
+) -> None:
+    """Entry point of the child process: compile, then send the plan or the error."""
+    # The parent's stdout can be an MCP transport; nothing printed here may reach it.
+    os.dup2(2, 1)
+    import openhcs.processing.func_registry as func_registry
+
+    try:
+        with EndpointStartupStatus.callback_scope(to_parent.send):
+            if func_registry.pipeline_source_requires_import_projection(
+                pipeline_source
+            ):
+                func_registry.initialize_registry()
+            compiled = InProcessCompileInspectionGateway()._compile(
+                CompileInspectionInput(
+                    plate=plate,
+                    pipeline_document=PipelineDocumentCodec.from_source(
+                        pipeline_source
+                    ),
+                    axis_filter=axis_filter,
+                    global_pipeline_config=global_pipeline_config,
+                    progress_queue=ProgressSentToParent(to_parent),
+                )
+            )
+    except Exception as error:
+        to_parent.send(_compile_inspection_error(error))
+    else:
+        to_parent.send(compiled)
+
+
 @dataclass(frozen=True, slots=True)
 class GlobalConfigSelection:
     config_id: str | None
@@ -181,7 +300,7 @@ class ArtifactPlanInspectionService:
         self._path_policy = path_policy
         self._config_service = config_service
         self._compile_inspection_gateway = (
-            compile_inspection_gateway or InProcessCompileInspectionGateway()
+            compile_inspection_gateway or ChildProcessCompileInspectionGateway()
         )
 
     def inspect(

@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 import tifffile
 from objectstate import replace_raw
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from PIL import Image
 from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
@@ -169,7 +169,7 @@ def _execute_imported_cppipe_via_zmq(
         materialize_runtime_artifacts=materialize_runtime_artifacts,
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     pipeline_config = replace_raw(
         imported_config,
         path_planning_config=LazyPathPlanningConfig(
@@ -358,7 +358,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
         dataset_source=SourceBindingsSource,
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     pipeline_config = replace_raw(
         PipelineConfig(
             dataset_source=SourceBindingsSource,

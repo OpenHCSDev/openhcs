@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
+from objectstate import set_global_config
 from PyQt6 import sip
 from PyQt6.QtTest import QTest
 from pyqt_reactive.widgets.shared.responsive_layout_widgets import (
@@ -44,7 +44,6 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
     global_config = GlobalPipelineConfig(
         streaming_defaults=StreamingDefaults(host="global-host"),
     )
-    set_global_config_for_editing(GlobalPipelineConfig, global_config)
     try:
         global_state = ObjectState(global_config, scope_id="")
         ObjectStateRegistry.register(global_state, _skip_snapshot=True)
@@ -82,7 +81,7 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
             assert browser_state.get_resolved_value(path) == f"browser-{config_key}"
     finally:
         ObjectStateRegistry.clear()
-        set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+        set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_right_panel_replacement_releases_previous_server_browser(

@@ -15,17 +15,12 @@ PyQt6 worker threads don't inherit thread-local storage from the main thread. Th
 Problem Context
 ===============
 
-Thread-local storage is process-specific and doesn't propagate to worker threads:
-
-.. code-block:: python
-
-    # Main thread
-    set_global_config_for_editing(GlobalPipelineConfig, config)
-    
-    # Worker thread (different thread-local storage)
-    config = get_current_global_config(GlobalPipelineConfig)  # Returns None!
-
-Without explicit propagation, worker threads resolve placeholders against empty context, producing incorrect placeholder text.
+When this was written the global config was stored per thread, so a worker thread read
+``None`` and resolved placeholders against an empty context. Since ObjectState 4.0.0 the
+global config is stored once per process and every thread reads the same one
+(``get_live_global_config(GlobalPipelineConfig)``); see ObjectState
+``docs/state_propagation.rst`` and ``CHANGELOG.md`` (4.0.0). The rest of this page
+describes the per-thread workaround of that time.
 
 Solution: Context Snapshot
 ===========================
@@ -205,7 +200,7 @@ Symptom: Incorrect Placeholder Text
 .. code-block:: python
 
     # In worker thread
-    config = get_current_global_config(GlobalPipelineConfig)
+    config = get_live_global_config(GlobalPipelineConfig)
     logger.debug(f"Worker thread config: {config}")  # Should not be None
 
 **Fix**: Verify ``_global_config_snapshot`` is captured and restored

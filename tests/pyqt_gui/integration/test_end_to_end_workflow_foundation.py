@@ -1268,7 +1268,7 @@ class TestPyQtGUIWorkflowFoundation:
         """Own one real OpenHCS application for the complete workflow matrix."""
         import sys
 
-        from objectstate.global_config import get_current_global_config
+        from objectstate import get_live_global_config
 
         from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 
@@ -1298,7 +1298,7 @@ class TestPyQtGUIWorkflowFoundation:
                 pipeline_runtime=_create_test_global_config(),
             ),
         )
-        if get_current_global_config(GlobalPipelineConfig) is None:
+        if get_live_global_config(GlobalPipelineConfig) is None:
             raise AssertionError("OpenHCS did not establish its global config context.")
 
         app.create_main_window()

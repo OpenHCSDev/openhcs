@@ -4,7 +4,7 @@ from inspect import signature
 from types import SimpleNamespace
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
@@ -146,7 +146,6 @@ def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
 def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_workers):
     ObjectStateRegistry.clear()
     global_config = GlobalPipelineConfig(num_workers=2)
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     global_state = ObjectState(global_config, scope_id="")
     pipeline_state = ObjectState(
         PipelineConfig(num_workers=pipeline_workers),
@@ -164,13 +163,13 @@ def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_worker
         assert len(assignments) == expected_workers
 
         # The compiled snapshot must not resolve again in a different context.
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig, GlobalPipelineConfig(num_workers=4)
         )
         assert captured.num_workers == expected_workers
     finally:
         ObjectStateRegistry.clear()
-        ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+        set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
@@ -527,7 +526,7 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
             components=(ComponentSelector(Microscopy.Channel, "1"),)
         ),
     )
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(
@@ -595,7 +594,6 @@ def test_compiler_streaming_config_snapshot_preserves_inherited_port():
             persistent=False,
         ),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     global_state = ObjectState(global_config, scope_id="")
     pipeline_state = ObjectState(
         PipelineConfig(),
@@ -1012,7 +1010,7 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
     ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     plate_path = tmp_path / "plate"
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
     first_orchestrator = SimpleNamespace(
         dataset_root=plate_path,
@@ -1042,7 +1040,7 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
 
 def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_path):
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     plate_path = tmp_path / "plate"
     saved_binding = NamedSourceBinding(alias="DNA")
     live_binding = NamedSourceBinding(alias="Memb")

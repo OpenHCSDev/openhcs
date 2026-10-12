@@ -472,7 +472,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     tmp_path, embedded, assembly_backend, storage_backend
 ):
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
     from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 
@@ -541,7 +541,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             use_threading=True,
             analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         )
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         config = PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig.from_config(_config()),
             vfs_config=LazyVFSConfig(

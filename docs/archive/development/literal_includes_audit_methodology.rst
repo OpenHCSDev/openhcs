@@ -51,7 +51,7 @@ Architectural Accuracy Over Syntactic Accuracy
 
 **Principle**: Documentation should reflect architectural patterns and design decisions, with Python object references automatically tracking method evolution.
 
-**Example**: Documentation describing lazy structure preservation functionality uses `:py:func:`~openhcs.core.lazy_config.rebuild_lazy_config_with_new_global_reference`` - if method is renamed, Sphinx build fails until reference is updated.
+**Example**: Documentation describing lazy structure preservation functionality uses a ``:py:func:`` reference to the function that implements it (the helper used here originally was removed in ObjectState 4.0.0, see ObjectState ``CHANGELOG.md``) - if method is renamed, Sphinx build fails until reference is updated.
 
 **Implementation Strategy**:
 
@@ -309,9 +309,9 @@ Phantom Method Resolution
    :py:meth:`~openhcs.core.lazy_config._preserve_lazy_structure_if_needed`
 
    # Updated with actual implementation and context
-   :py:func:`~openhcs.core.lazy_config.rebuild_lazy_config_with_new_global_reference`
-   preserves lazy structure by creating a new lazy config instance that maintains the same
-   field resolution behavior but uses an updated global reference for context resolution.
+   :py:func:`objectstate.set_global_config`
+   stores the global config; lazy fields resolve against it at read time, so a lazy
+   config needs no rebuilding (ObjectState ``CHANGELOG.md`` 4.0.0).
 
 Logical Method Decomposition with Implementation Context
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

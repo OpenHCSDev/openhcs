@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import tifffile
 from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts.streaming import AutomaticStreaming, OnDemandStreaming
@@ -175,7 +175,7 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1),
         )
@@ -249,7 +249,7 @@ def test_neuroncyto_demo_executes_numeric_biological_well_identity(
     progress_queue = SimpleQueue()
     set_progress_queue(progress_queue)
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1, use_threading=True),
         )
@@ -382,7 +382,7 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1),
         )

@@ -67,7 +67,7 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     tmp_path, monkeypatch
 ):
     from unittest.mock import Mock
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.source_bindings import (
@@ -110,7 +110,7 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
         ),
     ))
     held_config = GlobalPipelineConfig(source_bindings_config=source_a)
-    ensure_global_config_context(GlobalPipelineConfig, held_config)
+    set_global_config(GlobalPipelineConfig, held_config)
     owner = PipelineOrchestrator(
         tmp_path,
         pipeline_config=PipelineConfig(

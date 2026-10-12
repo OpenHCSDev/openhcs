@@ -68,12 +68,12 @@ Compilation and execution
 
    from pathlib import Path
 
-   from objectstate import ensure_global_config_context
+   from objectstate import set_global_config
    from openhcs.core.config import GlobalPipelineConfig
    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
    plate_path = Path("/data/plate").resolve()
-   ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+   set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
    orchestrator = PipelineOrchestrator(
        plate_path,
        pipeline_config=pipeline_config,

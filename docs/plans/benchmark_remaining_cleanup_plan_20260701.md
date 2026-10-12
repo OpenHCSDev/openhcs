@@ -727,10 +727,7 @@ make the adapter receive the existing config object:
 
 ```python
 from dataclasses import dataclass, fields, is_dataclass, replace
-from objectstate.lazy_factory import (
-    ensure_global_config_context,
-    rebuild_lazy_config_with_new_global_reference,
-)
+from objectstate import set_global_config
 from openhcs.core.config import GlobalPipelineConfig, LazyWellFilterConfig
 from openhcs.core.source_schema_workspace import SourceSchemaImageSetSelection
 
@@ -863,12 +860,10 @@ global_config = replace(
     materialize_runtime_artifacts=request.materialize_runtime_artifacts,
     materialization_results_path=output_plate_root / "results",
 )
-ensure_global_config_context(GlobalPipelineConfig, global_config)
-pipeline_config = rebuild_lazy_config_with_new_global_reference(
-    pipeline_config,
-    global_config,
-    GlobalPipelineConfig,
-)
+# ObjectState 4.0.0 (CHANGELOG.md, docs/state_propagation.rst): one stored global
+# config per process; lazy fields resolve at read time, so the pipeline config
+# object is used as it is.
+set_global_config(GlobalPipelineConfig, global_config)
 orchestrator = PipelineOrchestrator(
     execution_plate_path,
     pipeline_config=pipeline_config,

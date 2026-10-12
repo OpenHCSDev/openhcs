@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from polystore.streaming.identity import StreamProducerOrigin
 
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
@@ -230,7 +230,7 @@ def test_colocalization_presentation_compiles_from_public_native_source(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             namespace["global_config"],
         )

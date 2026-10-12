@@ -51,7 +51,7 @@ The system uses generic detection logic to distinguish root configs from nested 
 .. code-block:: python
 
    def _build_context_from_current_form_values(self, exclude_field=None):
-       current_context = get_current_global_config(GlobalPipelineConfig)
+       current_context = get_live_global_config(GlobalPipelineConfig)
 
        # Generic root vs nested detection
        if hasattr(current_context, self.field_id):

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import tifffile
 from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
@@ -185,7 +185,7 @@ def test_neurite_example_compiles_with_declared_loose_file_identities(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1),
         )

@@ -4,7 +4,6 @@ from PyQt6.QtCore import QEventLoop, QObject, QTimer
 from PyQt6.QtWidgets import QApplication
 
 from objectstate import ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
 from objectstate.object_state import ObjectState
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from pyqt_reactive.forms.parameter_form_chrome_sync import ParameterFormChromeSync
@@ -447,7 +446,6 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
     global_config = GlobalPipelineConfig()
     global_state = ObjectState(global_config, scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
-    set_global_config_for_editing(GlobalPipelineConfig, global_config)
 
     plate_state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     ObjectStateRegistry.register(plate_state, _skip_snapshot=True)

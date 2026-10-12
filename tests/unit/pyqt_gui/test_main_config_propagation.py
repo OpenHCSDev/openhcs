@@ -7,7 +7,10 @@ import pytest
 from PyQt6.QtWidgets import QWidget
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
+from objectstate import ObjectStateRegistry, get_saved_global_config
+
 import openhcs.pyqt_gui.main as main_module
+from openhcs.authoring.session.events import DatasetConfigChanged
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.pyqt_gui.config import (
     GuiLogLevel,
@@ -53,39 +56,46 @@ class _ServiceAdapterStub:
         self.last_config = config
 
 
-@dataclass
-class _LifecycleWorkflowStub:
-    calls: int = 0
-    last_config: GlobalPipelineConfig | None = None
+def test_a_saved_global_config_reaches_the_runtime_context_and_every_dataset(
+    tmp_path,
+) -> None:
+    """After a save, the main window's owners and each dataset see the saved config."""
+    from tests.unit.pyqt_gui.session_harness import add_datasets, caller_session
 
-    def propagate_config(self, new_config: GlobalPipelineConfig) -> None:
-        self.calls += 1
-        self.last_config = new_config
-
-
-def test_on_config_changed_propagates_to_embedded_widgets() -> None:
     service_adapter = _ServiceAdapterStub()
-    lifecycle_workflow = _LifecycleWorkflowStub()
-
     main_like = type("MainLike", (), {})()
     main_like.runtime_context = PyQtGuiRuntimeContext(get_default_ui_config())
     main_like.service_adapter = service_adapter
-    main_like.lifecycle_workflow = lifecycle_workflow
     main_like.set_pipeline_runtime_config = lambda config: setattr(
         main_like,
         "runtime_context",
         main_like.runtime_context.with_pipeline_runtime(config),
     )
 
-    new_config = GlobalPipelineConfig(num_workers=2)
-    OpenHCSMainWindow.on_config_changed(main_like, new_config)
+    with caller_session() as session:
+        main_like.session = session
+        (scope_id,) = add_datasets(session, tmp_path, "plate")
+        changed = []
+        session.subscribe(
+            lambda record: changed.append(
+                (record.event.scope_id, record.event.effective_config.num_workers)
+            )
+            if isinstance(record.event, DatasetConfigChanged)
+            else None
+        )
+        # What the global config window's save does before it tells the main window.
+        global_state = ObjectStateRegistry.global_config_state(GlobalPipelineConfig)
+        global_state.update_parameter("num_workers", 3)
+        global_state.mark_saved()
+        new_config = get_saved_global_config(GlobalPipelineConfig)
 
-    assert main_like.runtime_context.pipeline_runtime == new_config
-    assert service_adapter.calls == 1
-    assert service_adapter.last_config == new_config
+        OpenHCSMainWindow.on_config_changed(main_like, new_config)
 
-    assert lifecycle_workflow.calls == 1
-    assert lifecycle_workflow.last_config == new_config
+        assert new_config.num_workers == 3
+        assert main_like.runtime_context.pipeline_runtime == new_config
+        assert service_adapter.calls == 1
+        assert service_adapter.last_config == new_config
+        assert changed == [(scope_id, 3)]
 
 
 def test_service_adapter_uses_runtime_context_as_global_config_owner() -> None:
@@ -314,11 +324,10 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
 
     global_config = GlobalPipelineConfig()
     global_publication = Recorder()
-    global_propagation = Recorder()
     global_like = SimpleNamespace(
         runtime_context=PyQtGuiRuntimeContext(ui_config),
         service_adapter=SimpleNamespace(set_global_config=global_publication.record),
-        lifecycle_workflow=SimpleNamespace(propagate_config=global_propagation.record),
+        session=SimpleNamespace(saved_global_config_changed=lambda: None),
     )
     global_like.set_pipeline_runtime_config = MethodType(
         OpenHCSMainWindow.set_pipeline_runtime_config,
@@ -329,7 +338,6 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
 
     assert global_like.runtime_context.pipeline_runtime is global_config
     assert global_publication.values == [global_config]
-    assert global_propagation.values == [global_config]
     assert _visible_leaf_paths(global_config)
 
 
@@ -404,46 +412,6 @@ def test_set_ui_config_restores_previous_consumers_before_rejecting_update() -> 
     assert main_like.runtime_context.ui_config is current
     assert main_like.service_adapter.widget_gui_config is current
     assert main_like.ui_config_changed.values == []
-
-
-def test_lifecycle_workflow_adopts_a_saved_global_config_into_the_session(
-    qapp,
-) -> None:
-    from tests.unit.pyqt_gui.session_harness import add_datasets, caller_session
-
-    progress_bar = type("ProgressBar", (), {})()
-    main_window = QWidget()
-    workflow = MainWindowLifecycleWorkflow(
-        main_window=main_window,
-        embedded_widgets=SimpleNamespace(),
-        floating_windows={},
-        status_progress_bar=progress_bar,
-        ui_bridge_lifecycle=MainWindowUiBridgeLifecycle(),
-        ui_services=SimpleNamespace(close=lambda: None),
-    )
-
-    new_config = GlobalPipelineConfig(num_workers=3)
-    import tempfile
-    from pathlib import Path
-
-    from openhcs.authoring.session.events import DatasetConfigChanged
-
-    with caller_session() as session:
-        main_window.session = session
-        (scope_id,) = add_datasets(session, Path(tempfile.mkdtemp()), "plate")
-        changed = []
-        session.subscribe(
-            lambda record: changed.append(
-                (record.event.scope_id, record.event.effective_config.num_workers)
-            )
-            if isinstance(record.event, DatasetConfigChanged)
-            else None
-        )
-
-        workflow.propagate_config(new_config)
-
-        assert session.global_config is new_config
-        assert changed == [(scope_id, 3)]
 
 
 def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(

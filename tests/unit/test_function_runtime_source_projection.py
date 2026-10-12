@@ -16,7 +16,11 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-from objectstate.global_config import GlobalContextValues
+from objectstate import (
+    forget_stored_global_config,
+    get_live_global_config,
+    set_global_config,
+)
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
@@ -2148,9 +2152,12 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
 
 @pytest.fixture
 def preserve_global_pipeline_context():
-    context = GlobalContextValues.capture(GlobalPipelineConfig)
+    previous = get_live_global_config(GlobalPipelineConfig)
     yield
-    context.apply()
+    if previous is not None:
+        set_global_config(GlobalPipelineConfig, previous)
+    else:
+        forget_stored_global_config(GlobalPipelineConfig)
 
 
 def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
@@ -2161,7 +2168,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     import tifffile
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -2210,7 +2216,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,
@@ -3245,7 +3251,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
 
     import tifffile
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.config import (
@@ -3306,7 +3311,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,
