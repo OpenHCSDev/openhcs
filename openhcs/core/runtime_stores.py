@@ -41,7 +41,6 @@ from openhcs.core.source_matching import (
     SourceAxisMetadataScope,
     SourceImageSetIdentityCompatibility,
     SourceImageSetIdentityPolicy,
-    semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes import Axis, PartitionAxis
@@ -136,7 +135,7 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
         scope = record.key.scope
-        producer_scope = self.input_plan.producer_group_scope()
+        producer_scope = self.input_plan.group_scope
         if scope.component is not producer_scope.component or scope.value_text is None:
             return False
         return record.location == RuntimeArtifactLocation(
@@ -205,11 +204,7 @@ class RuntimeArtifactQuery:
         group_key: str | None = None,
     ) -> "RuntimeArtifactQuery":
         """Build the runtime-store query for one compiled artifact input."""
-        input_scope = ComponentGroupScope.from_raw(
-            input_plan.group_keys,
-            component=input_plan.group_component,
-        )
-        if input_scope.is_dynamic and group_key is None:
+        if group_key is None and not input_plan.group_scope.has_compiled_keys:
             return cls(
                 name=input_plan.name,
                 artifact_type=input_plan.artifact_type,
@@ -321,9 +316,7 @@ class RuntimeArtifactInput:
 
         storage_plan = self.edge_plan.storage_plan
         projection = self.edge_plan.projection
-        producer_scope = storage_plan.producer_group_scope()
-        if producer_scope.is_ungrouped:
-            return self._records(store, producer_scope, None)
+        producer_scope = storage_plan.group_scope
         selection_scope = projection.producer_selection_scope
         if self.selects_complete_producer():
             return self.all_records(store)
@@ -341,7 +334,7 @@ class RuntimeArtifactInput:
 
         storage_plan = self.edge_plan.storage_plan
         projection = self.edge_plan.projection
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         selection_scope = projection.producer_selection_scope
         return (
             projection.selects_declared_complete_producer(self.edge_plan.spec, storage_plan)
@@ -350,8 +343,7 @@ class RuntimeArtifactInput:
             )
             or (
                 selection_scope == producer_scope
-                and not selection_scope.is_dynamic
-                and len(selection_scope.keys) > 1
+                and selection_scope.names_several_keys
             )
         )
 
@@ -369,7 +361,7 @@ class RuntimeArtifactInput:
         """
 
         storage_plan = self.edge_plan.storage_plan
-        producer_scope = storage_plan.producer_group_scope()
+        producer_scope = storage_plan.group_scope
         projection = self.edge_plan.projection
         selection_scope = projection.producer_selection_scope
         selects_complete_producer = self.selects_complete_producer()
@@ -377,7 +369,7 @@ class RuntimeArtifactInput:
         identity_policy = self._source_context_identity_policy()
         candidates = tuple(
             record
-            for group_key in ((None,) if producer_scope.is_dynamic else producer_scope.keys)
+            for group_key in producer_scope.keys
             for record in store.find_matching(
                 RuntimeArtifactQuery.from_input_plan(
                     storage_plan,
@@ -413,16 +405,11 @@ class RuntimeArtifactInput:
                     continue
                 coordinates = dict(record_coordinates)
                 for component in projected_components:
-                    component_scope = projection.component_scope(component)
-                    if component_scope.is_dynamic:
-                        component_value = semantic_source_metadata_value(
-                            metadata, component.name,
-                        )
-                        if component_value is None:
-                            break
-                        component_value = str(component_value)
-                    else:
-                        component_value = component_scope.select_runtime_key(None)
+                    component_value = projection.component_scope(
+                        component
+                    ).value_for_plane(metadata, component)
+                    if component_value is None:
+                        break
                     if not SourceAxisMetadataScope.constraint_matches_metadata(
                         metadata, component.name, component_value,
                     ):
@@ -435,15 +422,14 @@ class RuntimeArtifactInput:
                     coordinates.setdefault(component, component_value)
                 else:
                     runtime_value = coordinates.get(execution_scope.component)
-                    if execution_scope.is_dynamic and runtime_value is None:
-                        continue
-                    component_keys = execution_scope.runtime_keys((runtime_value,))
-                    for component_key in component_keys:
+                    for component_key in execution_scope.candidate_keys(runtime_value):
                         if (
                             not selects_complete_producer
-                            and selection_scope.is_dynamic
-                            and selection_scope.component is execution_scope.component
-                            and record_scope.value_text != component_key
+                            and not selection_scope.admits_record_key(
+                                execution_scope.component,
+                                component_key,
+                                record_scope.value_text,
+                            )
                         ):
                             continue
                         fixed_group_value = coordinates.get(execution_scope.component)
@@ -473,8 +459,8 @@ class RuntimeArtifactInput:
         """Resolve every producer group explicitly declared by this plan."""
 
         storage_plan = self.edge_plan.storage_plan
-        producer_scope = storage_plan.producer_group_scope()
-        if not producer_scope.is_dynamic:
+        producer_scope = storage_plan.group_scope
+        if producer_scope.has_compiled_keys:
             return tuple(
                 record
                 for group_key in producer_scope.keys
@@ -523,10 +509,7 @@ class RuntimeArtifactInput:
     ) -> Any:
         """Compose exact records after projecting the runtime-axis coordinate."""
 
-        return RuntimeValue.compose(
-            tuple(self._axis_value(record) for record in records),
-            self._producer_group_composition_scope(),
-        )
+        return self._compose(tuple(self._axis_value(record) for record in records))
 
     def projected_values(
         self,
@@ -539,23 +522,21 @@ class RuntimeArtifactInput:
     def resolve_value(self, store: "RuntimeValueStore") -> Any:
         """Resolve this compiled input to its invocation value."""
 
-        return RuntimeValue.compose(
-            self.projected_values(store),
-            self._producer_group_composition_scope(),
-        )
+        return self._compose(self.projected_values(store))
 
-    def _producer_group_composition_scope(
-        self,
-    ) -> ComponentGroupScope | None:
-        """Return declared group-axis reconstruction semantics for this input."""
+    def _compose(self, values: tuple[RuntimeValue, ...]) -> Any:
+        """Compose plainly, or rebuild the producer's group axis when consumed."""
 
         storage_plan = self.edge_plan.storage_plan
         consumer_components = ComponentSet.of(
             self.edge_plan.projection.consumer_variable_components
         )
         if not storage_plan.composes_producer_groups(consumer_components):
-            return None
-        return storage_plan.producer_group_scope()
+            return RuntimeValue.compose(values)
+        return RuntimeValue.compose_groups(
+            values,
+            storage_plan.group_scope.require_grouped("Producer-group composition"),
+        )
 
     def _axis_value(self, value: RuntimeValue) -> RuntimeValue:
         projected_components = ComponentSet.of(
@@ -727,7 +708,7 @@ class RuntimeArtifactInput:
         ).excluding(
             ComponentSet.collect(
                 projected_components,
-                (self.edge_plan.storage_plan.producer_group_scope().component,),
+                (self.edge_plan.storage_plan.group_scope.component,),
             )
         )
         identity_policy = self._source_context_identity_policy()
@@ -979,14 +960,15 @@ class RuntimeValueStore:
             return False
         if key.scope.axis_id != axis_id:
             return False
-        if key.scope.component is not plan.group_component:
+        if key.scope.component is not plan.group_scope.component:
             return False
-        if plan.group_component is None:
-            resolved_plan = plan
-        else:
-            resolved_plan = plan.for_group(key.scope.value_text)
-            if resolved_plan is None:
-                return False
+        resolved_plan = (
+            plan.for_group(key.scope.value_text)
+            if plan.group_scope.as_grouped()
+            else plan
+        )
+        if resolved_plan is None:
+            return False
         return address.location.path == resolved_plan.path
 
     @property

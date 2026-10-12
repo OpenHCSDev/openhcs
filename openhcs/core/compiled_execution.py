@@ -9,7 +9,7 @@ from objectstate.lazy_factory import (
     resolve_lazy_configurations_for_serialization,
 )
 from openhcs.core.config import GlobalPipelineConfig, MultiprocessingStartMethod
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import CompiledContext
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.worker_start_policy import (
     WorkerStartDecision,
@@ -80,7 +80,7 @@ class CompiledRuntimeEnvironmentPlan:
         cls,
         global_config: GlobalPipelineConfig,
         *,
-        compiled_contexts: Mapping[str, ProcessingContext] | None,
+        compiled_contexts: Mapping[str, CompiledContext] | None,
         server_mode: bool,
     ) -> "CompiledRuntimeEnvironmentPlan":
         execution_facts = WorkerStartExecutionFacts.from_compiled_contexts(
@@ -128,8 +128,8 @@ class CompiledExecutionBundle:
     """
 
     pipeline_definition: Sequence[AbstractStep]
-    runtime_contexts: Mapping[str, ProcessingContext]
-    transport_contexts: Mapping[str, ProcessingContext]
+    runtime_contexts: Mapping[str, CompiledContext]
+    transport_contexts: Mapping[str, CompiledContext]
     worker_assignments: Mapping[str, list[str]]
     runtime_environment: CompiledRuntimeEnvironmentPlan
 
@@ -161,7 +161,7 @@ class CompiledExecutionBundle:
         cls,
         *,
         pipeline_definition: Sequence[AbstractStep],
-        runtime_contexts: Mapping[str, ProcessingContext],
+        runtime_contexts: Mapping[str, CompiledContext],
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
     ) -> "CompiledExecutionBundle":
@@ -185,7 +185,7 @@ class CompiledExecutionBundle:
         cls,
         *,
         pipeline_definition: Sequence[AbstractStep],
-        runtime_contexts: Mapping[str, ProcessingContext],
+        runtime_contexts: Mapping[str, CompiledContext],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
     ) -> "CompiledExecutionBundle":
         """Create a bundle before worker ownership has been assigned."""

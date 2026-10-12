@@ -34,7 +34,11 @@ from openhcs.core.runtime_stores import (
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    DynamicGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.callable_contract import CallableContract
@@ -120,8 +124,7 @@ def _runtime_value(name="measurements", path="/memory/measurements.pkl"):
             name=name,
             path=path,
             artifact_type=MeasurementsArtifactType,
-            group_keys=("DAPI",),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
         ),
         MeasurementTable(
             name=name,
@@ -240,15 +243,14 @@ def test_output_plan_uses_its_single_scope_for_ungrouped_invocation():
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/Nuclei_1.pkl"},
     )
 
     resolved = output_plan.for_invocation_group(None)
 
-    assert resolved.group_keys == ("1",)
-    assert resolved.group_component is Microscopy.Channel
+    assert resolved.group_scope.keys == ("1",)
+    assert resolved.group_scope.component is Microscopy.Channel
     assert resolved.path == "/memory/Nuclei_1.pkl"
 
 
@@ -257,15 +259,14 @@ def test_ungrouped_output_plan_ignores_incidental_invocation_group():
         name="RGBImage",
         path="/memory/RGBImage.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=None,
+        group_scope=ComponentGroupScope.of((None,), component=None),
         paths_by_group={None: "/memory/RGBImage.pkl"},
     )
 
     resolved = output_plan.for_invocation_group("1")
 
-    assert resolved.group_keys == (None,)
-    assert resolved.group_component is None
+    assert resolved.group_scope.keys == (None,)
+    assert resolved.group_scope.component is None
     assert resolved.path == "/memory/RGBImage.pkl"
 
 
@@ -337,8 +338,7 @@ def test_dynamic_output_plan_requires_invocation_group():
         name="ChannelImage",
         path="/memory/ChannelImage.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group={None: "/memory/ChannelImage.pkl"},
     )
 
@@ -377,8 +377,7 @@ def test_runtime_value_store_keeps_fixed_component_artifacts_distinct() -> None:
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
     ).for_group("2")
     store = RuntimeValueStore()
     records = []
@@ -426,15 +425,14 @@ def test_runtime_value_store_keeps_fixed_component_artifacts_distinct() -> None:
         name="measurements",
         path=output_plan.path,
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             input_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            producer_selection_scope=input_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+            invocation_scope=DynamicGroupScope(Microscopy.Channel),
+            producer_selection_scope=input_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Channel),),
             consumer_variable_components=(),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -454,8 +452,7 @@ def test_runtime_value_empty_fixed_scope_preserves_ordinary_key_identity() -> No
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
     ).for_group("2")
     table = MeasurementTable(
         name="measurements",
@@ -521,7 +518,7 @@ def test_runtime_value_store_find_matching_cache_invalidates_after_replace():
                 name="measurements",
                 path="/memory/measurements.pkl",
                 artifact_type=MeasurementsArtifactType,
-                group_component=Microscopy.Channel,
+                group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
             ),
             "memory",
         ),
@@ -546,8 +543,7 @@ def test_runtime_artifact_query_from_input_plan_uses_group_path():
             name="DNA",
             path="/memory/DNA.pkl",
             artifact_type=ImageArtifactType,
-            group_keys=("1", "2"),
-            group_component=Microscopy.Site,
+            group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
             paths_by_group={"1": "/memory/DNA_s1.pkl", "2": "/memory/DNA_s2.pkl"},
         ),
         axis_id="A01",
@@ -566,7 +562,7 @@ def test_runtime_artifact_query_from_dynamic_input_plan_matches_discovered_group
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
             paths_by_group={None: "/memory/measurements.pkl"},
         ),
         axis_id="A01",
@@ -596,8 +592,7 @@ def test_observed_input_selection_preserves_groups_axis_backend_and_locations(
         name="RGB",
         path="/memory/RGB.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=(None,) if dynamic else ("1", "2", "3"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,) if dynamic else ("1", "2", "3"), component=Microscopy.Site),
         paths_by_group=(
             {None: "/memory/RGB.pkl"}
             if dynamic
@@ -605,13 +600,13 @@ def test_observed_input_selection_preserves_groups_axis_backend_and_locations(
         ),
     )
     selection = (
-        ComponentGroupScope.dynamic(Microscopy.Site)
+        DynamicGroupScope(Microscopy.Site)
         if dynamic
-        else ComponentGroupScope.from_raw(("2", "1"), component=Microscopy.Site)
+        else ComponentGroupScope.of(("2", "1"), component=Microscopy.Site)
     )
     edge = _runtime_input_edge(
         storage_plan,
-        invocation_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
         producer_selection_scope=selection,
         component_scopes=(selection,),
         consumer_variable_components=(Microscopy.Site,),
@@ -699,7 +694,7 @@ def test_runtime_artifact_query_from_dynamic_output_plan_uses_runtime_group_path
             name="RGBImage",
             path="/memory/A01_RGBImage.pkl",
             artifact_type=ImageArtifactType,
-            group_component=Microscopy.Site,
+            group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
             paths_by_group={None: "/memory/A01_RGBImage.pkl"},
         ),
         axis_id="A01",
@@ -722,8 +717,7 @@ def test_runtime_artifact_input_projection_selects_same_component_group():
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group=paths,
     )
     for group_key, value in (("1", 1.0), ("2", 2.0)):
@@ -742,16 +736,15 @@ def test_runtime_artifact_input_projection_selects_same_component_group():
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group=paths,
     )
     records = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-            producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+            invocation_scope=DynamicGroupScope(Microscopy.Site),
+            producer_selection_scope=DynamicGroupScope(Microscopy.Site),
+            component_scopes=(DynamicGroupScope(Microscopy.Site),),
             consumer_variable_components=(Microscopy.Channel,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -775,8 +768,7 @@ def test_runtime_artifact_input_collects_exact_complete_producer_scope():
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group=paths,
     )
     for group_key in ("1", "2"):
@@ -802,18 +794,17 @@ def test_runtime_artifact_input_collects_exact_complete_producer_scope():
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group=paths,
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope(
+            invocation_scope=ComponentGroupScope.of(
                 ("1",),
                 component=Microscopy.Channel,
             ),
-            producer_selection_scope=storage_plan.producer_group_scope(),
+            producer_selection_scope=storage_plan.group_scope,
             component_scopes=(),
             consumer_variable_components=(Microscopy.Site,),
         ),
@@ -840,7 +831,7 @@ def test_runtime_artifact_input_projection_collects_variable_component_groups():
         name="RGBImage",
         path="/memory/RGBImage.pkl",
         artifact_type=ImageArtifactType,
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
         paths_by_group={None: "/memory/RGBImage.pkl"},
     )
     for group_key, value in (("1", 1.0), ("2", 2.0)):
@@ -859,15 +850,15 @@ def test_runtime_artifact_input_projection_collects_variable_component_groups():
         name="RGBImage",
         path="/memory/RGBImage.pkl",
         artifact_type=ImageArtifactType,
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
         paths_by_group={None: "/memory/RGBImage.pkl"},
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             input_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            producer_selection_scope=input_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+            invocation_scope=DynamicGroupScope(Microscopy.Channel),
+            producer_selection_scope=input_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Channel),),
             consumer_variable_components=(Microscopy.Site,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -901,8 +892,7 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2", "3"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2", "3"), component=Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         paths_by_group=paths,
     )
@@ -943,17 +933,16 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2", "3"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2", "3"), component=Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         paths_by_group=paths,
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-            producer_selection_scope=storage_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+            invocation_scope=DynamicGroupScope(Microscopy.Site),
+            producer_selection_scope=storage_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Site),),
             consumer_variable_components=(Microscopy.Channel,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -966,7 +955,7 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
 
     candidates = runtime_input.candidate_execution_scopes(
         store,
-        ComponentGroupScope.dynamic(Microscopy.Site),
+        DynamicGroupScope(Microscopy.Site),
         variable_components=ComponentSet((Microscopy.Channel,)),
     )
     assert tuple(scope.value_text for scope in candidates) == ("1", "2", "3")
@@ -1014,11 +1003,11 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
                  path=path, backend="memory")
     edge = _runtime_input_edge(
         storage_plan,
-        invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=DynamicGroupScope(Microscopy.Site),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(
-            ComponentGroupScope.dynamic(Microscopy.Site),
-            ComponentGroupScope.from_raw(("3",), component=Microscopy.Timepoint),
+            DynamicGroupScope(Microscopy.Site),
+            ComponentGroupScope.of(("3",), component=Microscopy.Timepoint),
         ),
         consumer_variable_components=(),
     )
@@ -1027,7 +1016,7 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
         axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store, ComponentGroupScope.dynamic(Microscopy.Site),
+        store, DynamicGroupScope(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     (coordinates,) = tuple(candidates)
@@ -1043,11 +1032,11 @@ def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context()
     path = "/memory/produced_pixels.pkl"
     output_plan = ArtifactOutputPlan(
         name="image", path=path, artifact_type=ImageArtifactType,
-        group_component=Microscopy.Channel, group_keys=("1",),
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel), 
     )
     storage_plan = ArtifactInputPlan(
         name="image", path=path, artifact_type=ImageArtifactType,
-        group_component=Microscopy.Channel, group_keys=("1",),
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel), 
     )
     payload = ImagePayloadMetadata(
         source_path="/source/old_filename_w9.tif",
@@ -1067,16 +1056,16 @@ def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context()
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-            producer_selection_scope=storage_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+            invocation_scope=DynamicGroupScope(Microscopy.Site),
+            producer_selection_scope=storage_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Site),),
             consumer_variable_components=(),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
         backend="memory",
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store, ComponentGroupScope.dynamic(Microscopy.Site),
+        store, DynamicGroupScope(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     (coordinates,) = tuple(candidates)
@@ -1103,7 +1092,7 @@ def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context()
         path=path, backend="memory",
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store, ComponentGroupScope.dynamic(Microscopy.Site),
+        store, DynamicGroupScope(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     assert len(candidates) == 2
@@ -1131,9 +1120,9 @@ def test_runtime_artifact_input_projection_ignores_scalar_pixel_contributors() -
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+            invocation_scope=DynamicGroupScope(Microscopy.Site),
+            producer_selection_scope=UngroupedScope(),
+            component_scopes=(DynamicGroupScope(Microscopy.Site),),
             consumer_variable_components=(),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -1206,8 +1195,7 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         variable_components=(Microscopy.Channel,),
         paths_by_group=paths,
     )
@@ -1232,18 +1220,17 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         variable_components=(Microscopy.Channel,),
         paths_by_group=paths,
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            producer_selection_scope=storage_plan.producer_group_scope(),
+            invocation_scope=DynamicGroupScope(Microscopy.Channel),
+            producer_selection_scope=storage_plan.group_scope,
             component_scopes=(
-                ComponentGroupScope(
+                ComponentGroupScope.of(
                     ("1",),
                     component=Microscopy.Channel,
                 ),
@@ -1283,8 +1270,7 @@ def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> 
         name="image",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
         paths_by_group={"1": path},
     )
     store = RuntimeValueStore()
@@ -1301,16 +1287,15 @@ def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> 
         name="image",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
         paths_by_group={"1": path},
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            producer_selection_scope=storage_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+            invocation_scope=DynamicGroupScope(Microscopy.Channel),
+            producer_selection_scope=storage_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Channel),),
             consumer_variable_components=(Microscopy.Site,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -1337,8 +1322,7 @@ def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> 
         name="image",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": path},
     )
     store = RuntimeValueStore()
@@ -1355,17 +1339,16 @@ def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> 
         name="image",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": path},
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=storage_plan.producer_group_scope(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=storage_plan.group_scope,
             component_scopes=(
-                ComponentGroupScope(("1",), component=Microscopy.Channel),
+                ComponentGroupScope.of(("1",), component=Microscopy.Channel),
             ),
             consumer_variable_components=(Microscopy.Site,),
         ),
@@ -1388,19 +1371,18 @@ def test_runtime_artifact_input_projection_selects_compiler_owned_group_for_ungr
         name="image",
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope(
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=ComponentGroupScope.of(
                 ("2",),
                 component=Microscopy.Channel,
             ),
             component_scopes=(
-                ComponentGroupScope(
+                ComponentGroupScope.of(
                     ("2",),
                     component=Microscopy.Channel,
                 ),
@@ -1417,7 +1399,7 @@ def test_runtime_artifact_input_projection_selects_compiler_owned_group_for_ungr
 
     assert (
         runtime_input.edge_plan.projection.producer_selection_scope
-        == ComponentGroupScope(
+        == ComponentGroupScope.of(
             ("2",),
             component=Microscopy.Channel,
         )
@@ -1434,8 +1416,7 @@ def test_runtime_artifact_input_projection_keeps_equal_keys_component_typed():
             name="image",
             path=path,
             artifact_type=ImageArtifactType,
-            group_keys=("1",),
-            group_component=component,
+            group_scope=ComponentGroupScope.of(("1",), component=component),
             paths_by_group={"1": path},
         )
         store.record(
@@ -1452,16 +1433,15 @@ def test_runtime_artifact_input_projection_keeps_equal_keys_component_typed():
         name="image",
         path="/memory/site_image.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
         paths_by_group={"1": "/memory/site_image.pkl"},
     )
     records = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-            producer_selection_scope=storage_plan.producer_group_scope(),
-            component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+            invocation_scope=DynamicGroupScope(Microscopy.Channel),
+            producer_selection_scope=storage_plan.group_scope,
+            component_scopes=(DynamicGroupScope(Microscopy.Channel),),
             consumer_variable_components=(Microscopy.Site,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
@@ -1484,8 +1464,7 @@ def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope()
         name="RGBImage",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         paths_by_group={"3": path},
     )
     payload = ImagePayloadMetadata(
@@ -1500,20 +1479,19 @@ def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope()
         name="RGBImage",
         path=path,
         artifact_type=ImageArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         paths_by_group={"3": path},
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope(
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=ComponentGroupScope.of(
                 ("3",),
                 component=Microscopy.Channel,
             ),
             component_scopes=(
-                ComponentGroupScope(
+                ComponentGroupScope.of(
                     ("3",),
                     component=Microscopy.Channel,
                 ),
@@ -1530,7 +1508,7 @@ def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope()
 
     assert (
         runtime_input.edge_plan.projection.producer_selection_scope
-        == ComponentGroupScope(
+        == ComponentGroupScope.of(
             ("3",),
             component=Microscopy.Channel,
         )
@@ -1724,7 +1702,7 @@ def _ungrouped_runtime_artifact_input(
     axis_scope: RuntimeExecutionAxisScope = RuntimeExecutionAxisScope(axis_id="A01"),
     source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
 ) -> RuntimeArtifactInput:
-    ungrouped = ComponentGroupScope.ungrouped()
+    ungrouped = UngroupedScope()
     return RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
@@ -1821,8 +1799,7 @@ def _grouped_label_input_with_distinct_consumer_channel():
         name="Cells",
         path=path,
         artifact_type=ObjectLabelsArtifactType,
-        group_component=Microscopy.Channel,
-        group_keys=("0",),
+        group_scope=ComponentGroupScope.of(("0",), component=Microscopy.Channel),
         paths_by_group={"0": path},
         source_step_id=20,
     )
@@ -1830,8 +1807,7 @@ def _grouped_label_input_with_distinct_consumer_channel():
         name=storage_plan.name,
         path=path,
         artifact_type=storage_plan.artifact_type,
-        group_component=storage_plan.group_component,
-        group_keys=storage_plan.group_keys,
+        group_scope=ComponentGroupScope.of(storage_plan.group_scope.keys, component=storage_plan.group_scope.component),
         paths_by_group=storage_plan.paths_by_group,
     ).for_group("0")
     value = RuntimeValue.normalize_for_execution_scope(
@@ -1852,8 +1828,8 @@ def _grouped_label_input_with_distinct_consumer_channel():
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
             storage_plan,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=storage_plan.producer_group_scope(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=storage_plan.group_scope,
             component_scopes=(),
             consumer_variable_components=(Microscopy.ZIndex,),
         ),
@@ -1875,7 +1851,7 @@ def test_exact_producer_group_does_not_constrain_consumer_source_channel():
     assert runtime_input.records(store) == (record,)
     assert runtime_input.resolve_value(store) is record.data
     candidates = runtime_input.candidate_execution_scopes(
-        store, ComponentGroupScope.ungrouped(),
+        store, UngroupedScope(),
         variable_components=ComponentSet((Microscopy.ZIndex,)),
     )
     (scope,) = candidates
@@ -1951,7 +1927,7 @@ def test_different_producer_group_axis_preserves_fixed_source_channel_constraint
     )
     storage_plan = replace(
         runtime_input.edge_plan.storage_plan,
-        group_component=Microscopy.Site, group_keys=("1",),
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site), 
         paths_by_group={"1": record.location.path},
     )
     runtime_input = replace(
@@ -1961,7 +1937,7 @@ def test_different_producer_group_axis_preserves_fixed_source_channel_constraint
             storage_plan=storage_plan,
             projection=replace(
                 runtime_input.edge_plan.projection,
-                producer_selection_scope=storage_plan.producer_group_scope(),
+                producer_selection_scope=storage_plan.group_scope,
             ),
         ),
     )
@@ -2145,7 +2121,7 @@ def test_paired_channel_projection_rejects_a_different_producer_site_plane():
             storage_plan=replace(edge.storage_plan, variable_components=(Microscopy.Site,)),
             projection=replace(
                 edge.projection,
-                component_scopes=(ComponentGroupScope(("1",), component=Microscopy.Site),),
+                component_scopes=(ComponentGroupScope.of(("1",), component=Microscopy.Site),),
             ),
         ),
     )
@@ -2456,7 +2432,7 @@ def test_dynamic_input_query_distinguishes_compiled_paths_with_same_backend():
                 name="measurements",
                 path=record.location.path,
                 artifact_type=MeasurementsArtifactType,
-                group_component=Microscopy.Channel,
+                group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                 paths_by_group={None: record.location.path, "DAPI": record.location.path},
             ),
             axis_id="A01",
@@ -2478,8 +2454,7 @@ def test_dynamic_input_query_retains_discovery_order_and_ignores_wrong_component
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Site,
-            group_keys=("DAPI",),
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Site),
         ),
         value.data,
         axis_id="A01",
@@ -2491,7 +2466,7 @@ def test_dynamic_input_query_retains_discovery_order_and_ignores_wrong_component
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         ),
         axis_id="A01",
         backend="memory",
@@ -2505,7 +2480,7 @@ def test_dynamic_query_snapshots_address_mapping_without_mutating_source_plan():
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group=paths,
     )
     old_query = RuntimeArtifactQuery.from_input_plan(
@@ -2544,7 +2519,7 @@ def test_dynamic_query_retains_absent_and_empty_path_declarations(paths):
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group=paths,
     )
     query = RuntimeArtifactQuery.from_input_plan(plan, axis_id="A01", backend="memory")
@@ -2559,7 +2534,7 @@ def test_input_plan_owns_independent_immutable_runtime_address_snapshot():
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group=paths,
         source_step_id=7,
         source_step_scope_id="producer-scope",
@@ -2594,7 +2569,7 @@ def test_store_transport_excludes_all_derived_lookup_caches():
             name="measurements",
             path=record.location.path,
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
             paths_by_group={"DAPI": record.location.path},
         ),
         axis_id="A01",
@@ -2635,7 +2610,7 @@ def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
             name="measurements",
             path=record.location.path,
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         ),
         axis_id="A01",
         backend="memory",
@@ -2671,8 +2646,7 @@ def test_unified_store_cache_eviction_recomputes_order_without_changing_record_a
             name="first",
             path=first.location.path,
             artifact_type=MeasurementsArtifactType,
-            group_component=Microscopy.Channel,
-            group_keys=("DAPI",),
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
         ),
         axis_id="A01",
         backend="memory",

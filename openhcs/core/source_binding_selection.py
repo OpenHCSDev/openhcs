@@ -72,7 +72,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
     from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
@@ -1581,7 +1581,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 
     origin: ClassVar[type[SourceBindingOrigin] | None] = None
     """The binding origin whose source universe this request resolves."""
-    context: "ProcessingContext"
+    context: "ExecutingContext"
     plan: "CompiledStepPlan"
     matching_files: tuple[str, ...]
     source_backend: Backend
@@ -1591,7 +1591,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     def from_context(
         cls,
         *,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         matching_files: Sequence[str],
         source_projection: VirtualWorkspaceSourceProjection | None,

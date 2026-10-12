@@ -23,8 +23,8 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -92,8 +92,8 @@ def test_binding_request_rejects_edges_from_another_callable_contract() -> None:
             artifact_type=spec.artifact_type,
         ),
         spec=spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -129,8 +129,8 @@ def test_runtime_adapter_contract_owns_active_input_selection() -> None:
             artifact_type=second.artifact_type,
         ),
         spec=second,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -173,8 +173,8 @@ def test_declared_input_occurrence_owns_callable_parameter_binding() -> None:
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -236,8 +236,8 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=mask,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(Microscopy.ZIndex,),
     )
@@ -399,8 +399,8 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
     edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
         spec=mask,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(Microscopy.ZIndex,),
     )
@@ -495,8 +495,8 @@ def _artifact_availability_adapter(
             input_plan,
             spec=spec,
             input_index=input_index,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )
@@ -592,8 +592,8 @@ def test_compiled_edges_preserve_postponed_sequence_parameter_type() -> None:
             input_plan,
             spec=spec,
             input_index=index - 1,
-            invocation_scope=ComponentGroupScope.ungrouped(),
-            producer_selection_scope=ComponentGroupScope.ungrouped(),
+            invocation_scope=UngroupedScope(),
+            producer_selection_scope=UngroupedScope(),
             component_scopes=(),
             consumer_variable_components=(),
         )

@@ -32,6 +32,9 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,
 )
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,8 +112,7 @@ def _measurement_record(
             name=name,
             path=path,
             artifact_type=MeasurementsArtifactType,
-            group_keys=("DAPI",),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of(("DAPI",), component=Microscopy.Channel),
         ),
         MeasurementTable(
             name=name,

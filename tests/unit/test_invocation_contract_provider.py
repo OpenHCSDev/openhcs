@@ -43,6 +43,9 @@ from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _identity(image, *, sigma: float = 1.0):
@@ -664,7 +667,6 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding
     from openhcs.core.config import StepSourceBindingsConfig
@@ -703,7 +705,7 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
     )
     snapshot = step
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -756,7 +758,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
 ):
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -788,7 +789,7 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
         for index, step in enumerate(steps)
     }
     session = CompilationSession.from_context(
-        context=ProcessingContext(step_plans=plans, axis_id="A01"),
+        context=executing_context(step_plans=plans, axis_id="A01"),
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
@@ -824,7 +825,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
 def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> None:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -835,7 +835,7 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
     step = FunctionStep(func=crop, name="Native NumPy crop")
     snapshot = step
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -1113,7 +1113,6 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding
     from openhcs.core.config import StepSourceBindingsConfig
@@ -1141,7 +1140,7 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
     )
     snapshot = step
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 0: CompiledStepPlan(
                     step_index=0,
@@ -1232,7 +1231,6 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     )
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding, SourceArtifactRole
     from openhcs.core.config import StepSourceBindingsConfig
@@ -1280,7 +1278,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     )
     steps = (measurement_step, step)
     session = CompilationSession.from_context(
-        context=ProcessingContext(
+        context=executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,
@@ -1354,7 +1352,6 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -1372,7 +1369,7 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         )
         return (
             CompilationSession.from_context(
-                context=ProcessingContext(
+                context=executing_context(
                     step_plans={
                         index: CompiledStepPlan(
                             step_index=index,

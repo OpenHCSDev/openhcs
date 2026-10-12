@@ -21,7 +21,6 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
@@ -83,6 +82,9 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -688,7 +690,7 @@ def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution()
     )
     assert materialization.write_mode is WriteMode.ERROR
 
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01", "A02"))
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     primary_path = materialize(
@@ -721,7 +723,7 @@ def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution()
 
 def test_save_images_keeps_declared_relative_paths_for_single_axis_execution() -> None:
     scope = ExecutionAxisMaterializationRelativePathScope()
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
 
     assert scope.scoped_path(PurePosixPath("exports/Saved.tiff"), context) == (

@@ -29,7 +29,9 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.memory import numpy as numpy_function
-from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
+from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec

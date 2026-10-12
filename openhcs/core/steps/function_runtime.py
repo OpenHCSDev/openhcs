@@ -39,7 +39,7 @@ from openhcs.core.component_group_scope import (
     RuntimeFixedComponentValues,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.debug import (
     DebugCursor,
     DebugEvent,
@@ -177,7 +177,7 @@ ObjectLabelContextualizableOutput = (
 )
 RuntimePayload = FunctionOutputContextualizedValue
 RuntimeFunctionOutput = RuntimePayload | NoMainFlowOutput | tuple[RuntimePayload, ...]
-RuntimeCallableArgument = JsonValue | RuntimePayload | ProcessingContext
+RuntimeCallableArgument = JsonValue | RuntimePayload | ExecutingContext
 RuntimeCallableKwargs = Mapping[str, RuntimeCallableArgument]
 EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
 
@@ -186,7 +186,7 @@ EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
 class PatternGroupExecutionScope:
     """Shared pattern-group execution coordinates."""
 
-    context: ProcessingContext
+    context: ExecutingContext
     execution_plan: CompiledStepPlan
     compiled_group: CompiledFunctionGroup
     component_value: RuntimeComponentValue = None
@@ -1524,7 +1524,7 @@ class PatternGroupData(PatternGroupExecutionScope):
 
 
 def _save_artifact_value(
-    context: ProcessingContext,
+    context: ExecutingContext,
     output_plan: ArtifactOutputPlan,
     value: RuntimePayload,
     source_payload: RuntimePayload,

@@ -13,7 +13,9 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import InputStackBroadcastSourceRelation
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    UngroupedScope,
+)
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
     compile_function_pattern,
@@ -183,7 +185,7 @@ def _compile_public_step(step: FunctionStep):
         compiled,
         artifact_inputs={},
         relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
         source_bindings=step.source_bindings,
         available_artifacts=ArtifactSpecCollection(
@@ -212,9 +214,9 @@ def _compile_runtime_input_edges(func, plans: tuple[ArtifactInputPlan, ...]):
         compiled,
         artifact_inputs=plans_by_ref,
         relation_source_scopes={
-            plan.ref(): plan.producer_group_scope() for plan in plans
+            plan.ref(): plan.group_scope for plan in plans
         },
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
     )
 

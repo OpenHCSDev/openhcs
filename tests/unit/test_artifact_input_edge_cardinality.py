@@ -7,7 +7,10 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.relations import InputGroupLineageSourceRelation
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    UngroupedScope,
+)
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import compile_function_pattern
@@ -77,9 +80,9 @@ def test_repeated_input_roles_compile_as_exact_edge_occurrences() -> None:
         compiled,
         artifact_inputs={storage_plan.ref(): storage_plan},
         relation_source_scopes={
-            objects.ref(): storage_plan.producer_group_scope(),
+            objects.ref(): storage_plan.group_scope,
         },
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
     )
     invocation = next(compiled.iter_invocations())
@@ -118,8 +121,7 @@ def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections()
         name=source.name,
         path="/memory/source.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
     )
     compiled = compile_function_pattern(
         admitted_graph(
@@ -142,10 +144,10 @@ def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections()
             source_plan.ref(): source_plan,
         },
         relation_source_scopes={
-            plain_objects.ref(): object_plan.producer_group_scope(),
-            source.ref(): source_plan.producer_group_scope(),
+            plain_objects.ref(): object_plan.group_scope,
+            source.ref(): source_plan.group_scope,
         },
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         consumer_variable_components=ComponentSet(),
     )
     invocation = next(compiled.iter_invocations())
@@ -162,9 +164,9 @@ def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections()
     )
     assert invocation.artifact_input_edges[0].projection.component_scopes == ()
     assert invocation.artifact_input_edges[1].projection.component_scopes == (
-        source_plan.producer_group_scope(),
+        source_plan.group_scope,
     )
     assert (
         invocation.artifact_input_edges[2].projection.producer_selection_scope
-        == source_plan.producer_group_scope()
+        == source_plan.group_scope
     )

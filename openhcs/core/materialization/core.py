@@ -113,7 +113,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.artifacts.plans import ArtifactOutputPlan
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 logger = logging.getLogger(__name__)
@@ -1341,7 +1341,7 @@ class SourceStemAuthoritySelection:
     @classmethod
     def from_processing_context(
         cls,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> SourceStemAuthoritySelection:
         if context is None:
             return cls(parser=None)
@@ -1375,7 +1375,7 @@ class SourceStemAuthority(
     @classmethod
     def from_processing_context(
         cls,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> SourceStemAuthority:
         return cls.for_context(
             SourceStemAuthoritySelection.from_processing_context(context),
@@ -1798,7 +1798,7 @@ class ROIPathAuthority:
     @classmethod
     def from_processing_context(
         cls,
-        context: ProcessingContext | None,
+        context: ExecutingContext | None,
     ) -> ROIPathAuthority:
         return cls(SourceStemAuthority.from_processing_context(context))
 
@@ -2514,7 +2514,7 @@ class MaterializationContext:
     backend_kwargs: NormalizedBackendKwargs
     filemanager: FileManager
     extra_inputs: dict
-    context: ProcessingContext | None = None
+    context: ExecutingContext | None = None
     artifact_source_identity: SourceImageIdentity | None = None
     artifact_filename_identity: SourceImageIdentity | None = None
     variable_components: Sequence[type[Axis]] = field(default_factory=tuple)
@@ -4977,7 +4977,7 @@ def materialization_outputs(
     data: MaterializationValue,
     path: str,
     filemanager: FileManager,
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
     extra_inputs: dict | None = None,
     *,
     artifact_source_identity: SourceImageIdentity | None = None,
@@ -5024,7 +5024,7 @@ def prepare_materialization(
     filemanager: FileManager,
     backends: Sequence[str] | str,
     backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
     extra_inputs: dict | None = None,
     *,
     artifact_source_identity: SourceImageIdentity | None = None,
@@ -5070,7 +5070,7 @@ def materialize(
     filemanager: FileManager,
     backends: Sequence[str] | str,
     backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
-    context: ProcessingContext | None = None,
+    context: ExecutingContext | None = None,
     extra_inputs: dict | None = None,
     *,
     artifact_source_identity: SourceImageIdentity | None = None,

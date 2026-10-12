@@ -29,7 +29,7 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.runtime.viewer_display import DeclaredAxes, ViewerSlotFamily
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
@@ -587,7 +587,7 @@ class StreamMetadataRootAuthority:
     candidate_roots: tuple[Path, ...]
 
     @classmethod
-    def from_context(cls, context: ProcessingContext) -> "StreamMetadataRootAuthority":
+    def from_context(cls, context: ExecutingContext) -> "StreamMetadataRootAuthority":
         roots = []
         for value in (
             context.dataset_root,
@@ -649,7 +649,7 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
     def for_component(
         cls,
         *,
-        context: ProcessingContext,
+        context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
     ) -> "StreamComponentDomainProvider":
@@ -668,7 +668,7 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
     def build_for_component(
         cls,
         *,
-        context: ProcessingContext,
+        context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
     ) -> "StreamComponentDomainProvider":
@@ -706,13 +706,13 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
     def build_for_component(
         cls,
         *,
-        context: ProcessingContext,
+        context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
     ) -> "StreamExecutionAxisDomainProvider":
         if context.execution_runtime is None:
             raise RuntimeError(
-                "Streaming component domain requires ProcessingContext.execution_runtime "
+                "Streaming component domain requires ExecutingContext.execution_runtime "
                 "for the multiprocessing axis."
             )
         values = context.execution_runtime.execution_axis_values
@@ -763,7 +763,7 @@ class StreamComponentDomainProviders:
     def from_layout(
         cls,
         *,
-        context: ProcessingContext,
+        context: ExecutingContext,
         layout: ViewerComponentLayout,
         metadata_roots: tuple[StreamMetadataRoot, ...],
     ) -> "StreamComponentDomainProviders":
@@ -804,7 +804,7 @@ class StreamComponentMessageExtraAuthority:
         cls,
         viewer_surface: StreamingViewerSurface,
         *,
-        context: ProcessingContext,
+        context: ExecutingContext,
         source_metadata_items: StreamSourceComponentMetadataItems,
     ) -> "StreamComponentMessageExtraAuthority":
         viewer_surface = cls._scope_to_complete_components(

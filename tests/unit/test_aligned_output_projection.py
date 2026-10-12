@@ -1,12 +1,10 @@
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -16,6 +14,9 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.memory import MemoryType
 from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
+from tests.context_support import (
+    executing_context,
+)
 
 
 def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypatch):
@@ -45,7 +46,7 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
                 step_index=0, step_name="output-projection",
                 axis_id="A01", output_memory_type=MemoryType.NUMPY,
             ),
-            context=ProcessingContext(axis_id="A01"),
+            context=executing_context(axis_id="A01"),
             compiled_group=compile_function_pattern(
                 admitted_graph(lambda image: image),
                 {},

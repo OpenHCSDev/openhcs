@@ -17,7 +17,7 @@ from openhcs.core.source_path_identity import (
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -609,12 +609,12 @@ class StepOutputManifestStore:
 
 
 _STEP_OUTPUT_MANIFESTS: WeakKeyDictionary[
-    ProcessingContext,
+    ExecutingContext,
     StepOutputManifestStore,
 ] = WeakKeyDictionary()
 
 
-def step_output_manifest(context: ProcessingContext) -> StepOutputManifestStore:
+def step_output_manifest(context: ExecutingContext) -> StepOutputManifestStore:
     """Return execution-local main-flow output lineage for a context."""
     if context in _STEP_OUTPUT_MANIFESTS:
         return _STEP_OUTPUT_MANIFESTS[context]

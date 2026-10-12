@@ -6,7 +6,6 @@ from types import MappingProxyType
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     DeclaredSourceMetadataRecord,
@@ -29,6 +28,9 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.dataset_sources.interfaces import FilenameParseResult
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 PATH = "A01_s001_w1_z001_t001.tif"
 
@@ -308,7 +310,7 @@ def test_resolved_direct_constructor_owns_deep_immutable_invariant():
 
 @pytest.mark.parametrize("context_owned", (False, True))
 def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned):
-    processing_context = ProcessingContext(axis_id="A01")
+    processing_context = executing_context(axis_id="A01")
     cache = (
         processing_context.runtime_source_binding_context_cache
         if context_owned

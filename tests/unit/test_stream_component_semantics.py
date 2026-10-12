@@ -16,7 +16,6 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.worker_lanes import (
     WorkerAssignmentPlan,
@@ -24,6 +23,10 @@ from openhcs.core.orchestrator.worker_lanes import (
 )
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    compiled_context,
+    executing_context,
+)
 
 
 def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity():
@@ -40,8 +43,7 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
             worker_slot=slot,
             worker_assignments=assignments.worker_assignments,
         )
-        context = ProcessingContext()
-        context.bind_execution_runtime(lane)
+        context = compiled_context().executing(lane)
         assert context.execution_runtime is lane
         assert lane.worker_assignments is assignments.worker_assignments
         assert lane.owned_partition_values == tuple(assignments.worker_assignments[slot])
@@ -65,7 +67,7 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
 def test_streaming_domain_requires_bound_execution():
     with pytest.raises(RuntimeError, match="execution_runtime"):
         StreamExecutionAxisDomainProvider.build_for_component(
-            context=ProcessingContext(),
+            context=executing_context(),
             component=AxisFamily.active().partition_axis().name,
             metadata_roots=(),
         )

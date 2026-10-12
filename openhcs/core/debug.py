@@ -394,7 +394,7 @@ class DebugArtifactIdentity:
         return cls(
             name=plan.name,
             kind=plan.artifact_type,
-            group_keys=tuple(plan.group_keys or (None,)),
+            group_keys=plan.group_scope.keys,
             producer_step_index=(
                 None
                 if output_plan is None or output_plan.producer_step_index is None
