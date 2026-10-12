@@ -82,9 +82,7 @@ def command_render(response, argv):
 
 @pytest.mark.parametrize("structured", [False, True])
 @pytest.mark.parametrize("selected_case", [False, True])
-def test_original_session_framing_to_generated_sampling_command(
-    structured, selected_case, monkeypatch
-):
+def test_original_session_framing_to_generated_sampling_command(structured, selected_case, monkeypatch):
     from tests.unit.agent.test_mcp_dev_client_pipeline_results import (
         ControlledWireSession,
     )
