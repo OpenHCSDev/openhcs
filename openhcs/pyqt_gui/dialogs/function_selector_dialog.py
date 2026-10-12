@@ -29,7 +29,11 @@ from pyqt_reactive.widgets.shared.function_table_browser import (
     FunctionTableRow,
 )
 
-from openhcs.agent.dto.functions import FunctionCatalogEntry, FunctionCatalogPage
+from openhcs.agent.dto.functions import (
+    FailedCustomFunctionSource,
+    FunctionCatalogEntry,
+    FunctionCatalogPage,
+)
 from openhcs.agent.services.endpoint_function_catalog_service import (
     EndpointFunctionUnavailableError,
     ZMQFunctionCatalogService,
@@ -169,6 +173,7 @@ class FunctionSelectorDialog(QDialog):
 
         # Endpoint metadata is populated asynchronously after the widgets exist.
         self.catalog_entries: dict[str, FunctionCatalogEntry] = {}
+        self.failed_custom_sources: tuple[FailedCustomFunctionSource, ...] = ()
         self._catalog_future: Future[FunctionCatalogPage] | None = None
 
         self.setup_ui()
@@ -217,6 +222,7 @@ class FunctionSelectorDialog(QDialog):
             return
 
         self.catalog_entries = {entry.function_id: entry for entry in page.items}
+        self.failed_custom_sources = page.failed_custom_sources
         logger.info(
             "Loaded %d functions from endpoint catalog revision %s",
             len(self.catalog_entries),
@@ -250,14 +256,9 @@ class FunctionSelectorDialog(QDialog):
             function_table_rows(catalog_entries)
         )
 
-        # Create unified count display in the browser's status label
-        total_count = len(self.catalog_entries)
-        filtered_count = len(self.function_table_browser.filtered_items)
-        count_text = f"Functions: {filtered_count}/{total_count}"
-        if filter_description:
-            count_text += f" ({filter_description})"
-
-        self.function_table_browser.status_label.setText(count_text)
+        self.function_table_browser.status_label.setText(
+            self._status_text(filter_description)
+        )
 
         # Clear selection when filtering
         self._set_selection_state(None, False)
@@ -412,12 +413,23 @@ class FunctionSelectorDialog(QDialog):
         """Populate function table using FunctionTableBrowser."""
         self.function_table_browser.set_items(function_table_rows(self.catalog_entries))
 
-        # Update count label
-        total = len(self.catalog_entries)
-        filtered = len(self.function_table_browser.filtered_items)
-        self.function_table_browser.status_label.setText(
-            f"Functions: {filtered}/{total}"
+        self.function_table_browser.status_label.setText(self._status_text())
+
+    def _status_text(self, filter_description: str = "") -> str:
+        """Shown and total counts, and the custom functions that failed to load."""
+        text = (
+            f"Functions: {len(self.function_table_browser.filtered_items)}"
+            f"/{len(self.catalog_entries)}"
         )
+        if filter_description:
+            text += f" ({filter_description})"
+        if self.failed_custom_sources:
+            names = ", ".join(source.name for source in self.failed_custom_sources)
+            text += (
+                f" | Custom functions that failed to load: {names} "
+                "(see the Custom Function Manager for the errors)"
+            )
+        return text
 
     def on_tree_selection_changed(self):
         """Handle tree selection using mathematical simplification (RST principle)."""

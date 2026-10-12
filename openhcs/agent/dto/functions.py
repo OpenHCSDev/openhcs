@@ -781,7 +781,7 @@ def catalog_page(
     limit: int,
     query: str | None,
     library: str | None,
-    failed_custom_sources: tuple[FailedCustomFunctionSource, ...],
+    failed_custom_sources: tuple[FailedCustomFunctionSource, ...] = (),
 ) -> FunctionCatalogPage:
     return FunctionCatalogPage(
         schema_version=SCHEMA_VERSION,
