@@ -176,5 +176,127 @@ one step, of which 246 installed distributions are most).
   (`submission_<id>` in step scope ids). Output files (TIFF and CSV) are byte-identical.
 
 **Not done.** `changed_during_run` (asking again for size and modification time at the end of the
-run). The agent capability `openhcs_read_run_record` is being written separately and reads
-`effective_config_code`; that key is now `global_config_code`.
+run): the design text above still describes it; it is dropped, a file modified during a run is
+not detected.
+
+## Hand-off (2026-10-12): state, results, what remains
+
+A fresh agent continues from here. PolyStore part: PR OpenHCSDev/PolyStore#41 (branch
+`feat/file-content-identity`, commit `8ee8ce4`, version 0.6.3, not merged, not on PyPI). This
+branch pins `polystore>=0.6.3,<0.7` and points the submodule at that commit.
+
+### Implemented and committed
+
+| Commit | What |
+|---|---|
+| `7ea5440e1` | this receipt's design |
+| `1786bbc13` | `openhcs/core/function_identity.py`; `identity()` on the function reference and registry entry families; custom source text kept on `CustomFunctionSourceNamespace`; `content_at_run_start` on the declared path family; `openhcs/core/run_record.py` |
+| `c2d689e61` | bundle carries `RunDeclaration`; workers report `producer_by_saved_path`; `RunRecord.at_run_start` in `execute_bundle_request`; one-transaction write in `reconcile_completed_dataset`; complete rendering writes every parameter; `tests/unit/test_run_record.py` (17), `tests/integration/test_run_record_round_trip.py` |
+| `09a712ad5` | `openhcs_read_run_record` capability (`openhcs/agent/services/run_record_service.py`), `tests/unit/test_run_record_capability.py` (7) |
+| `d33b72496` | merge of `origin/main` |
+
+### Acceptance run (CPU venv, torch 2.14.1+cpu, Cellpose 3.1.1.3, 3 BBBC039 fields)
+
+Scripts and outputs: `.claude/scratch/acceptance/` (untracked). NumPy-declared Cellpose source
+from commit `47fbed348` (the torch-declared one cannot compile without CUDA; DL1's gap).
+
+- Cellpose then `measure_labelled_objects`: a label TIFF resolves to step `segment`, a
+  measurement CSV to step `measure`. `custom_source_sha256` equals sha256 of the source file.
+  All 7 Cellpose parameters are recorded as `function_default`; `min_area_px=20` as `pipeline`.
+  `imports.libraries`: cellpose 3.1.1.3, numpy 2.0.2. Record 78,764 bytes, metadata document
+  97,633 bytes. Compile 2.53 s, execute 19.97 s.
+- Body changed, name kept: source hash `a2824fff…` -> `bca58da6…`, record id `7ce7240d…` ->
+  `37e46efc…`; each dataset stores its own text.
+- Re-run from the record in a fresh process with nothing registered: 3 main images, the label
+  TIFF and both step CSVs byte-identical. ROI zips differ only in an embedded absolute
+  `source_path` and zip timestamps (all `.roi` members identical); `segmentation_summary.txt`
+  lists absolute paths; `metaxpress_style_summary.csv` has a different `Plate ID`.
+- N2V2 denoise (NumPy-declared copy; model file left at its default): `declared_files` entry
+  `declared_as: "input file"`, `hashed: true`, sha256 `0340245e…`, 124,144,631 bytes, equal to
+  hashlib; after overwriting the model the recorded hash is `5a2582ea…`.
+- Hash cost: standalone 1 GiB, sha256, 0.58 s warm and 2.15 s after dropping the page cache
+  (blake2b 1.03 s, md5 1.22 s). Through `filemanager.file_content` under load (full suite running,
+  2 GB free RAM): 12.56 s first read, then 1.29 s and 1.46 s.
+- Capability default response: 52,808 bytes for a dataset root, 68,175 for one file.
+
+Example (Cellpose step, trimmed):
+
+```json
+{"name": "segment", "pipeline_position": 0,
+ "step_scope_id": "…/runA/source::pipeline::submission_7fd30cd3c3c0::step_0",
+ "input_memory_type": "numpy", "output_memory_type": "numpy", "assigned_gpu_devices": [],
+ "functions": [{
+   "identity": {"key": "openhcs:cellpose_segment", "module": "openhcs.processing.custom_functions",
+     "name": "cellpose_segment",
+     "imports": {"libraries": [{"distribution": "cellpose", "version": "3.1.1.3"},
+                               {"distribution": "numpy", "version": "2.0.2"}],
+                 "modules_without_distribution": ["openhcs"]},
+     "custom_source_sha256": "a2824fffc06b7c906d3af193fa4ff21ba24a7a5ddf0a16e54419aa7eb077d9af"},
+   "parameters": [
+     {"name": "image", "value": "<supplied when the function is called>", "source": {"kind": "run_time"}},
+     {"name": "model", "value": "cellpose_segment.__openhcs_source_a2824f….__openhcs_member_….NUCLEI",
+      "source": {"kind": "function_default", "function": "openhcs:cellpose_segment"}},
+     {"name": "diameter", "value": "None", "source": {"kind": "function_default", "function": "openhcs:cellpose_segment"}},
+     {"name": "flow_threshold", "value": "0.4", "source": {"kind": "function_default", "function": "openhcs:cellpose_segment"}}],
+   "declared_files": []}]}
+```
+
+### Gates
+
+- `guardrails_local.sh` on `d33b72496`: **rc=1**. Lines: `ratchet openhcs exit 1`,
+  `ratchet scripts exit 0`, `ratchet benchmark exit 0`, `38 passed, 22 warnings in 68.54s`,
+  `nra-r1 exit 1`, `guardrails rc=1`. Ratchet delta: `GodClassExcess PipelineCompiler +7`,
+  `GodClassExcess OpenHCSMetadataTarget +24`, `LongBooleanChain +1`,
+  `BooleanChainTerms openhcs/core/steps/abstract.py +1`,
+  `BooleanChainTerms openhcs/core/virtual_workspace_metadata.py +4`,
+  `ForeignAbsenceProbe` +1 in `virtual_workspace_metadata.py` and +1 in
+  `serialization/pycodify_formatters.py`, `StringSubscript +21`,
+  `AnyAnnotation openhcs/core/run_record.py +6`. NRA increased: `unmodeled_record_shape` in
+  `openhcs/core/run_record.py` and `openhcs/agent/services/run_record_service.py`.
+- `verify_branch.sh DL3`: see "Full suite" below.
+- Not run: `smoke_local.sh`, official30 parity (required: compilation, execution and
+  materialization changed).
+
+### What remains, in order
+
+1. **Model the record as nominal types** (clears `StringSubscript`, `AnyAnnotation`,
+   `unmodeled_record_shape`): `RunRecord` holds `content: Mapping[str, Any]` and the reader and
+   the capability service index it by string. Replace with frozen dataclasses (software, step,
+   function, parameter, declared file) that encode to and decode from JSON in one place;
+   `RunRecordService` reads attributes.
+2. **Move the added code out of the two oversized classes**: `saved_path_producers` out of
+   `OpenHCSMetadataTarget` (it belongs with `ProducedFiles`), the declaration calls out of
+   `PipelineCompiler`. Remove the two new absence probes and the lengthened boolean chains
+   (`StepExecutionObservation.is_empty`, `reconcile_completed_dataset`).
+3. **Defect: a declared path left at its default is recorded as written in the pipeline**, with
+   the resolved absolute path as its value. `CallableContract.resolve_declared_paths`
+   (`callable_contract.py:~1296`) puts the resolved default into the kwargs and `_parameters`
+   (`run_record.py`) treats every kwarg as written. Record the written or default value with its
+   true source and keep the resolved path only in `declared_files`. Failing test first.
+4. **`enabled`** is written in `pipeline_code` function kwargs but has no `parameters` entry.
+5. **Device on CPU**: `assigned_gpu_devices: []` does not say the step ran on host memory. State
+   it explicitly from the place DL1 leaves the assignment.
+6. **Enum defaults of custom functions** render as
+   `name.__openhcs_source_<sha>.__openhcs_member_<hex>.MEMBER` (same mangling as D1 gap 10).
+7. **Transitive libraries**: `imports.libraries` lists direct imports only (torch is not listed
+   for Cellpose; it is only in `software.installed_distributions`). Decide: record the
+   requirement closure of the direct imports, or state the rule in the record.
+8. **Plate-level outputs are unrecorded**: `results/metaxpress_style_summary.csv` (analysis
+   consolidation) has no `produced_files` entry; `for_output_file` raises `UnrecordedOutputFile`
+   for it. It needs a producer identity of its own kind (it is not a step output).
+9. **Record size**: 59 to 79 kB per record, mostly installed distributions and per-step
+   configuration repeating absolute scope ids. The capability's shortened response is still 53 kB.
+10. **Fallback to remove or justify**: with no saved global config, `RunDeclaration` stores a
+    default-constructed one.
+11. **Reader API**: no public "is this a dataset root"; `ProducedFile` has neither dataset root
+    nor relative path, so the capability's read of the metadata document above a file bypasses
+    the agent path policy; a directory without metadata reports as an unrecorded file.
+12. `changed_during_run` is not implemented; update the design text or implement.
+13. Reproducibility leaks found by the round trip, outside this branch's scope: ROI zip metadata
+    and `segmentation_summary.txt` embed absolute source paths; zip timestamps.
+14. Gates: guardrails to `rc=0`, `verify_branch.sh`, `smoke_local.sh`, parity under
+    `heavy_slot.sh` and `official30.lock`. Then mark the PR ready. PolyStore #41 must merge and
+    release 0.6.3 before CI here can install the pin.
+15. Delete `.claude/venv-cpu` (2.3 GB) and `.claude/scratch/` in this worktree.
+16. For the #1230 branch: nothing in the example functions has to change for this gap; the count
+    table's own `model` and `diameter_px` columns are no longer the only place those are stated.
