@@ -5,38 +5,41 @@ from __future__ import annotations
 import hashlib
 from dataclasses import replace
 
-from openhcs.core.selection import AllItems, SelectionScope
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.selection import AllItems, SelectionScope
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.bridge.dto import (
     UiActionIdentity,
     UiActionInvokeRequest,
     UiActionSummary,
-    UiDebugActionState,
-    UiDebugCursorState,
-    UiDebugRuntimeFrameState,
-    UiDebugTerminalSummaryState,
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
     UiLiveOverviewSection,
     UiLiveOverviewSeverity,
-    UiPipelineDebugSessionState,
-    UiPipelineEditorState,
-    UiProgressIdentityState,
     UiStateSurfaceDocument,
     UiStateSurfaceRequest,
     UiStateSurfaceSummary,
+)
+from openhcs.agent.dto.ui_bridge import (
+    UiDebugActionState,
+    UiDebugCursorState,
+    UiDebugRuntimeFrameState,
+    UiDebugTerminalSummaryState,
+    UiPipelineDebugSessionState,
+    UiPipelineEditorState,
+    UiProgressIdentityState,
 )
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineDebugToolbarWidgetIdentity,
     PipelineEditorStateSurfaceIdentityDeclaration,
     PipelineEditorWidgetIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
+    DatasetListStateSurfaceIdentity,
 )
 from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.progress.debug_projection import DebugRuntimeFrame
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     UiActionDispatch,
     UiActionProviderABC,
     UiActionProviderIdentity,
@@ -46,10 +49,7 @@ from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     state_surface_declaration_for_identity,
     state_surface_ids_for_action,
 )
-from openhcs.pyqt_gui.services.ui_bridge_registry import (
-    UiBridgeProviderSetABC,
-    UiBridgeRegistrationContext,
-)
+from formbridge.bridge.registry import UiBridgeProviderSetABC, UiBridgeRegistrationContext
 from openhcs.authoring.session.views import PipelineStepsView
 from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
     SessionOperationActionProvider,
@@ -64,7 +64,7 @@ from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
 PIPELINE_EDITOR_ACTIONS_TITLE = "Pipeline editor actions"
 PIPELINE_DEBUG_TOOLBAR_ACTIONS_TITLE = "Pipeline debug toolbar actions"
 PLATE_MANAGER_STATE_SURFACE_ID = (
-    PlateManagerStateSurfaceIdentityDeclaration.require_value()
+    DatasetListStateSurfaceIdentity.require_value()
 )
 PIPELINE_EDITOR_WIDGET_ID = PipelineEditorWidgetIdentity.require_value()
 PIPELINE_DEBUG_TOOLBAR_WIDGET_ID = PipelineDebugToolbarWidgetIdentity.require_value()

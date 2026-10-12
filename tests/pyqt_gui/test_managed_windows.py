@@ -24,7 +24,7 @@ class _Signal:
 
 
 class _OrchestratorStub:
-    pass
+    dataset_root = "/plates/stub"
 
 
 class _PlateManagerStub(QWidget):
@@ -46,20 +46,24 @@ class _ImageBrowserStub(QWidget):
 
     def __init__(
         self,
+        dataset,
         *,
-        orchestrator: _OrchestratorStub | None,
         color_scheme: None,
         zmq_config,
         progress_config,
     ) -> None:
+        from openhcs.pyqt_gui.widgets.image_browser import NoDataset
+
         super().__init__()
         del color_scheme, progress_config
-        self.orchestrators = [orchestrator]
+        assert isinstance(dataset, NoDataset)
+        self.orchestrators = [None]
         self.zmq_configs = [zmq_config]
         _ImageBrowserStub.instances.append(self)
 
-    def set_orchestrator(self, orchestrator: _OrchestratorStub) -> None:
-        self.orchestrators.append(orchestrator)
+    def set_dataset(self, dataset) -> None:
+        assert dataset.scope_parent == str(dataset.orchestrator.dataset_root)
+        self.orchestrators.append(dataset.orchestrator)
 
     def set_zmq_config(self, config) -> None:
         self.zmq_configs.append(config)

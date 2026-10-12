@@ -10,12 +10,8 @@ from typing import TypeAlias
 
 from objectstate import get_base_type_for_lazy
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentError,
-    AgentWarning,
-    RenderedSource,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION, RenderedSource
+from formbridge.contracts import AgentError, AgentWarning
 from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.pipeline import (

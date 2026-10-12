@@ -1,5 +1,7 @@
 """Geometry declarations preserve the payload their raw implementations consume."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 from typing import get_type_hints
 
@@ -9,7 +11,6 @@ import pytest
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
@@ -48,7 +49,7 @@ def test_prepared_resize_preserves_typed_primary_and_bare_array(func):
     assert contract.raw_main_flow_call_argument(pixels).data is pixels
 
 
-@pytest.mark.parametrize("axis", (None, RuntimePlaneAxis.RUNTIME_SLICE))
+@pytest.mark.parametrize("axis", (NoPlaneAxis, RuntimeSlicePlaneAxis))
 @pytest.mark.parametrize("z_factor", (1.0, 2.0))
 @pytest.mark.parametrize(
     "domain_type", (SourceSpatialDomain, VolumeSourceSpatialDomain)

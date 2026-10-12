@@ -443,14 +443,14 @@ class FijiPayloadLocalPlaneExpander:
         )
 
     @staticmethod
-    def _require_plane_axis(item: FijiWireItem) -> RuntimePlaneAxis:
+    def _require_plane_axis(item: FijiWireItem) -> type[RuntimePlaneAxis]:
         raw_axis = item.payload.get(ViewerWireField.PLANE_AXIS.value)
         if raw_axis is None:
             raise ValueError(
                 "Fiji payload-local plane component declaration requires plane_axis."
             )
         try:
-            return RuntimePlaneAxis(raw_axis)
+            return RuntimePlaneAxis.named(raw_axis)
         except (TypeError, ValueError) as error:
             raise ValueError(
                 f"Unsupported Fiji payload-local plane axis {raw_axis!r}."

@@ -2,9 +2,7 @@ from types import SimpleNamespace
 
 from zmqruntime.viewer_state import ViewerInstance, ViewerState
 
-from openhcs.pyqt_gui.services.ui_bridge_live_overview import (
-    ViewerSessionLiveOverviewContributor,
-)
+from openhcs.pyqt_gui.services.ui_bridge_live_overview import ViewerSessionLiveOverviewContributor
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 
 

@@ -10,11 +10,8 @@ try:
 except ImportError:
     PYQT_AVAILABLE = False
 
-from pyqt_reactive.services.zmq_server_info import (
-    BaseServerInfo,
-    ExecutionServerInfo,
-)
-from pyqt_reactive.services.zmq_server_scan_service import StartingEndpointObservation
+from formbridge.services.zmq_server_info import BaseServerInfo, ExecutionServerInfo
+from formbridge.services.zmq_server_scan_service import StartingEndpointObservation
 from zmqruntime.messages import PongResponse
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 

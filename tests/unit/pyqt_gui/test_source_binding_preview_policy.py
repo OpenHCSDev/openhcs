@@ -5,13 +5,8 @@ from dataclasses import replace
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.pyqt_gui.config import UIConfig
-from pyqt_reactive.utils.preview_formatters import (
-    PreviewFieldFormatRequest,
-    PreviewValueDetail,
-)
-from pyqt_reactive.widgets.shared.manager_preview_formatting import (
-    ManagerPreviewFieldFormatter,
-)
+from formbridge.utils.preview_formatters import PreviewFieldFormatRequest, PreviewValueDetail
+from formbridge.managers.preview_formatting import ManagerPreviewFieldFormatter
 
 
 def test_source_binding_collection_is_compact_and_expansion_preserves_its_scope():

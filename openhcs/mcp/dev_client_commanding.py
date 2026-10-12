@@ -21,7 +21,7 @@ from openhcs.agent.capabilities import (
     get_capability_registry,
     require_agent_type_contract,
 )
-from openhcs.agent.dto.common import AgentCliArgumentSpec, AgentCliRequest
+from formbridge.contracts import AgentCliArgumentSpec, AgentCliRequest
 from python_introspect import JsonValue
 from openhcs.agent.dto.execution import (
     RuntimeServerConnectionToolRequest,

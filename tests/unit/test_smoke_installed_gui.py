@@ -4,9 +4,10 @@ import hashlib
 import json
 from concurrent.futures import Future
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from zmqruntime import (
     DataControlPortPair,
     DataControlPortPairAuthority,
@@ -15,10 +16,14 @@ from zmqruntime import (
     TransportMode,
 )
 
-from openhcs.agent.dto.common import AgentResourceRef
+from formbridge.contracts import AgentResourceRef
 from openhcs.agent.dto.execution import ExecutionConnectionSpec, RuntimeServerInfo
 from openhcs.agent.dto.functions import FunctionCatalogEntry, FunctionCatalogPage
-from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+from formbridge.bridge.dto import (
+    ActionAccepted,
+    UiActionInvocationStatus,
+    UiWindowSnapshotResult,
+)
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig, UIConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from scripts.smoke_installed_gui import (
@@ -30,6 +35,7 @@ from scripts.smoke_installed_gui import (
     InstalledGuiSnapshotEvidenceAuthority,
     _StartupObservation,
     assert_not_source_checkout_import,
+    require_ui_action_accepted,
     verify_installed_function_catalog,
     with_isolated_runtime_topology,
 )
@@ -396,3 +402,18 @@ def test_window_snapshot_cli_projects_declared_output_directory(tmp_path: Path) 
 
     assert call.name == "openhcs_ui_snapshot_window"
     assert call.arguments["output_dir_path"] == str(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "status", tuple(UiActionInvocationStatus.__registry__.values())
+)
+def test_gui_smoke_accepts_only_an_accepted_ui_action(
+    status: type[UiActionInvocationStatus],
+) -> None:
+    action_result = SimpleNamespace(status=status)
+
+    if status is ActionAccepted:
+        require_ui_action_accepted(action_result)
+    else:
+        with pytest.raises(AssertionError, match="not accepted"):
+            require_ui_action_accepted(action_result)

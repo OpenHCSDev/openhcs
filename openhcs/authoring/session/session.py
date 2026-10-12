@@ -25,9 +25,9 @@ from typing import TYPE_CHECKING, TypeVar
 from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from polystore.base import _create_storage_registry
-from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
-from pyqt_reactive.services.zmq_server_scan_service import EndpointObservationSnapshot
+from formbridge.services.async_operation_executor import AsyncOperationExecutor
+from formbridge.services.scope_token_service import ScopeTokenService
+from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
 from zmqruntime.messages import ExecutionRecord
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
@@ -152,7 +152,7 @@ from openhcs.core.debug import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.agent.dto.common import AgentError
+    from formbridge.contracts import AgentError
     from openhcs.authoring.session.operations import SessionOperation
     from openhcs.authoring.session.views import SessionView
     from zmqruntime.messages import PongResponse

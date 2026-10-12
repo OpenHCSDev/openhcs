@@ -15,6 +15,36 @@ from openhcs.processing.custom_functions.events import (
 from openhcs.processing.custom_functions.signals import CustomFunctionSignals
 
 
+@pytest.fixture(autouse=True)
+def _collections_cover_this_test_only():
+    """Keep the session's earlier heap out of this test's collections.
+
+    These tests call ``gc.collect()`` to show that nothing they allocate
+    survives through a reference cycle. A full collection also walks every
+    object the session allocated before them, which took seconds per call late
+    in the unit run. Freezing that heap leaves the collector exactly the
+    objects allocated from here on, so each assertion keeps its full strength.
+    """
+    gc.freeze()
+    yield
+    gc.unfreeze()
+
+
+def test_collection_under_the_frozen_heap_still_reclaims_new_cycles() -> None:
+    class Node:
+        pass
+
+    node = Node()
+    node.itself = node
+    node_reference = weakref.ref(node)
+
+    del node
+    assert node_reference() is not None
+    gc.collect()
+
+    assert node_reference() is None
+
+
 class _DomainSubscriber:
     def __init__(self, observations: list[str]) -> None:
         self._observations = observations

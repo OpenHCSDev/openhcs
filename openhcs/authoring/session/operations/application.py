@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.agent.dto.common import AgentWarning
+from formbridge.contracts import AgentWarning
 from openhcs.authoring.session.operations import RendererOperation
 
 

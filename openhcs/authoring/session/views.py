@@ -23,7 +23,7 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.agent.ui_bridge_identities import (
     PipelineEditorWidgetIdentity,
-    PlateManagerWidgetIdentity,
+    DatasetListWidgetIdentity,
     UiSessionViewWidgetIdentityDeclaration,
 )
 from openhcs.authoring.session.dataset_status import PlateStatusPresenter
@@ -232,7 +232,7 @@ class DatasetActivity:
 class DatasetListView(SessionView):
     view_id = "dataset_list"
     title = "Datasets"
-    window = PlateManagerWidgetIdentity
+    window = DatasetListWidgetIdentity
     state = DatasetListState
     operations = (
         AddDatasets,

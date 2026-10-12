@@ -8,12 +8,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.orchestrator.execution_result import (
-    AxisSucceeded,
     ExecutionResult,
     RuntimeExecutionObservation,
-    ExecutionStatus,
 )
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionExpectation,
@@ -26,7 +24,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 
 ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 8
-ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 4
+ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 5
 
 
 def _axis_membership_failures(
@@ -50,28 +48,11 @@ def _axis_membership_failures(
 
 
 @dataclass(frozen=True, slots=True)
-class ZMQExecutionAxisOutcome:
-    """Small per-axis result retained without worker runtime values."""
-
-    status: type[ExecutionStatus]
-    failed_combination: str | None = None
-    error_message: str | None = None
-
-    @classmethod
-    def from_result(cls, result: ExecutionResult) -> ZMQExecutionAxisOutcome:
-        return cls(
-            status=result.status,
-            failed_combination=result.failed_combination,
-            error_message=result.error_message,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class ZMQRuntimeExecutionOutcomeExport:
     """Ordinary execution outcome without parent-side runtime-value retention."""
 
     schema_version: int
-    outcomes_by_axis: Mapping[str, ZMQExecutionAxisOutcome]
+    outcomes_by_axis: Mapping[str, ExecutionResult]
     output_roots: tuple[Path, ...]
     compiled_axis_ids: tuple[str, ...]
     server_environment: RuntimeEnvironmentSnapshot | None = None
@@ -92,7 +73,7 @@ class ZMQRuntimeExecutionOutcomeExport:
         return cls(
             schema_version=ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION,
             outcomes_by_axis={
-                str(axis_id): ZMQExecutionAxisOutcome.from_result(result)
+                str(axis_id): result.without_runtime_observation()
                 for axis_id, result in execution_results.items()
             },
             output_roots=tuple(Path(root) for root in output_roots),
@@ -131,7 +112,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     @property
     def successful_axis_count(self) -> int:
         return sum(
-            outcome.status.succeeded
+            outcome.is_success()
             for outcome in self.outcomes_by_axis.values()
         )
 
@@ -141,9 +122,9 @@ class ZMQRuntimeExecutionOutcomeExport:
             self.outcomes_by_axis,
         )
         unsuccessful = {
-            axis_id: outcome.status.name
+            axis_id: outcome.describe()
             for axis_id, outcome in self.outcomes_by_axis.items()
-            if outcome.status is not AxisSucceeded
+            if not outcome.is_success()
         }
         failures = list(membership_failures)
         if unsuccessful:
@@ -172,7 +153,7 @@ class ZMQRuntimeExecutionObservationExport:
     def from_execution(
         cls,
         *,
-        compiled_contexts: Mapping[str, ProcessingContext],
+        executed_contexts: Mapping[str, ExecutingContext],
         execution_results: Mapping[str, ExecutionResult],
         output_roots: tuple[Path, ...],
         runtime_observations: tuple[RuntimeExecutionObservation, ...],
@@ -180,12 +161,12 @@ class ZMQRuntimeExecutionObservationExport:
         execution_id: str | None = None,
     ) -> ZMQRuntimeExecutionObservationExport:
         observation = RuntimeArtifactExecutionObservation.from_contexts(
-            compiled_contexts, runtime_observations=runtime_observations
+            executed_contexts, runtime_observations=runtime_observations
         )
         return cls(
             schema_version=ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
-            expectation=RuntimeArtifactExecutionExpectation.from_compiled_contexts(
-                compiled_contexts
+            expectation=RuntimeArtifactExecutionExpectation.from_executed_contexts(
+                executed_contexts
             ),
             records_by_axis=dict(observation.records_by_axis),
             exports=observation.exports,

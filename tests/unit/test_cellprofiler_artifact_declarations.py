@@ -38,7 +38,6 @@ from openhcs.core.config import (
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
@@ -91,6 +90,9 @@ from openhcs.processing.backends.cellprofiler.texture import MeasureTextureModul
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
 from openhcs.processing.backends.cellprofiler.morphology import MaskObjectsModule
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _module(
@@ -178,7 +180,7 @@ def _compiler_contracts(
             resolved_steps.append(resolved_step)
             step_states[index] = step_state
 
-        context = ProcessingContext(
+        context = executing_context(
             step_plans={
                 index: CompiledStepPlan(
                     step_index=index,
@@ -629,12 +631,11 @@ def test_calculate_math_retains_measurement_subjects_across_producer_channels() 
         name=measurements.name,
         path="/memory/intensity.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2", "1"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2", "1"), component=Microscopy.Channel),
     )
     assert ArtifactInputProjectionPlan.declared_producer_selection_scope(
         measurement_input, storage
-    ) == ComponentGroupScope.from_raw(("2", "1"), component=Microscopy.Channel)
+    ) == ComponentGroupScope.of(("2", "1"), component=Microscopy.Channel)
 
 
 def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from openhcs.agent import skill_sync
-from openhcs.agent.runtime_platform import LinuxRuntimePlatform
+from formbridge.runtime_platform import LinuxRuntimePlatform
 from openhcs.agent.skill_bundle import AgentSkillBundle
 from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
 from openhcs.mcp import client_registration

@@ -1,5 +1,6 @@
 """Synthetic-plate integration coverage for 2D neurite outgrowth."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.progress import ProgressExecutionContext
 import csv
 import io
@@ -57,7 +58,6 @@ from openhcs.core.progress import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps import FunctionStep
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -192,7 +192,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             for output in compiled_plan.artifact_outputs.values()
             if output.name == "neurite_candidate_mask"
         )
-        assert checkpoint_plan.group_component is Microscopy.Site
+        assert checkpoint_plan.group_scope.component is Microscopy.Site
         assert checkpoint_plan.group_scope_sources()
         assert checkpoint_plan.source_context_source() is None
         assert compiled_plan.variable_components == [Microscopy.Channel]
@@ -362,7 +362,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             assert projection.execution_scope is not None
             assert projection.image_metadata is not None
             assert (
-                projection.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+                projection.image_metadata.plane_axis is RuntimeSlicePlaneAxis
             )
             assert projection.image_metadata.source_provenance.source_plane_count == 2
 

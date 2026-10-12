@@ -1,4 +1,6 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from unittest.mock import patch
@@ -15,8 +17,8 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.processing.backends.cellprofiler.worms import (
     OverlapStyle,
@@ -44,10 +46,8 @@ from openhcs.core.runtime_object_label_building import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -108,8 +108,8 @@ def _straighten_worms_binding_request(
             artifact_type=object_spec.artifact_type,
         ),
         spec=object_spec,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -278,10 +278,10 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         variant_data=ObjectLabelVariantData(
             labels=np.array([[[0, 1], [0, 0]]], dtype=np.int32)
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     request = _straighten_worms_binding_request(label_stack, plane_index=0)
@@ -293,8 +293,8 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         projected_labels.labels,
         np.array([[0, 1], [0, 0]], dtype=np.int32),
     )
-    assert projected_labels.plane_axis is None
-    assert projected_labels.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert projected_labels.plane_axis.unstacked
+    assert projected_labels.domain.scope.ids_span_payload
 
 
 def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:
@@ -308,10 +308,10 @@ def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     request = _straighten_worms_binding_request(

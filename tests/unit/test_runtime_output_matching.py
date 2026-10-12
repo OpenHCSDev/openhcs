@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
@@ -16,12 +17,10 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableDeclaration,
     FunctionStepExecutionScope,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
@@ -31,6 +30,9 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+)
 
 
 def _contract(
@@ -66,13 +68,13 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
     data = np.arange(24, dtype=np.float32).reshape((2, 3, 4))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(data, None)
     trailing = object()
     contract = _contract(first, second, measurements)
     matcher_returned_output = (payload, trailing)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
 
@@ -99,7 +101,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
         contract.contextualize_returned_canonical_output(
             matcher_returned_output,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=3,
             ),
         )
@@ -107,7 +109,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
         contract.contextualize_returned_canonical_output(
             matcher_returned_output,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis=SourceBindingPlaneAxis,
                 axis_size=2,
             ),
         )
@@ -269,8 +271,7 @@ def test_compiled_output_selection_accepts_exact_runtime_group_projection(
         name=output.name,
         path="/memory/output",
         artifact_type=output.artifact_type,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -294,8 +295,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         name=output.name,
         path="/memory/output",
         artifact_type=output.artifact_type,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -310,8 +310,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         name=output.name,
         path="/memory/wrong",
         artifact_type=output.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/wrong"},
     )
 

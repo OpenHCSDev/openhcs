@@ -4,6 +4,8 @@ The renderer, disk TIFF writer and wire builder are real. Only the final viewer
 transport is intercepted; no viewer or native process is started.
 """
 
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -16,9 +18,9 @@ from openhcs.core.pipeline.artifact_planning import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
     RequiredSourceComponentMetadata,
@@ -90,9 +92,9 @@ def _source_bound_labels(component):
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=pixels),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            declared_object_id_domains=((1,), (2,)), scope=ObjectLabelDomainScope.PLANE,
+            declared_object_id_domains=((1,), (2,)), scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=paths, component_metadata=source_fields,
@@ -157,7 +159,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
     np.testing.assert_array_equal(persisted_pixels, pixels)
     assert persisted_pixels.dtype == pixels.dtype
     metadata = disk_outputs[0].metadata
-    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.plane_axis is SourceBindingPlaneAxis
     assert metadata.source_provenance.source_plane_count == 2
     assert metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
     assert [metadata.source_provenance.for_source_plane(index).source_component_metadata[component.name]
@@ -246,7 +248,7 @@ def test_automatic_aggregate_label_tiff_preserves_stack(component, viewer_ack_re
     item = batches[0].batch_images[0]
     assert tuple(item["shape"]) == pixels.shape
     assert item["dtype"] == str(pixels.dtype)
-    assert item["plane_axis"] == RuntimePlaneAxis.SOURCE_BINDING.value
+    assert item["plane_axis"] == SourceBindingPlaneAxis.name
     assert item["plane_component_values"] == {component.name: ["1", "2"]}
     decoded = ImagePayloadMetadata.from_viewer_image_metadata(item["image_metadata"])
     assert decoded.source_voxel_spacing.values_zyx == (0.75, 0.75)
@@ -308,9 +310,9 @@ def test_single_output_kwargs_cannot_hide_projected_pixels(
     for index, item in enumerate(projected):
         np.testing.assert_array_equal(item.content, pixels[index])
         assert np.shares_memory(item.content, pixels)
-        assert item.metadata.plane_axis is None
+        assert item.metadata.plane_axis.unstacked
         assert item.source_component_metadata["channel"] == index + 1
-    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.plane_axis is SourceBindingPlaneAxis
     np.testing.assert_array_equal(output.content, pixels[:plane_count])
 
 
@@ -372,14 +374,14 @@ def test_existing_projection_owns_source_binding_label_planes(component):
             value=payload, source_description="automatic label TIFF",
             variable_components=(component,),
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2,
+                axis=SourceBindingPlaneAxis, axis_size=2,
             ),
         )
     )
     assert len(items) == 2
     for index, item in enumerate(items):
         np.testing.assert_array_equal(item.data, pixels[index])
-        assert item.metadata.plane_axis is None
+        assert item.metadata.plane_axis.unstacked
         assert item.require_source_component_metadata()[component.name] == index + 1
         assert item.metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
         assert np.shares_memory(item.data, labels.data)
@@ -406,7 +408,7 @@ def test_existing_projection_rejects_label_source_cardinality_mismatch():
                 source_description="automatic label TIFF",
                 variable_components=(Microscopy.Channel,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                    axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=3,
+                    axis=SourceBindingPlaneAxis, axis_size=3,
                 ),
             )
         )

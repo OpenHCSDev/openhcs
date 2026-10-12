@@ -1,3 +1,6 @@
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
@@ -8,7 +11,6 @@ from typing import Annotated, ClassVar
 import numpy as np
 import pytest
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
@@ -31,7 +33,9 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
+    DynamicGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.config import DtypeConfig, StepSourceBindingsConfig
 from openhcs.core.function_patterns import (
@@ -89,7 +93,6 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
@@ -219,8 +222,8 @@ def _runtime_request_input_edge(
             artifact_type=ImageArtifactType,
         ),
         input_index=input_index,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -404,7 +407,7 @@ def measurement_values_for_label_slices(
     labels: object,
     *,
     domain: ObjectLabelDomain,
-    plane_axis: RuntimePlaneAxis | None,
+    plane_axis: type[RuntimePlaneAxis],
     plane_projector: RuntimePlaneProjection,
     object_name: str | None = None,
     row_axis: MeasurementRowAxisField = MeasurementRowAxisField.SLICE_INDEX,
@@ -434,7 +437,7 @@ def adapter_label_measurement_values(
     labels: object,
     *,
     domain: ObjectLabelDomain,
-    plane_axis: RuntimePlaneAxis | None,
+    plane_axis: type[RuntimePlaneAxis],
     slice_index: int | None = None,
 ) -> tuple[object, ...]:
     return ObjectLabelMeasurementSliceRequest(
@@ -603,7 +606,7 @@ def _plan(name, kind, *, group_component=None):
         name=name,
         path=f"/memory/{name}.pkl",
         artifact_type=kind,
-        group_component=group_component,
+        group_scope=ComponentGroupScope.of((None,), component=group_component),
     )
 
 
@@ -768,7 +771,7 @@ def _source_bound_image_stack(images):
             paths=tuple(f"/src/{alias}.tif" for alias in aliases),
         ),
         source_image_names=aliases,
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(np.stack(tuple(images.values())), None)
 
 
@@ -883,8 +886,8 @@ def _executor_for_contract(
                 ),
                 spec=spec,
                 input_index=input_index,
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             )
@@ -1144,10 +1147,10 @@ def test_cellprofiler_adapter_contextualizes_single_source_aligned_label_plane()
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((1, 5, 6), dtype=np.int32)),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,),),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
 
     record = adapter.add_objects(
@@ -1214,15 +1217,15 @@ def test_cellprofiler_adapter_rejects_unaddressable_source_aligned_label_stack()
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(None, None)
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(np.zeros((2, 5, 6), dtype=np.float32), None)
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 5, 6), dtype=np.int32)),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
 
     with pytest.raises(ValueError, match="neither source_path"):
@@ -1300,13 +1303,13 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
                         name=NUCLEI,
                         path=outputs[NUCLEI].path,
                         artifact_type=ObjectLabelsArtifactType,
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                     ),
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=ComponentGroupScope.dynamic(
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=DynamicGroupScope(
                         Microscopy.Site
                     ),
-                    component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                    component_scopes=(DynamicGroupScope(Microscopy.Site),),
                     consumer_variable_components=(Microscopy.Site,),
                 ),
             )
@@ -1354,8 +1357,7 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
         name=relationship_name,
         path="/memory/relationships.pkl",
         artifact_type=RelationshipsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group=group_paths,
     )
     filemanager = FileManagerStub()
@@ -1396,16 +1398,15 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
                     name=relationship_name,
                     path=output_plan.path,
                     artifact_type=RelationshipsArtifactType,
-                    group_keys=output_plan.group_keys,
-                    group_component=output_plan.group_component,
+                    group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=output_plan.group_scope.component),
                     paths_by_group=output_plan.paths_by_group,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -1458,8 +1459,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
         name=relationship_name,
         path="/memory/relationships.pkl",
         artifact_type=RelationshipsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group=group_paths,
     )
     filemanager = FileManagerStub()
@@ -1496,16 +1496,15 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
                     name=relationship_name,
                     path=output_plan.path,
                     artifact_type=RelationshipsArtifactType,
-                    group_keys=output_plan.group_keys,
-                    group_component=output_plan.group_component,
+                    group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=output_plan.group_scope.component),
                     paths_by_group=output_plan.paths_by_group,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -1576,13 +1575,13 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
                     name=DNA_IMAGE,
                     path=outputs[DNA_IMAGE].path,
                     artifact_type=ImageArtifactType,
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -1629,8 +1628,7 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         name=image_name,
         path=image_path,
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
     )
 
     for group_key, source_path, value in (
@@ -1662,20 +1660,19 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     (AXIS_ID,), component=Microscopy.Well
                 ),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         (AXIS_ID,), component=Microscopy.Well
                     ),
-                    ComponentGroupScope.dynamic(Microscopy.Site),
+                    DynamicGroupScope(Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -1732,8 +1729,7 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
         name=image_name,
         path=image_path,
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
     )
 
     for group_key, source_path, value in (
@@ -1764,14 +1760,13 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -1822,8 +1817,7 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         name=image_name,
         path=image_path,
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
     )
 
     for group_key, source_path, value in (
@@ -1855,14 +1849,13 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -1910,8 +1903,7 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
         name=output_name,
         path=f"/memory/{output_name}.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("0", "3"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("0", "3"), component=Microscopy.Channel),
         paths_by_group={
             "0": f"/memory/{output_name}_w0.pkl",
             "3": f"/memory/{output_name}_w3.pkl",
@@ -1985,7 +1977,7 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
@@ -1999,7 +1991,7 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=source_paths, component_metadata=source_metadata
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.stack(
                 (
@@ -2019,16 +2011,16 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                     variable_components=(Microscopy.Site,),
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     ("2",), component=Microscopy.Site
                 ),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
+                    ComponentGroupScope.of(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2086,7 +2078,7 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
@@ -2100,7 +2092,7 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=source_paths, component_metadata=source_metadata
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.stack(
                 (
@@ -2120,16 +2112,16 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                     variable_components=(Microscopy.Site,),
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     ("2",), component=Microscopy.Site
                 ),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
+                    ComponentGroupScope.of(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2177,7 +2169,7 @@ def test_cellprofiler_adapter_uses_identity_record_for_collapsed_grouped_input()
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                 ),
             ),
@@ -2198,11 +2190,11 @@ def test_cellprofiler_adapter_uses_identity_record_for_collapsed_grouped_input()
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2238,8 +2230,7 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
         name=image_name,
         path=image_path,
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group={
             "1": "/memory/A01_w1_Mito.pkl",
             "2": "/memory/A01_w2_Mito.pkl",
@@ -2268,24 +2259,23 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=("1", "2"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                     paths_by_group={
                         "1": "/memory/A01_w1_Mito.pkl",
                         "2": "/memory/A01_w2_Mito.pkl",
                     },
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     ("1",), component=Microscopy.Channel
                 ),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1",), component=Microscopy.Channel
                     ),
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -2345,7 +2335,7 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     variable_components=(Microscopy.Channel,),
                     paths_by_group={None: image_path},
                 ),
@@ -2379,17 +2369,17 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                     variable_components=(Microscopy.Channel,),
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     ("2",), component=Microscopy.Site
                 ),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(("2",), component=Microscopy.Site),
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Channel
                     ),
                 ),
@@ -2444,7 +2434,7 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
@@ -2467,7 +2457,7 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
                     {"site": "2", "channel": "1"},
                 ),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.stack(
                 (
@@ -2487,16 +2477,16 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
                     name=image_name,
                     path=image_path,
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                     paths_by_group={None: image_path},
                     variable_components=(Microscopy.Site,),
                 ),
-                invocation_scope=ComponentGroupScope.from_raw(
+                invocation_scope=ComponentGroupScope.of(
                     ("2",), component=Microscopy.Site
                 ),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
+                    ComponentGroupScope.of(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2547,8 +2537,7 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
         name=image_name,
         path="/memory/Mito.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group=image_paths,
     )
     for group_key, site, value in (
@@ -2583,16 +2572,15 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
                     name=image_name,
                     path="/memory/Mito.pkl",
                     artifact_type=ImageArtifactType,
-                    group_keys=("1", "2"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                     paths_by_group=image_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -2697,13 +2685,13 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
                     name=NUCLEI,
                     path=outputs[NUCLEI].path,
                     artifact_type=ObjectLabelsArtifactType,
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -2750,8 +2738,8 @@ def test_cellprofiler_adapter_does_not_project_stacked_objects_from_source_metad
                     path=output_plan.path,
                     artifact_type=ObjectLabelsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2787,10 +2775,10 @@ def test_cellprofiler_adapter_does_not_project_stacked_objects_from_source_metad
             ),
             source_image_names=(DNA_IMAGE,),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,)),
             ),
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
         ),
     )
     ImagePayloadMetadata(
@@ -2838,8 +2826,8 @@ def test_cellprofiler_adapter_preserves_nominal_object_label_spatial_domains():
                     path=source_plan.path,
                     artifact_type=ImageArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2921,8 +2909,8 @@ def test_cellprofiler_adapter_rejects_non_nominal_object_label_values(labels):
                     path=source_plan.path,
                     artifact_type=ImageArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -2976,12 +2964,12 @@ def test_cellprofiler_adapter_reads_declared_inputs_by_compiled_location():
         name=NUCLEI,
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=(None,),
+        group_scope=ComponentGroupScope.of((None,), component=None),
     )
     input_edge = cellprofiler_runtime_input_edge_for_test(
         input_plan,
-        invocation_scope=ComponentGroupScope.ungrouped(),
-        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        invocation_scope=UngroupedScope(),
+        producer_selection_scope=UngroupedScope(),
         component_scopes=(),
         consumer_variable_components=(),
     )
@@ -3022,8 +3010,7 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
                         name=NUCLEI,
                         path=path,
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                         paths_by_group={group_key: path},
                     ),
                 ),
@@ -3046,16 +3033,15 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=tuple(group_paths),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(tuple(group_paths), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -3101,8 +3087,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     name=NUCLEI,
                     path=realized_path,
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("1",),
-                    group_component=Microscopy.Channel,
+                    group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
                     paths_by_group={"1": realized_path},
                 ),
             ),
@@ -3125,15 +3110,14 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Channel,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                     paths_by_group={"1": realized_path},
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Channel
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+                component_scopes=(DynamicGroupScope(Microscopy.Channel),),
                 consumer_variable_components=(Microscopy.Channel,),
             ),
         )
@@ -3156,7 +3140,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
     objects = consumer.get_objects(NUCLEI)
 
     np.testing.assert_array_equal(objects.labels, realized_labels[None, ...])
-    assert objects.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert objects.plane_axis is RuntimeSlicePlaneAxis
     assert objects.domain.declared_object_id_domains == ((1,),)
 
     # A dynamic component never grants access to another compiled producer path.
@@ -3203,8 +3187,7 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                         name=CELLS,
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Channel,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Channel),
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3229,15 +3212,14 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                     name=CELLS,
                     path="/memory/Cells.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Channel,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Channel
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+                component_scopes=(DynamicGroupScope(Microscopy.Channel),),
                 consumer_variable_components=(Microscopy.Channel,),
             ),
         )
@@ -3290,8 +3272,7 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
                         name=NUCLEI,
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3316,16 +3297,15 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("1", "2"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -3383,8 +3363,7 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
                         name=NUCLEI,
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3410,16 +3389,15 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("1", "2"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -3481,10 +3459,10 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
                 )
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -3502,10 +3480,10 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
                     artifact_type=ObjectLabelsArtifactType,
                     variable_components=(Microscopy.Site,),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -3555,8 +3533,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     name=DNA_IMAGE,
                     path=group_paths["1"],
                     artifact_type=ImageArtifactType,
-                    group_keys=("1",),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
                     paths_by_group={"1": group_paths["1"]},
                 ),
             ),
@@ -3575,8 +3552,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     name=DNA_IMAGE,
                     path=group_paths["2"],
                     artifact_type=ImageArtifactType,
-                    group_keys=("2",),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Site),
                     paths_by_group={"2": group_paths["2"]},
                 ),
             ),
@@ -3593,15 +3569,14 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     name=DNA_IMAGE,
                     path="/memory/DNA.pkl",
                     artifact_type=ImageArtifactType,
-                    group_keys=(None,),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -3672,11 +3647,11 @@ def test_cellprofiler_adapter_relationships_validate_declared_inputs_by_location
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                 ),
                 input_index=0,
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -3685,11 +3660,11 @@ def test_cellprofiler_adapter_relationships_validate_declared_inputs_by_location
                     name=CELLS,
                     path="/memory/Cells.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                 ),
                 input_index=1,
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -3774,8 +3749,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
                     name=CELLS,
                     path="/memory/Cells_s1.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("1",),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Site),
                     paths_by_group={"1": "/memory/Cells_s1.pkl"},
                 ),
             ),
@@ -3794,8 +3768,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
                     name=CELLS,
                     path="/memory/Cells_s2.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("2",),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Site),
                     paths_by_group={"2": "/memory/Cells_s2.pkl"},
                 ),
             ),
@@ -3890,10 +3863,10 @@ def test_cellprofiler_adapter_relationships_allow_same_invocation_child_output()
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
+                    group_scope=ComponentGroupScope.of((None,), component=None),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -4153,8 +4126,7 @@ def test_cellprofiler_adapter_uses_static_output_scope():
                     name=CELLS,
                     path=output_path,
                     artifact_type=ObjectLabelsArtifactType,
-                    group_keys=("3",),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Site),
                     paths_by_group={"3": output_path},
                 ),
             ),
@@ -4312,8 +4284,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                         name=NUCLEI,
                         path=object_group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                         paths_by_group={group_key: object_group_paths[group_key]},
                     ),
                 ),
@@ -4324,8 +4295,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                         name=NUCLEI_MEASUREMENTS,
                         path=group_paths[group_key],
                         artifact_type=MeasurementsArtifactType,
-                        group_keys=(group_key,),
-                        group_component=Microscopy.Site,
+                        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -4361,16 +4331,15 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                     name=NUCLEI_MEASUREMENTS,
                     path="/memory/NucleiMeasurements.pkl",
                     artifact_type=MeasurementsArtifactType,
-                    group_keys=("1", "2"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("1", "2"), component=Microscopy.Site
                     ),
                 ),
@@ -4619,8 +4588,8 @@ def test_cellprofiler_adapter_hides_undeclared_same_name_object_table_occurrence
                     path=output_plans[0].path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -4663,8 +4632,7 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
         name=MEASUREMENTS,
         path=f"/memory/{MEASUREMENTS}.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=Microscopy.Site,
-        group_keys=tuple(group_paths),
+        group_scope=ComponentGroupScope.of(tuple(group_paths), component=Microscopy.Site),
         paths_by_group=group_paths,
     )
     for index, value in enumerate((11.0, 13.0), start=1):
@@ -4722,22 +4690,21 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
                         name=MEASUREMENTS,
                         path=output_plan.path,
                         artifact_type=MeasurementsArtifactType,
-                        group_component=Microscopy.Site,
-                        group_keys=output_plan.group_keys,
+                        group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=Microscopy.Site),
                         paths_by_group=output_plan.paths_by_group,
                     ),
-                    invocation_scope=ComponentGroupScope.from_raw(
+                    invocation_scope=ComponentGroupScope.of(
                         ("1",), component=Microscopy.Channel
                     ),
-                    producer_selection_scope=ComponentGroupScope.from_raw(
-                        output_plan.group_keys, component=Microscopy.Site
+                    producer_selection_scope=ComponentGroupScope.of(
+                        output_plan.group_scope.keys, component=Microscopy.Site
                     ),
                     component_scopes=(
-                        ComponentGroupScope.from_raw(
+                        ComponentGroupScope.of(
                             ("1",), component=Microscopy.Channel
                         ),
-                        ComponentGroupScope.from_raw(
-                            output_plan.group_keys, component=Microscopy.Site
+                        ComponentGroupScope.of(
+                            output_plan.group_scope.keys, component=Microscopy.Site
                         ),
                     ),
                     consumer_variable_components=(Microscopy.Site,),
@@ -4836,13 +4803,13 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
                     name=NUCLEI_MEASUREMENTS,
                     path=outputs[NUCLEI_MEASUREMENTS].path,
                     artifact_type=MeasurementsArtifactType,
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -4873,10 +4840,10 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
         "Intensity_MeanIntensity_rawGFP",
         labels,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_allclose(values[0], [5.0])
@@ -4935,8 +4902,8 @@ def test_cellprofiler_adapter_rejects_single_slice_measurements_for_repeated_lab
                     path=measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -4965,10 +4932,10 @@ def test_cellprofiler_adapter_rejects_single_slice_measurements_for_repeated_lab
             "Intensity_MeanIntensity_rawGFP",
             labels,
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (1,), (1,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
 
 
@@ -5118,8 +5085,8 @@ def test_source_qualified_object_feature_ignores_unrelated_runtime_slice_scope()
                     path=measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -5264,13 +5231,13 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
                     name=NUCLEI_MEASUREMENTS,
                     path=outputs[NUCLEI_MEASUREMENTS].path,
                     artifact_type=MeasurementsArtifactType,
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of((None,), component=Microscopy.Site),
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=DynamicGroupScope(
                     Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                component_scopes=(DynamicGroupScope(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
         )
@@ -5300,10 +5267,10 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
         "Intensity_MeanIntensity_rawGFP",
         np.array([[[1]], [[1]]], dtype=np.int32),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_allclose(values[0], [5.0])
@@ -5340,7 +5307,7 @@ def test_cellprofiler_adapter_measurement_query_cache_is_store_scoped():
             ObjectLabelPayload(
                 variant_data=ObjectLabelVariantData(labels=labels),
                 domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-                plane_axis=None,
+                plane_axis=NoPlaneAxis,
             ),
         )
         producer.add_measurements(
@@ -5380,8 +5347,8 @@ def test_cellprofiler_adapter_measurement_query_cache_is_store_scoped():
                         path=measurement_output.path,
                         artifact_type=MeasurementsArtifactType,
                     ),
-                    invocation_scope=ComponentGroupScope.ungrouped(),
-                    producer_selection_scope=ComponentGroupScope.ungrouped(),
+                    invocation_scope=UngroupedScope(),
+                    producer_selection_scope=UngroupedScope(),
                     component_scopes=(),
                     consumer_variable_components=(),
                 ),
@@ -5411,10 +5378,10 @@ def test_cellprofiler_adapter_measurement_query_cache_is_store_scoped():
             "AreaShape_Area",
             labels[np.newaxis, ...],
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )[0],
         [20.0, 80.0],
     )
@@ -5425,10 +5392,10 @@ def test_cellprofiler_adapter_measurement_query_cache_is_store_scoped():
             "AreaShape_Area",
             labels[np.newaxis, ...],
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )[0],
         [4.0, 12.0],
     )
@@ -5469,7 +5436,7 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
                 labels=np.array([[1, 2]], dtype=np.int32)
             ),
             domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-            plane_axis=None,
+            plane_axis=NoPlaneAxis,
         ),
     )
     producer.add_measurements(
@@ -5559,8 +5526,8 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
                     path=single_measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -5589,8 +5556,8 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
                     path=measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -5618,10 +5585,10 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
         "AreaShape_Area",
         first_plane,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2),),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     stack_values = adapter_label_measurement_values(
         stack_adapter,
@@ -5629,10 +5596,10 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
         "AreaShape_Area",
         label_stack,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2), (1,)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_allclose(single_plane_values[0], [10.0, 20.0])
@@ -5657,8 +5624,8 @@ def test_cellprofiler_adapter_projects_duplicate_object_labels_to_current_runtim
                     path=f"/memory/{NUCLEI_MEASUREMENTS}.pkl",
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -5727,10 +5694,10 @@ def test_cellprofiler_adapter_projects_duplicate_object_labels_to_current_runtim
         "AreaShape_Area",
         labels,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1, 2),
         ),
-        plane_axis=None,
+        plane_axis=NoPlaneAxis,
     )
 
     assert len(value_slices) == 1
@@ -6237,17 +6204,17 @@ def test_cellprofiler_object_only_pure_2d_module_executes_label_runtime_slices(
     labels = ObjectLabelSet(
         name=NUCLEI,
         variant_data=ObjectLabelVariantData(labels=label_planes),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/src/Nuclei_t0.tif", "/src/Nuclei_t1.tif"),
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 20, 21), dtype=np.float32), None)
     seen: list[tuple[tuple[int, ...], int]] = []
     adapter.add_objects(NUCLEI, labels)
@@ -6333,14 +6300,14 @@ def test_cellprofiler_object_only_full_stack_measurement_preserves_label_runtime
     labels = ObjectLabelSet(
         name=NUCLEI,
         variant_data=ObjectLabelVariantData(labels=label_planes),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 20, 21), dtype=np.float32), None)
     seen: list[tuple[int, ...]] = []
     adapter.add_objects(NUCLEI, labels)
@@ -6874,10 +6841,10 @@ def test_measurement_lookup_aligns_values_to_label_slices():
             dtype=np.int32,
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10, 20), (30,)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name=NUCLEI,
         dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -6935,10 +6902,10 @@ def test_measurement_lookup_does_not_stop_on_broad_cellprofiler_alias():
         "Intensity_MaxIntensity_OrigGreen",
         np.array([[[1, 2]]], dtype=np.int32),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2),),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         plane_projector=RuntimePlaneProjection.stack(1),
         object_name=NUCLEI,
     )
@@ -7033,8 +7000,7 @@ def test_relationship_plane_records_use_compiled_input_projection_order():
                 name=relationship_name,
                 path=group_paths[group_key],
                 artifact_type=RelationshipsArtifactType,
-                group_keys=(group_key,),
-                group_component=Microscopy.Site,
+                group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Site),
                 paths_by_group={group_key: group_paths[group_key]},
             ),
             relationship,
@@ -7049,16 +7015,15 @@ def test_relationship_plane_records_use_compiled_input_projection_order():
                     name=relationship_name,
                     path="/memory/relationships.pkl",
                     artifact_type=RelationshipsArtifactType,
-                    group_keys=("site_a", "site_b"),
-                    group_component=Microscopy.Site,
+                    group_scope=ComponentGroupScope.of(("site_a", "site_b"), component=Microscopy.Site),
                     paths_by_group=group_paths,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.from_raw(
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=ComponentGroupScope.of(
                     ("site_a", "site_b"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
+                    ComponentGroupScope.of(
                         ("site_a", "site_b"), component=Microscopy.Site
                     ),
                 ),
@@ -7217,10 +7182,10 @@ def test_adapter_feature_lookup_rejects_undeclared_measurement_output():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
     adapter.add_measurements(
@@ -7267,10 +7232,10 @@ def test_adapter_feature_lookup_rejects_undeclared_measurement_output():
             "Intensity_MaxIntensity_OrigGreen",
             labels,
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
 
 
@@ -7299,10 +7264,10 @@ def test_adapter_measurement_vector_scope_uses_feature_bearing_axis_projection()
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
     producer.add_measurements(
@@ -7342,8 +7307,8 @@ def test_adapter_measurement_vector_scope_uses_feature_bearing_axis_projection()
                     path=measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -7369,10 +7334,10 @@ def test_adapter_measurement_vector_scope_uses_feature_bearing_axis_projection()
         "Intensity_MaxIntensity_OrigGreen",
         labels,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2),),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         slice_index=99,
     )
 
@@ -7410,10 +7375,10 @@ def test_adapter_multiplane_label_lookup_prefers_runtime_slice_axis():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
     producer.add_measurements(
@@ -7453,8 +7418,8 @@ def test_adapter_multiplane_label_lookup_prefers_runtime_slice_axis():
                     path=measurement_output.path,
                     artifact_type=MeasurementsArtifactType,
                 ),
-                invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.ungrouped(),
+                invocation_scope=UngroupedScope(),
+                producer_selection_scope=UngroupedScope(),
                 component_scopes=(),
                 consumer_variable_components=(),
             ),
@@ -7480,10 +7445,10 @@ def test_adapter_multiplane_label_lookup_prefers_runtime_slice_axis():
         "Intensity_MaxIntensity_OrigGreen",
         labels,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         slice_index=99,
     )
 
@@ -7525,10 +7490,10 @@ def test_adapter_measurement_vector_scope_rejects_undeclared_axis_table():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
     producer.add_measurements(
@@ -7572,10 +7537,10 @@ def test_adapter_measurement_vector_scope_rejects_undeclared_axis_table():
             "Intensity_MaxIntensity_OrigGreen",
             labels,
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
 
 
@@ -7831,10 +7796,10 @@ def test_measurement_lookup_allows_empty_multiplane_label_planes():
         "Intensity_MeanIntensity_rawGFP",
         labels,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((), (1, 2)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name=NUCLEI,
         dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -7883,10 +7848,10 @@ def test_measurement_lookup_rejects_singleton_columnar_slice_for_label_stack():
                 dtype=np.int32,
             ),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
             dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -7937,10 +7902,10 @@ def test_measurement_lookup_rejects_singleton_indexed_slice_for_label_stack():
                 dtype=np.int32,
             ),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
             dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -7991,10 +7956,10 @@ def test_measurement_lookup_rejects_shifted_slice_domain_for_local_label_stack()
                 dtype=np.int32,
             ),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
             dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -8040,10 +8005,10 @@ def test_measurement_lookup_rejects_smaller_axis_domain_for_label_stack():
                 dtype=np.int32,
             ),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (1,), (1,), (1,)),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_projector=RuntimePlaneProjection.stack(4),
             object_name=NUCLEI,
             dialect=CELLPROFILER_MEASUREMENT_DIALECT,
@@ -8056,10 +8021,10 @@ def test_measurement_lookup_returns_empty_slices_for_empty_objects():
         "AreaShape_FormFactor",
         np.zeros((2, 3, 4), dtype=np.int32),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((), ()),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name=NUCLEI,
     )
@@ -8075,10 +8040,10 @@ def test_measurement_lookup_rejects_undeclared_row_axis_for_nonempty_objects():
             "AreaShape_FormFactor",
             np.array([[[1, 0], [0, 0]]], dtype=np.int32),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             plane_projector=RuntimePlaneProjection.stack(1),
             object_name=NUCLEI,
         )
@@ -8120,10 +8085,10 @@ def test_calculate_math_records_object_indexed_measurements():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -8253,10 +8218,10 @@ def test_calculate_math_pads_missing_same_object_operand_values():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -8566,10 +8531,10 @@ def test_classify_objects_binds_runtime_measurement_values():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -8627,7 +8592,7 @@ def test_classify_objects_binds_runtime_measurement_values():
 
     result = executor(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((1, 2, 2), dtype=np.float32), None),
         cellprofiler_runtime=adapter,
         measurement_feature="Math_Ratio",
@@ -8690,10 +8655,10 @@ def test_classify_objects_uses_declared_area_shape_measurements():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -8751,7 +8716,7 @@ def test_classify_objects_uses_declared_area_shape_measurements():
 
     executor(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((1, 2, 2), dtype=np.float32), None),
         cellprofiler_runtime=adapter,
         measurement_feature="AreaShape_Area",
@@ -8801,10 +8766,10 @@ def test_classify_objects_binds_custom_threshold_and_named_low_high_bins():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2, 3),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -8869,7 +8834,7 @@ def test_classify_objects_binds_custom_threshold_and_named_low_high_bins():
 
     executor(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((1, 2, 2), dtype=np.float32), None),
         cellprofiler_runtime=adapter,
         measurement_feature="Intensity_MaxIntensity_OrigGreen",
@@ -8937,10 +8902,10 @@ def test_classify_objects_binds_repeated_single_measurement_rules():
             name=NUCLEI,
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1, 2),),
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei.tif",),
             ),
@@ -9012,7 +8977,7 @@ def test_classify_objects_binds_repeated_single_measurement_rules():
 
     executor(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((1, 2, 2), dtype=np.float32), None),
         cellprofiler_runtime=adapter,
         classification_rules=(
@@ -9105,9 +9070,9 @@ def test_classify_objects_slices_runtime_measurements_with_label_stack():
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
                 declared_object_id_domains=((1, 2), (3, 4)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/src/Nuclei_t0.tif", "/src/Nuclei_t1.tif"),
             ),
@@ -9157,7 +9122,7 @@ def test_classify_objects_slices_runtime_measurements_with_label_stack():
 
     result = executor(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((2, 2, 2), dtype=np.float32), None),
         cellprofiler_runtime=adapter,
         measurement_feature="AreaShape_Area",

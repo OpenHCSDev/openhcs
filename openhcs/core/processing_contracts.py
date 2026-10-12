@@ -8,6 +8,7 @@ policy used by those algorithms live here too.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from abc import ABC, abstractmethod
@@ -42,7 +43,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayload,
     MaskedImagePayload,
     PlainImagePayload,
-    image_metadata_of,
+    as_runtime_value,
     owned_runtime_value,
 )
 from openhcs.core.runtime_object_label_aggregation import (
@@ -420,7 +421,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
     value_type = None
 
     def is_single_plane_value(self, value: Any) -> bool:
-        return value.metadata.plane_axis is None
+        return value.metadata.plane_axis.unstacked
 
     def slice_value(self, value: Any, memory_type: str) -> tuple[Any, ...]:
         data = value.data
@@ -497,7 +498,7 @@ class Pure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis = RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis,
     ) -> Any:
         if not values:
             raise ValueError("PURE_2D auxiliary aggregation requires output values.")
@@ -548,7 +549,7 @@ class Pure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         """Aggregate compatible per-slice auxiliary values."""
 
@@ -563,7 +564,7 @@ class DirectedRelationshipPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> DirectedObjectRelationshipPayload:
         del memory_type, plane_axis
         return DirectedObjectRelationshipPayload(
@@ -592,7 +593,7 @@ class SpatialGridPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> RuntimeSliceAlignedValues[SpatialGrid]:
         del memory_type, plane_axis
         return RuntimeSliceAlignedValues(tuple(values))
@@ -608,7 +609,7 @@ class AlignedImageStackPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> AlignedImageStack:
         aligned_values = tuple(values)
         first = aligned_values[0]
@@ -662,7 +663,7 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         del values, memory_type, plane_axis
         raise NotImplementedError(
@@ -694,7 +695,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
@@ -733,7 +734,7 @@ class ObjectLabelPayloadPure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ObjectLabelPure2DSliceAggregator.aggregate(
             values,
@@ -760,7 +761,7 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
@@ -777,7 +778,7 @@ class ColumnarRowsPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> ColumnarRows:
         del memory_type, plane_axis
         if len(values) == 1:
@@ -824,7 +825,7 @@ class FlatSequencePure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         del memory_type, plane_axis
         flattened: list[Any] = []
@@ -857,7 +858,7 @@ class PlaneSplit:
     """A main-flow value split into the planes of its declared plane axis."""
 
     slices: tuple[Any, ...]
-    plane_axis: RuntimePlaneAxis
+    plane_axis: type[RuntimePlaneAxis]
     memory_type: str
     kwargs: dict[str, Any]
     source_aliases: tuple[str, ...] = ()
@@ -1168,7 +1169,7 @@ class Pure2DContract(ProcessingContract):
         return (
             not request.execution_mode.per_plane
             or request.plane_projection is None
-            or request.plane_projection.plane_index is not None
+            or request.plane_projection.selects_one_plane
         )
 
     @classmethod
@@ -1293,10 +1294,10 @@ class VolumetricToSliceContract(WholeStackInputContract):
     @classmethod
     def main_flow_output_source_payload(cls, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""
-        metadata = image_metadata_of(source_payload)
+        metadata = as_runtime_value(source_payload).image_metadata
         if not metadata.has_values:
             return source_payload
-        if metadata.plane_axis is None:
+        if metadata.plane_axis.unstacked:
             raise ValueError(
                 "VOLUMETRIC_TO_SLICE output requires a declared input plane axis."
             )
@@ -1402,7 +1403,7 @@ class LibraryContractCall(ContractCall):
             return None
         input_metadata = image.metadata
         plane_axis = input_metadata.plane_axis
-        if plane_axis is None:
+        if plane_axis.unstacked:
             raise ValueError(
                 "PURE_2D multi-plane execution requires the input payload to "
                 "declare its runtime plane axis."

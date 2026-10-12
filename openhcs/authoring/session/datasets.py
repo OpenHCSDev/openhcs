@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from formbridge.bridge.scope_policy import HiddenObjectStateScope
 from objectstate.collection_containers import RootState
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 
@@ -12,6 +13,12 @@ from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 # "" is the GlobalPipelineConfig scope; the dataset list has its own.
 DATASET_LIST_SCOPE_ID = "__plates__"
 DATASET_LIST_PARAMETER = "orchestrator_scope_ids"
+
+
+class DatasetListScope(HiddenObjectStateScope):
+    """The dataset list root is a system scope; agents read each dataset's own scope."""
+
+    scope_id = DATASET_LIST_SCOPE_ID
 
 
 @dataclass(frozen=True, slots=True)

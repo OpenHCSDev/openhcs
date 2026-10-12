@@ -1,6 +1,8 @@
 """Construction of object-label values from source-image context."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -32,7 +34,7 @@ class SourceImageObjectLabelBuildRequest:
 
     image: runtime_image_values.ImagePayload
     labels: object
-    domain_scope: ObjectLabelDomainScope | None = None
+    domain_scope: type[ObjectLabelDomainScope] | None = None
     plane_projection: RuntimePlaneAxisValueProjection | None = None
     declared_object_count: int | None = None
     declared_object_ids: tuple[int, ...] = ()
@@ -76,7 +78,7 @@ class SourceImageObjectLabelBuildRequest:
                     self.image,
                     self.labels,
                 )
-            plane_axis = None
+            plane_axis = NoPlaneAxis
         else:
             if self.declared_object_count is not None or self.declared_object_ids:
                 raise ValueError(
@@ -84,7 +86,7 @@ class SourceImageObjectLabelBuildRequest:
                     "domains; payload-wide object counts or IDs are invalid."
                 )
             label_domain = PresentObjectLabelIdsDomainDeclaration(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 plane_projection=semantics,
             ).declared_domain(self.image, self.labels)
             plane_axis = semantics.axis
@@ -125,24 +127,17 @@ class SourceImageObjectLabelBuildRequest:
         declare whether object IDs identify a whole volume or separate planes.
         Saved label-image admission supplies its projection at the ingress owner.
         """
-        if self.domain_scope is ObjectLabelDomainScope.PAYLOAD:
+        scope = self.domain_scope
+        if scope is not None and scope.ids_span_payload:
             if self.plane_projection is not None:
                 raise ValueError(
                     "Payload-scoped object-label output cannot declare a plane "
                     "projection."
                 )
             return None
-        if (
-            self.domain_scope is not None
-            and self.domain_scope is not ObjectLabelDomainScope.PLANE
-        ):
-            raise TypeError(
-                "Source-image object-label domain_scope must be payload, plane, "
-                f"or None; got {self.domain_scope!r}."
-            )
         projection = self.plane_projection
         if projection is None:
-            if self.domain_scope is ObjectLabelDomainScope.PLANE:
+            if scope is not None:
                 raise ValueError(
                     "Plane-scoped object-label output requires an exact plane "
                     "projection."

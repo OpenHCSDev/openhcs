@@ -1,6 +1,7 @@
 """Shared source-binding candidate selection for planning and runtime."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -60,20 +61,18 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
-from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_io import get_all_image_paths
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
     from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
@@ -1582,7 +1581,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 
     origin: ClassVar[type[SourceBindingOrigin] | None] = None
     """The binding origin whose source universe this request resolves."""
-    context: "ProcessingContext"
+    context: "ExecutingContext"
     plan: "CompiledStepPlan"
     matching_files: tuple[str, ...]
     source_backend: Backend
@@ -1592,7 +1591,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     def from_context(
         cls,
         *,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         matching_files: Sequence[str],
         source_projection: VirtualWorkspaceSourceProjection | None,
@@ -1628,7 +1627,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         source_provenance = (
             None
             if source_payload is None
-            else image_metadata_of(source_payload).source_provenance
+            else as_runtime_value(source_payload).image_metadata.source_provenance
         )
         if source_provenance is not None and not source_provenance.has_values:
             raise ValueError(
@@ -1689,9 +1688,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             and projected_payloads[0].metadata.persists_whole_image()
             else stack_image_payloads(
                 projected_payloads,
-                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    RuntimePlaneAxis.RUNTIME_SLICE
-                ),
+                metadata_mode=RuntimeSlicePlaneAxis,
             )
         )
         return cls.admit_source_artifact_cohort(
@@ -1714,16 +1711,14 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         whole-image source retains its intrinsic spatial dimensions.
         """
         metadata = payload.metadata
-        if not metadata.persists_whole_image() and metadata.plane_axis is None:
+        if not metadata.persists_whole_image() and metadata.plane_axis.unstacked:
             if member_count != 1:
                 raise ValueError(
                     "A scalar source payload must declare exactly one cohort member."
                 )
             payload = stack_image_payloads(
                 (payload,),
-                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    RuntimePlaneAxis.RUNTIME_SLICE
-                ),
+                metadata_mode=RuntimeSlicePlaneAxis,
             )
             metadata = payload.metadata
         domain = source_binding_plan.source_spatial_domain.with_source_cohort(

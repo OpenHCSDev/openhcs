@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import fields
 
-from pyqt_reactive.services.widget_tree_projection_config import (
+from formbridge.services.widget_tree_projection_config import (
     COMPACT_FIELD_PROJECTION_METADATA_KEY,
     CompactFieldProjection,
     WidgetNodeIdentity,
@@ -20,7 +20,7 @@ from openhcs.agent.capabilities import (
     DesktopLocalCapabilitySurfaceProfile,
     get_capability_registry,
 )
-from openhcs.agent.dto.ui_bridge import UiWidgetActionSummary
+from formbridge.bridge.dto import UiWidgetActionSummary
 import openhcs.mcp.server as server
 
 

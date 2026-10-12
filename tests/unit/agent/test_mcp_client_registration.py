@@ -7,7 +7,7 @@ import subprocess
 import pytest
 import tomlkit
 
-from openhcs.agent.runtime_platform import (
+from formbridge.runtime_platform import (
     AgentRuntimePlatform,
     LinuxRuntimePlatform,
     MacOSRuntimePlatform,

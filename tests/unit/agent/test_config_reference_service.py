@@ -1,7 +1,7 @@
 from dataclasses import fields
 
 from objectstate import ObjectState
-from pyqt_reactive.services.parameter_help_service import dataclass_parameter_descriptions
+from formbridge.services.parameter_help_service import dataclass_parameter_descriptions
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.config_reference_service import (

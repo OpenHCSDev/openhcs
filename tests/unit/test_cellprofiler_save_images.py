@@ -1,6 +1,7 @@
 """Focused contracts for executable CellProfiler SaveImages support."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from pathlib import PurePosixPath
@@ -20,7 +21,6 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
@@ -40,7 +40,6 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_bindings import (
@@ -83,6 +82,9 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
+from tests.context_support import (
+    executing_context,
+)
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -511,7 +513,7 @@ def test_save_images_projects_declared_singleton_runtime_slice() -> None:
     assert isinstance(materialization, MaterializationSpec)
     payload = ImageMetadataPayload(
         np.ones((1, 3, 4), dtype=np.uint8),
-        ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
 
@@ -688,7 +690,7 @@ def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution()
     )
     assert materialization.write_mode is WriteMode.ERROR
 
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01", "A02"))
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     primary_path = materialize(
@@ -721,7 +723,7 @@ def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution()
 
 def test_save_images_keeps_declared_relative_paths_for_single_axis_execution() -> None:
     scope = ExecutionAxisMaterializationRelativePathScope()
-    context = ProcessingContext(axis_id="A01")
+    context = executing_context(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
 
     assert scope.scoped_path(PurePosixPath("exports/Saved.tiff"), context) == (
@@ -962,7 +964,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
         np.zeros((3, 2, 2, 3), dtype=np.uint8),
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -1000,7 +1002,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
     )
     complete_output = ImagePayloadMetadata(
         axes=PayloadAxes.colour_samples(-1),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=tuple(alias for _site in range(1, 4) for alias in aliases),
         source_image_provenance_planes=(
             SourceImageProvenancePlanes.from_components(
@@ -1037,7 +1039,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         complete_output,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -1080,13 +1082,13 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
         source_payload,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=plane_count,
         ),
     )
 
     contextualized_metadata = contextualized.metadata
-    assert contextualized_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert contextualized_metadata.plane_axis is RuntimeSlicePlaneAxis
     assert contextualized_metadata.source_image_provenance_planes.paths == (
         metadata.source_image_provenance_planes.paths
     )
@@ -1099,7 +1101,7 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
 
 def test_image_output_context_removes_selected_source_runtime_axis() -> None:
     source_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("OrigRed", "OrigGreen", "OrigBlue"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/red.tif", "/source/green.tif", "/source/blue.tif"),
@@ -1128,13 +1130,13 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
         np.zeros((2, 2, 3), dtype=np.uint8),
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
 
     metadata = contextualized.metadata
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.source_path == "/source/blue.tif"
 
 
@@ -1165,7 +1167,7 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
         np.zeros((2, 2, 2), dtype=np.uint8),
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )

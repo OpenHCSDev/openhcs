@@ -20,7 +20,8 @@ from polystore.streaming.identity import (
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerNativeLayerTransform
 
-from openhcs.agent.dto.common import AgentResourceRef, SCHEMA_VERSION
+from formbridge.contracts import AgentResourceRef
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import PlateFileStreamRequest
 from openhcs.agent.dto.plate import PlateFileStreamResult

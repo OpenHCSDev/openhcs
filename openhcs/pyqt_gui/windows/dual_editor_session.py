@@ -1,140 +1,133 @@
-"""Nominal session helpers for DualEditorWindow."""
+"""What the step editor edits (``StepEdit``) and the family its tabs belong to."""
 
 from __future__ import annotations
 
+import copy
 import logging
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, cast
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, ClassVar, cast
 
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
-from objectstate.object_state import ObjectStateRegistry
 from objectstate import ObjectState, ObjectStateEditSession
+from pyqt_reactive.windows.tabbed_editor_window import EditedObject, EditorTab, SaveRefused
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.widgets.step_parameter_editor import StepParameterEditorWidget
-    from pyqt_reactive.widgets.function_list_editor import FunctionListEditorWidget
+from openhcs.authoring.session.step_scopes import build_step_scope_id
+from openhcs.core.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.source_binding_context import SourceBindingContext
+from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
+from openhcs.pyqt_gui.widgets.step_parameter_editor import StepEditorStateRequest
 
 logger = logging.getLogger(__name__)
 
 
-def _require_function_step(value, *, label: str) -> FunctionStep:
-    if not isinstance(value, FunctionStep):
-        raise TypeError(f"{label} must be a FunctionStep, got {type(value).__name__}")
-    return value
+def _nothing_to_do(*_args: object) -> None:
+    """Default for the hooks a caller may leave out."""
 
 
-@dataclass(slots=True)
-class DualEditorSession:
-    """Own step/function-editor synchronization for a dual editor instance."""
+class StepEditorTab(EditorTab):
+    """A tab of the step editor. Subclass it to add a tab; the window needs no change."""
 
-    editing_step: FunctionStep
-    step_editor: "StepParameterEditorWidget | None" = None
-    func_editor: "FunctionListEditorWidget | None" = None
+    @property
+    def edit(self) -> StepEdit:
+        return cast(StepEdit, self.window.edited)
+
+    def set_step_index(self, index: int) -> None:
+        """The step moved to another position in its pipeline."""
+        del index
+
+    def pipeline_step_replaced(self, step: FunctionStep) -> None:
+        """Another editor replaced the pipeline's step object with ``step``."""
+        del step
+
+
+@dataclass(eq=False)
+class StepEdit(EditedObject):
+    """One ``FunctionStep`` of a plate's pipeline while it is being edited."""
+
+    tab_family: ClassVar[type[EditorTab]] = StepEditorTab
+
+    #: The step object the pipeline holds; replaced when another editor saves this step.
+    pipeline_step: FunctionStep
+    plate_scope: str
+    orchestrator: Any
+    is_new: bool = False
+    list_position: int | None = None
+    on_save: Callable[[FunctionStep], None] = _nothing_to_do
+    before_mutation: Callable[[], None] = _nothing_to_do
+    source_bindings: SourceBindingsConfig | None = None
+    source_binding_context: SourceBindingContext | None = None
+    function_invocation_badge_provider: Callable[[str, int, Callable], str | None] | None = None
+    compiled_artifact_inspection_provider: Callable[
+        [str], CompiledArtifactInspection | None
+    ] = _nothing_to_do
+    #: The clone that is edited, so unsaved changes never reach the pipeline's object.
+    step: FunctionStep = field(init=False)
+    _scope_id: str = field(init=False)
+    _state: ObjectState = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.step = copy.deepcopy(self.pipeline_step)
+        self._scope_id = build_step_scope_id(self.plate_scope, self.step)
+        self._state = StepEditorStateRequest(self._scope_id).resolve()
+
+    @property
+    def scope_id(self) -> str:
+        return self._scope_id
+
+    @property
+    def state(self) -> ObjectState:
+        return self._state
+
+    def title(self) -> str:
+        name = str(self._state.get_current_values()["name"])
+        if self.list_position is not None:
+            name = f"{self.list_position + 1}. {name}"
+        return f"{'New' if self.is_new else 'Edit'} Step: {name}"
+
+    def save_label(self) -> str:
+        return "Create" if self.is_new else "Save"
+
+    def require_mutation_allowed(self) -> None:
+        self.before_mutation()
 
     def object_session(self) -> ObjectStateEditSession[FunctionStep]:
-        """Return the generic ObjectState edit boundary for this step window."""
-
+        """The ObjectState edit boundary for this step."""
         return ObjectStateEditSession(
-            state_provider=lambda: self.step_state,
-            fallback_object=self.editing_step,
+            state_provider=lambda: self._state,
+            fallback_object=self.step,
             expected_type=FunctionStep,
         )
 
-    def current_function_spec(self) -> FunctionSpec:
-        """Return the live function spec from ObjectState, falling back to the clone."""
-        object_session = self.object_session()
-        if object_session.has_parameter("func"):
-            return cast(FunctionSpec, object_session.parameter_value("func"))
-        return self.editing_step.func
+    def function_pattern(self) -> FunctionSpec:
+        """The function pattern the ObjectState currently holds."""
+        return cast(FunctionSpec, self.object_session().parameter_value("func"))
 
-    def current_source_bindings(self):
-        """Return live source bindings from ObjectState, falling back to the clone."""
-        object_session = self.object_session()
-        if object_session.has_parameter("source_bindings"):
-            return object_session.parameter_value("source_bindings")
-        return self.editing_step.source_bindings
-
-    def current_function_pattern(self) -> FunctionSpec:
-        """Return the function editor pattern through the nominal transport authority."""
-        if self.func_editor is None:
-            return self.normalize_function_spec(self.editing_step.func)
-        return self.normalize_function_spec(self.func_editor.current_pattern)
-
-    def normalize_function_spec(self, func_spec: FunctionSpec) -> FunctionSpec:
-        """Normalize a function spec through the transport authority."""
+    @staticmethod
+    def normalized_function_pattern(pattern: FunctionSpec) -> FunctionSpec:
         return cast(
             FunctionSpec,
-            FunctionStepTransportAuthority.normalize_function_spec(func_spec),
+            FunctionStepTransportAuthority.normalize_function_spec(pattern),
         )
 
-    @property
-    def step_state(self) -> ObjectState | None:
-        if self.step_editor is None:
-            return None
-        return self.step_editor.state
-
-    def apply_function_spec_to_state(self, func_spec: FunctionSpec) -> FunctionSpec:
-        """Normalize and apply the function spec through the ObjectState boundary."""
-
-        normalized = self.normalize_function_spec(func_spec)
-        object_session = self.object_session()
-        if object_session.has_parameter("func"):
-            object_session.update_parameter("func", normalized)
-        else:
-            self.editing_step.func = normalized
+    def apply_function_pattern(self, pattern: FunctionSpec) -> FunctionSpec:
+        """Normalize a function pattern and write it to the ObjectState."""
+        normalized = self.normalized_function_pattern(pattern)
+        self.object_session().update_parameter("func", normalized)
         return normalized
 
-    def sync_function_editor_from_step(self) -> bool:
-        """Refresh the function editor from its authoritative ObjectState context."""
-        if self.func_editor is None:
-            logger.debug("Function editor does not exist yet; skipping sync")
-            return False
-        self.func_editor.refresh_from_context()
-        return True
+    def compiled_inspection(self) -> CompiledArtifactInspection | None:
+        """The plate's current compiled artifact inspection, if it has been compiled."""
+        return self.compiled_artifact_inspection_provider(self.plate_scope)
 
-    def apply_current_function_pattern(self) -> tuple[bool, FunctionSpec]:
-        """Apply the current function editor pattern to step and ObjectState."""
-        current_pattern = self.current_function_pattern()
-        logger.debug(
-            "[FUNC_PATTERN] current_pattern type=%s value=%r",
-            type(current_pattern).__name__,
-            current_pattern,
-        )
-
-        object_session = self.object_session()
-        state_func = (
-            object_session.parameter_value("func")
-            if object_session.has_parameter("func")
-            else self.editing_step.func
-        )
-        if state_func == current_pattern:
-            logger.debug("[FUNC_PATTERN] Ignoring no-op function pattern update")
-            return False, current_pattern
-
-        with ObjectStateRegistry.atomic("edit func"):
-            self.apply_function_spec_to_state(current_pattern)
-            state = self.step_state
-            if state is not None:
-                logger.debug(
-                    "[FUNC_PATTERN] ObjectState dirty_fields after update: %s",
-                    state.dirty_fields,
-                )
-        return True, current_pattern
-
-
-@dataclass
-class DualEditorFunctionPatternController:
-    """Qt-slot target for function pattern changes."""
-
-    session: DualEditorSession
-    detect_changes: Callable[[], None]
-    invalidate_artifact_plan: Callable[[], None]
-
-    def handle_change(self) -> None:
-        changed, current_pattern = self.session.apply_current_function_pattern()
-        if not changed:
-            return
-        self.detect_changes()
-        self.invalidate_artifact_plan()
-        logger.debug("Function pattern changed: %r", current_pattern)
+    def save(self) -> FunctionStep:
+        saved = self.object_session().to_object(update_delegate=False)
+        step_name = saved.name
+        if not step_name or not step_name.strip():
+            raise SaveRefused("Step name cannot be empty.")
+        self.is_new = False
+        self.step = saved
+        self.pipeline_step = saved
+        self.on_save(saved)
+        return saved

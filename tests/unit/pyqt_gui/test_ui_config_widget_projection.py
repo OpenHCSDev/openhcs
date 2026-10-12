@@ -29,7 +29,7 @@ def test_nested_ui_config_projects_color_enums_and_shortcut_capture(qapp) -> Non
         ParameterFormManager,
     )
     from pyqt_reactive.protocols import KeySequenceEditAdapter
-    from pyqt_reactive.services.system_monitor_config import (
+    from formbridge.services.system_monitor_config import (
         PerformanceGraphColor,
         PerformanceMonitorColors,
     )

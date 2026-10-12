@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import copy
 from dataclasses import replace
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -99,8 +98,7 @@ class FunctionStepTransportAuthority:
         """Derive transport plans without replacing prepared runtime contracts."""
         if contracts is None:
             contracts = {}
-        transport_context = copy(context)
-        transport_context.step_plans = {
+        return context.with_step_plans({
             step_id: replace(
                 step_plan,
                 compiled_function_pattern=cls.normalize_compiled_pattern(
@@ -108,8 +106,7 @@ class FunctionStepTransportAuthority:
                 ),
             )
             for step_id, step_plan in context.step_plans.items()
-        }
-        return transport_context
+        })
 
     @classmethod
     def normalize_step(cls, step: Any) -> Any:

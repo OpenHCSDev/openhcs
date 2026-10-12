@@ -5,7 +5,8 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.plate import (
     PlatePathInspectionRequest,
     PlatePathInspectionResult,

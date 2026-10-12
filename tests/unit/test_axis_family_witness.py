@@ -11,6 +11,7 @@ viewer whose layers carry the family's axes.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 import os
@@ -468,19 +469,17 @@ def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -
     from openhcs.core.payload_axes import FamilyAxisSpec, RuntimePlaneAxisSpec
     from openhcs.core.runtime_image_values import (
         ImagePayloadMetadata,
-        ImagePayloadMetadataCompositionMode,
         MaskedImagePayload,
     )
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
     signals = (_signal(0.0), _signal(100.0))
     stack = stack_image_payloads(
-        signals, metadata_mode=ImagePayloadMetadataCompositionMode.STACK
+        signals, metadata_mode=RuntimeSlicePlaneAxis
     )
     assert stack.geometry.shape == (2, 3, 4)
     assert stack.axes == (
-        RuntimePlaneAxisSpec(RuntimePlaneAxis.RUNTIME_SLICE.value),
+        RuntimePlaneAxisSpec(RuntimeSlicePlaneAxis.name),
         FamilyAxisSpec(Telemetry.Sensor),
         FamilyAxisSpec(Telemetry.Time),
     )
@@ -491,7 +490,7 @@ def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -
     for original, projected in zip(signals, slices, strict=True):
         np.testing.assert_array_equal(np.asarray(projected.data), original.data)
         assert projected.axes == original.axes
-        assert projected.metadata.plane_axis is None
+        assert projected.metadata.plane_axis.unstacked
 
     restored = ImagePayloadMetadata.from_mapping(
         {"axes": stack.metadata.axes.to_mapping(), "source_dtype": "float32"}

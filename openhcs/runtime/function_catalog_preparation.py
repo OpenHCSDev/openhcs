@@ -193,7 +193,8 @@ class FunctionCatalogPreparation:
         self, handle: FunctionCatalogPreparationHandle
     ) -> FunctionCatalogPreparationState:
         """Project this future, never wait, restart or build another job store."""
-        from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
+        from openhcs.agent.dto.common import SCHEMA_VERSION
+        from formbridge.contracts import AgentError
         from openhcs.agent.dto.functions import (
             FunctionCatalogPreparationOutcome as Outcome,
         )

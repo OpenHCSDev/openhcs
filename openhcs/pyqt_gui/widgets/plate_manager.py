@@ -7,7 +7,7 @@ the :class:`DatasetListView` operations; changes arrive as session events.
 
 from __future__ import annotations
 
-from pyqt_reactive.services.window_code_document import use_external_code_editor
+from formbridge.services.window_code_document import use_external_code_editor
 import logging
 from dataclasses import fields, replace
 from functools import singledispatchmethod
@@ -17,31 +17,28 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from objectstate import DataclassFieldAccess
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import pyqtSignal
-from pyqt_reactive.core.path_cache import PathCacheKey
+from formbridge.core.path_cache import PathCacheKey
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
     AbstractManagerWidget,
     ListItemFormat,
 )
-from pyqt_reactive.widgets.shared.manager_item_hooks import (
-    AttributeItemIdProjection,
-    ManagerItemHooks,
-)
+from formbridge.managers.item_hooks import AttributeItemIdProjection, ManagerItemHooks
 from pyqt_reactive.widgets.shared.manager_selection_controller import (
     ItemIdSelectionPayloadProjection,
 )
-from pyqt_reactive.widgets.shared.manager_state_binding import ManagerStateBinding
+from formbridge.managers.state_binding import ManagerStateBinding
 from pyqt_reactive.widgets.shared.scope_visual_config import ListItemType
 from typing_extensions import override
 
-from openhcs.core.selection import SelectedItems, SelectionScope
+from formbridge.selection import SelectedItems, SelectionScope
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
 from openhcs.agent.dto.session import DatasetRootsRequest
 from openhcs.agent.ui_bridge_identities import (
-    PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
+    DatasetLiveMeasurementsStateSurfaceIdentity,
+    DatasetListStateSurfaceIdentity,
+    DatasetListWidgetIdentity,
 )
 from openhcs.authoring.session.dataset_document import (
     DatasetDocument,
@@ -85,9 +82,7 @@ from openhcs.authoring.session.views import (
 )
 from openhcs.core.config import PipelineConfig
 from openhcs.constants.constants import OrchestratorCreated
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
-    UiOwnedStateSurfaceDeclaration,
-)
+from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.session_rendering import (
     GuiRenderer,
     OperationPresenter,
@@ -124,10 +119,10 @@ class PlateManagerWidget(
     """
 
     SESSION_VIEW = DatasetListView
-    TITLE = PlateManagerWidgetIdentity.require_title()
+    TITLE = DatasetListWidgetIdentity.require_title()
     UI_STATE_SURFACE_DECLARATIONS = (
         UiOwnedStateSurfaceDeclaration(
-            identity=PlateManagerStateSurfaceIdentityDeclaration,
+            identity=DatasetListStateSurfaceIdentity,
             title="Plate manager state",
             payload_schema="openhcs.ui.plate_manager_state.v1",
             related_action_ids=tuple(
@@ -135,13 +130,13 @@ class PlateManagerWidget(
             ),
         ),
         UiOwnedStateSurfaceDeclaration(
-            identity=PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
+            identity=DatasetLiveMeasurementsStateSurfaceIdentity,
             title="Live measurement results",
             payload_schema="openhcs.ui.live_measurements_state.v1",
             related_action_ids=(ShowLiveResults.operation_id,),
         ),
     )
-    UI_BRIDGE_WIDGET_IDENTITY = PlateManagerWidgetIdentity
+    UI_BRIDGE_WIDGET_IDENTITY = DatasetListWidgetIdentity
     HELP_KNOWLEDGE_TARGET = KnowledgeBaseDocumentTarget(
         document_id="openhcs_basic_interface",
         section_id="plate-manager",

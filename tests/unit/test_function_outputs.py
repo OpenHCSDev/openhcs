@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import json
 from pathlib import Path
 from dataclasses import replace
@@ -44,7 +45,6 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
@@ -776,7 +776,7 @@ def test_stream_outputs_scope_viewer_layout_to_collapsed_source_components():
                 },
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     collapsed_metadata = stack_metadata.collapse_leading_plane_axis()
     payload = collapsed_metadata.payload_with(
@@ -1055,7 +1055,7 @@ def test_stream_outputs_projects_declared_channel_stack_axis():
     path = "/tmp/output/A01_s1_w1.tif"
     pixels = np.ones((2, 5, 6), dtype=np.uint16)
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(path, path),
             component_metadata=(
@@ -1109,7 +1109,7 @@ def test_stream_outputs_projects_stack_planes_with_item_source_paths():
     second_path = "/tmp/source/A01_s1_w2.tif"
     pixels = np.ones((2, 5, 6), dtype=np.uint16)
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(first_path, second_path),
             component_metadata=(
@@ -1160,7 +1160,7 @@ def test_stream_outputs_projects_stack_planes_with_item_source_paths():
 def test_stream_outputs_rejects_unaddressed_stack_payload_metadata():
     path = "/tmp/output/A01_s1_w1.tif"
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_component_metadata=complete_component_metadata(
             {
                 "well": "A01",
@@ -1189,7 +1189,7 @@ def test_stream_outputs_projects_semantic_image_stack_before_viewer_backend():
     )
     payload = ImagePayloadMetadata(
         axes=PayloadAxes.colour_samples(-1),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes.from_components(
                 component_metadata=(first_metadata, second_metadata)
@@ -1352,7 +1352,7 @@ def test_stream_outputs_partitions_one_producer_by_image_axis_fields():
 def test_stream_outputs_rejects_unidentified_stack_without_per_slice_metadata():
     path = "/tmp/output/A01_s1_w1.tif"
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_component_metadata=complete_component_metadata(
             {"well": "A01", "site": "1", "channel": "1"}
         ),
@@ -1836,7 +1836,7 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
                 )
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     output = Output.from_metadata(
         path=str(output_path),
@@ -1924,7 +1924,7 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
     assert restored.execution_scope == materialization.record.key.scope
     assert restored.artifact_kind is ObjectLabelsArtifactType
     assert restored.image_metadata is not None
-    assert restored.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert restored.image_metadata.plane_axis is RuntimeSlicePlaneAxis
     assert restored.image_metadata.source_provenance.source_plane_count == 2
 
 
@@ -2750,7 +2750,7 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     )
     metadata = ImagePayloadMetadata(
         source_image_names=("DNA",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_spatial_domain=VolumeSourceSpatialDomain(
             source_depth=5,
             origin_yx=(0, 0),

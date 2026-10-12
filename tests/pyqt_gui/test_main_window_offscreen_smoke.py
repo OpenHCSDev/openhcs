@@ -188,11 +188,6 @@ def _run_main_window(port: int):
 
 if __name__ == "__main__":
     exit_code, app = _run_main_window(int(sys.argv[1]))
-    # Tearing down the QApplication (PyQt's exit handler and interpreter
-    # finalization) intermittently segfaults with no Python frame, before and
-    # after U5 alike; recorded in U5-dead-ui-code.md. No exit handler owns a
-    # process, so leave without teardown: this test checks the application's own
-    # exit status and the processes it leaves behind.
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os._exit(exit_code)
+    # Normal interpreter teardown: a crash while the QApplication is torn down
+    # fails this test through the child's exit status.
+    sys.exit(exit_code)

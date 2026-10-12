@@ -1,5 +1,7 @@
 """Physical source-plane projection preserves composition and mutable isolation."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import fields
 
 import numpy as np
@@ -43,7 +45,7 @@ def _metadata(axis, channel_axis):
     )
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 @pytest.mark.parametrize("channel_axis", (None, 1, 3, -1))
 @pytest.mark.parametrize("plane", (0, 1))
 def test_physical_projection_agrees_with_separate_semantic_operations(
@@ -60,14 +62,14 @@ def test_physical_projection_agrees_with_separate_semantic_operations(
     assert projected.unit_interval_intensity.scale == (255, 65535)[plane]
     assert projected.source_plane_intensity_scales == ()
     assert projected.source_plane_dtypes == ()
-    assert projected.plane_axis is None
+    assert projected.plane_axis.unstacked
     projected.source_provenance.source_identity.path = "/tmp/changed.tif"
     assert metadata.source_path == "/tmp/parent.tif"
     assert metadata.source_image_provenance_planes.paths[plane] != "/tmp/changed.tif"
 
 
 def test_physical_projection_constructs_only_the_final_metadata(monkeypatch):
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, None)
+    metadata = _metadata(RuntimeSlicePlaneAxis, None)
     calls = []
     original = ImagePayloadMetadata.__post_init__
 
@@ -81,13 +83,13 @@ def test_physical_projection_constructs_only_the_final_metadata(monkeypatch):
 
 
 def test_physical_projection_rejects_leading_channel_axis():
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, 0)
+    metadata = _metadata(RuntimeSlicePlaneAxis, 0)
     with pytest.raises(ValueError, match="both plane and"):
         metadata.for_leading_source_plane(1)
 
 
 def test_physical_projection_requires_declared_plane_axis():
-    metadata = _metadata(None, None)
+    metadata = _metadata(NoPlaneAxis, None)
     with pytest.raises(ValueError, match="declared plane axis"):
         metadata.for_leading_source_plane(1)
 
@@ -98,22 +100,13 @@ def test_declared_axis_positions_must_be_int(channel_axis):
         PayloadAxes.colour_samples(channel_axis)
 
 
-def test_physical_projection_preserves_invalid_mutated_plane_error():
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, None)
-    metadata.plane_axis = "invalid-axis"
-    with pytest.raises(ValueError):
-        metadata.for_source_plane(1).without_leading_plane_axis()
-    with pytest.raises(ValueError):
-        metadata.for_leading_source_plane(1)
-
-
 def test_projection_preserves_selected_spacing_and_nested_contributors():
     contributor = SourceImageProvenanceContributor(
         SourceImageIdentity("/tmp/contributor.tif", {"site": "3"}),
         source_image_name="Original",
     )
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes(
             (
                 RuntimeSourceImageProvenancePlane(
@@ -135,7 +128,7 @@ def test_projection_preserves_selected_spacing_and_nested_contributors():
 
 
 def test_projection_observes_mask_and_metadata_mutation():
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, None)
+    metadata = _metadata(RuntimeSlicePlaneAxis, None)
     mask = np.ones((2, 3, 4), dtype=bool)
     projector = ImagePayloadSliceProjector(mask, metadata)
     data = np.zeros((3, 4))
@@ -167,7 +160,7 @@ def _metadata_with_observed_plane_fields(*, proof_raises=False):
             return super().__getitem__(index)
 
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_plane_intensity_scales=ObservedTuple((2.0,)),
         unit_interval_intensity=ImageUnitIntervalIntensityMetadata(
             source_plane_scales=(ObservedInt(1),)
@@ -212,7 +205,6 @@ def test_source_plane_preserves_intensity_then_proof_effect_order():
             AttributeError,
             "with_missing_from",
         ),
-        ("for_leading_source_plane", 0, "plane", ValueError, "invalid-axis"),
         (
             "without_leading_plane_axis",
             0,
@@ -234,13 +226,6 @@ def test_source_plane_preserves_intensity_then_proof_effect_order():
             ValueError,
             "both plane and",
         ),
-        (
-            "without_leading_plane_axis",
-            0,
-            "plane",
-            ValueError,
-            "both plane and",
-        ),
     ),
 )
 def test_projection_preserves_cross_invalid_constructor_guard_order(
@@ -248,17 +233,15 @@ def test_projection_preserves_cross_invalid_constructor_guard_order(
 ):
     metadata = ImagePayloadMetadata(
         source_path="/tmp/source.tif",
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     metadata.axes = PayloadAxes.colour_samples(channel_axis)
     if broken == "domain":
         metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
     elif broken == "spacing":
         metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
-    elif broken == "spacing-value":
-        metadata.source_voxel_spacing = None
     else:
-        metadata.plane_axis = "invalid-axis"
+        metadata.source_voxel_spacing = None
     with pytest.raises(error, match=message):
         if operation == "without_leading_plane_axis":
             metadata.without_leading_plane_axis()
@@ -268,7 +251,7 @@ def test_projection_preserves_cross_invalid_constructor_guard_order(
 
 def test_missing_leading_axis_precedes_plane_field_effects():
     metadata, events = _metadata_with_observed_plane_fields(proof_raises=True)
-    metadata.plane_axis = None
+    metadata.plane_axis = NoPlaneAxis
     metadata.axes = PayloadAxes.colour_samples(0)
     with pytest.raises(ValueError, match="requires a declared plane axis"):
         metadata.for_leading_source_plane(0)
@@ -276,10 +259,9 @@ def test_missing_leading_axis_precedes_plane_field_effects():
 
 
 def test_projection_spacing_failure_precedes_other_invalid_source_fields():
-    metadata = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+    metadata = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis)
     metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
     metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
-    metadata.plane_axis = "invalid-axis"
     with pytest.raises(ValueError, match="finite and positive"):
         metadata.for_leading_source_plane(0)
 
@@ -287,17 +269,17 @@ def test_projection_spacing_failure_precedes_other_invalid_source_fields():
 @pytest.mark.parametrize(
     "operation,normalization_axes",
     (
-        ("without_leading_plane_axis", (RuntimePlaneAxis.RUNTIME_SLICE, None)),
+        ("without_leading_plane_axis", (RuntimeSlicePlaneAxis, NoPlaneAxis)),
         (
             "for_leading_source_plane",
-            (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.RUNTIME_SLICE, None),
+            (RuntimeSlicePlaneAxis, RuntimeSlicePlaneAxis, NoPlaneAxis),
         ),
     ),
 )
 def test_projection_normalizes_owned_metadata_at_each_historical_phase(
     monkeypatch, operation, normalization_axes
 ):
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, 2)
+    metadata = _metadata(RuntimeSlicePlaneAxis, 2)
     input_provenance = metadata.source_provenance
     input_proof = metadata.unit_interval_intensity
     births = []
@@ -323,7 +305,7 @@ def test_projection_normalizes_owned_metadata_at_each_historical_phase(
         else metadata.for_leading_source_plane(1)
     )
 
-    assert births == [(projected, RuntimePlaneAxis.RUNTIME_SLICE, 2)]
+    assert births == [(projected, RuntimeSlicePlaneAxis, 2)]
     assert tuple(axis for _, axis, _ in phases) == normalization_axes
     assert all(owner is projected for owner, _, _ in phases)
     assert tuple(channel for _, _, channel in phases) == (2,) * (
@@ -332,7 +314,7 @@ def test_projection_normalizes_owned_metadata_at_each_historical_phase(
     assert projected is not metadata
     assert metadata.source_provenance is input_provenance
     assert metadata.unit_interval_intensity is input_proof
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.axis_position(ColourAxis) == 2
     assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
     assert projected.source_provenance is not input_provenance
@@ -343,7 +325,7 @@ def test_projection_normalizes_owned_metadata_at_each_historical_phase(
 def test_projection_preserves_contributor_derivation_constructor_error_order(
     monkeypatch, combined
 ):
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, None)
+    metadata = _metadata(RuntimeSlicePlaneAxis, None)
     invalid_domain = SourceSpatialDomain(origin_yx=(1,))
     metadata.source_spatial_domain = invalid_domain
     provenance = metadata.source_provenance
@@ -366,13 +348,13 @@ def test_projection_preserves_contributor_derivation_constructor_error_order(
         assert calls == [provenance]
     assert metadata.source_provenance is provenance
     assert metadata.source_spatial_domain is invalid_domain
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
 
 
 @pytest.mark.parametrize("combined", (False, True))
 def test_failed_owned_axis_transform_does_not_mutate_source(monkeypatch, combined):
-    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, 2)
+    metadata = _metadata(RuntimeSlicePlaneAxis, 2)
     provenance = metadata.source_provenance
     proof = metadata.unit_interval_intensity
 
@@ -389,7 +371,7 @@ def test_failed_owned_axis_transform_does_not_mutate_source(monkeypatch, combine
             metadata.without_leading_plane_axis()
     assert metadata.source_provenance is provenance
     assert metadata.unit_interval_intensity is proof
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert metadata.axis_position(ColourAxis) == 2
     assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
     assert metadata.source_plane_dtypes == ("uint8", "uint16")

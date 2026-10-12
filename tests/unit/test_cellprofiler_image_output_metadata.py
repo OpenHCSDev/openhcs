@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import inspect
 
@@ -63,7 +64,7 @@ def _source_binding_payload(
                 {"channel": str(index)} for index in range(plane_count)
             ),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(data, None)
 
 
@@ -97,7 +98,7 @@ def test_colocalization_saved_mask_projects_its_declared_source_plane() -> None:
 
     metadata = output.metadata
     assert output.data.shape == rna.shape
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.axis_position(ColourAxis) is None
     assert metadata.source_image_paths == ("/input/rna.tif",)
 
@@ -120,7 +121,7 @@ def test_image_math_collapses_all_source_binding_contributors() -> None:
     )
 
     metadata = output.metadata
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.source_path == "/input/shared.tif"
     assert len(metadata.source_provenance.represented_source_identities) == 2
 
@@ -144,7 +145,7 @@ def test_all_image_illumination_collapses_all_source_plane_contributors() -> Non
 
     metadata = output.metadata
     assert output.data.shape == (4, 5)
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.source_path == "/input/shared.tif"
     assert len(metadata.source_provenance.represented_source_identities) == 2
 
@@ -170,7 +171,7 @@ def test_skeleton_branchpoint_image_declares_rgb_channel_axis() -> None:
     metadata = branchpoints.metadata
     assert branchpoints.data.shape == (9, 9, 3)
     assert metadata.axis_position(ColourAxis) == -1
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
 
 
 def test_worm_outline_images_declare_rgb_and_scalar_channel_semantics() -> None:
@@ -200,10 +201,10 @@ def test_worm_outline_images_declare_rgb_and_scalar_channel_semantics() -> None:
 
 @pytest.mark.parametrize(
     "plane_axis",
-    (RuntimePlaneAxis.SOURCE_BINDING, RuntimePlaneAxis.RUNTIME_SLICE),
+    (SourceBindingPlaneAxis, RuntimeSlicePlaneAxis),
 )
 def test_straighten_worms_projects_sources_into_warped_spatial_domain(
-    plane_axis: RuntimePlaneAxis,
+    plane_axis: type[RuntimePlaneAxis],
 ) -> None:
     source_payloads = tuple(
         ImagePayloadMetadata(
@@ -218,9 +219,9 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
     )
     image = (
         ImagePayloadBundleContext.from_payloads(source_payloads).compose()
-        if plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+        if plane_axis is SourceBindingPlaneAxis
         else ImagePayloadMetadata.compose(source_payloads)
-        .replace_fields(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+        .replace_fields(plane_axis=RuntimeSlicePlaneAxis)
         .payload_with(
             np.stack(tuple(payload.data for payload in source_payloads)),
             None,
@@ -242,7 +243,7 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
     assert len(output.slices) == 2
     for index, warped in enumerate(output.slices, start=1):
         metadata = warped.metadata
-        assert metadata.plane_axis is None
+        assert metadata.plane_axis.unstacked
         assert metadata.source_image_paths == (f"/input/channel_{index}.tif",)
         assert metadata.source_spatial_domain.origin_yx == (0, 0)
         assert metadata.source_spatial_domain.source_shape_yx == (

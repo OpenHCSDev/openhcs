@@ -16,6 +16,7 @@ from openhcs.core.compiled_step_plan import (
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
@@ -114,7 +115,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     from openhcs.core.steps.function_execution import FunctionStepExecutor
 
     compiled_plan = _compiled_plan(
-        execution_group_scope=ComponentGroupScope.from_raw(
+        execution_group_scope=ComponentGroupScope.of(
             ("2",),
             component=Microscopy.Site,
         )
@@ -369,7 +370,7 @@ def test_grouped_pattern_requires_concrete_execution_group_component():
         axis_id="A01",
         step_name="dict-none",
         execution_group_value=None,
-        execution_group_scope=ComponentGroupScope.ungrouped(),
+        execution_group_scope=UngroupedScope(),
         compiled_function_pattern=compile_function_pattern(
             admitted_graph({"1": first, "2": second}),
             {},
@@ -416,8 +417,7 @@ def test_component_artifact_plan_selection_merges_global_and_group_outputs():
         name="measurements",
         path="/tmp/measurements/A01",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("A01",),
-        group_component=Microscopy.Well,
+        group_scope=ComponentGroupScope.of(("A01",), component=Microscopy.Well),
         paths_by_group={"A01": "/tmp/measurements/A01"},
     )
 
@@ -426,7 +426,7 @@ def test_component_artifact_plan_selection_merges_global_and_group_outputs():
             global_output.ref(): global_output,
             grouped_output.ref(): grouped_output,
         },
-        ComponentGroupScope(("A01",), component=Microscopy.Well),
+        ComponentGroupScope.of(("A01",), component=Microscopy.Well),
         "A01",
     )
 
@@ -441,14 +441,13 @@ def test_component_artifact_plan_selection_omits_unscoped_outputs_for_missing_gr
         name="objects",
         path="/tmp/objects",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         paths_by_group={"3": "/tmp/objects_w3"},
     )
 
     selected = PatternGroupExecutionScope._select_output_plans_for_component(
         {output.ref(): output},
-        ComponentGroupScope(("1", "3"), component=Microscopy.Channel),
+        ComponentGroupScope.of(("1", "3"), component=Microscopy.Channel),
         "1",
     )
 
@@ -460,8 +459,7 @@ def test_default_invocation_keeps_compiled_grouped_output_plan():
         name="measurements",
         path="/tmp/measurements",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "3", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "3", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/tmp/w1_measurements",
             "3": "/tmp/w3_measurements",
@@ -471,7 +469,7 @@ def test_default_invocation_keeps_compiled_grouped_output_plan():
 
     selected = PatternGroupExecutionScope._select_output_plans_for_component(
         {grouped_output.ref(): grouped_output},
-        ComponentGroupScope.ungrouped(),
+        UngroupedScope(),
         None,
     )
 
@@ -496,16 +494,14 @@ def _cross_channel_output_invocation():
         name=channel_one_spec.name,
         path="/memory/channel_one.pkl",
         artifact_type=channel_one_spec.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/channel_one__1.pkl"},
     )
     channel_two = ArtifactOutputPlan(
         name=channel_two_spec.name,
         path="/memory/channel_two.pkl",
         artifact_type=channel_two_spec.artifact_type,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/channel_two__2.pkl"},
     )
     invocation = compile_function_pattern(
@@ -526,7 +522,7 @@ def test_invocation_output_selection_omits_inactive_component_outputs():
     selected_outputs = invocation.select_outputs(
         {channel_one.ref(): channel_one},
         compiled_output_plans=invocation.output_plans_for_component(
-            ComponentGroupScope.from_raw(
+            ComponentGroupScope.of(
                 ("1", "2"), component=Microscopy.Channel,
             ),
             "1",
@@ -663,8 +659,7 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
             name=spec.name,
             path=f"/memory/{spec.name}.pkl",
             artifact_type=spec.artifact_type,
-            group_keys=(channel,),
-            group_component=Microscopy.Channel,
+            group_scope=ComponentGroupScope.of((channel,), component=Microscopy.Channel),
             paths_by_group={channel: f"/memory/{spec.name}__{channel}.pkl"},
             relations=spec.relations,
         )
@@ -678,7 +673,7 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
         input_plans,
         output_plans,
     ).default_group.invocations[0]
-    execution_scope = ComponentGroupScope.from_raw(
+    execution_scope = ComponentGroupScope.of(
         ("1", "2"),
         component=Microscopy.Channel,
     )
@@ -693,7 +688,7 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
                 storage_plan=input_plans[spec.ref()],
                 projection=ArtifactInputProjectionPlan(
                     invocation_scope=execution_scope,
-                    producer_selection_scope=ComponentGroupScope.ungrouped(),
+                    producer_selection_scope=UngroupedScope(),
                     component_scopes=(execution_scope,),
                     consumer_variable_components=(),
                 ),
@@ -752,7 +747,7 @@ def test_invocation_output_selection_rejects_missing_active_component_output():
         invocation.select_outputs(
             {},
             compiled_output_plans=invocation.output_plans_for_component(
-                ComponentGroupScope.from_raw(
+                ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Channel,
                 ),
                 "1",
@@ -766,8 +761,7 @@ def test_invocation_output_selection_rejects_active_projection_drift():
         name=channel_one.name,
         path="/memory/drifted_channel_one.pkl",
         artifact_type=channel_one.artifact_type,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/drifted_channel_one__1.pkl"},
     )
 
@@ -775,7 +769,7 @@ def test_invocation_output_selection_rejects_active_projection_drift():
         invocation.select_outputs(
             {drifted_channel_one.ref(): drifted_channel_one},
             compiled_output_plans=invocation.output_plans_for_component(
-                ComponentGroupScope.from_raw(
+                ComponentGroupScope.of(
                     ("1", "2"), component=Microscopy.Channel,
                 ),
                 "1",
@@ -800,15 +794,14 @@ def test_adapter_invocation_preserves_component_selected_artifact_inputs():
         name="IllumStain1",
         path="/tmp/IllumStain1",
         artifact_type=ImageArtifactType,
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
     )
     invocation = compile_function_pattern(
         admitted_graph(apply_illumination),
         {first_input.ref(): first_input},
         {},
     ).default_group.invocations[0]
-    scope = ComponentGroupScope.from_raw(
+    scope = ComponentGroupScope.of(
         ("1",),
         component=Microscopy.Channel,
     )

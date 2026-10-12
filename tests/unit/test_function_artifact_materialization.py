@@ -1,3 +1,6 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 import json
 import pickle
@@ -45,7 +48,9 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
+    DynamicGroupScope,
     RuntimeExecutionAxisScope,
+    UngroupedScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import TiffConfig
@@ -66,9 +71,10 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.core.orchestrator.execution_result import (
+    MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
-    MergeAllRuntimeRecords, OmitRuntimeRecords,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline.artifact_planning import (
@@ -91,7 +97,6 @@ from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -99,7 +104,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -414,10 +418,10 @@ def _plan(
     variable_components = tuple(variable_components)
     if execution_group_value is None:
         execution_group_value = group_by_value
-    execution_group_scope = ComponentGroupScope.ungrouped()
+    execution_group_scope = UngroupedScope()
     if execution_group_value is not None:
         execution_group_component = AxisFamily.active().named(execution_group_value)
-        execution_group_scope = ComponentGroupScope.dynamic(execution_group_component)
+        execution_group_scope = DynamicGroupScope(execution_group_component)
     return CompiledStepPlan(
         step_index=6,
         step_name="measure",
@@ -663,7 +667,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
         artifact_type=ObjectLabelsArtifactType,
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
                 "/input/A02_s001_w1_z001_t001.tif",
@@ -688,7 +692,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
         label_slices,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -707,9 +711,9 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     )
     assert runtime_value.data.domain == ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
-    assert runtime_value.data.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert runtime_value.data.plane_axis is RuntimeSlicePlaneAxis
     assert runtime_value.data.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
         source_shape_yx=(8, 8),
@@ -767,7 +771,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         output,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -823,7 +827,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         labels,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -965,7 +969,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
         variable_components=(Microscopy.Site,),
     )
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_component_metadata={
             "well": "A01",
             "site": "1",
@@ -1074,8 +1078,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
         path="/analysis/A01_measurements_step7.csv",
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/analysis/A01_measurements_step7.csv"},
     )
     runtime_output_plan = output_plan.for_group("1")
@@ -1228,7 +1231,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
 
     # The measurement table has no pixel-plane axis. Its rendered point archive
     # nevertheless owns every represented Z plane, not only its scalar address.
-    assert result.metadata.plane_axis is None
+    assert result.metadata.plane_axis.unstacked
     domain = materialization.stream_source_metadata_items((result,), None)
     assert [item["z_index"] for item in domain.values] == list(
         range(source_z_origin, source_z_origin + 4)
@@ -1467,8 +1470,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parse
         name="cell_counts",
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         materialization=csv_only(),
     )
     context = _context(FileManagerStub())
@@ -1541,10 +1543,10 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
     labels_array[:, 2:6, 3:7] = 1
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels_array),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),) * 4,
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(
@@ -2105,8 +2107,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
-        group_keys=("1",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/A01_w1_measurements_step7.pkl"},
     )
     runtime_output_plan = output_plan.for_group("1")
@@ -2171,8 +2172,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2253,8 +2253,7 @@ def test_artifact_name_materialization_ignores_incomplete_source_identity() -> N
         name="SavedImage",
         path="/memory/SavedImage.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=("3",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         paths_by_group={"3": "/memory/SavedImage.pkl"},
         materialization=MaterializationSpec(
             ImageFileOptions(
@@ -2302,8 +2301,7 @@ def test_fixed_scope_preserves_distinct_source_group_identity() -> None:
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2357,8 +2355,7 @@ def test_fixed_component_scope_rejects_unresolved_filename_identity() -> None:
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2466,8 +2463,7 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
         name="measurements",
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Channel),
         paths_by_group={
             "1": "/memory/A01_w1_measurements_step7.pkl",
             "2": "/memory/A01_w2_measurements_step7.pkl",
@@ -2586,8 +2582,7 @@ def test_overlay_and_save_image_materialization_use_source_address_owner(
         name=artifact_name,
         path=f"/memory/A01_{artifact_name}_step7.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group={None: f"/memory/A01_{artifact_name}_step7.pkl"},
         materialization=TerminalMaterializationSpec(
             ImageFileOptions(filename_suffix=".tif")
@@ -2632,8 +2627,7 @@ def test_scalar_image_materialization_rejects_conflicting_duplicate_payloads():
         name="Overlay",
         path="/memory/A01_Overlay_step7.pkl",
         artifact_type=ImageArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group={None: "/memory/A01_Overlay_step7.pkl"},
         materialization=TerminalMaterializationSpec(
             ImageFileOptions(filename_suffix=".tif")
@@ -2660,8 +2654,7 @@ def test_actual_materialization_records_uses_dynamic_runtime_groups():
         name="segmentation_masks",
         path="/memory/A01_segmentation_masks_step7.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=(None,),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
         paths_by_group={None: "/memory/A01_segmentation_masks_step7.pkl"},
     )
     group_one = output_plan.for_group("1")
@@ -2704,8 +2697,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
         name="measurements",
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("1", "2"),
-        group_component=Microscopy.Site,
+        group_scope=ComponentGroupScope.of(("1", "2"), component=Microscopy.Site),
         paths_by_group={
             "1": "/memory/A01_s001_measurements_step7.pkl",
             "2": "/memory/A01_s002_measurements_step7.pkl",
@@ -2794,8 +2786,7 @@ def test_materialize_artifact_outputs_uses_grouped_scope_not_record_location(
         name="measurements",
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={
             "2": "/memory/A01_w2_measurements_step7.pkl",
         },
@@ -2845,8 +2836,7 @@ def test_materialize_artifact_outputs_uses_null_component_group_identity_for_str
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        group_keys=("2",),
-        group_component=Microscopy.Channel,
+        group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={
             "2": "/memory/channel2_Nuclei.pkl",
         },
@@ -2994,10 +2984,10 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 4, 4), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes(
             tuple(
@@ -3151,8 +3141,7 @@ def test_tile_positions_runtime_materializes_native_json_without_changing_payloa
         path=str(tmp_path / "runtime" / "positions.pkl"),
         artifact_type=spec.artifact_type,
         materialization=spec.materialization,
-        group_component=Microscopy.Channel if group_key is not None else None,
-        group_keys=(group_key,),
+        group_scope=ComponentGroupScope.of((group_key,), component=Microscopy.Channel if group_key is not None else None),
     )
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
@@ -3510,8 +3499,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
         path="/memory/AdjacentImage.pkl",
         artifact_type=ImageArtifactType,
         materialization=csv_only(),
-        group_keys=("11",),
-        group_component=Microscopy.Timepoint,
+        group_scope=ComponentGroupScope.of(("11",), component=Microscopy.Timepoint),
         paths_by_group={
             "11": "/memory/A01_t11_AdjacentImage_step7.pkl",
         },
@@ -3625,7 +3613,7 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
 
 @pytest.mark.parametrize(
     "domain_scope",
-    (ObjectLabelDomainScope.PLANE, ObjectLabelDomainScope.PAYLOAD),
+    (PlaneLabelScope, PayloadLabelScope),
 )
 def test_materialize_artifact_outputs_uses_variable_components_for_streaming_identity(
     monkeypatch,
@@ -3641,17 +3629,17 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2, 2), dtype=np.int32)),
         plane_axis=(
-            RuntimePlaneAxis.RUNTIME_SLICE
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else None
+            RuntimeSlicePlaneAxis
+            if domain_scope.ids_per_plane
+            else NoPlaneAxis
         ),
         domain=(
             ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             )
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD)
+            if domain_scope.ids_per_plane
+            else ObjectLabelDomain(scope=PayloadLabelScope)
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -3806,10 +3794,10 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2, 2), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -4068,7 +4056,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
         },
         source_image_names=("OrigDNA",),
         axes=PayloadAxes.colour_samples(0),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     value = RuntimeValue.normalize(
         output_plan,
@@ -4076,7 +4064,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
             source_path="/derived/nuclei-rgb.tif",
             source_image_names=("NucleiImage",),
             axes=PayloadAxes.colour_samples(3),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.ones((2, 5, 7, 3), dtype=np.uint16),
             None,
@@ -4093,7 +4081,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
     assert metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
     assert metadata.source_image_names == ("OrigDNA",)
     assert metadata.axis_position(ColourAxis) == 3
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
@@ -4133,7 +4121,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     saved_payload = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         selected_payload,
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.ones((2, 5, 7), dtype=np.uint16),
             None,
@@ -4194,7 +4182,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     )
 
     assert saved_payload.metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE
+        RuntimeSlicePlaneAxis
     )
     assert tuple(
         Path(output.path)

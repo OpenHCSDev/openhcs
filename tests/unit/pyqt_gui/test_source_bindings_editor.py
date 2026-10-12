@@ -50,6 +50,7 @@ from openhcs.core.config import (
 from openhcs.constants.constants import Backend
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_bindings_preview import SourceInventory
+from formbridge.forms.raw_display_value import RawDisplayValue
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
     SourceBindingsEditorWidget,
     SourceSetPairingRow,
@@ -73,10 +74,7 @@ from pyqt_reactive.forms.parameter_form_manager import (
     ParameterFormManager,
 )
 from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PyQt6WidgetEnhancer
-from pyqt_reactive.forms.parameter_info_types import (
-    InlineDataclassWidgetInfo,
-    create_parameter_info,
-)
+from formbridge.forms.parameter_info_types import InlineDataclassWidgetInfo, create_parameter_info
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollViewport
 from pyqt_reactive.widgets.shared.reflowing_vertical_scroll_area import (
@@ -261,14 +259,14 @@ def test_lazy_pipeline_source_bindings_config_uses_nominal_inline_widget_info() 
 def test_source_bindings_editor_builds_from_bindings() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    assert widget.layout.count() > 0
+    assert widget.sections_layout.count() > 0
 
 
 def test_source_bindings_editor_renders_pipeline_source_filter_table() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         SourceBindingsConfig(
             source_filters=(
                 SourceFilterClause(
@@ -280,8 +278,8 @@ def test_source_bindings_editor_renders_pipeline_source_filter_table() -> None:
         )
     )
 
-    assert widget.source_filters_table is not None
-    assert widget.source_filters_table.rowCount() == 1
+    assert widget.table("source_filters") is not None
+    assert widget.table("source_filters").rowCount() == 1
 
     section_titles = {label.text() for label in widget.findChildren(QLabel)}
     assert "Source Filters" in section_titles
@@ -289,24 +287,24 @@ def test_source_bindings_editor_renders_pipeline_source_filter_table() -> None:
 
 def test_source_bindings_editor_edits_pipeline_source_filters() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(SourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(SourceBindingsConfig())
 
-    widget.add_source_filter_row()
-    assert widget.source_filters_table is not None
+    widget.add_new_row("source_filters")
+    assert widget.table("source_filters") is not None
     set_combo_cell_text(
-        widget.source_filters_table,
+        widget.table("source_filters"),
         0,
         column_index(SourceFilterClause, "subject"),
         "extension",
     )
     set_combo_cell_text(
-        widget.source_filters_table,
+        widget.table("source_filters"),
         0,
         column_index(SourceFilterClause, "match_type"),
         "equals",
     )
     set_editable_cell_text(
-        widget.source_filters_table,
+        widget.table("source_filters"),
         0,
         column_index(SourceFilterClause, "value"),
         ".tif",
@@ -323,17 +321,17 @@ def test_source_bindings_editor_edits_pipeline_source_filters() -> None:
 
 def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(SourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(SourceBindingsConfig())
 
-    widget.add_source_filter_row(
-        SourceFilterClause(
+    widget.add_row(
+        "source_filters", SourceFilterClause(
             SourceFileName,
             TextContains,
             "DNA",
         )
     )
-    assert widget.source_filters_table is not None
-    combo = widget.source_filters_table.cellWidget(
+    assert widget.table("source_filters") is not None
+    combo = widget.table("source_filters").cellWidget(
         0,
         column_index(SourceFilterClause, "match_type"),
     )
@@ -364,9 +362,9 @@ def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
 
 def test_source_bindings_editor_accepts_lazy_pipeline_source_bindings() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(LazySourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(LazySourceBindingsConfig())
 
-    widget.add_source_filter_row()
+    widget.add_new_row("source_filters")
 
     edited = widget.get_value()
     assert get_base_type_for_lazy(type(edited)) is SourceBindingsConfig
@@ -430,8 +428,8 @@ def test_inline_source_bindings_root_reset_all_resets_child_fields() -> None:
 
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -533,26 +531,26 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         source_widget = source_container._inline_value_widget
         assert isinstance(source_widget, SourceBindingsEditorWidget)
 
-        source_widget.add_source_filter_row()
-        assert source_widget.source_filters_table is not None
+        source_widget.add_new_row("source_filters")
+        assert source_widget.table("source_filters") is not None
         set_combo_cell_text(
-            source_widget.source_filters_table,
+            source_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         set_editable_cell_text(
-            source_widget.source_filters_table,
+            source_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "DNA",
         )
 
-        source_widget.add_metadata_rule_row(expected_rule)
-        source_widget.add_match_plan_row()
-        assert source_widget.match_plan_table is not None
+        source_widget.add_row("metadata_rules", expected_rule)
+        source_widget.add_new_row("match_plan")
+        assert source_widget.table("match_plan") is not None
         set_editable_cell_text(
-            source_widget.match_plan_table,
+            source_widget.table("match_plan"),
             0,
             column_index(SourceSetPairingRow, "fields"),
             (SourceBindingMatchField("DNA", "well"),),
@@ -627,7 +625,7 @@ def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
 
         queued_flashes: list[str] = []
         manager.queue_flash_local_batch = queued_flashes.extend
-        source_widget.add_binding_row(binding)
+        source_widget.append_to_field("bindings", binding)
         for _ in range(10):
             QApplication.processEvents()
 
@@ -645,7 +643,7 @@ def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
         )
         assert tuple(
             inherited.alias
-            for inherited in step_widget._create_step_bindings_dialog().bindings()
+            for inherited in step_widget.step_bindings_dialog().bindings()
         ) == ("DNA",)
         assert source_container._title_label.text().startswith("* ")
         assert step_container._title_label.text().startswith("* ")
@@ -703,9 +701,9 @@ def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> Non
         assert isinstance(pipeline_widget, SourceBindingsEditorWidget)
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
-        assert tuple(step_widget._create_step_bindings_dialog().bindings()) == ()
+        assert tuple(step_widget.step_bindings_dialog().bindings()) == ()
 
-        pipeline_widget.add_binding_row(binding)
+        pipeline_widget.append_to_field("bindings", binding)
         loop = QEventLoop()
         QTimer.singleShot(260, loop.quit)
         loop.exec()
@@ -725,7 +723,7 @@ def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> Non
         )
         assert tuple(
             inherited.alias
-            for inherited in step_widget._create_step_bindings_dialog().bindings()
+            for inherited in step_widget.step_bindings_dialog().bindings()
         ) == ("DNA",)
     finally:
         pipeline_manager.deleteLater()
@@ -785,7 +783,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
             TextContains,
             "DNA",
         )
-        pipeline_widget.add_source_filter_row(first_filter)
+        pipeline_widget.add_row("source_filters", first_filter)
         loop = QEventLoop()
         QTimer.singleShot(260, loop.quit)
         loop.exec()
@@ -795,19 +793,19 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         assert step_state.get_resolved_value("source_bindings.source_filters") == (
             first_filter,
         )
-        assert step_widget.source_filters_table is not None
+        assert step_widget.table("source_filters") is not None
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
 
-        assert pipeline_widget.source_filters_table is not None
+        assert pipeline_widget.table("source_filters") is not None
         set_combo_cell_text(
-            pipeline_widget.source_filters_table,
+            pipeline_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "equals",
@@ -830,7 +828,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         )
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -844,7 +842,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         )
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -858,7 +856,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         )
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -946,10 +944,10 @@ def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
 
         refresh_calls = []
         step_widget.refresh = lambda: refresh_calls.append("refresh")  # type: ignore[method-assign]
-        original_source_filters_table = step_widget.source_filters_table
-        assert step_widget._enabled_reset_button is not None
+        original_source_filters_table = step_widget.table("source_filters")
+        assert step_widget.title_checkbox.reset_button is not None
 
-        step_widget._enabled_reset_button.click()
+        step_widget.title_checkbox.reset_button.click()
         for _ in range(20):
             QApplication.processEvents()
 
@@ -957,7 +955,7 @@ def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
         assert (
             DataclassFieldAccess.raw_value(step_widget.get_value(), "enabled") is None
         )
-        assert step_widget.source_filters_table is original_source_filters_table
+        assert step_widget.table("source_filters") is original_source_filters_table
         assert refresh_calls == []
     finally:
         manager.deleteLater()
@@ -1007,7 +1005,7 @@ def test_source_bindings_enableable_reset_to_inherited_true_is_path_scoped() -> 
 
         full_marker_refreshes = []
         marker_paths = []
-        original_markers = step_widget.refresh_section_label_markers
+        original_markers = step_widget.refresh_child_field_chrome
 
         def record_markers(owner_field_paths=None):
             if owner_field_paths is None:
@@ -1025,11 +1023,11 @@ def test_source_bindings_enableable_reset_to_inherited_true_is_path_scoped() -> 
 
         refresh_calls = []
         step_widget.refresh = lambda: refresh_calls.append("refresh")  # type: ignore[method-assign]
-        step_widget.refresh_section_label_markers = record_markers  # type: ignore[method-assign]
+        step_widget.refresh_child_field_chrome = record_markers  # type: ignore[method-assign]
         step_widget.set_value = record_set_value  # type: ignore[method-assign]
 
-        assert step_widget._enabled_reset_button is not None
-        step_widget._enabled_reset_button.click()
+        assert step_widget.title_checkbox.reset_button is not None
+        step_widget.title_checkbox.reset_button.click()
         for _ in range(30):
             QApplication.processEvents()
 
@@ -1109,8 +1107,8 @@ def test_source_bindings_enableable_reset_from_false_to_inherited_value_is_path_
             step_widget.refresh = lambda: refresh_calls.append("refresh")  # type: ignore[method-assign]
             step_widget.set_value = record_set_value  # type: ignore[method-assign]
 
-            assert step_widget._enabled_reset_button is not None
-            step_widget._enabled_reset_button.click()
+            assert step_widget.title_checkbox.reset_button is not None
+            step_widget.title_checkbox.reset_button.click()
             for _ in range(30):
                 QApplication.processEvents()
 
@@ -1173,19 +1171,19 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             step_widget.child_field_section_group("match_plan").graphicsEffect() is None
         )
 
-        source_widget.add_source_filter_row()
-        assert source_widget.source_filters_table is not None
+        source_widget.add_new_row("source_filters")
+        assert source_widget.table("source_filters") is not None
         set_combo_cell_text(
-            source_widget.source_filters_table,
+            source_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
-        assert source_widget.source_filters_table.rowCount() == 1
+        assert source_widget.table("source_filters").rowCount() == 1
 
         set_editable_cell_text(
-            source_widget.source_filters_table,
+            source_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "DNA",
@@ -1202,11 +1200,11 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
                 "DNA",
             ),
         )
-        assert step_widget.source_filters_table is not None
-        assert step_widget.source_filters_table.rowCount() == 1
+        assert step_widget.table("source_filters") is not None
+        assert step_widget.table("source_filters").rowCount() == 1
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -1216,7 +1214,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             step_widget.child_field_section_group("source_filters").graphicsEffect()
             is None
         )
-        inherited_match_type_widget = step_widget.source_filters_table.cellWidget(
+        inherited_match_type_widget = step_widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -1225,17 +1223,17 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             PlaceholderConfig.text_color_name()
             in inherited_match_type_widget.styleSheet()
         )
-        inherited_value_item = step_widget.source_filters_table.item(
+        inherited_value_item = step_widget.table("source_filters").item(
             0,
             column_index(SourceFilterClause, "value"),
         )
         assert inherited_value_item is not None
         assert inherited_value_item.font().italic()
 
-        source_widget.add_match_plan_row()
-        assert source_widget.match_plan_table is not None
+        source_widget.add_new_row("match_plan")
+        assert source_widget.table("match_plan") is not None
         set_editable_cell_text(
-            source_widget.match_plan_table,
+            source_widget.table("match_plan"),
             0,
             column_index(SourceSetPairingRow, "fields"),
             (SourceBindingMatchField("DNA", "well"),),
@@ -1243,13 +1241,13 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         for _ in range(10):
             QApplication.processEvents()
 
-        source_widget.add_match_plan_row()
+        source_widget.add_new_row("match_plan")
         QApplication.processEvents()
-        assert source_widget.match_plan_table is not None
-        assert source_widget.match_plan_table.rowCount() == 2
+        assert source_widget.table("match_plan") is not None
+        assert source_widget.table("match_plan").rowCount() == 2
 
         set_editable_cell_text(
-            source_widget.match_plan_table,
+            source_widget.table("match_plan"),
             1,
             column_index(SourceSetPairingRow, "fields"),
             (SourceBindingMatchField("GFP", "well"),),
@@ -1269,8 +1267,8 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             state.get_resolved_value("step_source_bindings_config.match_plan")
             == expected_plan
         )
-        assert step_widget.match_plan_table is not None
-        assert step_widget.match_plan_table.rowCount() == 2
+        assert step_widget.table("match_plan") is not None
+        assert step_widget.table("match_plan").rowCount() == 2
     finally:
         manager.deleteLater()
         ObjectStateRegistry.clear()
@@ -1283,7 +1281,7 @@ def test_source_bindings_enableable_only_updates_skip_table_rebuild() -> None:
         TextContains,
         "DNA",
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         LazyStepSourceBindingsConfig(
             enabled=True,
             source_filters=(inherited_filter,),
@@ -1307,8 +1305,8 @@ def test_source_bindings_enableable_only_updates_skip_table_rebuild() -> None:
 
         assert refresh_calls == []
         assert DataclassFieldAccess.raw_value(widget.get_value(), "enabled") is None
-        assert widget.source_filters_table is not None
-        assert widget.source_filters_table.rowCount() == 1
+        assert widget.table("source_filters") is not None
+        assert widget.table("source_filters").rowCount() == 1
     finally:
         widget.deleteLater()
 
@@ -1329,7 +1327,7 @@ def test_source_bindings_refresh_detaches_obsolete_subtrees_before_flash_replay(
         flash_key="source_bindings",
         parent=dialog,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(),
         parent=container,
     )
@@ -1340,8 +1338,8 @@ def test_source_bindings_refresh_detaches_obsolete_subtrees_before_flash_replay(
     container.register_flash_groupbox("source_bindings", container)
     obsolete_widgets = tuple(
         item_widget
-        for index in range(widget.layout.count())
-        if (item_widget := widget.layout.itemAt(index).widget()) is not None
+        for index in range(widget.sections_layout.count())
+        if (item_widget := widget.sections_layout.itemAt(index).widget()) is not None
     )
 
     try:
@@ -1400,7 +1398,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             TextContains,
             "DNA",
         )
-        source_widget.add_source_filter_row(inherited_filter)
+        source_widget.add_row("source_filters", inherited_filter)
         for _ in range(10):
             QApplication.processEvents()
 
@@ -1408,11 +1406,11 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         assert state.get_resolved_value(
             "step_source_bindings_config.source_filters"
         ) == (inherited_filter,)
-        assert step_widget.source_filters_table is not None
-        assert step_widget.source_filters_table.rowCount() == 1
+        assert step_widget.table("source_filters") is not None
+        assert step_widget.table("source_filters").rowCount() == 1
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -1420,7 +1418,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         )
 
         set_editable_cell_text(
-            step_widget.source_filters_table,
+            step_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA",
@@ -1438,7 +1436,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         )
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -1457,22 +1455,22 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             DataclassFieldAccess.raw_value(step_widget.get_value(), "source_filters")
             is None
         )
-        assert step_widget.source_filters_table.rowCount() == 1
+        assert step_widget.table("source_filters").rowCount() == 1
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
-        inherited_value_item = step_widget.source_filters_table.item(
+        inherited_value_item = step_widget.table("source_filters").item(
             0,
             column_index(SourceFilterClause, "value"),
         )
         assert inherited_value_item is not None
         assert inherited_value_item.font().italic()
-        inherited_match_type_widget = step_widget.source_filters_table.cellWidget(
+        inherited_match_type_widget = step_widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -1524,21 +1522,21 @@ def test_source_bindings_inherited_table_combo_activation_materializes_child() -
             TextContains,
             "DNA",
         )
-        source_widget.add_source_filter_row(inherited_filter)
+        source_widget.add_row("source_filters", inherited_filter)
         for _ in range(10):
             QApplication.processEvents()
 
         assert state.parameters["step_source_bindings_config.source_filters"] is None
         history_len_before_activation = len(ObjectStateRegistry.get_branch_history())
-        assert step_widget.source_filters_table is not None
-        match_type_widget = step_widget.source_filters_table.cellWidget(
+        assert step_widget.table("source_filters") is not None
+        match_type_widget = step_widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -1616,15 +1614,15 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
             TextContains,
             "DNA",
         )
-        source_widget.add_source_filter_row(inherited_filter)
+        source_widget.add_row("source_filters", inherited_filter)
         for _ in range(10):
             QApplication.processEvents()
 
         assert state.parameters["step_source_bindings_config.source_filters"] is None
         history_len_before_edit = len(ObjectStateRegistry.get_branch_history())
-        assert step_widget.source_filters_table is not None
+        assert step_widget.table("source_filters") is not None
         set_editable_cell_text(
-            step_widget.source_filters_table,
+            step_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA",
@@ -1655,7 +1653,7 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
         )
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -1704,15 +1702,15 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
             TextContains,
             "DNA",
         )
-        source_widget.add_source_filter_row(inherited_filter)
+        source_widget.add_row("source_filters", inherited_filter)
         for _ in range(10):
             QApplication.processEvents()
 
         assert state.parameters["step_source_bindings_config.source_filters"] is None
-        assert step_widget.source_filters_table is not None
+        assert step_widget.table("source_filters") is not None
 
         set_editable_cell_text(
-            step_widget.source_filters_table,
+            step_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA",
@@ -1728,7 +1726,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         assert state.parameters["step_source_bindings_config.source_filters"] == (
             materialized_filter,
         )
-        value_item = step_widget.source_filters_table.item(
+        value_item = step_widget.table("source_filters").item(
             0,
             column_index(SourceFilterClause, "value"),
         )
@@ -1738,7 +1736,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         assert value_item.text() == "*_RNA"
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -1753,7 +1751,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         )
 
         set_editable_cell_text(
-            step_widget.source_filters_table,
+            step_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA2",
@@ -1769,7 +1767,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         assert state.parameters["step_source_bindings_config.source_filters"] == (
             edited_filter,
         )
-        value_item = step_widget.source_filters_table.item(
+        value_item = step_widget.table("source_filters").item(
             0,
             column_index(SourceFilterClause, "value"),
         )
@@ -1784,7 +1782,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         queued.clear()
         registered.clear()
         set_editable_cell_text(
-            step_widget.source_filters_table,
+            step_widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA2",
@@ -1821,7 +1819,7 @@ def test_source_bindings_child_chrome_and_reset_use_flat_state_paths() -> None:
         source_widget = source_container._inline_value_widget
         assert isinstance(source_widget, SourceBindingsEditorWidget)
 
-        source_widget.add_binding_row(NamedSourceBinding(alias="DNA"))
+        source_widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
         loop = QEventLoop()
         QTimer.singleShot(0, loop.quit)
         loop.exec()
@@ -2140,19 +2138,18 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
         enabled=True,
     )
 
-    widget = SourceBindingsEditorWidget.from_bindings(
-        local_raw,
-        display_bindings=resolved_display,
+    widget = SourceBindingsEditorWidget(
+        RawDisplayValue(SourceBindingsConfig, local_raw, resolved_display),
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
 
     assert tuple(binding.alias for binding in dialog.bindings()) == ("InheritedDNA",)
-    assert widget.metadata_rules_table is not None
-    assert widget.metadata_rules_table.rowCount() == 1
-    assert widget.source_filters_table is not None
-    assert widget.source_filters_table.rowCount() == 1
+    assert widget.table("metadata_rules") is not None
+    assert widget.table("metadata_rules").rowCount() == 1
+    assert widget.table("source_filters") is not None
+    assert widget.table("source_filters").rowCount() == 1
 
-    match_type_widget = widget.source_filters_table.cellWidget(
+    match_type_widget = widget.table("source_filters").cellWidget(
         0,
         column_index(SourceFilterClause, "match_type"),
     )
@@ -2161,7 +2158,7 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
     assert match_type_widget.currentText() == "contains"
     assert PlaceholderConfig.text_color_name() in match_type_widget.styleSheet()
 
-    value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+    value_item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
     assert value_item is not None
     assert value_item.font().italic()
     assert value_item.foreground().color().name() == PlaceholderConfig.text_color_name()
@@ -2177,25 +2174,25 @@ def test_source_bindings_table_row_value_read_does_not_emit_item_changed() -> No
         TextContains,
         "DNA",
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
-        LazyStepSourceBindingsConfig(),
-        display_bindings=StepSourceBindingsConfig(
-            source_filters=(inherited_filter,),
-            enabled=True,
-        ),
+    widget = SourceBindingsEditorWidget(
+        RawDisplayValue(
+            SourceBindingsConfig,
+            LazyStepSourceBindingsConfig(),
+            StepSourceBindingsConfig(source_filters=(inherited_filter,), enabled=True),
+        )
     )
 
-    assert widget.source_filters_table is not None
-    assert widget.source_filters_controller is not None
-    value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+    assert widget.table("source_filters") is not None
+    assert widget.row_table("source_filters").controller is not None
+    value_item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
     assert value_item is not None
     value_item.setText("*DNA")
     value_item.setData(Qt.ItemDataRole.UserRole, "DNA")
 
     emitted: list[object] = []
-    widget.source_filters_table.itemChanged.connect(emitted.append)
+    widget.table("source_filters").itemChanged.connect(emitted.append)
 
-    assert widget.source_filters_controller.row_values() == (
+    assert widget.row_table("source_filters").controller.row_values() == (
         (SourceFileName, TextContains, "DNA", ""),
     )
     assert emitted == []
@@ -2215,14 +2212,13 @@ def test_source_bindings_editor_editing_inherited_table_makes_lazy_child_concret
         source_filters=(inherited_filter,),
         enabled=True,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
-        local_raw,
-        display_bindings=resolved_display,
+    widget = SourceBindingsEditorWidget(
+        RawDisplayValue(SourceBindingsConfig, local_raw, resolved_display),
     )
 
-    assert widget.source_filters_table is not None
+    assert widget.table("source_filters") is not None
     set_editable_cell_text(
-        widget.source_filters_table,
+        widget.table("source_filters"),
         0,
         column_index(SourceFilterClause, "value"),
         "RNA",
@@ -2267,8 +2263,8 @@ def test_source_bindings_child_reset_restores_lazy_inheritance_slot() -> None:
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
 
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -2357,7 +2353,7 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
         assert isinstance(pipeline_widget, SourceBindingsEditorWidget)
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
-        pipeline_widget.add_source_filter_row(inherited_filter)
+        pipeline_widget.add_row("source_filters", inherited_filter)
         loop = QEventLoop()
         QTimer.singleShot(260, loop.quit)
         loop.exec()
@@ -2367,8 +2363,8 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
         assert step_state.get_resolved_value("source_bindings.source_filters") == (
             inherited_filter,
         )
-        assert step_widget.source_filters_table is not None
-        assert step_widget.source_filters_table.rowCount() == 1
+        assert step_widget.table("source_filters") is not None
+        assert step_widget.table("source_filters").rowCount() == 1
 
         step_widget.child_field_reset_button("source_filters").click()
         QApplication.processEvents()
@@ -2384,10 +2380,10 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
             )
             is None
         )
-        assert step_widget.source_filters_table.rowCount() == 1
+        assert step_widget.table("source_filters").rowCount() == 1
         assert (
             table_cell_text(
-                step_widget.source_filters_table,
+                step_widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -2414,13 +2410,12 @@ def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> N
         match_plan=None,
         enabled=False,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
-        local_raw,
-        display_bindings=resolved_display,
+    widget = SourceBindingsEditorWidget(
+        RawDisplayValue(SourceBindingsConfig, local_raw, resolved_display),
     )
 
-    widget.add_metadata_rule_row(
-        MetadataExtractionRule(
+    widget.add_row(
+        "metadata_rules", MetadataExtractionRule(
             source=FromFileName,
             pattern=r"(?P<site>s\d+)",
         )
@@ -2441,26 +2436,25 @@ def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> N
 def test_source_bindings_editor_uses_compact_inline_step_binding_summary() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
     )
 
     button_labels = tuple(button.text() for button in widget.findChildren(QPushButton))
-    assert widget.step_bindings_table is None
     assert "Edit bindings..." in button_labels
 
 
 def test_source_bindings_editor_tables_expand_without_vertical_scrollbars() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
 
     assert table.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
@@ -2479,7 +2473,7 @@ def test_source_bindings_editor_tables_expand_without_vertical_scrollbars() -> N
 
 def test_pipeline_sources_preview_fits_rows_and_bar_in_reflowing_config_body() -> None:
     app = QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
     widget.set_preview_context(source_bindings=SourceBindingsConfig())
     scroll_area = ReflowingVerticalScrollArea()
     scroll_area.setStyleSheet(ColorScheme().styles.generate_config_window_style())
@@ -2549,7 +2543,7 @@ def test_source_filters_fit_complete_rows_and_bar_inside_scoped_section() -> Non
         )
         for index in range(3)
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(source_filters=filters)
     )
     scroll_area = ReflowingVerticalScrollArea()
@@ -2559,7 +2553,7 @@ def test_source_filters_fit_complete_rows_and_bar_inside_scoped_section() -> Non
     scroll_area.show()
 
     try:
-        table = widget.source_filters_table
+        table = widget.table("source_filters")
         assert table is not None
         section = table.parentWidget()
         assert section is not None
@@ -2645,7 +2639,7 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
         assert isinstance(step_container, InlineDataclassGroupBox)
         step_widget = step_container._inline_value_widget
         assert isinstance(step_widget, SourceBindingsEditorWidget)
-        table = step_widget.metadata_rules_table
+        table = step_widget.table("metadata_rules")
         assert table is not None
         assert table.rowCount() == 1
         assert state.parameters["step_source_bindings_config.metadata_rules"] is None
@@ -2693,12 +2687,12 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
 def test_source_bindings_editor_explains_binding_selector_and_roles() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
 
     select_axes = table.verticalHeaderItem(binding_row_index("components"))
@@ -2724,13 +2718,13 @@ def test_source_bindings_editor_explains_binding_selector_and_roles() -> None:
 def test_source_bindings_editor_explains_image_set_pairing_table() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
-    assert widget.match_plan_table is not None
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
+    assert widget.table("match_plan") is not None
 
-    method_header = widget.match_plan_table.horizontalHeaderItem(
+    method_header = widget.table("match_plan").horizontalHeaderItem(
         column_index(SourceSetPairingRow, "method")
     )
-    fields_header = widget.match_plan_table.horizontalHeaderItem(
+    fields_header = widget.table("match_plan").horizontalHeaderItem(
         column_index(SourceSetPairingRow, "fields")
     )
     button_labels = tuple(button.text() for button in widget.findChildren(QPushButton))
@@ -2747,7 +2741,7 @@ def test_source_bindings_editor_explains_image_set_pairing_table() -> None:
 def test_source_bindings_editor_tables_use_scoped_table_abstraction() -> None:
     QtApplicationHarness.app()
 
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
@@ -2756,7 +2750,7 @@ def test_source_bindings_editor_tables_use_scoped_table_abstraction() -> None:
 
     widget.set_scope_color_scheme(scheme)
     tables = widget.findChildren(ScopedTableWidget)
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
 
     assert tables
     assert all(table._scope_color_scheme is scheme for table in tables)
@@ -2766,7 +2760,7 @@ def test_source_bindings_editor_tables_use_scoped_table_abstraction() -> None:
 
 def test_inline_groupbox_propagates_scope_to_source_binding_tables() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
@@ -2842,7 +2836,7 @@ def test_white_scope_help_controls_use_neutral_outline_chrome() -> None:
 
 def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(LazyStepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(LazyStepSourceBindingsConfig())
     container = InlineDataclassGroupBox(
         title="Source Bindings",
         help_target=StepSourceBindingsConfig,
@@ -2883,17 +2877,17 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
         first,
         first_placeholder,
     )
-    assert widget.match_plan_table is not None
-    assert widget.match_plan_table.rowCount() == 1
+    assert widget.table("match_plan") is not None
+    assert widget.table("match_plan").rowCount() == 1
 
     PyQt6WidgetEnhancer.apply_placeholder_with_value(
         container,
         second,
         second_placeholder,
     )
-    assert widget.match_plan_table.rowCount() == 2
+    assert widget.table("match_plan").rowCount() == 2
     assert (
-        table_cell_text(widget.match_plan_table, 1, column_index(SourceSetPairingRow, "fields"))
+        table_cell_text(widget.table("match_plan"), 1, column_index(SourceSetPairingRow, "fields"))
         == "GFP:site"
     )
 
@@ -2919,7 +2913,7 @@ def test_inline_source_bindings_widget_updates_object_state() -> None:
         widget = None
     assert widget is not None
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
     QApplication.processEvents()
 
     edited = state.parameters["source_bindings"]
@@ -2952,18 +2946,18 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
 
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextEquals,
                 "DNA",
             )
         )
         QApplication.processEvents()
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -2971,13 +2965,13 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         )
 
         set_combo_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -2994,7 +2988,7 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
                 "DNA",
             ),
         )
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3045,16 +3039,16 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
 
         set_combo_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3062,13 +3056,13 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         assert match_type_widget.currentText() == "*_contains"
 
         set_editable_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA",
         )
         QApplication.processEvents()
-        value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+        value_item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
         assert value_item is not None
         assert value_item.text() == "*_RNA"
         assert "source_bindings.source_filters" in state.dirty_fields
@@ -3083,7 +3077,7 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
             ),
         )
 
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3092,7 +3086,7 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         assert match_type_widget.currentText() == "*_contains"
         assert match_type_widget.property("objectstate_dirty") is True
 
-        value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+        value_item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
         assert value_item is not None
         assert value_item.data(Qt.ItemDataRole.UserRole) == "DNA"
         assert value_item.text() == "_DNA"
@@ -3126,7 +3120,7 @@ def test_inline_source_bindings_edit_flashes_changed_collection() -> None:
 
     queued: list[str] = []
     manager.queue_flash_local_batch = queued.extend
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
     QApplication.processEvents()
 
     assert queued == ["source_bindings.bindings"]
@@ -3155,8 +3149,8 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
 
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextEquals,
                 "DNA",
@@ -3170,9 +3164,9 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         manager.register_flash_masked_container = lambda key, container, mask_rects, *, label_widget=None, layout_watch_widgets=(): registered.append(
             (key, container, mask_rects, label_widget)
         )
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         set_combo_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
@@ -3191,7 +3185,7 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         )
         queued.clear()
         registered.clear()
-        combo = widget.source_filters_table.cellWidget(
+        combo = widget.table("source_filters").cellWidget(
             0, column_index(SourceFilterClause, "match_type")
         )
         assert isinstance(combo, QComboBox)
@@ -3285,10 +3279,10 @@ def test_inline_source_bindings_provenance_navigation_masks_child_section() -> N
         section_window_pos = manager.mapFromGlobal(
             section.mapToGlobal(section.rect().topLeft())
         )
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         table_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.mapToGlobal(
-                widget.source_filters_table.rect().topLeft()
+            widget.table("source_filters").mapToGlobal(
+                widget.table("source_filters").rect().topLeft()
             )
         )
         label_widget = widget.child_field_label("source_filters")
@@ -3300,7 +3294,7 @@ def test_inline_source_bindings_provenance_navigation_masks_child_section() -> N
         bounds = [path.boundingRect().toAlignedRect() for path in masks]
         if section_rect != label_rect:
             assert section_rect not in bounds
-        assert QRect(table_window_pos, widget.source_filters_table.size()) in bounds
+        assert QRect(table_window_pos, widget.table("source_filters").size()) in bounds
         assert_label_masked(label_widget, manager, masks)
         assert "source_bindings_config.source_filters" in queued
         assert "source_bindings_config" not in queued
@@ -3350,11 +3344,11 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         assert "source_bindings.source_filters" in state.signature_diff_fields
         assert widget.child_field_label("source_filters")._label.font().underline()
 
-        subject_widget = widget.source_filters_table.cellWidget(
+        subject_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "subject"),
         )
@@ -3362,7 +3356,7 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
         assert subject_widget.property("objectstate_signature_diff") is True
         assert subject_widget.font().underline()
 
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             1,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3370,7 +3364,7 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
         assert match_type_widget.property("objectstate_signature_diff") is True
         assert match_type_widget.font().underline()
 
-        value_item = widget.source_filters_table.item(
+        value_item = widget.table("source_filters").item(
             1,
             column_index(SourceFilterClause, "value"),
         )
@@ -3404,8 +3398,8 @@ def test_inline_source_bindings_structural_path_flash_targets_table_cell() -> No
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -3429,15 +3423,15 @@ def test_inline_source_bindings_structural_path_flash_targets_table_cell() -> No
         assert key == "source_bindings_config.source_filters[0].match_type"
         assert container_widget is widget.child_field_section_group("source_filters")
         assert label_widget is widget.child_field_label("source_filters")
-        assert widget.source_filters_table is not None
-        cell_rect = widget.source_filters_table.visualRect(
-            widget.source_filters_table.model().index(
+        assert widget.table("source_filters") is not None
+        cell_rect = widget.table("source_filters").visualRect(
+            widget.table("source_filters").model().index(
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.viewport().mapToGlobal(cell_rect.topLeft())
+            widget.table("source_filters").viewport().mapToGlobal(cell_rect.topLeft())
         )
         label_widget = widget.child_field_label("source_filters")
         masks = tuple(mask_rects(manager))
@@ -3483,8 +3477,8 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
         assert isinstance(widget, SourceBindingsEditorWidget)
         # Separate the first cell's center from the table's center on every style.
         for value in ("DNA", "RNA", "Protein"):
-            widget.add_source_filter_row(
-                SourceFilterClause(
+            widget.add_row(
+        "source_filters", SourceFilterClause(
                     SourceFileName,
                     TextContains,
                     value,
@@ -3521,21 +3515,21 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
             target_rect.height(),
             target_rect.y() + target_rect.height(),
         )
-        assert widget.source_filters_table is not None
-        cell_rect = widget.source_filters_table.visualRect(
-            widget.source_filters_table.model().index(
+        assert widget.table("source_filters") is not None
+        cell_rect = widget.table("source_filters").visualRect(
+            widget.table("source_filters").model().index(
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.viewport().mapToGlobal(cell_rect.topLeft())
+            widget.table("source_filters").viewport().mapToGlobal(cell_rect.topLeft())
         )
         assert target_rect == QRect(cell_window_pos, cell_rect.size())
         assert target.target_widget is target.structural_flash_target.scroll_widget()
-        table_top = widget.source_filters_table.mapTo(
+        table_top = widget.table("source_filters").mapTo(
             manager,
-            widget.source_filters_table.rect().topLeft(),
+            widget.table("source_filters").rect().topLeft(),
         ).y()
         assert target_bounds[0] > table_top
         target_scroll = harness._target_scroll_position(target, viewport)
@@ -3546,7 +3540,7 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
         table_center_scroll = max(
             0,
             table_top
-            + widget.source_filters_table.height() // 2
+            + widget.table("source_filters").height() // 2
             - viewport.viewport_height // 2,
         )
         assert target_scroll == expected_cell_scroll
@@ -3593,8 +3587,8 @@ def test_source_bindings_cell_flash_element_masks_cell_and_child_label() -> None
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -3616,15 +3610,15 @@ def test_source_bindings_cell_flash_element_masks_cell_and_child_label() -> None
         assert element.get_child_paths is not None
 
         mask_paths = tuple(element.get_child_paths(manager))
-        assert widget.source_filters_table is not None
-        cell_rect = widget.source_filters_table.visualRect(
-            widget.source_filters_table.model().index(
+        assert widget.table("source_filters") is not None
+        cell_rect = widget.table("source_filters").visualRect(
+            widget.table("source_filters").model().index(
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.viewport().mapToGlobal(cell_rect.topLeft())
+            widget.table("source_filters").viewport().mapToGlobal(cell_rect.topLeft())
         )
         expected_cell_rect = cell_rect.translated(cell_window_pos - cell_rect.topLeft())
         label_widget = widget.child_field_label("source_filters")
@@ -3658,8 +3652,8 @@ def test_source_bindings_child_section_flash_masks_changed_child_section() -> No
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -3690,10 +3684,10 @@ def test_source_bindings_child_section_flash_masks_changed_child_section() -> No
             label_widget.mapToGlobal(label_widget.rect().topLeft())
         )
         masks = tuple(mask_rects(manager))
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         table_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.mapToGlobal(
-                widget.source_filters_table.rect().topLeft()
+            widget.table("source_filters").mapToGlobal(
+                widget.table("source_filters").rect().topLeft()
             )
         )
         section_rect = QRect(section_window_pos, section.size())
@@ -3701,7 +3695,7 @@ def test_source_bindings_child_section_flash_masks_changed_child_section() -> No
         bounds = [path.boundingRect().toAlignedRect() for path in masks]
         if section_rect != label_rect:
             assert section_rect not in bounds
-        assert QRect(table_window_pos, widget.source_filters_table.size()) in bounds
+        assert QRect(table_window_pos, widget.table("source_filters").size()) in bounds
         assert_label_masked(label_widget, manager, masks)
         assert queued == ["source_bindings_config.source_filters"]
 
@@ -3731,8 +3725,8 @@ def test_source_bindings_owner_flash_masks_descendant_fields() -> None:
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
@@ -3765,13 +3759,13 @@ def test_source_bindings_owner_flash_masks_descendant_fields() -> None:
         assert container_widget is container
         assert label_widget is None
         masks = tuple(mask_rects(manager))
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         table_window_pos = manager.mapFromGlobal(
-            widget.source_filters_table.mapToGlobal(
-                widget.source_filters_table.rect().topLeft()
+            widget.table("source_filters").mapToGlobal(
+                widget.table("source_filters").rect().topLeft()
             )
         )
-        assert QRect(table_window_pos, widget.source_filters_table.size()) in [
+        assert QRect(table_window_pos, widget.table("source_filters").size()) in [
             path.boundingRect().toAlignedRect() for path in masks
         ]
         assert queued == ["source_bindings_config"]
@@ -3804,18 +3798,18 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
 
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextEquals,
                 "DNA",
             )
         )
         QApplication.processEvents()
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -3823,7 +3817,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         )
 
         set_combo_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "match_type"),
             "contains",
@@ -3831,13 +3825,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3861,13 +3855,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3891,13 +3885,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
-        match_type_widget = widget.source_filters_table.cellWidget(
+        match_type_widget = widget.table("source_filters").cellWidget(
             0,
             column_index(SourceFilterClause, "match_type"),
         )
@@ -3939,18 +3933,18 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
 
-        widget.add_source_filter_row(
-            SourceFilterClause(
+        widget.add_row(
+        "source_filters", SourceFilterClause(
                 SourceFileName,
                 TextContains,
                 "DNA",
             )
         )
         QApplication.processEvents()
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -3958,7 +3952,7 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         )
 
         set_editable_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "value"),
             "RNA",
@@ -3966,13 +3960,13 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
-        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+        item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "RNA"
         assert item.text() == "*_RNA"
@@ -3988,13 +3982,13 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
-        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+        item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "DNA"
         assert item.text() == "*_DNA"
@@ -4010,13 +4004,13 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
-        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
+        item = widget.table("source_filters").item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "RNA"
         assert item.text() == "*_RNA"
@@ -4075,10 +4069,10 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             == first_filters
         )
         assert widget.get_value().source_filters == first_filters
-        assert widget.source_filters_table is not None
+        assert widget.table("source_filters") is not None
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -4086,7 +4080,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -4121,7 +4115,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         assert widget.get_value().source_filters == second_filters
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -4129,7 +4123,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -4150,7 +4144,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         assert widget.get_value().source_filters == first_filters
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "match_type"),
             )
@@ -4158,7 +4152,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
         )
         assert (
             table_cell_text(
-                widget.source_filters_table,
+                widget.table("source_filters"),
                 0,
                 column_index(SourceFilterClause, "value"),
             )
@@ -4234,7 +4228,7 @@ def test_nested_form_flash_delegates_to_root_manager() -> None:
 
 def test_source_bindings_flash_masks_nested_section_titles() -> None:
     app = QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
         )
@@ -4290,7 +4284,7 @@ def test_source_bindings_editor_round_trips_form_value() -> None:
     binding_config = StepSourceBindingsConfig(
         bindings=(NamedSourceBinding(alias="DNA"),),
     )
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
     changed_count = 0
 
     def record_change() -> None:
@@ -4326,13 +4320,13 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
             ),
         ),
     )
-    widget = SourceBindingsEditorWidget.from_bindings(raw_config)
-    assert widget.source_filters_table is not None
+    widget = SourceBindingsEditorWidget.for_value(raw_config)
+    assert widget.table("source_filters") is not None
 
     widget.set_resolved_value_preview(preview_config)
     assert (
         table_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "subject"),
         )
@@ -4343,7 +4337,7 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
 
     assert (
         table_cell_text(
-            widget.source_filters_table,
+            widget.table("source_filters"),
             0,
             column_index(SourceFilterClause, "subject"),
         )
@@ -4378,7 +4372,7 @@ def test_source_bindings_editor_renders_preview_context(tmp_path) -> None:
         source_backend=Backend.DISK,
         source_bindings=source_bindings,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(),
         source_bindings=source_bindings,
     )
@@ -4395,13 +4389,13 @@ def test_source_bindings_editor_renders_preview_context(tmp_path) -> None:
 
 def test_source_bindings_editor_edits_step_binding_table() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
-    dialog = widget._create_step_bindings_dialog()
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_binding_cell_text(table, 0, "alias", "OrigDNA")
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     edited = widget.get_value()
     assert edited.bindings[0].alias == "OrigDNA"
@@ -4421,15 +4415,15 @@ def test_source_bindings_editor_preserves_selector_on_basic_edits() -> None:
         ),
         inherit_current_scope=False,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA", selector=selector),),
         )
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_binding_cell_text(table, 0, "alias", "OrigDNA")
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     edited = widget.get_value().bindings[0]
     assert edited.alias == "OrigDNA"
@@ -4443,13 +4437,13 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         projection_role=SourceArtifactRole,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(bindings=(binding,))
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_binding_cell_text(table, 0, "alias", "OrigDNA")
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     edited = widget.get_value().bindings[0]
     assert edited.alias == "OrigDNA"
@@ -4459,10 +4453,10 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
 
 def test_source_bindings_editor_edits_binding_identity_columns() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
-    dialog = widget._create_step_bindings_dialog()
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_editable_cell_text(
         table,
@@ -4481,7 +4475,7 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
         "projection_role",
         SourceArtifactRole.name,
     )
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     binding = widget.get_value().bindings[0]
     assert binding.component_identity == (
@@ -4494,10 +4488,10 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
 
 def test_source_bindings_editor_edits_selector_columns() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
-    dialog = widget._create_step_bindings_dialog()
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_editable_cell_text(
         table,
@@ -4515,7 +4509,7 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
         (SourceFilterClause(SourceFileName, TextContains, "DNA"),),
     )
     set_binding_cell_text(table, 0, "inherit_current_scope", False)
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     selector = widget.get_value().bindings[0].selector
     assert selector.components == (
@@ -4558,14 +4552,14 @@ def test_source_bindings_editor_uses_free_form_selector_pickers(tmp_path) -> Non
         source_backend=Backend.DISK,
         source_bindings=source_bindings,
     )
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(),
         source_bindings=source_bindings,
         inventory=inventory,
     )
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
-    dialog = widget._create_step_bindings_dialog()
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     components_widget = binding_cell_widget(table, 0, "components")
     metadata_widget = binding_cell_widget(table, 0, "metadata")
@@ -4578,7 +4572,7 @@ def test_source_bindings_editor_uses_free_form_selector_pickers(tmp_path) -> Non
 
 def test_source_bindings_editor_removes_selected_binding_row() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(
             bindings=(
                 NamedSourceBinding(alias="DNA"),
@@ -4586,12 +4580,12 @@ def test_source_bindings_editor_removes_selected_binding_row() -> None:
             ),
         )
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     table.selectColumn(0)
 
     dialog.editor.remove_selected_binding_rows()
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     remaining_aliases = tuple(binding.alias for binding in widget.get_value().bindings)
     assert remaining_aliases == ("GFP",)
@@ -4599,22 +4593,22 @@ def test_source_bindings_editor_removes_selected_binding_row() -> None:
 
 def test_source_bindings_editor_edits_metadata_rules() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_metadata_rule_row()
-    assert widget.metadata_rules_table is not None
+    widget.add_new_row("metadata_rules")
+    assert widget.table("metadata_rules") is not None
     set_combo_cell_text(
-        widget.metadata_rules_table,
+        widget.table("metadata_rules"),
         0,
         column_index(MetadataExtractionRule, "source"),
         "file_name",
     )
-    widget.metadata_rules_table.item(
+    widget.table("metadata_rules").item(
         0,
         column_index(MetadataExtractionRule, "pattern"),
     ).setText(r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif")
     set_editable_cell_text(
-        widget.metadata_rules_table,
+        widget.table("metadata_rules"),
         0,
         column_index(MetadataExtractionRule, "filters"),
         (SourceFilterClause(SourceFileName, TextContains, "DNA"),),
@@ -4638,18 +4632,18 @@ def test_source_bindings_editor_edits_metadata_rules() -> None:
 
 def test_source_bindings_editor_edits_match_plan() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_match_plan_row()
-    assert widget.match_plan_table is not None
+    widget.add_new_row("match_plan")
+    assert widget.table("match_plan") is not None
     set_combo_cell_text(
-        widget.match_plan_table,
+        widget.table("match_plan"),
         0,
         column_index(SourceSetPairingRow, "method"),
         "metadata",
     )
     set_editable_cell_text(
-        widget.match_plan_table,
+        widget.table("match_plan"),
         0,
         column_index(SourceSetPairingRow, "fields"),
         (SourceBindingMatchField("DNA", "well"), SourceBindingMatchField("GFP", "well")),
@@ -4667,10 +4661,10 @@ def test_source_bindings_editor_edits_match_plan() -> None:
 
 def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:
     QtApplicationHarness.app()
-    widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
+    widget = SourceBindingsEditorWidget.for_value(StepSourceBindingsConfig())
 
-    widget.add_binding_row(NamedSourceBinding(alias="DNA"))
-    dialog = widget._create_step_bindings_dialog()
+    widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
+    dialog = widget.step_bindings_dialog()
     table = dialog.editor.table
     set_combo_cell_text(
         table,
@@ -4687,7 +4681,7 @@ def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:
         *binding_cell_position(0, "projection_role"),
         "source_artifact",
     )
-    widget._apply_step_bindings(dialog.bindings())
+    widget.replace_field("bindings", dialog.bindings())
 
     binding = widget.get_value().bindings[0]
     assert binding.artifact_kind.value == "object_labels"

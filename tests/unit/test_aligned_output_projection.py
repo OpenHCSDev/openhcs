@@ -1,11 +1,10 @@
-from types import SimpleNamespace
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -14,8 +13,10 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.memory import MemoryType
 from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
+from tests.context_support import (
+    executing_context,
+)
 
 
 def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypatch):
@@ -24,10 +25,10 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
     mask = first > 3
     payloads = (
         ImagePayloadMetadata(
-            source_path="first.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            source_path="first.tif", plane_axis=RuntimeSlicePlaneAxis
         ).payload_with(first, mask),
         ImagePayloadMetadata(
-            source_path="second.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            source_path="second.tif", plane_axis=RuntimeSlicePlaneAxis
         ).payload_with(second, None),
     )
     contexts = tuple(AlignedImageSliceContext.main_flow(name) for name in ("A", "B"))
@@ -45,7 +46,7 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
                 step_index=0, step_name="output-projection",
                 axis_id="A01", output_memory_type=MemoryType.NUMPY,
             ),
-            context=ProcessingContext(axis_id="A01"),
+            context=executing_context(axis_id="A01"),
             compiled_group=compile_function_pattern(
                 admitted_graph(lambda image: image),
                 {},
@@ -68,13 +69,13 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
             np.testing.assert_array_equal(payload.mask, mask[plane])
         else:
             assert payload.mask is None
-        assert payload.metadata.plane_axis is None
+        assert payload.metadata.plane_axis.unstacked
 
 
 def test_shared_projection_retains_nesting_and_fresh_metadata_snapshots():
     array = np.ones((2, 2, 2), dtype=np.float32)
     metadata = ImagePayloadMetadata(
-        source_path="first.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        source_path="first.tif", plane_axis=RuntimeSlicePlaneAxis
     )
     payload = metadata.payload_with(array, None)
     stack = AlignedImageStack((payload,))

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from openhcs.interop.cellprofiler.measurement_dialect import CellProfilerEquivalencePolicy
 
@@ -106,10 +108,6 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -821,9 +819,9 @@ def test_runtime_reference_artifact_equivalence_projects_object_numbers_per_plan
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     payload = label_set
     value = RuntimeValue(
@@ -874,7 +872,7 @@ def test_runtime_reference_artifact_equivalence_projects_payload_object_numbers_
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_ids=(1, 2),
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
         ),
     )
     payload = label_set
@@ -4851,9 +4849,9 @@ def test_runtime_reference_artifact_equivalence_derives_relationship_child_locat
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     store.record(
         RuntimeValue(
@@ -7701,9 +7699,9 @@ def test_runtime_measurement_snapshot_uses_declared_plane_object_domains(
                     ),
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-                        scope=ObjectLabelDomainScope.PLANE,
+                        scope=PlaneLabelScope,
                     ),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                 ),
             ),
         ),
@@ -7766,11 +7764,11 @@ def test_runtime_measurement_snapshot_preserves_multi_source_declared_object_dom
                 "SSC",
                 ObjectLabelPayload(
                     variant_data=ObjectLabelVariantData(labels=labels),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     source_image_names=("BF_image", "MorphBf"),
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-                        scope=ObjectLabelDomainScope.PLANE,
+                        scope=PlaneLabelScope,
                     ),
                 ),
             ),
@@ -7923,10 +7921,10 @@ def test_runtime_measurement_snapshot_preserves_repeated_declared_plane_domains(
                 "SSC",
                 ObjectLabelPayload(
                     variant_data=ObjectLabelVariantData(labels=labels),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2)),
-                        scope=ObjectLabelDomainScope.PLANE,
+                        scope=PlaneLabelScope,
                     ),
                 ),
             ),
@@ -9398,7 +9396,7 @@ def test_runtime_reference_artifact_equivalence_uses_payload_3d_label_locations_
                     variant_data=ObjectLabelVariantData(labels=labels),
                     domain=ObjectLabelDomain(
                         declared_object_ids=(1, 2),
-                        scope=ObjectLabelDomainScope.PAYLOAD,
+                        scope=PayloadLabelScope,
                     ),
                 ),
             ),
@@ -10690,7 +10688,7 @@ def test_runtime_reference_artifact_equivalence_prefers_explicit_object_location
                     ),
                     domain=ObjectLabelDomain(
                         declared_object_count=2,
-                        scope=ObjectLabelDomainScope.PAYLOAD,
+                        scope=PayloadLabelScope,
                     ),
                 ),
             ),
