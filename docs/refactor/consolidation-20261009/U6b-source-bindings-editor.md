@@ -24,7 +24,7 @@
 
 - **Domain, 2:** `_source_bindings`, `_inventory` (the pipeline config and the file inventory that the read-only tables and the suggestions are computed from).
 - **Value pair, 2:** `_bindings`, `_display_bindings`. Two attributes updated side by side in 9 places.
-- **`None` modes, 14:** `_form_context`, `_child_chrome` (one mode, "is this widget inside a form", stored twice and tested 23 times); `step_bindings_summary_table`, `step_bindings_table`, `step_bindings_editor`, `source_filters_table`, `metadata_rules_table`, `match_plan_table`, `source_filters_controller`, `metadata_rules_controller`, `match_plan_controller` (9 attributes for "is this section rendered", reset by hand in `clear`); `_inline_groupbox`, `_enabled_checkbox`, `_enabled_title_widget`, `_enabled_reset_button`, `_enabled_provenance_button` (5 for "is the enable checkbox attached"; counted 14 with the 9 above and the form pair as 2 = 16 attributes, 3 modes).
+- **`None` modes, 16 attributes for 3 modes:** `_form_context`, `_child_chrome` ("is this widget inside a form", stored twice, tested 23 times); `step_bindings_summary_table`, `step_bindings_table`, `step_bindings_editor`, `source_filters_table`, `metadata_rules_table`, `match_plan_table`, `source_filters_controller`, `metadata_rules_controller`, `match_plan_controller` ("is this section rendered", reset by hand in `clear`); `_inline_groupbox`, `_enabled_checkbox`, `_enabled_title_widget`, `_enabled_reset_button`, `_enabled_provenance_button` ("is the enable checkbox attached").
 - **Lifecycle flags, 2:** `_updating_ui`, `_updating_enableable_chrome`.
 - **Rosters, 3:** `_editable_table_controllers`, `_structural_table_controllers`, `_table_placeholder_chrome_state`, plus the method roster `_table_placeholder_targets` (field name to table, restated).
 - **Qt plumbing, 3:** `_change_signal_callbacks`, `_scope_color_scheme`, `layout`.
@@ -97,9 +97,49 @@ Today a new row section needs 4 methods and 5 roster edits in the widget. After:
 
 The widget declares sections and domain inputs only; guards, the K4 and E1 guard files, the editor tests, `guardrails rc=0` and `smoke rc=0` pass; library PRs are open.
 
+## Result
+
+Library branches: formbridge `refactor/U6b-raw-display-value`, pyqt-reactive `refactor/U6b-sectioned-dataclass-editor` (needs the formbridge branch).
+
+| | Before | After |
+|---|---|---|
+| Widget class | 1,388 lines, 77 methods | 192 lines, 8 methods |
+| File | 1,999 lines | 661 lines |
+| Instance attributes set by the widget | 28 | 2 (`_source_bindings`, `_inventory`) |
+| `None` comparisons in the class | 74 | 2 (`self._inventory is None`, `plan is not None`) |
+| Lifecycle flags | 2 | 0 (the table controller's own `update_guard`; `QSignalBlocker` on the checkbox) |
+| Forwarded methods | 13 | 0 in OpenHCS; 5 in the library, each required by a form contract or used as a query (`value`, `child_field_identity`, `child_field_label`, `child_field_reset_button`, `child_field_navigation_target`) |
+| Copies of the row-section code | 3 x 4 methods | 1 (`RowTableSection`) |
+| Field rosters | 5 | 0 (the rendered-section dict, filled by `build`) |
+| Kind switches | 3 | 1 domain (`isinstance(concrete, StepSourceBindingsConfig)`), 1 library boundary (`form_context is None` in the constructor, which picks the chrome member), 1 library nominal check (`_form_chrome`, which rejects form-only questions on a standalone editor) |
+
+What the OpenHCS widget still holds: its two inputs, `sections()` (the declaration), `suggestions()`, the bindings dialog (`step_bindings_dialog`, `edit_step_bindings`), `set_preview_context`, `resolved_view_inputs`.
+
+### Deletions and their certificates
+
+- **derived** (the mechanism is `SectionedDataclassEditor` and the section family in pyqt-reactive): every generic method in the classification table; the 9 per-section table and controller attributes (now `rendered(field)`, `table(field)`, `row_table(field)`); `_updating_ui` (the controller's `update_guard`); `_table_placeholder_targets`; `from_bindings` (now `for_value`, which reads `value_type`); `create_source_bindings_editor_widget`, `source_bindings_form_context`, `resolved_source_bindings_value`, `register_source_bindings_editor_widget` (now `SectionedDataclassEditor.in_form`, registered directly); `SourceBindingsEditorValue` (now `RawDisplayValue` plus the module function `shown_pipeline_and_step_configs`).
+- **unused**: `step_bindings_table`, `step_bindings_editor`, `remove_selected_binding_rows` and the "dialog is open" branch of `add_binding_row`. They were set only while the modal dialog's `exec()` blocked, and the dialog's own editor has its own add and remove buttons. One test asserted `step_bindings_table is None`; that assertion is removed.
+- **tests-only**: `in_form` requires `manager` and `param_info`. The old factory accepted either as `None` and built a standalone editor. The form machinery always passes both (all form tests pass); a third-party caller of the registered factory without a manager is what the interface admitted and tests do not exercise. Standalone construction is `for_value`.
+
+### Behaviour changes
+
+- Any row section may declare `refreshes_alone`; only Source Filters does, as before.
+- `set_raw_value_with_resolved_preview` with an unchanged raw value and a display value that renders the same rows now refreshes markers only. Before, a config that is not enableable rebuilt every table in that case. The rendered rows are the same.
+- When only the enable state changed and the raw value did not, the title checkbox and its markers are refreshed without rebuilding the tables (before: rebuild, from `set_value` only).
+- A single-section refresh also re-reads the enable state into the title.
+- The profiler phases are named `sectioned_dataclass_editor.show_value` and `.refresh_child_field_chrome` (were `openhcs.source_bindings.*`; nothing read the names).
+- The widget's layout attribute is `sections_layout`; it no longer shadows `QWidget.layout()`.
+- Error text for a wrong value type now comes from `RawDisplayValue` (`Expected SourceBindingsConfig, got X.`).
+
+### Left for another surface
+
+- `StepBindingsTableEditor` and `StepBindingsDialog` (same file, not this class): a transposed "one record per column" table editor and its dialog. Generic; belongs in pyqt-reactive next to `EditableTableController`.
+- `inventory: SourceInventory | None` is the one optional domain input left.
+
 ## Progress
 
 - [x] Step 1: classification (this commit).
-- [ ] Step 2: formbridge `RawDisplayValue`; pyqt-reactive sectioned editor.
-- [ ] Step 3: OpenHCS widget reduced to declarations; tests renamed.
-- [ ] Step 4: new-case test and guards.
+- [x] Step 2: formbridge `RawDisplayValue`; pyqt-reactive sectioned editor.
+- [x] Step 3: OpenHCS widget reduced to declarations; tests renamed.
+- [x] Step 4: new-case test and guards (`test_new_filter_and_pairing_members_are_editable_without_a_widget_edit`).
+- [ ] Next: move the transposed bindings table editor to pyqt-reactive (not part of this class).
