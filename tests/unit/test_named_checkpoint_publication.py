@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from test_artifact_publication_journey import _plate
+from test_artifact_publication_journey import _plate, progress_events  # noqa: F401 (fixture)
 from openhcs.core.artifacts.sidecars import QaCheckpoint
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.artifacts.specs import (
