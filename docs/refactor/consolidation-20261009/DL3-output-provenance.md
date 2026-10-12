@@ -300,3 +300,29 @@ Example (Cellpose step, trimmed):
 15. Delete `.claude/venv-cpu` (2.3 GB) and `.claude/scratch/` in this worktree.
 16. For the #1230 branch: nothing in the example functions has to change for this gap; the count
     table's own `model` and `diameter_px` columns are no longer the only place those are stated.
+
+### Full suite (`verify_branch.sh DL3`, on `d33b72496`, lines verbatim)
+
+```
+suite: = 7 failed, 11754 passed, 25 skipped, 358 warnings, 6 subtests passed in 1948.52s (0:32:28) =
+collected 11785, reported 11761, crash lines 0
+new vs known: 5
+only on DL3:
+tests/unit/agent/test_mcp_server.py::test_mcp_stdio_server_roundtrip_returns_errors_as_payloads
+tests/unit/test_mcp_dev_client_terminal_input.py::test_long_terminal_command_reuses_original_parser_and_client[...]
+tests/unit/test_pycodify_formatters.py::test_function_step_round_trip_omits_injected_values_but_keeps_runtime_settings[False-expected_kwargs1]
+fails on both with a different error:
+```
+
+Failing ids outside `known.fail` (5), with the believed cause (none investigated beyond this):
+
+| Id | Rerun alone | Believed cause |
+|---|---|---|
+| `tests/unit/test_pycodify_formatters.py::test_function_step_round_trip_omits_injected_values_but_keeps_runtime_settings[False-expected_kwargs1]` | fails on DL3 only | **This branch.** `clean_mode=False` now writes every parameter; the test expects only the written kwargs in the full rendering. Same change of meaning as the one already made in `tests/unit/agent/test_authoring_roundtrip_boundaries.py`; restate the expectation for the full rendering, keep the clean one. |
+| `tests/unit/test_mcp_dev_client_terminal_input.py::test_long_terminal_command_reuses_original_parser_and_client[...]` | fails on DL3 only | **Probably this branch**: the generated CLI gained `read-run-record`, or the complete rendering changed a long command's text. Not looked at. |
+| `tests/unit/agent/test_mcp_server.py::test_mcp_stdio_server_roundtrip_returns_errors_as_payloads` | fails on DL3 only in the gate's rerun; passed alone earlier (`1 passed` with `-k stdio_server_roundtrip`) | Seen before as a 5 s stdio-initialize timeout under load (acceptance run and suite ran together). Rerun on a quiet machine before treating it as real; if it persists, the new tool lengthens server start. |
+| `tests/unit/agent/test_mcp_affine_inspection_progress.py::test_resident_continuous_connections_keep_affinity_and_wire_progress[original-continuous]` | passed on rerun (both trees) | load-dependent |
+| `tests/unit/test_ack_return_route_journey.py::test_two_native_stream_producers_keep_deferred_ack_ownership[TransportMode.IPC]` | passed on rerun (both trees) | load-dependent |
+
+The remaining 2 of the 7 failures are the ids in `known.fail`. Fix the first two rows as step 0
+of "What remains".
