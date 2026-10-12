@@ -71,7 +71,11 @@ from openhcs.runtime.import_authority import (
     ImportRootEndpoint,
     OpenHCSRuntimeImportAuthority,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq_config import (
+    OPENHCS_ZMQ_CONFIG,
+    OpenHCSZMQConfig,
+    require_bindable_address,
+)
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQExecutionCompileControl,
@@ -1025,6 +1029,11 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
     ):
         """Connect using the OpenHCS endpoint's declared startup deadline."""
 
+        for url in (
+            self.endpoint.data_url(self.config),
+            self.endpoint.control_url(self.config),
+        ):
+            require_bindable_address(url)
         return super().connect(
             timeout=(
                 self.config.client_connect_timeout_seconds

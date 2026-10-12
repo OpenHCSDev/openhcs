@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
+import zmq
 
 import zmqruntime.client
 import zmqruntime.transport_modes
@@ -16,7 +23,9 @@ from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import (
     OPENHCS_ZMQ_CONFIG,
     SOCKET_ROOT_ENV,
+    SocketPathTooLongError,
     checkout_socket_root,
+    require_bindable_address,
 )
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
@@ -115,5 +124,90 @@ def test_each_checkout_has_its_own_socket_root(monkeypatch, tmp_path):
 def test_this_test_run_has_a_private_socket_root():
     root = OPENHCS_ZMQ_CONFIG.socket_root()
 
-    assert root != checkout_socket_root()
-    assert root.name.startswith("ohcs-sock-")
+    assert root.parent == checkout_socket_root()
+    assert root.is_dir()
+
+
+_CHILD_REPORT = """
+import json
+from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+
+client = ZMQExecutionClient(port=65000, persistent=False)
+print(json.dumps({
+    "socket_root": str(client.config.socket_root()),
+    "code_root": client.launch().code_root,
+    "audience": client.launch().audience,
+    "control_url": client.endpoint.control_url(client.config),
+}))
+"""
+
+
+def _report(environment: dict[str, str]) -> dict[str, str]:
+    completed = subprocess.run(
+        [sys.executable, "-c", _CHILD_REPORT],
+        env={**environment, "PYTHONPATH": str(REPOSITORY_ROOT)},
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert completed.returncode == 0, completed.stderr[-2000:]
+    return json.loads(completed.stdout.splitlines()[-1])
+
+
+def test_a_child_process_computes_its_parents_socket_root_and_launch():
+    """A server or CLI started by this process looks where this process looks."""
+
+    client = ZMQExecutionClient(port=65000, persistent=False)
+
+    assert _report(dict(os.environ)) == {
+        "socket_root": str(client.config.socket_root()),
+        "code_root": client.launch().code_root,
+        "audience": client.launch().audience,
+        "control_url": client.endpoint.control_url(client.config),
+    }
+
+
+def test_a_private_socket_root_can_be_bound_whatever_tmpdir_is(tmp_path):
+    """The test run's sockets do not move with ``TMPDIR`` (a deep one cannot bind)."""
+
+    deep_tmpdir = tmp_path / ("d" * 120)
+    deep_tmpdir.mkdir()
+    child = (
+        "from openhcs.runtime.zmq_config import use_private_socket_root\n"
+        "use_private_socket_root()\n" + _CHILD_REPORT
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", child],
+        env={
+            **os.environ,
+            "PYTHONPATH": str(REPOSITORY_ROOT),
+            "TMPDIR": str(deep_tmpdir),
+        },
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert completed.returncode == 0, completed.stderr[-2000:]
+    report = json.loads(completed.stdout.splitlines()[-1])
+
+    assert Path(report["socket_root"]).parent == checkout_socket_root()
+    assert not Path(report["socket_root"]).exists()
+    require_bindable_address(report["control_url"])
+
+
+def test_a_client_refuses_a_socket_path_no_server_can_bind(monkeypatch, tmp_path):
+    """It raises before starting a server, and names the path and the limit."""
+
+    root = tmp_path / ("r" * 120)
+    monkeypatch.setenv(SOCKET_ROOT_ENV, str(root))
+    client = ZMQExecutionClient(port=65000, persistent=False)
+    monkeypatch.setattr(
+        client, "_spawn_server_process", lambda: pytest.fail("a server was started")
+    )
+
+    with pytest.raises(SocketPathTooLongError) as refusal:
+        client.connect(timeout=5)
+
+    assert str(root) in str(refusal.value)
+    assert str(zmq.IPC_PATH_MAX_LEN) in str(refusal.value)
+    assert SOCKET_ROOT_ENV in str(refusal.value)

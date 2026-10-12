@@ -58,7 +58,8 @@ class EndpointLaunch(WireMessage):
 - The check applies to endpoints on this host. A remote TCP host is an endpoint the user named; its paths and process ids mean nothing here.
 - **Namespace.** `ZMQConfig.socket_root()` owns where socket and lock files live. `OpenHCSZMQConfig` derives it from the import root: `~/.openhcs/<first 8 hex digits of sha256(import root)>/`. Two checkouts no longer share addresses, so the refusal is the second line, not the normal case. `OPENHCS_SOCKET_ROOT` replaces the root for one process tree; it is read at each call, and child processes inherit it. An absolute `ipc_socket_dir` still selects an explicit directory.
 - **Orphans.** The server checks `launch.owner` once a second in its message loop. When the owner is gone, an owner-only server cancels its work and stops; an any-session server stops once it has no running or queued execution.
-- **Tests and harness.** `tests/conftest.py` sets `OPENHCS_SOCKET_ROOT` to a short private directory (one per pytest process, so per xdist worker). The harness uses `ZMQExecutionClient.with_private_server`, which takes its address from `TransportDeclaration.private_endpoint` (a new socket directory for IPC, the first unbound pair for TCP) and raises if the server does not start. `benchmark.openhcs_measured_run.measured_execution_client` is the one place the harness builds a client: private with no port, the named port otherwise.
+- **Tests and harness.** `tests/conftest.py` calls `use_private_socket_root()`, which makes a new directory beneath the checkout's socket root and exports it as `OPENHCS_SOCKET_ROOT` (one per pytest process, so per xdist worker). The directory is not under `TMPDIR`: a socket path longer than `zmq.IPC_PATH_MAX_LEN` (107) cannot be bound, and a run with a deep `TMPDIR` put every server there. The `unix_socket_dir` fixture is a subdirectory of the same root.
+- **A path no server can bind.** `ZMQExecutionClient.connect` raises `SocketPathTooLongError` (path, length, limit) before it starts a server. A session whose compile cannot connect publishes `CompilationFailed` per dataset, so a caller waiting for the compilation (the measured CLI) ends instead of waiting. The harness uses `ZMQExecutionClient.with_private_server`, which takes its address from `TransportDeclaration.private_endpoint` (a new socket directory for IPC, the first unbound pair for TCP) and raises if the server does not start. `benchmark.openhcs_measured_run.measured_execution_client` is the one place the harness builds a client: private with no port, the named port otherwise.
 
 Identity that must match: code location and owning process (through the audience). Version stays where it is: `EndpointApplication`, compared by `ZMQClientService`. A server edited after it started has the same root and version and is not detected; a source digest would be needed and no surface owns that.
 
@@ -83,6 +84,7 @@ Runtime only. Socket and lock files move from `~/.openhcs/ipc` and `~/.openhcs/t
 - No module in `benchmark/` names `DataControlPortPairAuthority`.
 - Client and server state the import root as their code root, including a subclass defined elsewhere.
 - Each checkout has its own socket root, and the test run's root is private.
+- A child process computes its parent's socket root, code root and audience; a private root can be bound whatever `TMPDIR` is; a client refuses a path too long to bind without starting a server.
 
 ## Tests
 
@@ -109,6 +111,7 @@ A new kind of server (a viewer, a bridge) that must not be shared across checkou
 | The MCP resident-server socket restates the checkout digest and `~/.openhcs/ipc` | `openhcs/mcp/socket.py:48,61`; it should read `OPENHCS_ZMQ_CONFIG.socket_root()` | U4 |
 | `connect` kills the listener of an unresponsive TCP address before starting its own server | `zmqruntime/client.py` `_kill_processes_on_port`; the process may be another session's | zmqruntime (L3) |
 | The application version is compared after connecting, and only by `ZMQClientService` and the catalog client | `authoring/session/execution_client.py:202`; a plain client attaches to a same-root server of another version | U1 |
+| `IpcTransportDeclaration.private_endpoint` makes its directory under `TMPDIR`, not under `config.socket_root()`; with a deep `TMPDIR` a private server is refused by the length check | `zmqruntime/transport_modes.py` `private_endpoint` | zmqruntime |
 | `viewer_endpoint_discovery.py:212` names an undefined `ViewerEndpointDiscoveryResult` | ruff F821 at this head | U4 |
 
 ## Result

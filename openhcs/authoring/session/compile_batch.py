@@ -48,7 +48,14 @@ class CompileBatch:
                 session.progress_tracker.clear_execution(previous_execution_id)
         session.mark_compile_pending(scope_ids)
         try:
-            client = await session.connect_client()
+            try:
+                client = await session.connect_client()
+            except Exception as error:
+                # Without a server no dataset compiles: say so per dataset, so
+                # whoever waits for the compilation stops waiting.
+                for scope_id in scope_ids:
+                    self._compile_failed(scope_id, error)
+                raise
             session.publish(
                 StatusReported(f"Queueing compilation for {len(scope_ids)} dataset(s)...")
             )
