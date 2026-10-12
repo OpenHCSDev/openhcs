@@ -1,15 +1,17 @@
 # OS4: one owner of the global config
 
 Branch `refactor/OS4-global-config-one-owner`. Libraries: ObjectState 4.0.0 (`02393c4`),
-formbridge 0.1.4 (`3ddc051`), pyqt-reactive 0.8.0 (`1c0f35f`).
+formbridge 0.1.4 (`3ddc051`), pyqt-reactive 0.8.0 (`1c0f35f`). Removed names and their
+replacements: ObjectState `CHANGELOG.md` (4.0.0) and `docs/state_propagation.rst`;
+pyqt-reactive `CHANGELOG.md` (0.8.0).
 
 ## What is wrong (measured at `c603c82f0`)
 
 The global config had four holders in the GUI process and a different set in the
 headless one:
 
-- `openhcs/pyqt_gui/app.py:235-249` stored the config twice (`set_global_config_for_editing`,
-  `ensure_global_config_context`) and then registered a state built from the same object.
+- `openhcs/pyqt_gui/app.py:235-249` stored the config twice through the two 3.x
+  setters and then registered a state built from the same object.
 - `Session.global_config` (`session.py:338`) held a third copy; `Session.adopt_global_config`
   wrote the store again with a config the state already held; `initialize_datasets`
   (`:1030`) and its worker (`:1055`) re-stored the session's copy on every initialisation.
@@ -17,25 +19,102 @@ headless one:
 - `window_handlers.py:100` had a fallback setter on save; `main_window_workflows.py:220`
   forwarded the saved config to `adopt_global_config`.
 
-P1: a fact with several writers that are kept equal by convention is a restated
-relation; the copies are derived views or deleted.
+A fact with several writers kept equal by convention is a restated relation
+(PAPER-RESULTS, P1 correct-maintenance model): the copies are derived views or deleted.
 
-## Target
+## Target (done)
 
-- ObjectState 4.0.0: the state registered at scope `""` is the holder. Reads are
+- The state registered at scope `""` is the holder. Reads are
   `get_live_global_config` / `get_saved_global_config`.
 - ONE registration site: `openhcs/authoring/session/lifetime.py::open_session`
   registers the state and starts the session; `close_session` ends the session and
-  unregisters the state. GUI (`pyqt_gui/main.py`), headless MCP (`mcp/context.py`),
-  the benchmark CLI and the test harness all start their session there. Whoever
-  starts the session's lifetime registers the state; there is no "register if
-  nobody did".
-- `Session.global_config` is deleted; readers ask `get_saved_global_config(GlobalPipelineConfig)`.
+  unregisters the state. The GUI main window (`pyqt_gui/main.py`), the headless MCP
+  context (`mcp/context.py`), the benchmark CLI and the test harness all start their
+  session there. Starting the session is what registers the state; there is no
+  "register if nobody did". `Session` gained no member (it lost one attribute, one
+  constructor parameter and three setter calls).
+- `Session.global_config` is deleted; its eight readers ask
+  `get_saved_global_config(GlobalPipelineConfig)`. `dataset_document.live_global_config`
+  is deleted; its callers ask `get_live_global_config(GlobalPipelineConfig)`.
 - `Session.apply_global_config(config)` is the one way to replace the config
   (`set_global_config`, which routes to the registered state).
-  `Session.adopt_global_config` is deleted; what remains of it is
+  `Session.adopt_global_config` is deleted; what remains is
   `Session.saved_global_config_changed()`, which only publishes `DatasetConfigChanged`.
+- Before the session exists (GUI start-up) the config that `config_cache` stored at
+  launch is the global config; it is shadowed once the state is registered.
 
-## Status
+## Deletion certificates
 
-See the sections below; filled in as sub-jobs finish.
+| Deleted | Certificate |
+| --- | --- |
+| `app.py` two setter calls and the global-state registration | **derived**: `open_session` registers the state; registering makes its object the global config (ObjectState 4.0.0). |
+| `Session.global_config` attribute and constructor parameter | **derived**: `get_saved_global_config` reads the registered state's saved object; the attribute was only ever assigned the object last saved. |
+| `Session.adopt_global_config` store write | **derived**: the state already holds the config after `mark_saved` (window save) or `set_global_config` (`apply_global_config`). |
+| `session.py` setter in `initialize_datasets` and in its worker `run()` | **derived** (one config per process; the worker reads the same one). Renamed instead of deleted they would revert unsaved global edits; `tests/unit/test_one_global_config_state.py` covers add, initialise, compile, run. |
+| `window_handlers.py` fallback setter on save | **derived**: `handle_save` runs after the window called `mark_saved` on the registered state. |
+| `MainWindowLifecycleWorkflow.propagate_config` | **unused** after its body became one call; `on_config_changed` calls `session.saved_global_config_changed()` directly. |
+| `ZMQExecutionServer._ensure_request_global_config_context` | **derived**: a one-line forward to `set_global_config`, inlined at its one call. |
+| `dataset_document.live_global_config(session)` | **derived**: equal to `get_live_global_config(GlobalPipelineConfig)` with a state registered; its no-state branch read the deleted attribute. |
+| `dual_editor_tabs.py` entered `config_context` block around the step form | **tests-only**: the four test files that build the step editor give 61 passed with and without it; the earlier probe saw 0 lazy resolutions inside it over 8 builds. Not exercised: step types or widgets outside those tests that would do a plain lazy read (not through a state) while the form is built. |
+| `benchmark` uses of the 3.x "rebuild lazy config" helper | **derived**: it stored the global config and returned a field-for-field copy; lazy fields resolve at read time. Replaced by `set_global_config` and the config object itself. |
+| `_candidate_pipeline_config(global_config=...)` parameter (benchmark) | **unused** after the above. |
+
+## A. Per-process stored config in the execution server
+
+Compilations cannot overlap in one execution-server process, so `set_global_config`
+per request stays (`openhcs/runtime/zmq_execution_server.py`, comment at the call).
+Evidence: `execute_task` is called only from `run_execution`
+(`external/zmqruntime/src/zmqruntime/execution/server.py:270`), which only
+`_queue_worker` calls (`:216`); one such thread is started (`:180-184`).
+`execute_compiled_bundle` is synchronous (`openhcs/runtime/zmq_worker_execution.py:69-92`);
+no control-thread strategy compiles (`openhcs/runtime/zmq_control.py`); workers receive
+the compiled bundle. Test:
+`tests/unit/test_zmq_execution_server.py::test_jobs_submitted_together_each_compile_with_their_own_global_config`
+(four submitting threads, the real queue worker, a real compile).
+
+## B. `InProcessCompileInspectionGateway`
+
+It runs only in MCP processes (`openhcs/mcp/context.py` `artifact_plan_service`,
+`openhcs/agent/capabilities.py`), never in the GUI. The MCP process now registers a
+global state with its session, and a request without `global_config_id` compiles
+against `GlobalPipelineConfig()`, so the two can differ: a rename would have replaced
+the session's config. Fix: `ArtifactPlanInspectionService` compiles in a separate
+process by default (`ChildProcessCompileInspectionGateway`, about 3-4 s more per
+inspection). `InProcessCompileInspectionGateway` raises when a global state is
+registered; it is used by tests and inside the child.
+An in-process explicit path is not possible on ObjectState 4.0.0: steps resolve through
+`ObjectState.resolve_saved_object` (`openhcs/core/pipeline/compiler.py:923`), which
+takes no explicit global config and ignores an entered context. That needs an
+ObjectState change (a `global_config` argument); reported, not done here.
+Test: `tests/unit/agent/test_plan_inspection_keeps_the_global_config.py`.
+
+## C. Route versus raise
+
+Route kept. Remaining OpenHCS calls that replace the global config:
+
+- `core/config_cache.py` `_establish_global_pipeline_config`: the config loaded at
+  launch (`pyqt_gui/launch.py:188`, the only caller of `load_cached_global_config*`),
+  before any state exists.
+- `runtime/zmq_execution_server.py`: the request's config, in a process with no state (A).
+- `authoring/session/session.py` `apply_global_config`: the deliberate replace; callers
+  are `dataset_document.apply_dataset_document` (an edited code document whose global
+  part differs) and tests.
+- `agent/services/artifact_plan_inspection_service.py` in-process gateway: only when no
+  global state is registered (B).
+
+None runs on plate add, initialisation, compile or run.
+
+## Found, out of scope
+
+- More holders of the same value in the GUI: `runtime_context.pipeline_runtime_config`
+  (`pyqt_gui/app.py`, `main.py`) and `service_adapter.global_config`. Candidates for the
+  same treatment.
+- The global config form cannot finish building: `source_spatial_domain.fill_value: Any`
+  raises `UnsupportedWidgetTypeError`; predates this change.
+- `PipelineCompiler` takes registry ancestors for steps (`compiler.py:912-915`), so an
+  in-process inspection of a plate that is open in the session would read that
+  session's dataset state.
+
+## Gates
+
+Filled in at the end of the gate run (see PR body).

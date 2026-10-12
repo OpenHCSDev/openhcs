@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import singledispatch
 import logging
 import multiprocessing
 import os
@@ -203,14 +204,9 @@ class ChildProcessCompileInspectionGateway(CompileInspectionGatewayABC):
                         "The inspection compile process ended with exit code "
                         f"{child.exitcode} before it sent a plan."
                     ) from None
-                if isinstance(sent, ProgressEvent):
-                    request.progress_queue.put(sent)
-                elif isinstance(sent, EndpointStartupStatus):
-                    sent.publish()
-                elif isinstance(sent, AgentError):
-                    raise ChildCompileInspectionError(sent)
-                else:
-                    return sent
+                result = _arrived_from_child(sent, request)
+                if result is not None:
+                    return result
         finally:
             from_child.close()
             if child.is_alive():
@@ -227,6 +223,35 @@ class ChildCompileInspectionError(AgentFacingErrorMixin, Exception):
 
     def to_agent_error(self) -> AgentError:
         return self._error
+
+
+@singledispatch
+def _arrived_from_child(
+    sent: object, request: CompileInspectionInput
+) -> CompileInspectionResult | None:
+    """Act on one object the child sent; return the plan when this is it."""
+
+    raise TypeError(f"The inspection compile process sent {type(sent).__name__}.")
+
+
+@_arrived_from_child.register
+def _(sent: CompileInspectionResult, request: CompileInspectionInput):
+    return sent
+
+
+@_arrived_from_child.register
+def _(sent: ProgressEvent, request: CompileInspectionInput) -> None:
+    request.progress_queue.put(sent)
+
+
+@_arrived_from_child.register
+def _(sent: EndpointStartupStatus, request: CompileInspectionInput) -> None:
+    sent.publish()
+
+
+@_arrived_from_child.register
+def _(sent: AgentError, request: CompileInspectionInput) -> None:
+    raise ChildCompileInspectionError(sent)
 
 
 class ProgressSentToParent(ProgressQueue):
