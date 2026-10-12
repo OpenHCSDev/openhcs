@@ -36,7 +36,7 @@ from openhcs.core.axes import (
     TileAxis,
     TimeAxis,
 )
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import REPLACES_REGISTERED_ATTRIBUTE, AutoRegisterMeta
 from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from python_introspect import (
     AnnotatedDataclassValidationMixin,
@@ -102,14 +102,22 @@ if TYPE_CHECKING:
     from openhcs.core.step_dependencies import StepInputDependency
 
 
-# Combined metaclass for StreamingConfig to support both Enableable and AutoRegisterMeta
-class StreamingConfigMeta(EnableableMeta, AutoRegisterMeta):
-    """Combined metaclass for enableable, auto-registered streaming configs."""
-
-    pass
-
-
 from objectstate import auto_create_decorator, abbreviation
+from objectstate.lazy_factory import LazyDataclass
+
+
+class StreamingConfigMeta(EnableableMeta, AutoRegisterMeta):
+    """Metaclass for enableable streaming configs registered by viewer family.
+
+    Steps, forms and the compiler hold the lazy form of a streaming config, so
+    the lazy form is the registered type for its viewer: it declares that it
+    takes the key from the config it was generated from.
+    """
+
+    def __new__(mcs, name, bases, attrs, **class_kwargs):
+        if LazyDataclass in bases:
+            attrs = {**attrs, REPLACES_REGISTERED_ATTRIBUTE: bases[0]}
+        return super().__new__(mcs, name, bases, attrs, **class_kwargs)
 
 logger = logging.getLogger(__name__)
 
