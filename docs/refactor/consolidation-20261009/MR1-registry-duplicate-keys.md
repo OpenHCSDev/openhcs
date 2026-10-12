@@ -112,12 +112,13 @@ Also found, outside this surface: `polystore.streaming.handlers` imports `metacl
 ## Progress notes
 
 - [x] Receipt, inventory (`.claude/mr1/inventory.py`, untracked).
-- [ ] Library fix + tests, version 0.4.0.
-- [ ] ObjectState module/qualname fix.
-- [ ] OpenHCS collisions, guard, bound.
-- [ ] Plain-registry sweep.
-- [ ] Test collisions.
-- [ ] PRs.
+- [x] Library fix + tests, version 0.4.0. PR OpenHCSDev/metaclass-registry#5.
+- [x] ObjectState module/qualname fix.
+- [x] OpenHCS collisions, guard.
+- [x] Plain-registry sweep.
+- [x] Test collisions (OpenHCS, PolyStore, zmqruntime).
+- [x] Checks: see "Verification (second agent)".
+- [ ] Library PRs other than metaclass-registry, and the OpenHCS PR: left to the lead (see "For the lead").
 
 ## Handoff (2026-10-12)
 
@@ -139,7 +140,7 @@ The first agent stopped at its context limit. **No PR is open yet in any repo.**
 | `FormattingMeasurementFeatureTemplate` | `'MeasurementFeatureTemplate'` | `FlipAndRotateModule.MeasurementFeatureTemplate` | `ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate` | keyed by `__qualname__` |
 | `StreamingConfig` | `NapariViewer` | `NapariStreamingConfig` | `LazyNapariStreamingConfig` | declared replacement in `StreamingConfigMeta`; ObjectState rebuild carries the declaration's module |
 | `StreamingConfig` | `FijiViewer` | `FijiStreamingConfig` | `LazyFijiStreamingConfig` | same |
-| `GroupingDeclaration` (axes) | `'site'`, `'band'`, `'plot'`, `'a'` | e.g. `Microscopy.Site` | a second axis family's `Site` (only test domains today) | `GroupingDeclarationMeta`: declarations are keyed by name but held by their `AxisFamily`, not by a name-keyed registry. It overrides the library's private `_register_class`; owner of surface G1 should confirm or replace this. |
+| `GroupingDeclaration` (axes) | `'site'`, `'band'`, `'plot'`, `'a'` | e.g. `Microscopy.Site` | a second axis family's `Site` (only test domains today) | no name-keyed registry of declarations: see "Axis decision" below |
 
 Tests that displaced production classes for the rest of the session (now use the `stand_in_members` fixture in `tests/conftest.py`, built on `metaclass_registry.testing.restored_registry`, or a unique key): `test_viewer_protocol.py` (11 viewers under `'napari'`), `test_napari_reset_transitions.py` (3), `agent/test_native_presentation_451452.py`, `agent/test_s1_native_viewer_records.py`, `pyqt_gui/test_ui_window_flash_snapshot.py`, `test_runtime_equivalence.py`, `test_materialization_batch_outcomes.py` (`CsvOnlyMemoryBackend` replaced the `'memory'` backend).
 
@@ -181,3 +182,57 @@ Registries that do not use the library: see "Registries that do not use the libr
 6. `SMOKE_SKIP_GUI=1 bash /home/ts/code/projects/openhcs/.claude/verify/smoke_local.sh $W` must print `smoke rc=0` (not run).
 7. Parity under `flock /home/ts/code/projects/openhcs/.claude/verify/official30.lock <parity command>`, 30/30 (not run).
 8. Open PRs: metaclass-registry (0.4.0, no tag), ObjectState, PolyStore, formbridge, pyqt-reactive (no version bumps), then OpenHCS with the status line. Update "Progress notes" above.
+
+## Verification (second agent, 2026-10-12)
+
+The Handoff section above is the first agent's; where the two differ, this section is current.
+
+### Changes made after the handoff
+
+- **metaclass-registry `541b3c1`.** `__replaces_registered__` was read only when a class registered, so a declaration on a class that did not register (abstract, no key, no registry) was ignored. It now raises, and a value that is not a class raises `TypeError`. This exposed one loose caller: `StreamingConfigMeta` declared a replacement for every lazy form, including abstract `LazyStreamingConfig`, which replaced nothing. It now declares one only when the config the lazy form was generated from is registered.
+- **Axis decision.** `GroupingDeclarationMeta` and its override of the private `_register_class` are removed. Axis names are unique within one `AxisFamily`, not across families (the production docstrings already said so, and `axis_boundaries` already decoded names through the active family because "the registry cannot decode it"). The family's `axes` tuple is the per-family holder; the global name-keyed registry was a second, unread copy of that relation in which two families could not coexist. `GroupingDeclaration` no longer declares `__registry_key__`, so there is no registry to collide in. The JSON encoder for declarations (`to_jsonable`, by `name`) is registered in `openhcs/core/axis_boundaries.py` beside the existing decoder. Deletion certificate for `GroupingDeclaration.__registry__`: **unused** (no reader in OpenHCS, the libraries or tests; the only generic reader, `registered_class_from_key`, was already overridden for this metaclass). Isolating the tests instead would have kept a registry in which a second production domain could not declare `site`.
+- **CellProfiler `'mask'`.** On main the registry was `{'threshold': Threshold…, 'mask': ObjectMaximaInputStrategy}` (observed). `MaskMaximaInputStrategy` was unreachable. `ExcludeMode.MASK` resolved to `ObjectMaximaInputStrategy`, which inherits `image()` unchanged, so no result differed. `ExcludeMode.OBJECTS` raised `KeyError: 'objects'` (observed), so a workflow using it failed rather than computing something else. Fixed by the library's derived-key fix; test `test_mask_and_object_maxima_strategies_are_registered_under_their_own_modes`.
+- **CellProfiler `'MeasurementFeatureTemplate'`.** Whichever of the two modules was imported last held the key (on the main checkout, importing classification then image_geometry left `FlipAndRotateModule`'s; discovery order leaves `ClassifyObjectsSingleMeasurementModule`'s). Nothing reads this registry by key: templates are found through the owning module's nested classes (`declared_authority_types`), so no result depended on it. Keyed by `__qualname__`; test `test_same_named_feature_templates_of_two_modules_are_both_registered`.
+- **PolyStore `410905c`.** A test registered a second codec for `.roi.zip`; it now uses an unused compound extension.
+- **zmqruntime `4081873`** (new branch). `ZMQServer` kept a registry keyed by `_server_type`. Nothing reads it, and every `ExecutionServer` subclass reports `'execution'`, so a second subclass raised. `ZMQServer` is now a plain ABC; `_server_type` stays as the role reported in the pong. Certificate for `ZMQServer.__registry__`: **unused**.
+
+### Checks observed
+
+| Check | Result |
+|---|---|
+| metaclass-registry tests | 107 passed |
+| metaclass-registry lint | ruff clean, black clean, mypy 17 errors (origin/main: 18) |
+| python-introspect | 176 passed |
+| arraybridge | 247 passed, 17 skipped |
+| ObjectState | 240 passed |
+| formbridge | 102 passed |
+| PolyStore | 601 passed, 2 skipped |
+| pycodify | 66 passed serially. Under `-n 2` collection fails because parameter ids contain object addresses; pycodify is unchanged at origin/main |
+| pyqt-reactive | 564 passed, 1 failed: `test_published_runtime_is_not_overridden_by_a_source_candidate` (installed `zmqruntime` metadata is 0.4.1). Fails on origin/main too |
+| zmqruntime | 375 passed, 4 failed. Two `test_progress_annotation` cases (`openhcs.agent.dto.execution.ExecutionJobStatus` does not exist) and two `test_ack_return_route` IPC cases (socket path under this worktree exceeds 107 characters; one passes serially). On origin/main with the main registry, run serially: the two progress cases and one IPC case fail the same way; `test_execution.py` passes there and raised `DuplicateRegistryKeyError` before the fix |
+| ruff on changed files of the other libraries | no file has more findings than on origin/main |
+| OpenHCS touched test files, guard, axis tests | 361 passed, 1 skipped, 1 failed (`test_axis_family_witness…through_the_kernel[zmq]`); that test passed when rerun holding the parity lock, and failed three times with two different errors while another agent's execution servers were up |
+| `tests/unit/test_registry_keys_unique.py` | 8 passed |
+| Two untriaged failures (`agent/test_mcp_server.py::test_mcp_stdio_server_roundtrip_returns_errors_as_payloads`, `pyqt_gui/test_ui_bridge_lifecycle_config.py::test_zmq_browser_scan_service_discovers_ui_bridge_default_transport`) | both pass on this branch and on origin/main (6c1312d36); the earlier failures did not reproduce |
+| guardrails_local.sh | `guardrails rc=0` at 5a61d32f1 |
+| smoke_local.sh, `SMOKE_SKIP_GUI=1` | `smoke rc=0`, 5 passed |
+| Import everything | 1096 modules imported, 18 failed for reasons unrelated to registries (torch, pyclesperanto, `metaclass_registry.lazy`, benchmark imports), no `DuplicateRegistryKeyError`; the only different-class replacements are the two declared streaming configs |
+| 30-workflow parity under flock | 1 passed in 714 s (the test asserts 30 cases), with `OPENHCS_CP_NATIVE_REFERENCE_ROOT=$W/benchmark/native_refs/official30_scoped_rows` and `NPY_DISABLE_CPU_FEATURES=AVX512_SKX,X86_V4`. Without the first variable the test is skipped and exits 0; without the second it fails at once |
+
+Not run: the full unit suite, and `tests/pyqt_gui tests/source_contracts tests/shell tests/installer tests/integration` (the lead runs suites centrally).
+
+## For the lead
+
+metaclass-registry has PR OpenHCSDev/metaclass-registry#5 (0.4.0, not tagged). No PR is open in the other libraries or in OpenHCS. Branch in every repo: `refactor/MR1-registry-duplicate-keys`, pushed. Ranges are `origin/main..head`.
+
+| Library | Range | What it does |
+|---|---|---|
+| ObjectState | `1fcdf12..31795ce` (1 commit) | Rebuilt lazy dataclasses carry their declaration's `__module__` at creation; `UISpecialFieldRegistry` rejects a second declaration. |
+| PolyStore | `a9a3e6c..410905c` (2 commits) | `FileFormatRegistry.register` rejects a second codec for an extension; two tests. |
+| formbridge | `b4d1558..fe1af87` (1 commit) | Inline-widget factories and preview formatters reject a second registrant per type. |
+| pyqt-reactive | `4991fc7..11c2f87` (1 commit) | Widget ids and form builders reject a second registrant. |
+| zmqruntime | `4826549..4081873` (1 commit) | `ZMQServer` is a plain ABC: servers are no longer registered by `_server_type`. Removes public `ZMQServer.__registry__` (unread). |
+| pycodify | none | Unchanged. |
+
+None of these bumps a version or touches a lock. OpenHCS requires `metaclass-registry>=0.4.0,<0.5`, so it cannot merge before 0.4.0 is released. zmqruntime must ship its commit before or with 0.4.0 reaching its users: on 0.4.0, a second `ExecutionServer` subclass in one process raises without it.
+
