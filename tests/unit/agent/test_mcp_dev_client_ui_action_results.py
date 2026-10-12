@@ -283,17 +283,14 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
              (FirstCapability, SecondCapability))
     extension = type("ExtendedActionRenderer", (*bases, UiActionInvokeRenderer),
                      {"output_contract": ExtendedAction})
-    try:
-        assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
-        value = ExtendedAction(
-            SCHEMA_VERSION, UiActionIdentity(widget_id="datasets", action_id="run_datasets"),
-            "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
-        )
-        decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))
-        assert decoded.annotation == "new declared fact"
-        rendered = extension.render_payload_value(decoded, McpDevOutputRenderOptions())
-        assert events == (["second", "first"] if reverse else ["first", "second"])
-        assert rendered.count("first capability") == rendered.count("second capability") == 1
-        assert rendered.count("UI action invoke:") == 1
-    finally:
-        del McpDevOutputRenderer.__registry__[ExtendedAction]
+    assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
+    value = ExtendedAction(
+        SCHEMA_VERSION, UiActionIdentity(widget_id="datasets", action_id="run_datasets"),
+        "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
+    )
+    decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))
+    assert decoded.annotation == "new declared fact"
+    rendered = extension.render_payload_value(decoded, McpDevOutputRenderOptions())
+    assert events == (["second", "first"] if reverse else ["first", "second"])
+    assert rendered.count("first capability") == rendered.count("second capability") == 1
+    assert rendered.count("UI action invoke:") == 1

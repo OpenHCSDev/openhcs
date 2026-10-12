@@ -308,22 +308,16 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         assert invocation.kwargs_dict == {**kwargs, "amount": 3}
     finally:
         CustomFunctionRuntimeRegistry.remove(new_authoring_callable.__name__)
-        dict.__delitem__(
-            CellProfilerModule.__registry__, NewAuthoringModule.module_name
-        )
 
 
 def test_duplicate_provider_authoring_claims_fail_closed():
     class DuplicateOwner(CellProfilerInvocationContractProviderFactory):
         pass
 
-    try:
-        service, ref = draft(gray_to_color, selectors())
-        result = service.validate(ref)
-        assert not result.valid
-        assert (
-            "Multiple invocation contract providers claimed authoring kwargs"
-            in result.errors[0].message
-        )
-    finally:
-        dict.__delitem__(DuplicateOwner.__registry__, DuplicateOwner.__name__)
+    service, ref = draft(gray_to_color, selectors())
+    result = service.validate(ref)
+    assert not result.valid
+    assert (
+        "Multiple invocation contract providers claimed authoring kwargs"
+        in result.errors[0].message
+    )

@@ -453,60 +453,54 @@ def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edit
     outcome, output = save_archive_outcome(
         publication_context, plate, destination, monkeypatch
     )
-    registry = OpenHCSMetadataTarget.__registry__
-    original_declarations = dict(registry)
-    try:
 
-        class IndependentSavedResultMetadataTarget(
-            PublicationAuditCapability,
-            ProducedImageMetadataCapability,
-            RuntimeArtifactMetadataTarget,
-        ):
-            declaration_key = None
+    class IndependentSavedResultMetadataTarget(
+        PublicationAuditCapability,
+        ProducedImageMetadataCapability,
+        RuntimeArtifactMetadataTarget,
+    ):
+        declaration_key = None
 
-            @classmethod
-            def from_plan(cls, plan):
-                return cls(
-                    output_dir=plate / destination,
-                    backend=Backend.DISK.value,
-                    dataset_root=str(plate),
-                    sub_dir=destination,
-                    results_dir=str(plate / destination),
-                )
+        @classmethod
+        def from_plan(cls, plan):
+            return cls(
+                output_dir=plate / destination,
+                backend=Backend.DISK.value,
+                dataset_root=str(plate),
+                sub_dir=destination,
+                results_dir=str(plate / destination),
+            )
 
-        plan = replace(
-            plan_for(plate),
-            runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(),
-        )
-        (target,) = OpenHCSMetadataTarget.for_execution(
-            publication_context,
-            plan,
-            artifact_materializations=(outcome,),
-        )
-        target.write(publication_context, produced_plan=plan)
-        assert publication_context.publication_audit == [
-            ("before", destination),
-            ("after", destination),
-        ]
-        assert result_paths(plate, publication_context) == (output.path,)
-        pending = plate / destination / "pending-image.tif"
-        pending.write_bytes(b"never decoded")
-        target.write(publication_context, produced_plan=plan)
-        assert publication_context.publication_audit == [
-            ("before", destination), ("after", destination),
-            ("before", destination), ("after", destination),
-        ]
-        # Independent MI hooks reach the inherited empty-step behavior even
-        # while another image producer has not published its typed address.
-        assert target.produced_projection_entries(publication_context, plan).entries == {}
-        before = METADATA_CONFIG.metadata_path(plate).read_bytes()
-        with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
-            target.write(publication_context)
-        assert METADATA_CONFIG.metadata_path(plate).read_bytes() == before
-        assert Path(output.path).read_bytes() == b"synthetic admission only"
-    finally:
-        registry.clear()
-        registry.update(original_declarations)
+    plan = replace(
+        plan_for(plate),
+        runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(),
+    )
+    (target,) = OpenHCSMetadataTarget.for_execution(
+        publication_context,
+        plan,
+        artifact_materializations=(outcome,),
+    )
+    target.write(publication_context, produced_plan=plan)
+    assert publication_context.publication_audit == [
+        ("before", destination),
+        ("after", destination),
+    ]
+    assert result_paths(plate, publication_context) == (output.path,)
+    pending = plate / destination / "pending-image.tif"
+    pending.write_bytes(b"never decoded")
+    target.write(publication_context, produced_plan=plan)
+    assert publication_context.publication_audit == [
+        ("before", destination), ("after", destination),
+        ("before", destination), ("after", destination),
+    ]
+    # Independent MI hooks reach the inherited empty-step behavior even
+    # while another image producer has not published its typed address.
+    assert target.produced_projection_entries(publication_context, plan).entries == {}
+    before = METADATA_CONFIG.metadata_path(plate).read_bytes()
+    with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+        target.write(publication_context)
+    assert METADATA_CONFIG.metadata_path(plate).read_bytes() == before
+    assert Path(output.path).read_bytes() == b"synthetic admission only"
 
 
 def test_files_without_successful_batch_outcomes_do_not_create_step_targets(

@@ -2,7 +2,6 @@ from dataclasses import fields as dataclass_fields
 
 from openhcs.agent.capabilities import (
     UiBridgeOperationInvocation,
-    AgentCapabilityDeclaration,
     AgentCapabilityExposition,
     AgentDataclassRequestServiceInvocation,
     AgentFromFieldsServiceInvocation,
@@ -339,16 +338,13 @@ def test_health_capability_declares_mcp_reliability_contract():
 
 def _declaration_error(**attributes) -> Exception:
     name = "openhcs_test_rejected_declaration"
-    try:
-        with pytest.raises((TypeError, ValueError)) as caught:
-            type(
-                "RejectedDeclaration",
-                (UiBridgeCapability,),
-                {"name": name, "title": "Rejected", "description": "", "service": "test"}
-                | attributes,
-            )
-    finally:
-        AgentCapabilityDeclaration.__registry__.pop(name, None)
+    with pytest.raises((TypeError, ValueError)) as caught:
+        type(
+            "RejectedDeclaration",
+            (UiBridgeCapability,),
+            {"name": name, "title": "Rejected", "description": "", "service": "test"}
+            | attributes,
+        )
     return caught.value
 
 

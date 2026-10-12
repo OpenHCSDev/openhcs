@@ -9,7 +9,6 @@ from zmqruntime.config import TransportMode
 from zmqruntime.messages import ProcessIdentity
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration,
     StartFunctionCatalogPreparationCapability,
 )
 from formbridge.contracts import AgentDataclassCliRequest
@@ -210,39 +209,36 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
         cli_command = "s1-generated-input-extension"
         input_contract = ExtendedConnection
 
-    try:
-        generated = call(
-            _build_parser(),
-            NewCapability.cli_command,
-            "--host",
-            "LOCALHOST",
-            "--port",
-            "5993",
-            "--request-tag",
-            "retained",
-            "--no-trace-enabled",
-        )
-        assert generated.arguments == {
-            "host": "localhost",
-            "port": 5993,
-            "transport_mode": None,
-            "persistent": False,
-            "request_tag": "retained",
-            "trace_enabled": False,
-        }
-        assert events == (["ephemeral", "host"] if reverse else ["host", "ephemeral"])
-        assert len(decoded) == 1 and type(decoded[0]) is ExtendedConnection
-        assert decoded[0].request_tag == "retained"
-        # CLI input retains the subclass's fields; the distinct credential-free
-        # execution projection still carries only the public connection owner.
-        assert (
-            decoded[0].tool_arguments()
-            == ExecutionConnectionSpec(port=5993, persistent=False).tool_arguments()
-        )
-        assert ExtendedConnection.__mro__.count(AgentDataclassCliRequest) == 1
-        assert ExtendedConnection.__mro__.count(ExecutionConnectionSpec) == 1
-    finally:
-        del AgentCapabilityDeclaration.__registry__[NewCapability.name]
+    generated = call(
+        _build_parser(),
+        NewCapability.cli_command,
+        "--host",
+        "LOCALHOST",
+        "--port",
+        "5993",
+        "--request-tag",
+        "retained",
+        "--no-trace-enabled",
+    )
+    assert generated.arguments == {
+        "host": "localhost",
+        "port": 5993,
+        "transport_mode": None,
+        "persistent": False,
+        "request_tag": "retained",
+        "trace_enabled": False,
+    }
+    assert events == (["ephemeral", "host"] if reverse else ["host", "ephemeral"])
+    assert len(decoded) == 1 and type(decoded[0]) is ExtendedConnection
+    assert decoded[0].request_tag == "retained"
+    # CLI input retains the subclass's fields; the distinct credential-free
+    # execution projection still carries only the public connection owner.
+    assert (
+        decoded[0].tool_arguments()
+        == ExecutionConnectionSpec(port=5993, persistent=False).tool_arguments()
+    )
+    assert ExtendedConnection.__mro__.count(AgentDataclassCliRequest) == 1
+    assert ExtendedConnection.__mro__.count(ExecutionConnectionSpec) == 1
 
 
 @pytest.mark.parametrize("negative", (False, True))
@@ -262,17 +258,14 @@ def test_new_declared_default_factory_runs_only_at_typed_construction(negative):
         cli_command = "s1-generated-factory-extension"
         input_contract = FactoryConnection
 
-    try:
-        parser = _build_parser()
-        assert not constructed
-        observed = call(
-            parser,
-            FactoryCapability.cli_command,
-            "--port",
-            "5993",
-            *(("--no-probe",) if negative else ()),
-        )
-        assert observed.arguments["probe"] is (not negative)
-        assert constructed == ([] if negative else ["default"])
-    finally:
-        del AgentCapabilityDeclaration.__registry__[FactoryCapability.name]
+    parser = _build_parser()
+    assert not constructed
+    observed = call(
+        parser,
+        FactoryCapability.cli_command,
+        "--port",
+        "5993",
+        *(("--no-probe",) if negative else ()),
+    )
+    assert observed.arguments["probe"] is (not negative)
+    assert constructed == ([] if negative else ["default"])
