@@ -136,7 +136,7 @@ Library (pyqt-reactive, branch `refactor/U6a-tabbed-editor-window`):
 `TabbedEditorNavigationDriver`, `TabbedEditorWindow`), `ActionTabbedWindowBody.apply_accent`,
 `FunctionListEditorWidget.window_navigation_driver` with `FunctionFieldNavigationDriver`.
 
-OpenHCS: `dual_editor_window.py` 1,310 -> 225 lines (the three files: 1,622 -> 615); `DualEditorWindow` keeps `__init__`, session-event
+OpenHCS: `dual_editor_window.py` 1,310 -> 209 lines; `DualEditorWindow` keeps `__init__`, session-event
 dispatch and `_on_pipeline_changed`. `dual_editor_session.py` holds `StepEdit` and the `StepEditorTab`
 family base. `dual_editor_tab_builder.py` became `dual_editor_tabs.py` with the three tab declarations.
 
