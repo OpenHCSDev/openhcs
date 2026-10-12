@@ -103,10 +103,8 @@ class DatasetDocument(SelectedScopeIdsCarrier):
 
 
 def live_global_config(session: "Session") -> GlobalPipelineConfig:
-    state = ObjectStateRegistry.get_by_scope("")
-    if state is None:
-        return session.global_config
-    return state.to_object(update_delegate=False)
+    del session
+    return ObjectStateRegistry.get_by_scope("").to_object(update_delegate=False)
 
 
 def authored_pipeline_config(scope_id: str) -> PipelineConfig:
