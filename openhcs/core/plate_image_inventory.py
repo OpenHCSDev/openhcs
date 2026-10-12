@@ -51,6 +51,10 @@ if TYPE_CHECKING:
 JsonLike = str | int | float | bool | None
 
 
+FILE_NAME_FIELD = "filename"
+"""Metadata field of every file record that holds the name a file table shows."""
+
+
 @dataclass(frozen=True, slots=True)
 class PlateImageRecord:
     """One image exposed by a plate, including virtual and physical identity."""
@@ -320,7 +324,7 @@ class PlateImageInventory:
             else None if projection is None else projection.source_metadata_for(lookup)
         )
         metadata: dict[str, JsonValue] = {
-            "filename": image_file,
+            FILE_NAME_FIELD: image_file,
             "virtual_path": image_file,
             "full_virtual_path": full_virtual_path,
             "source_path": source_path,
@@ -982,7 +986,7 @@ class PlateResultFileInventory:
                 str(relative_path), str(file_path)
             )
             metadata: dict[str, JsonValue] = {
-                "filename": str(relative_path),
+                FILE_NAME_FIELD: str(relative_path),
                 "type": file_format.name,
                 "size": file_size_label(file_path),
                 "modified": file_modified_label(file_path),

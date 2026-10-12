@@ -33,10 +33,10 @@ def binding_with_unlisted_fields() -> NamedSourceBinding:
 
 def test_bindings_table_round_trip_preserves_every_binding_field(qapp) -> None:
     binding = binding_with_unlisted_fields()
-    widget = SourceBindingsEditorWidget.from_bindings(
+    widget = SourceBindingsEditorWidget.for_value(
         StepSourceBindingsConfig(enabled=True, bindings=(binding,))
     )
-    dialog = widget._create_step_bindings_dialog()
+    dialog = widget.step_bindings_dialog()
     editor = dialog.editor
     try:
         assert dialog.bindings() == (binding,)
@@ -60,7 +60,7 @@ def test_bindings_table_round_trip_preserves_every_binding_field(qapp) -> None:
         )
         assert dialog.bindings() == (expected,)
 
-        widget._apply_step_bindings(dialog.bindings())
+        widget.replace_field("bindings", dialog.bindings())
         assert widget.get_value().bindings == (expected,)
     finally:
         dialog.deleteLater()

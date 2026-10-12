@@ -432,7 +432,7 @@ def test_local_structural_child_edit_uses_resolved_change_flash() -> None:
 
         flashes: list[str] = []
         manager.queue_flash_local_batch = flashes.extend
-        widget.add_binding_row(NamedSourceBinding(alias="DNA"))
+        widget.append_to_field("bindings", NamedSourceBinding(alias="DNA"))
         QApplication.processEvents()
 
         assert flashes == ["source_bindings.bindings"]

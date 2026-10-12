@@ -211,6 +211,7 @@ class OpenHCSWindowCreationAuthority:
         """Create DualEditorWindow for step or function scope."""
         from objectstate import ObjectStateRegistry
 
+        from openhcs.pyqt_gui.windows.dual_editor_tabs import ArtifactsTab
         from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 
         scope_id = request.scope_id
@@ -237,9 +238,7 @@ class OpenHCSWindowCreationAuthority:
         window = DualEditorWindow(
             step_data=step,
             is_new=False,
-            on_save_callback=None,  # ObjectState handles save
             orchestrator=orchestrator,
-            service_adapter=plate_manager.service_adapter,
             step_index=editor_scope.step_token.index,
             plate_scope=editor_scope.plate_scope,
             compiled_artifact_inspection_provider=(
@@ -253,7 +252,7 @@ class OpenHCSWindowCreationAuthority:
             parent=None,
         )
         window.connect_session_events(plate_manager.session)
-        window.connect_artifact_signals(
+        window.tab(ArtifactsTab).follow_artifact_signals(
             compiled_artifact_signal=(
                 plate_manager.compiled_artifact_inspection_changed
             ),
@@ -330,6 +329,11 @@ class OpenHCSWindowCreationAuthority:
         """Select the tab implied by the scope's nominal editor target."""
         from objectstate import ObjectStateRegistry
 
+        from openhcs.pyqt_gui.windows.dual_editor_tabs import (
+            FunctionPatternTab,
+            StepSettingsTab,
+        )
+
         state_for_tab_selection = ObjectStateRegistry.get_by_scope(
             editor_scope.scope_id
         )
@@ -350,10 +354,7 @@ class OpenHCSWindowCreationAuthority:
                 select_function_tab,
             )
 
-        tab_index = 0
-        if select_function_tab:
-            tab_index = 1
-        window.tab_widget.setCurrentIndex(tab_index)
+        window.tab(FunctionPatternTab if select_function_tab else StepSettingsTab).select()
 
     def _plate_manager(self):
         from formbridge.services.service_registry import ServiceRegistry
