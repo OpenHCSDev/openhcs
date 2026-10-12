@@ -118,3 +118,66 @@ Also found, outside this surface: `polystore.streaming.handlers` imports `metacl
 - [ ] Plain-registry sweep.
 - [ ] Test collisions.
 - [ ] PRs.
+
+## Handoff (2026-10-12)
+
+The first agent stopped at its context limit. **No PR is open yet in any repo.** Everything is committed and pushed on branch `refactor/MR1-registry-duplicate-keys` in each repo. The commits are WIP commits: squash or reword before opening PRs.
+
+### Rule chosen for re-registration
+
+- Same class object again: no-op.
+- Same class statement created again: the new object takes the key. "Same statement" means equal `__module__` and `__qualname__`, or a class rebuilt from a copy of the registered class's namespace (same module and name, and it carries the token registration put in the namespace). Evidence: 79 of the 85 registrations that land on an occupied key at import are `@dataclass(slots=True)` rebuilding the class; no `importlib.reload` call exists anywhere, and reload falls under the same module-and-qualname rule.
+- A different class raises `DuplicateRegistryKeyError` naming the family, the key and both classes.
+- Replacement on purpose is declared in the replacing class body, `__replaces_registered__ = Other`; it is not inherited and the key must hold exactly `Other`. One caller needs it (the lazy streaming configs).
+- Secondary registries and cache loads follow the same rule; the error propagates through discovery.
+
+### Real collisions found (a class was displaced on main)
+
+| Family | Key | Displaced | Displacing | Resolution |
+|---|---|---|---|---|
+| `MaximaInputStrategy` | `'mask'` | `MaskMaximaInputStrategy` | `ObjectMaximaInputStrategy` | library fix: a subclass derives its own key; `'objects'` now exists |
+| `FormattingMeasurementFeatureTemplate` | `'MeasurementFeatureTemplate'` | `FlipAndRotateModule.MeasurementFeatureTemplate` | `ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate` | keyed by `__qualname__` |
+| `StreamingConfig` | `NapariViewer` | `NapariStreamingConfig` | `LazyNapariStreamingConfig` | declared replacement in `StreamingConfigMeta`; ObjectState rebuild carries the declaration's module |
+| `StreamingConfig` | `FijiViewer` | `FijiStreamingConfig` | `LazyFijiStreamingConfig` | same |
+| `GroupingDeclaration` (axes) | `'site'`, `'band'`, `'plot'`, `'a'` | e.g. `Microscopy.Site` | a second axis family's `Site` (only test domains today) | `GroupingDeclarationMeta`: declarations are keyed by name but held by their `AxisFamily`, not by a name-keyed registry. It overrides the library's private `_register_class`; owner of surface G1 should confirm or replace this. |
+
+Tests that displaced production classes for the rest of the session (now use the `stand_in_members` fixture in `tests/conftest.py`, built on `metaclass_registry.testing.restored_registry`, or a unique key): `test_viewer_protocol.py` (11 viewers under `'napari'`), `test_napari_reset_transitions.py` (3), `agent/test_native_presentation_451452.py`, `agent/test_s1_native_viewer_records.py`, `pyqt_gui/test_ui_window_flash_snapshot.py`, `test_runtime_equivalence.py`, `test_materialization_batch_outcomes.py` (`CsvOnlyMemoryBackend` replaced the `'memory'` backend).
+
+Registries that do not use the library: see "Registries that do not use the library" above (8 fixed, 8 recorded with owners).
+
+### Repos, branches, heads
+
+| Repo | Branch | Head | Remote |
+|---|---|---|---|
+| metaclass-registry | `refactor/MR1-registry-duplicate-keys` | `35efe82` | pushed: 35efe82 |
+| ObjectState | `refactor/MR1-registry-duplicate-keys` | `31795ce` | pushed: 31795ce |
+| PolyStore | `refactor/MR1-registry-duplicate-keys` | `a46ffcd` | pushed: a46ffcd |
+| formbridge | `refactor/MR1-registry-duplicate-keys` | `fe1af87` | pushed: fe1af87 |
+| pyqt-reactive | `refactor/MR1-registry-duplicate-keys` | `11c2f87` | pushed: 11c2f87 |
+
+- metaclass-registry: the rule, `register_once`, `is_same_declaration`, `DuplicateRegistryKeyError`, `testing.restored_registry`, derived-key fix, version 0.4.0, CHANGELOG, README, tests. It has no `uv.lock`.
+- ObjectState: rebuilt dataclasses carry `__module__` at creation; `UISpecialFieldRegistry` rejects a second declaration. No version bump.
+- PolyStore: `FileFormatRegistry` rejects a second codec; one test. No version bump, lock untouched.
+- formbridge: inline-widget factories and preview formatters reject a second registrant; one test.
+- pyqt-reactive: widget ids and form builders reject a second registrant.
+- OpenHCS: submodules point at the heads above; `pyproject.toml` requires `metaclass-registry>=0.4.0,<0.5`; guard `tests/unit/test_registry_keys_unique.py`.
+
+### Observed so far
+
+- metaclass-registry tests: 103 passed (before the last 2 helper tests were added; rerun).
+- Import of all 1087 importable modules (OpenHCS, benchmark, nine libraries) in one process with the rule enforced: no `DuplicateRegistryKeyError`; 22 modules fail for unrelated, pre-existing reasons (torch, pyclesperanto, unbuilt native extensions, `polystore.streaming.handlers`, four benchmark pipelines).
+- `tests/unit tests/core`, `-n 2`, machine load 20-30: 144 failed, 6 errors, 11467 passed. 108 ids were not in `.claude/verify/known.fail`. Rerun of those 108: 84 passed (load timeouts), 22 failed and 4 errored, all but two with `DuplicateRegistryKeyError`; those are the test files fixed above. After the fixes, a rerun of the 108 plus the guard left: `test_mcp_server.py::test_mcp_stdio_server_roundtrip_returns_errors_as_payloads` (anyio `BrokenResourceError`; its sibling flipped between runs) and `pyqt_gui/test_ui_bridge_lifecycle_config.py::test_zmq_browser_scan_service_discovers_ui_bridge_default_transport` (5 s endpoint startup timeout). Neither mentions a registry; neither was compared against main. `test_axis_family_witness.py::...through_the_kernel[zmq]` once connected to another agent's execution server and passed when rerun alone.
+- The last edits (the `GroupingDeclarationMeta` change and the test fixes) were verified only on the rerun lists, not on a full suite.
+
+### Remaining checks, with commands
+
+`W` is this worktree. `.claude/mr1/` (untracked, in the worktree) holds the helper scripts used below; recreate them if the worktree is gone.
+
+1. Library suites (were started, results not read): `$W/.claude/mr1/libtests.sh metaclass-registry python-introspect pycodify arraybridge ObjectState zmqruntime PolyStore formbridge pyqt-reactive`; read `$W/.claude/mr1/lib_<name>.txt`. Fix any test that now collides (unique key or `restored_registry`).
+2. Lint: `$W/.claude/mr1/lint.sh metaclass-registry src/` (ruff, black; mypy had 17 pre-existing errors, 18 on main), and ruff at line length 100 for the four other libraries.
+3. OpenHCS test directories not run: `tests/pyqt_gui tests/source_contracts tests/shell tests/installer tests/integration` with `$W/.claude/mr1/suite.sh <label> <dirs> -q --tb=short -n 2 -rfE`; grep the output for `DuplicateRegistryKeyError`. Rerun `tests/unit/test_registry_keys_unique.py` and the two leftover failures above, on this branch and on main.
+4. Import-everything: `$W/.claude/mr1/py.sh $W/.claude/mr1/inventory.py $W/.claude/mr1/inv3.json openhcs polystore zmqruntime arraybridge python_introspect pycodify objectstate pyqt_reactive formbridge metaclass_registry benchmark` then `show.py inv3.json`; expect only the two declared streaming-config replacements under DISTINCT.
+5. `bash /home/ts/code/projects/openhcs/.claude/verify/guardrails_local.sh $W` must end `guardrails rc=0` (not run).
+6. `SMOKE_SKIP_GUI=1 bash /home/ts/code/projects/openhcs/.claude/verify/smoke_local.sh $W` must print `smoke rc=0` (not run).
+7. Parity under `flock /home/ts/code/projects/openhcs/.claude/verify/official30.lock <parity command>`, 30/30 (not run).
+8. Open PRs: metaclass-registry (0.4.0, no tag), ObjectState, PolyStore, formbridge, pyqt-reactive (no version bumps), then OpenHCS with the status line. Update "Progress notes" above.
