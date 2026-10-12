@@ -1,4 +1,6 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from pathlib import Path
@@ -47,7 +49,6 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import SourceArtifactProjection
@@ -640,7 +641,7 @@ def test_stream_images_projects_declared_channel_singleton_with_retained_plane_a
     stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
     item_fields = dict(stream_request.source.item_fields)
     image_metadata = item_fields.pop("image_metadata")
-    assert image_metadata["plane_axis"] is None
+    assert image_metadata["plane_axis"] == NoPlaneAxis.name
     assert "source_channel_axis" not in image_metadata
     assert item_fields == {
         "source_spatial_shape_yx": [8, 9],
@@ -690,7 +691,7 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
             ),
         ),
         source_dtype="int32",
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     projection = SourceArtifactProjection(
         address=None,

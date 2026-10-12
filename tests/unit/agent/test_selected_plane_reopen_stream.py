@@ -1,5 +1,6 @@
 """Ordinary saved-image streaming must reach the strict receiver with owned axes."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from dataclasses import replace
 from hashlib import sha256
 from multiprocessing.shared_memory import SharedMemory
@@ -117,7 +118,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
                 SharedMemory(name=name)
 
 
-@pytest.mark.parametrize("axis", (None, *RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", (NoPlaneAxis, *RuntimePlaneAxis.leading_axes()))
 def test_public_declared_saved_image_reaches_strict_receiver(
     tmp_path, receiver_transport, axis
 ):
@@ -129,7 +130,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
         plane_axis=axis,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes()
-            if axis is None
+            if axis.unstacked
             else SourceImageProvenancePlanes.from_components(
                 paths=(projection.image_metadata.source_path,),
                 component_metadata=(
@@ -139,7 +140,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
         ),
     )
     image_format = ImageFileFormat.require_path(path)
-    pixels = expected if axis is None else expected[None]
+    pixels = expected if axis.unstacked else expected[None]
     image = metadata.payload_with(pixels)
     image_format.write(path, image)
     projection = replace(
@@ -181,7 +182,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
     assert item.image_metadata.source_voxel_spacing == SourceVoxelSpacing(
         (1.3556, 1.3556)
     )
-    assert item.image_metadata.plane_axis is None
+    assert item.image_metadata.plane_axis.unstacked
     assert before == {p: sha256(p.read_bytes()).hexdigest() for p in before}
 
 
@@ -214,7 +215,7 @@ def test_plain_persisted_tiff_without_saved_image_metadata_streams(
     assert len(received) == 1
     for transmitted, item, bindings in received:
         np.testing.assert_array_equal(transmitted, expected)
-        assert item.image_metadata.plane_axis is None
+        assert item.image_metadata.plane_axis.unstacked
         assert bindings.payload_axes == ()
         assert item.image_metadata.source_voxel_spacing == SourceVoxelSpacing(
             (0.5, 0.5)

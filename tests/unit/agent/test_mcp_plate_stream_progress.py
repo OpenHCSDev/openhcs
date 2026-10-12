@@ -10,8 +10,7 @@ import threading
 import time
 
 import pytest
-from PyQt6.QtCore import QCoreApplication, QThread
-from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
+from formbridge.services.async_operation_executor import AsyncOperationExecutor
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import PointShape, ROI
@@ -67,7 +66,6 @@ def saved_roi_stream(tmp_path, monkeypatch):
 
     def acquire(**fields):
         assert threading.current_thread() is threading.main_thread()
-        assert QThread.currentThread() == QCoreApplication.instance().thread()
         assert fields["fresh"] is False and fields["ready_timeout"] == 30.0
         return viewer
 

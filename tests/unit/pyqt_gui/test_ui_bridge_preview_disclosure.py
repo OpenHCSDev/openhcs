@@ -20,15 +20,8 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
 from pyqt_reactive.widgets.shared.styled_text_layout import StyledTextLayout, Segment
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.dto.ui_bridge import (
-    UiWindowSummary,
-    UiWindowIdentity,
-    UiWidgetActionInvokeRequest,
-)
-from openhcs.pyqt_gui.services.ui_bridge_windows import (
-    WindowProjectionTarget,
-    UiWidgetActionInvokeResultFactory,
-)
+from formbridge.bridge.dto import UiWindowSummary, UiWindowIdentity, UiWidgetActionInvokeRequest
+from pyqt_reactive.bridge.windows import WindowProjectionTarget, UiWidgetActionInvokeResultFactory
 
 
 @pytest.fixture

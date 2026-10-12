@@ -10,9 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
 from objectstate.object_state import ObjectState
 from PyQt6.QtWidgets import QFileDialog
-from pyqt_reactive.widgets.shared.manager_workflows import (
-    ManagerCodeExecutionWorkflow,
-)
+from formbridge.managers.workflows import ManagerCodeExecutionWorkflow
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.debug import (

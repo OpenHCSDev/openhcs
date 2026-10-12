@@ -9,17 +9,16 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.agent.services.ui_bridge_service import (
-    UiBridgeSnapshotWindowOperation,
-)
+from formbridge.bridge.service import UiBridgeSnapshotWindowOperation
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping, to_jsonable
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResourceRef
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentResourceRef
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+from formbridge.bridge.dto import UiWindowSnapshotResult
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor, ViewerWindowSnapshotResult
 from openhcs.core.streaming_config_declarations import ViewerType
 from scripts.capture_media_gallery import (
@@ -577,8 +576,8 @@ def test_shared_native_snapshot_ingestion_refuses_invalid_resource_without_movin
     from pyqt_reactive.services.window_snapshot import (
         QtWindowSnapshotRequest,
         QtWindowSnapshotService,
-        WindowSnapshotCaptureSpec,
     )
+    from formbridge.services.window_snapshot import WindowSnapshotCaptureSpec
 
     source_root = tmp_path / "capture"
     request = GallerySourceCaptureRequest(

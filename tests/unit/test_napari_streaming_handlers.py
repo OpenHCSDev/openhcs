@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass, replace
 from itertools import product
@@ -24,7 +25,6 @@ from openhcs.runtime.viewer_display import PadToMaxSize, SeparateLayers
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
@@ -1723,11 +1723,11 @@ def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
     with pytest.raises(ValueError, match="component-axis binding"):
         policy.axis_labels(
             np.zeros((8, 16, 16)),
-            ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+            ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
         )
     color_stack_metadata = ImagePayloadMetadata(
         axes=PayloadAxes.colour_samples(-1),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     with pytest.raises(ValueError, match="component-axis binding"):
         policy.axis_labels(np.zeros((4, 16, 16, 3)), color_stack_metadata)
@@ -4648,7 +4648,7 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
             np.zeros((4, 16, 16, 3)),
             ImagePayloadMetadata(
                 axes=PayloadAxes.colour_samples(-1),
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
             ),
         ),
     ):
@@ -4743,7 +4743,7 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
             ),
             image_metadata=ImagePayloadMetadata(
                 axes=PayloadAxes.colour_samples(-1),
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
             ),
             plane_component_domain=ViewerComponentValueDomainPayload(()),
             display_config=NapariDisplayConfig(),
@@ -5829,7 +5829,7 @@ def test_napari_aggregate_axis_binding_uses_declared_component_not_equal_extent(
             {"site": 1, "channel": 1},
             np.zeros((2, 3, 3), dtype=np.float32),
             image_metadata=ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
             ),
             plane_component_domain=_component_value_domain({"channel": [1, 2]}),
         )

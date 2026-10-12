@@ -8,7 +8,7 @@ try:
 except Exception:
     PYQT_AVAILABLE = False
 
-from pyqt_reactive.services.zmq_server_info import BaseServerInfo
+from formbridge.services.zmq_server_info import BaseServerInfo
 from pyqt_reactive.widgets.shared import TreeNodeIdentity, TreeStateAdapter
 from zmqruntime.messages import PongResponse, ServerRole
 

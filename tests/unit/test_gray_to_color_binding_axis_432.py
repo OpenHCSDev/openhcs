@@ -1,5 +1,6 @@
 """Source-only #432: declared primary binding is not a runtime grouping axis."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -13,7 +14,6 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -63,7 +63,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     physical = {"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1"}
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic/A01_s1_w2_z1_t1.tif",), component_metadata=(physical,),
         ),
@@ -92,10 +92,10 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     # The source's acquisition axis remains distinct from the named input axis.
     assert isinstance(request.payload, AlignedImageStack)
     assert request.execution_mode is AlignedStackExecution
-    assert request.plane_projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert request.plane_projection.axis is RuntimeSlicePlaneAxis
     assert request.plane_projection.axis_size == 1
-    assert request.plane_projection.plane_index is None
-    assert request.payload.slices[0].metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert request.plane_projection.preserves_complete_axis
+    assert request.payload.slices[0].metadata.plane_axis is SourceBindingPlaneAxis
     assert request.payload.slices[0].metadata.source_image_names == ("FITC",)
     execution = executor._invocation_request(
         image_request=request, adapter=runtime, current_image=source,
@@ -107,9 +107,9 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
         execution_mode=execution.execution_mode, plane_projection=execution.plane_projection,
     )
     # Float32 is the original Stack runner's output contract, not unit normalization.
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
     plane = RuntimeSliceProjection.value_for_slice(result, RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
+        axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1,
     ))
     assert plane.data.shape == (4, 5, 1)
     np.testing.assert_array_equal(plane.data[..., 0], pixels)
@@ -138,7 +138,7 @@ def _execute_bound_stack(bundle):
         {"color_scheme": GrayToColorModule.Scheme.STACK, "rescale_intensity": False},
         execution_mode=FullStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING,
+            axis=SourceBindingPlaneAxis,
             axis_size=bundle.data.shape[0],
             source_aliases=bundle.metadata.source_image_names,
         ),
@@ -151,13 +151,13 @@ def test_two_processing_roles_share_physical_channel_without_fabrication(aliases
     capped = np.clip(raw / 6000, 0, 1)
     inputs = tuple(_source_plane(pixels, alias) for pixels, alias in zip((raw, capped), aliases, strict=True))
     bundle = ImagePayloadBundleContext.from_payloads(inputs).compose()
-    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.metadata.plane_axis is SourceBindingPlaneAxis
     result = _execute_bound_stack(bundle)
     np.testing.assert_array_equal(result.data[..., 0], raw)
     np.testing.assert_array_equal(result.data[..., 1], capped)
     np.testing.assert_array_equal(inputs[0].data, raw)
     metadata = result.metadata
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_component_metadata["channel"] == "2"
     assert set(metadata.source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
@@ -169,13 +169,13 @@ def test_projected_runtime_plane_needs_a_separate_named_binding_axis():
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     scalar = _source_plane(pixels, "FITC")
     metadata = scalar.metadata
-    retained = replace(metadata, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(pixels[None], None)
+    retained = replace(metadata, plane_axis=RuntimeSlicePlaneAxis).payload_with(pixels[None], None)
     projected = RuntimeSliceProjection.value_for_slice(retained, RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
+        axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1,
     ))
-    assert projected.metadata.plane_axis is None
+    assert projected.metadata.plane_axis.unstacked
     bundle = ImagePayloadBundleContext.from_payloads((projected,)).compose()
-    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.metadata.plane_axis is SourceBindingPlaneAxis
     result = _execute_bound_stack(bundle)
     assert result.data.shape == (4, 5, 1)
     np.testing.assert_array_equal(result.data[..., 0], pixels)

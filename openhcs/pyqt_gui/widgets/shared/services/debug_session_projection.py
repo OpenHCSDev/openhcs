@@ -92,7 +92,7 @@ class DebugToolbarActionProjector:
                 code="debug_target_required",
                 message="Debug controls require a selected plate.",
                 hint=(
-                    "Use plate_manager.state to select a plate, initialize it, compile it, "
+                    "Use datasets.state to select a plate, initialize it, compile it, "
                     "then read pipeline_debug_toolbar.session."
                 ),
             )
@@ -122,7 +122,7 @@ class DebugToolbarActionProjector:
                     "session is available yet."
                 ),
                 hint=(
-                    "Poll pipeline_debug_toolbar.session and plate_manager.state; "
+                    "Poll pipeline_debug_toolbar.session and datasets.state; "
                     "use Stop debug session if the queued execution is stuck."
                 ),
             )

@@ -5,7 +5,8 @@ from __future__ import annotations
 from inspect import getdoc
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import AgentError, RenderedSource
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import RenderedSource
 from openhcs.agent.dto.execution import (
     ArtifactInputPlanSummary,
     ArtifactMaterializationPlanSummary,

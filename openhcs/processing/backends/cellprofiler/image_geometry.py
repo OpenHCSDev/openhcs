@@ -907,10 +907,10 @@ class CellProfilerPlaneGeometry:
         image = ImagePayload.of(image)
         image_array = np.asarray(image.data)
         metadata = image.metadata
-        if metadata.plane_axis is not None:
+        if metadata.plane_axis.leads_data:
             raise ValueError(
                 "CellProfiler plane geometry requires an already-projected image; "
-                f"got declared {metadata.plane_axis.value!r} plane axis."
+                f"got declared {metadata.plane_axis.name!r} plane axis."
             )
         channel_axis = metadata.axis_index(ColourAxis, image_array)
         expected_rank = 2 if channel_axis is None else 3
@@ -1254,7 +1254,7 @@ def tile(
     for image_index in range(num_images):
         put_tile(image_data[image_index], output_pixels, image_index, geometry)
     metadata = image.metadata
-    if metadata.plane_axis is not None:
+    if metadata.plane_axis.leads_data:
         metadata = metadata.collapse_leading_plane_axis()
     return (
         metadata.replace_fields(

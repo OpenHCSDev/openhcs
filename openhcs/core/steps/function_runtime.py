@@ -4,6 +4,8 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import logging
 import time
 from dataclasses import dataclass, replace
@@ -123,7 +125,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -141,7 +142,7 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 from openhcs.core.runtime_image_values import owned_runtime_value
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 from openhcs.core.debug import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
@@ -235,7 +236,7 @@ class PatternGroupExecutionScope:
 
         plan = self.unscoped_main_flow_source_binding_plan
         represented_names = frozenset(
-            image_metadata_of(payload).source_provenance.represented_source_image_names
+            as_runtime_value(payload).image_metadata.source_provenance.represented_source_image_names
         )
         if represented_names:
             variable_components = ComponentSet.of(
@@ -1275,7 +1276,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 single_output_plane_axis=(
                     processed_stack.plane_axis_for_output_context(output_contexts[0])
                     if len(output_payloads) == 1
-                    else None
+                    else NoPlaneAxis
                 ),
             )
             context.runtime_image_stack_cache.store(
@@ -1729,7 +1730,7 @@ class FunctionCoreExecutor:
         metadata = payload.metadata
         if (
             not metadata.persists_whole_image()
-            and metadata.plane_axis not in (None, RuntimePlaneAxis.RUNTIME_SLICE)
+            and metadata.plane_axis.one_plane_per_source_binding
         ):
             # A remaining binding axis does not prove this source's ordered
             # physical members. Resolve it through its declared origin owner.
@@ -1741,9 +1742,9 @@ class FunctionCoreExecutor:
             member_count=member_count if member_count is not None else 1,
         )
         projection = RuntimePlaneAxisValueProjection.from_projector(
-            request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
+            request.plane_projection, RuntimeSlicePlaneAxis, (),
         )
-        if projection is not None and projection.plane_index is not None:
+        if projection is not None and projection.selects_one_plane:
             payload = RuntimeSliceProjection.value_for_slice(payload, projection)
         return payload
 

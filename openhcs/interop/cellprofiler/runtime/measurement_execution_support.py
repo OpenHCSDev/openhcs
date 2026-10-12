@@ -88,11 +88,6 @@ def object_measurement_runtime_inputs(
     profile_enabled = CellProfilerRuntimeProfileLogger.enabled()
     profile_events: list[CellProfilerRuntimeProfileEvent] = []
     label_payload_timer = RuntimeProfileTimer.start()
-    if not isinstance(label_payload, ObjectLabelValue):
-        raise TypeError(
-            "CellProfiler object measurement requires ObjectLabelValue labels, "
-            f"got {type(label_payload).__name__}."
-        )
     prepared_labels = measurement_image.prepare_object_labels(
         label_payload,
         plane_projector=adapter,

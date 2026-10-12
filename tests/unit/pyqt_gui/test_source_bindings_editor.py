@@ -73,10 +73,7 @@ from pyqt_reactive.forms.parameter_form_manager import (
     ParameterFormManager,
 )
 from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PyQt6WidgetEnhancer
-from pyqt_reactive.forms.parameter_info_types import (
-    InlineDataclassWidgetInfo,
-    create_parameter_info,
-)
+from formbridge.forms.parameter_info_types import InlineDataclassWidgetInfo, create_parameter_info
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollViewport
 from pyqt_reactive.widgets.shared.reflowing_vertical_scroll_area import (

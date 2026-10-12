@@ -1,102 +1,14 @@
-"""Registered identities for stable agent-facing UI bridge objects."""
+"""OpenHCS's registered UI bridge identities: its windows, widgets, documents and surfaces."""
 
 from __future__ import annotations
 
-from abc import ABC
-from typing import ClassVar
-
-from metaclass_registry import AutoRegisterMeta
-
-
-class UiBridgeIdentityDeclaration(ABC, metaclass=AutoRegisterMeta):
-    """Registered identity for stable agent-facing UI bridge objects."""
-
-    __registry_key__ = "value"
-    __skip_if_no_key__ = True
-
-    value: ClassVar[str | None] = None
-    enum_member_name: ClassVar[str | None] = None
-
-    @classmethod
-    def require_value(cls) -> str:
-        if cls.value is None:
-            raise ValueError(
-                f"{cls.__name__} does not declare a bridge identity value."
-            )
-        return cls.value
-
-
-class UiStableWindowIdentityDeclaration(UiBridgeIdentityDeclaration):
-    """Registered identity and presentation for a stable public UI window."""
-
-    title: ClassVar[str | None] = None
-
-    @classmethod
-    def require_title(cls) -> str:
-        """Return the declaration-owned public window title."""
-
-        if cls.title is None:
-            raise ValueError(f"{cls.__name__} does not declare a window title.")
-        return cls.title
-
-    @classmethod
-    def has_title(cls) -> bool:
-        return cls.title is not None
-
-    @classmethod
-    def declaration_types(
-        cls,
-    ) -> tuple[type[UiStableWindowIdentityDeclaration], ...]:
-        """Project the complete stable-window family from the identity registry."""
-
-        return tuple(
-            dict.fromkeys(
-                declaration
-                for declaration in cls.__registry__.values()
-                if issubclass(declaration, cls)
-                and declaration.value is not None
-                and declaration.has_title()
-            )
-        )
-
-
-class UiWidgetIdentityDeclaration(UiBridgeIdentityDeclaration):
-    """Registered widget identity declaration."""
-
-    @classmethod
-    def action_provider_id(cls) -> str:
-        """Return the stable action-provider id for this widget."""
-        return f"{cls.require_value()}.actions"
-
-
-class UiStableWidgetIdentityDeclaration(
-    UiWidgetIdentityDeclaration,
+from formbridge.bridge.identities import (
+    UiCodeDocumentIdentityDeclaration,
+    UiStableWidgetIdentityDeclaration,
     UiStableWindowIdentityDeclaration,
-):
-    """Stable public window whose content is also a registered UI widget."""
-
-
-class UiOwnedByWidgetIdentityDeclaration(UiBridgeIdentityDeclaration):
-    """Identity declaration for a UI bridge object owned by one widget."""
-
-    widget_identity: ClassVar[type[UiWidgetIdentityDeclaration] | None] = None
-
-    @classmethod
-    def widget_id(cls) -> str:
-        if cls.widget_identity is None:
-            raise ValueError(f"{cls.__name__} does not declare a widget identity.")
-        return cls.widget_identity.require_value()
-
-
-class UiCodeDocumentIdentityDeclaration(UiOwnedByWidgetIdentityDeclaration):
-    """Registered code document identity declaration."""
-
-
-class UiStateSurfaceIdentityDeclarationBase(UiBridgeIdentityDeclaration):
-    """Registered protocol identity for one UI state surface.
-
-    Widget ownership and presentation metadata live on the owning widget class.
-    """
+    UiStateSurfaceIdentityDeclarationBase,
+    UiWidgetIdentityDeclaration,
+)
 
 
 class UiSessionViewWidgetIdentityDeclaration(UiStableWidgetIdentityDeclaration):
@@ -113,30 +25,21 @@ class UiSessionViewWidgetIdentityDeclaration(UiStableWidgetIdentityDeclaration):
         return True
 
 
-class PlateManagerWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
-    value = "plate_manager"
-    enum_member_name = "PLATE_MANAGER"
+class DatasetListWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
+    value = "datasets"
 
 
 class PipelineEditorWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
     value = "pipeline_editor"
-    enum_member_name = "PIPELINE_EDITOR"
 
 
 class PipelineDebugToolbarWidgetIdentity(UiWidgetIdentityDeclaration):
     value = "pipeline_debug_toolbar"
-    enum_member_name = "PIPELINE_DEBUG_TOOLBAR"
 
 
 class MainWindowWidgetIdentity(UiStableWidgetIdentityDeclaration):
     value = "main_window"
-    enum_member_name = "MAIN_WINDOW"
     title = "OpenHCS"
-
-
-class ManagedWindowWidgetIdentity(UiWidgetIdentityDeclaration):
-    value = "managed_window"
-    enum_member_name = "MANAGED_WINDOW"
 
 
 class SystemMonitorWindowIdentity(UiStableWindowIdentityDeclaration):
@@ -162,6 +65,7 @@ class LogViewerWindowIdentity(UiStableWindowIdentityDeclaration):
 class GlobalConfigWindowIdentity(UiStableWindowIdentityDeclaration):
     value = "global_config"
     title = "Configure OpenHCS"
+    manager_scope_alias = ""
 
 
 class KnowledgeBaseWindowIdentity(UiStableWindowIdentityDeclaration):
@@ -174,42 +78,30 @@ class AboutOpenHCSWindowIdentity(UiStableWindowIdentityDeclaration):
     title = "About OpenHCS"
 
 
-class PlateManagerOrchestratorCodeDocumentIdentity(UiCodeDocumentIdentityDeclaration):
-    value = "plate_manager.orchestrator_config"
-    enum_member_name = "PLATE_MANAGER_ORCHESTRATOR"
-    widget_identity = PlateManagerWidgetIdentity
+class DatasetListCodeDocumentIdentity(UiCodeDocumentIdentityDeclaration):
+    value = "datasets.orchestrator_config"
+    widget_identity = DatasetListWidgetIdentity
 
 
-class PlateManagerStateSurfaceIdentityDeclaration(
+class DatasetListStateSurfaceIdentity(
     UiStateSurfaceIdentityDeclarationBase
 ):
-    value = "plate_manager.state"
-    enum_member_name = "PLATE_MANAGER"
+    value = "datasets.state"
 
 
-class PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration(
+class DatasetLiveMeasurementsStateSurfaceIdentity(
     UiStateSurfaceIdentityDeclarationBase
 ):
-    value = "plate_manager.live_measurements"
-    enum_member_name = "PLATE_MANAGER_LIVE_MEASUREMENTS"
+    value = "datasets.live_measurements"
 
 
 class PipelineEditorStateSurfaceIdentityDeclaration(
     UiStateSurfaceIdentityDeclarationBase
 ):
     value = "pipeline_editor.state"
-    enum_member_name = "PIPELINE_EDITOR"
 
 
 class PipelineDebugSessionStateSurfaceIdentityDeclaration(
     UiStateSurfaceIdentityDeclarationBase
 ):
     value = "pipeline_debug_toolbar.session"
-    enum_member_name = "PIPELINE_DEBUG_SESSION"
-
-
-class UiLiveOverviewStateSurfaceIdentityDeclaration(
-    UiStateSurfaceIdentityDeclarationBase
-):
-    value = "ui_live_overview.state"
-    enum_member_name = "UI_LIVE_OVERVIEW"

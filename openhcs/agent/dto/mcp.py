@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openhcs.agent.dto.common import AgentError, AgentTimedStatusEnvelope
+from formbridge.contracts import AgentError, AgentTimedStatusEnvelope
 
 
 @dataclass(frozen=True, slots=True)

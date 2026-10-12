@@ -1,6 +1,7 @@
 """Agent-facing plate file streaming service."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 from dataclasses import replace
@@ -15,24 +16,22 @@ from polystore.streaming.identity import (
 )
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from python_introspect import JsonObject
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
     PlateFileStreamResult,
     PlatePathInspectionRequest,
 )
-from openhcs.agent.dto.ui_bridge import UiBridgeConnectionSpec
+from formbridge.bridge.dto import UiBridgeConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowStateResult
 from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionContext,
     PlateInspectionFileQueryProjection,
     PlateInspectionService,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    UiBridgeService,
-)
+from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC, UiBridgeService
 from openhcs.constants import Backend
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
@@ -41,7 +40,6 @@ from openhcs.core.plate_image_inventory import (
     PlateFileRecord,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -426,7 +424,7 @@ class PlateStreamingService:
                 ref=source_ref,
                 source_metadata=first_components,
                 image_metadata=ImagePayloadMetadata(
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     source_provenance=SourceImageProvenance(
                         source_path=image_path,
                         source_component_metadata=record.components,

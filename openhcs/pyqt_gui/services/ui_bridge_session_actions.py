@@ -12,16 +12,13 @@ from collections.abc import Callable
 
 from objectstate.object_state import ObjectStateRegistry
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
-from openhcs.agent.dto.ui_bridge import (
-    UiActionIdentity,
-    UiActionInvokeRequest,
-    UiActionSummary,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from formbridge.bridge.dto import UiActionIdentity, UiActionInvokeRequest, UiActionSummary
 from openhcs.authoring.session.operations import SessionOperation
 from openhcs.authoring.session.operations.datasets import PromptedOperation
 from openhcs.authoring.session.session import Session
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     UiActionDispatch,
     UiActionProviderABC,
     UiActionProviderIdentity,

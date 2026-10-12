@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.widgets.shared.base_form_dialog import BaseFormDialog
 from pyqt_reactive.widgets.shared.dirty_window_presenter import DirtyWindowStateTracker
 

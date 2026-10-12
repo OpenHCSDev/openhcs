@@ -31,13 +31,6 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
-    ObjectLabelPlaneDomainStrategy,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
@@ -211,7 +204,7 @@ class ZeroWithinPositiveExtentMissingObjectMeasurementValueStrategy(
                 f"got {type(label_payload).__name__}."
             )
         domain = label_payload.object_label_domain()
-        if domain.scope is not ObjectLabelDomainScope.PAYLOAD:
+        if domain.scope.ids_per_plane:
             raise ValueError(
                 "Missing object-measurement values require a projected payload "
                 "object-ID domain."
@@ -381,9 +374,7 @@ class ObjectMeasurementRowCompletionSchema:
                 "Empty object-measurement rows can only be completed when the sole "
                 f"declared axis is {slice_axis!r}; got {self.axis_fields!r}."
             )
-        axis_values = ObjectLabelPlaneDomainStrategy.for_enum_member(
-            label_payload.object_label_domain().scope
-        ).declared_measurement_axis_values(label_payload)
+        axis_values = label_payload.object_label_domain().scope.declared_measurement_axis_values(label_payload)
         return tuple((axis_value,) for axis_value in axis_values)
 
     def object_ids_for_axis(
@@ -457,13 +448,12 @@ class ObjectMeasurementRowCompletionSchema:
     ) -> tuple[RuntimeCallableArgument, ...]:
         """Return the axis subset that changes the label-id domain."""
         label_domain = label_payload.object_label_domain()
-        if label_domain.scope is ObjectLabelDomainScope.PAYLOAD:
+        if label_domain.scope.ids_span_payload:
             return ()
         slice_axis_name = MeasurementRowAxisField.SLICE_INDEX.value
-        if label_payload.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise ValueError(
-                "Plane-scoped measurement domains require the runtime-slice axis."
-            )
+        label_payload.plane_axis.require_runtime_slices(
+            "Plane-scoped measurement domains require the runtime-slice axis."
+        )
         if slice_axis_name not in self.axis_fields:
             raise ValueError("Plane-scoped measurement rows must declare slice_index.")
         slice_axis_position = self.axis_fields.index(slice_axis_name)

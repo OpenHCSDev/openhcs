@@ -6,13 +6,12 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from unittest.mock import patch
 
-from pyqt_reactive.protocols import (
+from formbridge.protocols.component_selection import (
     ComponentSelectionProviderABC,
     FunctionSelectionProviderABC,
-    LogDiscoveryProviderABC,
-    ServerScanProviderABC,
 )
-from pyqt_reactive.services.zmq_server_scan_service import (
+from formbridge.protocols.log_providers import LogDiscoveryProviderABC, ServerScanProviderABC
+from formbridge.services.zmq_server_scan_service import (
     EndpointObservationSnapshot,
     ZMQServerScanService,
 )

@@ -1,5 +1,6 @@
 """Contributor scope and saved producer addresses survive their real consumers."""
 
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
 from pathlib import Path
 import pickle
@@ -21,7 +22,7 @@ from openhcs.core.runtime_exports import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress, RuntimeArtifactLocation, RuntimeValueStore,
 )
@@ -46,7 +47,7 @@ from openhcs.core.artifacts.plans import MAIN_FLOW
 
 def _source(sites):
     return ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/input/field_{i}.tif" for i in range(len(sites))),
@@ -87,7 +88,7 @@ def test_mixed_acquired_and_reduced_batch_uses_distinct_original_display_scopes(
     declaration = DeclaredReducedField(np.full((3, 4), 720, dtype=np.uint16), [])
     reduced = ImageArtifactType.contextualize_output(
         source, declaration, MAIN_FLOW,
-        RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2),
+        RuntimePlaneAxisValueProjection.preserve(axis=SourceBindingPlaneAxis, axis_size=2),
     )
     assert declaration.calls == ["before", "after"]
     acquired_metadata = source.metadata.for_leading_source_plane(0)

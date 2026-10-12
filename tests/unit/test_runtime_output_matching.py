@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
@@ -20,7 +21,6 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
@@ -68,13 +68,13 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
     data = np.arange(24, dtype=np.float32).reshape((2, 3, 4))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(data, None)
     trailing = object()
     contract = _contract(first, second, measurements)
     matcher_returned_output = (payload, trailing)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
 
@@ -101,7 +101,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
         contract.contextualize_returned_canonical_output(
             matcher_returned_output,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=3,
             ),
         )
@@ -109,7 +109,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
         contract.contextualize_returned_canonical_output(
             matcher_returned_output,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis=SourceBindingPlaneAxis,
                 axis_size=2,
             ),
         )

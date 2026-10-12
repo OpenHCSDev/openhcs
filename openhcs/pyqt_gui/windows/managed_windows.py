@@ -12,7 +12,7 @@ from openhcs.agent.ui_bridge_identities import (
     ImageBrowserWindowIdentity,
     LogViewerWindowIdentity,
     PipelineEditorWidgetIdentity,
-    PlateManagerWidgetIdentity,
+    DatasetListWidgetIdentity,
     ZmqServerManagerWindowIdentity,
 )
 
@@ -32,7 +32,7 @@ class PlateManagerWindow(_ManagedChildCleanupWindow):
         super().__init__(main_window)
         self.main_window = main_window
         self.service_adapter = service_adapter
-        self.setWindowTitle(PlateManagerWidgetIdentity.require_title())
+        self.setWindowTitle(DatasetListWidgetIdentity.require_title())
         self.setModal(False)
         self.resize(600, 400)
 
@@ -103,7 +103,7 @@ class ImageBrowserWindow(_ManagedChildCleanupWindow):
         plate_widgets = [self.main_window.embedded_widgets.require_plate_manager()]
 
         plate_window = WindowManager._scoped_windows.get(
-            PlateManagerWidgetIdentity.require_value()
+            DatasetListWidgetIdentity.require_value()
         )
         if plate_window is not None and plate_window.widget not in plate_widgets:
             plate_widgets.append(plate_window.widget)

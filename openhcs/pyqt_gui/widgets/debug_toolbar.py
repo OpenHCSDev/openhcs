@@ -11,9 +11,7 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from openhcs.core.debug import DebugCommandType
 from openhcs.core.execution_state import ManagerExecutionState
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
-    UiOwnedStateSurfaceDeclaration,
-)
+from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     DebugActionRenderModel,
     DebugSessionPanelText,

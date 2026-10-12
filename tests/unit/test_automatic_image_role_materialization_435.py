@@ -1,5 +1,6 @@
 """Default retained image artifacts keep their declared output role identity."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import replace
 from pathlib import Path
@@ -26,7 +27,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata, ImagePayloadMetadataCompositionMode
+from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
@@ -99,7 +100,7 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
         )
         value = (
             payloads[0] if plane_count == 1 else ImagePayloadBundleContext.from_payloads(
-                payloads, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+                payloads, metadata_mode=RuntimeSlicePlaneAxis,
             ).compose()
         )
         context.runtime_value_store.record(
@@ -191,7 +192,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
         for index in (1, 2)
     )
     value = ImagePayloadBundleContext.from_payloads(
-        payloads, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        payloads, metadata_mode=RuntimeSlicePlaneAxis,
     ).compose()
     filemanager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
     context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
@@ -226,7 +227,7 @@ def test_authored_duplicate_template_still_fails_before_any_save(tmp_path):
             source_component_metadata={"well": "A01", "site": "1", "channel": "2", "z_index": str(index), "timepoint": "1", "extension": ".tif"},
         )) for index in (1, 2)
     )
-    value = ImagePayloadBundleContext.from_payloads(payloads, metadata_mode=ImagePayloadMetadataCompositionMode.STACK).compose()
+    value = ImagePayloadBundleContext.from_payloads(payloads, metadata_mode=RuntimeSlicePlaneAxis).compose()
     manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
     with pytest.raises(ValueError, match="produced duplicate paths"):
         materialization_outputs(spec, value, str(tmp_path / "role"), manager,
@@ -256,7 +257,7 @@ def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suff
         )) for index in range(1, plane_count + 1)
     )
     value = payloads[0] if plane_count == 1 else ImagePayloadBundleContext.from_payloads(
-        payloads, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        payloads, metadata_mode=RuntimeSlicePlaneAxis,
     ).compose()
     store = RuntimeValueStore()
     record = store.record(RuntimeValue.normalize(output_plan, value, axis_id="A01"), path=output_plan.path, backend=Backend.MEMORY.value)

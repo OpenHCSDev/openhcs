@@ -1011,7 +1011,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
                     "outputs but returned a non-aligned payload without a "
                     "compiled plane projection."
                 )
-            if projection.plane_index is not None:
+            if projection.selects_one_plane:
                 raise RuntimeSliceProjectionDeclarationError(
                     f"{function_name} declares {len(canonical_specs)} canonical "
                     "outputs after the compiled plane projection already selected "
@@ -1028,7 +1028,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
                 raise RuntimeSliceProjectionDeclarationError(
                     f"{function_name} declares {len(canonical_specs)} canonical "
                     "outputs but its returned payload does not declare the "
-                    f"compiled {projection.axis.value!r} plane axis; got "
+                    f"compiled {projection.axis.name!r} plane axis; got "
                     f"{output_axis!r}."
                 )
             output_values = tuple(

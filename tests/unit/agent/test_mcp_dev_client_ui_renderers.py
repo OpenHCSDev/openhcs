@@ -7,9 +7,9 @@ from dataclasses import replace
 
 from python_introspect import to_jsonable
 
-from openhcs.agent.dto.common import AgentError, AgentWarning
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.mcp import McpServerHealthResult
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     QT_TOP_LEVEL_WINDOW_KIND,
     UiActionCatalog,
     UiActionIdentity,
@@ -21,10 +21,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentCatalog,
     UiCodeDocumentIdentity,
     UiCodeDocumentSummary,
-    UiDebugRuntimeFrameState,
-    UiPipelineDebugSessionState,
-    UiPipelineEditorState,
-    UiPlateManagerState,
     UiSnapshotRef,
     UiStateSurfaceCatalog,
     UiStateSurfaceDocument,
@@ -37,9 +33,15 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowIdentity,
     UiWindowSummary,
 )
+from openhcs.agent.dto.ui_bridge import (
+    UiDebugRuntimeFrameState,
+    UiPipelineDebugSessionState,
+    UiPipelineEditorState,
+    UiPlateManagerState,
+)
 from openhcs.agent.ui_bridge_identities import (
     PipelineEditorStateSurfaceIdentityDeclaration,
-    PlateManagerStateSurfaceIdentityDeclaration,
+    DatasetListStateSurfaceIdentity,
 )
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity,
@@ -183,7 +185,7 @@ def test_catalogs_filter_and_truncate_with_contains_and_limit():
     surfaces = replace(
         sample_dto(UiStateSurfaceCatalog),
         surfaces=(
-            surface_summary("plate_manager.state", title="Plate Manager"),
+            surface_summary("datasets.state", title="Plate Manager"),
             surface_summary("plate_manager.debug", title="Debug"),
             surface_summary("pipeline_editor.state", title="Pipeline Editor"),
         ),
@@ -191,7 +193,7 @@ def test_catalogs_filter_and_truncate_with_contains_and_limit():
     rendered = render(surfaces, CatalogRenderOptions(contains="plate", limit=1))
     assert "State surfaces: count=3 matched=2 shown=1" in rendered
     assert "Filter: contains=plate" in rendered
-    assert "- plate_manager.state: widget=" in rendered
+    assert "- datasets.state: widget=" in rendered
     assert "plate_manager.debug" not in rendered
     assert "...<truncated 1 surfaces>" in rendered
 
@@ -203,7 +205,7 @@ def test_catalogs_filter_and_truncate_with_contains_and_limit():
 
     documents = replace(
         sample_dto(UiCodeDocumentCatalog),
-        documents=(document("plate_manager.orchestrator_config"), document("pipeline")),
+        documents=(document("datasets.orchestrator_config"), document("pipeline")),
     )
     assert "Code documents: count=2 matched=2 shown=2" in render(documents)
 
@@ -221,7 +223,7 @@ def test_state_surface_documents_render_through_their_surface_state():
     state = replace(
         sample_dto(UiPlateManagerState),
         summary=surface_summary(
-            PlateManagerStateSurfaceIdentityDeclaration.require_value(),
+            DatasetListStateSurfaceIdentity.require_value(),
             current_selection_count=1,
         ),
         manager_execution_state="idle",

@@ -7,19 +7,19 @@ import asyncio
 from typing import cast
 
 
-from pyqt_reactive.services.window_snapshot import (
+from formbridge.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotFrameCondition,
 )
 
-from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
+from formbridge.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.agent.dto.session import (
     DatasetRowState,
     SessionEventBatch,
     SessionEventsRequest,
 )
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     AllFields,
     UiActionInvokeRequest,
     UiCodeDocumentApplyRequest,
@@ -30,18 +30,13 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldListQuery,
     UiObjectStateFieldMutationRequest,
     UiObjectStateScopeListRequest,
-    UiSelectedPlateWorkflowKind,
     UiWidgetActionInvokeRequest,
     UiWidgetTreeRequest,
     UiWindowSnapshotRequest,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    DEFAULT_UI_BRIDGE_TIMEOUT_MS,
-    UiBridgeGatewayTimeoutError,
-)
-from openhcs.agent.ui_bridge_identities import (
-    PlateManagerStateSurfaceIdentityDeclaration,
-)
+from openhcs.agent.dto.ui_bridge import UiSelectedPlateWorkflowKind
+from formbridge.bridge.service import DEFAULT_UI_BRIDGE_TIMEOUT_MS, UiBridgeGatewayTimeoutError
+from openhcs.agent.ui_bridge_identities import DatasetListStateSurfaceIdentity
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
@@ -104,7 +99,7 @@ class StateSurfaceCommandSpec(CapabilityBackedCommandSpec):
         parser.add_argument(
             "surface_id",
             nargs="?",
-            default=PlateManagerStateSurfaceIdentityDeclaration.require_value(),
+            default=DatasetListStateSurfaceIdentity.require_value(),
         )
         parser.add_argument(
             "--selection-mode",
@@ -166,7 +161,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_selected_plate_workflow
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
+        state_surface_id = DatasetListStateSurfaceIdentity.require_value()
         parser.add_argument(
             "workflow",
             choices=tuple(workflow.value for workflow in UiSelectedPlateWorkflowKind),
@@ -247,7 +242,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             state_surface_tool_arguments(
                 args,
                 surface_id=(
-                    PlateManagerStateSurfaceIdentityDeclaration.require_value()
+                    DatasetListStateSurfaceIdentity.require_value()
                 ),
                 selection_mode=args.poll_selection_mode,
             ),

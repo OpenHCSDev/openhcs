@@ -3,11 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from openhcs.agent.dto.ui_bridge import UiObjectStateFieldMutationRequest
+from formbridge.bridge.dto import UiObjectStateFieldMutationRequest
 from objectstate import ObjectState, ObjectStateRegistry
-from openhcs.pyqt_gui.services.ui_bridge_object_state import (
-    ObjectStateFieldMutationService,
-)
+from formbridge.bridge.object_state import ObjectStateFieldMutationService
 
 
 @dataclass

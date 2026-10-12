@@ -12,11 +12,8 @@ from openhcs.pyqt_gui.services.reactor_providers import (
     OpenHCSComponentSelectionProvider,
 )
 from openhcs.pyqt_gui.widgets.step_parameter_editor import StepParameterEditorWidget
-from pyqt_reactive.protocols import (
-    FunctionSelectionProviderABC,
-    codegen_provider,
-    component_selection,
-)
+from formbridge.protocols.component_selection import FunctionSelectionProviderABC
+from formbridge.protocols import codegen_provider, component_selection
 from pyqt_reactive.widgets.function_list_editor import FunctionListEditorWidget
 
 

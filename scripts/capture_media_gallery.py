@@ -32,13 +32,13 @@ import openhcs  # noqa: F401  # Activate recorded source dependencies before UI 
 
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
-from pyqt_reactive.services.tab_identity import TabLabelDeclarationMixin
+from formbridge.services.tab_identity import TabLabelDeclarationMixin
 from pyqt_reactive.services.widget_tree_projection import WidgetActionKind
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiActionCatalog,
     UiActionInvokeRequest,
     UiActionInvokeResult,
@@ -61,7 +61,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowSnapshotRequest,
     ViewerWindowSnapshotResult,
 )
-from openhcs.agent.services.ui_bridge_service import (
+from formbridge.bridge.service import (
     UiBridgeCloseWindowOperation,
     UiBridgeInvokeActionOperation,
     UiBridgeInvokeWidgetActionOperation,

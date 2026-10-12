@@ -430,11 +430,11 @@ class ObjectArtifactOutputModule(
             )
         row_batches.append(super().measurement_record_rows(request))
         rows = ConcatenatedColumnarRows(tuple(row_batches))
-        plane_index = request.adapter.request.plane_projection.plane_index
-        if plane_index is not None:
+        plane_projection = request.adapter.request.plane_projection
+        if plane_projection.selects_one_plane:
             rows = MeasurementRowsAxisProjection.from_rows(
                 rows
-            ).project_runtime_slice_index(plane_index)
+            ).project_runtime_slice_index(plane_projection.plane_index)
         return rows
 
     @classmethod

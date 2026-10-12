@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from python_introspect import to_jsonable
 
 from openhcs.core.debug import DebugCommand, DebugCommandType

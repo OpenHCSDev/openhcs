@@ -320,7 +320,7 @@ def test_collapsed_same_path_mirror_retains_filename_and_semantic_views(tmp_path
     assert "site" not in metadata.source_component_metadata
     assert len(metadata.source_provenance.represented_source_identities) == 2
     assert metadata.source_voxel_spacing == SourceVoxelSpacing((0.5, 0.5))
-    assert metadata.plane_axis is None
+    assert metadata.plane_axis.unstacked
     target.write(context, produced_plan=plan)
     document = json.loads((tmp_path / "openhcs_metadata.json").read_text())
     reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(

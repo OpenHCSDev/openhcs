@@ -1,5 +1,7 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
+from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
 import json
@@ -25,7 +27,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecu
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
-    ImageMetadataPayload, ImagePayloadMetadata, ImagePayloadMetadataCompositionMode,
+    ImageMetadataPayload, ImagePayloadMetadata,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
@@ -41,7 +43,7 @@ from openhcs.core.steps.function_outputs import (
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
 from openhcs.core.materialization import (
     ImageFileOptions, MaterializationSpec,
@@ -111,7 +113,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                 source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
             ).payload_with(filemanager.load(str(path), Backend.DISK.value)))
         source_stack = stack_image_payloads(
-            source_planes, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+            source_planes, metadata_mode=RuntimeSlicePlaneAxis,
         )
         roles = (("fixture_image_494", 1.0),)
     for role, scale in roles:
@@ -183,7 +185,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         if aggregate:
             payload = ImageArtifactType.contextualize_output(
                 source_stack, pixels.copy(), output_plan,
-                RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 4),
+                RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=4),
             )
         if aggregate:
             execution_scope = RuntimeExecutionAxisScope.from_raw(
@@ -258,7 +260,14 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         destination = plan.output_dir / filename
         filemanager.save(payload, str(destination), Backend.MEMORY.value)
         filemanager.ensure_directory(plan.output_dir, Backend.DISK.value)
-        filemanager.save(payload.data, str(destination), Backend.DISK.value)
+        # Write the file as the runtime does: with the payload's declared TIFF axes.
+        ((_indices, tiff_config),) = ImageFileFormat.storage_write_batches(
+            (payload,), (destination,), None,
+        )
+        filemanager.save(
+            payload.data, str(destination), Backend.DISK.value,
+            **({} if tiff_config is None else {"tiff_config": tiff_config}),
+        )
         record_output_path(
             context, plan, str(destination), image_metadata=payload.metadata,
             output_context=AlignedImageSliceContext.main_flow(
@@ -341,9 +350,9 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         }
         provenance = metadata["source_provenance"]
         assert "z_index" not in provenance["source_component_metadata"]
-        assert [plane["component_metadata"]["z_index"] for plane in
-                provenance["source_image_provenance_planes"]] == ["0", "1", "2", "3"]
-        assert [plane["path"] for plane in provenance["source_image_provenance_planes"]] == [
+        planes = provenance["source_image_provenance_planes"]["identities"]
+        assert [plane["component_metadata"]["z_index"] for plane in planes] == ["0", "1", "2", "3"]
+        assert [plane["path"] for plane in planes] == [
             str(source_dir / f"A01_s001_w1_z{z_index:03d}_t001.tif") for z_index in range(4)
         ]
         assert metadata["source_spatial_domain"]["spatial_dimensions"] == 2

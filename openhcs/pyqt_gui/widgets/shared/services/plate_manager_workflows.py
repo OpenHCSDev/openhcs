@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from pyqt_reactive.widgets.shared.manager_workflows import ManagerCodeExecutionWorkflow
+from formbridge.managers.workflows import ManagerCodeExecutionWorkflow
 
 from openhcs.authoring.session.dataset_document import (
     AllDatasetDocumentScope,

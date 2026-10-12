@@ -1,6 +1,7 @@
 """Shared CellProfiler color literal semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 import re
 from abc import ABC, abstractmethod
@@ -41,7 +42,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -1600,12 +1600,11 @@ def gray_to_color(
     )
     output = GrayToColorSchemeRunner.for_scheme(scheme).run(request)
     metadata = image.metadata
-    if metadata.plane_axis is not None:
-        if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
-            raise ValueError(
-                "GrayToColor image metadata requires a source-binding plane "
-                f"axis, got {metadata.plane_axis!r}."
-            )
+    if metadata.plane_axis.leads_data:
+        metadata.plane_axis.require_source_bindings(
+            "GrayToColor image metadata requires a source-binding plane "
+            f"axis, got {metadata.plane_axis!r}."
+        )
         source_plane_count = metadata.source_provenance.source_plane_count
         if source_plane_count < 1:
             raise ValueError(
@@ -1614,7 +1613,7 @@ def gray_to_color(
         parent_image = RuntimeSliceProjection.value_for_slice(
             image,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis=SourceBindingPlaneAxis,
                 plane_index=0,
                 axis_size=source_plane_count,
                 source_aliases=metadata.source_image_names,
@@ -1624,7 +1623,7 @@ def gray_to_color(
         parent_image = image
     output_metadata = (
         metadata.without_leading_plane_axis()
-        if metadata.plane_axis is not None
+        if metadata.plane_axis.leads_data
         else metadata
     )
     return output_metadata.with_axis(ColourSampleAxisSpec(), -1).payload_with(

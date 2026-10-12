@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 from zmqruntime import (
     DataControlPortPair,
     DataControlPortPairAuthority,
@@ -16,10 +16,10 @@ from zmqruntime import (
     TransportMode,
 )
 
-from openhcs.agent.dto.common import AgentResourceRef
+from formbridge.contracts import AgentResourceRef
 from openhcs.agent.dto.execution import ExecutionConnectionSpec, RuntimeServerInfo
 from openhcs.agent.dto.functions import FunctionCatalogEntry, FunctionCatalogPage
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     ActionAccepted,
     UiActionInvocationStatus,
     UiWindowSnapshotResult,

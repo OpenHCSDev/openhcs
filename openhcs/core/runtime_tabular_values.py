@@ -19,7 +19,6 @@ from python_introspect import JsonValue, to_jsonable
 import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceProjectableValue,
 )
@@ -32,15 +31,15 @@ class ColumnarRows(RuntimeSliceProjectableValue):
 
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
         """Select the rows of one runtime slice through the rows' declared axis."""
-        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            return self
-        from openhcs.core.measurement_row_materialization import (
-            MeasurementRowsAxisProjection,
-        )
+        if context.axis.one_plane_per_runtime_slice:
+            from openhcs.core.measurement_row_materialization import (
+                MeasurementRowsAxisProjection,
+            )
 
-        return MeasurementRowsAxisProjection.from_rows(self).project_runtime_slice_index(
-            context.require_plane_index()
-        )
+            return MeasurementRowsAxisProjection.from_rows(
+                self
+            ).project_runtime_slice_index(context.require_plane_index())
+        return self
 
     @staticmethod
     def column_array(values: Sequence[object]) -> np.ndarray:

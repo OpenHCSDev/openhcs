@@ -363,10 +363,10 @@ def test_live_measurement_surface_is_discovered_from_public_catalog():
         {
             "actions": [
                 {
-                    "widget_id": "plate_manager",
+                    "widget_id": "datasets",
                     "action_id": "show_live_results",
                     "related_state_surface_ids": [
-                        "plate_manager.state",
+                        "datasets.state",
                         "runtime-owned-id",
                     ],
                 },
@@ -374,7 +374,7 @@ def test_live_measurement_surface_is_discovered_from_public_catalog():
         },
         {
             "surfaces": [
-                {"surface_id": "plate_manager.state"},
+                {"surface_id": "datasets.state"},
                 {"surface_id": "runtime-owned-id"},
             ]
         },
@@ -671,7 +671,7 @@ class _FakeMcpClient:
                     "surfaces": [
                         {
                             "surface_id": "runtime-owned-id",
-                            "widget_id": "plate_manager",
+                            "widget_id": "datasets",
                             "title": "Live measurement results",
                         }
                     ]
@@ -683,10 +683,10 @@ class _FakeMcpClient:
                 {
                     "actions": [
                         {
-                            "widget_id": "plate_manager",
+                            "widget_id": "datasets",
                             "action_id": "show_live_results",
                             "related_state_surface_ids": [
-                                "plate_manager.state",
+                                "datasets.state",
                                 "runtime-owned-id",
                             ],
                         }
@@ -867,6 +867,6 @@ def test_showcase_reuses_one_persistent_session_and_writes_timing_report(tmp_pat
         argv[:2] == ("state-surface", "runtime-owned-id") for argv in fake_client.argv
     )
     assert any(
-        argv[:3] == ("invoke-action", "plate_manager", "show_live_results")
+        argv[:3] == ("invoke-action", "datasets", "show_live_results")
         for argv in fake_client.argv
     )

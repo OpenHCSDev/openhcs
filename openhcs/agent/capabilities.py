@@ -35,12 +35,8 @@ from openhcs.agent.dto.authoring import (
     AuthoringContext,
     AuthoringContextRequest,
 )
-from openhcs.agent.dto.common import (
-    AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
-    SCHEMA_VERSION,
-    AgentDataclassCliRequest,
-    RenderedSource,
-)
+from formbridge.contracts import AGENT_PARAMETER_DESCRIPTION_METADATA_KEY, AgentDataclassCliRequest
+from openhcs.agent.dto.common import SCHEMA_VERSION, RenderedSource
 from openhcs.agent.dto.config import (
     ConfigPatch,
     ConfigRef,
@@ -81,7 +77,7 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.authoring.session.operations import HeadlessOperation, SessionOperation
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
-from openhcs.agent.services.ui_bridge_service import (
+from formbridge.bridge.service import (
     UiBridgeApplyDocumentOperation,
     UiBridgeCloseWindowOperation,
     UiBridgeFocusWindowOperation,
@@ -103,8 +99,6 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeOperation,
     UiBridgeRequestlessOperation,
     UiBridgeRestoreSnapshotOperation,
-    UiBridgeSelectedPlateWorkflowOperation,
-    UiBridgeSessionEventsOperation,
     UiBridgeSnapshotWindowOperation,
     UiBridgeStatusOperation,
     UiBridgeSwitchBranchOperation,
@@ -112,6 +106,10 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeValidateDocumentOperation,
     UiBridgeWaitForOperationReceiptOperation,
     UiBridgeWidgetTreeOperation,
+)
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeSelectedPlateWorkflowOperation,
+    UiBridgeSessionEventsOperation,
 )
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
@@ -162,7 +160,7 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationRequest,
     SyntheticPlateGenerationResult,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiBridgeCatalog,
     UiObjectStateFieldHelpQuery,
     UiObjectStateFieldHelpResult,
