@@ -21,7 +21,10 @@ from openhcs.core.callable_contract import (
     attach_callable_contract_metadata, attach_processing_prepare,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import NormalizedFunctionGroup
+from openhcs.core.function_patterns import (
+    NormalizedFunctionGroup,
+    normalize_prepared_function_pattern,
+)
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -177,8 +180,8 @@ def test_authored_compilation_prepares_before_signature_and_refreshes_each_compi
         raw.__annotations__["image"] = desired_annotations.pop(0)
 
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
-    first = NormalizedFunctionGroup.from_chain("group", (raw,)).items[0].contract
-    second = NormalizedFunctionGroup.from_chain("group", (raw,)).items[0].contract
+    first = next(normalize_prepared_function_pattern([raw]).iter_items()).contract
+    second = next(normalize_prepared_function_pattern([raw]).iter_items()).contract
     assert first.canonical_parameter_annotations["image"] is ArrayPayload
     assert second.canonical_parameter_annotations["image"] is np.ndarray
     assert FunctionContractAttribute.canonical_signature not in vars(raw)
@@ -205,10 +208,22 @@ def test_unprepared_function_reference_compilation_reads_prepared_live_declarati
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
         composite_key="test:raw_numeric",
     )
-    contract = NormalizedFunctionGroup.from_chain("group", (reference,)).items[0].contract
+    contract = next(normalize_prepared_function_pattern([reference]).iter_items()).contract
     assert contract.func is reference
     assert contract.canonical_parameter_annotations["image"] is np.ndarray
     assert fake_preparation.call_count == 1
+
+
+def test_lowering_a_pattern_without_compiling_it_prepares_nothing(fake_preparation):
+    """Authoring and validation read the declaration; they never touch a kernel."""
+    contract = NormalizedFunctionGroup.from_chain("group", (raw_numeric,)).items[0].contract
+    declared = CallableContract.from_declared_callable(raw_numeric)
+    assert fake_preparation.call_count == 0
+    assert contract.canonical_signature == declared.canonical_signature
+    assert (
+        declared.canonical_signature
+        == CallableContract.from_prepared_callable(raw_numeric).canonical_signature
+    )
 
 
 @pytest.mark.parametrize("serializer", [pickle, cloudpickle])

@@ -1535,11 +1535,29 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def from_prepared_callable(cls, func: Callable[..., object]) -> "CallableContract":
         """Construct a compiled view only after the declaration owner prepares it."""
         projection = CallableProjection.from_callable(func)
-        prepared = cls.from_callable(projection.prepared_callable())
-        if prepared.prepared_canonical_signature is None:
-            prepared = prepared.with_prepared_signature()
+        return cls._for_projection(projection, projection.prepared_callable())
+
+    @classmethod
+    def from_declared_callable(cls, func: Callable[..., object]) -> "CallableContract":
+        """Construct the same view from the declaration alone, preparing nothing.
+
+        A signature is read from the callable's annotations and preparation never
+        changes it. Authoring a pipeline (converting a ``.cppipe``) runs no kernel,
+        so it must neither compile nor load one: kernels belong to the catalog
+        preparation of the process that executes.
+        """
+        projection = CallableProjection.from_callable(func)
+        return cls._for_projection(projection, projection.declared_callable())
+
+    @classmethod
+    def _for_projection(
+        cls, projection: "CallableProjection", resolved: Callable[..., object]
+    ) -> "CallableContract":
+        contract = cls.from_callable(resolved)
+        if contract.prepared_canonical_signature is None:
+            contract = contract.with_prepared_signature()
         return dataclasses.replace(
-            prepared, func=func, function_name=projection.name,
+            contract, func=projection.func, function_name=projection.name,
             module_name=projection.module_name,
         )
 
@@ -2229,13 +2247,22 @@ class CallableProjection:
             )
         return cls(func=func, name=name, module_name=module_name, namespace=namespace)
 
-    def prepared_callable(self) -> Any:
-        """Keep ready library references or prepare live authored targets before validation."""
-        prepared = DeclaredSignature().read(
+    def has_published_signature(self) -> bool:
+        """Whether catalog preparation already published this callable's signature."""
+        return DeclaredSignature().read(
             self.namespace.get(FunctionContractAttribute.canonical_signature),
             owner=f"{self.name!r}.{FunctionContractAttribute.canonical_signature}",
-        )
-        if prepared is not None:
+        ) is not None
+
+    def declared_callable(self) -> Any:
+        """Keep ready library references or resolve live authored targets, preparing nothing."""
+        if self.has_published_signature():
+            return self.func
+        return _resolve_declared_callable(self.func)
+
+    def prepared_callable(self) -> Any:
+        """Keep ready library references or prepare live authored targets before validation."""
+        if self.has_published_signature():
             return self.func
         resolved = _resolve_declared_callable(self.func)
         for target in type(self).from_callable(resolved).prepare_targets():

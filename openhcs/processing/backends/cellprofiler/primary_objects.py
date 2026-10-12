@@ -657,7 +657,7 @@ class IdentifyPrimaryObjectsModule(
             artifact_outputs=artifact_outputs,
         )
         source = cls.primary_image_inputs(
-            CallableContract.from_prepared_callable(
+            CallableContract.from_declared_callable(
                 cls.require_callable(invocation_key.function_name)
             ),
             artifact_inputs.specs,

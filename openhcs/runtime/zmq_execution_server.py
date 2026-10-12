@@ -27,10 +27,12 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.dataset_sources.discovery import discover_domain_registries
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.import_authority import ImportRootEndpoint
@@ -47,6 +49,7 @@ from openhcs.runtime.zmq_control import (
 from openhcs.runtime.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
     ZMQAuxiliaryExecutionParams,
+    ZMQAuxiliaryParamField,
     ZMQExecutionRequestPayload,
 )
 from openhcs.runtime.zmq_orchestrator_environment import (
@@ -199,7 +202,17 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
         super().prepare_runtime_capabilities(status_callback)
+        self._prepare_first_request_state()
         self._prepare_worker_resources()
+
+    @staticmethod
+    def _prepare_first_request_state() -> None:
+        """Run what the first request would otherwise run once, before the fork.
+
+        Each owner completes its own lazy state: here, the family registries
+        that domains extend. Workers inherit the result.
+        """
+        discover_domain_registries()
 
     def _prepare_worker_resources(self) -> None:
         """Prepare inherited workers before endpoint execution threads start."""
@@ -813,9 +826,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         export_path = request_context.auxiliary_params.runtime_observation_export_path
         if export_path is None:
             return
-
-        from openhcs.core.runtime_execution_validation import runtime_output_roots
-        from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
 
         execution_bundle = compilation.execution_bundle
         output_roots = runtime_output_roots(

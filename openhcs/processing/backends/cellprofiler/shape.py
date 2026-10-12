@@ -482,6 +482,7 @@ from openhcs.processing.backends.analysis.region_properties import (
 )
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     feret_diameters_from_labels,
+    prepare_arccos_kernels,
     _numpy124_aquicksort_indices,
     _numpy124_ordered_label_maximum_indices,
 )
@@ -1018,6 +1019,7 @@ class ObjectSizeShapeKernelPreparation(
 
     def execute(self) -> None:
         """Compile AreaShape paths before benchmark execution."""
+        prepare_arccos_kernels()
         image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
         labels = np.zeros((32, 32), dtype=np.int32)
         labels[8:24, 8:24] = 1
@@ -1960,64 +1962,6 @@ def _first_scalar(value: object) -> float:
 
 
 @njit(cache=True)
-def _radius_features_from_distance_image_numba(
-    labels: np.ndarray, distances: np.ndarray, label_ids: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    object_count = label_ids.size
-    max_label = 0
-    for i in range(object_count):
-        label_id = int(label_ids[i])
-        if label_id > max_label:
-            max_label = label_id
-    counts_by_label = np.zeros(max_label + 1, dtype=np.int64)
-    sums_by_label = np.zeros(max_label + 1, dtype=np.float64)
-    max_by_label = np.zeros(max_label + 1, dtype=np.float64)
-    rows, cols = labels.shape
-    for row in range(rows):
-        for col in range(cols):
-            label = int(labels[row, col])
-            if label > 0 and label <= max_label:
-                value = distances[row, col]
-                counts_by_label[label] += 1
-                sums_by_label[label] += value
-                if value > max_by_label[label]:
-                    max_by_label[label] = value
-    offsets = np.zeros(max_label + 2, dtype=np.int64)
-    for label in range(max_label + 1):
-        offsets[label + 1] = offsets[label] + counts_by_label[label]
-    cursor = offsets.copy()
-    ordered = np.empty(offsets[max_label + 1], dtype=np.float64)
-    for row in range(rows):
-        for col in range(cols):
-            label = int(labels[row, col])
-            if label > 0 and label <= max_label:
-                index = cursor[label]
-                ordered[index] = distances[row, col]
-                cursor[label] = index + 1
-    max_radius = np.zeros(object_count, dtype=np.float64)
-    mean_radius = np.zeros(object_count, dtype=np.float64)
-    median_radius = np.zeros(object_count, dtype=np.float64)
-    for i in range(object_count):
-        label = int(label_ids[i])
-        if label <= 0 or label > max_label:
-            continue
-        count = counts_by_label[label]
-        if count <= 0:
-            continue
-        start = offsets[label]
-        values = ordered[start : start + count].copy()
-        values.sort()
-        max_radius[i] = max_by_label[label]
-        mean_radius[i] = sums_by_label[label] / count
-        middle = count // 2
-        if count % 2 == 1:
-            median_radius[i] = values[middle]
-        else:
-            median_radius[i] = 0.5 * (values[middle - 1] + values[middle])
-    return (max_radius, mean_radius, median_radius)
-
-
-@njit(cache=True)
 def _radius_features_from_labels_numba(
     labels: np.ndarray, label_ids: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -2217,42 +2161,6 @@ def _distance_to_label_edge_numba(labels: np.ndarray) -> np.ndarray:
                 if labels[source_y, source_x] == label:
                     output[source_y, source_x] = np.sqrt(distances_sq[yy, xx])
     return output
-
-
-@njit(cache=True)
-def _maximum_position_of_labels_numba(
-    image: np.ndarray, labels: np.ndarray, label_ids: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-    object_count = label_ids.size
-    max_label = 0
-    for index in range(object_count):
-        label = int(label_ids[index])
-        if label > max_label:
-            max_label = label
-    best_values = np.full(max_label + 1, -np.inf, dtype=np.float64)
-    best_y = np.full(max_label + 1, -1, dtype=np.int64)
-    best_x = np.full(max_label + 1, -1, dtype=np.int64)
-    seen = np.zeros(max_label + 1, dtype=np.bool_)
-    height, width = labels.shape
-    for y in range(height):
-        for x in range(width):
-            label = int(labels[y, x])
-            if label <= 0 or label > max_label:
-                continue
-            value = image[y, x]
-            if not seen[label] or value > best_values[label]:
-                seen[label] = True
-                best_values[label] = value
-                best_y[label] = y
-                best_x[label] = x
-    centers_i = np.zeros(object_count, dtype=np.float64)
-    centers_j = np.zeros(object_count, dtype=np.float64)
-    for index in range(object_count):
-        label = int(label_ids[index])
-        if label > 0 and label <= max_label and seen[label]:
-            centers_i[index] = float(best_y[label])
-            centers_j[index] = float(best_x[label])
-    return (centers_i, centers_j)
 
 
 def _maximum_position_of_labels_scipy_select(

@@ -1050,7 +1050,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
 
         del module, binding, name, step_context, output_position
         primary_images = cls.primary_image_inputs(
-            CallableContract.from_prepared_callable(
+            CallableContract.from_declared_callable(
                 cls.require_callable(invocation_key.function_name)
             ),
             artifact_inputs.specs,
@@ -1183,7 +1183,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
             group_key=invocation_key.group_key,
         )
         func = cls.require_callable(invocation_key.function_name)
-        callable_contract = CallableContract.from_prepared_callable(func)
+        callable_contract = CallableContract.from_declared_callable(func)
         inputs = cls.artifact_contract_inputs(
             module,
             invocation_key=invocation_key,
