@@ -56,7 +56,7 @@ from zmqruntime.startup import (
 from zmqruntime.transport import TransportEndpoint
 
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.core.array_conversions import StepConversions
+from openhcs.core.array_conversions import ComparedConversions
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentCodec
@@ -442,11 +442,12 @@ class ZMQCompiledPipelineRun:
         return ExecutionOutputSummary.from_results_summary(self.results_summary)
 
     @property
-    def conversions(self) -> StepConversions:
-        """The array conversions the server's workers made in this run, by step."""
+    def conversions(self) -> tuple[ComparedConversions, ...]:
+        """The array conversions the server's workers made, each beside the plan."""
 
-        return StepConversions.from_json(
-            self.results_summary[StepConversions.RESULTS_SUMMARY_KEY]
+        return tuple(
+            ComparedConversions.from_json(row)
+            for row in self.results_summary[ComparedConversions.RESULTS_SUMMARY_KEY]
         )
 
 

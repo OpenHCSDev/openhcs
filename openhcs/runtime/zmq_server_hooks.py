@@ -12,7 +12,7 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.core.array_conversions import StepConversions
+from openhcs.core.array_conversions import ComparedConversions
 from openhcs.core.execution_state import ExecutionOutputSummary
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
@@ -88,9 +88,9 @@ class ZMQResultsSummaryEnricher:
                 compiled_execution_extras.viewer_states_by_port
             )
         if compiled_execution_extras is not None:
-            summary[StepConversions.RESULTS_SUMMARY_KEY] = (
-                compiled_execution_extras.conversions.to_json()
-            )
+            summary[ComparedConversions.RESULTS_SUMMARY_KEY] = [
+                row.to_json() for row in compiled_execution_extras.conversions
+            ]
         if isinstance(execution_payload, dict):
             execution_payload[MessageFields.RESULTS_SUMMARY] = summary
 

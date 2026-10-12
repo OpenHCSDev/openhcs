@@ -1,8 +1,9 @@
-"""A run reports the array conversions it made, and they are the ones its plan states.
+"""A run reports the array conversions it made, each beside what its plan states.
 
 Each test compiles and executes a real pipeline on a two-well, two-field plate
-(four planes) and compares the conversions returned with the run's results to
-the conversions derived from the compiled plans. The CuPy and torch pipelines
+(four planes) and reads the compared rows returned with the run's results:
+what the plan states for each crossing, what was recorded there, and whether
+they match, differ in a way ArrayBridge's record explains, or mismatch. The CuPy and torch pipelines
 need those libraries; the accelerator one needs a CUDA device.
 
 Run as a script with a pipeline name, this module executes that pipeline and
@@ -31,9 +32,8 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.core import memory
 from openhcs.core.array_conversions import (
-    StepConversions,
-    format_planned_and_observed,
-    planned_conversions,
+    ComparedConversions,
+    format_compared_conversions,
 )
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -81,8 +81,10 @@ PIPELINES = {
 }
 
 
-def _planned_and_observed(root: Path, name: str, execution: GlobalPipelineConfig):
-    """Compile and execute one pipeline; return its planned and observed conversions."""
+def _compared_conversions(
+    root: Path, name: str, execution: GlobalPipelineConfig
+) -> tuple[ComparedConversions, ...]:
+    """Compile and execute one pipeline; return its conversions beside the plan."""
     plate = root / "plate"
     with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
         SyntheticMicroscopyGenerator(
@@ -132,23 +134,25 @@ def _planned_and_observed(root: Path, name: str, execution: GlobalPipelineConfig
     finally:
         set_progress_queue(None)
     results.require_success()
-    planned = planned_conversions(
-        next(iter(compiled.runtime_contexts.values())).step_plans
-    )
-    return planned, results.extras.conversions
+    return results.extras.conversions
 
 
-def _planned_keys(planned) -> set[tuple]:
-    return {(each.step_index, each.key) for each in planned if each.makes_a_new_array}
+def _crossings(rows: tuple[ComparedConversions, ...]) -> list[tuple]:
+    return [
+        (
+            row.step_index,
+            f"{row.source_library} on {row.source_device}",
+            f"{row.target_library} on {row.target_device}",
+            row.planned,
+            row.observed,
+            row.agreement,
+            row.count,
+        )
+        for row in rows
+    ]
 
 
-def _observed_counts(observed: StepConversions) -> dict[tuple, int]:
-    return {
-        (step_index, key): total.count
-        for step_index, counters in observed.by_step.items()
-        for key, total in counters.totals.items()
-    }
-
+SHARED = "shared host buffer"
 
 IN_PROCESS = GlobalPipelineConfig(num_workers=1, use_threading=True)
 
@@ -172,25 +176,36 @@ def test_a_numpy_jax_numpy_run_returns_the_conversions_its_plan_states(
     observer_before = ConversionObserver.current
 
     with caplog.at_level(logging.INFO, logger="openhcs.core.orchestrator.bundle_execution"):
-        planned, observed = _planned_and_observed(tmp_path, "numpy_jax_numpy", execution)
+        rows = _compared_conversions(tmp_path, "numpy_jax_numpy", execution)
 
-    assert _planned_keys(planned) == {
-        (1, ("numpy", "host", "jax", "host", "host copy")),
-        (2, ("jax", "host", "numpy", "host", "host copy")),
-    }
-    assert _observed_counts(observed) == dict.fromkeys(
-        _planned_keys(planned), PLANE_COUNT
-    ), format_planned_and_observed(planned, observed)
+    table = format_compared_conversions(rows)
+    # NumPy hands JAX its buffer only when the buffer starts on a 64-byte
+    # boundary, which each plane's allocation decides: the plan says shared, and
+    # a plane that was copied is recorded as a copy with the shared route declined.
+    into_jax = [row for row in rows if row.target_library == "jax"]
+    assert {
+        (row.planned, row.observed, row.declined_mechanisms, row.agreement)
+        for row in into_jax
+    } <= {
+        (SHARED, SHARED, (), "matches"),
+        (SHARED, "host copy", (SHARED,), "explained difference"),
+    }, table
+    assert sum(row.count for row in into_jax) == PLANE_COUNT, table
+    assert {row.boundaries for row in into_jax} == {("add_one -> double_in_jax",)}
+    assert _crossings(tuple(row for row in rows if row not in into_jax)) == [
+        (0, "numpy on host", "numpy on host", "stays in place", "no record", "matches", 0),
+        (2, "jax on host", "numpy on host", SHARED, SHARED, "matches", PLANE_COUNT),
+        (2, "numpy on host", "numpy on host", "stays in place", "no record", "matches", 0),
+    ], table
     assert ConversionObserver.current is observer_before
     assert not ConversionObserver.current.wants_records
     [logged] = [
-        record.getMessage()
+        record
         for record in caplog.records
         if record.getMessage().startswith("Array conversions of this run")
     ]
-    assert logged.splitlines()[1:] == format_planned_and_observed(
-        planned, observed
-    ).splitlines()
+    assert logged.levelno == logging.INFO
+    assert logged.getMessage().splitlines()[1:] == table.splitlines()
 
 
 def _cuda_device_present() -> bool:
@@ -203,16 +218,14 @@ def _cuda_device_present() -> bool:
 
 @pytest.mark.skipif(not _cuda_device_present(), reason="needs CuPy, torch and CUDA")
 def test_cupy_hands_torch_its_buffer_and_the_run_reports_it(tmp_path):
-    planned, observed = _planned_and_observed(tmp_path, "cupy_torch_numpy", IN_PROCESS)
+    rows = _compared_conversions(tmp_path, "cupy_torch_numpy", IN_PROCESS)
 
-    assert _planned_keys(planned) == {
-        (0, ("numpy", "host", "cupy", "accelerator:0", "host copy")),
-        (1, ("cupy", "accelerator:0", "torch", "accelerator:0", "dlpack")),
-        (2, ("torch", "accelerator:0", "numpy", "host", "host copy")),
-    }
-    assert _observed_counts(observed) == dict.fromkeys(
-        _planned_keys(planned), PLANE_COUNT
-    ), format_planned_and_observed(planned, observed)
+    assert _crossings(rows) == [
+        (0, "numpy on host", "cupy on accelerator:0", "host copy", "host copy", "matches", 4),
+        (1, "cupy on accelerator:0", "torch on accelerator:0", "dlpack", "dlpack", "matches", 4),
+        (2, "torch on accelerator:0", "numpy on host", "host copy", "host copy", "matches", 4),
+        (2, "numpy on host", "numpy on host", "stays in place", "no record", "matches", 0),
+    ], format_compared_conversions(rows)
 
 
 @pytest.mark.skipif(find_spec("torch") is None, reason="needs torch")
@@ -227,29 +240,27 @@ def test_torch_without_a_visible_accelerator_converts_on_host_as_planned(tmp_pat
     assert completed.returncode == 0, completed.stderr[-3000:]
     report = json.loads(completed.stdout.splitlines()[-1])
 
-    assert report["planned"] == [
-        [0, ["numpy", "host", "torch", "host", "host copy"]],
-        [1, ["torch", "host", "numpy", "host", "host copy"]],
-    ]
-    assert report["observed"] == [
-        [0, ["numpy", "host", "torch", "host", "host copy"], PLANE_COUNT],
-        [1, ["torch", "host", "numpy", "host", "host copy"], PLANE_COUNT],
+    assert [
+        (row["step_index"], row["source_library"], row["source_device"],
+         row["target_library"], row["target_device"], row["planned"], row["observed"],
+         row["agreement"], row["count"])
+        for row in report["conversions"]
+    ] == [
+        (0, "numpy", "host", "torch", "host", SHARED, SHARED, "matches", PLANE_COUNT),
+        (1, "torch", "host", "numpy", "host", SHARED, SHARED, "matches", PLANE_COUNT),
+        (1, "numpy", "host", "numpy", "host", "stays in place", "no record", "matches", 0),
     ]
     assert report["cuda_initialized"] is False
 
 
 if __name__ == "__main__":
-    planned, observed = _planned_and_observed(Path(sys.argv[2]), sys.argv[1], IN_PROCESS)
+    rows = _compared_conversions(Path(sys.argv[2]), sys.argv[1], IN_PROCESS)
     import torch
 
     print(
         json.dumps(
             {
-                "planned": sorted(_planned_keys(planned)),
-                "observed": sorted(
-                    (step, key, count)
-                    for (step, key), count in _observed_counts(observed).items()
-                ),
+                "conversions": [row.to_json() for row in rows],
                 "cuda_initialized": torch.cuda.is_initialized(),
             }
         )

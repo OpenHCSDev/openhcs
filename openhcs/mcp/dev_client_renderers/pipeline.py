@@ -26,6 +26,7 @@ from openhcs.agent.dto.pipeline import (
     PipelineValidationResult,
 )
 from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+from openhcs.utils.text_table import aligned_columns
 from openhcs.mcp.dev_client_rendering import (
     CodeDocumentRenderOptions,
     McpDevOutputRenderOptions,
@@ -332,15 +333,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         if not rows:
             return []
         rows.insert(0, ("step", "boundary", "source", "target", "mechanism"))
-        widths = [max(len(row[column]) for row in rows) for column in range(5)]
-        return [
-            "Conversions:",
-            *(
-                "  "
-                + "  ".join(cell.ljust(width) for cell, width in zip(row, widths)).rstrip()
-                for row in rows
-            ),
-        ]
+        return ["Conversions:", *(f"  {line}" for line in aligned_columns(rows))]
 
     @classmethod
     def _artifact_input_line(cls, artifact: ArtifactInputPlanSummary) -> str:

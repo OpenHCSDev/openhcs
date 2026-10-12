@@ -8,40 +8,41 @@ are therefore computed from the plans whenever they are asked for and never
 stored beside them. The mechanism of each is ArrayBridge's answer for the two
 placements.
 
-What a run really did is counted by ArrayBridge's conversion observer, which is
-installed only while a step executes, and kept by the step that was executing.
+What a run really did is counted by ArrayBridge's conversion observer, which the
+thread executing a step installs for the duration of that step. The two are then
+compared: a row matches the plan, differs in a way ArrayBridge's record explains,
+or is a mismatch nothing explains.
 """
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from contextvars import ContextVar
-from dataclasses import dataclass, field
-from threading import Lock
-from typing import ClassVar
+from dataclasses import asdict, dataclass, field
+from typing import Any, ClassVar
 
 from arraybridge.conversion import (
     ConversionCounters,
-    ConversionKey,
     ConversionObserver,
     ConversionRecord,
     ConversionRoute,
-    IgnoreConversions,
 )
 from arraybridge.devices import HOST
 from arraybridge.types import MemoryType
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.runtime_array_values import ArrayPlacement
+from openhcs.utils.text_table import aligned_columns
+
+PlacementKey = tuple[str, str, str, str]
+"""Source library and device, target library and device, as ArrayBridge's records name them."""
 
 STORED_PLANES = "stored planes"
 STORED_PLANE_PLACEMENT = ArrayPlacement(MemoryType.NUMPY.library, HOST)
 """Where a plane read from a file store is, and where one must be to be written."""
-
-NO_CONVERSION = "none"
-"""The mechanism shown where source and target placement are the same."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,32 +66,28 @@ class PlannedConversion:
     target: ArrayPlacement
 
     @property
-    def makes_a_new_array(self) -> bool:
-        return self.source != self.target
+    def routes(self) -> tuple[type[ConversionRoute], ...]:
+        """ArrayBridge's routes for the two placements, the one tried first first."""
+        return ConversionRoute.candidates(
+            self.source.library,
+            self.source.device,
+            self.target.library,
+            self.target.device,
+        )
 
     @property
     def mechanism(self) -> str:
         """ArrayBridge's first route for the two placements."""
-        if not self.makes_a_new_array:
-            return NO_CONVERSION
-        return str(
-            ConversionRoute.planned(
-                self.source.library,
-                self.source.device,
-                self.target.library,
-                self.target.device,
-            ).mechanism
-        )
+        return str(self.routes[0].mechanism)
 
     @property
-    def key(self) -> ConversionKey:
-        """The key ArrayBridge's counters give this conversion when it happens."""
+    def placements(self) -> PlacementKey:
+        """The two placements as ArrayBridge's records name them."""
         return (
             str(self.source.library.name),
             self.source.device.label,
             str(self.target.library.name),
             self.target.device.label,
-            self.mechanism,
         )
 
     def describe(self) -> str:
@@ -199,191 +196,337 @@ def planned_conversions(
     )
 
 
-def _aligned(rows: Sequence[Sequence[str]]) -> str:
-    widths = [max(len(row[column]) for row in rows) for column in range(len(rows[0]))]
-    return "\n".join(
-        "  ".join(cell.ljust(width) for cell, width in zip(row, widths)).rstrip()
-        for row in rows
-    )
-
-
 def format_planned_conversions(conversions: Sequence[PlannedConversion]) -> str:
     """One line per boundary of the pipeline."""
-    return _aligned(
-        [
-            ("step", "boundary", "source", "target", "mechanism"),
-            *(
-                (
-                    str(each.step_index),
-                    each.boundary,
-                    each.source.describe(),
-                    each.target.describe(),
-                    each.mechanism,
-                )
-                for each in conversions
-            ),
-        ]
+    return "\n".join(
+        aligned_columns(
+            [
+                ("step", "boundary", "source", "target", "mechanism"),
+                *(
+                    (
+                        str(each.step_index),
+                        each.boundary,
+                        each.source.describe(),
+                        each.target.describe(),
+                        each.mechanism,
+                    )
+                    for each in conversions
+                ),
+            ]
+        )
     )
 
 
-class ExecutingStepConversions(ConversionObserver):
-    """Sends each conversion to the counters of the step executing in the calling thread.
+NO_RECORD = "no record"
+"""The observed mechanism where a run wrote no record between two placements."""
 
-    ArrayBridge has one observer per process, and several steps may execute at
-    once in threads. This observer is installed when the first of them starts
-    and the one it replaced is restored when the last finishes; the replaced
-    observer still receives every record.
+NOT_PLANNED = "not planned"
+"""The planned mechanism of a conversion no boundary of its step plans."""
+
+
+@dataclass(frozen=True, slots=True)
+class ObservedConversions:
+    """The conversions one step made between two placements in one way, counted.
+
+    ``declined_mechanisms`` are the routes ArrayBridge tried first that did not
+    carry these arrays, as its records list them.
     """
 
-    _receiver: ClassVar[ContextVar[ConversionObserver]] = ContextVar(
-        "conversions_of_executing_step", default=IgnoreConversions()
-    )
-    _lock: ClassVar[Lock] = Lock()
-    _steps_executing: ClassVar[int] = 0
-    _replaced: ClassVar[ConversionObserver] = IgnoreConversions()
+    step_index: int
+    placements: PlacementKey
+    mechanism: str
+    declined_mechanisms: tuple[str, ...]
+    count: int
+    nbytes: int
+    seconds: float
+
+
+@dataclass(frozen=True, slots=True)
+class _CountingForStep(ConversionObserver):
+    """The observer of the thread executing one step: its records go to that step."""
+
+    conversions: StepConversions
+    step_index: int
 
     def record(self, record: ConversionRecord) -> None:
-        self._receiver.get().record(record)
-        self._replaced.record(record)
-
-    @classmethod
-    @contextmanager
-    def sending_to(cls, counters: ConversionCounters) -> Iterator[None]:
-        """Count this thread's conversions into ``counters`` for the duration of a block."""
-        with cls._lock:
-            if cls._steps_executing == 0:
-                cls._replaced = cls().install()
-            cls._steps_executing += 1
-        token = cls._receiver.set(counters)
-        try:
-            yield
-        finally:
-            cls._receiver.reset(token)
-            with cls._lock:
-                cls._steps_executing -= 1
-                if cls._steps_executing == 0:
-                    cls._replaced.install()
-                    cls._replaced = IgnoreConversions()
+        self.conversions.counters.setdefault(
+            (self.step_index, record.declined_mechanisms), ConversionCounters()
+        ).record(record)
 
 
 @dataclass(slots=True)
 class StepConversions:
-    """The conversions made while each step executed, by step index.
+    """The conversions made while each step executed.
 
+    ArrayBridge's counters do not key on the routes a record lists as declined,
+    so there is one set of counters per step and tuple of declined routes.
     Plain data: a worker returns it with its result and the parent merges them.
     """
 
-    RESULTS_SUMMARY_KEY: ClassVar[str] = "array_conversions"
-    STEP_INDEX: ClassVar[str] = "step_index"
-
-    by_step: dict[int, ConversionCounters] = field(default_factory=dict)
+    counters: dict[tuple[int, tuple[str, ...]], ConversionCounters] = field(
+        default_factory=dict
+    )
 
     @contextmanager
     def during_step(self, step_index: int) -> Iterator[None]:
-        """Count the conversions the calling thread makes in a block for one step."""
-        counters = self.by_step.setdefault(step_index, ConversionCounters())
-        with ExecutingStepConversions.sending_to(counters):
+        """Count the conversions the calling thread makes in a block for one step.
+
+        ArrayBridge's observer belongs to the thread that installs it, so this
+        is entered in the thread that executes the step.
+        """
+        with _CountingForStep(self, step_index).installed():
             yield
 
     def merge(self, other: StepConversions) -> StepConversions:
         """Add another worker's or another axis's counts into these."""
-        for step_index, counters in other.by_step.items():
-            self.by_step.setdefault(step_index, ConversionCounters()).merge(counters)
+        for key, counters in other.counters.items():
+            self.counters.setdefault(key, ConversionCounters()).merge(counters)
         return self
 
-    def total(self) -> ConversionCounters:
-        """The counts of the whole run, without the step."""
-        total = ConversionCounters()
-        for counters in self.by_step.values():
-            total.merge(counters)
-        return total
+    def observed(self) -> tuple[ObservedConversions, ...]:
+        """Every kind of conversion that was recorded, by step."""
+        return tuple(
+            ObservedConversions(
+                step_index,
+                key[:4],
+                key[4],
+                declined,
+                total.count,
+                total.nbytes,
+                total.seconds,
+            )
+            for (step_index, declined), counters in sorted(self.counters.items())
+            for key, total in sorted(counters.totals.items())
+        )
 
-    def to_json(self) -> list[dict[str, str | int | float]]:
-        """ArrayBridge's rows, each with the index of its step."""
-        return [
-            {self.STEP_INDEX: step_index, **row}
-            for step_index in sorted(self.by_step)
-            for row in self.by_step[step_index].to_json()
-        ]
+
+class PlanAgreement(ABC, metaclass=AutoRegisterMeta):
+    """How what a run recorded between two placements relates to the plan.
+
+    Leaves are asked in the order they are declared here; the first that holds
+    names the outcome.
+    """
+
+    __registry_key__ = "label"
+    label: ClassVar[str | None] = None
 
     @classmethod
-    def from_json(cls, rows: Sequence[Mapping[str, str | int | float]]) -> StepConversions:
-        conversions = cls()
-        for row in rows:
-            conversions.merge(
-                cls({int(row[cls.STEP_INDEX]): ConversionCounters.from_json([dict(row)])})
-            )
-        return conversions
+    @abstractmethod
+    def holds(
+        cls, routes: Sequence[type[ConversionRoute]], seen: ObservedConversions
+    ) -> bool:
+        """``routes`` are ArrayBridge's for the planned placements, first choice first."""
+
+    @classmethod
+    def of(
+        cls, routes: Sequence[type[ConversionRoute]], seen: ObservedConversions
+    ) -> type[PlanAgreement]:
+        return next(
+            agreement
+            for agreement in cls.__registry__.values()
+            if agreement.holds(routes, seen)
+        )
 
 
-def format_planned_and_observed(
-    planned: Sequence[PlannedConversion], observed: StepConversions
-) -> str:
-    """Each planned boundary beside what the run did between the same two placements.
+class Matches(PlanAgreement):
+    """The run did what the plan states; for a route that writes no record, nothing."""
 
-    A conversion the run made that no boundary of its step plans is listed
-    after the boundaries with ``unplanned`` in place of the boundary.
+    label = "matches"
+
+    @classmethod
+    def holds(
+        cls, routes: Sequence[type[ConversionRoute]], seen: ObservedConversions
+    ) -> bool:
+        planned = routes[0]
+        if not planned.writes_a_record:
+            return seen.count == 0
+        return seen.mechanism == planned.mechanism and not seen.declined_mechanisms
+
+
+class ExplainedDifference(PlanAgreement):
+    """The planned route could not carry these arrays and the next route did.
+
+    ArrayBridge's records say so: every route before the observed one is listed
+    as declined, in the order the routes are tried.
     """
-    rows: list[tuple[str, ...]] = [
-        (
-            "step",
-            "boundary",
-            "source",
-            "target",
-            "planned",
-            "observed",
-            "calls",
-            "MB",
-            "seconds",
+
+    label = "explained difference"
+
+    @classmethod
+    def holds(
+        cls, routes: Sequence[type[ConversionRoute]], seen: ObservedConversions
+    ) -> bool:
+        tried = (*seen.declined_mechanisms, seen.mechanism)
+        return len(tried) > 1 and tried == tuple(
+            str(route.mechanism) for route in routes[: len(tried)]
         )
-    ]
-    remaining = {
-        (step_index, key): total
-        for step_index, counters in observed.by_step.items()
-        for key, total in counters.totals.items()
-    }
+
+
+class UnexplainedMismatch(PlanAgreement):
+    """Anything else: a planned conversion never recorded, or one nothing explains."""
+
+    label = "unexplained mismatch"
+
+    @classmethod
+    def holds(
+        cls, routes: Sequence[type[ConversionRoute]], seen: ObservedConversions
+    ) -> bool:
+        return True
+
+
+@dataclass(frozen=True, slots=True)
+class ComparedConversions:
+    """What a run recorded between two placements in one step, beside the plan.
+
+    ``boundaries`` are the boundaries of the step that plan this crossing; none
+    when no boundary does. Plain fields: dumps to JSON.
+    """
+
+    RESULTS_SUMMARY_KEY: ClassVar[str] = "array_conversions"
+
+    step_index: int
+    boundaries: tuple[str, ...]
+    source_library: str
+    source_device: str
+    target_library: str
+    target_device: str
+    planned: str
+    observed: str
+    declined_mechanisms: tuple[str, ...]
+    agreement: str
+    count: int
+    nbytes: int
+    seconds: float
+
+    @classmethod
+    def of(
+        cls,
+        boundaries: Sequence[PlannedConversion],
+        seen: ObservedConversions,
+        planned: str,
+        agreement: type[PlanAgreement],
+    ) -> ComparedConversions:
+        return cls(
+            seen.step_index,
+            tuple(each.boundary for each in boundaries),
+            *seen.placements,
+            planned,
+            seen.mechanism,
+            seen.declined_mechanisms,
+            str(agreement.label),
+            seen.count,
+            seen.nbytes,
+            seen.seconds,
+        )
+
+    def to_json(self) -> dict[str, str | int | float | list[str]]:
+        return {
+            **asdict(self),
+            "boundaries": list(self.boundaries),
+            "declined_mechanisms": list(self.declined_mechanisms),
+        }
+
+    @classmethod
+    def from_json(cls, row: Mapping[str, Any]) -> ComparedConversions:
+        return cls(
+            **{
+                **row,
+                "boundaries": tuple(row["boundaries"]),
+                "declined_mechanisms": tuple(row["declined_mechanisms"]),
+            }
+        )
+
+
+def compare_with_plan(
+    planned: Sequence[PlannedConversion], observed: StepConversions
+) -> tuple[ComparedConversions, ...]:
+    """Each crossing a step plans beside what the run recorded there, then the rest.
+
+    Boundaries of one step between the same two placements are one crossing:
+    the records do not say which boundary a conversion was made at. A crossing
+    with no record is one row with ``NO_RECORD``; a recorded conversion no
+    boundary of its step plans is a row of its own after the planned ones.
+    """
+    unplanned = list(observed.observed())
+    crossings: dict[tuple[int, PlacementKey], list[PlannedConversion]] = {}
     for each in planned:
-        matching = sorted(
-            observed_key
-            for observed_key in remaining
-            if observed_key[0] == each.step_index and observed_key[1][:4] == each.key[:4]
-        )
-        totals = [remaining.pop(observed_key) for observed_key in matching]
-        rows.append(
-            (
-                str(each.step_index),
-                each.boundary,
-                each.source.describe(),
-                each.target.describe(),
-                each.mechanism,
-                ", ".join(observed_key[1][4] for observed_key in matching) or NO_CONVERSION,
-                str(sum(total.count for total in totals)),
-                f"{sum(total.nbytes for total in totals) / 1e6:.1f}",
-                f"{sum(total.seconds for total in totals):.3f}",
+        crossings.setdefault((each.step_index, each.placements), []).append(each)
+    rows: list[ComparedConversions] = []
+    for (step_index, placements), boundaries in crossings.items():
+        recorded = [
+            seen
+            for seen in unplanned
+            if (seen.step_index, seen.placements) == (step_index, placements)
+        ]
+        for seen in recorded:
+            unplanned.remove(seen)
+        routes = boundaries[0].routes
+        rows.extend(
+            ComparedConversions.of(
+                boundaries,
+                seen,
+                str(routes[0].mechanism),
+                PlanAgreement.of(routes, seen),
             )
+            for seen in recorded
+            or [ObservedConversions(step_index, placements, NO_RECORD, (), 0, 0, 0.0)]
         )
-    for (step_index, key), total in sorted(remaining.items()):
-        rows.append(
-            (
-                str(step_index),
-                "unplanned",
-                f"{key[0]} on {key[1]}",
-                f"{key[2]} on {key[3]}",
-                "",
-                key[4],
-                str(total.count),
-                f"{total.nbytes / 1e6:.1f}",
-                f"{total.seconds:.3f}",
-            )
+    rows.extend(
+        ComparedConversions.of((), seen, NOT_PLANNED, UnexplainedMismatch)
+        for seen in unplanned
+    )
+    return tuple(rows)
+
+
+def format_compared_conversions(rows: Sequence[ComparedConversions]) -> str:
+    """One line per row: what was planned, what was recorded, and how they agree."""
+    return "\n".join(
+        aligned_columns(
+            [
+                (
+                    "step",
+                    "boundary",
+                    "source",
+                    "target",
+                    "planned",
+                    "observed",
+                    "declined",
+                    "agreement",
+                    "calls",
+                    "MB",
+                    "seconds",
+                ),
+                *(
+                    (
+                        str(row.step_index),
+                        "; ".join(row.boundaries),
+                        f"{row.source_library} on {row.source_device}",
+                        f"{row.target_library} on {row.target_device}",
+                        row.planned,
+                        row.observed,
+                        ", ".join(row.declined_mechanisms),
+                        row.agreement,
+                        str(row.count),
+                        f"{row.nbytes / 1e6:.1f}",
+                        f"{row.seconds:.3f}",
+                    )
+                    for row in rows
+                ),
+            ]
         )
-    return _aligned(rows)
+    )
 
 
 __all__ = [
-    "ExecutingStepConversions",
+    "ComparedConversions",
+    "ExplainedDifference",
+    "Matches",
+    "PlanAgreement",
     "PlannedConversion",
     "StepConversions",
-    "format_planned_and_observed",
+    "UnexplainedMismatch",
+    "compare_with_plan",
+    "format_compared_conversions",
     "format_planned_conversions",
     "planned_conversions",
     "planned_step_conversions",

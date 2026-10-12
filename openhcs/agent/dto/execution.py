@@ -182,8 +182,8 @@ class AssignedDeviceSummary:
 class PlannedConversionSummary:
     """One boundary crossed while a step executes and the conversion made there.
 
-    ``mechanism`` is ArrayBridge's route for the two placements, or ``none``
-    where the arrays already are where they are read.
+    ``mechanism`` is ArrayBridge's route for the two placements; it is
+    ``stays in place`` where the arrays already are where they are read.
     """
 
     boundary: str

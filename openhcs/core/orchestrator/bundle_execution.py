@@ -21,8 +21,11 @@ from typing import (
 
 from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
 from openhcs.core.array_conversions import (
+    ComparedConversions,
     StepConversions,
-    format_planned_and_observed,
+    UnexplainedMismatch,
+    compare_with_plan,
+    format_compared_conversions,
     planned_conversions,
 )
 from openhcs.core.artifacts.kinds import SpecialArtifactType
@@ -129,8 +132,9 @@ class BundleExecutionExtras:
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
-    conversions: StepConversions = field(default_factory=StepConversions)
-    """The array conversions of the whole run: every axis and the dataset-scoped steps."""
+    conversions: tuple[ComparedConversions, ...] = ()
+    """The array conversions of the whole run (every axis and the dataset-scoped
+    steps), each beside what the plan states for it."""
 
 
 class BundleExecutionResults(dict[str, ExecutionResult]):
@@ -361,14 +365,19 @@ def execute_bundle_request(
         else:
             viewer_states_by_port = MappingProxyType({})
         project_execution_state(orchestrator, execution_results)
-        logger.info(
+        compared_conversions = compare_with_plan(
+            planned_conversions(next(iter(executing_contexts.values())).step_plans),
+            conversions,
+        )
+        logger.log(
+            logging.WARNING
+            if any(
+                row.agreement == UnexplainedMismatch.label
+                for row in compared_conversions
+            )
+            else logging.INFO,
             "Array conversions of this run, planned and observed:\n%s",
-            format_planned_and_observed(
-                planned_conversions(
-                    next(iter(executing_contexts.values())).step_plans
-                ),
-                conversions,
-            ),
+            format_compared_conversions(compared_conversions),
         )
         if execution_results.is_success():
             _emit_execution_progress(
@@ -386,7 +395,7 @@ def execute_bundle_request(
             extras=BundleExecutionExtras(
                 viewer_states_by_port=viewer_states_by_port,
                 runtime_observation=dataset_runtime_observation,
-                conversions=conversions,
+                conversions=compared_conversions,
             ),
             executed_contexts=executing_contexts,
         )
