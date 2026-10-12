@@ -301,14 +301,8 @@ def test_explicit_sync_cli_reports_earlier_publications_on_later_failure(
 
 
 def test_new_client_skill_capability_is_driven_by_its_declaration(
-    bundle, environment, monkeypatch
+    bundle, environment
 ):
-    monkeypatch.setattr(
-        McpClientRegistrationTarget,
-        "__registry__",
-        dict(McpClientRegistrationTarget.__registry__),
-    )
-
     class TestHarness(McpClientRegistrationTarget):
         target_id = "test-harness-skills"
         display_name = "Test harness"
