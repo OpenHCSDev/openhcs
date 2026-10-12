@@ -1,10 +1,13 @@
 """The derived Cellpose functions as the catalogue, workers, agents and code see them."""
 
 import inspect
+from pathlib import Path
 
 import pytest
 
 pytest.importorskip("cellpose", reason="Cellpose is an optional dependency")
+
+from openhcs.core.callable_contract import CallableContract
 
 from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
@@ -112,6 +115,26 @@ def test_agent_catalogue_lists_every_control_with_type_default_and_description(
         derived.RestorationModel if name == "restore" else derived.SegmentationModel
     )
     assert list(described["model_type"].enum_values) == [m.value for m in models]
+
+
+def test_json_authoring_values_become_the_declared_types(catalogue):
+    function = catalogue["cellpose:segment"].func
+    decoded = CallableContract.from_callable(function).decode_public_kwargs(
+        {
+            "model_type": "nuclei",
+            "normalize": {"percentile": [2, 98.0], "norm3D": False},
+            "channels": [0, 0],
+            "pretrained_model": "/models/mine",
+            "diameter": 12,
+        }
+    )
+    assert decoded == {
+        "model_type": derived.SegmentationModel.NUCLEI,
+        "normalize": derived.NormalizeOptions(percentile=(2.0, 98.0), norm3D=False),
+        "channels": (0, 0),
+        "pretrained_model": Path("/models/mine"),
+        "diameter": 12.0,
+    }
 
 
 def test_generated_pipeline_code_executes_back_to_an_equal_step(catalogue):

@@ -30,6 +30,7 @@ from python_introspect import (
     RuntimeParameterDeclarationABC,
     add_parameter_exclusions,
     coerce_enum_member,
+    dataclass_from_mapping,
     declared_enum_type,
     enum_member_type,
     is_union_type,
@@ -1537,18 +1538,31 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         return CallableProjection.from_callable(func).prepared_contract()
 
     def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
-        """Descend declared scalar enums at authoring, before source projection."""
+        """Decode authoring values to the types the signature declares.
+
+        The annotated parameters that were given are one record of typed
+        fields, so they are decoded the way a dataclass is decoded from a
+        mapping: a nested dataclass from an object, a tuple from an array, a
+        path from a string. An enum is also accepted by member name.
+        """
 
         decoded = dict(kwargs)
-        for name, annotation in self.canonical_parameter_annotations.items():
-            if name not in kwargs or enum_member_type(resolve_annotated(annotation)) is None:
+        annotations = {
+            name: annotation
+            for name, annotation in self.canonical_parameter_annotations.items()
+            if name in kwargs and annotation is not inspect.Parameter.empty
+        }
+        for name, annotation in annotations.items():
+            if enum_member_type(resolve_annotated(annotation)) is None:
                 continue
             value = kwargs[name]
             decoded[name] = value if value is None else coerce_enum_member(annotation, value)
             validate_annotation_value(
                 annotation, decoded[name], path=f"{self.function_name}.{name}",
             )
-        return decoded
+        given = dataclasses.make_dataclass(self.function_name, list(annotations.items()))
+        typed = dataclass_from_mapping(given, {name: decoded[name] for name in annotations})
+        return {**decoded, **{name: getattr(typed, name) for name in annotations}}
 
     def validate_public_kwargs(
         self,
