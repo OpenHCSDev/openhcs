@@ -13,13 +13,12 @@ from pathlib import Path
 
 import pytest
 from arraybridge.decorators import DtypeConversion
-from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import GlobalContextValues
-from objectstate.lazy_factory import ensure_global_config_context
-from pyqt_reactive.windows.config_window import ConfigSaveParticipant, ConfigWindowTabSpec
+from objectstate import ObjectState, ObjectStateRegistry, forget_stored_global_config
+from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
 
+from openhcs.authoring.session.lifetime import close_session, open_session
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
-from openhcs.authoring.session.session import CallerThread, Session
+from openhcs.authoring.session.session import CallerThread
 from openhcs.core.config import (
     DtypeConfig,
     GlobalPipelineConfig,
@@ -61,25 +60,22 @@ def _states_below(scope_id: str) -> list[ObjectState]:
 
 @pytest.fixture
 def empty_registry() -> Iterator[None]:
-    previous_global = GlobalContextValues.capture(GlobalPipelineConfig)
     ObjectStateRegistry.clear()
     try:
         yield
     finally:
         ObjectStateRegistry.clear()
-        previous_global.apply()
+        forget_stored_global_config(GlobalPipelineConfig)
 
 
 def test_headless_session_global_config_reaches_existing_step_states(
     empty_registry: None, tmp_path: Path
 ) -> None:
-    """The MCP server's session has no GUI to register the global state for it."""
+    """A session started without a GUI, as the MCP server starts its own."""
 
-    before = _global_config(BEFORE)
-    ensure_global_config_context(GlobalPipelineConfig, before)
-    session = Session(
+    session = open_session(
+        global_config=_global_config(BEFORE),
         transport_config=OpenHCSZMQConfig(default_port=29873, persistent=False),
-        global_config=before,
         main_thread=CallerThread(),
         workspace_root=tmp_path / "workspaces",
     )
@@ -106,7 +102,7 @@ def test_headless_session_global_config_reaches_existing_step_states(
         } == {(AFTER, AFTER)}
         assert {state.get_provenance(FIELD) for state in states} == {("", DtypeConfig)}
     finally:
-        session.close()
+        close_session(session)
 
 
 def test_saved_global_config_reaches_saved_values_of_existing_step_states(
@@ -116,9 +112,7 @@ def test_saved_global_config_reaches_saved_values_of_existing_step_states(
     from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 
     plate = "/isolated/global-save-plate"
-    before = _global_config(BEFORE)
-    ensure_global_config_context(GlobalPipelineConfig, before)
-    global_state = ObjectState(before, scope_id="")
+    global_state = ObjectState(_global_config(BEFORE), scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
     ObjectStateRegistry.register(
         ObjectState(PipelineConfig(), scope_id=plate, parent_state=global_state),
@@ -128,17 +122,7 @@ def test_saved_global_config_reaches_saved_values_of_existing_step_states(
     states = _states_below(plate)
     assert {state.get_saved_resolved_value(FIELD) for state in states} == {BEFORE}
     window = OpenHCSConfigWindow(
-        tabs=(
-            ConfigWindowTabSpec(
-                state=global_state,
-                save_participant=ConfigSaveParticipant(
-                    apply=lambda config: ensure_global_config_context(
-                        GlobalPipelineConfig, config
-                    ),
-                    rollback=lambda config: None,
-                ),
-            ),
-        ),
+        tabs=(ConfigWindowTabSpec(state=global_state),),
         scope_id=OpenHCSUiWindowId.global_config,
     )
     try:

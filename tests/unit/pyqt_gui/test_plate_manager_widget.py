@@ -11,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from objectstate import get_live_global_config, get_saved_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import Qt
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
@@ -30,7 +31,6 @@ from openhcs.authoring.session.dataset_document import (
     SelectedDatasetDocumentScope,
     apply_dataset_document,
     authored_pipeline_config,
-    live_global_config,
     render_dataset_document,
 )
 from openhcs.authoring.session.operations.datasets import (
@@ -201,7 +201,7 @@ def _document_source(session, scope_ids, steps_by_scope, global_config=None) -> 
     return PlateManagerCodeDocumentAuthority.render(
         PlateManagerCodeDocumentAuthority.from_values(
             plate_paths=list(scope_ids),
-            global_pipeline_config=global_config or live_global_config(session),
+            global_pipeline_config=global_config or get_live_global_config(GlobalPipelineConfig),
             per_plate_configs={
                 scope_id: authored_pipeline_config(scope_id) for scope_id in scope_ids
             },
@@ -745,7 +745,7 @@ def test_a_missing_dataset_declaration_stays_editable_until_initialization(
     with caller_session() as session:
         payload = PlateManagerCodeDocumentAuthority.from_values(
             plate_paths=(scope_id,),
-            global_pipeline_config=session.global_config,
+            global_pipeline_config=get_saved_global_config(GlobalPipelineConfig),
             per_plate_configs={
                 scope_id: PipelineConfig(dataset_source=OpenHCSDatasetSource)
             },
@@ -887,7 +887,7 @@ def test_code_document_config_refreshes_the_saved_baseline(tmp_path) -> None:
         applied = PlateManagerCodeWorkflow(session).apply_namespace(
             {
                 "plate_paths": [scope_id],
-                "global_config": session.global_config,
+                "global_config": get_saved_global_config(GlobalPipelineConfig),
                 "per_plate_configs": {scope_id: config},
                 "pipeline_data": {scope_id: []},
             }
@@ -907,11 +907,10 @@ def test_code_document_config_refreshes_the_saved_baseline(tmp_path) -> None:
         assert diff <= state.signature_diff_fields
 
 
-def _global_state(session, **draft) -> ObjectState:
-    state = ObjectStateRegistry.get_by_scope("")
-    if state is None:
-        state = ObjectState(session.global_config, scope_id="")
-        ObjectStateRegistry.register(state)
+def _global_state(**draft) -> ObjectState:
+    """The session's global config state, with ``draft`` as unsaved edits."""
+
+    state = ObjectStateRegistry.global_config_state(GlobalPipelineConfig)
     for field, value in draft.items():
         state.update_parameter(field, value)
     return state
@@ -926,7 +925,7 @@ def test_selected_code_document_replaces_only_the_selected_pipeline(
     with session_gui() as gui:
         session = gui.session
         selected, unselected = add_datasets(session, tmp_path, "selected", "unselected")
-        global_state = _global_state(session)
+        global_state = _global_state()
         saved_workers = global_state.get_saved_resolved_value("num_workers")
         if global_draft:
             global_state.update_parameter("num_workers", 37)
@@ -985,13 +984,13 @@ def test_selected_code_document_replaces_only_the_selected_pipeline(
 
 def test_all_dataset_document_commits_an_unchanged_global_draft() -> None:
     with caller_session() as session:
-        global_state = _global_state(session, num_workers=37)
+        global_state = _global_state(num_workers=37)
 
         apply_dataset_document(
             session,
             PlateManagerCodeDocumentAuthority.from_values(
                 plate_paths=[],
-                global_pipeline_config=live_global_config(session),
+                global_pipeline_config=get_live_global_config(GlobalPipelineConfig),
                 per_plate_configs={},
                 pipeline_data={},
             ),
@@ -1000,15 +999,20 @@ def test_all_dataset_document_commits_an_unchanged_global_draft() -> None:
 
         assert global_state.get_saved_resolved_value("num_workers") == 37
         assert not global_state.dirty_fields
-        assert session.global_config.num_workers == 37
+        assert get_saved_global_config(GlobalPipelineConfig).num_workers == 37
 
 
-def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -> None:
+def test_a_dataset_saved_value_follows_the_global_config_only_once_it_is_saved(
+    tmp_path,
+) -> None:
+    """The dataset's own unsaved override stays in place throughout."""
+
     with session_gui(global_config=GlobalPipelineConfig(num_workers=1)) as gui:
         session = gui.session
-        (scope_id,) = add_datasets(session, tmp_path, "plate")
-        global_state = _global_state(session)
+        scope_id, inheriting = add_datasets(session, tmp_path, "plate", "inheriting")
+        global_state = _global_state()
         dataset_state = ObjectStateRegistry.get_by_scope(scope_id)
+        inheriting_state = ObjectStateRegistry.get_by_scope(inheriting)
         orchestrator = session.orchestrator(scope_id)
         emitted = []
         gui.plate_manager.orchestrator_config_changed.connect(
@@ -1022,24 +1026,38 @@ def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -
         assert dataset_state.get_saved_resolved_value("num_workers") == 1
         assert dataset_state.dirty_fields == {"num_workers"}
 
+        def own_override_is_unsaved() -> bool:
+            return (
+                object.__getattribute__(orchestrator.pipeline_config, "num_workers")
+                is None
+                and dataset_state.parameters["num_workers"] == 3
+                and dataset_state._saved_parameters["num_workers"] is None
+                and dataset_state.get_resolved_value("num_workers") == 3
+                and dataset_state.dirty_fields == {"num_workers"}
+            )
+
         global_state.update_parameter("num_workers", 7)
-        session.adopt_global_config(global_state.to_object(update_delegate=False))
         gui.settle()
 
-        assert object.__getattribute__(orchestrator.pipeline_config, "num_workers") is None
-        assert dataset_state.parameters["num_workers"] == 3
-        assert dataset_state._saved_parameters["num_workers"] is None
-        assert dataset_state.get_resolved_value("num_workers") == 3
-        assert dataset_state.get_saved_resolved_value("num_workers") == 7
-        assert dataset_state.dirty_fields == {"num_workers"}
-        assert emitted == [(scope_id, 7)]
+        assert get_live_global_config(GlobalPipelineConfig).num_workers == 7
+        assert get_saved_global_config(GlobalPipelineConfig).num_workers == 1
+        assert dataset_state.get_saved_resolved_value("num_workers") == 1
+        assert inheriting_state.get_resolved_value("num_workers") == 7
+        assert inheriting_state.get_saved_resolved_value("num_workers") == 1
+        assert own_override_is_unsaved()
+        assert emitted == []
 
+        # What saving the global config window does.
         global_state.mark_saved()
+        session.saved_global_config_changed()
+        gui.settle()
 
-        assert dataset_state.parameters["num_workers"] == 3
-        assert dataset_state.get_resolved_value("num_workers") == 3
+        assert get_saved_global_config(GlobalPipelineConfig).num_workers == 7
         assert dataset_state.get_saved_resolved_value("num_workers") == 7
-        assert dataset_state.dirty_fields == {"num_workers"}
+        assert inheriting_state.get_saved_resolved_value("num_workers") == 7
+        assert not inheriting_state.dirty_fields
+        assert own_override_is_unsaved()
+        assert emitted == [(scope_id, 7), (inheriting, 7)]
 
 
 def _render(session, *scope_ids):
@@ -1154,7 +1172,7 @@ def test_code_document_keeps_an_authored_dataset_override(tmp_path) -> None:
 def test_code_document_reads_the_global_config_from_object_state() -> None:
     initial = GlobalPipelineConfig(partition_filter_config=PartitionFilterConfig(partition_filter="A01"))
     with caller_session(global_config=initial) as session:
-        global_state = _global_state(session)
+        global_state = _global_state()
         global_state.update_parameter("partition_filter_config.partition_filter", "A02")
 
         document = _render(session)
@@ -1169,7 +1187,10 @@ def test_code_document_reads_the_global_config_from_object_state() -> None:
             == "A02"
         )
         assert (
-            object.__getattribute__(session.global_config.partition_filter_config, "partition_filter")
+            object.__getattribute__(
+                get_saved_global_config(GlobalPipelineConfig).partition_filter_config,
+                "partition_filter",
+            )
             == "A01"
         )
 
@@ -1201,7 +1222,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
             session,
             PlateManagerCodeDocumentAuthority.from_values(
                 plate_paths=[scope_id],
-                global_pipeline_config=live_global_config(session),
+                global_pipeline_config=get_live_global_config(GlobalPipelineConfig),
                 per_plate_configs={scope_id: authored_pipeline_config(scope_id)},
                 pipeline_data={
                     scope_id: [FunctionStep(func=percentile_normalize, name="Replacement")]
