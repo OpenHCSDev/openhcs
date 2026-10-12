@@ -114,7 +114,7 @@ def fake_preparation(monkeypatch):
     return prepare
 
 
-def test_registry_resolves_signatures_after_all_hooks_and_before_ready(monkeypatch):
+def test_first_use_resolves_signatures_after_every_target_hook(monkeypatch):
     events = []
 
     def first(image: np.ndarray):
@@ -124,9 +124,6 @@ def test_registry_resolves_signatures_after_all_hooks_and_before_ready(monkeypat
         return image
 
     first.__dict__[FunctionContractAttribute.raw_processing_function] = last
-    metadata = {"first": SimpleNamespace(func=first), "alias": SimpleNamespace(func=first)}
-    monkeypatch.setattr(RegistryService, "_metadata_cache", metadata)
-    monkeypatch.setattr(PreparationCacheBatch, "populate_child_caches", lambda *a, **k: None)
 
     def prepare(owner):
         events.append(("prepare", owner.projection.func))
@@ -141,28 +138,25 @@ def test_registry_resolves_signatures_after_all_hooks_and_before_ready(monkeypat
 
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
     monkeypatch.setattr(contract_module, "get_type_hints", hints)
-    assert RegistryService.prepare_in_current_process(status_callback=events.append) is metadata
-    preparations = [i for i, item in enumerate(events) if isinstance(item, tuple) and item[0] == "prepare"]
-    signatures = [i for i, item in enumerate(events) if isinstance(item, tuple) and item[0] == "signature"]
+    contract = CallableContract.from_prepared_callable(first)
+    preparations = [i for i, item in enumerate(events) if item[0] == "prepare"]
+    signatures = [i for i, item in enumerate(events) if item[0] == "signature"]
     assert len(preparations) == 2
     assert max(preparations) < min(signatures)
-    assert max(signatures) < next(i for i, item in enumerate(events) if isinstance(item, str) and "kernels ready" in item)
-    assert CallableContract.from_callable(first).canonical_parameter_annotations["image"] is ArrayPayload
-    assert CallableContract.from_callable(last).canonical_parameter_annotations["image"] is ArrayPayload
+    assert contract.canonical_parameter_annotations["image"] is ArrayPayload
 
 
-def test_explicit_library_rewarm_refreshes_new_contract_not_existing_snapshot(monkeypatch, fake_preparation):
+def test_catalog_readiness_never_freezes_a_callable_signature(monkeypatch):
     def raw(image: np.ndarray):
         return image
 
     metadata = {"raw": SimpleNamespace(func=raw)}
     monkeypatch.setattr(RegistryService, "_metadata_cache", metadata)
     RegistryService.prepare_in_current_process()
-    first = CallableContract.from_callable(raw)
+    assert FunctionContractAttribute.canonical_signature not in vars(raw)
+    first = CallableContract.from_prepared_callable(raw)
     raw.__annotations__["image"] = ArrayPayload
-    assert CallableContract.from_callable(raw).canonical_parameter_annotations["image"] is np.ndarray
-    RegistryService.prepare_in_current_process()
-    second = CallableContract.from_callable(raw)
+    second = CallableContract.from_prepared_callable(raw)
     assert first.canonical_parameter_annotations["image"] is np.ndarray
     assert second.canonical_parameter_annotations["image"] is ArrayPayload
 

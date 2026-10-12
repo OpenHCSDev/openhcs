@@ -222,47 +222,9 @@ def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
     )
 
 
-def test_registry_startup_prepares_parent_after_cache_work_with_cached_metadata(
+def test_first_use_prepares_a_declared_raw_owner_in_another_module(
     monkeypatch, declared_module
 ):
-    from types import SimpleNamespace
-
-    from openhcs.processing.backends.lib_registry.registry_service import (
-        RegistryService,
-    )
-
-    process = declare_process(declared_module)
-    events = []
-    process.__dict__[FunctionContractAttribute.processing_prepare] = (
-        lambda: events.append("hook")
-    )
-    metadata = {
-        "first": SimpleNamespace(func=process),
-        "alias": SimpleNamespace(func=process),
-    }
-    monkeypatch.setattr(RegistryService, "_metadata_cache", metadata)
-    monkeypatch.setattr(
-        PreparationCacheBatch,
-        "populate_child_caches",
-        lambda batch, *, max_workers, status_callback: events.append(
-            tuple(item.module_name for item in batch.preparations)
-        ),
-    )
-
-    assert RegistryService.prepare_in_current_process() is metadata
-    assert RegistryService.prepare_in_current_process() is metadata
-    assert events == [(declared_module.__name__,), "hook", (declared_module.__name__,)]
-
-
-def test_registry_startup_includes_declared_raw_owner_in_another_module(
-    monkeypatch, declared_module
-):
-    from types import SimpleNamespace
-
-    from openhcs.processing.backends.lib_registry.registry_service import (
-        RegistryService,
-    )
-
     raw_module = ModuleType("_openhcs_raw_preparation_test")
     monkeypatch.setitem(sys.modules, raw_module.__name__, raw_module)
     wrapper = declare_process(declared_module)
@@ -275,31 +237,13 @@ def test_registry_startup_includes_declared_raw_owner_in_another_module(
     raw.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append(
         "raw"
     )
-    monkeypatch.setattr(
-        RegistryService, "_metadata_cache", {"wrapper": SimpleNamespace(func=wrapper)}
-    )
-    monkeypatch.setattr(
-        PreparationCacheBatch,
-        "populate_child_caches",
-        lambda self, **kwargs: events.append(
-            tuple(item.module_name for item in self.preparations)
-        ),
-    )
 
-    RegistryService.prepare_in_current_process()
-    RegistryService.prepare_in_current_process()
-    compiler_target = CallableContract.from_callable(
-        wrapper
-    ).resolve_canonical_raw_callable()
-    assert compiler_target is raw
-    prepare_processing_callable(compiler_target)
+    contract = CallableContract.from_prepared_callable(wrapper)
+    assert contract.resolve_canonical_raw_callable() is raw
+    CallableContract.from_prepared_callable(wrapper)
+    prepare_processing_callable(raw)
 
-    assert events == [
-        (declared_module.__name__, raw_module.__name__),
-        "wrapper",
-        "raw",
-        (declared_module.__name__, raw_module.__name__),
-    ]
+    assert sorted(events) == ["raw", "wrapper"]
 
 
 @pytest.mark.skipif(

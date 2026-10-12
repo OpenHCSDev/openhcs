@@ -161,42 +161,29 @@ def test_invalid_budget_cannot_discover_or_launch(monkeypatch, budget):
         PreparationCacheBatch(()).populate_child_caches(max_workers=budget)
 
 
-@pytest.mark.parametrize("fails", [False, True])
-def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded(
+
+
+def test_startup_prepares_no_callable_and_first_use_prepares_only_that_callable(
     monkeypatch,
-    fails,
 ):
     events = []
     module = ModuleType("_admitted_preparation_source")
     monkeypatch.setitem(sys.modules, module.__name__, module)
 
-    def selected(image):
+    def used(image):
         return image
 
-    def unselected(image):
+    def unused(image):
         return image
 
-    def dynamic(image):
-        return image
-
-    for function in (selected, unselected, dynamic):
+    for function in (used, unused):
         function.__module__ = module.__name__
-
-    def prepare_selected():
-        events.append("selected")
-        if fails:
-            raise RuntimeError("selected preparation failed")
-
-    selected.__dict__[FunctionContractAttribute.processing_prepare] = prepare_selected
-    unselected.__dict__[FunctionContractAttribute.processing_prepare] = (
-        lambda: events.append("unselected")
-    )
-    dynamic.__dict__[FunctionContractAttribute.processing_prepare] = (
-        lambda: events.append("dynamic")
-    )
+        function.__dict__[FunctionContractAttribute.processing_prepare] = (
+            lambda name=function.__name__: events.append(name)
+        )
     metadata = {
-        "selected": SimpleNamespace(func=selected),
-        "unselected": SimpleNamespace(func=unselected),
+        "used": SimpleNamespace(func=used),
+        "unused": SimpleNamespace(func=unused),
     }
     monkeypatch.setattr(RegistryService, "_metadata_cache", None)
     monkeypatch.setattr(
@@ -212,34 +199,20 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
         "module_registry_families",
         staticmethod(lambda module: ()),
     )
-    monkeypatch.setattr(
-        PreparationCacheBatch, "populate_child_caches", lambda self, **kwargs: None
-    )
-    if fails:
-        for _ in range(2):
-            with pytest.raises(RuntimeError, match="selected preparation failed"):
-                RegistryService.prepare_in_current_process()
-        assert events == ["selected", "selected"]
-        events.clear()
-        fails = False
     assert RegistryService.prepare_in_current_process() is metadata
     assert RegistryService.prepare_in_current_process() is metadata
-    assert events == ["selected", "unselected"]
+    assert events == []
 
     invocation = CompiledFunctionInvocation(
-        key=FunctionInvocationKey("selected", "default", 0),
-        contract=CallableContract.from_callable(selected),
+        key=FunctionInvocationKey("used", "default", 0),
+        contract=CallableContract.from_prepared_callable(used),
     )
-    dynamic_invocation = CompiledFunctionInvocation(
-        key=FunctionInvocationKey("dynamic", "default", 1),
-        contract=CallableContract.from_prepared_callable(dynamic),
-    )
-    assert events == ["selected", "unselected", "dynamic"]
-    assert dynamic_invocation.contract.prepared_canonical_signature is not None
+    assert events == ["used"]
+    assert invocation.contract.prepared_canonical_signature is not None
     for _ in range(2):
         invocation.contract.resolve_runtime_callable()
-        dynamic_invocation.contract.resolve_runtime_callable()
-    assert events == ["selected", "unselected", "dynamic"]
+        CallableContract.from_prepared_callable(used)
+    assert events == ["used"]
 
 
 def test_platform_without_affinity_admits_its_online_cpus(monkeypatch):
