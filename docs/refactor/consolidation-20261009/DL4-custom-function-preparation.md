@@ -492,6 +492,167 @@ follows / entries projected):
 
 The registration call itself is 0.03 s before and after. Not measured in a real server.
 
+### 4. Spawn workers hold their loads (UNFINISHED: commit `63540c956` is a WIP)
+
+The agent building this stopped at a usage limit in the middle of writing tests. What is
+in the tree, by reading (not all of it observed running):
+
+- `openhcs/runtime/kept_workers.py`: `KeptWorkers(WorkerSupply)` owns every worker the
+  server keeps; `ZMQExecutionServer` holds one and delegates (the server class lost about
+  80 lines). Its docstring states the lifetime rule: forked workers inherit the server's
+  prepared state, start before readiness and live until the server stops; workers that
+  start on their own (spawn, forkserver: every pipeline with an accelerator step) prepare
+  themselves in their first command, are started by the first load phase of a pipeline
+  (its "prepare this pipeline" job or the load phase of an execution nobody prepared), one
+  per lane, and are kept while the next pipeline on that start method has the same worker
+  count; a kept worker that holds a load the next pipeline does not select is ended and
+  started again. Released by: `close` (server stop); a pipeline with a different worker
+  count; a custom-function change (self-started workers end, forked workers are forked
+  again); a leased worker ends when its execution returns it.
+- `worker_execution.py`: the runner is a family, `PreparedWorkerLaneRunner` with members
+  `PreparedForkWorkerLaneRunner` (inherit) and `SelfPreparedWorkerLaneRunner` (prepare at
+  start); `WorkerSupply` with `PerExecutionWorkers` and `KeptWorkers`; `WorkerNeed`.
+- `GlobalPipelineConfig.accelerator_workers: PositiveInteger = 1` (`core/config.py`, form
+  control and MCP text from the declaration like `num_workers`): a pipeline with an
+  accelerator step runs with `min(num_workers, accelerator_workers)`
+  (`worker_start_policy.py::worker_limit`, read in `compiled_execution.py`). Default one
+  because every worker holds its own copy of each load on the device, and one is the only
+  count that fits every device that fits the pipeline at all. Next step, not built: a load
+  hook states its size and the default is derived from the device's free memory.
+- Tests written: `tests/unit/test_orchestrator_lane_planning.py` (+71 lines), a spawn
+  driver `helpers/prepared_resource/run_spawned_worker_pipelines.py` and spawn tests in
+  `test_no_jit_after_readiness.py` (`-k spawn`).
+
+Observed by the lead after the stop: `test_zmq_execution_server`,
+`test_orchestrator_lane_planning`, `test_execution_server_startup_preparation`,
+`test_g7_runtime_protocol_guards`, `test_callable_abi_preparation`,
+`test_processing_preparation`: 131 passed. The spawn tests over the real server: see
+"State at stop" below.
+
+Not done in item 4: the lazy import path (`openhcs.processing.custom_functions.__getattr__`
+and `CustomFunctionRuntimeRegistry.metadata_for_name`, a second load-at-first-lookup entry)
+is still there and no certificate was written; the resident size of a prepared spawn
+worker and loads per worker were not reported; no GPU commands were left beyond item 7 of
+the older list above.
+
+### 5. Numba kernels in spawned workers (not started)
+
+The WIP touches `helpers/numba_trace/sitecustomize.py` and the spawn fixture counts Numba
+events, but no measurement was reported. Measure first; change nothing if it is zero.
+
+### 6. Names (not started)
+
+Conflicts with the open branches are light, so the rename can be done here, last, as its
+own commit: 46 files, 107 occurrences on this branch. Against `origin/main`:
+`refactor/DL1-device-and-memory-types` 2 files in common, 1 added line using the names;
+`refactor/DL3-output-provenance` 1 file, 0 lines; `feature/cellpose-full-surface` 2 files,
+7 lines; `feature/CP1-cellprofiler-plugins` 0, 0; `feature/cellpose-n2v2-custom-functions`
+0 files, 2 lines; `refactor/DL2-declared-files-between-steps` has no remote branch. The
+mapping, for this branch and for whoever lands after it:
+
+```
+s/\bprocessing_prepare\b/processing_acquire/g        # decorator, FunctionContractAttribute member
+s/\battach_processing_prepare\b/attach_processing_acquire/g
+s/__openhcs_prepare__/__openhcs_acquire__/g
+# keyword of the memory decorators only (@numpy(prepare=...), @torch(prepare=...), and the
+# parameter inside openhcs/core/memory/decorators.py):
+s/@\(numpy\|cupy\|torch\|tensorflow\|jax\|pyclesperanto\|numpy_function\)(\(.*\)\bprepare=/@\1(\2acquire=/
+```
+
+Not every `prepare=` is the hook: `prepare=prepare` in `openhcs/processing/presets/pipelines/*.py`,
+`prepare=` in `scripts/check_refactor_r1.py` and in the test doubles of
+`tests/unit/pyqt_gui/test_main_zmq_window_routing.py`, `test_master_multi_plate_demo.py`,
+`test_zmq_execution_server.py` are other things. `processing_load` / `load=` /
+`__openhcs_load__` keep their names. No alias.
+
+### Coordinator finding (2026-10-12, not built): a hook must not choose a device
+
+With `OPENHCS_CPU_ONLY=1` on a GPU machine `torch.cuda.is_initialized()` was True in the
+executing process although every device assignment was host: at compile
+`DeclaredHookPreparation.execute` calls the acquire hook with no device, and the Cellpose
+example's `_warm_up` wrote `"cuda" if torch.cuda.is_available()` itself. The contract to
+write into the hook declarations and enforce:
+
+- **An acquire hook puts something on the machine (a download, an on-disk cache) and
+  neither needs nor touches a device.** It cannot be given one: its parameters are the
+  declared `Enum`/`Literal` values and nothing else (`declared_hook_arguments` already
+  refuses any other parameter; the message should say why).
+- **A load hook is given the device the compiler assigned.** Chosen form: a parameter
+  named `device`, supplied by the platform from the plan and never from the step's keyword
+  arguments, in addition to the load already running inside the assigned device scope
+  (`LoadHookPreparation.device_id`, `invocation.execution_device_scope()`). On main the
+  plan states `execution_device_id: int | None` (None is the host). Branch
+  `refactor/DL1-device-and-memory-types` (not on main) replaces that with `Device` objects
+  (`HOST`, `AcceleratorDevice(index)`) from `arraybridge.devices` and a per-library device
+  rule in the plan; the parameter takes whatever the plan states, so when DL1 lands the
+  annotation becomes `Device` and nothing else changes. **Dependency: DL1.** A hook that
+  asks the library which device exists is wrong by contract.
+- **Guard to add:** with accelerators excluded for the process, no hook initialises CUDA: a
+  fake `torch` module on the server's and the workers' path (as arraybridge's own test
+  does) whose `cuda` records initialisation; the probe functions' acquire and load hooks
+  run; the count of initialisations is zero in every process. Where cheap, the platform
+  itself checks after an acquire hook that no accelerator was initialised and fails the
+  acquisition naming the hook.
+
+The Cellpose sketch above becomes:
+
+```python
+def _download_weights(model: CellposeModel) -> None:        # acquire: no device, ever
+    cellpose.models.cache_model_path(model.value)
+
+def _load_model(model: CellposeModel, device) -> None:      # device: what the plan assigned
+    _model(model, device).eval(np.zeros((1, 64, 64), np.float32))
+
+@torch(acquire=_download_weights, load=_load_model)
+def cellpose_segment(image, model: CellposeModel = CellposeModel.NUCLEI, diameter: float = 30.0):
+    ...
+```
+
+(the function body gets the same device from its memory-type declaration; it never calls
+`torch.cuda.is_available()`).
+
+### Guardrails (measured at `ee253945a`, after step 1 only; NOT rc=0)
+
+`ratchet openhcs exit 1`, `ratchet scripts exit 0`, `ratchet benchmark exit 0`,
+`38 passed`, `nra-r1 exit 0: "increased": []`,
+`base a51f4eab135b8b56f55f048391497fa62015b41d head ee253945a8c7048fd35fc2bc867048752d91530c guardrails rc=1`.
+The second leg's `isinstance`/`issubclass` on `Enum` and `get_origin(...) is Literal` were
+not flagged (`TypeSwitch` 0). Entries above main at that commit:
+
+| entry | main | branch | state |
+| --- | --- | --- | --- |
+| `GodClassExcess` `FunctionCatalogService` | 0 | 23 | open: move `follow_custom_function_change` and `custom_catalogue_state` to an owner of their own (they need only the server's write check), and give the projection reuse of item 7 its own owner |
+| `GodClassExcess` `CustomFunctionManager` | 99 | 120, more after item 2 | open: the file store (`source_path_for_name`, snapshots, `hold_source`, `drop_source`, `_save_function_code`, `source_revision`) is its own owner |
+| `GodClassExcess` `ZMQExecutionServer` | 249 | 282 | the WIP moves worker keeping to `KeptWorkers`; not re-measured |
+| `ForeignAbsenceProbe` `zmq_execution_client.py` | 5 | 6 | fixed in `30e1d634d` by reading (typed response, server identified by address); not re-measured |
+| `ForeignAbsenceProbe` `zmq_execution_server.py` | 6 | 7 | second leg; in the WIP's brief; not re-measured |
+| `AnyAnnotation` `core/memory/decorators.py` | 26 | 28 | fixed in `30e1d634d` (`load` typed); not re-measured |
+| `AnyAnnotation` `worker_execution.py` | 22 | 23 | second leg (`run(self, connection: Any)`); in the WIP's brief; not re-measured |
+
+The gate has not been run on any later commit.
+
+### What remains of the third leg (exact, in order)
+
+1. Item 4: run `tests/integration/test_no_jit_after_readiness.py -k spawn` and the custom
+   tests of that file and `test_custom_function_changes_reach_servers.py` on `63540c956`,
+   finish what fails, report loads per worker and the resident size of a spawn worker,
+   decide the lazy import path with a certificate, leave GPU commands; reword the WIP commit.
+2. The coordinator finding above (acquire takes no device; load is given the plan's
+   device; the CUDA guard). Depends on DL1 only for the annotation.
+3. Item 5 (measure Numba kernel loads in a prepared spawn worker).
+4. The ratchet table above, then `guardrails_local.sh` to rc=0 (origin/main was 0 commits
+   ahead of this branch when checked).
+5. Item 6, the rename, last and alone.
+6. Owner decision of item 3 (two compiles per benchmark row, or one compile with the clock
+   stopped during the prepare job).
+7. Three tests reported failing on this branch before item 4
+   (`tests/unit/test_callable_abi_preparation.py` x2,
+   `tests/unit/test_cellprofiler_callable_kernel_preparation.py` x1): the WIP edits the
+   first file and its 131-test run above passes; the CellProfiler one was not rerun.
+8. Stale text above this section: "Not done" item 4 and "What remains" items 2, 3, 6 of the
+   second leg are done by items 1, 2, 3 and 7 here; `run_compiled_pipeline` no longer sends
+   the prepare request.
+
 ## Gates
 
 See the PR description.
