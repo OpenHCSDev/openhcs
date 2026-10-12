@@ -6,6 +6,7 @@ import logging
 import multiprocessing
 import os
 import sys
+import queue
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
@@ -29,8 +30,15 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.dataset_sources.discovery import discover_domain_registries
-from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
-from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
+from openhcs.core.orchestrator.bundle_execution import actual_max_workers
+from openhcs.core.orchestrator.cancellation import (
+    ExecutionCancellationSignal,
+    ExecutionCancelledError,
+)
+from openhcs.core.orchestrator.worker_execution import (
+    PreparedForkWorkerLaneRunner,
+    WorkerExecutorFactory,
+)
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
@@ -756,6 +764,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 subject_id=request_context.subject_id,
             ),
             debug_execution_policy=debug_execution_policy,
+            consumes_artifact=not request_context.auxiliary_params.prepare_workers_only,
         ).resolve()
 
     @staticmethod
@@ -788,6 +797,10 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 request_context=request_context,
                 compilation=compilation,
             )
+        if request_context.auxiliary_params.prepare_workers_only:
+            return self._prepare_pipeline_workers(
+                request_context.execution_id, compilation.execution_bundle
+            )
         execution_results = ZMQWorkerExecutionRequest(
             execution_id=request_context.execution_id,
             orchestrator=orchestrator,
@@ -812,6 +825,36 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         )
         execution_results.require_success()
         return execution_results
+
+    def _prepare_pipeline_workers(
+        self, execution_id: str, execution_bundle: CompiledExecutionBundle
+    ) -> dict[str, int]:
+        """Load what the pipeline selects into the workers that will run it.
+
+        The workers are returned to the front of the prepared set, so the
+        execution of this pipeline is given the same processes.
+        """
+        worker_count = actual_max_workers(execution_bundle, None)
+        resources = WorkerExecutorFactory(
+            log_file_base=None,
+            progress_queue=queue.SimpleQueue(),
+            cancellation=ExecutionCancellationSignal(),
+        ).create(
+            runtime_environment=execution_bundle.runtime_environment,
+            actual_max_workers=worker_count,
+            prepared_worker_runner=self._prepared_worker_runner,
+        )
+        started = time.perf_counter()
+        with resources.execution_context():
+            loads = resources.load_pipeline_resources(execution_bundle, worker_count)
+        logger.info(
+            "[%s] Prepared pipeline: %d resource load(s) across %d worker(s) in %.3fs",
+            execution_id,
+            loads,
+            worker_count,
+            time.perf_counter() - started,
+        )
+        return {"resource_loads": loads, "workers": worker_count}
 
     def _export_runtime_observation(
         self,

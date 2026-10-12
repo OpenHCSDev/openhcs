@@ -182,6 +182,142 @@ pipeline that uses `CYTO3` with 2 workers loads one model in 2 workers, and the 
 standing rule asks for and fits CPU; B is what a GPU needs. The choice also decides item 1
 (how many spawn workers exist before a pipeline is known).
 
+## Owner decision taken (2026-10-12): both, split by the kind of cost
+
+"A for what is one-time per machine, B for what is bound by memory."
+
+A function's preparation has two declared parts with different lifetimes:
+
+| Part | Declared with | Runs | Called with |
+| --- | --- | --- | --- |
+| Acquire: put a resource on this machine (kernel cache, weights) | `prepare=` of the memory decorator, or `@processing_prepare(fn)` | catalogue preparation, before the server reports ready | once per value of each hook parameter's declared type |
+| Load: put a resource into a process or onto a device (model, warm-up) | `load=` of the memory decorator, or `@processing_load(fn)` | "prepare this pipeline", in each worker that will run the pipeline | the values the compiled step selects, inside the device scope the compiler assigned |
+
+As the author writes it (what `cellpose_segment.py` on the #1230 branch should become; that
+branch is not edited here):
+
+```python
+class CellposeModel(Enum):
+    NUCLEI = "nuclei"; CYTO3 = "cyto3"; CYTO2 = "cyto2"
+
+def _download_weights(model: CellposeModel) -> None:       # acquire: every member
+    cellpose.models.cache_model_path(model.value)          # (narrow it with Literal[...])
+
+def _load_model(model: CellposeModel) -> None:             # load: the selected member,
+    _model(model).eval(np.zeros((1, 64, 64), np.float32))  # on the assigned device
+
+@numpy(prepare=_download_weights, load=_load_model)
+def cellpose_segment(image, model: CellposeModel = CellposeModel.NUCLEI, diameter: float = 30.0):
+    return _model(model).eval(image, diameter=diameter)[0]
+```
+
+The hook names parameters of its function; each must be annotated with an `Enum` (every
+member) or a `Literal` (those values). A hook without parameters is the single empty
+combination, which is every existing Numba kernel hook: the catalogued functions use the
+same declaration and the same operation (`AcquireHookPreparation`), not a parallel one.
+
+**Unprepared pipelines: prepared implicitly, as their own phase, never refused.** The GUI
+(`Session.run_datasets`) and every existing client submit compile then execute; refusing
+would break them and would add a job round trip to every run of a pipeline that loads
+nothing. An execution first runs the load phase for its leased workers
+(`WorkerExecutorResources.load_pipeline_resources`), which finishes before any lane starts
+and sends nothing to a worker that already holds the loads; it logs its count and seconds.
+`run_compiled_pipeline` (the benchmark's path) sends the explicit request, so the
+`SERVER_COMPILATION_JOB` and `SERVER_PIPELINE_JOB` it reports contain no load.
+
+### Done in this pass (item 1 of the hand-off)
+
+- `openhcs/core/processing_preparation.py`: `declared_hook_arguments`,
+  `selected_hook_arguments`, `AcquireHookPreparation`, `LoadHookPreparation` (identity
+  includes arguments and device), `CallablePreparation.acquisitions / prepare_for_call /
+  prepare_selected / selected_load`, `UnpreparedValueError`.
+- Compile (`normalize_prepared_function_pattern` -> `CallableProjection.prepared_callable(kwargs)`):
+  a serving process refuses a selection it did not acquire, naming the acquired values; a
+  process that does not serve (a script, a direct orchestrator) acquires only the selected value.
+- `openhcs/core/orchestrator/worker_execution.py`: `PipelineResourceLoads` (derived from the
+  compiled bundle), worker command `LoadPipelineResources`, `load_pipeline_resources` on the
+  resources family, `WorkerProcess.loaded`; released workers go back to the front of the
+  prepared set so the same pipeline is given the same processes.
+- "Prepare this pipeline" is its own queued job: `ZMQAuxiliaryExecutionParams.prepare_workers_only`
+  on a request that names the compile artifact (`ZMQExecutionRequestBuilder.with_worker_preparation`),
+  served by `ZMQExecutionServer._prepare_pipeline_workers`; `run_compiled_pipeline` sends it
+  (`ZMQPipelineRunPhase.SUBMIT_PREPARATION / WAIT_PREPARATION`, `ZMQCompiledPipelineRun.preparation_record`).
+- Tests: three new tests in `tests/integration/test_no_jit_after_readiness.py` over the
+  real server with a probe function (acquire declared for `small`, `large`; the function
+  also accepts `undeclared`), fork workers, 2 workers. See "Measurements of this pass".
+
+### Measurements of this pass (probe function, fork workers, 2 workers, 4 wells, CPU, loaded machine)
+
+`tests/integration/test_no_jit_after_readiness.py`, custom-function tests: 6 passed.
+Counts are exact; times are one run.
+
+| | first run | second run |
+| --- | --- | --- |
+| acquisitions (server, before readiness) | 2 (`small`, `large`), none later | 0 |
+| "prepare this pipeline" job, client wall | 0.03 s, 2 loads (one per worker) | 0.04 s, 0 loads |
+| loads inside compile or execute | 0 | 0 |
+| execute, client wall | 0.08 s | 0.07 s |
+| worker processes that execute | the 2 that were prepared | the same 2 |
+
+A compile selecting `undeclared` is refused: "'probe' was not prepared for
+model='undeclared'. Prepared before this server reported ready: model='small';
+model='large'." Seen failing first: with the load hook looked up on the compiler's
+reference instead of the declared function, the prepare job loaded nothing and both loads
+landed in the first execute; the guard reported exactly that.
+
+Not run in this pass: `guardrails_local.sh` (origin/main not merged), the two Numba tests
+of the same file, the full suite. Unit files run and passing: `test_processing_preparation`,
+`test_preparation_admission`, `test_callable_contract`, `test_custom_function_lifecycle`,
+`test_fork_compiler_preparation`, `test_zmq_execution_server`, `test_zmq_compiled_pipeline_run`,
+`test_openhcs_adapter`, `test_openhcs_measured_run`, `test_g7_runtime_protocol_guards`,
+`test_orchestrator_lane_planning` and the other unit files that import `worker_execution`
+or `zmq_execution_signature` (before the last two fixes: 282 passed, 2 failed, both fixed
+and rerun).
+
+### What remains (exact, in order)
+
+0. Merge `origin/main`, run `guardrails_local.sh` (not run; `declared_hook_arguments` has one
+   `isinstance(annotation, type) and issubclass(annotation, enum.Enum)` and one
+   `get_origin(...) is Literal`, which a ratchet may count), then the full gates.
+
+1. **Spawn workers (hand-off item 2), not started.** `ProcessWorkerExecutorResources.load_pipeline_resources`
+   returns 0: the spawn pool's processes are created per execution by
+   `WorkerExecutorFactory.create` (a `ProcessPoolExecutor` per call), so nothing can persist
+   from "prepare" to "execute". Needed: a prepared runner on the spawn context
+   (`PreparedForkWorkerLaneRunner` does not need fork except `inherited_parent_connections`
+   in `_serve_worker` and the `PrepareWorker` first command, which for a spawned process must
+   run `_configure_worker_process` and load the custom sources), started at "prepare this
+   pipeline" with the pipeline's worker count, kept by the server. A spawned worker resolves
+   a custom function through `openhcs.processing.custom_functions.__getattr__`
+   (`FunctionReferenceTransportAuthority.importable_function`), so that hook cannot be
+   deleted until the spawned worker loads the sources at start. No limit on accelerator
+   workers exists in `openhcs/core/config.py` (only `num_workers`); one must be declared
+   there. Memory: each worker of a pipeline holds one copy of each selected model
+   (2 workers x 1 model here; 12 x 0.9 GB does not fit 8 GB).
+2. **The implicit load phase is logged, not a field of the execution record**, so
+   `end_time - start_time` of an execution that was not prepared includes it. It should be
+   an extra of the record (`BundleExecutionExtras`) and subtracted by `benchmark/timing.py`.
+3. **`total_seconds` of `benchmark/well_throughput_scaling.py` (2165-2201)** is a client
+   clock around `run_compiled_pipeline`, so it now contains the prepare job (and it already
+   contained server start on the owned-server path). The benchmark must send the prepare
+   request before starting that clock; `compile_seconds` and `execute_seconds` are already clean.
+4. **Numba kernels in a spawned worker**: the kernel hooks are acquire-only; a spawned
+   worker loads a cached kernel at first call. Declaring the kernel hooks as loads too is
+   one line per hook, after item 1.
+5. **Names**: `processing_prepare` / `prepare=` / `__openhcs_prepare__` now mean "acquire";
+   rename to `processing_acquire` / `acquire=` (35 files mention them).
+6. Hand-off items 3 (registering tells running servers; GUI "preparing" state; edit and
+   delete over the wire, which have no request today), 4 (retry of a failed acquisition),
+   5 (the 7 s catalogue-preparation request: `_clear_caches` drops
+   `RegistryService._metadata_cache`, the reload makes a new dict, and
+   `FunctionCatalogService._search_projections` compares by dict identity, so every
+   function is projected again) are not started.
+7. GPU run, after 1: build the venv of DL-COMMON (`torch 2.6.0+cu124`, `cupy-cuda12x`,
+   `cellpose==3.1.1.3`), store the example above with `@torch`, then
+   `python tests/integration/helpers/prepared_resource/run_custom_function_pipelines.py <dir>`
+   with `OPENHCS_PREPARED_RESOURCE_TRACE=<dir>/trace.jsonl` and without `OPENHCS_CPU_ONLY`,
+   and count `load` events per worker pid and `nvidia-smi --query-compute-apps=pid,used_memory --format=csv`.
+
 ## Gates
 
 See the PR description.

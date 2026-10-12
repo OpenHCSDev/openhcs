@@ -192,6 +192,8 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         BenchmarkPhase.WAIT_OPENHCS,
         BenchmarkPhase.SUBMIT_OPENHCS,
         BenchmarkPhase.WAIT_OPENHCS,
+        BenchmarkPhase.SUBMIT_OPENHCS,
+        BenchmarkPhase.WAIT_OPENHCS,
         BenchmarkPhase.SERVER_COMPILATION_JOB,
         BenchmarkPhase.SERVER_PIPELINE_JOB,
         BenchmarkPhase.VALIDATE_RUNTIME,

@@ -277,6 +277,9 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         def submit_prepared_pipeline(self, request):
             if request.compile_control.compile_only:
                 return self.submit_compile(request)
+            if (request.config_params or {}).get("prepare_workers_only"):
+                assert request.compile_control.compile_artifact_id == "compile-1"
+                return {"status": "accepted", "execution_id": "prepare-1"}
             return self.submit_pipeline(request)
 
         def submit_compile(self, submission):
@@ -297,7 +300,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             self.waits.append(execution_id)
-            if execution_id == "compile-1":
+            if execution_id in ("compile-1", "prepare-1"):
                 return {
                     "execution": self.poll_status(execution_id)["execution"],
                     "status": "complete",
@@ -337,7 +340,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
             }
 
         def poll_status(self, execution_id):
-            assert execution_id in {"compile-1", "exec-1"}
+            assert execution_id in {"compile-1", "prepare-1", "exec-1"}
             return {
                 "status": "ok",
                 "execution": {
@@ -408,7 +411,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         submission.compile_control.compile_artifact_id
         for submission in FakeZMQExecutionClient.submitted
     ] == [None, "compile-1"]
-    assert FakeZMQExecutionClient.waits == ["compile-1", "exec-1"]
+    assert FakeZMQExecutionClient.waits == ["compile-1", "prepare-1", "exec-1"]
     assert {record["phase"] for record in timing.payloads()} >= {
         BenchmarkPhase.SUBMIT_OPENHCS.name,
         BenchmarkPhase.WAIT_OPENHCS.name,

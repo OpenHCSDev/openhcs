@@ -12,7 +12,7 @@ import signal
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Self, Sequence
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Mapping, Self, Sequence
 
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -24,11 +24,15 @@ from openhcs.core.compiled_step_plan import (
     FrameworkDeviceAssignment,
 )
 from openhcs.core.config import MultiprocessingStartMethod
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable_contract import (
+    CallableProjection,
+    FunctionStepExecutionScope,
+)
 from openhcs.core.context.processing_context import (
     CompiledContext,
     ExecutingContext,
 )
+from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
 from openhcs.core.runtime_profile import RuntimeProfileLogger
@@ -56,6 +60,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
+from openhcs.core.processing_preparation import CallablePreparation, LoadHookPreparation
 from openhcs.core.progress import (
     ProgressContextPayload,
     ProgressEvent,
@@ -127,6 +132,17 @@ class WorkerExecutorResources(ABC):
 
     def execution_context(self):
         return contextlib.nullcontext()
+
+    def load_pipeline_resources(
+        self, execution_bundle: CompiledExecutionBundle, worker_count: int
+    ) -> int:
+        """Load what the pipeline selects where it will run; return loads done.
+
+        The lanes of this mode run in this process or in children forked from
+        it during the execution, so the loads happen here.
+        """
+        loads = PipelineResourceLoads.from_bundle(execution_bundle)
+        return loads.run(loads.invocations)
 
     def install_execution_bundle(
         self, execution_bundle: CompiledExecutionBundle
@@ -404,6 +420,16 @@ class ProcessWorkerExecutorResources(PooledWorkerExecutorResources):
     """Process-pool resources with exact ownership of child cancellation."""
 
     _executor: concurrent.futures.ProcessPoolExecutor
+
+    def load_pipeline_resources(
+        self, execution_bundle: CompiledExecutionBundle, worker_count: int
+    ) -> int:
+        """Nothing: this pool's processes start with the execution and end with it.
+
+        They inherit nothing from this process, so a load here would be held
+        by a process that runs no lane.
+        """
+        return 0
 
     def cancel_execution(self) -> int:
         processes = self._executor._processes
@@ -690,6 +716,65 @@ class PrepareWorker(AnsweredWorkerCommand):
 
 
 @dataclass(frozen=True)
+class PipelineResourceLoads:
+    """What a compiled pipeline loads into each process that runs it.
+
+    Derived from the compiled steps: each invocation whose function declares a
+    load hook, with the values the step selects and the device the compiler
+    assigned. One entry per distinct load.
+    """
+
+    by_identity: Mapping[Hashable, CompiledFunctionInvocation]
+
+    @staticmethod
+    def operation(invocation: CompiledFunctionInvocation) -> LoadHookPreparation | None:
+        return CallablePreparation(
+            CallableProjection.from_callable(invocation.contract.func).resolved()
+        ).selected_load(invocation.kwargs_dict, invocation.execution_device_id)
+
+    @classmethod
+    def from_bundle(cls, execution_bundle: CompiledExecutionBundle) -> Self:
+        by_identity: dict[Hashable, CompiledFunctionInvocation] = {}
+        for context in execution_bundle.transport_contexts.values():
+            for step_plan in context.step_plans.values():
+                pattern = step_plan.compiled_function_pattern
+                if pattern is None:
+                    continue
+                for invocation in pattern.iter_invocations():
+                    operation = cls.operation(invocation)
+                    if operation is not None:
+                        by_identity.setdefault(operation.identity, invocation)
+        return cls(by_identity)
+
+    @property
+    def invocations(self) -> tuple[CompiledFunctionInvocation, ...]:
+        return tuple(self.by_identity.values())
+
+    @classmethod
+    def run(cls, invocations: Iterable[CompiledFunctionInvocation]) -> int:
+        """Load each in this process, on its device; count the ones not yet held."""
+        performed = 0
+        for invocation in invocations:
+            operation = cls.operation(invocation)
+            if operation.is_completed():
+                continue
+            with invocation.execution_device_scope():
+                operation.prepare()
+            performed += 1
+        return performed
+
+
+@dataclass(frozen=True)
+class LoadPipelineResources(AnsweredWorkerCommand):
+    """Load into this worker what a pipeline it will run selects."""
+
+    invocations_payload: bytes
+
+    def run(self, connection: Any) -> int:
+        return PipelineResourceLoads.run(pickle.loads(self.invocations_payload))
+
+
+@dataclass(frozen=True)
 class ExecuteInheritedLane(AnsweredWorkerCommand):
     """Execute one lane against the execution bundle this process holds."""
 
@@ -782,6 +867,8 @@ class WorkerProcess:
     slot: str
     process: Any
     connection: Any
+    # Identities of the pipeline resources this process was told to load.
+    loaded: set[Hashable] = field(default_factory=set, compare=False, repr=False)
 
     def send(self, command: WorkerCommand) -> None:
         self.connection.send(command)
@@ -1027,9 +1114,16 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
             outdated = bool(process_ids & self._outdated_process_ids)
             self._outdated_process_ids -= process_ids
             retire = retire or outdated
+            # Returned to the front in their order: the next pipeline with the
+            # same worker count is given the processes that hold its loads.
+            kept = [
+                worker
+                for worker in workers
+                if not retire and not self._closed and worker.process.is_alive()
+            ]
+            self._available[:0] = kept
             for worker in workers:
-                if not retire and not self._closed and worker.process.is_alive():
-                    self._available.append(worker)
+                if any(worker is kept_worker for kept_worker in kept):
                     continue
                 if worker.process.is_alive():
                     worker.process.terminate()
@@ -1101,11 +1195,9 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
             )
         self.cancellation.raise_if_requested("before prepared worker checkout")
         lane_items = list(worker_lane_execution_plan.active_lane_items())
-        self._leased.extend(self._runner.acquire(len(lane_items)))
+        self._lease(len(lane_items))
         submitted: list[WorkerProcess] = []
-        for (worker_slot, lane_keys), worker in zip(
-            lane_items, self._leased, strict=True
-        ):
+        for (worker_slot, lane_keys), worker in zip(lane_items, self._leased):
             self.cancellation.raise_if_requested("before prepared worker submission")
             payload = pickle.dumps(
                 execution_bundle.for_transport_serialization(
@@ -1136,6 +1228,44 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
                 result.runtime_observation.merge_into(parent_contexts)
         self.cancellation.raise_if_requested("after prepared worker execution")
         return results
+
+    def _lease(self, worker_count: int) -> None:
+        """Hold this many workers from here until the execution context ends."""
+        missing = worker_count - len(self._leased)
+        if missing > 0:
+            self._leased.extend(self._runner.acquire(missing))
+
+    def load_pipeline_resources(
+        self, execution_bundle: CompiledExecutionBundle, worker_count: int
+    ) -> int:
+        """Load in the workers leased for this pipeline what each does not hold."""
+        loads = PipelineResourceLoads.from_bundle(execution_bundle).by_identity
+        if not loads:
+            return 0
+        self._lease(worker_count)
+        sent: list[tuple[WorkerProcess, set[Hashable]]] = []
+        for worker in self._leased[:worker_count]:
+            missing = loads.keys() - worker.loaded
+            if not missing:
+                continue
+            worker.send(
+                LoadPipelineResources(
+                    pickle.dumps(
+                        tuple(loads[identity] for identity in loads if identity in missing),
+                        protocol=pickle.HIGHEST_PROTOCOL,
+                    )
+                )
+            )
+            sent.append((worker, missing))
+        performed = 0
+        try:
+            for worker, missing in sent:
+                performed += worker.result(self.progress_queue)
+                worker.loaded.update(missing)
+        except BaseException:
+            object.__setattr__(self, "_retire_workers", True)
+            raise
+        return performed
 
     @property
     def worker_processes(self) -> list[WorkerProcess]:

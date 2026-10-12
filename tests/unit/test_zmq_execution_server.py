@@ -138,7 +138,8 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
         compile_only=False,
         execution_id=record.execution_id,
         auxiliary_params=SimpleNamespace(
-            runtime_observation_mode_for=lambda bundle: OmitRuntimeRecords
+            prepare_workers_only=False,
+            runtime_observation_mode_for=lambda bundle: OmitRuntimeRecords,
         ),
     )
     monkeypatch.setattr(

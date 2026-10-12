@@ -52,6 +52,39 @@ def {name}(image, gain: float = 1.0):
 '''
 
 
+# A function with both parts of a preparation: what it acquires (once per
+# machine, for every value its hook declares) and what it loads (per process,
+# for the value a pipeline selects). The function accepts a third value that
+# the acquire hook does not declare.
+PROBE_SOURCE = '''
+from typing import Literal
+from prepared_resource_trace import record
+from openhcs.core.memory import numpy as numpy_function
+
+HELD = set()
+
+def _acquire(model: Literal["small", "large"]) -> None:
+    record("acquire", "probe", model=model)
+
+def _load(model: Literal["small", "large", "undeclared"]) -> None:
+    record("load", "probe", model=model)
+    HELD.add(model)
+
+@numpy_function(prepare=_acquire, load=_load)
+def probe(image, model: Literal["small", "large", "undeclared"] = "small"):
+    """Return the stack.
+
+    Args:
+        image: Image stack.
+        model: Which resource to use.
+    """
+    if model not in HELD:
+        _load(model)
+    record("call", "probe", model=model)
+    return image
+'''
+
+
 def main() -> None:
     work = Path(sys.argv[1]).resolve()
     import openhcs  # noqa: F401
@@ -81,6 +114,7 @@ def main() -> None:
         FunctionCatalogEndpointUnavailableError,
         OpenHCSExecutionSubmission,
         ZMQExecutionClient,
+        ZMQExecutionRequestBuilder,
     )
     from zmqruntime.execution.responses import (
         ExecutionSubmissionResponse,
@@ -104,6 +138,7 @@ def main() -> None:
         return function
 
     stored_before_start = store("resource_stored_before_start")
+    [probe] = manager.register_from_code(PROBE_SOURCE, persist=True, emit_signal=False)
 
     suffix = "_prepared_resource"
     vfs = VFSConfig(materialization_backend=MaterializeToDisk)
@@ -150,6 +185,41 @@ def main() -> None:
         ).require_complete("execute")
         record("execute_end")
 
+    def compile_pipeline(steps) -> str:
+        compile_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_compile(submission(steps))
+        ).require_execution_id("compile")
+        ExecutionWaitResult.from_wire(
+            client.wait_for_completion(compile_id)
+        ).require_complete("compile")
+        return compile_id
+
+    def run_prepared(steps) -> None:
+        """Compile, "prepare this pipeline", execute: three separate jobs."""
+        record("compile_start")
+        compile_id = compile_pipeline(steps)
+        record("compile_end")
+        record("pipeline_preparation_start")
+        preparation_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_prepared_pipeline(
+                ZMQExecutionRequestBuilder.from_task(
+                    submission(steps)
+                ).with_worker_preparation(compile_id)
+            )
+        ).require_execution_id("prepare")
+        ExecutionWaitResult.from_wire(
+            client.wait_for_completion(preparation_id)
+        ).require_complete("prepare")
+        record("pipeline_preparation_end")
+        record("execute_start")
+        execution_id = ExecutionSubmissionResponse.from_wire(
+            client.submit_pipeline(submission(steps, compile_artifact_id=compile_id))
+        ).require_execution_id("execute")
+        ExecutionWaitResult.from_wire(
+            client.wait_for_completion(execution_id)
+        ).require_complete("execute")
+        record("execute_end")
+
     try:
         if not client.connect(timeout=1800):
             raise RuntimeError("The execution server did not become ready.")
@@ -183,6 +253,16 @@ def main() -> None:
         both = [*first, FunctionStep(name="while ready", func=stored_while_ready)]
         run(both)
         run(both)
+
+        selects_large = [FunctionStep(name="probe", func=(probe, {"model": "large"}))]
+        run_prepared(selects_large)
+        run_prepared(selects_large)
+        try:
+            compile_pipeline(
+                [FunctionStep(name="probe", func=(probe, {"model": "undeclared"}))]
+            )
+        except Exception as error:
+            record("refused", "probe", message=str(error))
     finally:
         client.disconnect()
 

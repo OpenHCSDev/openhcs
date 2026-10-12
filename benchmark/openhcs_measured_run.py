@@ -331,6 +331,8 @@ def execute_measured_openhcs_pipeline_on_client(
     benchmark_phases = {
         ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
         ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
+        ZMQPipelineRunPhase.SUBMIT_PREPARATION: BenchmarkPhase.SUBMIT_OPENHCS,
+        ZMQPipelineRunPhase.WAIT_PREPARATION: BenchmarkPhase.WAIT_OPENHCS,
         ZMQPipelineRunPhase.SUBMIT_EXECUTION: BenchmarkPhase.SUBMIT_OPENHCS,
         ZMQPipelineRunPhase.WAIT_EXECUTION: BenchmarkPhase.WAIT_OPENHCS,
     }

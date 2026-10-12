@@ -146,6 +146,7 @@ def test_preparation_compiles_every_kernel(cold_run_events: list[dict]) -> None:
 PREPARED_RESOURCE = Path(__file__).resolve().parent / "helpers" / "prepared_resource"
 STORED_BEFORE_START = "resource_stored_before_start"
 STORED_WHILE_READY = "resource_stored_while_ready"
+PROBE = "probe"
 
 
 @pytest.fixture(scope="module")
@@ -230,14 +231,14 @@ def test_nothing_is_prepared_or_loaded_during_compile_or_execute(
             timed.append(event)
     calls = [event for event in timed if event["kind"] == "call"]
     assert {event["function"] for event in calls} == {
-        STORED_BEFORE_START, STORED_WHILE_READY,
-    }, "the pipelines did not call both functions, so the counter proves nothing"
+        STORED_BEFORE_START, STORED_WHILE_READY, PROBE,
+    }, "the pipelines did not call every function, so the counter proves nothing"
     assert len({event["pid"] for event in calls}) >= 2, "expected several worker processes"
 
     late = [
         f"{event['kind']} {event['function']} pid {event['pid']}"
         for event in timed
-        if event["kind"] in ("prepare", "load")
+        if event["kind"] in ("prepare", "acquire", "load")
     ]
     assert late == [], (
         "A custom function was prepared or loaded its resource during a timed "
@@ -257,3 +258,59 @@ def test_each_process_holds_exactly_one_load_of_each_resource(
         ]
         calls = _kinds(events, "call", function)
         assert calls and {event["loads"] for event in calls} == {1}
+
+
+# --- The two parts of a preparation: acquired per machine, loaded per pipeline ---
+
+
+def test_every_declared_value_is_acquired_before_readiness_by_the_server(
+    custom_function_events: list[dict],
+) -> None:
+    events = custom_function_events
+    first_ready = _kinds(events, "ready")[0]
+    acquired = _kinds(events, "acquire", PROBE)
+    assert sorted(event["model"] for event in acquired) == ["large", "small"], (
+        "one acquisition per value the acquire hook declares, and no other"
+    )
+    workers = {event["pid"]: event["parent"] for event in _kinds(events, "call", PROBE)}
+    for event in acquired:
+        assert _position(events, event) < _position(events, first_ready)
+        assert {event["pid"]} == set(workers.values())
+
+
+def test_a_pipeline_is_loaded_once_in_each_of_its_workers_when_it_is_prepared(
+    custom_function_events: list[dict],
+) -> None:
+    """Two prepared runs with two workers: two loads, both in the first "prepare"."""
+    events = custom_function_events
+    loads = _kinds(events, "load", PROBE)
+    calls = _kinds(events, "call", PROBE)
+    assert [event["model"] for event in loads] == ["large", "large"], (
+        "only the value the pipeline selects is loaded"
+    )
+    assert len({event["pid"] for event in loads}) == 2, "one load per worker"
+    assert {event["pid"] for event in calls} == {event["pid"] for event in loads}, (
+        "the workers that were prepared are the workers that execute, in both runs"
+    )
+    first_start, second_start = _kinds(events, "pipeline_preparation_start")
+    first_end, second_end = _kinds(events, "pipeline_preparation_end")
+    for event in loads:
+        assert (
+            _position(events, first_start)
+            < _position(events, event)
+            < _position(events, first_end)
+        ), "a load happens inside the pipeline's own preparation, before execution"
+    assert _position(events, second_start) < _position(events, second_end)
+
+
+def test_a_value_that_was_not_acquired_is_refused_at_compile(
+    custom_function_events: list[dict],
+) -> None:
+    [refused] = _kinds(custom_function_events, "refused", PROBE)
+    assert "undeclared" in refused["message"]
+    assert "model='large'" in refused["message"] and "model='small'" in refused["message"]
+    assert not [
+        event
+        for event in custom_function_events
+        if event["kind"] in ("acquire", "load") and event.get("model") == "undeclared"
+    ]

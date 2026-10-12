@@ -279,6 +279,19 @@ def execute_bundle_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
+                    # Its own phase, finished before any lane starts. Empty
+                    # when the pipeline was prepared (or declares no loads).
+                    load_started = time.perf_counter()
+                    loads = executor_resources.load_pipeline_resources(
+                        execution_bundle, validated.actual_max_workers
+                    )
+                    if loads:
+                        logger.info(
+                            "Pipeline was not prepared: %d resource load(s) before "
+                            "execution took %.3fs.",
+                            loads,
+                            time.perf_counter() - load_started,
+                        )
                     lane_results = executor_resources.run_worker_lanes(
                         pipeline_definition=validated.pipeline_definition,
                         worker_lane_execution_plan=worker_lane_execution_plan,

@@ -1566,13 +1566,15 @@ def normalize_prepared_function_pattern(
     """
     if isinstance(pattern, NormalizedFunctionPattern):
         for item in pattern.iter_items():
-            CallableProjection.from_callable(item.func).prepared_callable()
+            CallableProjection.from_callable(item.func).prepared_callable(
+                item.kwargs_dict
+            )
         return pattern
     for _, chain in AuthoredFunctionPattern.groups(pattern):
         for leaf in chain:
             func, kwargs = AuthoredFunctionPattern.split_leaf(leaf)
             if not RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs or {}):
-                CallableProjection.from_callable(func).prepared_callable()
+                CallableProjection.from_callable(func).prepared_callable(kwargs or {})
     return normalize_function_pattern(pattern)
 
 

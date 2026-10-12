@@ -413,6 +413,8 @@ class ZMQPipelineRunPhase(Enum):
 
     SUBMIT_COMPILE = "submit_compile"
     WAIT_COMPILE = "wait_compile"
+    SUBMIT_PREPARATION = "submit_preparation"
+    WAIT_PREPARATION = "wait_preparation"
     SUBMIT_EXECUTION = "submit_execution"
     WAIT_EXECUTION = "wait_execution"
 
@@ -425,6 +427,7 @@ class ZMQCompiledPipelineRun:
     execution_id: str
     request: ZMQExecutionRequestBuilder
     compile_record: ExecutionRecord
+    preparation_record: ExecutionRecord
     execution_record: ExecutionRecord
     completion_observed_at: float
 
@@ -477,6 +480,35 @@ def run_compiled_pipeline(
         "OpenHCS ZMQ compilation failed", expected_execution_id=compile_artifact_id
     )
 
+    # "Prepare this pipeline": its own job, finished before the execution is
+    # submitted, so no execution contains a resource load.
+    with phase_scope(ZMQPipelineRunPhase.SUBMIT_PREPARATION):
+        preparation_response = ExecutionSubmissionResponse.from_wire(
+            client.submit_prepared_pipeline(
+                request.with_worker_preparation(compile_artifact_id)
+            )
+        )
+    if not preparation_response.accepted:
+        raise RuntimeError(
+            preparation_response.require_failure_text(
+                "OpenHCS ZMQ pipeline preparation submission"
+            )
+        )
+    preparation_id = preparation_response.require_execution_id(
+        "OpenHCS ZMQ pipeline preparation submission"
+    )
+    with phase_scope(ZMQPipelineRunPhase.WAIT_PREPARATION):
+        preparation_wait_response = client.wait_for_completion(
+            preparation_id,
+            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+        )
+    preparation_record = ExecutionWaitResult.from_wire(
+        preparation_wait_response
+    ).require_completed_execution(
+        "OpenHCS ZMQ pipeline preparation failed",
+        expected_execution_id=preparation_id,
+    )
+
     execution_request = request.with_compile_artifact_id(compile_artifact_id)
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_EXECUTION):
         execution_response = ExecutionSubmissionResponse.from_wire(
@@ -505,6 +537,7 @@ def run_compiled_pipeline(
         execution_id=execution_id,
         request=execution_request,
         compile_record=compile_record,
+        preparation_record=preparation_record,
         execution_record=execution_record,
         completion_observed_at=completion_observed_at,
     )
@@ -545,6 +578,21 @@ class ZMQExecutionRequestBuilder:
         return replace(
             self,
             compile_control=self.compile_control.as_execution_request(artifact_id),
+        )
+
+    def with_worker_preparation(self, artifact_id: str) -> ZMQExecutionRequestBuilder:
+        """The request that prepares the workers of a compiled pipeline."""
+        boundary = self.config_projection.params_boundary or ZMQConfigParamsBoundary(
+            None
+        )
+        return replace(
+            self.with_compile_artifact_id(artifact_id),
+            config_projection=replace(
+                self.config_projection,
+                params_boundary=boundary.with_updates(
+                    ZMQAuxiliaryExecutionParams(prepare_workers_only=True).to_transport()
+                ),
+            ),
         )
 
     @property
