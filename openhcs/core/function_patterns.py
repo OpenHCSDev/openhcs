@@ -410,7 +410,7 @@ class NormalizedFunctionGroup:
             kwargs = {} if kwargs is None else kwargs
             if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
                 continue
-            contract = CallableContract.from_declared_callable(func)
+            contract = CallableProjection.from_callable(func).declared_contract()
             normalized_items.append(
                 NormalizedFunctionItem(
                     key=FunctionInvocationKey.from_contract(

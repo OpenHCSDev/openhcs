@@ -152,8 +152,15 @@ class FunctionCatalogExecutionServer(ExecutionServer):
         self,
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
-        """Prepare catalog metadata before physical endpoint readiness."""
+        """Prepare the catalog and what a first request would otherwise run once.
+
+        The storage backend registry and the family registries that domains
+        extend are completed by their owners here, so workers forked after
+        this inherit them and no request pays for them.
+        """
         self._function_catalog_preparation.prepare_before_serving(status_callback)
+        ensure_storage_registry()
+        discover_domain_registries()
 
     def start(self) -> None:
         self.prepare_runtime_capabilities()
@@ -203,18 +210,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
         super().prepare_runtime_capabilities(status_callback)
-        self._prepare_first_request_state()
         self._prepare_worker_resources()
-
-    @staticmethod
-    def _prepare_first_request_state() -> None:
-        """Run what the first request would otherwise run once, before the fork.
-
-        Each owner completes its own lazy state: the storage backend registry
-        and the family registries that domains extend. Workers inherit the result.
-        """
-        ensure_storage_registry()
-        discover_domain_registries()
 
     def _prepare_worker_resources(self) -> None:
         """Prepare inherited workers before endpoint execution threads start."""

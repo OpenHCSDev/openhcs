@@ -217,7 +217,7 @@ def test_unprepared_function_reference_compilation_reads_prepared_live_declarati
 def test_lowering_a_pattern_without_compiling_it_prepares_nothing(fake_preparation):
     """Authoring and validation read the declaration; they never touch a kernel."""
     contract = NormalizedFunctionGroup.from_chain("group", (raw_numeric,)).items[0].contract
-    declared = CallableContract.from_declared_callable(raw_numeric)
+    declared = CallableProjection.from_callable(raw_numeric).declared_contract()
     assert fake_preparation.call_count == 0
     assert contract.canonical_signature == declared.canonical_signature
     assert (

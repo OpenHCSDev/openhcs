@@ -1534,32 +1534,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     @classmethod
     def from_prepared_callable(cls, func: Callable[..., object]) -> "CallableContract":
         """Construct a compiled view only after the declaration owner prepares it."""
-        projection = CallableProjection.from_callable(func)
-        return cls._for_projection(projection, projection.prepared_callable())
-
-    @classmethod
-    def from_declared_callable(cls, func: Callable[..., object]) -> "CallableContract":
-        """Construct the same view from the declaration alone, preparing nothing.
-
-        A signature is read from the callable's annotations and preparation never
-        changes it. Authoring a pipeline (converting a ``.cppipe``) runs no kernel,
-        so it must neither compile nor load one: kernels belong to the catalog
-        preparation of the process that executes.
-        """
-        projection = CallableProjection.from_callable(func)
-        return cls._for_projection(projection, projection.declared_callable())
-
-    @classmethod
-    def _for_projection(
-        cls, projection: "CallableProjection", resolved: Callable[..., object]
-    ) -> "CallableContract":
-        contract = cls.from_callable(resolved)
-        if contract.prepared_canonical_signature is None:
-            contract = contract.with_prepared_signature()
-        return dataclasses.replace(
-            contract, func=projection.func, function_name=projection.name,
-            module_name=projection.module_name,
-        )
+        return CallableProjection.from_callable(func).prepared_contract()
 
     def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
         """Descend declared scalar enums at authoring, before source projection."""
@@ -2259,6 +2234,29 @@ class CallableProjection:
         if self.has_published_signature():
             return self.func
         return _resolve_declared_callable(self.func)
+
+    def declared_contract(self) -> "CallableContract":
+        """The contract read from the declaration alone, preparing nothing.
+
+        A signature is read from the callable's annotations and preparation never
+        changes it. Authoring a pipeline (converting a ``.cppipe``, lowering a
+        function pattern) runs no kernel, so it must neither compile nor load
+        one: kernels belong to the catalog preparation of the process that executes.
+        """
+        return self._contract_of(self.declared_callable())
+
+    def prepared_contract(self) -> "CallableContract":
+        """The same contract, after the declaration owner prepared the callable."""
+        return self._contract_of(self.prepared_callable())
+
+    def _contract_of(self, resolved: Any) -> "CallableContract":
+        contract = CallableContract.from_callable(resolved)
+        if contract.prepared_canonical_signature is None:
+            contract = contract.with_prepared_signature()
+        return dataclasses.replace(
+            contract, func=self.func, function_name=self.name,
+            module_name=self.module_name,
+        )
 
     def prepared_callable(self) -> Any:
         """Keep ready library references or prepare live authored targets before validation."""

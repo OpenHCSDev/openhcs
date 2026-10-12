@@ -22,7 +22,7 @@ from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable_contract import CallableContract, CallableProjection
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
@@ -1050,9 +1050,9 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
 
         del module, binding, name, step_context, output_position
         primary_images = cls.primary_image_inputs(
-            CallableContract.from_declared_callable(
+            CallableProjection.from_callable(
                 cls.require_callable(invocation_key.function_name)
-            ),
+            ).declared_contract(),
             artifact_inputs.specs,
         )
         contextual_inputs = tuple(
@@ -1183,7 +1183,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
             group_key=invocation_key.group_key,
         )
         func = cls.require_callable(invocation_key.function_name)
-        callable_contract = CallableContract.from_declared_callable(func)
+        callable_contract = CallableProjection.from_callable(func).declared_contract()
         inputs = cls.artifact_contract_inputs(
             module,
             invocation_key=invocation_key,

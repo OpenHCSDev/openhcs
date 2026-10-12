@@ -91,7 +91,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable_contract import CallableProjection
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.runtime_image_values import ImagePayload
@@ -657,9 +657,9 @@ class IdentifyPrimaryObjectsModule(
             artifact_outputs=artifact_outputs,
         )
         source = cls.primary_image_inputs(
-            CallableContract.from_declared_callable(
+            CallableProjection.from_callable(
                 cls.require_callable(invocation_key.function_name)
-            ),
+            ).declared_contract(),
             artifact_inputs.specs,
         )
         if len(source) != 1:
