@@ -8,28 +8,39 @@ agent DTOs.
 
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import ClassVar, Protocol
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-class ResultFilePreviewReader(Protocol):
+class ResultFilePreviewReader(ABC):
     """The previews a reader can build; each kind picks one."""
 
-    def text_preview(self, record, *, max_lines: int, max_bytes: int): ...
+    @classmethod
+    @abstractmethod
+    def text_preview(cls, record, *, max_lines: int, max_bytes: int):
+        """Preview the file as text lines."""
 
-    def csv_preview(self, record, *, max_lines: int, max_bytes: int): ...
+    @classmethod
+    @abstractmethod
+    def csv_preview(cls, record, *, max_lines: int, max_bytes: int):
+        """Preview the file as text lines plus parsed columns and rows."""
 
-    def roi_preview(self, record, *, max_examples: int, max_bytes: int): ...
+    @classmethod
+    @abstractmethod
+    def roi_preview(cls, record, *, max_examples: int, max_bytes: int):
+        """Preview the ROIs the archive holds."""
 
 
-class ResultFileOpener(Protocol):
+class ResultFileOpener(ABC):
     """What a file browser can do with a result file."""
 
+    @abstractmethod
     def open_in_default_app(self, file_path: Path) -> None:
         """Hand the file to the desktop's default application."""
 
+    @abstractmethod
     def stream_rois(self, file_path: Path) -> None:
         """Send the file's ROIs to the enabled viewers."""
 
@@ -59,7 +70,7 @@ class ResultFileFormat(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def preview(
         cls,
-        reader: ResultFilePreviewReader,
+        reader: type[ResultFilePreviewReader],
         record,
         *,
         max_lines: int,

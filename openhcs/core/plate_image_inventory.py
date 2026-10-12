@@ -17,7 +17,10 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.constants.constants import Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
-from openhcs.core.result_file_formats import ResultFileFormat
+from openhcs.core.result_file_formats import (
+    ResultFileFormat,
+    ResultFilePreviewReader,
+)
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -512,7 +515,7 @@ class PlateResultFilePreview:
     omitted_reason: str | None = None
 
 
-class PlateResultFilePreviewReader:
+class PlateResultFilePreviewReader(ResultFilePreviewReader):
     """Read bounded previews for analysis result files."""
 
     DEFAULT_MAX_LINES = 8

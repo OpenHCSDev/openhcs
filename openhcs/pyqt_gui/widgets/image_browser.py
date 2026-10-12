@@ -40,7 +40,7 @@ from pyqt_reactive.widgets.shared.image_table_browser import (
 )
 
 from openhcs.core.config import StreamingConfig
-from openhcs.core.result_file_formats import ResultFileFormat
+from openhcs.core.result_file_formats import ResultFileFormat, ResultFileOpener
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileKind,
@@ -131,7 +131,7 @@ class ImageBrowserItem(Mapping[str, ImageTableValue]):
 
 
 @dataclass(frozen=True)
-class ResultFileBrowserOpener:
+class ResultFileBrowserOpener(ResultFileOpener):
     """What the image browser does when a result file is opened."""
 
     browser: "ImageBrowserWidget"
