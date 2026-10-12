@@ -131,7 +131,23 @@ Resolved values, ObjectState 2.1.1 (U6 base) against 3.0.0 (this branch):
 
 ## Tests
 
-PLACEHOLDER_TESTS
+Observed locally, CPython 3.12, the three submodules at the commits above.
+
+| Check | Result |
+|---|---|
+| formbridge `pytest tests -n 2` | 107 passed |
+| formbridge `ruff check src tests` | clean |
+| pyqt-reactive `pytest tests -n 2` | 593 passed, 1 failed (`test_published_runtime_is_not_overridden_by_a_source_candidate`: compares the installed `zmqruntime` with its bound; fails the same way at 0.7.0) |
+| pyqt-reactive `ruff check src/ --select E9,F63,F7,F822,F823`, `check_ruff_added_lines.py` | clean |
+| OpenHCS `tests/unit/pyqt_gui -n 2` | 899 passed |
+| OpenHCS 108 unit files that name ObjectState, lazy configs or `PipelineConfig`, with `test_validate_local_release_floors.py` and `agent/test_mcp_tool_contract.py` | 2388 passed, 11 failed, 3 skipped; the same 11 fail on the U6 base with ObjectState 2.1.1 (listed under "Out of scope") |
+| `test_compilation_session.py` (ledger item 9) | passed in that run |
+| `guardrails_local.sh` | `guardrails rc=0` (at `543c56eb8`) |
+| `SMOKE_SKIP_GUI=1 smoke_local.sh` | `smoke rc=0`, 5 passed (at `543c56eb8`) |
+| official30 parity, run 1 | 28/30 equivalent, not a valid run: `cp_tutorial_pixel_based_classification` was compiled by an execution server of another worktree (`agent-a05d025a19446fcd4`, `cannot import name 'LazyAnalysisConsolidationConfig'` from that worktree's file) and `cp_tutorial_translocation_final` was skipped after it |
+| official30 parity, run 2 | PARITY2 |
+
+MCP tool contract: `test_mcp_tool_contract.py` passes with no schema file changed.
 
 ## Done when
 
@@ -156,4 +172,10 @@ submodules moved to the release tags.
 
 ## Done / next
 
-See the end of this file.
+Done: the three library and application changes, the three PRs, every check
+in the table above.
+
+Next: a clean parity run. Run 2 is queued on `official30.lock`
+(`.claude/parity.sh` in the worktree; result in `.claude/logs/parity.done` and
+`parity.txt`). Then move the submodules to the release tags once the libraries
+are published.
