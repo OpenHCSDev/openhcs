@@ -17,7 +17,7 @@ from polystore.roi import PointShape, ROI
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration, MainThreadProgressCapability,
+    MainThreadProgressCapability,
     StreamPlateFilesToViewerCapability, UiStreamSelectedPlateFilesToViewerCapability,
 )
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
@@ -242,5 +242,3 @@ def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_
         assert any("published and viewer settlement completed" in message for message in hooks)
     finally:
         executor.close()
-        for declaration in (IndependentStream, IndependentStreamAfter):
-            AgentCapabilityDeclaration.__registry__.pop(declaration.name)

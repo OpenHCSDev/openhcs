@@ -562,13 +562,7 @@ def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None
 
     main_window = CompositionMainWindow()
     main_window.plate_manager_widget = FakePlateManager()
-    try:
-        OpenHCSUiBridgeCompositionRoot.for_main_window(main_window)
-    finally:
-        UiBridgeProviderSetABC.__registry__.pop(
-            DiscoveredProviderSet.registry_key,
-            None,
-        )
+    OpenHCSUiBridgeCompositionRoot.for_main_window(main_window)
 
     assert factory_calls == [main_window]
 
@@ -621,13 +615,7 @@ def test_embedded_code_document_registrations_are_registry_discovered(
             "additional_widget": additional_widget,
         },
     )()
-    try:
-        EmbeddedCodeDocumentRegistrationABC.register_all_for_main_window(main_window)
-    finally:
-        EmbeddedCodeDocumentRegistrationABC.__registry__.pop(
-            AdditionalEmbeddedCodeDocumentRegistration.scope_id,
-            None,
-        )
+    EmbeddedCodeDocumentRegistrationABC.register_all_for_main_window(main_window)
 
     assert (
         OpenHCSUiWindowId.pipeline_editor,
