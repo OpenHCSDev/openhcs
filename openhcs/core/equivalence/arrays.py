@@ -6,11 +6,8 @@ import hashlib
 
 import numpy as np
 
-from openhcs.core.memory import (
-    MEMORY_TYPE_NUMPY,
-    convert_memory,
-    detect_memory_type,
-)
+from openhcs.core.memory import detect_memory_type
+from openhcs.core.runtime_array_values import host_array
 
 
 def array_memory_type(value: object) -> str | None:
@@ -21,17 +18,11 @@ def array_memory_type(value: object) -> str | None:
         return None
 
 
-def canonical_numpy_array(value: object) -> np.ndarray | None:
-    """Convert an ArrayBridge-supported array to canonical CPU NumPy."""
-    source_type = array_memory_type(value)
-    if source_type is None:
+def contiguous_host_array(value: object) -> np.ndarray | None:
+    """Return an ArrayBridge-supported array as contiguous host NumPy."""
+    if array_memory_type(value) is None:
         return None
-    array = (
-        value
-        if source_type == MEMORY_TYPE_NUMPY
-        else convert_memory(value, source_type, MEMORY_TYPE_NUMPY, 0)
-    )
-    return np.ascontiguousarray(array)
+    return np.ascontiguousarray(host_array(value))
 
 
 def canonical_scalar(value: object) -> object:
@@ -45,7 +36,7 @@ def semantic_array_payload(
     value: object,
 ) -> tuple[str, str, tuple[int, ...], str] | None:
     """Return a backend-independent exact payload for array content."""
-    array = canonical_numpy_array(value)
+    array = contiguous_host_array(value)
     if array is None:
         return None
     digest = hashlib.sha256()
@@ -60,7 +51,7 @@ def semantic_array_payload(
 
 def semantic_array_shape(value: object) -> tuple[int, ...] | None:
     """Return backend-independent array shape without hashing content."""
-    array = canonical_numpy_array(value)
+    array = contiguous_host_array(value)
     if array is None:
         return None
     return tuple(int(axis) for axis in array.shape)

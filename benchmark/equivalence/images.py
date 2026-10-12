@@ -9,7 +9,7 @@ import imageio.v3 as imageio
 import numpy as np
 
 from openhcs.core.equivalence.arrays import (
-    canonical_numpy_array,
+    contiguous_host_array,
     semantic_array_payload,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
@@ -57,7 +57,7 @@ class RuntimeImageSnapshot:
         array: object,
     ) -> "RuntimeImageSnapshot":
         """Build a semantic image snapshot from an in-memory runtime artifact."""
-        contiguous = canonical_numpy_array(array)
+        contiguous = contiguous_host_array(array)
         if contiguous is None:
             contiguous = np.ascontiguousarray(array)
         array_payload = semantic_array_payload(contiguous)
