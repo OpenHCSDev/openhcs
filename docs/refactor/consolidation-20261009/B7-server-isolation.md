@@ -24,7 +24,7 @@ The three observed failures are one sequence:
 - The first run's next workflow finds the socket, gets a ready reply and attaches. It now runs on code imported from the other worktree.
 - When the other process ends, its server stops under the first run. `benchmark/openhcs_measured_run.py:297` reports "client entered without a connected endpoint" for the same collision seen from the other side.
 
-`require_owned_server` exists in the harness (`openhcs_measured_run.py:305`) and would have refused; the parity path does not pass it.
+`require_owned_server` exists in the harness (`openhcs_measured_run.py:305`) and would have refused; the parity path does not pass it. It stays: a measured run may still be given a port, and then needs a server it started.
 
 Why a server lived 31 hours:
 
@@ -51,17 +51,24 @@ class EndpointLaunch(WireMessage):
     audience: str             # wire name, derived from the family registry
 ```
 
-- `ZMQServer` holds its `EndpointLaunch` and reports it in every heartbeat (`PongResponse.launch`). `code_root` is derived from the server class, never passed by a caller.
+- `ZMQServer` holds its `EndpointLaunch` and reports it in every heartbeat (`PongResponse.launch`).
+- `code_root()` is a classmethod on clients and servers. Its default is the directory the class's top-level package is imported from. OpenHCS overrides it on both with `OpenHCSRuntimeImportAuthority.current().import_root`, the root its child processes are already launched from, so a client subclass defined in a script or a test is still this checkout's client.
 - **A client that starts a server** hands it the launch (`owner` = the client process, audience from `persistent`) and connects only if the server that becomes ready reports exactly that launch.
 - **A client that attaches** (an occupied endpoint in `connect`, or `connect_existing`) is refused with `EndpointLaunchMismatchError` unless the server reports a launch, its `code_root` equals the client's, and its audience admits the client process. The error names both code roots and the owner.
 - The check applies to endpoints on this host. A remote TCP host is an endpoint the user named; its paths and process ids mean nothing here.
-- **Namespace.** `ZMQConfig.socket_root()` owns where socket and lock files live. `OpenHCSZMQConfig` derives it from the import root: `~/.openhcs/<digest of import root>/`. Two checkouts no longer share addresses, so the refusal is the second line, not the normal case. `OPENHCS_SOCKET_ROOT` replaces the root for one process tree.
+- **Namespace.** `ZMQConfig.socket_root()` owns where socket and lock files live. `OpenHCSZMQConfig` derives it from the import root: `~/.openhcs/<first 8 hex digits of sha256(import root)>/`. Two checkouts no longer share addresses, so the refusal is the second line, not the normal case. `OPENHCS_SOCKET_ROOT` replaces the root for one process tree; it is read at each call, and child processes inherit it. An absolute `ipc_socket_dir` still selects an explicit directory.
 - **Orphans.** The server checks `launch.owner` once a second in its message loop. When the owner is gone, an owner-only server cancels its work and stops; an any-session server stops once it has no running or queued execution.
-- **Tests and harness.** `tests/conftest.py` sets `OPENHCS_SOCKET_ROOT` to a short private directory before OpenHCS is imported (one per pytest process, so per xdist worker). The harness uses `ZMQExecutionClient.with_private_server`, which takes its address from `TransportDeclaration.private_endpoint`.
+- **Tests and harness.** `tests/conftest.py` sets `OPENHCS_SOCKET_ROOT` to a short private directory (one per pytest process, so per xdist worker). The harness uses `ZMQExecutionClient.with_private_server`, which takes its address from `TransportDeclaration.private_endpoint` (a new socket directory for IPC, the first unbound pair for TCP) and raises if the server does not start. `benchmark.openhcs_measured_run.measured_execution_client` is the one place the harness builds a client: private with no port, the named port otherwise.
 
 Identity that must match: code location and owning process (through the audience). Version stays where it is: `EndpointApplication`, compared by `ZMQClientService`. A server edited after it started has the same root and version and is not detected; a source digest would be needed and no surface owns that.
 
-Deleted: the three `DataControlPortPairAuthority.acquire` + `ZMQExecutionClient(port=...)` pairs in the harness, `require_owned_server`, the parity test's `_free_zmq_port_pair`, and the hand-built `Path.home() / ".openhcs" / "ipc"` in `viewer_endpoint_discovery.py`.
+Deleted (all **derived**: `private_endpoint` and `socket_root` now own the fact):
+
+- the three `DataControlPortPairAuthority.acquire` + `ZMQExecutionClient(port=...)` pairs in the harness;
+- the execution port the three official30 tests chose (`_free_zmq_port_pair` stays for viewer ports);
+- the hand-built `Path.home() / ".openhcs" / "ipc"` in `viewer_endpoint_discovery.py`.
+
+Behaviour removed: a measured run with no port and without `require_owned_server` no longer uses the shared default port 7777; it starts a private server (**contract**: this surface's ownership rule).
 
 ## Persisted state
 
@@ -69,16 +76,19 @@ Runtime only. Socket and lock files move from `~/.openhcs/ipc` and `~/.openhcs/t
 
 ## Guards
 
-- No `Path.home()` in `openhcs/` or `zmqruntime` builds a socket path outside `socket_root()`.
-- No harness or test file pairs `DataControlPortPairAuthority.acquire(OPENHCS_ZMQ_CONFIG` with an execution client.
-- `ZMQClient` assigns `_connection` only after the launch check.
+`tests/unit/test_b7_server_isolation_guards.py`:
+
+- Every `ZMQClient` method that assigns a connection calls a launch check (AST).
+- No ZMQ endpoint code (`zmqruntime.transport_modes`, `zmqruntime.client`, `openhcs/{runtime,agent,core,pyqt_gui}`) builds a socket path from `Path.home()`.
+- No module in `benchmark/` names `DataControlPortPairAuthority`.
+- Client and server state the import root as their code root, including a subclass defined elsewhere.
+- Each checkout has its own socket root, and the test run's root is private.
 
 ## Tests
 
-- Two servers from two code roots: each client reaches only its own; a client aimed at the other's address is refused with both roots in the message.
-- An owner-only server refuses a second process and admits its owner.
-- An orphaned server exits: owner-only at once, any-session after its work.
-- zmqruntime: the same three at the library level with a minimal server.
+- zmqruntime `tests/test_endpoint_launch.py`, with real server processes: two servers from two code roots, each client reaches only its own, and a client aimed at the other's address is refused with both roots in the message; an owner-only server refuses another process and a persistent one admits it; a server that reports no launch is refused; a server exits after its owner is killed (both audiences); a persistent orphan finishes its work first.
+- OpenHCS `tests/integration/test_execution_server_isolation.py`, with the real launcher: the started server reports the launch its client handed it; a client of another checkout and a client of another process are refused at the same address and the server is unharmed; the server and its children exit after the owner is killed.
+- Both orphan tests and the two-root test were run against the code with the check removed and fail there.
 
 ## New-case experiments
 
@@ -96,10 +106,7 @@ A new kind of server (a viewer, a bridge) that must not be shared across checkou
 | Item | Evidence | Belongs to |
 |---|---|---|
 | UI-bridge descriptor discovery takes the only live descriptor from any checkout | `ui_bridge_service.py:1563-1585`, `/proc` environment scan at `:1599` | U4 |
-
-## Progress notes
-
-- [x] Mechanism measured, receipt written.
-- [ ] zmqruntime: `EndpointLaunch`, client check, orphan stop, `socket_root`, `private_endpoint`.
-- [ ] OpenHCS: launch argument, socket root, harness, conftest, guards.
-- [ ] Parity, ratchet, nra, CI.
+| The MCP resident-server socket restates the checkout digest and `~/.openhcs/ipc` | `openhcs/mcp/socket.py:48,61`; it should read `OPENHCS_ZMQ_CONFIG.socket_root()` | U4 |
+| `connect` kills the listener of an unresponsive TCP address before starting its own server | `zmqruntime/client.py` `_kill_processes_on_port`; the process may be another session's | zmqruntime (L3) |
+| The application version is compared after connecting, and only by `ZMQClientService` and the catalog client | `authoring/session/execution_client.py:202`; a plain client attaches to a same-root server of another version | U1 |
+| `viewer_endpoint_discovery.py:212` names an undefined `ViewerEndpointDiscoveryResult` | ruff F821 at this head | U4 |
