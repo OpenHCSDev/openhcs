@@ -37,13 +37,16 @@ class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
 
     @classmethod
     def can_prepare_in_child(cls) -> bool:
-        if not OpenHCSProcessEnvironment.cpu_only_mode():
-            return False
-        if not cls.requires_persistent_kernel_cache():
-            return False
-        from numba import config as numba_config
+        """A forked child compiles for the server wherever Numba persists.
 
-        return bool(numba_config.CACHE_DIR)
+        Numba always has a cache for a ``cache=True`` kernel: ``NUMBA_CACHE_DIR``,
+        else ``__pycache__`` beside the source, else its per-user directory. It
+        refuses to define the kernel otherwise.
+        """
+        return (
+            OpenHCSProcessEnvironment.cpu_only_mode()
+            and cls.requires_persistent_kernel_cache()
+        )
 
 
 class PreparationOperation(ABC):
@@ -165,6 +168,13 @@ class DeclaredHookPreparation(PreparationOperation):
 
     def execute(self) -> None:
         self.hook()
+
+    def cache_operations(self) -> tuple[PreparationOperation, ...]:
+        """A hook bound to a declared operation is that operation's cache work."""
+        operation = getattr(self.hook, "__self__", None)
+        if isinstance(operation, PreparationOperation):
+            return operation.cache_operations()
+        return (self,)
 
     def can_prepare_in_child(self) -> bool:
         """A hook's kernels reach the server through the persistent Numba cache."""
@@ -406,17 +416,24 @@ class PreparationCacheBatch:
             return
         worker_capacity = min(max_workers, _schedulable_cpu_count())
         context = multiprocessing.get_context("fork")
-        registries = tuple(
+        registry_operations = {
+            operation.identity: operation
+            for preparation in self.preparations
+            for operation in preparation.cache_operations()
+        }
+        hook_operations = dict.fromkeys(
             operation
-            for operation in {
-                operation.identity: operation
-                for preparation in self.preparations
-                for operation in preparation.cache_operations()
-            }.values()
-            if operation.can_prepare_in_child()
+            for hook in self.hooks
+            for operation in hook.cache_operations()
+            if operation.identity not in registry_operations
         )
-        hooks = tuple(
-            operation for operation in self.hooks if operation.can_prepare_in_child()
+        registries, hooks = (
+            tuple(
+                operation
+                for operation in operations
+                if operation.can_prepare_in_child()
+            )
+            for operations in (registry_operations.values(), hook_operations)
         )
         # A registry operation compiles for seconds, so each gets a child. A
         # hook mostly loads what the registries cached, and a child costs about
