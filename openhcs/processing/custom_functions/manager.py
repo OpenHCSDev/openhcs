@@ -533,7 +533,7 @@ class CustomFunctionManager:
             function_name=declaration.__name__,
             content_sha256=CustomFunctionSource.content_digest(code.encode("utf-8")),
         )
-        CustomFunctionSourceNamespace(source, namespace).bind(declaration)
+        CustomFunctionSourceNamespace(source, namespace, code).bind(declaration)
         try:
             return project_custom_function(
                 declaration,

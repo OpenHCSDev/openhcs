@@ -57,7 +57,24 @@ class CustomFunctionSourceNamespace:
 
     source: CustomFunctionSource
     bindings: dict[str, object] = field(repr=False)
+    code: str = field(repr=False)
+    """The exact text ``source.content_sha256`` is the hash of."""
     member_prefix: ClassVar[str] = "__openhcs_member_"
+
+    def __post_init__(self) -> None:
+        if CustomFunctionSource.content_digest(self.code.encode("utf-8")) != (
+            self.source.content_sha256
+        ):
+            raise ValueError(
+                f"Custom function source {self.source.function_name!r}: the text "
+                "does not have the declared content hash."
+            )
+
+    @classmethod
+    def bound_to(cls, declaration: Callable) -> "CustomFunctionSourceNamespace":
+        """Return the namespace ``bind`` attached to this declaration."""
+        revision = vars(declaration)[FunctionContractAttribute.declaration_revision]
+        return vars(declaration)[f"__openhcs_source_{revision}"]
 
     @property
     def export_attribute(self) -> str:
