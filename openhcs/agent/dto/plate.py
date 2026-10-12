@@ -9,6 +9,7 @@ from enum import Enum
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
+from polystore.streaming.identity import StreamProducerIdentity
 from zmqruntime.config import TransportMode
 
 from formbridge.contracts import (
@@ -25,6 +26,7 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
+from openhcs.core.run_record import RunRecord, StepCalls
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -1349,12 +1351,14 @@ class RunRecordReadRequest(AgentDataclassCliRequest):
 
     ``path`` is an output dataset root (the directory that holds the OpenHCS
     metadata document) or one output file below such a root.
-    ``include_sources`` returns the long texts in full; otherwise each is
-    replaced by its sha256 and length and named in ``shortened_fields``.
+    ``include_full_record`` adds the complete stored record to each entry: the
+    pipeline and global config documents, the resolved configuration with the
+    owner of every value, custom function source texts and every installed
+    distribution.
     """
 
     path: str
-    include_sources: bool = False
+    include_full_record: bool = False
 
     @classmethod
     def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
@@ -1370,16 +1374,17 @@ class RunRecordReadRequest(AgentDataclassCliRequest):
 
 @dataclass(frozen=True, slots=True)
 class RunRecordEntry:
-    """One stored run record, addressed by the sha256 of its full content.
+    """One stored run record, addressed by the sha256 of its stored JSON.
 
-    ``shortened_fields`` names every field of ``record`` whose value was
-    replaced by ``{"shortened": true, "sha256": ..., "length": ...}``; it is
-    empty when the record is returned in full.
+    ``steps`` says what each step ran: every function with its identity (a
+    custom function by the sha256 of its source), every parameter with its
+    value and source, and every declared file with its content hash.
+    ``record`` is the complete record, present when the request asked for it.
     """
 
     record_id: str
-    record: JsonObject
-    shortened_fields: tuple[str, ...] = ()
+    steps: tuple[StepCalls, ...]
+    record: RunRecord | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1388,8 +1393,8 @@ class ProducedFileEntry:
 
     path: str
     record_id: str
-    producer: JsonObject
-    step: JsonObject
+    producer: StreamProducerIdentity
+    step: StepCalls
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -1402,7 +1407,6 @@ class RunRecordReadResult(AgentResultEnvelope):
     """
 
     path: str
-    include_sources: bool
     records: tuple[RunRecordEntry, ...] = ()
     produced_files: tuple[ProducedFileEntry, ...] = ()
     errors: tuple[AgentError, ...] = ()

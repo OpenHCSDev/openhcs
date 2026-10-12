@@ -310,8 +310,6 @@ class FunctionStepFormatter(SourceFormatter):
                 current_value = step_values[name]
             else:
                 current_value = param.default
-            if name == "func" and not context.clean_mode:
-                current_value = with_every_parameter_written(current_value)
 
             if name in default_values:
                 default_value = default_values[name]

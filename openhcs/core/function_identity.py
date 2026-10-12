@@ -11,9 +11,11 @@ import ast
 import importlib.metadata
 import importlib.util
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 
 from openhcs.runtime.environment_provenance import InstalledDistributionVersion
 
@@ -80,15 +82,6 @@ class ModuleLibraries:
             return cls.of_modules(frozenset())
         return cls.imported_by_source(Path(origin).read_text(encoding="utf-8"))
 
-    def to_record(self) -> dict[str, object]:
-        return {
-            "libraries": [
-                {"distribution": library.name, "version": library.version}
-                for library in self.libraries
-            ],
-            "modules_without_distribution": list(self.modules_without_distribution),
-        }
-
 
 @dataclass(frozen=True, slots=True)
 class FunctionIdentity:
@@ -116,18 +109,13 @@ class FunctionIdentity:
             imports=ModuleLibraries.imported_by_module(module),
         )
 
-    def custom_sources(self) -> dict[str, str]:
-        """Source texts this identity refers to by hash; none for an installed module."""
-        return {}
+    def recorded_source_hashes(self) -> tuple[str, ...]:
+        """The sha256 of each source text this identity refers to; none for an installed module."""
+        return ()
 
-    def to_record(self) -> dict[str, object]:
-        return {
-            "key": self.key,
-            "module": self.module,
-            "name": self.name,
-            "defined_in": self.defined_in.to_record(),
-            "imports": self.imports.to_record(),
-        }
+    def source_texts(self) -> Mapping[str, str]:
+        """Source texts this identity refers to, by sha256; none for an installed module."""
+        return MappingProxyType({})
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,7 +123,6 @@ class CustomFunctionIdentity(FunctionIdentity):
     """A function defined by user-written source text, identified by that text's hash."""
 
     source_sha256: str
-    source_text: str
 
     @classmethod
     def of_source(
@@ -148,14 +135,33 @@ class CustomFunctionIdentity(FunctionIdentity):
             defined_in=ModuleLibraries.of_modules(frozenset()),
             imports=ModuleLibraries.imported_by_source(source_text),
             source_sha256=source_sha256,
-            source_text=source_text,
         )
 
-    def custom_sources(self) -> dict[str, str]:
-        return {self.source_sha256: self.source_text}
+    def recorded_source_hashes(self) -> tuple[str, ...]:
+        return (self.source_sha256,)
 
-    def to_record(self) -> dict[str, object]:
-        return {
-            **FunctionIdentity.to_record(self),
-            "custom_source_sha256": self.source_sha256,
-        }
+    def source_texts(self) -> Mapping[str, str]:
+        """The text, from the registered source namespace that owns this hash."""
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+        from openhcs.processing.custom_functions.source_namespace import (
+            CustomFunctionSource,
+            CustomFunctionSourceNamespace,
+        )
+
+        declaration = CustomFunctionRuntimeRegistry.declaration_for_source(
+            CustomFunctionSource(self.name, self.source_sha256)
+        )
+        if declaration is None:
+            raise LookupError(
+                f"Custom function {self.name!r} is no longer registered with source "
+                f"{self.source_sha256}; its text cannot be recorded."
+            )
+        return MappingProxyType(
+            {
+                self.source_sha256: CustomFunctionSourceNamespace.bound_to(
+                    declaration.metadata.func
+                ).code
+            }
+        )

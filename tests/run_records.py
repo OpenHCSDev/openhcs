@@ -2,7 +2,12 @@
 
 from types import MappingProxyType
 
-from openhcs.core.run_record import ProducedFiles, RunDeclaration, RunRecord
+from openhcs.core.run_record import (
+    ProducedFiles,
+    RunDeclaration,
+    RunRecord,
+    SoftwareEnvironment,
+)
 
 
 def minimal_run_declaration() -> RunDeclaration:
@@ -15,17 +20,15 @@ def minimal_run_declaration() -> RunDeclaration:
 
 
 def minimal_run_record() -> RunRecord:
-    """A record with every stored key and no steps."""
+    """A record of a run with no steps."""
     declaration = minimal_run_declaration()
     return RunRecord(
-        {
-            "software": {},
-            "pipeline_code": declaration.pipeline_code,
-            "global_config_code": declaration.global_config_code,
-            "configuration": [],
-            "steps": [],
-            "custom_sources": {},
-        }
+        software=SoftwareEnvironment.current(),
+        pipeline_code=declaration.pipeline_code,
+        global_config_code=declaration.global_config_code,
+        configuration=declaration.configuration,
+        steps=(),
+        custom_sources=MappingProxyType({}),
     )
 
 

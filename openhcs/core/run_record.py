@@ -15,6 +15,11 @@ Two read kinds are kept apart on purpose. ``pipeline_code`` and
 ``global_config_code`` are stored documents: executing them rebuilds the
 run. ``configuration``, ``steps[].configuration`` and ``parameters`` are the
 resolved values, each with the declaration that supplied it.
+
+The stored form is the JSON ``python_introspect.to_jsonable`` writes for these
+dataclasses and ``python_introspect.dataclass_from_mapping`` reads back; there
+is no other encoder or decoder. A class of a registered family (a parameter's
+or a configuration value's source) is stored as its registry key.
 """
 
 from __future__ import annotations
@@ -24,27 +29,31 @@ import inspect
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass, fields, is_dataclass, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import pycodify
+from metaclass_registry import AutoRegisterMeta
+from polystore.file_content import HashedFileContent, UnhashedFileContent
 from polystore.streaming.identity import StreamProducerIdentity
+from python_introspect import JsonObject, JsonValue, dataclass_from_mapping, to_jsonable
 
-from openhcs.core.vfs_protocol import DatasetPathDeclaration, FileManagerLike
+from openhcs.core.function_identity import CustomFunctionIdentity, FunctionIdentity
+
+from openhcs.core.vfs_protocol import FileManagerLike
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.function_patterns import CompiledFunctionInvocation
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.core.steps.abstract import AbstractStep
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
     from pycodify.documents import PipelineDocument
 
-RUN_RECORDS_KEY = "run_records"
-PRODUCED_FILES_KEY = "produced_files"
-JsonRecord = dict[str, Any]
 
 
 def python_expression(value: object) -> str:
@@ -54,99 +63,114 @@ def python_expression(value: object) -> str:
     return pycodify.to_source(value, pycodify.FormatContext(clean_mode=False)).code
 
 
-class ValueSource(ABC):
-    """Which declaration supplied a recorded value."""
+class ParameterSource(ABC, metaclass=AutoRegisterMeta):
+    """Which declaration supplied the value a function parameter ran with.
 
-    kind: ClassVar[str]
+    Each source is a subclass; ``name`` is its spelling in the stored record.
+    """
 
-    @abstractmethod
-    def details(self) -> JsonRecord:
-        """The fields that identify the supplying declaration."""
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    def to_record(self) -> JsonRecord:
-        return {"kind": self.kind, **self.details()}
-
-
-@dataclass(frozen=True, slots=True)
-class WrittenInPipeline(ValueSource):
-    """The pipeline document states the value."""
-
-    kind: ClassVar[str] = "pipeline"
-
-    def details(self) -> JsonRecord:
-        return {}
-
-
-@dataclass(frozen=True, slots=True)
-class FunctionDefault(ValueSource):
-    """The pipeline leaves the parameter out; the function's signature supplies it."""
-
-    kind: ClassVar[str] = "function_default"
-    function_key: str
-
-    def details(self) -> JsonRecord:
-        return {"function": self.function_key}
-
-
-@dataclass(frozen=True, slots=True)
-class SuppliedAtRunTime(ValueSource):
-    """The platform passes the value when it calls the function."""
-
-    kind: ClassVar[str] = "run_time"
-
-    def details(self) -> JsonRecord:
-        return {}
-
-
-@dataclass(frozen=True, slots=True)
-class SetOnObject(ValueSource):
-    """The configured object itself holds the value."""
-
-    kind: ClassVar[str] = "set_here"
-    scope_id: str | None
-
-    def details(self) -> JsonRecord:
-        return {"scope": self.scope_id}
-
-
-@dataclass(frozen=True, slots=True)
-class InheritedFrom(ValueSource):
-    """ObjectState resolved the value from this scope and class."""
-
-    kind: ClassVar[str] = "inherited"
-    scope_id: str | None
-    source_type_name: str | None
+    name: ClassVar[str | None] = None
 
     @classmethod
-    def reported_by_object_state(
-        cls, scope_id: str | None, source_type: type | None
-    ) -> "InheritedFrom":
-        """Keep the class by name: the declaration is pickled with the compiled bundle."""
-        return cls(
-            scope_id,
-            None
-            if source_type is None
-            else f"{source_type.__module__}.{source_type.__qualname__}",
-        )
+    @abstractmethod
+    def value_expression(
+        cls, parameter: inspect.Parameter, written: Mapping[str, object]
+    ) -> str | None:
+        """The value as a Python expression, or None when no declaration states it."""
 
-    def details(self) -> JsonRecord:
-        return {"scope": self.scope_id, "type": self.source_type_name}
+
+class WrittenInPipeline(ParameterSource):
+    """The pipeline document states the value."""
+
+    name = "pipeline"
+
+    @classmethod
+    def value_expression(
+        cls, parameter: inspect.Parameter, written: Mapping[str, object]
+    ) -> str | None:
+        return python_expression(written[parameter.name])
+
+
+class FunctionDefault(ParameterSource):
+    """The pipeline leaves the parameter out; the signature of the recorded function supplies it.
+
+    The function and its version are the identity of the function record the
+    parameter belongs to.
+    """
+
+    name = "function_default"
+
+    @classmethod
+    def value_expression(
+        cls, parameter: inspect.Parameter, written: Mapping[str, object]
+    ) -> str | None:
+        return python_expression(parameter.default)
+
+
+class SuppliedAtRunTime(ParameterSource):
+    """The platform passes the value when it calls the function; no declaration states it."""
+
+    name = "run_time"
+
+    @classmethod
+    def value_expression(
+        cls, parameter: inspect.Parameter, written: Mapping[str, object]
+    ) -> str | None:
+        return None
 
 
 @dataclass(frozen=True, slots=True)
-class RecordedValue:
-    """One resolved value and the declaration that supplied it."""
+class RecordedParameter:
+    """One parameter of a function, the value it ran with and where the value came from."""
 
     name: str
-    expression: str
-    source: ValueSource
+    value: str | None
+    source: type[ParameterSource]
 
-    def to_record(self) -> JsonRecord:
-        return {
-            "name": self.name,
-            "value": self.expression,
-            "source": self.source.to_record(),
-        }
+
+class ConfigValueSource(ABC, metaclass=AutoRegisterMeta):
+    """How a configured object came by a value: it holds it, or ObjectState resolved it."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+
+
+class SetOnObject(ConfigValueSource):
+    """The configured object itself holds the value."""
+
+    name = "set_here"
+
+
+class InheritedFrom(ConfigValueSource):
+    """ObjectState resolved the value from another scope or class."""
+
+    name = "inherited"
+
+
+def _type_name(owner: type | None) -> str | None:
+    return None if owner is None else f"{owner.__module__}.{owner.__qualname__}"
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigValueOwner:
+    """The scope and class that supplied configuration values, and how."""
+
+    source: type[ConfigValueSource]
+    scope_id: str | None
+    type_name: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigValuesFromOwner:
+    """The resolved values one owner supplied, by field path, as Python expressions."""
+
+    owner: ConfigValueOwner
+    values: Mapping[str, str]
 
 
 ObjectStateProvenance = Mapping[str, tuple[str | None, type | None]]
@@ -156,33 +180,58 @@ def _field_values(configured: object) -> dict[str, object]:
     return {item.name: getattr(configured, item.name) for item in fields(configured)}
 
 
+def _values_with_owner(
+    values: Mapping[str, object],
+    provenance: ObjectStateProvenance,
+    *,
+    holder: ConfigValueOwner,
+    prefix: str = "",
+) -> Iterator[tuple[ConfigValueOwner, str, str]]:
+    for name, value in values.items():
+        path = f"{prefix}{name}"
+        if path in provenance:
+            scope_id, source_type = provenance[path]
+            yield (
+                ConfigValueOwner(InheritedFrom, scope_id, _type_name(source_type)),
+                path,
+                python_expression(value),
+            )
+        elif is_dataclass(value) and not isinstance(value, type):
+            yield from _values_with_owner(
+                _field_values(value),
+                provenance,
+                holder=holder,
+                prefix=f"{path}.",
+            )
+        else:
+            yield holder, path, python_expression(value)
+
+
 def resolved_values(
     values: Mapping[str, object],
     provenance: ObjectStateProvenance,
     *,
     scope_id: str | None,
-    prefix: str = "",
-) -> Iterator[RecordedValue]:
-    """Every leaf value of a resolved object, with the source ObjectState reported.
+    holder_type: type,
+) -> tuple[ConfigValuesFromOwner, ...]:
+    """Every leaf value of a resolved object, grouped by the owner that supplied it.
 
     ObjectState lists the paths it inherited; a path it does not list is held
     by the object itself. A nested config the object leaves unset is inherited
     whole and listed as one path, so the inherited check comes before descent.
+    Each owner is written once, with all the values it supplied.
     """
-    for name, value in values.items():
-        path = f"{prefix}{name}"
-        if path in provenance:
-            yield RecordedValue(
-                path,
-                python_expression(value),
-                InheritedFrom.reported_by_object_state(*provenance[path]),
-            )
-        elif is_dataclass(value) and not isinstance(value, type):
-            yield from resolved_values(
-                _field_values(value), provenance, scope_id=scope_id, prefix=f"{path}."
-            )
-        else:
-            yield RecordedValue(path, python_expression(value), SetOnObject(scope_id))
+    by_owner: dict[ConfigValueOwner, dict[str, str]] = {}
+    for owner, path, expression in _values_with_owner(
+        values,
+        provenance,
+        holder=ConfigValueOwner(SetOnObject, scope_id, _type_name(holder_type)),
+    ):
+        by_owner.setdefault(owner, {})[path] = expression
+    return tuple(
+        ConfigValuesFromOwner(owner, MappingProxyType(owned))
+        for owner, owned in by_owner.items()
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,15 +240,15 @@ class RunDeclaration:
 
     pipeline_code: str
     global_config_code: str
-    configuration: tuple[RecordedValue, ...]
-    step_configurations: tuple[tuple[RecordedValue, ...], ...] = ()
+    configuration: tuple[ConfigValuesFromOwner, ...]
+    step_configurations: tuple[tuple[ConfigValuesFromOwner, ...], ...] = ()
     """Resolved values of each enabled step, by compiled step index."""
 
     @classmethod
     def before_step_resolution(
         cls,
-        orchestrator: Any,
-        pipeline_definition: Sequence[Any],
+        orchestrator: "PipelineOrchestrator",
+        pipeline_definition: Sequence["AbstractStep"],
     ) -> "RunDeclaration":
         """Render the documents as submitted, before the compiler resolves the steps in place."""
         from objectstate import ObjectState, ObjectStateRegistry
@@ -221,24 +270,22 @@ class RunDeclaration:
             ),
         )
         return cls(
-            pipeline_code=PipelineDocumentCodec.render(
+            pipeline_code=PipelineDocumentCodec.render_with_every_parameter(
                 PipelineDocumentCodec.from_values(
                     pipeline_config=orchestrator.pipeline_config,
                     pipeline_steps=pipeline_definition,
-                ),
-                clean_mode=False,
+                )
             ),
             global_config_code=ConfigDocumentCodec.render(
                 saved_global_config,
                 expected_config_type=GlobalPipelineConfig,
                 clean_mode=False,
             ),
-            configuration=tuple(
-                resolved_values(
-                    _field_values(effective_config),
-                    provenance,
-                    scope_id=str(orchestrator.dataset_root),
-                )
+            configuration=resolved_values(
+                _field_values(effective_config),
+                provenance,
+                scope_id=str(orchestrator.dataset_root),
+                holder_type=type(orchestrator.pipeline_config),
             ),
         )
 
@@ -249,128 +296,194 @@ class RunDeclaration:
         return replace(
             self,
             step_configurations=tuple(
-                tuple(
-                    resolved_values(
-                        step.configuration_parameters(),
-                        pipeline.step_provenance[index],
-                        scope_id=pipeline.step_scope_ids[index],
-                    )
+                resolved_values(
+                    step.configuration_parameters(),
+                    pipeline.step_provenance[index],
+                    scope_id=pipeline.step_scope_ids[index],
+                    holder_type=type(step),
                 )
                 for index, step in enumerate(pipeline.steps)
             ),
         )
 
 
-def _parameters(invocation: "CompiledFunctionInvocation", function_key: str) -> list[JsonRecord]:
+@dataclass(frozen=True, slots=True)
+class DeclaredFile:
+    """One declared path parameter and what the storage layer says the file holds."""
+
+    parameter: str
+    declared_as: str
+    path: str
+    content: HashedFileContent | UnhashedFileContent
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionRecord:
+    """One function call of a step: which function, with which values and files."""
+
+    identity: FunctionIdentity | CustomFunctionIdentity
+    group: str
+    position: int
+    input_memory_type: str | None
+    output_memory_type: str | None
+    parameters: tuple[RecordedParameter, ...]
+    declared_files: tuple[DeclaredFile, ...]
+
+    @classmethod
+    def of_invocation(
+        cls,
+        invocation: "CompiledFunctionInvocation",
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> "FunctionRecord":
+        contract = invocation.contract
+        return cls(
+            identity=contract.func.identity(),
+            group=python_expression(invocation.key.group_key),
+            position=invocation.key.position,
+            input_memory_type=invocation.input_memory_type,
+            output_memory_type=invocation.output_memory_type,
+            parameters=_parameters(invocation),
+            declared_files=tuple(
+                DeclaredFile(
+                    parameter=parameter_name,
+                    declared_as=declaration.plain_name,
+                    path=str(path),
+                    content=declaration.content_at_run_start(
+                        Path(path), filemanager=filemanager, backend=backend
+                    ),
+                )
+                for parameter_name, (declaration, path) in (
+                    contract.declared_path_values(invocation.kwargs_dict).items()
+                )
+            ),
+        )
+
+
+def _parameters(invocation: "CompiledFunctionInvocation") -> tuple[RecordedParameter, ...]:
     """Every parameter of the function's signature with its effective value and source."""
     contract = invocation.contract
     written = invocation.kwargs_dict
+    signature = contract.canonical_signature.parameters
     supplied_at_run_time = {
         *contract.runtime_owned_parameter_names,
         invocation.primary_input_parameter_name,
     }
-    recorded: list[RecordedValue] = []
-    for name, parameter in contract.canonical_signature.parameters.items():
+    sources: dict[str, type[ParameterSource]] = {}
+    for name, parameter in signature.items():
         if name in written:
-            recorded.append(
-                RecordedValue(name, python_expression(written[name]), WrittenInPipeline())
-            )
+            sources[name] = WrittenInPipeline
         elif name in supplied_at_run_time or parameter.default is inspect.Parameter.empty:
-            recorded.append(
-                RecordedValue(name, "<supplied when the function is called>", SuppliedAtRunTime())
-            )
+            sources[name] = SuppliedAtRunTime
         else:
-            recorded.append(
-                RecordedValue(
-                    name,
-                    python_expression(parameter.default),
-                    FunctionDefault(function_key),
-                )
-            )
-    recorded.extend(
-        RecordedValue(name, python_expression(value), WrittenInPipeline())
-        for name, value in written.items()
-        if name not in contract.canonical_signature.parameters
-    )
-    return [value.to_record() for value in recorded]
-
-
-def _declared_files(
-    invocation: "CompiledFunctionInvocation",
-    *,
-    filemanager: FileManagerLike,
-    backend: str,
-) -> list[JsonRecord]:
-    """Each declared path parameter, with what the storage layer says the file holds."""
-    declared: Mapping[str, tuple[DatasetPathDeclaration, object]] = (
-        invocation.contract.declared_path_values(invocation.kwargs_dict)
-    )
-    return [
-        {
-            "parameter": parameter_name,
-            "declared_as": declaration.plain_name,
-            "path": str(path),
-            "content": declaration.content_at_run_start(
-                Path(path), filemanager=filemanager, backend=backend
-            ).to_record(),
-        }
-        for parameter_name, (declaration, path) in declared.items()
-    ]
-
-
-def _step_record(
-    plan: "CompiledStepPlan",
-    configuration: Iterable[RecordedValue],
-    *,
-    filemanager: FileManagerLike,
-    backend: str,
-) -> tuple[JsonRecord, dict[str, str]]:
-    custom_sources: dict[str, str] = {}
-    functions = []
-    for invocation in plan.compiled_function_pattern.iter_invocations():
-        identity = invocation.contract.func.identity()
-        custom_sources.update(identity.custom_sources())
-        functions.append(
-            {
-                "identity": identity.to_record(),
-                "group": python_expression(invocation.key.group_key),
-                "position": invocation.key.position,
-                "input_memory_type": invocation.input_memory_type,
-                "output_memory_type": invocation.output_memory_type,
-                "parameters": _parameters(invocation, identity.key),
-                "declared_files": _declared_files(
-                    invocation, filemanager=filemanager, backend=backend
-                ),
-            }
+            sources[name] = FunctionDefault
+    keyword_only = inspect.Parameter.KEYWORD_ONLY
+    return tuple(
+        RecordedParameter(
+            name,
+            source.value_expression(
+                signature.get(name, inspect.Parameter(name, keyword_only)), written
+            ),
+            source,
         )
-    return (
-        {
-            "name": plan.step_name,
-            "pipeline_position": plan.pipeline_position,
-            "step_scope_id": plan.step_scope_id,
-            "input_memory_type": plan.input_memory_type,
-            "output_memory_type": plan.output_memory_type,
-            "assigned_gpu_devices": [
-                {"memory_type": binding.memory_type.value, "device_id": binding.device_id}
-                for binding in plan.device_assignment.bindings
-            ],
-            "functions": functions,
-            "configuration": [value.to_record() for value in configuration],
-        },
-        custom_sources,
+        for name, source in {
+            **sources,
+            **{name: WrittenInPipeline for name in written if name not in signature},
+        }.items()
     )
 
 
 @dataclass(frozen=True, slots=True)
-class ProducedFile:
-    """One output file, the step that wrote it and the record of the run."""
+class GpuDevice:
+    """The GPU device assigned to one framework's arrays."""
 
-    record: "RunRecord"
-    producer: StreamProducerIdentity
+    memory_type: str
+    device_id: int
 
-    @property
-    def step(self) -> JsonRecord:
-        return self.record.step_for(self.producer)
+
+@dataclass(frozen=True, slots=True)
+class StepCalls:
+    """What one step ran: its identity in the pipeline, its devices and its function calls."""
+
+    name: str
+    pipeline_position: int | None
+    step_scope_id: str | None
+    input_memory_type: str | None
+    output_memory_type: str | None
+    assigned_gpu_devices: tuple[GpuDevice, ...]
+    functions: tuple[FunctionRecord, ...]
+
+    @classmethod
+    def of_plan(
+        cls,
+        plan: "CompiledStepPlan",
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> "StepCalls":
+        return cls(
+            name=plan.step_name,
+            pipeline_position=plan.pipeline_position,
+            step_scope_id=plan.step_scope_id,
+            input_memory_type=plan.input_memory_type,
+            output_memory_type=plan.output_memory_type,
+            assigned_gpu_devices=tuple(
+                GpuDevice(binding.memory_type.value, binding.device_id)
+                for binding in plan.device_assignment.bindings
+            ),
+            functions=tuple(
+                FunctionRecord.of_invocation(
+                    invocation, filemanager=filemanager, backend=backend
+                )
+                for invocation in plan.compiled_function_pattern.iter_invocations()
+            ),
+        )
+
+    def is_named_by(self, producer: StreamProducerIdentity) -> bool:
+        """A producer identity names a step by the two fields it carries."""
+        return (
+            self.step_scope_id == producer.step_scope_id
+            and self.pipeline_position == producer.pipeline_position
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StepRecord:
+    """One step of the run: what it ran, and its resolved configuration by owner."""
+
+    calls: StepCalls
+    configuration: tuple[ConfigValuesFromOwner, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SoftwareEnvironment:
+    """The interpreter and the installed distributions the run executed in."""
+
+    openhcs: str
+    python: str
+    python_implementation: str
+    platform: str
+    machine: str
+    installed_distributions: Mapping[str, str]
+    """Version by distribution name."""
+
+    @classmethod
+    def current(cls) -> "SoftwareEnvironment":
+        import openhcs
+        from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
+
+        environment = RuntimeEnvironmentSnapshot.current()
+        return cls(
+            openhcs=openhcs.__version__,
+            python=environment.python_version,
+            python_implementation=environment.python_implementation,
+            platform=environment.sys_platform,
+            machine=environment.machine,
+            installed_distributions=MappingProxyType(
+                {item.name: item.version for item in environment.installed_distributions}
+            ),
+        )
 
 
 class UnrecordedOutputFile(LookupError):
@@ -379,14 +492,29 @@ class UnrecordedOutputFile(LookupError):
 
 @dataclass(frozen=True, slots=True)
 class RunRecord:
-    """What produced an output dataset, as stored: JSON-native, addressed by its content."""
+    """What produced an output dataset. Its id is the sha256 of its stored JSON."""
 
-    content: Mapping[str, Any]
+    software: SoftwareEnvironment
+    pipeline_code: str
+    global_config_code: str
+    configuration: tuple[ConfigValuesFromOwner, ...]
+    steps: tuple[StepRecord, ...]
+    custom_sources: Mapping[str, str]
+    """Source text of each custom function, by the sha256 its identity states."""
+
+    def to_json(self) -> JsonObject:
+        """The stored form: the one encoder, ``python_introspect.to_jsonable``."""
+        return to_jsonable(self)
+
+    @classmethod
+    def from_json(cls, stored: JsonObject) -> "RunRecord":
+        """Read the stored form: the one decoder, ``python_introspect.dataclass_from_mapping``."""
+        return dataclass_from_mapping(cls, stored)
 
     @property
     def record_id(self) -> str:
         return hashlib.sha256(
-            json.dumps(self.content, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            json.dumps(self.to_json(), sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
 
     @classmethod
@@ -403,12 +531,8 @@ class RunRecord:
         a declared input file is hashed once and the hash is of the bytes the
         run reads.
         """
-        import openhcs
-        from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
-
         declaration = bundle.run_declaration
-        steps: dict[int, JsonRecord] = {}
-        custom_sources: dict[str, str] = {}
+        steps: dict[int, StepRecord] = {}
         for axis_id in bundle.axis_ids:
             context = next(
                 context
@@ -416,48 +540,28 @@ class RunRecord:
                 if context.require_axis_id() == axis_id
             )
             for index, plan in context.step_plans.items():
-                if index in steps:
-                    continue
-                steps[index], sources = _step_record(
-                    plan,
-                    declaration.step_configurations[index],
-                    filemanager=filemanager,
-                    backend=backend,
-                )
-                custom_sources.update(sources)
-        environment = RuntimeEnvironmentSnapshot.current()
+                if index not in steps:
+                    steps[index] = StepRecord(
+                        StepCalls.of_plan(plan, filemanager=filemanager, backend=backend),
+                        declaration.step_configurations[index],
+                    )
+        custom_sources: dict[str, str] = {}
+        for step in steps.values():
+            for function in step.calls.functions:
+                custom_sources.update(function.identity.source_texts())
         return cls(
-            {
-                "software": {
-                    "openhcs": openhcs.__version__,
-                    "python": environment.python_version,
-                    "python_implementation": environment.python_implementation,
-                    "platform": environment.sys_platform,
-                    "machine": environment.machine,
-                    "installed_distributions": {
-                        item.name: item.version
-                        for item in environment.installed_distributions
-                    },
-                },
-                "pipeline_code": declaration.pipeline_code,
-                "global_config_code": declaration.global_config_code,
-                "configuration": [value.to_record() for value in declaration.configuration],
-                "steps": [steps[index] for index in sorted(steps)],
-                "custom_sources": custom_sources,
-            }
+            software=SoftwareEnvironment.current(),
+            pipeline_code=declaration.pipeline_code,
+            global_config_code=declaration.global_config_code,
+            configuration=declaration.configuration,
+            steps=tuple(steps[index] for index in sorted(steps)),
+            custom_sources=MappingProxyType(custom_sources),
         )
 
-    @property
-    def steps(self) -> Sequence[JsonRecord]:
-        return self.content["steps"]
-
-    def step_for(self, producer: StreamProducerIdentity) -> JsonRecord:
-        """The step a producer identity names, matched on the two fields it carries."""
+    def step_for(self, producer: StreamProducerIdentity) -> StepCalls:
+        """The step a producer identity names."""
         matches = [
-            step
-            for step in self.steps
-            if step["step_scope_id"] == producer.step_scope_id
-            and step["pipeline_position"] == producer.pipeline_position
+            step.calls for step in self.steps if step.calls.is_named_by(producer)
         ]
         if len(matches) != 1:
             raise LookupError(
@@ -469,17 +573,10 @@ class RunRecord:
     @classmethod
     def for_dataset(cls, dataset_root: str | Path) -> Mapping[str, "RunRecord"]:
         """Every record the dataset's metadata document holds, by record id."""
-        return MappingProxyType(
-            {
-                record_id: cls(content)
-                for record_id, content in _metadata_document(Path(dataset_root))
-                .get(RUN_RECORDS_KEY, {})
-                .items()
-            }
-        )
+        return DatasetRunRecords.of_dataset(Path(dataset_root)).run_records
 
     @classmethod
-    def for_output_file(cls, output_file: str | Path) -> ProducedFile:
+    def for_output_file(cls, output_file: str | Path) -> "ProducedFile":
         """The record and producing step of one output file.
 
         The answer comes only from what the writer stored for this path; a file
@@ -487,18 +584,15 @@ class RunRecord:
         """
         path = Path(output_file).resolve()
         dataset_root = _dataset_root_of(path)
-        document = _metadata_document(dataset_root)
-        entry = document.get(PRODUCED_FILES_KEY, {}).get(
-            path.relative_to(dataset_root).as_posix()
-        )
+        stored = DatasetRunRecords.of_dataset(dataset_root)
+        entry = stored.produced_files.get(path.relative_to(dataset_root).as_posix())
         if entry is None:
             raise UnrecordedOutputFile(
                 f"{path} is not recorded as a step output in "
                 f"{_metadata_path(dataset_root)}."
             )
         return ProducedFile(
-            record=cls(document[RUN_RECORDS_KEY][entry["run_record"]]),
-            producer=StreamProducerIdentity.from_payload(entry["producer"]),
+            record=stored.run_records[entry.run_record], producer=entry.producer
         )
 
     def rebuild(self) -> tuple["PipelineDocument", "GlobalPipelineConfig"]:
@@ -519,12 +613,12 @@ class RunRecord:
         )
 
         function_name_by_source = {
-            function["identity"]["custom_source_sha256"]: function["identity"]["name"]
+            source_sha256: function.identity.name
             for step in self.steps
-            for function in step["functions"]
-            if "custom_source_sha256" in function["identity"]
+            for function in step.calls.functions
+            for source_sha256 in function.identity.recorded_source_hashes()
         }
-        for recorded_sha256, source_text in self.content["custom_sources"].items():
+        for recorded_sha256, source_text in self.custom_sources.items():
             if CustomFunctionSource.content_digest(source_text.encode("utf-8")) != (
                 recorded_sha256
             ):
@@ -540,11 +634,82 @@ class RunRecord:
                     source_text, persist=False, emit_signal=False
                 )
         return (
-            PipelineDocumentCodec.from_source(self.content["pipeline_code"]),
+            PipelineDocumentCodec.from_source(self.pipeline_code),
             ConfigDocumentCodec.from_source(
-                self.content["global_config_code"],
+                self.global_config_code,
                 expected_config_type=GlobalPipelineConfig,
             ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StoredProducedFile:
+    """What the metadata document stores for one saved file."""
+
+    run_record: str
+    producer: StreamProducerIdentity
+
+
+@dataclass(frozen=True, slots=True)
+class ProducedFile:
+    """One output file, the step that wrote it and the record of the run."""
+
+    record: RunRecord
+    producer: StreamProducerIdentity
+
+    @property
+    def step(self) -> StepCalls:
+        return self.record.step_for(self.producer)
+
+
+@dataclass(frozen=True, slots=True)
+class DatasetRunRecords:
+    """The part of a dataset's metadata document that says what produced its files.
+
+    The document stores each field of this class under the field's name.
+    """
+
+    run_records: Mapping[str, RunRecord] = field(default_factory=dict)
+    produced_files: Mapping[str, StoredProducedFile] = field(default_factory=dict)
+    """By path relative to the dataset root."""
+
+    @classmethod
+    def in_document(cls, document: JsonObject) -> "DatasetRunRecords":
+        return dataclass_from_mapping(
+            cls,
+            {
+                item.name: document[item.name]
+                for item in fields(cls)
+                if item.name in document
+            },
+        )
+
+    @classmethod
+    def of_dataset(cls, dataset_root: Path) -> "DatasetRunRecords":
+        return cls.in_document(
+            json.loads(_metadata_path(dataset_root).read_text(encoding="utf-8"))
+        )
+
+    def with_run(
+        self, record: RunRecord, produced: Mapping[str, StreamProducerIdentity]
+    ) -> "DatasetRunRecords":
+        """Add one run's files; keep only the records some file still refers to."""
+        record_id = record.record_id
+        produced_files = {
+            **self.produced_files,
+            **{
+                path: StoredProducedFile(record_id, producer)
+                for path, producer in produced.items()
+            },
+        }
+        referenced = {entry.run_record for entry in produced_files.values()}
+        return DatasetRunRecords(
+            run_records={
+                stored_id: stored
+                for stored_id, stored in {**self.run_records, record_id: record}.items()
+                if stored_id in referenced
+            },
+            produced_files=produced_files,
         )
 
 
@@ -552,10 +717,6 @@ def _metadata_path(dataset_root: Path) -> Path:
     from openhcs.core.virtual_workspace_metadata import get_metadata_path
 
     return Path(get_metadata_path(dataset_root))
-
-
-def _metadata_document(dataset_root: Path) -> Mapping[str, Any]:
-    return json.loads(_metadata_path(dataset_root).read_text(encoding="utf-8"))
 
 
 def _dataset_root_of(output_file: Path) -> Path:
@@ -599,7 +760,7 @@ class ProducedFiles:
 
     def write_into(
         self,
-        document: dict[str, Any],
+        document: dict[str, JsonValue],
         *,
         dataset_root: Path,
         record: RunRecord,
@@ -611,15 +772,14 @@ class ProducedFiles:
         """
         if not self.producer_by_path:
             return
-        records = document.setdefault(RUN_RECORDS_KEY, {})
-        produced = document.setdefault(PRODUCED_FILES_KEY, {})
-        record_id = record.record_id
-        records[record_id] = dict(record.content)
-        for path, producer in self.producer_by_path.items():
-            produced[path.relative_to(dataset_root).as_posix()] = {
-                "run_record": record_id,
-                "producer": dict(producer.to_payload()),
-            }
-        referenced = {entry["run_record"] for entry in produced.values()}
-        for stale in set(records) - referenced:
-            del records[stale]
+        document.update(
+            to_jsonable(
+                DatasetRunRecords.in_document(document).with_run(
+                    record,
+                    {
+                        path.relative_to(dataset_root).as_posix(): producer
+                        for path, producer in self.producer_by_path.items()
+                    },
+                )
+            )
+        )

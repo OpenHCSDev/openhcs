@@ -2362,14 +2362,16 @@ class ReadRunRecordCapability(PlatePathCapability):
         "Read-only: what produced an output dataset. Pass an output dataset root "
         "(the directory holding openhcs_metadata.json) to get every run record "
         "by record id, or one output file inside a dataset to get the producer "
-        "identity stored for that file, the producing step's entry (name, "
-        "pipeline position, functions with identity, parameters with their "
-        "sources, declared files with content hashes, devices) and the record of "
+        "identity stored for that file, the producing step and the record of "
         "that run. A file the dataset does not list is an error, never a guess "
-        "from its name. By default pipeline_code, global_config_code, "
-        "custom_sources texts and software.installed_distributions are replaced "
-        "by their sha256 and length and named in shortened_fields; pass "
-        "include_sources=true for the full texts."
+        "from its name. Each record lists what every step ran: each function "
+        "with its identity (registry key, defining and imported library "
+        "versions, sha256 of a custom function's source), every parameter with "
+        "its value and source (pipeline, function_default, run_time), declared "
+        "files with content hashes, and devices. Pass include_full_record=true "
+        "to add the complete stored record: pipeline and global config "
+        "documents, resolved configuration with the owner of every value, "
+        "custom source texts and all installed distributions."
     )
     exposition = PlatePathCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.INSPECTION,

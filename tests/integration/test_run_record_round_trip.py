@@ -14,7 +14,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.core.config import GlobalPipelineConfig, LazyPathPlanningConfig, PipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
-from openhcs.core.run_record import PRODUCED_FILES_KEY, RunRecord
+from openhcs.core.run_record import DatasetRunRecords, RunRecord
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
@@ -52,9 +52,7 @@ def run(plate: Path, pipeline_config: PipelineConfig, steps: list) -> Path:
 
 def produced_file_bytes(output_root: Path) -> dict[str, str]:
     """sha256 of every file the dataset records as a step output, by relative path."""
-    produced = json.loads((output_root / "openhcs_metadata.json").read_text())[
-        PRODUCED_FILES_KEY
-    ]
+    produced = DatasetRunRecords.of_dataset(output_root).produced_files
     return {
         relative: hashlib.sha256((output_root / relative).read_bytes()).hexdigest()
         for relative in sorted(produced)
@@ -66,7 +64,7 @@ SUBMISSION_SCOPE = re.compile(r"::pipeline::submission_[0-9a-f]+")
 
 def without_run_location(record: RunRecord, plate: Path) -> str:
     """The record with this run's plate path and submission scope written as placeholders."""
-    text = json.dumps(record.content, sort_keys=True).replace(str(plate), "<plate>")
+    text = json.dumps(record.to_json(), sort_keys=True).replace(str(plate), "<plate>")
     return SUBMISSION_SCOPE.sub("::pipeline::<submission>", text)
 
 
@@ -94,7 +92,7 @@ def test_record_read_from_one_output_file_reruns_to_identical_outputs(tmp_path, 
     assert tables and images
 
     produced = RunRecord.for_output_file(first_root / tables[0])
-    assert produced.step["name"] == "bright"
+    assert produced.step.name == "bright"
     CustomFunctionRuntimeRegistry.clear()
     document, global_config = produced.record.rebuild()
 
@@ -111,13 +109,9 @@ def test_record_read_from_one_output_file_reruns_to_identical_outputs(tmp_path, 
     # The rebuilt document writes every parameter, so a value the first run took
     # from a signature default is, in the second run, written in the pipeline.
     # Nothing else differs once the plate path and the submission scope are set aside.
-    assert set(differences.values()) == {
-        ("function_default", "pipeline"),
-        ("openhcs:processors_numpy_processor_stack_percentile_normalize", None),
-        ("openhcs:count_bright", None),
-    }
+    assert set(differences.values()) == {("function_default", "pipeline")}
     assert all(
-        re.fullmatch(r"/steps/\d+/functions/\d+/parameters/\d+/source/(kind|function)", where)
+        re.fullmatch(r"/steps/\d+/calls/functions/\d+/parameters/\d+/source", where)
         for where in differences
     )
 

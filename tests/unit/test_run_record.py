@@ -22,15 +22,26 @@ from openhcs.core.function_identity import ModuleLibraries
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
+from polystore.file_content import HashedFileContent, UnhashedFileContent
+
 from openhcs.core.run_record import (
-    PRODUCED_FILES_KEY,
-    RUN_RECORDS_KEY,
+    ConfigValueOwner,
+    DatasetRunRecords,
+    DeclaredFile,
+    FunctionDefault,
+    FunctionRecord,
+    InheritedFrom,
     ProducedFiles,
+    RecordedParameter,
     RunDeclaration,
     RunRecord,
+    SetOnObject,
+    SuppliedAtRunTime,
     UnrecordedOutputFile,
+    WrittenInPipeline,
     python_expression,
 )
+from openhcs.runtime.environment_provenance import InstalledDistributionVersion
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -155,14 +166,20 @@ def run(orchestrator: PipelineOrchestrator, steps: list, tmp_path: Path):
     return bundle
 
 
-def by_name(records: list[dict]) -> dict[str, dict]:
-    return {record["name"]: record for record in records}
-
-
-def only_function(record: RunRecord, step_name: str) -> dict:
-    (step,) = (step for step in record.steps if step["name"] == step_name)
-    (function,) = step["functions"]
+def only_function(record: RunRecord, step_name: str) -> FunctionRecord:
+    (step,) = (step for step in record.steps if step.calls.name == step_name)
+    (function,) = step.calls.functions
     return function
+
+
+def parameters_by_name(function: FunctionRecord) -> dict[str, RecordedParameter]:
+    return {parameter.name: parameter for parameter in function.parameters}
+
+
+def stored_records(dataset_root: Path) -> DatasetRunRecords:
+    return DatasetRunRecords.in_document(
+        json.loads((dataset_root / "openhcs_metadata.json").read_text())
+    )
 
 
 def normalize_and_count() -> list:
@@ -176,35 +193,67 @@ def test_parameter_left_out_is_recorded_with_the_function_default(tmp_path):
     record = record_of(orchestrator_for(_plate(tmp_path / "source")), normalize_and_count())
 
     function = only_function(record, "norm")
-    parameters = by_name(function["parameters"])
-    assert function["identity"]["key"] == NORMALIZE_KEY
-    assert parameters["low_percentile"] == {
-        "name": "low_percentile",
-        "value": "2.0",
-        "source": {"kind": "pipeline"},
-    }
-    assert parameters["high_percentile"] == {
-        "name": "high_percentile",
-        "value": "99.0",
-        "source": {"kind": "function_default", "function": NORMALIZE_KEY},
-    }
-    assert parameters["stack"]["source"] == {"kind": "run_time"}
+    parameters = parameters_by_name(function)
+    assert function.identity.key == NORMALIZE_KEY
+    assert parameters["low_percentile"] == RecordedParameter(
+        "low_percentile", "2.0", WrittenInPipeline
+    )
+    assert parameters["high_percentile"] == RecordedParameter(
+        "high_percentile", "99.0", FunctionDefault
+    )
+    assert parameters["stack"] == RecordedParameter("stack", None, SuppliedAtRunTime)
+
+
+def test_stored_json_reads_back_as_the_same_record(tmp_path, register):
+    """One encoder and one decoder: every type of the record survives the round trip."""
+    plate = _plate(tmp_path / "source")
+    (plate / "weights.bin").write_bytes(b"weights")
+    record = record_of(
+        orchestrator_for(plate),
+        [
+            FunctionStep(func=(stack_percentile_normalize, {"low_percentile": 2.0}), name="norm"),
+            FunctionStep(
+                func=(
+                    register(count_bright_source(0.5)),
+                    {"weights": "weights.bin", "notes": "notes/log.txt"},
+                ),
+                name="bright",
+            ),
+        ],
+    )
+
+    stored = json.loads(json.dumps(record.to_json()))
+
+    assert RunRecord.from_json(stored) == record
+    assert RunRecord.from_json(stored).record_id == record.record_id
+    (norm_parameter, *_rest) = stored["steps"][0]["calls"]["functions"][0]["parameters"]
+    assert norm_parameter == {"name": "stack", "value": None, "source": "run_time"}
 
 
 def test_saved_pipeline_text_stays_short_and_the_record_copy_is_complete(tmp_path):
     steps = normalize_and_count()
     record = record_of(orchestrator_for(_plate(tmp_path / "source")), steps)
 
-    document = PipelineDocumentCodec.from_source(record.content["pipeline_code"])
+    document = PipelineDocumentCodec.from_source(record.pipeline_code)
     saved_text = PipelineDocumentCodec.render(document)
     assert "low_percentile" in saved_text
     assert "high_percentile" not in saved_text
     assert "description=None" not in saved_text
-    assert "high_percentile" in record.content["pipeline_code"]
-    assert "description=None" in record.content["pipeline_code"]
+    submitted = PipelineDocumentCodec.from_values(
+        pipeline_config=PipelineConfig(), pipeline_steps=steps
+    )
+    # Three renderings of one source, three promises: the saved text leaves out
+    # defaults; the unabridged text writes every stored field but no parameter
+    # the pipeline does not state; the record's copy leaves nothing to a default.
+    assert "high_percentile" not in PipelineDocumentCodec.render(
+        submitted, clean_mode=False
+    )
+    assert "description=None" in PipelineDocumentCodec.render(submitted, clean_mode=False)
+    assert "high_percentile" in record.pipeline_code
+    assert "description=None" in record.pipeline_code
     assert (
         PipelineDocumentCodec.render(document, clean_mode=False)
-        == record.content["pipeline_code"]
+        == record.pipeline_code
     )
 
 
@@ -226,18 +275,18 @@ def test_custom_function_is_identified_by_its_source_text(tmp_path, register):
         record = record_of(
             orchestrator, [FunctionStep(func=register(source), name="bright")]
         )
-        identity = only_function(record, "bright")["identity"]
+        identity = only_function(record, "bright").identity
         sha256 = hashlib.sha256(source.encode("utf-8")).hexdigest()
-        assert identity["name"] == "count_bright"
-        assert identity["custom_source_sha256"] == sha256
-        assert record.content["custom_sources"] == {sha256: source}
+        assert identity.name == "count_bright"
+        assert identity.source_sha256 == sha256
+        assert record.custom_sources == {sha256: source}
         records[threshold] = record
 
     first, second = (
-        only_function(record, "bright")["identity"] for record in records.values()
+        only_function(record, "bright").identity for record in records.values()
     )
-    assert first["key"] == second["key"]
-    assert first["custom_source_sha256"] != second["custom_source_sha256"]
+    assert first.key == second.key
+    assert first.source_sha256 != second.source_sha256
     assert records[0.5].record_id != records[0.25].record_id
 
 
@@ -247,9 +296,10 @@ def test_custom_function_imports_name_installed_versions(tmp_path, register):
         [FunctionStep(func=register(count_bright_source(0.5)), name="bright")],
     )
 
-    libraries = only_function(record, "bright")["identity"]["imports"]["libraries"]
-    assert {"distribution": "numpy", "version": importlib.metadata.version("numpy")} in (
-        libraries
+    libraries = only_function(record, "bright").identity.imports.libraries
+    assert (
+        InstalledDistributionVersion("numpy", importlib.metadata.version("numpy"))
+        in libraries
     )
 
 
@@ -289,13 +339,13 @@ def test_declared_input_file_is_hashed_once_per_run_by_the_file_manager(
             ]
         )
 
-    def declared_files(bundle) -> dict[str, dict]:
+    def declared_files(bundle) -> dict[str, DeclaredFile]:
         record = RunRecord.at_run_start(
             bundle, filemanager=orchestrator.filemanager, backend=Backend.DISK.value
         )
         return {
-            declared["parameter"]: declared
-            for declared in only_function(record, "bright")["declared_files"]
+            declared.parameter: declared
+            for declared in only_function(record, "bright").declared_files
         }
 
     bundle = compiled()
@@ -303,26 +353,22 @@ def test_declared_input_file_is_hashed_once_per_run_by_the_file_manager(
 
     declared = declared_files(bundle)
     assert hashed_paths == [weights]
-    assert declared["weights"] == {
-        "parameter": "weights",
-        "declared_as": "input file",
-        "path": str(weights),
-        "content": {
-            "hashed": True,
-            "sha256": hashlib.sha256(b"first weights").hexdigest(),
-            "size_bytes": len(b"first weights"),
-        },
-    }
-    assert declared["notes"]["declared_as"] == "output file"
-    assert declared["notes"]["content"]["hashed"] is False
-    assert declared["notes"]["content"]["reason"].strip()
+    assert declared["weights"] == DeclaredFile(
+        parameter="weights",
+        declared_as="input file",
+        path=str(weights),
+        content=HashedFileContent(
+            hashlib.sha256(b"first weights").hexdigest(), len(b"first weights")
+        ),
+    )
+    assert declared["notes"].declared_as == "output file"
+    assert isinstance(declared["notes"].content, UnhashedFileContent)
+    assert declared["notes"].content.reason.strip()
 
     weights.write_bytes(b"second weights!")
-    assert declared_files(bundle)["weights"]["content"] == {
-        "hashed": True,
-        "sha256": hashlib.sha256(b"second weights!").hexdigest(),
-        "size_bytes": len(b"second weights!"),
-    }
+    assert declared_files(bundle)["weights"].content == HashedFileContent(
+        hashlib.sha256(b"second weights!").hexdigest(), len(b"second weights!")
+    )
 
 
 def test_resolved_configuration_names_the_source_of_each_value(tmp_path, monkeypatch):
@@ -337,17 +383,25 @@ def test_resolved_configuration_names_the_source_of_each_value(tmp_path, monkeyp
     plate = _plate(tmp_path / "source")
     record = record_of(orchestrator_for(plate), normalize_and_count())
 
-    configuration = by_name(record.content["configuration"])
-    assert configuration["num_workers"]["value"] == "1"
-    assert configuration["num_workers"]["source"] == {"kind": "set_here", "scope": str(plate)}
-    inherited = configuration["materialization_results_path"]["source"]
-    assert inherited["kind"] == "inherited"
-    assert inherited["type"] == "openhcs.core.config.GlobalPipelineConfig"
+    owner_by_path = {
+        path: (group.owner, value)
+        for group in record.configuration
+        for path, value in group.values.items()
+    }
+    assert owner_by_path["num_workers"] == (
+        ConfigValueOwner(SetOnObject, str(plate), "openhcs.core.config.PipelineConfig"),
+        "1",
+    )
+    inherited, _value = owner_by_path["materialization_results_path"]
+    assert inherited.source is InheritedFrom
+    assert inherited.type_name == "openhcs.core.config.GlobalPipelineConfig"
+    owners = [group.owner for group in record.configuration]
+    assert len(owners) == len(set(owners)), "each owner is written once"
 
     (pipeline,) = resolved_pipelines
     assert len(record.steps) == len(pipeline.steps) == 2
     for index, step in enumerate(record.steps):
-        recorded_names = {value["name"] for value in step["configuration"]}
+        recorded_names = {path for group in step.configuration for path in group.values}
         assert pipeline.step_provenance[index]
         assert set(pipeline.step_provenance[index]) <= recorded_names
 
@@ -357,9 +411,7 @@ def test_each_output_file_names_the_step_that_produced_it(tmp_path):
     orchestrator = orchestrator_for(plate)
     bundle = run(orchestrator, normalize_and_count(), tmp_path)
     output_root = tmp_path / "source_out"
-    produced = json.loads((output_root / "openhcs_metadata.json").read_text())[
-        PRODUCED_FILES_KEY
-    ]
+    produced = stored_records(output_root).produced_files
     (image,) = (path for path in produced if path.endswith(".tif"))
     (table,) = (path for path in produced if path.endswith(".csv"))
 
@@ -368,14 +420,14 @@ def test_each_output_file_names_the_step_that_produced_it(tmp_path):
 
     # "count" returns its image unchanged, so the saved pixels are still the
     # ones "norm" produced: the same producer a viewer item for them carries.
-    assert image_file.step["name"] == "norm"
-    assert table_file.step["name"] == "count"
+    assert image_file.step.name == "norm"
+    assert table_file.step.name == "count"
     assert table_file.record.record_id == image_file.record.record_id
     (context,) = bundle.runtime_contexts.values()
     count_plan = context.step_plans[1]
     (output_plan,) = count_plan.artifact_outputs.values()
-    assert produced[table]["producer"] == dict(
-        count_plan.producer_identity_for_artifact(output_plan).to_payload()
+    assert produced[table].producer == count_plan.producer_identity_for_artifact(
+        output_plan
     )
     unlisted = output_root / "A01_s001_w1_z001_t001_unlisted.csv"
     unlisted.write_text("not written by a step")
@@ -388,8 +440,8 @@ def test_input_plate_metadata_receives_no_record(tmp_path):
     run(orchestrator_for(plate), normalize_and_count(), tmp_path)
 
     document = json.loads((plate / "openhcs_metadata.json").read_text())
-    assert RUN_RECORDS_KEY not in document
-    assert PRODUCED_FILES_KEY not in document
+    assert not set(document) & {"run_records", "produced_files"}
+    assert stored_records(plate) == DatasetRunRecords()
 
 
 def test_second_pipeline_into_the_same_dataset_keeps_only_referenced_records(tmp_path):
@@ -401,9 +453,9 @@ def test_second_pipeline_into_the_same_dataset_keeps_only_referenced_records(tmp
         tmp_path,
     )
 
-    document = json.loads((tmp_path / "source_out" / "openhcs_metadata.json").read_text())
-    referenced = {entry["run_record"] for entry in document[PRODUCED_FILES_KEY].values()}
-    assert set(document[RUN_RECORDS_KEY]) == referenced
+    stored = stored_records(tmp_path / "source_out")
+    referenced = {entry.run_record for entry in stored.produced_files.values()}
+    assert set(stored.run_records) == referenced
     assert len(referenced) == 2
 
 
@@ -459,16 +511,14 @@ def test_subdirectory_metadata_updates_keep_the_records(tmp_path):
     plate = _plate(tmp_path / "source")
     run(orchestrator_for(plate), normalize_and_count(), tmp_path)
     metadata_path = tmp_path / "source_out" / "openhcs_metadata.json"
-    before = json.loads(metadata_path.read_text())
-    assert before[RUN_RECORDS_KEY] and before[PRODUCED_FILES_KEY]
+    before = stored_records(metadata_path.parent)
+    assert before.run_records and before.produced_files
 
     writer = AtomicMetadataWriter()
     writer.merge_subdirectory_metadata(metadata_path, {"added": {"note": "kept"}})
     writer.replace_subdirectory_metadata(metadata_path, "replaced", {"note": "kept"})
 
-    after = json.loads(metadata_path.read_text())
-    assert after[RUN_RECORDS_KEY] == before[RUN_RECORDS_KEY]
-    assert after[PRODUCED_FILES_KEY] == before[PRODUCED_FILES_KEY]
+    assert stored_records(metadata_path.parent) == before
 
 
 def test_output_dataset_with_records_opens_as_an_input_plate(tmp_path):
@@ -489,11 +539,10 @@ def test_every_registered_function_default_can_be_written_in_the_record():
         contract = CallableContract.from_callable(metadata.func)
         step = FunctionStep(func=metadata.func, name=key)
         try:
-            PipelineDocumentCodec.render(
+            PipelineDocumentCodec.render_with_every_parameter(
                 PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(), pipeline_steps=[step]
-                ),
-                clean_mode=False,
+                )
             )
             for name, parameter in contract.canonical_signature.parameters.items():
                 if (

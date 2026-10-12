@@ -325,22 +325,7 @@ def test_pipeline_document_loads_back_every_pattern_shape(clean_mode):
     loaded = PipelineDocumentCodec.from_source(source)
 
     assert raw(loaded.pipeline_config) == raw(document.pipeline_config), source
-    if clean_mode:
-        assert raw(loaded.pipeline_steps) == raw(document.pipeline_steps), source
-    else:
-        # The full text writes every function parameter, so what loads back
-        # states the signature defaults the original left out: the same
-        # declaration, the same short text, and the same full text again.
-        assert all(
-            loaded_step.same_declaration(step)
-            for loaded_step, step in zip(
-                loaded.pipeline_steps, document.pipeline_steps, strict=True
-            )
-        ), source
-        assert PipelineDocumentCodec.render(loaded) == PipelineDocumentCodec.render(
-            document
-        )
-        assert PipelineDocumentCodec.render(loaded, clean_mode=False) == source
+    assert raw(loaded.pipeline_steps) == raw(document.pipeline_steps), source
     assert samples.unsampled == []
     assert "path_root = Path('/data/screen')" in source
     assert "CropModule.Shape.ELLIPSE" in source
