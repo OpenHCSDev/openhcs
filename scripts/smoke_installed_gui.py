@@ -566,7 +566,6 @@ def run_installed_live_mcp_smoke(
     )
     from openhcs.agent.dto.mcp import McpServerHealthResult
     from openhcs.agent.dto.ui_bridge import (
-        UiActionInvocationStatus,
         UiActionInvokeResult,
         UiBridgeCatalog,
         UiBridgeStatus,
@@ -705,7 +704,7 @@ def run_installed_live_mcp_smoke(
             capability=agent_capabilities.ui_invoke_action,
             payload_type=UiActionInvokeResult,
         )
-        if action_result.status != UiActionInvocationStatus.ACCEPTED.value:
+        if not action_result.status.accepted:
             raise AssertionError(
                 f"Installed UI action was not accepted: {action_result}"
             )

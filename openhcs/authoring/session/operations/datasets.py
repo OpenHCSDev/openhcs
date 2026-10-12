@@ -148,7 +148,9 @@ class DeleteDatasets(IdleTargetsOperation, HeadlessOperation):
     operation_id = "delete_datasets"
     label = "Del"
     tooltip = "Delete selected datasets"
-    description = "Removes datasets and their configuration and pipeline from the session."
+    description = (
+        "Removes datasets and their configuration and pipeline from the session."
+    )
     side_effects = ("mutates_dataset_list",)
 
     @classmethod
@@ -170,7 +172,9 @@ class EditDatasetConfig(InitializedTargetsOperation, RendererOperation):
         error = super().available(session, request)
         if error is not None:
             return error
-        pending = [s for s in request.scope_ids if session.has_pending_definition_work(s)]
+        pending = [
+            s for s in request.scope_ids if session.has_pending_definition_work(s)
+        ]
         if pending:
             return AgentError(
                 code="dataset_definition_pending",
@@ -179,7 +183,9 @@ class EditDatasetConfig(InitializedTargetsOperation, RendererOperation):
         return None
 
 
-class InitializeDatasets(IdleTargetsOperation, DatasetWorkflowOperation, HeadlessOperation):
+class InitializeDatasets(
+    IdleTargetsOperation, DatasetWorkflowOperation, HeadlessOperation
+):
     operation_id = "initialize_datasets"
     workflow_name = "INIT"
     label = "Init"
@@ -330,7 +336,9 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
                 code="execution_batch_active",
                 message="An execution batch is already running.",
             )
-        pending = [s for s in request.scope_ids if session.has_pending_definition_work(s)]
+        pending = [
+            s for s in request.scope_ids if session.has_pending_definition_work(s)
+        ]
         if pending:
             return AgentError(
                 code="dataset_definition_pending",
@@ -357,7 +365,7 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
             tuple(request.scope_ids),
             auxiliary_params=session.observation_export_params(
                 request.runtime_observation_export_path,
-                request.runtime_observation_export_scope,
+                request.runtime_observation_export_scope.scope,
             ),
             submit_timeout_ms=request.submit_timeout_ms,
             wait_timeout_ms=request.wait_timeout_ms,
@@ -388,7 +396,9 @@ class StopExecution(HeadlessOperation):
     def available(cls, session, request) -> AgentError | None:
         state = session.execution_state
         if not state.busy:
-            return AgentError(code="no_execution_running", message="Nothing is running.")
+            return AgentError(
+                code="no_execution_running", message="Nothing is running."
+            )
         if not state.run_button_enabled(True):
             return AgentError(
                 code="execution_stopping",
@@ -461,4 +471,3 @@ class ShowDatasetImages(InitializedTargetsOperation, RendererOperation):
     tooltip = "Browse dataset images and metadata"
     description = "Opens the image and metadata browser of the selected datasets."
     side_effects = ("opens_dataset_viewer_window",)
-
