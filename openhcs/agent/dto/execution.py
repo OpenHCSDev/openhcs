@@ -169,6 +169,16 @@ class ViewerStreamingPlanSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class AssignedDeviceSummary:
+    """The device one array library runs on in a step, and the rule that chose it."""
+
+    library: str
+    device: str
+    rule: str
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
 class CompiledStepPlanSummary:
     step_index: int
     step_name: str
@@ -180,6 +190,7 @@ class CompiledStepPlanSummary:
     viewer_streaming: tuple[ViewerStreamingPlanSummary, ...] = ()
     artifact_inputs: tuple[ArtifactInputPlanSummary, ...] = ()
     artifact_outputs: tuple[ArtifactPlanSummary, ...] = ()
+    devices: tuple[AssignedDeviceSummary, ...] = ()
     truncated_artifact_input_count: int = 0
     truncated_artifact_output_count: int = 0
 

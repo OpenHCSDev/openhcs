@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Tuple
 from skimage.segmentation import watershed as skimage_watershed
 
 from openhcs.core.memory import cupy as cupy_func
+from openhcs.core.runtime_array_values import ArrayPlacement, host_array
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.backends.analysis.cell_counting_common import (
     AreaFilter,
@@ -72,17 +73,10 @@ WATERSHED_THRESHOLD_BACKEND = WatershedThresholdBackend(
 def _watershed_with_cpu_partition(image, markers, *, mask):
     """Run watershed through the CPU fallback and restore the CuPy device."""
 
-    from openhcs.constants.constants import MemoryType
-
-    device_id = MemoryType.CUPY.device_id_of(image)
-    if device_id is None:
-        raise ValueError("CuPy watershed input does not declare a GPU device.")
     labels = skimage_watershed(
-        MemoryType.CUPY.to_numpy(image),
-        MemoryType.CUPY.to_numpy(markers),
-        mask=MemoryType.CUPY.to_numpy(mask),
+        host_array(image), host_array(markers), mask=host_array(mask),
     )
-    return MemoryType.CUPY.from_numpy(labels, device_id)
+    return ArrayPlacement.of(image).place(labels)
 
 
 def count_cells_single_channel(

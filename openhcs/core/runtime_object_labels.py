@@ -347,7 +347,9 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
     def __init__(
         self, variants: Sequence[ObjectLabelVariantData], memory_type: str,
     ) -> None:
-        from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry
+        from arraybridge import MemoryType
+
+        from openhcs.core.memory import runtime_slice_stack_geometry
 
         target = MemoryType(memory_type)
         if target is not MemoryType.NUMPY:

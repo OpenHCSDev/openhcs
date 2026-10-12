@@ -10,7 +10,6 @@ import logging
 from typing import List, Optional, Tuple
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 torch = optional_import_placeholder("torch")
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.TORCH)
+OPERATIONS = MemoryType.TORCH.library
 
 
 def _integer_limits(dtype: "torch.dtype") -> Optional["torch.iinfo"]:

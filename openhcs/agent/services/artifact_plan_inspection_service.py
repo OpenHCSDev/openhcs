@@ -18,6 +18,7 @@ from openhcs.agent.dto.execution import (
     ArtifactMaterializationPlanSummary,
     ArtifactPlanInspection,
     ArtifactPlanSummary,
+    AssignedDeviceSummary,
     CompiledStepPlanSummary,
     MainFlowMaterializationPlanSummary,
     PipelineSourceArtifactPlanInspectionRequest,
@@ -401,6 +402,15 @@ def _bounded_step_summaries(compiled_contexts, axes: tuple[str, ...]):
                     _main_flow_materialization_summary(step_plan)
                 ),
                 viewer_streaming=_viewer_streaming_summaries(step_plan),
+                devices=tuple(
+                    AssignedDeviceSummary(
+                        library=str(each.library.name),
+                        device=each.device.label,
+                        rule=each.rule.name,
+                        reason=each.rule.reason,
+                    )
+                    for each in step_plan.device_assignment.assigned
+                ),
                 artifact_inputs=artifact_inputs,
                 artifact_outputs=artifact_outputs,
                 truncated_artifact_input_count=max(

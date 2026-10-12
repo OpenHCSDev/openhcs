@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
@@ -25,7 +24,7 @@ jax = optional_import_placeholder("jax")
 jnp = optional_import_placeholder("jax.numpy")
 lax = optional_import_placeholder("jax.lax")
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.JAX)
+OPERATIONS = MemoryType.JAX.library
 
 
 @jax_func

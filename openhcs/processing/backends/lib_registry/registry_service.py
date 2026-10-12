@@ -5,6 +5,7 @@ Provides unified access to all registry implementations with automatic discovery
 Follows OpenHCS generic solution principle - automatically adapts to new registries.
 """
 
+from arraybridge.libraries import ArrayLibrary
 import gc
 import inspect
 import logging
@@ -17,7 +18,6 @@ from collections.abc import Callable
 from concurrent.futures import CancelledError
 from typing import TYPE_CHECKING, Dict, Optional
 
-from arraybridge import MemoryType
 from objectstate import LazyDataclassFactory
 from python_introspect import SignatureAnalyzer
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
@@ -31,7 +31,6 @@ from openhcs.core.processing_preparation import (
     PreparationCacheBatch,
 )
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 from .unified_registry import (
     LIBRARY_REGISTRIES,
@@ -248,9 +247,10 @@ class RegistryService:
         )
 
         for registry_class in registry_classes:
-            if _cpu_only_mode_enabled() and not registry_class.supports_cpu_only():
+            if registry_class.library_ruled_out():
                 logger.info(
-                    "CPU-only registry discovery skipping %s",
+                    "Registry discovery skipping %s: its array library has no "
+                    "device in this process",
                     registry_class.__name__,
                 )
                 continue
@@ -329,7 +329,7 @@ class RegistryService:
                 stdout=output,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=MemoryType.subprocess_environment(),
+                env=ArrayLibrary.child_environment(),
                 **policy.popen_arguments(),
             )
             owned_process = endpoint_process(process)
@@ -558,6 +558,3 @@ class RegistryService:
             cls._resolved_reference_callables.clear()
         logger.info("Registry metadata cache cleared")
 
-
-def _cpu_only_mode_enabled() -> bool:
-    return OpenHCSProcessEnvironment.cpu_only_mode()

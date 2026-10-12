@@ -1079,8 +1079,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         try:
             return unstack_runtime_slices(
                 processed_data,
-                self.execution_plan.output_memory_type,
-                self.execution_plan.device_id_for(
+                self.execution_plan.placement_for(
                     self.execution_plan.output_memory_type
                 ),
                 expected_count=expected_count,
@@ -1108,8 +1107,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         explicit_output_surfaces = processed_stack.owns_output_surfaces
         stack_payload = processed_stack.output_stack_copy(
             projected_outputs,
-            memory_type=plan.output_memory_type,
-            device_id=plan.device_id_for(plan.output_memory_type),
+            plan.placement_for(plan.output_memory_type),
         )
         RuntimeProfileLogger.log(
             logger,
@@ -1385,8 +1383,7 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
                 )
             payloads.append(
                 source_payload.copied(
-                    memory_type=self.execution_plan.input_memory_type,
-                    device_id=self.execution_plan.device_id_for(
+                    self.execution_plan.placement_for(
                         self.execution_plan.input_memory_type,
                     ),
                 )
@@ -1720,9 +1717,7 @@ class FunctionCoreExecutor:
             != binding
         ):
             return None
-        payload = self.invocation.convert_input(
-            self.group_data.main_data_stack, self.source_memory_type,
-        )
+        payload = self.invocation.convert_input(self.group_data.main_data_stack)
         if edge.main_flow_projection is MainFlowInputProjection.DECLARED_SOURCE_IMAGE:
             payload = payload.project_declared_source(ref.name)
         elif edge.main_flow_projection is not MainFlowInputProjection.COMPLETE_PAYLOAD:
@@ -1960,10 +1955,7 @@ class FunctionCoreExecutor:
         *,
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
-        source_payload = self.invocation.convert_input(
-            self.main_data_arg,
-            self.source_memory_type,
-        )
+        source_payload = self.invocation.convert_input(self.main_data_arg)
         main_data_arg = self.invocation.main_flow_call_argument(source_payload)
         final_kwargs = dict(self.invocation.runtime_kwargs)
         loads_artifact_inputs = self.should_load_artifact_inputs()

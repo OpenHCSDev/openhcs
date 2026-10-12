@@ -8,7 +8,6 @@ pyclesperanto's own kernels (min/max normalization, CLAHE, top-hat sphere).
 from typing import List, Optional
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
@@ -22,7 +21,7 @@ from openhcs.processing.backends.processors.method_axes import (
 
 cle = optional_import_placeholder("pyclesperanto")
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.PYCLESPERANTO)
+OPERATIONS = MemoryType.PYCLESPERANTO.library
 
 
 def _gpu_minmax_normalize_range(image: "cle.Array") -> tuple:

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from math import floor, isfinite
 
-from arraybridge import MemoryType, detect_memory_type
+from arraybridge.libraries import ArrayLibrary
 
 
 class TileBlendMethod(Enum):
@@ -54,7 +54,7 @@ class SubpixelTilePlacement:
         fy, fx = self.fractional_yx
         if fy == 0 and fx == 0:
             return tile * mask, mask
-        array_module = MemoryType(detect_memory_type(tile)).import_module()
+        array_module = ArrayLibrary.of(tile).module
         identity_matrix = array_module.ones(2, dtype=array_module.float64)
         kwargs = {
             "offset": (-fy, -fx),

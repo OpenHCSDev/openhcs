@@ -1,7 +1,7 @@
-"""Image-stack operations written once against arraybridge ``ArrayOperations``.
+"""Image-stack operations written once against arraybridge ``ArrayLibrary``.
 
 Each backend processor module registers these operations under its own
-memory type and passes its ``ArrayOperations`` leaf. A leaf supplies only the
+memory type and passes its ``ArrayLibrary`` leaf. A leaf supplies only the
 primitives its array library does differently, so a result here equals what
 the backend's own library calls produce. Operations whose algorithm genuinely
 differs per backend stay in that backend's module.
@@ -18,7 +18,7 @@ from typing import Any
 
 import numpy as np
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
+from arraybridge.libraries import ArrayLibrary
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
@@ -28,7 +28,7 @@ from openhcs.processing.backends.processors.method_axes import (
 )
 
 
-def require_stack(ops: ArrayOperations, array: Any, name: str = "input") -> None:
+def require_stack(ops: ArrayLibrary, array: Any, name: str = "input") -> None:
     """Require one native array of the leaf's framework with three axes."""
 
     if not ops.accepts(array):
@@ -60,7 +60,7 @@ def weight_mask_extent(shape: Any) -> tuple[int, int]:
 
 
 def linear_weight_mask(
-    ops: ArrayOperations,
+    ops: ArrayLibrary,
     height: int,
     width: int,
     margin_ratio: float,
@@ -90,7 +90,7 @@ def linear_weight_mask(
 # ----- masks and projections -----
 
 
-def apply_mask(ops: ArrayOperations, image: Any, mask: Any) -> Any:
+def apply_mask(ops: ArrayLibrary, image: Any, mask: Any) -> Any:
     """Multiply a stack by a 2-D (per plane) or 3-D mask in float32."""
 
     require_stack(ops, image)
@@ -106,21 +106,21 @@ def apply_mask(ops: ArrayOperations, image: Any, mask: Any) -> Any:
     return ops.astype(masked, image.dtype)
 
 
-def max_projection(ops: ArrayOperations, stack: Any) -> Any:
+def max_projection(ops: ArrayLibrary, stack: Any) -> Any:
     """Maximum over the leading axis, shaped ``(1, Y, X)``."""
 
     require_stack(ops, stack)
     return ops.prepend_axis(ops.max(stack, 0))
 
 
-def mean_projection(ops: ArrayOperations, stack: Any) -> Any:
+def mean_projection(ops: ArrayLibrary, stack: Any) -> Any:
     """Mean over the leading axis in the input dtype, shaped ``(1, Y, X)``."""
 
     require_stack(ops, stack)
     return ops.prepend_axis(ops.astype(ops.mean(stack, 0), stack.dtype))
 
 
-def min_projection(ops: ArrayOperations, stack: Any) -> Any:
+def min_projection(ops: ArrayLibrary, stack: Any) -> Any:
     """Minimum over the leading axis, shaped ``(1, Y, X)``."""
 
     require_stack(ops, stack)
@@ -135,32 +135,32 @@ class StackProjection(
     __enum_member_attr__ = "method"
 
     @abstractmethod
-    def project(self, ops: ArrayOperations, stack: Any) -> Any:
+    def project(self, ops: ArrayLibrary, stack: Any) -> Any:
         """Return the projection shaped ``(1, Y, X)``."""
 
 
 class MaxStackProjection(StackProjection):
     method = StackProjectionMethod.MAX
 
-    def project(self, ops: ArrayOperations, stack: Any) -> Any:
+    def project(self, ops: ArrayLibrary, stack: Any) -> Any:
         return max_projection(ops, stack)
 
 
 class MeanStackProjection(StackProjection):
     method = StackProjectionMethod.MEAN
 
-    def project(self, ops: ArrayOperations, stack: Any) -> Any:
+    def project(self, ops: ArrayLibrary, stack: Any) -> Any:
         return mean_projection(ops, stack)
 
 
 class MinStackProjection(StackProjection):
     method = StackProjectionMethod.MIN
 
-    def project(self, ops: ArrayOperations, stack: Any) -> Any:
+    def project(self, ops: ArrayLibrary, stack: Any) -> Any:
         return min_projection(ops, stack)
 
 
-def create_projection(ops: ArrayOperations, stack: Any, method: Any) -> Any:
+def create_projection(ops: ArrayLibrary, stack: Any, method: Any) -> Any:
     """Project a stack with the method's registered projection.
 
     ``method`` is any enum whose values name ``StackProjection`` members.
@@ -179,35 +179,35 @@ class SpatialBin(EnumKeyedStrategyMixin[SpatialBinMethod], metaclass=AutoRegiste
     __enum_member_attr__ = "method"
 
     @abstractmethod
-    def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:
+    def reduce(self, ops: ArrayLibrary, array: Any, axis: tuple[int, ...]) -> Any:
         """Reduce the bin axes."""
 
 
 class MeanSpatialBin(SpatialBin):
     method = SpatialBinMethod.MEAN
 
-    def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:
+    def reduce(self, ops: ArrayLibrary, array: Any, axis: tuple[int, ...]) -> Any:
         return ops.mean(array, axis)
 
 
 class SumSpatialBin(SpatialBin):
     method = SpatialBinMethod.SUM
 
-    def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:
+    def reduce(self, ops: ArrayLibrary, array: Any, axis: tuple[int, ...]) -> Any:
         return ops.sum(array, axis)
 
 
 class MaxSpatialBin(SpatialBin):
     method = SpatialBinMethod.MAX
 
-    def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:
+    def reduce(self, ops: ArrayLibrary, array: Any, axis: tuple[int, ...]) -> Any:
         return ops.max(array, axis)
 
 
 class MinSpatialBin(SpatialBin):
     method = SpatialBinMethod.MIN
 
-    def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:
+    def reduce(self, ops: ArrayLibrary, array: Any, axis: tuple[int, ...]) -> Any:
         return ops.min(array, axis)
 
 
@@ -217,7 +217,7 @@ def _require_bin_size(bin_size: int) -> None:
 
 
 def spatial_bin_2d(
-    ops: ArrayOperations, stack: Any, bin_size: int, method: SpatialBinMethod
+    ops: ArrayLibrary, stack: Any, bin_size: int, method: SpatialBinMethod
 ) -> Any:
     """Bin each plane in ``bin_size`` x ``bin_size`` blocks."""
 
@@ -236,7 +236,7 @@ def spatial_bin_2d(
 
 
 def spatial_bin_3d(
-    ops: ArrayOperations, stack: Any, bin_size: int, method: SpatialBinMethod
+    ops: ArrayLibrary, stack: Any, bin_size: int, method: SpatialBinMethod
 ) -> Any:
     """Bin the stack in ``bin_size``-sided cubes."""
 
@@ -267,7 +267,7 @@ def spatial_bin_3d(
 
 
 def crop(
-    ops: ArrayOperations,
+    ops: ArrayLibrary,
     image: Any,
     start_x: int,
     start_y: int,
@@ -301,7 +301,7 @@ def crop(
 
 
 def stack_equalize_histogram(
-    ops: ArrayOperations, stack: Any, bins: int, range_min: float, range_max: float
+    ops: ArrayLibrary, stack: Any, bins: int, range_min: float, range_max: float
 ) -> Any:
     """Equalize with one histogram over the whole stack."""
 
@@ -348,7 +348,7 @@ def _target_range(
 
 
 def percentile_normalize_planes(
-    ops: ArrayOperations,
+    ops: ArrayLibrary,
     image: Any,
     low_percentile: float,
     high_percentile: float,
@@ -374,7 +374,7 @@ def percentile_normalize_planes(
 
 
 def percentile_normalize_stack(
-    ops: ArrayOperations,
+    ops: ArrayLibrary,
     stack: Any,
     low_percentile: float,
     high_percentile: float,
@@ -422,7 +422,7 @@ def composite_weights(weights: Sequence[float] | None, count: int) -> list[float
 
 
 def weighted_composite(
-    ops: ArrayOperations, stack: Any, weights: Sequence[float] | None
+    ops: ArrayLibrary, stack: Any, weights: Sequence[float] | None
 ) -> Any:
     """Float32 weighted sum of the planes, shaped ``(1, Y, X)``, in the input dtype."""
 

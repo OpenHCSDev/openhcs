@@ -175,7 +175,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        from openhcs.core.memory import detect_memory_type
+        from arraybridge import detect_memory_type
         from openhcs.core.processing_contracts import (
             Pure2DAuxiliaryOutputAggregator,
             Pure2DSliceResultBatch,

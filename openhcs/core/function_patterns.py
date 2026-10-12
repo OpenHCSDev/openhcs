@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
     from openhcs.core.source_bindings import CompiledSourceBindingPlan
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-    from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
+    from openhcs.core.device_assignment import DeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
@@ -51,6 +51,7 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_reference import FunctionReference
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
@@ -497,8 +498,8 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     artifact_output_plans: tuple[ArtifactOutputPlan, ...] = ()
     artifact_input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
     runtime_parameter_bindings: tuple[RuntimeParameterBinding, ...] = ()
-    input_device_id: int | None = None
-    execution_device_id: int | None = None
+    input_placement: ArrayPlacement | None = None
+    execution_placement: ArrayPlacement | None = None
     runtime_callable: Callable = field(
         init=False,
         repr=False,
@@ -633,49 +634,53 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
 
     def with_device_assignment(
         self,
-        assignment: FrameworkDeviceAssignment,
+        assignment: DeviceAssignment,
     ) -> "CompiledFunctionInvocation":
-        """Bind this immutable invocation at the compiler's placement boundary."""
-        if self.contract.execution_scope is FunctionStepExecutionScope.PLATE:
-            input_device_id = None
-        else:
-            input_memory_type, _ = self.contract.require_memory_types()
-            input_device_id = assignment.device_id_for(MemoryType(input_memory_type))
+        """Record where this invocation's input is placed and where it executes.
+
+        A callable that declares no input library, or no execution library, has
+        no such placement.
+        """
         return replace(
             self,
-            input_device_id=input_device_id,
-            execution_device_id=(
+            input_placement=(
+                None
+                if self._input_memory_type is None
+                else assignment.of(self._input_memory_type.library).placement
+            ),
+            execution_placement=(
                 None
                 if self._execution_memory_type is None
-                else assignment.device_id_for(self._execution_memory_type)
+                else assignment.of(self._execution_memory_type.library).placement
             ),
         )
 
-    def convert_input(self, payload: object, source_memory_type: str) -> object:
-        """Place the active predecessor's image on the compiled input domain.
+    def _require_input_placement(self) -> ArrayPlacement:
+        if self.input_placement is None:
+            self.contract.require_memory_types()
+            raise ValueError(
+                f"Compiled invocation {self.key!r} was not assigned an input device."
+            )
+        return self.input_placement
+
+    def convert_input(self, payload: object) -> object:
+        """Place the active predecessor's image where this invocation reads its input.
 
         Main-flow values of other kinds have no pixels to place.
         """
         payload = owned_runtime_value(payload)
-        if self._input_memory_type is None:
-            self.contract.require_memory_types()
+        placement = self._require_input_placement()
         if not isinstance(payload, ImagePayload):
             return payload
         if isinstance(payload, ImagePayloadStackComposition):
-            return payload.compose(
-                memory_type=self._input_memory_type.value,
-                device_id=self.input_device_id,
-            )
-        source = MemoryType(source_memory_type)
-        if source is self._input_memory_type and not source.is_gpu:
+            return payload.compose(placement)
+        if ArrayPlacement.of(payload.data) == placement:
             mask = payload.mask
             if project_image_mask_to_data_domain(
                 mask, payload, metadata=payload.metadata
             ) is mask:
                 return payload
-        return payload.with_pixels(source.convert_to(
-                payload.data, self._input_memory_type, self.input_device_id
-            ),)
+        return payload.with_pixels(placement.place(payload.data))
 
     def main_flow_call_argument(self, source_payload: object) -> object:
         """Apply the captured processing declaration to current request pixels."""
@@ -692,13 +697,14 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def execution_device_scope(self) -> AbstractContextManager[None]:
         """Enter the fixed device while retaining a fresh per-call scope lifetime."""
         memory_type = self._execution_memory_type
-        if memory_type is None or not memory_type.is_gpu:
+        if memory_type is None:
             return nullcontext()
-        if self.execution_device_id is None:
+        placement = self.execution_placement
+        if placement is None:
             raise ValueError(
                 f"No compiled device assignment exists for {memory_type.value!r}."
             )
-        return memory_type.device_scope(self.execution_device_id)
+        return placement.library.device_scope(placement.device)
 
     @property
     def input_memory_type(self) -> str | None:

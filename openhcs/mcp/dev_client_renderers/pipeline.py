@@ -272,6 +272,11 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
                     ),
                 )
             )
+            for assigned in step.devices:
+                lines.append(
+                    f"  device: {assigned.library} on {assigned.device} "
+                    f"({assigned.reason})"
+                )
             for viewer in step.viewer_streaming:
                 line = f"  viewer stream: viewer={viewer.viewer_type.value} config={viewer.config_key} backend={viewer.backend}"
                 if viewer.effective_config:

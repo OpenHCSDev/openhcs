@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Self
 
 import numpy as np
-from arraybridge import ArrayGeometry, ArrayPayload, MemoryType, detect_memory_type
+from arraybridge import ArrayGeometry, ArrayPayload
+from arraybridge.devices import Device
+from arraybridge.libraries import Array, ArrayLibrary
 
 
 def runtime_array_ufunc_result(
@@ -151,7 +154,41 @@ def host_array(value: Any) -> np.ndarray:
     an array is copied to host memory, by the library the array itself belongs to.
     """
     data = runtime_array_operand(value)
-    return MemoryType(detect_memory_type(data)).to_numpy(data)
+    return ArrayLibrary.of(data).to_numpy(data)
+
+
+@dataclass(frozen=True, slots=True)
+class ArrayPlacement:
+    """Where an array lives: its array library and the device of that library."""
+
+    library: ArrayLibrary[Array]
+    device: Device
+
+    @classmethod
+    def of(cls, value: Any) -> ArrayPlacement:
+        """The placement of an existing array or payload."""
+        data = runtime_array_operand(value)
+        library = ArrayLibrary.of(data)
+        return cls(library, library.device_of(data))
+
+    @classmethod
+    def beside(cls, value: Any, library: ArrayLibrary[Array]) -> ArrayPlacement:
+        """``library`` on the device that holds ``value``."""
+        return cls(library, cls.of(value).device)
+
+    @property
+    def memory_type(self) -> str:
+        """The library's name, as memory declarations spell it."""
+        return str(self.library.name)
+
+    def place(self, value: Any) -> Any:
+        """Return an array here; the same object when it already is."""
+        data = runtime_array_operand(value)
+        return ArrayLibrary.of(data).convert_to(data, self.library, self.device)
+
+    def stack(self, values: Sequence[Any]) -> Any:
+        """Stack arrays already placed here along a new leading axis."""
+        return self.library.stack_arrays(list(values), self.device)
 
 
 def array_geometry(value: Any) -> ArrayGeometry:
@@ -172,7 +209,7 @@ def is_array_payload(data: Any) -> bool:
     if isinstance(data, RuntimeArrayPayload):
         return True
     try:
-        detect_memory_type(data)
+        ArrayLibrary.of(data)
     except ValueError:
         return False
     return True

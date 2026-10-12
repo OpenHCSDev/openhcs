@@ -25,8 +25,6 @@ class OpenHCSProcessEnvironment:
     worker_profile_directory_key = "OPENHCS_WORKER_PROFILE_DIR"
     numba_sys_monitoring_key = "NUMBA_ENABLE_SYS_MONITORING"
     numpy_hugepage_advice_key = "NUMPY_MADVISE_HUGEPAGE"
-    subprocess_no_gpu_key = "OPENHCS_SUBPROCESS_NO_GPU"
-    polystore_subprocess_no_gpu_key = "POLYSTORE_SUBPROCESS_NO_GPU"
     jax_platforms_key = "JAX_PLATFORMS"
     use_threading_key = "OPENHCS_USE_THREADING"
 
@@ -80,32 +78,24 @@ class OpenHCSProcessEnvironment:
         return values.get(key, "").strip().lower() in {"1", "true", "yes", "on"}
 
     @classmethod
-    def cpu_only_mode(
+    def accelerators_excluded(
         cls,
         environment: Mapping[str, str] | None = None,
     ) -> bool:
-        """Return whether OpenHCS should exclude GPU-backed declarations."""
+        """Whether this process is assigned no accelerator (``OPENHCS_CPU_ONLY``).
+
+        Every array library then runs on its host device. A library with no
+        host device cannot run, so its functions are left out of the catalogue.
+        """
 
         return cls.flag_enabled(cls.cpu_only_key, environment)
 
     @classmethod
-    def gpu_imports_disabled(
-        cls,
-        environment: Mapping[str, str] | None = None,
-    ) -> bool:
-        """Return whether this process must avoid GPU-library imports."""
-
-        return cls.cpu_only_mode(environment) or cls.flag_enabled(
-            cls.subprocess_no_gpu_key,
-            environment,
-        )
-
-    @classmethod
-    def enable_cpu_only_mode(
+    def exclude_accelerators(
         cls,
         environment: MutableMapping[str, str] | None = None,
     ) -> None:
-        """Enable CPU-only execution and project it to dependency imports."""
+        """Assign this process no accelerator and tell the libraries that need telling."""
 
         values = os.environ if environment is None else environment
         values[cls.cpu_only_key] = "true"
@@ -119,10 +109,7 @@ class OpenHCSProcessEnvironment:
         """Project process defaults before dependencies import their runtimes."""
 
         values = os.environ if environment is None else environment
-        if cls.gpu_imports_disabled(values):
-            values[cls.subprocess_no_gpu_key] = "1"
-            values[cls.polystore_subprocess_no_gpu_key] = "1"
-        if cls.cpu_only_mode(values):
+        if cls.accelerators_excluded(values):
             values[cls.jax_platforms_key] = "cpu"
         if cls.worker_profile_directory(values) is not None:
             values[cls.numba_sys_monitoring_key] = "1"

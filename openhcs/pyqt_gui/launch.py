@@ -249,7 +249,7 @@ def main(
     from openhcs.utils.environment import OpenHCSProcessEnvironment
 
     if args.no_gpu:
-        OpenHCSProcessEnvironment.enable_cpu_only_mode()
+        OpenHCSProcessEnvironment.exclude_accelerators()
 
     # Setup Qt platform (must be done before creating QApplication)
     setup_qt_platform()
@@ -289,7 +289,7 @@ def main(
             pipeline_runtime=config,
         )
 
-        if OpenHCSProcessEnvironment.cpu_only_mode():
+        if OpenHCSProcessEnvironment.accelerators_excluded():
             logging.info("CPU-only execution enabled")
 
         # Create and run application

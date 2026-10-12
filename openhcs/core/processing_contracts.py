@@ -8,6 +8,7 @@ policy used by those algorithms live here too.
 """
 
 from __future__ import annotations
+from arraybridge import MemoryType
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
@@ -32,7 +33,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowsAxisProjection,
 )
 from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.runtime_array_values import ArrayPlacement, RuntimeArrayPayload
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
     RuntimeBatchInvocationRequest,
@@ -430,8 +431,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
         metadata = value.metadata
         slices = unstack_runtime_slices(
             data,
-            memory_type,
-            0,
+            ArrayPlacement.beside(data, MemoryType(memory_type).library),
             expected_count=metadata.source_provenance.source_plane_count or None,
         )
         return tuple(
@@ -673,7 +673,10 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
     def stack_array_slices(self, values: list[Any], memory_type: str) -> Any:
         """Stack an explicitly collected dense runtime-slice sequence."""
 
-        return stack_runtime_slices(values, memory_type, 0)
+        return stack_runtime_slices(
+            values,
+            ArrayPlacement.beside(values[0], MemoryType(memory_type).library),
+        )
 
 
 class ImagePayloadPure2DAuxiliaryOutputAggregator(
@@ -698,7 +701,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
-            values, memory_type=memory_type, plane_axis=plane_axis,
+            values, library=MemoryType(memory_type).library, plane_axis=plane_axis,
         )
 
 
@@ -764,7 +767,7 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
-            values, memory_type=memory_type, plane_axis=plane_axis,
+            values, library=MemoryType(memory_type).library, plane_axis=plane_axis,
         )
 
 

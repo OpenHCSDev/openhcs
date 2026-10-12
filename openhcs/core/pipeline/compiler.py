@@ -749,20 +749,9 @@ class PipelineCompiler:
 
     @staticmethod
     def assign_framework_device_resources(session: CompilationSession) -> None:
-        """Resolve each step's declaration-derived framework device footprint."""
-        context = session.context
+        """Assign a device to every array library each step declares."""
 
-        assign_framework_devices(context.step_plans)
-
-        for step_index, step_plan_val in context.step_plans.items():
-            if step_plan_val.requires_gpu:
-                if not step_plan_val.device_assignment.bindings:
-                    step_name = step_plan_val.step_name
-                    raise AssertionError(
-                        "Framework device resolution must assign bindings for step "
-                        f"{step_name} (index: {step_index}) "
-                        f"with GPU memory types."
-                    )
+        assign_framework_devices(session.context.step_plans)
 
     @staticmethod
     def apply_global_visualizer_override(

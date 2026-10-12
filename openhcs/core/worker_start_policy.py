@@ -16,20 +16,14 @@ from openhcs.core.context.processing_context import ProcessingContext
 class WorkerStartStepFacts:
     """Worker-start-relevant facts from one compiled step plan."""
 
-    requires_gpu: bool = False
+    uses_accelerator: bool = False
 
     @classmethod
     def from_compiled_step_plan(
         cls,
         step_plan: CompiledStepPlan,
     ) -> "WorkerStartStepFacts":
-        return cls(
-            requires_gpu=step_plan.requires_gpu,
-        )
-
-    @property
-    def uses_gpu(self) -> bool:
-        return self.requires_gpu
+        return cls(uses_accelerator=step_plan.uses_accelerator)
 
 
 @dataclass(frozen=True)
@@ -48,7 +42,7 @@ class WorkerStartExecutionFacts:
 
         for context in compiled_contexts.values():
             for step_plan in context.step_plans.values():
-                if WorkerStartStepFacts.from_compiled_step_plan(step_plan).uses_gpu:
+                if WorkerStartStepFacts.from_compiled_step_plan(step_plan).uses_accelerator:
                     return cls(gpu_enabled=True)
         return cls()
 

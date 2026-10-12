@@ -20,9 +20,7 @@ from openhcs.core.compiled_execution import (
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
-from openhcs.core.compiled_step_plan import (
-    FrameworkDeviceAssignment,
-)
+from openhcs.core.device_assignment import DeviceAssignment
 from openhcs.core.config import MultiprocessingStartMethod
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import (
@@ -73,7 +71,6 @@ from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     preview_reused_step_outputs,
 )
-from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.progress.types import (
     AxisCompletedProgressPhase,
     AxisErrorProgressPhase,
@@ -560,10 +557,6 @@ def _configure_worker_process(
     worker_log_level = worker_log_levels[worker_log_level_name]
     if not isinstance(worker_log_level, int):
         raise ValueError(f"Unknown OPENHCS_LOG_LEVEL: {worker_log_level_name!r}")
-
-    if not OpenHCSProcessEnvironment.cpu_only_mode():
-        os.environ.pop("OPENHCS_SUBPROCESS_NO_GPU", None)
-        os.environ.pop("POLYSTORE_SUBPROCESS_NO_GPU", None)
 
     if log_file_base is not None:
         _configure_worker_logging(log_file_base)
@@ -1415,7 +1408,7 @@ def _release_runtime_resources(
             cleanup_error,
         )
     try:
-        FrameworkDeviceAssignment.merge(
+        DeviceAssignment.merge(
             tuple(
                 step_plan.device_assignment
                 for context in context_values
@@ -1424,7 +1417,7 @@ def _release_runtime_resources(
         ).cleanup_loaded()
     except Exception as cleanup_error:
         logger.warning(
-            "Failed to cleanup the compiled GPU footprint after %s: %s",
+            "Failed to release accelerator memory after %s: %s",
             owner,
             cleanup_error,
         )

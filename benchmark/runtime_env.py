@@ -18,8 +18,6 @@ def configure_headless_cpu_benchmark_runtime(log_level: str) -> None:
     os.environ.setdefault("XDG_CACHE_HOME", "/tmp/openhcs-benchmark-xdg-cache")
     os.environ.setdefault("MPLCONFIGDIR", "/tmp/openhcs-benchmark-mpl")
     os.environ.setdefault("OPENHCS_CPU_ONLY", "true")
-    os.environ.setdefault("OPENHCS_SUBPROCESS_NO_GPU", "1")
-    os.environ.setdefault("POLYSTORE_SUBPROCESS_NO_GPU", "1")
     os.environ["OPENHCS_LOG_LEVEL"] = normalized_log_level
     configure_benchmark_logging(normalized_log_level)
 

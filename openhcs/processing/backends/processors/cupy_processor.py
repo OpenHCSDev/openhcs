@@ -11,7 +11,6 @@ from abc import abstractmethod
 from typing import List, Optional, Tuple
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -31,7 +30,7 @@ from openhcs.processing.backends.processors.method_axes import (
 
 cp = optional_import_placeholder("cupy")
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.CUPY)
+OPERATIONS = MemoryType.CUPY.library
 
 
 @cupy_func
@@ -837,6 +836,6 @@ def sobel(
 
     # Always preserve input dtype (CuCIM normalizes integer inputs to [0, 1])
     if result.dtype != original_dtype:
-        result = MemoryType.CUPY.scale_dtype(result, original_dtype)
+        result = MemoryType.CUPY.library.scale_dtype(result, original_dtype)
 
     return result

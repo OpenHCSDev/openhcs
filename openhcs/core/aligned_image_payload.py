@@ -1,6 +1,8 @@
 """Generic aligned image-payload composition for multi-source runtime inputs."""
 
 from __future__ import annotations
+from arraybridge.libraries import ArrayLibrary
+from arraybridge.libraries import Array
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
@@ -22,9 +24,6 @@ from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.memory import (
-    MemoryType,
-    convert_memory,
-    detect_memory_type,
     stack_runtime_slices,
     runtime_slice_stack_geometry,
 )
@@ -36,7 +35,11 @@ from openhcs.core.runtime_image_values import (
     project_image_mask_to_data_domain,
     preserved_image_plane_projection,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData, array_geometry
+from openhcs.core.runtime_array_values import (
+    ArrayPlacement,
+    RuntimeArrayData,
+    array_geometry,
+)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -416,8 +419,7 @@ class ImagePayloadStackComposition(ABC):
             ),
         ):
             main_data_stack = payloads[0].copied(
-                memory_type=execution_plan.input_memory_type,
-                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+                execution_plan.placement_for(execution_plan.input_memory_type),
             )
         else:
             metadata_mode = RuntimeSlicePlaneAxis
@@ -440,8 +442,9 @@ class ImagePayloadStackComposition(ABC):
             if metadata_mode.one_plane_per_runtime_slice:
                 main_data_stack = stack_image_payloads(
                     payloads, metadata_mode=metadata_mode,
-                    memory_type=execution_plan.input_memory_type,
-                    device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+                    placement=execution_plan.placement_for(
+                        execution_plan.input_memory_type
+                    ),
                 )
             elif metadata_mode.one_plane_per_source_binding:
                 main_data_stack = ImagePayloadBundleContext.from_payloads(
@@ -506,29 +509,14 @@ class ImagePayloadStackComposition(ABC):
         """Preserve each input's declared provenance unless the axis owner projects it."""
         return metadata
 
-    @staticmethod
-    def composition_memory_domain(
-        payloads: tuple[RuntimeArrayData, ...], *,
-        memory_type: str | None = None, device_id: int | None = None,
-    ) -> tuple[str, int | None]:
-        """Resolve where a composition is placed: explicitly, else beside its first payload."""
-        if memory_type is not None:
-            return memory_type, device_id
-        memory_type = detect_memory_type(payloads[0])
-        return memory_type, MemoryType(memory_type).device_id_of(payloads[0])
-
-    def compose(
-        self, *, memory_type: str | None = None, device_id: int | None = None,
-    ) -> Any:
+    def compose(self, placement: ArrayPlacement | None = None) -> Any:
+        """Compose the payloads at ``placement``; by default beside the first payload."""
         # Resolve the destination from the input payloads before reconciling intensity.
-        memory_type, device_id = self.composition_memory_domain(
-            tuple(payload.data for payload in self.composition_payloads),
-            memory_type=memory_type, device_id=device_id,
-        )
+        if placement is None:
+            placement = ArrayPlacement.of(self.composition_payloads[0].data)
         payloads = ImagePayloadMetadata.intensity_coherent_payloads(self.composition_payloads)
         composed = self.compose_unmasked(
-            tuple(payload.data for payload in payloads),
-            memory_type=memory_type, device_id=device_id,
+            tuple(payload.data for payload in payloads), placement,
         )
         metadata = ImagePayloadMetadata.compose(
             payloads,
@@ -538,15 +526,9 @@ class ImagePayloadStackComposition(ABC):
         return metadata.payload_with(composed, self.compose_mask(composed, metadata))
 
     def compose_unmasked(
-        self, payloads: tuple[RuntimeArrayData, ...], *,
-        memory_type: str | None = None, device_id: int | None = None,
+        self, payloads: tuple[RuntimeArrayData, ...], placement: ArrayPlacement,
     ) -> RuntimeArrayData:
-        memory_type, device_id = self.composition_memory_domain(
-            payloads, memory_type=memory_type, device_id=device_id,
-        )
-        return stack_runtime_slices(
-            payloads, memory_type, device_id,
-        )
+        return stack_runtime_slices(payloads, placement)
 
     def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -> Any | None:
         return _stack_image_payload_mask(
@@ -582,14 +564,11 @@ def stack_image_payloads(
     image_payloads: Sequence[Any],
     *,
     metadata_mode: type[RuntimePlaneAxis],
-    memory_type: str | None = None,
-    device_id: int | None = None,
+    placement: ArrayPlacement | None = None,
 ) -> Any:
-    """Stack image payloads in their declared memory domain with full context."""
+    """Stack image payloads at ``placement`` (by default beside the first) with full context."""
 
-    return ImagePayloadStackContext(image_payloads, metadata_mode).compose(
-        memory_type=memory_type, device_id=device_id,
-    )
+    return ImagePayloadStackContext(image_payloads, metadata_mode).compose(placement)
 
 
 def _stack_image_payload_mask(
@@ -632,11 +611,7 @@ def _stack_image_payload_mask(
                 payloads, output_slice_domains, resolved_masks, strict=True
             )
         )
-    return stack_runtime_slices(
-        resolved_masks,
-        detect_memory_type(stack),
-        MemoryType(detect_memory_type(stack)).device_id_of(stack),
-    )
+    return stack_runtime_slices(resolved_masks, ArrayPlacement.of(stack))
 
 
 def _complete_image_payload_mask(
@@ -655,7 +630,7 @@ def _complete_image_payload_mask(
         return project_image_mask_to_data_domain(
             mask, payload_data, metadata=payload.metadata,
         )
-    return MemoryType(detect_memory_type(payload_data)).ones_like(
+    return ArrayLibrary.of(payload_data).ones_like(
         payload_data, shape=mask_domain.default_mask_shape(), dtype=bool,
     )
 
@@ -797,14 +772,9 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 .broadcast_to_data(mask)
                 for index, mask in enumerate(resolved_masks)
             )
-        memory_type = detect_memory_type(composed)
-        memory_type_owner = MemoryType(memory_type)
-        stacked = stack_runtime_slices(
-            resolved_masks,
-            memory_type,
-            memory_type_owner.device_id_of(composed),
-        )
-        return memory_type_owner.astype(stacked, bool)
+        placement = ArrayPlacement.of(composed)
+        stacked = stack_runtime_slices(resolved_masks, placement)
+        return placement.library.astype(stacked, bool)
 
     def combined_mask(self, composed: Any) -> RuntimeArrayData | None:
         masks = self.present_masks
@@ -817,18 +787,13 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 f"spatial mask shape; got {mask_shapes!r}."
             )
         data = composed
-        memory_type = MemoryType(detect_memory_type(data))
-        device_id = memory_type.device_id_of(data)
+        placement = ArrayPlacement.of(data)
         prepared = tuple(
-            memory_type.astype(
-                MemoryType(detect_memory_type(mask)).convert_to(mask, memory_type, device_id),
-                bool,
-            )
-            for mask in masks
+            placement.library.astype(placement.place(mask), bool) for mask in masks
         )
         combined = prepared[0]
         for mask in prepared[1:]:
-            combined = memory_type.logical_and(
+            combined = placement.library.logical_and(
                 combined,
                 mask,
             )
@@ -837,12 +802,9 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
     def compose_unmasked(
         self,
         payloads: tuple[RuntimeArrayData, ...],
-        *, memory_type: str | None = None, device_id: int | None = None,
+        placement: ArrayPlacement,
     ) -> RuntimeArrayData:
         """Compose image payload arrays without mask/metadata wrapping."""
-        memory_type, device_id = self.composition_memory_domain(
-            payloads, memory_type=memory_type, device_id=device_id,
-        )
         channel_axes = tuple(
             metadata.axis_index(ColourAxis, payload)
             for payload, metadata in zip(
@@ -854,13 +816,12 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         declared_channel_count = sum(axis is not None for axis in channel_axes)
         if declared_channel_count in {0, len(payloads)}:
             return super(ImagePayloadBundleContext, self).compose_unmasked(
-                payloads, memory_type=memory_type, device_id=device_id,
+                payloads, placement,
             )
         return self.compose_mixed_channel_payloads(
             payloads,
             channel_axes=channel_axes,
-            memory_type=memory_type,
-            device_id=device_id,
+            placement=placement,
         )
 
     @staticmethod
@@ -868,20 +829,11 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         payloads: tuple[RuntimeArrayData, ...],
         *,
         channel_axes: tuple[int | None, ...],
-        memory_type: str,
-        device_id: int | None,
+        placement: ArrayPlacement,
     ) -> RuntimeArrayData:
         """Promote channel-free payloads using declared channel-axis semantics."""
-        target = MemoryType(memory_type)
-        prepared_payloads = tuple(
-            convert_memory(
-                data=payload,
-                source_type=detect_memory_type(payload),
-                target_type=memory_type,
-                gpu_id=device_id,
-            )
-            for payload in payloads
-        )
+        target = placement.library
+        prepared_payloads = tuple(placement.place(payload) for payload in payloads)
         declared_axes = tuple(axis for axis in channel_axes if axis is not None)
         channel_axis = declared_axes[0]
         if any(axis != channel_axis for axis in declared_axes[1:]):
@@ -931,7 +883,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             )
             for payload, axis in zip(prepared_payloads, channel_axes, strict=True)
         )
-        return target.stack_arrays(list(promoted), device_id)
+        return placement.stack(promoted)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1095,12 +1047,12 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         cls,
         slices: Sequence[Any],
         *,
-        memory_type: str,
+        library: ArrayLibrary[Array],
         plane_axis: type[RuntimePlaneAxis],
     ) -> "ProducedImageStack":
         """Wrap produced image slices as a stack without allocating its pixels."""
         return ProducedImageStack(
-            tuple(slices), memory_type=memory_type, plane_axis=plane_axis,
+            tuple(slices), library=library, plane_axis=plane_axis,
         )
 
     @property
@@ -1215,13 +1167,9 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
     def output_stack_copy(
         self,
         projected_outputs: Sequence[tuple[Any, AlignedImageSliceContext | None]],
-        *,
-        memory_type: str,
-        device_id: int | None,
+        placement: ArrayPlacement,
     ) -> RuntimeArrayData | None:
-        return self.copy_projected_output_stack(
-            projected_outputs, memory_type=memory_type, device_id=device_id,
-        )
+        return self.copy_projected_output_stack(projected_outputs, placement)
 
     def __post_init__(self) -> None:
         # Producers hand over bare arrays and payloads alike; members are payloads.
@@ -1260,15 +1208,10 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
 
         return type(self)(tuple(slices), self.slice_contexts)
 
-    def copied(
-        self, *, memory_type: str, device_id: int | None,
-    ) -> "ImagePayloadSliceStack":
+    def copied(self, placement: ArrayPlacement) -> "ImagePayloadSliceStack":
         """Retain aligned member domains while copying them into independent buffers."""
         return self.with_slices(
-            tuple(
-                payload.copied(memory_type=memory_type, device_id=device_id)
-                for payload in self.slices
-            )
+            tuple(payload.copied(placement) for payload in self.slices)
         )
 
     def projected_output_slices(
@@ -1286,15 +1229,13 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
     def copy_projected_output_stack(
         self,
         projected_outputs: Sequence[tuple[Any, AlignedImageSliceContext | None]],
-        *,
-        memory_type: str,
-        device_id: int | None,
+        placement: ArrayPlacement,
     ) -> RuntimeArrayData | None:
         """Prepare an independent output buffer in this owner's declared domain."""
         payloads = tuple(payload for payload, _context in projected_outputs)
         metadata_mode = self.projected_output_composition_mode
         if metadata_mode.unstacked:
-            return payloads[0].copied(memory_type=memory_type, device_id=device_id)
+            return payloads[0].copied(placement)
         data = tuple(payload.data for payload in payloads)
         declared_axes = {
             self.plane_axis_for_output_context(context)
@@ -1307,8 +1248,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
                 payloads, metadata_mode=metadata_mode,
             ).compose()
         return stack_image_payloads(
-            payloads, metadata_mode=metadata_mode,
-            memory_type=memory_type, device_id=device_id,
+            payloads, metadata_mode=metadata_mode, placement=placement,
         )
 
     def output_values_for_artifact_specs(
@@ -1472,7 +1412,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
     publication. After composition the slices are views of that buffer.
     """
 
-    memory_type: str
+    library: ArrayLibrary[Array]
     plane_axis: type[RuntimePlaneAxis]
     source_metadata: InitVar[ImagePayloadMetadata | None] = None
     _metadata: ImagePayloadMetadata = field(init=False, repr=False)
@@ -1483,7 +1423,6 @@ class ProducedImageStack(ImagePayloadSliceStack):
 
     def __post_init__(self, source_metadata: ImagePayloadMetadata | None) -> None:
         super(ProducedImageStack, self).__post_init__()
-        MemoryType(self.memory_type)
         data_geometry = runtime_slice_stack_geometry(
             tuple(payload.data for payload in self.slices)
         )
@@ -1529,8 +1468,8 @@ class ProducedImageStack(ImagePayloadSliceStack):
     def dtype(self) -> Any:
         return np.result_type(
             *(
-                MemoryType(detect_memory_type(payload.data))
-                .canonical_dtype_name(payload.data.dtype)
+                ArrayLibrary.of(payload.data)
+                .dtype_name(payload.data.dtype)
                 for payload in self.slices
             )
         )
@@ -1562,7 +1501,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             for index, payload in enumerate(self.slices)
         )
         return type(self)(
-            slices, self.slice_contexts, memory_type=self.memory_type,
+            slices, self.slice_contexts, library=self.library,
             plane_axis=self.plane_axis, source_metadata=metadata,
         )
 
@@ -1601,7 +1540,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             return None
         shared = self._shared_image_mask(masks, self.geometry)
         return shared if shared is not None else stack_runtime_slices(
-            masks, self.memory_type, 0,
+            masks, self._placement,
         )
 
     def __getstate__(self) -> dict[str, Any]:
@@ -1635,12 +1574,15 @@ class ProducedImageStack(ImagePayloadSliceStack):
     def with_slices(self, slices: Sequence[Any]) -> "ProducedImageStack":
         return type(self)(
             tuple(slices), self.slice_contexts,
-            memory_type=self.memory_type, plane_axis=self.plane_axis,
+            library=self.library, plane_axis=self.plane_axis,
         )
 
-    def copied(
-        self, *, memory_type: str, device_id: int | None,
-    ) -> "ProducedImageStack":
+    @property
+    def _placement(self) -> ArrayPlacement:
+        """This stack's library on the device holding its first slice."""
+        return ArrayPlacement.beside(self.slices[0].data, self.library)
+
+    def copied(self, placement: ArrayPlacement) -> "ProducedImageStack":
         """Snapshot produced pixels directly into one dense buffer.
 
         Input isolation and dense realization share one allocation. Copying
@@ -1648,54 +1590,43 @@ class ProducedImageStack(ImagePayloadSliceStack):
         copies into a second buffer, including a second copy of every mask.
         """
         data = stack_runtime_slices(
-            tuple(payload.data for payload in self.slices),
-            memory_type, device_id,
+            tuple(payload.data for payload in self.slices), placement,
         )
         masks = tuple(payload.mask for payload in self.slices)
         mask = None
         if masks[0] is not None:
             shared = self._shared_image_mask(masks, self.geometry)
             mask = (
-                stack_runtime_slices(masks, memory_type, device_id)
-                if shared is None else stack_runtime_slices(
-                    (shared,), memory_type, device_id,
-                )[0]
+                stack_runtime_slices(masks, placement)
+                if shared is None else stack_runtime_slices((shared,), placement)[0]
             )
         metadata = self._metadata.replace_fields()
         copied = type(self)(
-            self.slices, self.slice_contexts, memory_type=memory_type,
+            self.slices, self.slice_contexts, library=placement.library,
             plane_axis=self.plane_axis, source_metadata=metadata,
         )
         copied._composed_payload = metadata.payload_with(data, mask)
         copied._retain_composed_slices()
         return copied
 
-    def compose(
-        self, *, memory_type: str | None = None, device_id: int | None = None,
-    ) -> Any:
+    def compose(self, placement: ArrayPlacement | None = None) -> Any:
         with self._realization_lock:
             if self._composed_payload is None:
                 data = stack_runtime_slices(
-                    tuple(payload.data for payload in self.slices),
-                    self.memory_type, 0,
+                    tuple(payload.data for payload in self.slices), self._placement,
                 )
                 self._composed_payload = self._metadata.payload_with(
                     data, self._materialized_image_mask(),
                 )
                 self._retain_composed_slices()
-        if memory_type is None:
+        if placement is None:
             return self._composed_payload
-        target = MemoryType(memory_type)
         data = self._composed_payload.data
-        source = MemoryType(detect_memory_type(data))
-        if source is target and source.device_id_of(data) == device_id:
+        if ArrayPlacement.of(data) == placement:
             return self._composed_payload
         mask = self._composed_payload.mask
         return self._metadata.payload_with(
-            source.convert_to(data, target, device_id),
-            None if mask is None else MemoryType(detect_memory_type(mask)).convert_to(
-                mask, target, device_id,
-            ),
+            placement.place(data), None if mask is None else placement.place(mask),
         )
 
 

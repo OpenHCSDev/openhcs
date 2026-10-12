@@ -1,66 +1,41 @@
-"""Memory module for OpenHCS.
+"""The memory decorators OpenHCS functions declare with, and runtime-slice stacking.
 
-This module re-exports ArrayBridge's memory taxonomy and conversion utilities.
-OpenHCS adds only runtime composition helpers and callable metadata adapters.
+Array libraries, devices and conversion belong to ArrayBridge; import them from
+there.
 """
 
+from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arraybridge import ArrayGeometry
-
-# Re-export from arraybridge
-from arraybridge import (
-    # Converters
-    convert_memory,
-    detect_memory_type,
-    # Stack utilities
-    stack_slices,
-    unstack_slices,
-    # Slice processing
-    process_slices,
-    # Exceptions
-    MemoryConversionError,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_CUPY,
-    MEMORY_TYPE_JAX,
-    MEMORY_TYPE_NUMPY,
-    MEMORY_TYPE_PYCLESPERANTO,
-    MEMORY_TYPE_TENSORFLOW,
-    MEMORY_TYPE_TORCH,
-    MemoryType,
-)
+from arraybridge.libraries import ArrayLibrary
 
 # OpenHCS wraps ArrayBridge decorators to preserve compiler metadata while
 # leaving conversion semantics in ArrayBridge.
 from . import decorators as decorators
 
-for _memory_type in MemoryType:
-    _memory_type.prepare_import()
+if TYPE_CHECKING:
+    from openhcs.core.runtime_array_values import ArrayPlacement
+
+for _library in ArrayLibrary.all():
+    _library.prepare_import()
 
 memory_types = decorators.memory_types
-for _memory_type in MemoryType:
-    globals()[_memory_type.value] = getattr(decorators, _memory_type.value)
+for _library in ArrayLibrary.all():
+    globals()[_library.name] = getattr(decorators, _library.name)
 
 
-def stack_runtime_slices(
-    slices: Sequence[Any],
-    memory_type: str,
-    gpu_id: int | None,
-) -> Any:
+def stack_runtime_slices(slices: Sequence[Any], placement: ArrayPlacement) -> Any:
     """Stack an explicitly declared runtime-slice sequence along axis zero."""
 
     slice_values = tuple(slices)
     if not slice_values:
         raise ValueError("Runtime-slice stacking requires at least one slice.")
-    target = MemoryType(memory_type)
-    prepared_slices = [
-        MemoryType(detect_memory_type(value)).convert_to(value, target, gpu_id)
-        for value in slice_values
-    ]
+    prepared_slices = [placement.place(value) for value in slice_values]
     runtime_slice_stack_geometry(prepared_slices)
-    return target.stack_arrays(prepared_slices, gpu_id)
+    return placement.stack(prepared_slices)
 
 
 def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
@@ -80,16 +55,13 @@ def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
 
 def unstack_runtime_slices(
     stack: Any,
-    memory_type: str,
-    gpu_id: int | None,
+    placement: ArrayPlacement,
     *,
     expected_count: int | None = None,
 ) -> tuple[Any, ...]:
     """Split an explicitly declared leading runtime-slice axis."""
 
-    converted = MemoryType(detect_memory_type(stack)).convert_to(
-        stack, MemoryType(memory_type), gpu_id
-    )
+    converted = placement.place(stack)
     shape = tuple(int(value) for value in converted.shape)
     if not shape:
         raise ValueError("Runtime-slice unstacking requires a leading array axis.")
@@ -102,30 +74,10 @@ def unstack_runtime_slices(
 
 
 __all__ = [
-    # Converters
-    "convert_memory",
-    "detect_memory_type",
-    # Memory type constants
-    "MEMORY_TYPE_NUMPY",
-    "MEMORY_TYPE_CUPY",
-    "MEMORY_TYPE_TORCH",
-    "MEMORY_TYPE_TENSORFLOW",
-    "MEMORY_TYPE_JAX",
-    "MEMORY_TYPE_PYCLESPERANTO",
-    # Decorators
     "memory_types",
-    *(memory_type.value for memory_type in MemoryType),
+    *(library.name for library in ArrayLibrary.all()),
     "decorators",
-    # Stack utilities
-    "stack_slices",
-    "unstack_slices",
     "stack_runtime_slices",
     "unstack_runtime_slices",
-    # Slice processing
-    "process_slices",
-    # GPU cleanup
-    # Exceptions
-    "MemoryConversionError",
-    # Types
-    "MemoryType",
+    "runtime_slice_stack_geometry",
 ]

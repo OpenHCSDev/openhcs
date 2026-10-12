@@ -6,7 +6,7 @@ import hashlib
 
 import numpy as np
 
-from openhcs.core.memory import detect_memory_type
+from arraybridge import detect_memory_type
 from openhcs.core.runtime_array_values import host_array
 
 

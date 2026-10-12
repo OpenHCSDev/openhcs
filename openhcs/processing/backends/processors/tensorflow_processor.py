@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
@@ -23,7 +22,7 @@ from openhcs.processing.backends.processors.method_axes import (
 
 tf = optional_import_placeholder("tensorflow")
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.TENSORFLOW)
+OPERATIONS = MemoryType.TENSORFLOW.library
 
 
 @tensorflow_func

@@ -155,7 +155,7 @@ class ProcessMemoryReceipt:
 
     @classmethod
     def capture(cls, *, collect: bool) -> ProcessMemoryReceipt:
-        from arraybridge import MemoryType
+        from arraybridge.libraries import ArrayLibrary
 
         collected = gc.collect() if collect else 0
         pid = os.getpid()
@@ -206,9 +206,9 @@ class ProcessMemoryReceipt:
             imported_modules=len(modules),
             native_library_paths=libraries,
             imported_frameworks=tuple(
-                memory_type.import_name
-                for memory_type in MemoryType
-                if memory_type.loaded_module() is not None
+                library.import_name
+                for library in ArrayLibrary.all()
+                if library.loaded_module() is not None
             ),
             catalog_entries=catalog_entries,
             custom_declarations=len(

@@ -174,7 +174,7 @@ class ObjectLabelPure2DSliceAggregator:
         )
 
     def aggregate_values(self) -> ObjectLabelValue:
-        from openhcs.core.memory import MemoryType
+        from arraybridge import MemoryType
 
         if (
             self.representation is ObjectLabelRepresentation.DENSE_LABELS

@@ -6,6 +6,7 @@ explicit contract declarations, allowing them to skip runtime testing
 while producing the same FunctionMetadata format as external libraries.
 """
 
+from arraybridge.libraries import ArrayLibrary
 import ast
 import importlib
 import importlib.abc
@@ -26,11 +27,12 @@ from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
+from openhcs.constants import MemoryType
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
+from openhcs.core.device_assignment import DevicePreference, DeviceRule
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from python_introspect import is_declared_public_name
 from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -41,7 +43,6 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
     ProcessingContract,
 )
-from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionCanonicalLookup,
 )
@@ -270,17 +271,18 @@ _MEMORY_DECORATOR_IMPORT_MODULES = frozenset(
 
 
 def _allowed_openhcs_memory_types() -> frozenset[str]:
-    """Return the installed memory types eligible for OpenHCS registry imports.
+    """The array libraries whose functions belong in this process's catalogue.
 
-    A declaration whose framework is not installed (an optional extra) is not
-    part of this installation's catalog; CPU-only mode further admits NumPy only.
+    A library that is not installed (an optional extra) is left out, and so is
+    one the device rules give no device in this process: with accelerators
+    excluded, a library that has no host device.
     """
-    installed = frozenset(
-        memory_type.value for memory_type in MemoryType if memory_type.is_installed()
+    preference = DevicePreference()
+    return frozenset(
+        str(library.name)
+        for library in ArrayLibrary.all()
+        if library.is_installed() and not DeviceRule.rules_out(library, preference)
     )
-    if OpenHCSProcessEnvironment.cpu_only_mode():
-        return installed & {MemoryType.NUMPY.value}
-    return installed
 
 
 def _catalog_memory_types(func: Callable) -> frozenset[MemoryType] | None:
@@ -838,8 +840,8 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             return None
 
         if not plate_scoped and (
-            callable_contract.input_memory_type not in VALID_MEMORY_TYPES
-            or callable_contract.output_memory_type not in VALID_MEMORY_TYPES
+            callable_contract.input_memory_type not in ArrayLibrary.__registry__
+            or callable_contract.output_memory_type not in ArrayLibrary.__registry__
         ):
             logger.debug(
                 "Skipping %s - invalid input/output memory declarations",

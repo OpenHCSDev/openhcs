@@ -55,6 +55,7 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
+from openhcs.core.device_assignment import DevicePreference, DeviceRule
 from openhcs.core.processing_contracts import (
     ContractProbe,
     LibraryContractCall,
@@ -241,10 +242,12 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         return tuple(dict.values(cls.__registry__))
 
     @classmethod
-    def supports_cpu_only(cls) -> bool:
-        """Return whether this registry's declared memory type is CPU-safe."""
+    def library_ruled_out(cls) -> bool:
+        """Whether the registry's one array library can have no device in this process."""
 
-        return cls.MEMORY_TYPE in (None, MemoryType.NUMPY.value)
+        if cls.MEMORY_TYPE is None:
+            return False
+        return DeviceRule.rules_out(MemoryType(cls.MEMORY_TYPE).library, DevicePreference())
 
     def __init__(self, library_name: str):
         """

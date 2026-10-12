@@ -10,42 +10,7 @@ from typing import ClassVar, Set
 
 from metaclass_registry import AutoRegisterMeta
 
-from arraybridge.types import (
-    CPU_MEMORY_TYPES as CPU_MEMORY_TYPES,
-)
-from arraybridge.types import (
-    GPU_MEMORY_TYPES as GPU_MEMORY_TYPES,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_CUPY as MEMORY_TYPE_CUPY,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_JAX as MEMORY_TYPE_JAX,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_NUMPY as MEMORY_TYPE_NUMPY,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_PYCLESPERANTO as MEMORY_TYPE_PYCLESPERANTO,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_TENSORFLOW as MEMORY_TYPE_TENSORFLOW,
-)
-from arraybridge.types import (
-    MEMORY_TYPE_TORCH as MEMORY_TYPE_TORCH,
-)
-from arraybridge.types import (
-    SUPPORTED_MEMORY_TYPES as SUPPORTED_MEMORY_TYPES,
-)
-from arraybridge.types import (
-    VALID_GPU_MEMORY_TYPES as VALID_GPU_MEMORY_TYPES,
-)
-from arraybridge.types import (
-    VALID_MEMORY_TYPES as VALID_MEMORY_TYPES,
-)
-from arraybridge.types import (
-    MemoryType as MemoryType,
-)
+from arraybridge.types import MemoryType as MemoryType
 from polystore.constants import Backend
 
 

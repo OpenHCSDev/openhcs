@@ -3,20 +3,25 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
+from arraybridge import MemoryType
+from arraybridge.libraries import Array, ArrayLibrary
+
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.device_assignment import DeviceAssignment
+from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
@@ -41,137 +46,6 @@ else:
 
 ArtifactInputPlans = Mapping[ArtifactSpecRef, ArtifactInputPlan]
 ArtifactOutputPlans = Mapping[ArtifactSpecRef, ArtifactOutputPlan]
-
-
-@dataclass(frozen=True, slots=True)
-class FrameworkDeviceBinding:
-    """One framework-local GPU device selected for compiled execution."""
-
-    memory_type: MemoryType
-    device_id: int
-
-    def __post_init__(self) -> None:
-        if self.memory_type not in GPU_MEMORY_TYPES:
-            raise ValueError(
-                "FrameworkDeviceBinding requires a GPU memory declaration, got "
-                f"{self.memory_type.value!r}."
-            )
-        if type(self.device_id) is not int or self.device_id < 0:
-            raise ValueError(
-                "FrameworkDeviceBinding.device_id must be a non-negative integer."
-            )
-
-
-@dataclass(frozen=True, slots=True)
-class FrameworkDeviceAssignment:
-    """Compiled framework-local device bindings for one step footprint."""
-
-    bindings: tuple[FrameworkDeviceBinding, ...] = ()
-
-    def __post_init__(self) -> None:
-        memory_types = tuple(binding.memory_type for binding in self.bindings)
-        if len(memory_types) != len(frozenset(memory_types)):
-            raise ValueError(
-                "FrameworkDeviceAssignment cannot bind one memory type twice."
-            )
-
-    @classmethod
-    def from_mapping(
-        cls,
-        device_ids: Mapping[MemoryType, int],
-    ) -> "FrameworkDeviceAssignment":
-        return cls(
-            tuple(
-                FrameworkDeviceBinding(memory_type, device_id)
-                for memory_type, device_id in sorted(
-                    device_ids.items(),
-                    key=lambda item: item[0].value,
-                )
-            )
-        )
-
-    @classmethod
-    def merge(
-        cls,
-        assignments: Sequence["FrameworkDeviceAssignment"],
-    ) -> "FrameworkDeviceAssignment":
-        """Merge compatible compiled assignments into one cleanup footprint."""
-
-        device_ids: dict[MemoryType, int] = {}
-        for assignment in assignments:
-            for binding in assignment.bindings:
-                existing = device_ids.get(binding.memory_type)
-                if existing is not None and existing != binding.device_id:
-                    raise ValueError(
-                        f"Conflicting {binding.memory_type.value!r} device "
-                        f"assignments: {existing} and {binding.device_id}."
-                    )
-                device_ids[binding.memory_type] = binding.device_id
-        return cls.from_mapping(device_ids)
-
-    def select(
-        self,
-        memory_types: frozenset[MemoryType],
-    ) -> "FrameworkDeviceAssignment":
-        """Return the exact subset required by one compiled step."""
-
-        selected = tuple(
-            binding for binding in self.bindings if binding.memory_type in memory_types
-        )
-        if frozenset(binding.memory_type for binding in selected) != memory_types:
-            missing = memory_types - frozenset(
-                binding.memory_type for binding in selected
-            )
-            raise ValueError(
-                "No framework-local device assignment exists for "
-                f"{', '.join(sorted(item.value for item in missing))}."
-            )
-        return type(self)(selected)
-
-    def device_id_for(self, memory_type: MemoryType) -> int | None:
-        """Return the declared local device, or ``None`` for CPU memory."""
-
-        if memory_type not in GPU_MEMORY_TYPES:
-            return None
-        for binding in self.bindings:
-            if binding.memory_type is memory_type:
-                return binding.device_id
-        raise ValueError(
-            f"No compiled device assignment exists for {memory_type.value!r}."
-        )
-
-    def scope_for(
-        self,
-        declaration: str | None,
-    ) -> AbstractContextManager[None]:
-        """Return the declaration-owned execution scope for one framework."""
-
-        if declaration is None:
-            return nullcontext()
-        memory_type = MemoryType(declaration)
-        device_id = self.device_id_for(memory_type)
-        if device_id is None:
-            return nullcontext()
-        return memory_type.device_scope(device_id)
-
-    def cleanup_loaded(self) -> None:
-        """Release loaded allocators in this exact compiled footprint."""
-
-        failures: list[Exception] = []
-        for binding in self.bindings:
-            try:
-                binding.memory_type.cleanup_loaded(binding.device_id)
-            except Exception as error:
-                error.add_note(
-                    f"Cleanup failed for {binding.memory_type.value!r} "
-                    f"device {binding.device_id}."
-                )
-                failures.append(error)
-        if failures:
-            raise ExceptionGroup(
-                "Compiled framework cleanup failed",
-                failures,
-            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,9 +184,7 @@ class CompiledStepPlan:
     main_flow_axis_persistence_enabled: bool | None = None
     input_memory_type: str | None = None
     output_memory_type: str | None = None
-    device_assignment: FrameworkDeviceAssignment = field(
-        default_factory=FrameworkDeviceAssignment
-    )
+    device_assignment: DeviceAssignment = field(default_factory=DeviceAssignment)
     zarr_config: Mapping[str, Any] | None = None
     streaming_configs: dict[str, StreamingConfig] = field(default_factory=dict)
     visualize: bool = False
@@ -511,8 +383,8 @@ class CompiledStepPlan:
         )
 
     @property
-    def gpu_memory_types(self) -> frozenset[MemoryType]:
-        """Return the GPU-backed memory declarations used by this step."""
+    def declared_libraries(self) -> frozenset[ArrayLibrary[Array]]:
+        """Every array library this step's plan and callables declare."""
 
         memory_types = {
             MemoryType(declaration)
@@ -528,33 +400,23 @@ class CompiledStepPlan:
                 for invocation in self.compiled_function_pattern.iter_invocations()
                 for memory_type in invocation.contract.declared_memory_types
             )
-        return frozenset(
-            memory_type
-            for memory_type in memory_types
-            if memory_type in GPU_MEMORY_TYPES
-        )
+        return frozenset(memory_type.library for memory_type in memory_types)
 
     @property
-    def requires_gpu(self) -> bool:
-        """Return whether the compiled execution footprint requires a GPU."""
+    def uses_accelerator(self) -> bool:
+        """Whether any library of this step was assigned an accelerator."""
 
-        return bool(self.gpu_memory_types)
+        return self.device_assignment.uses_accelerator
 
-    def device_id_for(self, declaration: str | None) -> int | None:
-        """Return the compiled framework-local device for one declaration."""
+    def placement_for(self, declaration: str) -> ArrayPlacement:
+        """One declared library of this step on the device assigned to it."""
 
-        if declaration is None:
-            return None
-        return self.device_assignment.device_id_for(MemoryType(declaration))
+        return self.device_assignment.of(MemoryType(declaration).library).placement
 
-    def memory_device_scope(
-        self,
-        declaration: str | None,
-    ) -> AbstractContextManager[None]:
-        """Return the compiled declaration-owned framework device scope."""
+    def memory_device_scope(self, declaration: str) -> AbstractContextManager[None]:
+        """A block in which new arrays of the declared library use its assigned device."""
 
-        return self.device_assignment.scope_for(declaration)
-
+        return self.device_assignment.scope_for(MemoryType(declaration).library)
 
     @property
     def execution_group_value(self) -> str | None:

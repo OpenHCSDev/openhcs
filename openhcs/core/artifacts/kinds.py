@@ -25,7 +25,7 @@ from openhcs.core.artifacts.payloads import (
     TablePayloadShape,
 )
 from openhcs.core.axes import AxisFamily
-from openhcs.core.memory import detect_memory_type
+from arraybridge import detect_memory_type
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
@@ -843,21 +843,20 @@ class ImageArtifactType(ImagePayloadArtifactKind):
 
         if len(values) == 1:
             return values[0].data
-        return cls._stack_runtime_values(values, keeps_memory_type=False)
+        return cls._stack_runtime_values(values)
 
     @classmethod
     def compose_runtime_groups(cls, values: Sequence[RuntimeValue]) -> object:
         """Rebuild the producer's group axis on the producer's memory type."""
 
-        return cls._stack_runtime_values(values, keeps_memory_type=True)
+        return cls._stack_runtime_values(values)
 
     @classmethod
     def _stack_runtime_values(
         cls,
         values: Sequence[RuntimeValue],
-        *,
-        keeps_memory_type: bool,
     ) -> object:
+        """Stack the payloads beside the first one: its library, its device."""
         from openhcs.core.aligned_image_payload import stack_image_payloads
 
         components = {value.key.scope.component for value in values}
@@ -867,15 +866,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                 f"axis, got {components!r}."
             )
         payloads = tuple(value.data for value in values)
-        metadata_mode = RuntimeSlicePlaneAxis
-        if not keeps_memory_type:
-            return stack_image_payloads(payloads, metadata_mode=metadata_mode)
-        return stack_image_payloads(
-            payloads,
-            memory_type=detect_memory_type(payloads[0].data),
-            device_id=0,
-            metadata_mode=metadata_mode,
-        )
+        return stack_image_payloads(payloads, metadata_mode=RuntimeSlicePlaneAxis)
 
     @classmethod
     def normalize_group_scoped_payload(

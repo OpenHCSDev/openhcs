@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from arraybridge.libraries import ArrayLibrary
 import hashlib
 import logging
 import subprocess
@@ -16,7 +17,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-from arraybridge import MemoryType
 from typing_extensions import override
 from zmqruntime import (
     EndpointApplicationCompatibility,
@@ -218,7 +218,7 @@ class ExecutionRuntimeLaunchPlan:
                 stdout=log_stream,
                 stderr=subprocess.STDOUT,
                 cwd=self.runtime_dir,
-                env=MemoryType.subprocess_environment(),
+                env=ArrayLibrary.child_environment(),
                 **launch_policy.popen_arguments(),
             )
 

@@ -44,7 +44,7 @@ class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
         refuses to define the kernel otherwise.
         """
         return (
-            OpenHCSProcessEnvironment.cpu_only_mode()
+            OpenHCSProcessEnvironment.accelerators_excluded()
             and cls.requires_persistent_kernel_cache()
         )
 
