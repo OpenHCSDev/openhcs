@@ -24,8 +24,6 @@ from openhcs.pyqt_gui.widgets.artifact_plan_view import ArtifactPlanViewWidget
 from openhcs.pyqt_gui.widgets.step_parameter_editor import StepParameterEditorWidget
 from openhcs.pyqt_gui.windows.dual_editor_session import StepEditorTab
 
-_EDITOR_HEADER_STYLE = "color: {color}; font-weight: bold; font-size: 14px;"
-
 
 @cache
 def _function_step_form_field_names() -> frozenset[str]:
@@ -80,14 +78,11 @@ class StepSettingsTab(StepEditorTab):
         return self.editor.code_document_driver()
 
     def apply_scope_accent(self, accent_color: QColor) -> None:
+        del accent_color
         tree_style = self.window.get_scope_tree_selection_stylesheet()
         tree = self.editor.hierarchy_tree
         if tree_style and tree:
             tree.setStyleSheet(f"{tree.styleSheet()}\n{tree_style}")
-        if self.editor.header_label is not None:
-            self.editor.header_label.setStyleSheet(
-                _EDITOR_HEADER_STYLE.format(color=accent_color.name())
-            )
         self.editor.apply_scope_color_scheme(self.window._scope_color_scheme)
 
     def set_step_index(self, index: int) -> None:
@@ -146,10 +141,7 @@ class FunctionPatternTab(StepEditorTab):
         return self.editor.window_navigation_driver()
 
     def apply_scope_accent(self, accent_color: QColor) -> None:
-        if self.editor.header_label is not None:
-            self.editor.header_label.setStyleSheet(
-                _EDITOR_HEADER_STYLE.format(color=accent_color.name())
-            )
+        del accent_color
         self.editor.set_scope_color_scheme(self.window._scope_color_scheme)
 
     def write_pending_edits(self) -> None:
@@ -228,11 +220,6 @@ class ArtifactsTab(StepEditorTab):
     ) -> None:
         if plate_path != self.edit.plate_scope:
             return
-        if state is not None and not isinstance(state, CompiledDataset):
-            raise TypeError(
-                "Compiled artifact state signal requires CompiledDataset or None, got "
-                f"{type(state).__name__}."
-            )
         self.view.set_inspection(None if state is None else state.inspection)
 
     def _on_runtime_artifact_available(

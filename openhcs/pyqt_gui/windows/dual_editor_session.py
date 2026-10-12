@@ -120,12 +120,7 @@ class StepEdit(EditedObject):
 
     def compiled_inspection(self) -> CompiledArtifactInspection | None:
         """The plate's current compiled artifact inspection, if it has been compiled."""
-        inspection = self.compiled_artifact_inspection_provider(self.plate_scope)
-        if inspection is not None and not isinstance(inspection, CompiledArtifactInspection):
-            raise TypeError(
-                f"Compiled artifact inspection provider returned {type(inspection).__name__}."
-            )
-        return inspection
+        return self.compiled_artifact_inspection_provider(self.plate_scope)
 
     def save(self) -> FunctionStep:
         saved = self.object_session().to_object(update_delegate=False)
