@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 from dataclasses import is_dataclass
 from pathlib import Path
 
 from pycodify import SourceDocument
 
-import openhcs.core.config_document  # noqa: F401
-import openhcs.core.function_step_document  # noqa: F401
+import openhcs.core.config_document
+import openhcs.core.function_step_document
 import openhcs.core.pipeline_document  # noqa: F401
 
 REPO = Path(__file__).resolve().parents[2]
@@ -37,7 +38,11 @@ def _product_sources() -> list[tuple[Path, str]]:
 def _document_types(root: type = SourceDocument) -> list[type]:
     found: list[type] = []
     for subclass in root.__subclasses__():
-        if subclass.__module__.startswith("openhcs."):
+        # dataclass(slots=True) leaves the class it replaced in __subclasses__.
+        module = sys.modules.get(subclass.__module__)
+        if subclass.__module__.startswith("openhcs.") and (
+            getattr(module, subclass.__name__, None) is subclass
+        ):
             found.append(subclass)
         found.extend(_document_types(subclass))
     return found

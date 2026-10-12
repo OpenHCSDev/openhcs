@@ -64,7 +64,16 @@ class PipelineDocumentCodec:
     ) -> PipelineDocument:
         """Read the public assignments from an executed namespace."""
 
-        document = PipelineDocument.from_namespace(namespace)
+        return cls._validated(PipelineDocument.from_namespace(namespace))
+
+    @classmethod
+    def from_source(cls, source: str) -> PipelineDocument:
+        """Execute Python source and read its pipeline assignments."""
+
+        return cls._validated(PipelineDocument.from_source(source)).read_from(source)
+
+    @classmethod
+    def _validated(cls, document: PipelineDocument) -> PipelineDocument:
         if type(document.pipeline_steps) is not list:
             raise TypeError(
                 "pipeline_steps must be a list[FunctionStep], "
@@ -74,15 +83,6 @@ class PipelineDocumentCodec:
             pipeline_config=document.pipeline_config,
             pipeline_steps=document.pipeline_steps,
         )
-
-    @classmethod
-    def from_source(cls, source: str) -> PipelineDocument:
-        """Execute Python source and read its pipeline assignments."""
-
-        namespace: dict[str, object] = {}
-        code = compile(source, "<openhcs-pipeline-document>", "exec")
-        exec(code, namespace)
-        return cls.from_namespace(namespace).read_from(source)
 
     @classmethod
     def execution_source(cls, document: PipelineDocument) -> str:

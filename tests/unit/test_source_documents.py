@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import sys
 
 import pytest
 from pycodify import SourceDocument
@@ -29,7 +30,11 @@ def _steps() -> list[FunctionStep]:
 def _document_types(root: type = SourceDocument) -> list[type[SourceDocument]]:
     found: list[type[SourceDocument]] = []
     for subclass in root.__subclasses__():
-        if subclass.__module__.startswith("openhcs."):
+        # dataclass(slots=True) leaves the class it replaced in __subclasses__.
+        module = sys.modules.get(subclass.__module__)
+        if subclass.__module__.startswith("openhcs.") and (
+            getattr(module, subclass.__name__, None) is subclass
+        ):
             found.append(subclass)
         found.extend(_document_types(subclass))
     return found
@@ -105,7 +110,7 @@ def test_steps_only_file_is_a_pipeline_with_the_default_config() -> None:
 
 def test_pipeline_file_gives_its_steps_to_the_steps_only_reader() -> None:
     namespace: dict[str, object] = {}
-    exec(PipelineDocumentCodec.render(_sample(PipelineDocument)), namespace)
+    exec(PipelineDocumentCodec.render(_sample(PipelineDocument)), namespace)  # noqa: S102
 
     (step,) = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
 

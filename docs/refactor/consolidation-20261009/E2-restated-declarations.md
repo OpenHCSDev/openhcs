@@ -16,7 +16,7 @@
 
 - **pycodify `SourceDocument`** (`pycodify/documents.py`, library PR, no version bump). A dataclass that inherits it is saved as one Python module: each constructor field (`init=True`) is one module-level assignment, in declaration order. It supplies `assignment_names()`, `from_namespace()` (a field with a default may be absent; a required one raises `ValueError`), `from_source()`, `body()` and `to_source(header=, clean_mode=)`. Identity is nominal ([P1] Proposition 3.1): a document is a document because it inherits `SourceDocument`, not because it has a field called `step`.
 - **OpenHCS documents.** `PipelineStepsDocument(pipeline_steps)` (the steps-only file), `PipelineDocument(PipelineStepsDocument)` adding `pipeline_config` (default `PipelineConfig()`) and the non-constructor `source_text` (was `original_source`, rule 1b), `FunctionStepDocument(step)`, new `ConfigDocument(config)`. The codecs keep only OpenHCS's type checks and step normalization and call the inherited methods. `ConfigDocumentAuthority` is renamed `ConfigDocumentCodec` (rule 1b).
-- **Deleted:** `ConfigDocumentField`, `PipelineDocumentField` and its module `core/pipeline_document_fields.py`, `FunctionStepDocumentField`, `FunctionStepTransportAuthority.pipeline_steps_from_namespace` (no production caller), `McpReconnectOwner`, `RuntimeBatchCallableMetadataField` and `RUNTIME_BATCH_EXECUTORS_ATTR`, `CellProfilerSpreadsheetRowField`, `ConfigFieldRequirementLabel`, `ConfigFieldResolutionLabel`.
+- **Deleted:** `ConfigDocumentField`, `PipelineDocumentField` and its module `core/pipeline_document_fields.py`, `FunctionStepDocumentField`, `McpReconnectOwner`, `RuntimeBatchCallableMetadataField` and `RUNTIME_BATCH_EXECUTORS_ATTR`, `CellProfilerSpreadsheetRowField`, `ConfigFieldRequirementLabel`, `ConfigFieldResolutionLabel`.
 - The refactor merges no two cases that need different answers ([P10] Theorem 5.3): every deleted enum had one member, or (pipeline, labels) members in one-to-one correspondence with the declaration that replaces them.
 
 ### Candidates and verdicts (brief)
@@ -40,7 +40,7 @@
 
 | Candidate | Verdict |
 |---|---|
-| `PipelineDocumentNormalizationStrategy`, `StepDocumentNormalizationStrategy`, `ConfigDocumentNormalizationStrategy` (`pyqt_gui/services/code_document_normalization.py`) | document kind × "normalize"; see Outcome |
+| `PipelineDocumentNormalizationStrategy`, `StepDocumentNormalizationStrategy`, `ConfigDocumentNormalizationStrategy` (`pyqt_gui/services/code_document_normalization.py`) | kept: members of a registered strategy family keyed by declaration type, whose other members (plate manager, custom function, function pattern) are not documents; the three collapse to one when the codecs fold into the documents (see Outcome) |
 | `FunctionStepCodeDocumentDriver` (`pyqt_gui/services/function_step_code_document.py`) | glued; used by the dual editor (U-surface agents hold those files): later pass |
 | `SyntheticPlateFormat` (`core/synthetic_plate_generation.py`) | restates the microscope handler family: G4 |
 | `FormattingMeasurementFeatureTemplate` (1 member, `interop/cellprofiler/runtime/measurement_rows.py`) | K3 |
@@ -81,10 +81,19 @@ A fourth saved document (say a plate layout). Today: a field enum, a codec with 
 
 The deleted names are gone with no alias; the guards, the round-trip test, the document, codegen and MCP contract tests pass; `guardrails rc=0`; `smoke rc=0`; parity 30/30 (spreadsheet export is touched).
 
-## Progress notes
+## Outcome and corrections
 
-- [ ] pycodify `SourceDocument` + library PR
-- [ ] documents and codecs
-- [ ] one-member enums
-- [ ] labels
-- [ ] guards, E1 table, verification
+Done: pycodify `SourceDocument` (library PR OpenHCSDev/pycodify#5, no version bump; the submodule points at its branch head), the four documents and three codecs, the one-member enums, the labels, the guards.
+
+Corrections to the plan above:
+- **`pipeline_steps_from_namespace` is kept.** It has no caller in `openhcs/`, but `tests/unit/test_cellprofiler_public_boundary_contracts.py` runs it in a fresh interpreter as the public reader of a generated steps file. It now reads through `PipelineStepsDocument`.
+- **Assignment order in a complete pipeline file changes** to `pipeline_steps`, then `pipeline_config`: `PipelineDocument` inherits the steps field from `PipelineStepsDocument`, and dataclass fields are ordered base first. Names and values are unchanged, and files written in either order load. Keeping the old order needs a config-only base class that exists only to order two fields; that is a helper added to fit one chain ([P1] Theorem 4.6), so it was not added.
+- **Error text changes** for a missing assignment: `PipelineDocument source must define 'pipeline_steps'.` (was `Pipeline document must define ...`), likewise for the other kinds. A wrong member type in a pipeline reads `Pipeline member N must be FunctionStep` from the one shared check.
+- **`PipelineDocument.original_source` is `source_text`** (rule 1b) and is not a constructor field, so it is not an assignment; `read_from(source_text)` attaches it.
+- **Certificates.** *derived*: the three field enums (`SourceDocument.assignment_names`), `McpReconnectOwner` and the three stored reconnect fields (properties of `restart_required`), `CellProfilerSpreadsheetRowField` (`row_identity_contract.sample_number_field`, asserted equal to `"image_number"` by the spreadsheet tests). *unused*: `RUNTIME_BATCH_EXECUTORS_ATTR`, `RuntimeBatchCallableMetadataField.owner_label` as a method (inlined at its two sites). *derived*: the two label enums (text of two booleans, same output except that `lazy` is joined by the formatter). No tests-only deletion.
+
+Not done, with owner:
+- The codecs still exist: they hold OpenHCS's type checks and step normalization and forward the rest to the document. Folding validation into the documents' `__post_init__` deletes the three codecs and collapses three normalization strategies into one; it touches 60 files (43 of them tests) and belongs to a surface that owns `pipeline_editor.py` and the code-document services.
+- `FunctionStepTransportAuthority` keeps its name (rule 1b asks for a rename on touch): 12 product files and 27 test files, several held by open PRs. Proposed for the same later pass.
+
+Test evidence is in the PR description.

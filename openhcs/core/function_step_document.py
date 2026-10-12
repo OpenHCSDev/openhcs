@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from pycodify import SourceDocument
+
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
-from pycodify import SourceDocument
 
 
 @dataclass(frozen=True, slots=True)
