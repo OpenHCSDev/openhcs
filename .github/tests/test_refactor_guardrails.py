@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -586,3 +587,35 @@ def test_workflow_reuses_canonical_parity_and_packaged_tools():
         in ratchet
     )
     assert "agent-comms-ratchet --root" in ratchet
+
+
+def _workflows() -> dict[str, dict]:
+    return {
+        path.name: yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+        for path in sorted((REPO / ".github/workflows").glob("*.yml"))
+    }
+
+
+def test_pull_requests_start_only_the_cheap_workflows():
+    workflows = _workflows()
+    assert {
+        name for name, workflow in workflows.items() if "pull_request" in workflow["on"]
+    } == {"pr-checks.yml", "refactor-guardrails.yml", "website-pages.yml"}
+    for name in ("integration-tests.yml", "docs.yml"):
+        triggers = workflows[name]["on"]
+        assert set(triggers) == {"push", "schedule", "workflow_dispatch"}
+        assert triggers["push"] == {"tags": ["v*"]}
+        assert not any(
+            "github.event_name ==" in job.get("if", "")
+            for job in workflows[name]["jobs"].values()
+        )
+    for name, workflow in workflows.items():
+        assert "group" in workflow["concurrency"], name
+    assert workflows["publish.yml"]["concurrency"]["cancel-in-progress"] == "false"
+
+
+def test_r1_scan_deadline_reports_before_the_job_timeout():
+    job = _workflows()["refactor-guardrails.yml"]["jobs"]["nra-r1"]
+    budget = re.search(r"--budget-seconds (\d+)", job["steps"][-1]["run"])
+    assert budget is not None
+    assert int(budget.group(1)) / 60 + 10 <= int(job["timeout-minutes"])

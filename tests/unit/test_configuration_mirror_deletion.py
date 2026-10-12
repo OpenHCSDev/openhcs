@@ -13,6 +13,7 @@ SCANNED_ROOTS = (
     PROJECT_ROOT / "tests",
     PROJECT_ROOT / "benchmark",
     PROJECT_ROOT / "external/ObjectState/src",
+    PROJECT_ROOT / "external/formbridge/src",
     PROJECT_ROOT / "external/pyqt-reactive/src",
     PROJECT_ROOT / "external/python-introspect/src",
     PROJECT_ROOT / "external/zmqruntime/src",
@@ -207,6 +208,7 @@ def test_deleted_lazy_registry_and_name_resolver_symbols_do_not_recur() -> None:
     scanned_roots = (
         PROJECT_ROOT / "openhcs",
         PROJECT_ROOT / "external/ObjectState/src",
+        PROJECT_ROOT / "external/formbridge/src",
         PROJECT_ROOT / "external/pyqt-reactive/src",
     )
     for root in scanned_roots:
@@ -320,11 +322,11 @@ def test_typed_transport_boundaries_do_not_regrow_payload_schema_helpers() -> No
 
 def test_system_monitor_keeps_metrics_and_fixed_colors_typed() -> None:
     scanned_paths = (
-        PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
+        PROJECT_ROOT / "external/formbridge/src/formbridge/services/"
         "system_metrics_sampler.py",
-        PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
+        PROJECT_ROOT / "external/formbridge/src/formbridge/services/"
         "system_monitor_config.py",
-        PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
+        PROJECT_ROOT / "external/formbridge/src/formbridge/services/"
         "system_monitor_core.py",
         PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
         "persistent_system_monitor.py",
@@ -365,9 +367,9 @@ def test_zmq_server_browser_keeps_pong_and_tree_identity_typed() -> None:
         "ServerTree" + "Population",
     }
     scanned_paths = (
-        PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
+        PROJECT_ROOT / "external/formbridge/src/formbridge/services/"
         "zmq_server_info.py",
-        PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/services/"
+        PROJECT_ROOT / "external/formbridge/src/formbridge/services/"
         "zmq_server_scan_service.py",
         PROJECT_ROOT / "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/"
         "zmq_server_browser_widget.py",

@@ -27,9 +27,9 @@ import openhcs  # noqa: F401  # Activate recorded source dependencies before ext
 
 from polystore.streaming.identity import StreamProducerIdentity
 from openhcs.agent.ui_bridge_identities import (
-    PlateManagerOrchestratorCodeDocumentIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+    DatasetListWidgetIdentity,
 )
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import (
@@ -43,7 +43,7 @@ from openhcs.mcp.dev_client import McpDevClient
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON = os.environ.get("PYTHON_BIN", sys.executable)
 DEFAULT_OUTPUT_ROOT = ROOT / "mcp_outputs" / "assay_showcase"
-ORCHESTRATOR_DOCUMENT_ID = PlateManagerOrchestratorCodeDocumentIdentity.require_value()
+ORCHESTRATOR_DOCUMENT_ID = DatasetListCodeDocumentIdentity.require_value()
 WELL = "A01"
 SHOWCASE_NAPARI_PORT = 5889
 UI_TIMEOUT_MS = 2_000
@@ -1150,7 +1150,7 @@ def discover_live_measurement_surface_id(
         widget_id = action.get("widget_id")
         action_id = action.get("action_id")
         if (
-            widget_id == PlateManagerWidgetIdentity.require_value()
+            widget_id == DatasetListWidgetIdentity.require_value()
             and action_id == ShowLiveResults.operation_id
         ):
             raw_related = action.get("related_state_surface_ids")
@@ -1160,7 +1160,7 @@ def discover_live_measurement_surface_id(
                     for surface_id in raw_related
                     if isinstance(surface_id, str)
                     and surface_id
-                    != PlateManagerStateSurfaceIdentityDeclaration.require_value()
+                    != DatasetListStateSurfaceIdentity.require_value()
                 )
 
     surfaces = surface_catalog.get("surfaces")
@@ -1502,7 +1502,7 @@ def open_human_results_table(
         "open_human_results_table",
         [
             "invoke-action",
-            PlateManagerWidgetIdentity.require_value(),
+            DatasetListWidgetIdentity.require_value(),
             ShowLiveResults.operation_id,
             "--json",
             *_ui_args(ctx),
@@ -1651,7 +1651,7 @@ def _run_scenario(
                     "list_plate_manager_actions",
                     [
                         "actions",
-                        PlateManagerWidgetIdentity.require_value(),
+                        DatasetListWidgetIdentity.require_value(),
                         "--json",
                         *_ui_args(ctx),
                     ],

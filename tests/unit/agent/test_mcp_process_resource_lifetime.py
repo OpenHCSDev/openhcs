@@ -207,7 +207,7 @@ def test_resident_connection_close_preserves_resource_until_process_owner_close(
     monkeypatch, unix_socket_dir
 ):
     from mcp.server.fastmcp import FastMCP
-    from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
+    from formbridge.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevSocketSession
     from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
 

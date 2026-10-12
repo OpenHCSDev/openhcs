@@ -1,4 +1,6 @@
 """Scalar RGB invocations consume only an explicitly declared singleton root."""
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
@@ -6,9 +8,9 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.outlines import OverlayOutlinesModule
@@ -40,8 +42,8 @@ def _invocation_case(*, root_count=1, label_count=1):
     label_data[:, 2:5, 3:6] = 1
     labels = ObjectLabelSet(
         name='Nuclei', variant_data=ObjectLabelVariantData(labels=label_data),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        domain=ObjectLabelDomain(declared_object_id_domains=((1,),) * label_count, scope=ObjectLabelDomainScope.PLANE),
+        plane_axis=RuntimeSlicePlaneAxis,
+        domain=ObjectLabelDomain(declared_object_id_domains=((1,),) * label_count, scope=PlaneLabelScope),
     )
     adapter = _FakeCellProfilerRuntime(
         {'GFPandDNA': image}, objects={'Nuclei': labels}, callable_contract=contract,
@@ -79,23 +81,23 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     assert invocation.execution_mode is NaturalExecution
     assert invocation.plane_projection is None
     assert invocation.payload.metadata.axis_position(ColourAxis) == 2
-    assert selected.plane_axis is None
+    assert selected.plane_axis.unstacked
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)
-    scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=ObjectLabelDomainScope.PAYLOAD))
+    scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=PayloadLabelScope))
     expected = raw(image, object_labels=(scalar_labels,), outline_colors=('#21FFFF',))
     np.testing.assert_array_equal(output.data, expected.data)
     np.testing.assert_array_equal(image.data, image_before)
     np.testing.assert_array_equal(object_label_dense_array(labels), labels_before)
-    assert labels.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image.metadata.plane_axis is None
+    assert labels.plane_axis is RuntimeSlicePlaneAxis
+    assert image.metadata.plane_axis.unstacked
 
 
 @pytest.mark.parametrize('root_count', (None, 2))
 def test_scalar_rgb_cannot_authorize_unknown_or_multiple_root_planes(root_count):
     case = _invocation_case(root_count=root_count)
     invocation = _bind(case)
-    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimeSlicePlaneAxis
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match='Kwargs cannot create image-axis execution semantics'):
         _execute(case, invocation)
 
@@ -105,7 +107,7 @@ def test_explicit_full_stack_label_contract_preserves_scalar_boundary_refusal(mo
     monkeypatch.setattr(raw, FunctionContractAttribute.object_label_input_execution_mode, FullStackLabels)
     case = _invocation_case()
     invocation = _bind(case)
-    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimeSlicePlaneAxis
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match='Kwargs cannot create image-axis execution semantics'):
         _execute(case, invocation)
 
@@ -119,13 +121,13 @@ def test_declared_singleton_root_refuses_mismatched_label_cardinality():
 def test_final_module_mode_sees_full_labels_before_scalar_projection(monkeypatch):
     case = _invocation_case()
     def mode(cls, default, *, image, kwargs, variable_components):
-        assert kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+        assert kwargs['object_labels'][0].plane_axis is RuntimeSlicePlaneAxis
         assert object_label_dense_array(kwargs['object_labels'][0]).shape == (1, 8, 9)
         return FullStackExecution
     monkeypatch.setattr(OverlayOutlinesModule, 'execution_mode', classmethod(mode))
     invocation = _bind(case)
     assert invocation.execution_mode is FullStackExecution
-    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert invocation.kwargs['object_labels'][0].plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_module_mode_failure_precedes_projection_guard(monkeypatch):

@@ -1,7 +1,7 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation,
@@ -25,12 +25,12 @@ def test_image_math_splits_only_declared_source_binding_operand_axis() -> None:
     )
 
     np.testing.assert_allclose(result.data, 0.5)
-    assert result.metadata.plane_axis is None
+    assert result.metadata.plane_axis.unstacked
 
 
 def test_image_math_preserves_declared_runtime_slice_as_one_operand() -> None:
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(
         np.array(
             (
@@ -46,7 +46,7 @@ def test_image_math_preserves_declared_runtime_slice_as_one_operand() -> None:
     np.testing.assert_allclose(
         result.data, 1.0 - image.data
     )
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_image_math_does_not_infer_operand_axis_from_array_rank() -> None:

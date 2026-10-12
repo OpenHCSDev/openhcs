@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 
 
 class AgentFacingErrorMixin:

@@ -11,7 +11,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.config import TransportMode
 
-from openhcs.agent.dto.common import (
+from formbridge.contracts import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     AgentError,
     AgentResultEnvelope,

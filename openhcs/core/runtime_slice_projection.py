@@ -1,6 +1,8 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -21,7 +23,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimeSliceProjectableValue,
 )
 from openhcs.core.source_image_provenance import SourceComponentMetadata
-from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
@@ -66,7 +68,7 @@ class RuntimeProjectionSourceIdentityRequest:
             return None
         raise RuntimeSliceProjectionDeclarationError(
             "Variable-component runtime projection requires a nominal payload "
-            "with RuntimePlaneAxis.RUNTIME_SLICE; source provenance and ndarray "
+            "with RuntimeSlicePlaneAxis; source provenance and ndarray "
             "shape cannot declare the runtime axis."
         )
 
@@ -81,9 +83,9 @@ class RuntimeProjectionSourceIdentityRequest:
         context: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...] | None:
         """Return exact provenance projection for the request-declared stack axis."""
-        source_plane_count = image_metadata_of(
+        source_plane_count = as_runtime_value(
             self.value
-        ).source_provenance.source_plane_count
+        ).image_metadata.source_provenance.source_plane_count
         if source_plane_count == 0:
             return None
         if source_plane_count != context.axis_size:
@@ -192,7 +194,7 @@ class RuntimeProjectionSourceIdentityRequirement(ABC):
             source_description=request.source_description,
         )
         projection = request.plane_projection or RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=slice_count,
         )
         items: list[RuntimeProjectedPayloadItem] = []
@@ -250,12 +252,12 @@ class RuntimeProjectedPayloadItem:
 
     @property
     def data(self) -> RuntimeProjectionData:
-        return array_data_of(self.value)
+        return as_runtime_value(self.value).array_data
 
     @property
     def metadata(self) -> ImagePayloadMetadata:
         """Image metadata of the item; items of non-image kinds carry none."""
-        return image_metadata_of(self.value)
+        return as_runtime_value(self.value).image_metadata
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:
@@ -357,11 +359,11 @@ class RuntimeSliceProjection:
         return value
 
     @classmethod
-    def declared_plane_axis(cls, value: RuntimeProjectionData) -> RuntimePlaneAxis | None:
+    def declared_plane_axis(cls, value: RuntimeProjectionData) -> type[RuntimePlaneAxis]:
         """Return the leading plane axis a value declares; foreign values declare none."""
         if isinstance(value, RuntimeSliceProjectableValue):
             return value.declared_plane_axis
-        return None
+        return NoPlaneAxis
 
     @classmethod
     def alignment_slices(cls, value: RuntimeProjectionData) -> tuple[Any, ...]:
@@ -421,7 +423,7 @@ class RuntimeSliceProjection:
         if slice_count is None:
             return None
         return RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=slice_count,
         )
 
@@ -462,7 +464,7 @@ class RuntimeSliceProjection:
         if effective_slice_count is None:
             return None
         return RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=slice_index,
             axis_size=effective_slice_count,
         )

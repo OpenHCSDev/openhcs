@@ -1,5 +1,7 @@
 """Prior child measurements select their producer domain, not the child channel."""
 
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import pytest
@@ -317,10 +319,8 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     )
     from openhcs.core.runtime_object_label_domains import (
         ObjectLabelDomain,
-        ObjectLabelDomainScope,
     )
     from openhcs.core.runtime_plane_projection import (
-        RuntimePlaneAxis,
         RuntimePlaneProjection,
     )
     from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
@@ -361,10 +361,10 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             labels=np.array([[[1, 2], [0, 0]], [[1, 2], [0, 0]]], dtype=np.int32)
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2), (1, 2)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=child_planes,
     )
     storage = ArtifactInputPlan(
@@ -451,7 +451,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
                 backend="memory",
             )
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=child_planes,
     ).payload_with(np.ones((2, 2, 2), dtype=np.float32))
     bindings = CompiledSourceBindingPlan(

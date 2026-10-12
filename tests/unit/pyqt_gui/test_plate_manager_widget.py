@@ -16,13 +16,11 @@ from PyQt6.QtCore import Qt
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 import openhcs.processing.backends.cellprofiler as cellprofiler_backend
-from openhcs.core.selection import AllItems, SelectedItems
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.selection import AllItems, SelectedItems
+from formbridge.bridge.dto import (
     UiBridgeConfirmationRequirement,
     UiCodeDocumentApplyRequest,
-    UiCodeDocumentId,
     UiCodeDocumentRequest,
-    UiStateSurfaceId,
     UiStateSurfaceRequest,
     UiWindowNavigateRequest,
 )
@@ -97,14 +95,12 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
     MainWindowEmbeddedWidgets,
     MainWindowPipelineActions,
 )
-from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
-from openhcs.pyqt_gui.services.ui_bridge_object_state import (
-    ObjectStateBridgeProviderSet,
-)
+from formbridge.bridge.in_process import UiAgentBridgeService
+from pyqt_reactive.bridge.object_state_documents import ObjectStateBridgeProviderSet
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import (
     PlateManagerBridgeProviderSet,
 )
-from openhcs.pyqt_gui.services.ui_bridge_windows import UiWindowProjectionService
+from pyqt_reactive.bridge.windows import UiWindowProjectionService
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -118,6 +114,11 @@ from openhcs.core.progress.types import (
     RunningProgressStatus,
     StepStartedProgressPhase,
 )
+from openhcs.agent.ui_bridge_identities import (
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+)
+from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
 
 class InlineUiThreadDispatcher:
@@ -165,7 +166,7 @@ def _workspace(steps, pipeline_config: PipelineConfig | None = None):
 
 
 def _bridge(manager) -> UiAgentBridgeService:
-    return UiAgentBridgeService(
+    return OpenHCSUiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(manager),
         dispatcher=InlineUiThreadDispatcher(),
     )
@@ -174,7 +175,7 @@ def _bridge(manager) -> UiAgentBridgeService:
 def _apply(bridge, source: str, *, selection_mode=AllItems):
     document = bridge.get_document(
         UiCodeDocumentRequest(
-            document_id=UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value,
+            document_id=DatasetListCodeDocumentIdentity.require_value(),
             selection_mode=selection_mode.name,
         )
     )
@@ -1266,7 +1267,7 @@ def test_dataset_document_edits_during_a_run_and_recovers_after_its_failure(
         result = _apply(bridge, replacement)
         state = bridge.get_state_surface(
             UiStateSurfaceRequest(
-                surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
+                surface_id=DatasetListStateSurfaceIdentity.require_value(),
                 selection_mode=AllItems.name,
             )
         )
@@ -1296,7 +1297,7 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
         WindowManager.register(
             window_id, editor, code_document_driver=editor.code_document_driver()
         )
-        bridge = UiAgentBridgeService(
+        bridge = OpenHCSUiAgentBridgeService(
             provider_set=ObjectStateBridgeProviderSet(),
             dispatcher=InlineUiThreadDispatcher(),
         )

@@ -12,7 +12,7 @@ from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     StartFunctionCatalogPreparationCapability,
 )
-from openhcs.agent.dto.common import AgentDataclassCliRequest
+from formbridge.contracts import AgentDataclassCliRequest
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import FunctionCatalogPreparationHandle
 from openhcs.mcp.dev_client import _build_parser, _calls_from_args
@@ -194,7 +194,7 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
         request_tag: str = "new"
         trace_enabled: bool = True
 
-    import openhcs.agent.dto.common as common
+    import formbridge.contracts as common
 
     original_decode = common.dataclass_from_mapping
 

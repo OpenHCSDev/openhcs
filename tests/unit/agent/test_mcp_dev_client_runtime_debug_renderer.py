@@ -1,6 +1,6 @@
 """Focused compact rendering tests for paused runtime debug inspection."""
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
     RuntimeDebugInspectionResult,

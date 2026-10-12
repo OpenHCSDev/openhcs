@@ -1,3 +1,6 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 import json
 import pickle
@@ -94,7 +97,6 @@ from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -102,7 +104,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -666,7 +667,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
         artifact_type=ObjectLabelsArtifactType,
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
                 "/input/A02_s001_w1_z001_t001.tif",
@@ -691,7 +692,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
         label_slices,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -710,9 +711,9 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     )
     assert runtime_value.data.domain == ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
-    assert runtime_value.data.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert runtime_value.data.plane_axis is RuntimeSlicePlaneAxis
     assert runtime_value.data.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
         source_shape_yx=(8, 8),
@@ -770,7 +771,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         output,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -826,7 +827,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         labels,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -968,7 +969,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
         variable_components=(Microscopy.Site,),
     )
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_component_metadata={
             "well": "A01",
             "site": "1",
@@ -1230,7 +1231,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
 
     # The measurement table has no pixel-plane axis. Its rendered point archive
     # nevertheless owns every represented Z plane, not only its scalar address.
-    assert result.metadata.plane_axis is None
+    assert result.metadata.plane_axis.unstacked
     domain = materialization.stream_source_metadata_items((result,), None)
     assert [item["z_index"] for item in domain.values] == list(
         range(source_z_origin, source_z_origin + 4)
@@ -1542,10 +1543,10 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
     labels_array[:, 2:6, 3:7] = 1
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels_array),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),) * 4,
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(
@@ -2983,10 +2984,10 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 4, 4), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes(
             tuple(
@@ -3612,7 +3613,7 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
 
 @pytest.mark.parametrize(
     "domain_scope",
-    (ObjectLabelDomainScope.PLANE, ObjectLabelDomainScope.PAYLOAD),
+    (PlaneLabelScope, PayloadLabelScope),
 )
 def test_materialize_artifact_outputs_uses_variable_components_for_streaming_identity(
     monkeypatch,
@@ -3628,17 +3629,17 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2, 2), dtype=np.int32)),
         plane_axis=(
-            RuntimePlaneAxis.RUNTIME_SLICE
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else None
+            RuntimeSlicePlaneAxis
+            if domain_scope.ids_per_plane
+            else NoPlaneAxis
         ),
         domain=(
             ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             )
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD)
+            if domain_scope.ids_per_plane
+            else ObjectLabelDomain(scope=PayloadLabelScope)
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -3793,10 +3794,10 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2, 2), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -4055,7 +4056,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
         },
         source_image_names=("OrigDNA",),
         axes=PayloadAxes.colour_samples(0),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     value = RuntimeValue.normalize(
         output_plan,
@@ -4063,7 +4064,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
             source_path="/derived/nuclei-rgb.tif",
             source_image_names=("NucleiImage",),
             axes=PayloadAxes.colour_samples(3),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.ones((2, 5, 7, 3), dtype=np.uint16),
             None,
@@ -4080,7 +4081,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
     assert metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
     assert metadata.source_image_names == ("OrigDNA",)
     assert metadata.axis_position(ColourAxis) == 3
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
@@ -4120,7 +4121,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     saved_payload = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         selected_payload,
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(
             np.ones((2, 5, 7), dtype=np.uint16),
             None,
@@ -4181,7 +4182,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     )
 
     assert saved_payload.metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE
+        RuntimeSlicePlaneAxis
     )
     assert tuple(
         Path(output.path)

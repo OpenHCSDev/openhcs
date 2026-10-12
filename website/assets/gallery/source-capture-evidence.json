@@ -81,7 +81,7 @@
       }
     },
     {
-      "scenario_id": "ui-plate-manager",
+      "scenario_id": "ui-datasets",
       "source": {
         "duration_seconds": null,
         "format": "png",

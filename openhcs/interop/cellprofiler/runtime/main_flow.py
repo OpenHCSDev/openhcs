@@ -16,7 +16,7 @@ def cellprofiler_main_flow_output(
     """Preserve the declared OpenHCS plane axis on a CP output image."""
     output_image = owned_runtime_value(output_image)
     output_axis = output_image.metadata.plane_axis
-    if output_axis is None:
+    if output_axis.unstacked:
         return output_image
     if plane_projection is None:
         raise ValueError(
@@ -26,20 +26,20 @@ def cellprofiler_main_flow_output(
     if output_axis is not plane_projection.axis:
         raise ValueError(
             "CellProfiler main-flow output axis conflicts with the invocation "
-            f"projection: {output_axis.value!r} != "
-            f"{plane_projection.axis.value!r}."
+            f"projection: {output_axis.name!r} != "
+            f"{plane_projection.axis.name!r}."
         )
     plane_projection.validate_shape(
         array_geometry(output_image).shape,
         value_name="CellProfiler main-flow output",
     )
     input_axis = input_image.metadata.plane_axis
-    if input_axis is not None:
+    if input_axis.leads_data:
         if input_axis is not plane_projection.axis:
             raise ValueError(
                 "CellProfiler main-flow input axis conflicts with the output "
-                f"projection: {input_axis.value!r} != "
-                f"{plane_projection.axis.value!r}."
+                f"projection: {input_axis.name!r} != "
+                f"{plane_projection.axis.name!r}."
             )
         plane_projection.validate_shape(
             array_geometry(input_image).shape,

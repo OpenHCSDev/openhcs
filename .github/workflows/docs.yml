@@ -1,9 +1,14 @@
 name: Documentation
 
+# Release gate, like integration-tests.yml: on demand, on release tags and
+# nightly against main; not on pull requests or pushes to main.
 on:
-  pull_request:
   push:
-    branches: [main]
+    tags:
+      - "v*"
+  schedule:
+    - cron: "53 2 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -79,6 +84,7 @@ jobs:
             external/metaclass-registry/docs/source
             external/PolyStore/README.md
             external/PolyStore/docs/source
+            external/formbridge/README.md
             external/pyqt-reactive/README.md
             external/pyqt-reactive/docs
             external/python-introspect/README.md

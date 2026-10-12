@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 from polystore.base import ImageSamplingRequest
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from python_introspect import JsonObject
 from openhcs.agent.dto.plate import (
     PlateFileQueryRecordSummary,
@@ -45,9 +46,7 @@ from openhcs.agent.dto.plate import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.authoring.session.operations.datasets import InitializeDatasets
-from openhcs.agent.ui_bridge_identities import (
-    PlateManagerOrchestratorCodeDocumentIdentity,
-)
+from openhcs.agent.ui_bridge_identities import DatasetListCodeDocumentIdentity
 from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.plate_image_inventory import (
@@ -939,7 +938,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             ingestion_owner=ingestion_owner,
             source_binding_role=source_binding_role,
             ui_code_document_id=(
-                PlateManagerOrchestratorCodeDocumentIdentity.require_value()
+                DatasetListCodeDocumentIdentity.require_value()
             ),
             ui_operation=InitializeDatasets.operation_id,
             knowledge_query=cls.KNOWLEDGE_QUERY,

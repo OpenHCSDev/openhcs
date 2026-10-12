@@ -2138,7 +2138,7 @@ def straighten_worms(
     image_data = np.asarray(image.data)
     image_stack = image_data[np.newaxis, :, :] if image_data.ndim == 2 else image_data
     source_metadata = image.metadata
-    if image_stack.shape[0] > 1 and source_metadata.plane_axis is None:
+    if image_stack.shape[0] > 1 and source_metadata.plane_axis.unstacked:
         raise ValueError(
             "StraightenWorms requires a declared leading plane axis for "
             "multiple input images."
@@ -2190,7 +2190,7 @@ def straighten_worms(
         ).execute(placements)
         output_metadata = (
             source_metadata.for_leading_source_plane(slice_index)
-            if source_metadata.plane_axis is not None
+            if source_metadata.plane_axis.leads_data
             else source_metadata
         )
         output_spatial_shape = output_metadata.spatial_shape_yx(slice_image)

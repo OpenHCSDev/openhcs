@@ -1,6 +1,7 @@
 """Nominal measurement-image alignment contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 import logging
 from abc import ABC, abstractmethod
@@ -20,10 +21,8 @@ from openhcs.core.runtime_object_labels import (
     object_label_project_plane,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileTimer
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import ObjectLabelRepresentation
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
@@ -143,10 +142,10 @@ class MeasurementImageLabelAlignmentRequest:
         """Return this request with only the measurement image source-projected."""
         projection = RuntimePlaneAxisValueProjection.from_projector(
             self.plane_projector,
-            RuntimePlaneAxis.SOURCE_BINDING,
+            SourceBindingPlaneAxis,
             self.source_aliases,
         )
-        if projection is None or projection.plane_index is None:
+        if projection is None or projection.preserves_complete_axis:
             return self
         image = self.image
         if isinstance(image, AlignedImageStack):
@@ -179,10 +178,7 @@ class MeasurementImageLabelAlignmentRequest:
         """Project labels only through their declared axis and runtime context."""
         if self.label_payload is None:
             return self
-        if (
-            self.label_payload.object_label_domain().scope
-            is not ObjectLabelDomainScope.PLANE
-        ):
+        if self.label_payload.object_label_domain().scope.ids_span_payload:
             return self
         declared_projection = self.label_payload.declared_plane_projection()
         if declared_projection is None:
@@ -196,7 +192,7 @@ class MeasurementImageLabelAlignmentRequest:
         )
         if runtime_projection is None:
             return self
-        if runtime_projection.plane_index is None:
+        if runtime_projection.preserves_complete_axis:
             if declared_projection.axis_size != 1:
                 return self
             projection = declared_projection.selected_plane(0)
@@ -328,8 +324,7 @@ class MeasurementImageLabelAlignmentRequest:
         )
         if (
             label_payload is not None
-            and label_payload.object_label_domain().scope
-            is ObjectLabelDomainScope.PAYLOAD
+            and label_payload.object_label_domain().scope.ids_span_payload
             and image_runtime_projection is not None
             and image_runtime_projection.axis_size == 1
         ):
@@ -371,11 +366,7 @@ class MeasurementImageLabelAlignmentRequest:
                 return request.image
             return label_payload.measurement_reference_image()
         domain = label_payload.object_label_domain()
-        if domain.scope is not ObjectLabelDomainScope.PAYLOAD and not (
-            domain.scope is ObjectLabelDomainScope.PLANE
-            and label_payload.plane_axis
-            in (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING)
-        ):
+        if domain.scope.ids_per_plane and label_payload.plane_axis.unstacked:
             raise ValueError(
                 "Object-label reference alignment has no behavior declared for "
                 f"scope={domain.scope!r}, plane_axis={label_payload.plane_axis!r}."

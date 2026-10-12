@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import replace
 from types import SimpleNamespace
@@ -39,7 +40,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementSubject,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -310,7 +310,7 @@ def test_measure_image_quality_pure_2d_contract_slices_3d_site_batch() -> None:
         )
     )
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(planes, None)
     contract = _compiled_image_quality_contract()
 
@@ -327,7 +327,7 @@ def test_measure_image_quality_pure_2d_contract_slices_3d_site_batch() -> None:
         },
         execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -344,7 +344,7 @@ def test_measure_image_quality_projects_named_source_axis_from_runtime_metadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/plate/A01_{name}.tif" for name in source_names),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     image = source_metadata.payload_with(
         np.stack(
@@ -355,7 +355,7 @@ def test_measure_image_quality_projects_named_source_axis_from_runtime_metadata(
         )
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=len(source_names),
         source_aliases=source_names,
     )
@@ -414,7 +414,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/plate/A01_{name}.tif" for name in source_names),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     )
     image = source_metadata.payload_with(
         np.stack(
@@ -425,7 +425,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
         )
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=len(source_names),
         source_aliases=source_names,
     )

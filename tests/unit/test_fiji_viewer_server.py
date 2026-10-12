@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import sys
 from types import ModuleType, SimpleNamespace
@@ -15,7 +16,6 @@ from openhcs.core.config import (
     FijiStreamingConfig,
     NapariDisplayConfig,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.runtime.fiji_macro_runtime import (
@@ -561,7 +561,7 @@ def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> No
         },
         "path": "aggregate.tif",
         "data": data,
-        "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+        "plane_axis": RuntimeSlicePlaneAxis.name,
         "plane_component_values": {"site": [1, 2]},
     }
     component_domain = _component_value_domain(
@@ -627,7 +627,7 @@ def test_fiji_payload_local_plane_axis_rejects_coordinate_count_mismatch() -> No
                 "timepoint": 0,
             },
             "data": np.zeros((3, 4, 5), dtype=np.uint8),
-            "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+            "plane_axis": RuntimeSlicePlaneAxis.name,
             "plane_component_values": {"site": [1, 2]},
         }
     )
@@ -646,7 +646,7 @@ def test_fiji_payload_local_plane_axis_rejects_malformed_declarations() -> None:
             "timepoint": 0,
         },
         "data": np.zeros((2, 4, 5), dtype=np.uint8),
-        "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+        "plane_axis": RuntimeSlicePlaneAxis.name,
         "plane_component_values": {
             "site": [1, 2],
             "channel": [1, 2],

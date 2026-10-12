@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from arraybridge import MemoryType
-from pyqt_reactive.pattern_metadata import PatternScopeToken
+from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
 from openhcs.core.artifacts.plans import (

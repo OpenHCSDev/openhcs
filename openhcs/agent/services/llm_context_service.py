@@ -57,10 +57,10 @@ from openhcs.authoring.session.operations.datasets import (
 )
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
-    PlateManagerOrchestratorCodeDocumentIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    UiLiveOverviewStateSurfaceIdentityDeclaration,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
 )
+from formbridge.bridge.identities import UiLiveOverviewStateSurfaceIdentityDeclaration
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerDocumentAssignments,
 )
@@ -197,8 +197,8 @@ class RuntimeUiCoordinationSection(
     @classmethod
     def render(cls, service: "AgentAuthoringContextService") -> str:
         del service
-        code_document_id = PlateManagerOrchestratorCodeDocumentIdentity.require_value()
-        state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
+        code_document_id = DatasetListCodeDocumentIdentity.require_value()
+        state_surface_id = DatasetListStateSurfaceIdentity.require_value()
         document_fields = ", ".join(PlateManagerDocumentAssignments.names())
         workflow_names = ", ".join(
             operation.operation_id

@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import os
 from hashlib import md5
 from pathlib import Path
@@ -27,7 +28,6 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.payload_axes import PayloadAxes
 
 
@@ -654,7 +654,7 @@ def test_png_disk_serialization_unwraps_image_metadata_payload() -> None:
 def test_png_disk_serialization_rejects_declared_unprojected_plane_axis() -> None:
     payload = ImageMetadataPayload(
         np.zeros((1, 3, 5), dtype=np.uint8),
-        ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
 
     with pytest.raises(ValueError, match="projected off.*runtime_slice"):
@@ -699,7 +699,7 @@ def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
     )
     pixels = np.arange(np.prod(shape), dtype=np.uint16).reshape(shape)
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         axes=PayloadAxes.colour_samples(channel_axis),
         source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
     )
@@ -729,7 +729,7 @@ def test_runtime_plane_tiff_write_retains_scalar_frames_and_declared_channels(
     )
     pixels = np.arange(np.prod(shape), dtype=dtype).reshape(shape)
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         axes=PayloadAxes.colour_samples(channel_axis),
     )
     path = tmp_path / "artifact.labels.tif"
@@ -756,7 +756,7 @@ def test_runtime_plane_tiff_write_retains_scalar_frames_and_declared_channels(
 
 
 def test_runtime_plane_tiff_rejects_undeclared_extra_payload_axis(tmp_path):
-    metadata = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+    metadata = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis)
     with pytest.raises(ValueError, match='declared plane'):
         TiffImageFileFormat().write(
             tmp_path / 'invalid.tif', metadata.payload_with(np.zeros((4, 5, 7, 2)))

@@ -1,6 +1,7 @@
 """Focused gates for the CellProfiler runtime input-binding boundary."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from pathlib import Path
@@ -28,7 +29,6 @@ from openhcs.core.component_group_scope import (
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -257,7 +257,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     mask_metadata = ImagePayloadMetadata(
         source_image_names=(mask.name,),
         source_image_provenance_planes=mask_provenance,
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     mask_payload = mask_metadata.payload_with(
         np.stack(
@@ -291,7 +291,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
             paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((3, 2, 2), dtype=np.float32), None)
     source_binding_plan = CompiledSourceBindingPlan(
         source_stack_components=(
@@ -417,7 +417,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
                 },
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 2, 2), dtype=np.float32), None)
     store = RuntimeValueStore()
     store.replace(
@@ -445,7 +445,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
             paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((3, 2, 2), dtype=np.float32), None)
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,

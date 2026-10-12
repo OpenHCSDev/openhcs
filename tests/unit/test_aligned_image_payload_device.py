@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 import sys
@@ -11,7 +12,6 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
     ImageUnitIntervalIntensityMetadata,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -98,8 +98,8 @@ def declared_cupy_leaf(monkeypatch):
 
 
 @pytest.mark.parametrize('composition,mode', (
-    (ImagePayloadStackContext, ImagePayloadMetadataCompositionMode.STACK),
-    (ImagePayloadBundleContext, ImagePayloadMetadataCompositionMode.BUNDLE),
+    (ImagePayloadStackContext, RuntimeSlicePlaneAxis),
+    (ImagePayloadBundleContext, SourceBindingPlaneAxis),
 ))
 @pytest.mark.parametrize('raw_first', (False, True))
 @pytest.mark.parametrize('destination', ('implicit', 'numpy', 'cupy'))

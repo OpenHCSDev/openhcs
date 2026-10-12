@@ -1,6 +1,7 @@
 """Generic image-file and file-bundle materialization contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from pathlib import Path
 
@@ -11,7 +12,6 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.materialization import options as materialization_options
 from openhcs.core.materialization.constants import WriteMode
@@ -62,7 +62,7 @@ def test_source_identity_image_file_projects_addressable_stack_planes() -> None:
     image_options, _bundle_options = _option_types()
     planes = tuple(np.full((4, 5, 3), value, dtype=np.uint8) for value in (1, 2, 3))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/input/site{index}.tif" for index in range(1, 4)),
             component_metadata=tuple({"site": str(index)} for index in range(1, 4)),

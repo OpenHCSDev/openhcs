@@ -43,7 +43,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelStorageStrategy,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
@@ -141,7 +140,7 @@ class OverlayObjectsModule(
         labels = kwargs[cls.input_objects_binding.require_runtime_parameter_name()]
         if (
             isinstance(labels, ObjectLabelValue)
-            and labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+            and labels.object_label_domain().scope.ids_span_payload
         ):
             return FullStackExecution
         return default

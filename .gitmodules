@@ -30,3 +30,7 @@
 	path = external/pyqt-reactive
 	url = https://github.com/OpenHCSDev/PyQT-reactive.git
 	branch = main
+[submodule "external/formbridge"]
+	path = external/formbridge
+	url = https://github.com/OpenHCSDev/formbridge.git
+	branch = main

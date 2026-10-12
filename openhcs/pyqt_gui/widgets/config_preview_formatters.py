@@ -2,10 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pyqt_reactive.utils.preview_formatters import (
-    check_enabled_field,
-    resolve_preview_label,
-)
+from formbridge.utils.preview_formatters import check_enabled_field, resolve_preview_label
 
 if TYPE_CHECKING:
     from openhcs.core.config import PartitionFilterConfig

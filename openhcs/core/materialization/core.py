@@ -4,6 +4,7 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
 import csv
@@ -46,7 +47,6 @@ from metaclass_registry.strategies import (
 from openhcs.core.runtime_array_values import runtime_array_operand
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -107,7 +107,7 @@ from openhcs.core.materialization.options import (
 from openhcs.core.axes import Axis
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -1229,12 +1229,11 @@ class MaterializationInputItem(RuntimeProjectedPayloadItem):
 
     @property
     def data(self) -> MaterializationValue:
-        return runtime_array_operand(array_data_of(self.value))
+        return runtime_array_operand(as_runtime_value(self.value).array_data)
 
     def has_leading_plane_axis(self) -> bool:
         """Whether the payload's first dimension is a declared plane axis."""
-        plane_axis = self.metadata.plane_axis
-        return plane_axis is not None
+        return self.metadata.plane_axis.leads_data
 
     @property
     def runtime_plane(self) -> RuntimeProjectionPlaneMetadata | None:
@@ -1287,7 +1286,7 @@ class SourcePlaneProjectionContract:
                 plane_count_source
                 for payload in payloads
                 for plane_count_source in (
-                    image_metadata_of(payload).source_provenance.plane_count_sources
+                    as_runtime_value(payload).image_metadata.source_provenance.plane_count_sources
                 )
             )
         )
@@ -3692,7 +3691,7 @@ class ROIMaterializationPlaneMetadataAuthority:
 
         return ImagePayloadMetadata.compose(
             (item.value,),
-            mode=ImagePayloadMetadataCompositionMode.STACK,
+            mode=RuntimeSlicePlaneAxis,
             source_metadata=(metadata,),
         )
 

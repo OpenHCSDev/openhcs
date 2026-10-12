@@ -1,5 +1,6 @@
 """Structural, synthetic-only checks of embedded acquisition tile placement."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.progress import ProgressExecutionContext
 import json
 from pathlib import Path
@@ -18,7 +19,6 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.memory import numpy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
@@ -121,7 +121,7 @@ def _metadata(geometries, order, channel="1"):
             paths=tuple(f"source-{site}" for site in order),
             component_metadata=records,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
 
@@ -441,7 +441,7 @@ def test_registered_nine_site_paired_positions_use_owned_scalar_projection():
         original = _metadata(geometries, order, channel)
         metadata = ProjectionAuditMetadata(
             source_provenance=original.source_provenance,
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_voxel_spacing=SourceVoxelSpacing((0.25, 0.5)),
         )
         pixels = np.stack([np.full((4, 6), site + 1, np.uint16) for site in order])
@@ -662,7 +662,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                     assert metadata.source_voxel_spacing == SourceVoxelSpacing(
                         (0.25, 0.5)
                     )
-                    assert metadata.plane_axis is None
+                    assert metadata.plane_axis.unstacked
             replay_config = PreparedWorkspaceSource.pipeline_config_for_source(
                 config
             )

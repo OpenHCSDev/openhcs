@@ -44,7 +44,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec
@@ -266,7 +266,7 @@ class CellProfilerMeasurementTableModule(ABC):
         del cls, rows
         return request.source.composed_source_metadata(
             (request.source,)
-        ) or image_metadata_of(request.source.payload)
+        ) or as_runtime_value(request.source.payload).image_metadata
 
     @staticmethod
     def rows_only_declare_object_name(rows: ColumnarRows) -> bool:
@@ -656,7 +656,7 @@ class CurrentPayloadMeasurementRecordMixin(PayloadOnlyMeasurementRecordMixin):
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
         del cls, rows
-        return image_metadata_of(request.source.payload)
+        return as_runtime_value(request.source.payload).image_metadata
 
     @classmethod
     def clear_source_when_rows_declare_object_name(cls) -> bool:

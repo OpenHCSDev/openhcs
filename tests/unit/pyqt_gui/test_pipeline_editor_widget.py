@@ -13,16 +13,10 @@ from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
     ParameterFormManager,
 )
-from pyqt_reactive.services.function_navigation import (
-    build_function_token_field_path,
-)
-from pyqt_reactive.services.function_pattern_code_document import (
-    FunctionPatternCodeDocumentService,
-)
-from pyqt_reactive.services.pattern_data_manager import (
-    FUNC_EDITOR_PATTERN_TOKENS_META_KEY,
-)
-from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from formbridge.services.function_navigation import build_function_token_field_path
+from formbridge.services.function_pattern_code_document import FunctionPatternCodeDocumentService
+from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
+from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.authoring.session.compilation import CompiledDataset
@@ -59,7 +53,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
+from formbridge.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
 from openhcs.core.debug import StepDebugCommand

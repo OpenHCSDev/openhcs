@@ -23,7 +23,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont
 
 from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
-from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
+from formbridge.forms.layout_constants import CURRENT_LAYOUT
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.reflowing_vertical_scroll_area import (
     ReflowingVerticalScrollArea,

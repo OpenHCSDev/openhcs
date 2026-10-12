@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 from pathlib import Path
 
@@ -9,7 +10,6 @@ from polystore.roi import ROI, PointShape, load_rois_from_zip
 
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -68,7 +68,7 @@ def test_source_metadata_is_optional_only_for_external_shapes():
 
 def test_native_sidecar_preserves_retained_source_planes(tmp_path):
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/z1.tif", "/source/z2.tif"),
             component_metadata=(
@@ -89,7 +89,7 @@ def test_native_sidecar_preserves_retained_source_planes(tmp_path):
         decoded.retained_plane_component_values()
         == metadata.retained_plane_component_values()
     )
-    assert decoded.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert decoded.plane_axis is SourceBindingPlaneAxis
     assert decoded.source_voxel_spacing == metadata.source_voxel_spacing
     assert ROIArchiveSourceMetadata.geometry(restored) == rois
 

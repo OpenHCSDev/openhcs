@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     AllFields,
     UiCatalogPageMetadata,
     UiObjectStateFieldHelpResult,

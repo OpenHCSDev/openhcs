@@ -1,4 +1,5 @@
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 import numpy as np
 import pytest
@@ -23,7 +24,6 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_spatial_graph import (
     SpatialGraph,
     SpatialGraphEdge,
@@ -204,7 +204,7 @@ def test_spatial_graph_output_context_preserves_exact_source_identity() -> None:
 def test_spatial_graph_output_context_projects_declared_source_plane() -> None:
     graph = _branched_graph().replace_fields(source_plane_index=1)
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/tmp/hoechst.tif", "/tmp/smi312.tif"),
             component_metadata=({"channel": "1"}, {"channel": "4"}),
