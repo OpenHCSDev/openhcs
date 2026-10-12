@@ -72,10 +72,25 @@ class CustomFunctionCanonicalLookup:
         local = None
         if registry_name == cls._registry_name and name.isidentifier() and not name.startswith("_"):
             local = CustomFunctionRuntimeRegistry.metadata_for_name(name)
+        claimed = local is not None
         if local is not None:
             yield local
-        yield from super()._canonical_metadata_claims(
+        for claim in super()._canonical_metadata_claims(
             function_id, prepare_catalog=prepare_catalog and local is None,
+        ):
+            claimed = True
+            yield claim
+        if not claimed and CustomFunctionRuntimeRegistry.was_withdrawn(name):
+            raise WithdrawnCustomFunctionError(name)
+
+
+class WithdrawnCustomFunctionError(KeyError):
+    """A pipeline names a custom function this process published and withdrew."""
+
+    def __init__(self, function_name: str) -> None:
+        super().__init__(
+            f"Custom function {function_name!r} was deleted, so this server withdrew "
+            "it. Register it again, or remove the step that names it."
         )
 
 
@@ -140,7 +155,15 @@ class CustomFunctionRuntimeRegistry:
     _preparation_outcomes: dict[CustomFunctionSource, Future[FunctionMetadata]] = {}
     _preparation_threads: dict[CustomFunctionSource, int] = {}
     _source_revision: CustomFunctionSourceRevision | None = None
+    # Names this process published and no longer does.
+    _withdrawn: set[str] = set()
     _lock = threading.RLock()
+
+    @classmethod
+    def was_withdrawn(cls, function_name: str) -> bool:
+        """Whether this process published the function and then withdrew it."""
+        with cls._lock:
+            return function_name in cls._withdrawn
 
     @classmethod
     def _canonical_metadata_for_publication(
@@ -191,6 +214,17 @@ class CustomFunctionRuntimeRegistry:
                 and cls._declaration_revision(declaration.metadata) == content_sha256
             )
             return tuple(source for source in sources if cls.declaration_for_source(source) is not None)
+
+    @classmethod
+    def published_sources(cls) -> tuple[CustomFunctionSource, ...]:
+        """Every source this process publishes now, by name and content."""
+        with cls._lock:
+            return tuple(
+                CustomFunctionSource(name, revision)
+                for name, declaration in cls._declarations_by_name.items()
+                if (revision := cls._declaration_revision(declaration.metadata))
+                is not None
+            )
 
     @classmethod
     @contextmanager
@@ -435,6 +469,7 @@ class CustomFunctionRuntimeRegistry:
             }
             for function_name in persisted_names - metadata_by_name.keys():
                 cls._remove_preparation_outcomes_locked(function_name)
+                cls._withdrawn.add(function_name)
             cls._remove_module_exports_locked(previous_names)
             cls._declarations_by_name = {
                 **ephemeral_declarations,
@@ -458,6 +493,8 @@ class CustomFunctionRuntimeRegistry:
             cls._remove_preparation_outcomes_locked(function_name)
             cls._remove_module_exports_locked((function_name,))
             declaration = cls._declarations_by_name.pop(function_name, None)
+            if declaration is not None:
+                cls._withdrawn.add(function_name)
             if (
                 declaration is not None
                 and declaration.lifetime is PersistedLifetime
@@ -570,6 +607,7 @@ class CustomFunctionRuntimeRegistry:
 
         setattr(custom_functions, metadata.original_name, metadata.func)
         cls._published_exports[metadata.original_name] = metadata.func
+        cls._withdrawn.discard(metadata.original_name)
 
     @classmethod
     def _remove_module_exports_locked(cls, function_names: tuple[str, ...]) -> None:

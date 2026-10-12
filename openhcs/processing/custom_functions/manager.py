@@ -18,8 +18,6 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -28,7 +26,19 @@ from arraybridge import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.xdg_paths import get_data_file_path
+from openhcs.processing.custom_functions.catalogue_changes import (
+    CustomFunctionCreated,
+    CustomFunctionDeleted,
+    CustomFunctionEdited,
+    WriteAdmission,
+)
+from openhcs.processing.custom_functions.connected_servers import connected_servers
 from openhcs.processing.custom_functions.events import custom_function_changed
+from openhcs.processing.custom_functions.listing import (
+    CustomFunctionInfo,
+    CustomFunctionLoadFailure,
+    PersistedCustomFunction,
+)
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionLifetime,
     PersistedLifetime,
@@ -59,111 +69,6 @@ logger = logging.getLogger(__name__)
 
 # The file name ``exec`` gives frames of a persisted source it runs.
 _SOURCE_FILENAME = "<string>"
-
-
-@dataclass(frozen=True)
-class PersistedCustomFunction(ABC):
-    """
-    One persisted custom-function source as the manager lists it.
-
-    Attributes:
-        name: Name the source file gives the function
-        file_path: Path to source .py file
-    """
-
-    name: str
-    file_path: Path
-
-    @property
-    @abstractmethod
-    def list_label(self) -> str:
-        """The text a list of custom functions shows for this source."""
-
-    @property
-    @abstractmethod
-    def backend_label(self) -> str:
-        """The memory type or scope, or why there is none."""
-
-    @property
-    @abstractmethod
-    def status(self) -> str:
-        """Whether the source is loaded, and the error when it is not."""
-
-
-@dataclass(frozen=True)
-class CustomFunctionLoadFailure(PersistedCustomFunction):
-    """
-    A persisted source that could not be loaded.
-
-    Attributes:
-        error: What preparing or publishing the source raised
-    """
-
-    error: Exception
-
-    @property
-    def message(self) -> str:
-        if isinstance(self.error, ValidationError):
-            return self.error.message
-        return f"{type(self.error).__name__}: {self.error}"
-
-    @property
-    def line_number(self) -> int:
-        """Source line of the error, 0 when the error has none."""
-        if isinstance(self.error, ValidationError):
-            return self.error.line_number
-        return 0
-
-    @property
-    def list_label(self) -> str:
-        return f"{self.name} (failed to load)"
-
-    @property
-    def backend_label(self) -> str:
-        return "failed to load"
-
-    @property
-    def status(self) -> str:
-        return f"Failed to load: {self.describe()}"
-
-    def describe(self) -> str:
-        """File, line and error as one line of text."""
-        location = self.file_path.name
-        if self.line_number:
-            location = f"{location}, line {self.line_number}"
-        return f"{location}: {self.message}"
-
-
-@dataclass(frozen=True)
-class CustomFunctionInfo(PersistedCustomFunction):
-    """
-    A persisted source that loaded.
-
-    Attributes:
-        contract: Original callable contract, also owning scope and memory type
-    """
-
-    contract: CallableContract
-
-    @property
-    def list_label(self) -> str:
-        return self.name
-
-    @property
-    def status(self) -> str:
-        return "Loaded"
-
-    @property
-    def memory_type(self) -> str | None:
-        return self.contract.input_memory_type
-
-    @property
-    def doc(self) -> str:
-        return self.contract.func.__doc__ or ""
-
-    @property
-    def backend_label(self) -> str:
-        return self.memory_type or self.contract.execution_scope.value
 
 
 def load_each_source(
@@ -343,6 +248,10 @@ class CustomFunctionManager:
 
         if emit_signal:
             custom_function_changed.emit()
+        if persist:
+            connected_servers.tell(
+                CustomFunctionCreated(name=metadata.original_name, code=code)
+            )
 
         return registered_functions
 
@@ -393,8 +302,7 @@ class CustomFunctionManager:
                 exc_info=failure.error,
             )
         self._clear_caches()
-        if prepared or failures:
-            custom_function_changed.emit()
+        custom_function_changed.emit()
         logger.info(
             "Loaded %d persisted custom function(s); %d failed to load",
             len(prepared),
@@ -476,11 +384,9 @@ class CustomFunctionManager:
             CustomFunctionRuntimeRegistry.remove(func_name)
         logger.info("Deleted custom function file: %s", file_path)
 
-        # Clear caches
         self._clear_caches()
-
-        # Emit signal
         custom_function_changed.emit()
+        connected_servers.tell(CustomFunctionDeleted(name=func_name))
 
         return True
 
@@ -498,10 +404,12 @@ class CustomFunctionManager:
             snapshots, self.storage_dir, self._prepare_snapshot
         )
         loaded = [
-            CustomFunctionInfo(
-                name=name,
-                file_path=self.storage_dir / f"{name}.py",
-                contract=CallableContract.from_callable(metadata.func),
+            connected_servers.listing(
+                CustomFunctionInfo(
+                    name=name,
+                    file_path=self.storage_dir / f"{name}.py",
+                    contract=CallableContract.from_callable(metadata.func),
+                )
             )
             for name, metadata in prepared.items()
         ]
@@ -591,7 +499,35 @@ class CustomFunctionManager:
 
         self._clear_caches()
         custom_function_changed.emit()
+        connected_servers.tell(
+            CustomFunctionEdited(old_name=old_name, name=new_name, code=new_code)
+        )
         return new_name
+
+    def hold_source(
+        self, func_name: str, code: str, admit_write: WriteAdmission
+    ) -> None:
+        """Make this store hold ``code`` as the source of ``func_name``.
+
+        A store that already holds exactly these bytes (a server sharing the
+        session's store) is not written.
+        """
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
+        held = self._snapshot_source(file_path)
+        if held is not None and held.content == code.encode("utf-8"):
+            return
+        admit_write(self.storage_dir)
+        admit_write(file_path)
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self._save_function_code(func_name, code)
+
+    def drop_source(self, func_name: str, admit_write: WriteAdmission) -> None:
+        """Make this store hold no source of ``func_name``."""
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
+        if not file_path.exists():
+            return
+        admit_write(file_path)
+        file_path.unlink()
 
     def _create_execution_namespace(self) -> dict[str, Any]:
         """

@@ -228,8 +228,9 @@ def main() -> None:
         run(first)
         run(first)
 
-        stored_while_ready = store("resource_stored_while_ready")
+        # Storing tells the connected server, so the moment is recorded first.
         record("stored_while_ready")
+        stored_while_ready = store("resource_stored_while_ready")
         state = client.function_catalog_preparation(
             FunctionCatalogPreparationStartRequest(
                 ExecutionConnectionSpec(port=port, persistent=False)

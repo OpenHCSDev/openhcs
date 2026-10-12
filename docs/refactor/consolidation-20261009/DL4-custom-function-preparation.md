@@ -318,6 +318,68 @@ and rerun).
    with `OPENHCS_PREPARED_RESOURCE_TRACE=<dir>/trace.jsonl` and without `OPENHCS_CPU_ONLY`,
    and count `load` events per worker pid and `nvidia-smi --query-compute-apps=pid,used_memory --format=csv`.
 
+## Third leg
+
+### 1. Registering a custom function tells the running servers (done)
+
+Relation: registering is making the function usable, and usable includes acquired on every
+server that will run it. One owner states it: the manager's three operations
+(`register_from_code` with `persist`, `update_custom_function`, `delete_custom_function`)
+each tell `connected_servers` (`openhcs/processing/custom_functions/connected_servers.py`).
+The GUI dialog, `pyqt_gui/main.py` and any script call the manager and add nothing.
+
+- **Which servers.** Every `ZMQExecutionClient` adds itself to `connected_servers` when it is
+  constructed (weakly held); "connected" is asked of the client when a change is told, and
+  two clients of one server process count once. A process with no connected client (a
+  server, a worker, a script) tells nobody.
+- **The change family** (`catalogue_changes.py`): `CustomFunctionChange` with members
+  `CustomFunctionCreated(name, code)`, `CustomFunctionEdited(old_name, name, code)`,
+  `CustomFunctionDeleted(name)`. The member is the wire payload (control message type
+  `openhcs_custom_function_change`; one route, the family member says what happened) and
+  carries its effect in a server, `apply_on_server`: make the server's store hold what the
+  session's holds (`CustomFunctionManager.hold_source` / `drop_source`; a server that shares
+  the session's store finds the bytes already there and writes nothing; a write passes the
+  server's path policy), then `load_all_custom_functions`. Loading in a serving process
+  acquires (first leg), so: created is prepared, edited is prepared again and its old
+  revision withdrawn, deleted is withdrawn.
+- **In the server** (`FunctionCatalogPreparation.follow_custom_function_change`): the change
+  runs on the catalogue-preparation owner's own future, after any preparation under way, so
+  the server's existing status reports pending until the change is loaded and acquired and
+  the projections are current. `openhcs_custom_function_state` answers
+  `ServerCatalogueState(pending, loaded, failed)`.
+- **What the session shows.** `connected_servers.tell` returns at once; a thread sends the
+  change and asks for the state until it is not pending. Meanwhile
+  `list_custom_functions` lists the function as `CustomFunctionPreparing`
+  ("name (preparing)"). A source the server could not load or acquire is listed through the
+  existing `CustomFunctionLoadFailure` ("name (failed to load)", "On the execution server:
+  ..., line N"). When the server settles, `custom_function_changed` is emitted, which is
+  what refreshes the dialog.
+- **A compile naming a deleted function** is refused by the lookup owner:
+  "Custom function 'followed' was deleted, so this server withdrew it. Register it again,
+  or remove the step that names it." (`WithdrawnCustomFunctionError`; before: "Unknown
+  canonical function ID 'openhcs:followed'").
+- **A server started later** loads the persisted sources at its own start (first leg;
+  guarded by the "stored before start" function of `test_no_jit_after_readiness.py`).
+- Not notified: a registration with `persist=False` (MCP's ephemeral path, which already
+  registers in the server through `openhcs_custom_function_register`).
+- `load_all_custom_functions` now always announces a changed source set (before: only when
+  something loaded or failed, so deleting the last function left forked workers stale).
+
+Tests. `tests/integration/test_custom_function_changes_reach_servers.py` (six tests, one
+real server, fork workers; the driver `helpers/prepared_resource/run_custom_function_changes.py`
+only calls the manager): created while ready is acquired by the server and no compile or
+execute contains an acquisition; listed as preparing until the server holds it; an edit is
+acquired again, the server publishes only the new revision and calls run the new code; an
+acquisition that fails on the server is listed as failed to load with the cause; a deleted
+function is withdrawn and the compile naming it is refused with the message above.
+`tests/unit/test_custom_function_lifecycle.py` (four tests, scripted server): one request
+per change and per server process, none to a client that is not connected; preparing until
+the server reports; failed to load from the server's report; each member's effect on a
+server's store.
+
+Measured (same loaded machine): the server ran the acquisition 0.14 s after `create`; it
+reported pending for 6.9 s after that (the catalogue re-projection, item 7 below).
+
 ## Gates
 
 See the PR description.

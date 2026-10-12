@@ -12,6 +12,11 @@ from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttr
 from zmqruntime.messages import MessageFields, ResponseType
 
 from openhcs.agent.dto.functions import FunctionCatalogControlRequestABC
+from openhcs.processing.custom_functions.catalogue_changes import (
+    CustomCatalogueStateRequest,
+    CustomFunctionChange,
+    ServerCatalogueState,
+)
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.functions import (
@@ -455,6 +460,41 @@ class CustomFunctionRegistrationMessageStrategy(ZMQControlMessageStrategy):
             return CustomFunctionRegistrationControlResponse(
                 value=CustomFunctionRegistrationResult.uncertain(request, error),
             ).to_control_response()
+
+
+class CustomFunctionChangeMessageStrategy(ZMQControlMessageStrategy):
+    """A connected session changed its custom functions: this server follows."""
+
+    registry_key = CustomFunctionChange.wire_type
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        try:
+            preparation = context.require_function_catalog_preparation()
+            preparation.follow_custom_function_change(
+                message[CustomFunctionChange.change_key]
+            )
+            return CustomCatalogueStateMessageStrategy.response(preparation)
+        except Exception as error:
+            return self.error_response(error)
+
+
+class CustomCatalogueStateMessageStrategy(ZMQControlMessageStrategy):
+    """Report what this server holds of the custom functions, or pending."""
+
+    registry_key = CustomCatalogueStateRequest.wire_type
+
+    @staticmethod
+    def response(preparation: "FunctionCatalogPreparation") -> dict:
+        return {
+            MessageFields.STATUS: ResponseType.OK.value,
+            ServerCatalogueState.state_key: preparation.custom_catalogue_state(),
+        }
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        try:
+            return self.response(context.require_function_catalog_preparation())
+        except Exception as error:
+            return self.error_response(error)
 
 
 class CustomFunctionRegistrationObservationMessageStrategy(ZMQControlMessageStrategy):

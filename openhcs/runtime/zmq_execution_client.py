@@ -42,7 +42,10 @@ from zmqruntime.messages import (
     EndpointLaunch,
     ExecuteRequest,
     ExecutionRecord,
+    MessageFields,
     PongResponse,
+    ProcessIdentity,
+    ResponseType,
     ServerRole,
     StatusRequest,
 )
@@ -67,6 +70,15 @@ from openhcs.core.pipeline_document import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+from openhcs.processing.custom_functions.catalogue_changes import (
+    CustomCatalogueStateRequest,
+    CustomFunctionChange,
+    ServerCatalogueState,
+)
+from openhcs.processing.custom_functions.connected_servers import (
+    CustomFunctionServer,
+    connected_servers,
+)
 from openhcs.runtime.import_authority import (
     ImportRootEndpoint,
     OpenHCSRuntimeImportAuthority,
@@ -1009,8 +1021,14 @@ class FunctionCatalogExecutionClient(
         )
 
 
-class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
-    """ZMQ client for OpenHCS pipeline execution with progress streaming."""
+class ZMQExecutionClient(
+    ImportRootEndpoint, FunctionCatalogExecutionClient, CustomFunctionServer
+):
+    """ZMQ client for OpenHCS pipeline execution with progress streaming.
+
+    While it is connected, its server follows this process's custom functions:
+    every change the manager makes is sent to it.
+    """
 
     config: OpenHCSZMQConfig
 
@@ -1038,6 +1056,36 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
             config=config,
             connection_status_callback=connection_status_callback,
         )
+        connected_servers.add(self)
+
+    def server_process(self) -> ProcessIdentity | None:
+        endpoint = self.connected_endpoint
+        return None if endpoint is None else endpoint.process_identity
+
+    def follow_custom_function_change(
+        self, change: CustomFunctionChange
+    ) -> ServerCatalogueState:
+        return self._custom_catalogue_exchange(
+            {
+                MessageFields.TYPE: change.wire_type,
+                CustomFunctionChange.change_key: change,
+            }
+        )
+
+    def custom_catalogue_state(self) -> ServerCatalogueState:
+        return self._custom_catalogue_exchange(
+            {MessageFields.TYPE: CustomCatalogueStateRequest.wire_type}
+        )
+
+    def _custom_catalogue_exchange(
+        self, message: dict[str, object]
+    ) -> ServerCatalogueState:
+        response = self._send_control_request(
+            message, timeout_ms=self.config.control_timeout_ms
+        )
+        if response.get(MessageFields.STATUS) != ResponseType.OK.value:
+            raise RuntimeError(str(response.get(MessageFields.ERROR) or response))
+        return response[ServerCatalogueState.state_key]
 
     @classmethod
     @contextmanager
