@@ -88,6 +88,7 @@ def test_original_session_framing_to_generated_sampling_command(
         ControlledWireSession,
     )
     import openhcs.mcp.dev_client_core as ingress
+
     value = selected(sample()) if selected_case else sample()
     argv = ("selected-plate-sample",) if selected_case else ("sample-plate-image", "source-plate", "image.tif")
     args = dev_client._build_parser().parse_args(argv)
@@ -98,7 +99,6 @@ def test_original_session_framing_to_generated_sampling_command(
     def observe(contract, receipt):
         decoded.append(contract)
         return original_decode(contract, receipt)
-
     monkeypatch.setattr(ingress, "dataclass_from_mapping", observe)
     response = asyncio.run(command.run_session(peer, args))
     assert decoded == [type(value)]
