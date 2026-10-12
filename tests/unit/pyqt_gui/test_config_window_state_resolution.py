@@ -20,7 +20,10 @@ from pyqt_reactive.services.scope_window_factory import (
 )
 from pyqt_reactive.services.scope_window_navigation import ScopeWindowNavigationService
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.window_navigation import WindowNavigationRequest
+from pyqt_reactive.services.window_navigation import (
+    NavigationTargetClaimedTwiceError,
+    WindowNavigationRequest,
+)
 from pyqt_reactive.theming.color_scheme import ColorScheme
 
 from openhcs.core.config import (
@@ -280,7 +283,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         assert plate_window._tab_body.tab_bar.isHidden()
         assert plate_window._tab_body.current_widget() is plate_window._tabs[0].content
         assert plate_window.windowTitle() == "Config PipelineConfig"
-        assert plate_window._header_label.text() == "Config PipelineConfig"
+        assert plate_window.header_label.text() == "Config PipelineConfig"
         assert configurable_root_fields <= {
             parameter.name
             for parameter in plate_window._tabs[
@@ -738,15 +741,15 @@ def test_config_window_save_button_starts_disabled_and_styles_disabled_state(
     try:
         qapp.processEvents()
 
-        assert window._save_button is not None
-        assert not window._save_button.isEnabled()
-        assert "QPushButton:disabled" in window._save_button.styleSheet()
+        assert window.save_button is not None
+        assert not window.save_button.isEnabled()
+        assert "QPushButton:disabled" in window.save_button.styleSheet()
 
         state.update_parameter("num_workers", state.parameters["num_workers"] + 1)
         qapp.processEvents()
         window.detect_changes()
 
-        assert window._save_button.isEnabled()
+        assert window.save_button.isEnabled()
     finally:
         window.close()
         ObjectStateRegistry.clear()
@@ -1092,14 +1095,13 @@ def test_config_navigation_rejects_ambiguous_field_without_state_scope(qapp) -> 
         window.show()
         qapp.processEvents()
 
-        ambiguous = WindowManager.focus_and_navigate_result(
-            OpenHCSUiWindowId.global_config,
-            field_path="shared",
-            requested_scope_id=OpenHCSUiWindowId.global_config,
-        )
-        assert ambiguous.focused
-        assert not ambiguous.target_accepted
-        assert not ambiguous.navigated
+        # Two tabs claim ``shared`` and the request names neither state: refused, by name.
+        with pytest.raises(NavigationTargetClaimedTwiceError, match="'shared'"):
+            WindowManager.focus_and_navigate_result(
+                OpenHCSUiWindowId.global_config,
+                field_path="shared",
+                requested_scope_id=OpenHCSUiWindowId.global_config,
+            )
 
         declared = WindowManager.focus_and_navigate_result(
             OpenHCSUiWindowId.global_config,

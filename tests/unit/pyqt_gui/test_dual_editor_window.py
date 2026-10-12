@@ -115,6 +115,12 @@ def test_navigation_shows_the_tab_that_owns_the_field(open_step_editor) -> None:
 
     assert driver.owning_tabs(_field_request(window, "func")) == (window.tab(FunctionPatternTab),)
     assert driver.owning_tabs(_field_request(window, "name")) == (window.tab(StepSettingsTab),)
+    # The step's ObjectState holds ``func`` but the step form shows no such field,
+    # so only the function tab claims it; no tab order decides.
+    step_form = window.tab(StepSettingsTab).editor.form_manager
+    assert "func" in step_form.state.parameters
+    assert not step_form.owns_field_path("func")
+    assert not step_form.owns_field_path("func.token:abc|func")
 
     driver.prepare(_field_request(window, "func"))
     assert window.tab_body.current_widget() is window.tab(FunctionPatternTab).editor

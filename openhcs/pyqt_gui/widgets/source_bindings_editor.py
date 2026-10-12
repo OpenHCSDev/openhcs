@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, fields
+from operator import itemgetter
 from types import MappingProxyType
 from typing import (
     Annotated,
@@ -47,6 +48,7 @@ from pyqt_reactive.widgets.sectioned_dataclass_editor import (
 )
 from formbridge.forms.parameter_info_types import register_inline_dataclass_widget
 from formbridge.forms.raw_display_value import RawDisplayValue
+from pyqt_reactive.widgets.shared.abstract_table_browser import ColumnDef
 from pyqt_reactive.widgets.shared.scoped_table_widget import ScopedTableWidget
 from python_introspect import (
     FieldLabel,
@@ -457,6 +459,36 @@ PAIRING = PairingRowsSection(
     add_label="Add pairing key",
 )
 
+PIPELINE_SOURCE_COLUMNS = (
+    ColumnDef("Field", "field", value=itemgetter(0)),
+    ColumnDef("Value", "count", value=lambda row: len(row[1])),
+)
+DIAGNOSTIC_COLUMNS = (
+    ColumnDef("Severity", "severity", value=lambda found: found.severity.value),
+    ColumnDef("Code", "code"),
+    ColumnDef("Alias", "alias", value=lambda found: found.alias or ""),
+    ColumnDef("Message", "message"),
+)
+PREVIEW_MATCH_COLUMNS = (
+    ColumnDef("Alias", "alias"),
+    ColumnDef("Scope", "declaration_scope"),
+    ColumnDef("Matched", "matched_source_count"),
+    ColumnDef("Samples", "sample_paths", value=lambda row: ", ".join(row.sample_paths)),
+)
+SOURCE_SET_COLUMNS = (
+    ColumnDef("Index", "index"),
+    ColumnDef(
+        "Aliases",
+        "paths_by_alias",
+        value=lambda row: ", ".join(f"{alias}:{path}" for alias, path in row.paths_by_alias),
+    ),
+    ColumnDef(
+        "Metadata",
+        "metadata",
+        value=lambda row: ", ".join(f"{field}={value}" for field, value in row.metadata),
+    ),
+)
+
 
 class SourceBindingsEditorWidget(SectionedDataclassEditor):
     """Inline form widget for source bindings: it declares the sections.
@@ -522,51 +554,46 @@ class SourceBindingsEditorWidget(SectionedDataclassEditor):
 
     def sections(self) -> tuple[EditorSection, ...]:
         pipeline, step = self.resolved_view_inputs(self._source_bindings)
-        binding_columns = tuple(
-            DataclassFieldColumns.of(NamedSourceBinding).named(name)
-            for name in ("alias", "artifact_kind", "origin")
-        )
-        origin = binding_columns[-1].editor
+        binding_fields = DataclassFieldColumns.of(NamedSourceBinding)
+        origin = binding_fields.named("origin").editor
         pairing_method = DataclassFieldColumns.of(SourceSetPairingRow).named("method").editor
         step_bindings = step.binding_declarations
         return (
             ReadOnlyTableSection(
                 title="Pipeline Sources",
-                columns=("Field", "Value"),
+                columns=PIPELINE_SOURCE_COLUMNS,
                 rows=(
-                    ("image-plane sources", str(len(pipeline.image_plane_sources))),
-                    (
-                        "imported metadata tables",
-                        str(len(pipeline.imported_metadata_tables)),
-                    ),
+                    ("image-plane sources", pipeline.image_plane_sources),
+                    ("imported metadata tables", pipeline.imported_metadata_tables),
                 ),
             ),
             ReadOnlyTableSection(
                 title="Pipeline Bindings",
-                columns=tuple(column.label for column in binding_columns),
-                rows=tuple(
-                    tuple(
-                        column.editor.display(column.value_of(binding))
-                        for column in binding_columns
-                    )
-                    for binding in pipeline.binding_declarations
+                columns=tuple(
+                    binding_fields.named(name).read_only()
+                    for name in ("alias", "artifact_kind", "origin")
                 ),
+                rows=pipeline.binding_declarations,
             ),
             TupleSummarySection(
                 title="Bindings",
                 field_name="bindings",
-                columns=("Bindings", "Aliases", "Origins"),
-                rows=(
-                    (
-                        str(len(step_bindings)),
-                        ", ".join(binding.alias for binding in step_bindings),
-                        ", ".join(
-                            sorted({origin.display(binding.origin) for binding in step_bindings})
+                columns=(
+                    ColumnDef("Bindings", "count", value=len),
+                    ColumnDef(
+                        "Aliases",
+                        "aliases",
+                        value=lambda bindings: ", ".join(binding.alias for binding in bindings),
+                    ),
+                    ColumnDef(
+                        "Origins",
+                        "origins",
+                        value=lambda bindings: ", ".join(
+                            sorted({origin.display(binding.origin) for binding in bindings})
                         ),
                     ),
-                )
-                if step_bindings
-                else (),
+                ),
+                rows=(step_bindings,) if step_bindings else (),
                 actions=(
                     ("Edit bindings...", self.edit_step_bindings),
                     (
@@ -582,9 +609,21 @@ class SourceBindingsEditorWidget(SectionedDataclassEditor):
             PAIRING,
             ReadOnlyTableSection(
                 title="Resolved Source Set Pairing",
-                columns=("Scope", "Method", "Dimensions"),
+                columns=(
+                    ColumnDef("Scope", "scope", value=itemgetter(0)),
+                    ColumnDef(
+                        "Method",
+                        "method",
+                        value=lambda row: pairing_method.display(type(row[1])),
+                    ),
+                    ColumnDef(
+                        "Dimensions",
+                        "dimensions",
+                        value=lambda row: len(row[1].dimensions),
+                    ),
+                ),
                 rows=tuple(
-                    (scope, pairing_method.display(type(plan)), str(len(plan.dimensions)))
+                    (scope, plan)
                     for scope, plan in (
                         ("pipeline", pipeline.match_plan),
                         ("step", step.match_plan),
@@ -611,43 +650,20 @@ class SourceBindingsEditorWidget(SectionedDataclassEditor):
         )
         diagnostics = ReadOnlyTableSection(
             title="Diagnostics",
-            columns=("Severity", "Code", "Alias", "Message"),
-            rows=tuple(
-                (
-                    diagnostic.severity.value,
-                    diagnostic.code,
-                    diagnostic.alias or "",
-                    diagnostic.message,
-                )
-                for diagnostic in preview.diagnostics
-            ),
+            columns=DIAGNOSTIC_COLUMNS,
+            rows=tuple(preview.diagnostics),
         )
         return (
             *((diagnostics,) if preview.diagnostics else ()),
             ReadOnlyTableSection(
                 title="Preview Matches",
-                columns=("Alias", "Scope", "Matched", "Samples"),
-                rows=tuple(
-                    (
-                        row.alias,
-                        row.declaration_scope,
-                        str(row.matched_source_count),
-                        ", ".join(row.sample_paths),
-                    )
-                    for row in preview.binding_rows
-                ),
+                columns=PREVIEW_MATCH_COLUMNS,
+                rows=tuple(preview.binding_rows),
             ),
             ReadOnlyTableSection(
                 title="Source Sets",
-                columns=("Index", "Aliases", "Metadata"),
-                rows=tuple(
-                    (
-                        str(row.index),
-                        ", ".join(f"{alias}:{path}" for alias, path in row.paths_by_alias),
-                        ", ".join(f"{field}={value}" for field, value in row.metadata),
-                    )
-                    for row in preview.source_set_rows
-                ),
+                columns=SOURCE_SET_COLUMNS,
+                rows=tuple(preview.source_set_rows),
             ),
         )
 
