@@ -526,8 +526,13 @@ in the tree, by reading (not all of it observed running):
 Observed by the lead after the stop: `test_zmq_execution_server`,
 `test_orchestrator_lane_planning`, `test_execution_server_startup_preparation`,
 `test_g7_runtime_protocol_guards`, `test_callable_abi_preparation`,
-`test_processing_preparation`: 131 passed. The spawn tests over the real server: see
-"State at stop" below.
+`test_processing_preparation`: 131 passed. Over real servers on `63540c956`:
+`test_no_jit_after_readiness.py -k spawn`: 4 passed in 70 s;
+`test_custom_function_changes_reach_servers.py` plus the fork custom tests of
+`test_no_jit_after_readiness.py`: 20 passed in 101 s. Spawn trace of that run (CPU, probe
+function): 10 worker processes loaded, each exactly once; the workers of a pipeline that
+ran twice executed 4 calls each (both runs) with that one load; 4 processes of the stage
+with a changed worker count executed once each.
 
 Not done in item 4: the lazy import path (`openhcs.processing.custom_functions.__getattr__`
 and `CustomFunctionRuntimeRegistry.metadata_for_name`, a second load-at-first-lookup entry)
