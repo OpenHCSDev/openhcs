@@ -11,7 +11,7 @@ All functions follow OpenHCS contracts:
 
 For analysis functions that produce structured outputs (cell counts, measurements, etc.):
     - Use @artifact_outputs decorator to declare outputs
-    - Use materialization functions from openhcs.processing.materialization
+    - Use materialization functions from openhcs.core.materialization
     - Return tuple: (processed_image, analysis_result_1, analysis_result_2, ...)
 """
 
@@ -112,7 +112,7 @@ def my_custom_function(image, scale: float = 1.0, offset: float = 0.0):
 #    from openhcs.core.artifacts.specs import ArtifactSpec
 #    from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 #    from openhcs.core.pipeline.function_contracts import artifact_outputs
-#    from openhcs.processing.materialization import csv_only
+#    from openhcs.core.materialization import csv_only
 #
 # 2. Declare the semantic output and derive its columns from the row dataclass:
 #
@@ -323,7 +323,7 @@ def my_custom_function(image, radius: float = 2.0):
 
 NUMPY_ANALYSIS_TEMPLATE = """from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, MaterializationSpec
 from dataclasses import dataclass
 from typing import List, Tuple
 import numpy as np
@@ -384,7 +384,7 @@ def my_analysis_function(image, threshold: float = 0.5) -> Tuple[np.ndarray, Lis
 
 NUMPY_DUAL_OUTPUT_TEMPLATE = """from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.processing.materialization import CsvOptions, JsonOptions, MaterializationSpec
+from openhcs.core.materialization import CsvOptions, JsonOptions, MaterializationSpec
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Any
 import numpy as np

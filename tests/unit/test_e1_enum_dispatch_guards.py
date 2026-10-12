@@ -37,8 +37,6 @@ ALLOWED: dict[tuple[str, str], str] = {
     ('CellProfilerMeasurementTargetScope', 'openhcs/interop/cellprofiler/module_artifact_declarations.py'): CELLPROFILER_SPELLING,
     ('CellProfilerObjectTableMode', 'openhcs/interop/cellprofiler/analyst_export.py'): CELLPROFILER_SPELLING,
     ('CellProfilerSourceImageProjectionField', 'openhcs/interop/cellprofiler/analyst_export.py'): CELLPROFILER_SPELLING,
-    ('FileFormat', 'openhcs/core/plate_image_inventory.py'): "E2: restates polystore's format family (get_format_from_extension); key result actions by that family",
-    ('FileFormat', 'openhcs/pyqt_gui/widgets/image_browser.py'): "E2: restates polystore's format family (get_format_from_extension); key result actions by that family",
     ('FunctionStepExecutionScope', 'openhcs/core/artifacts/input_projection.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/callable_contract.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/function_patterns.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',

@@ -21,7 +21,7 @@ from skimage.morphology import skeletonize
 from openhcs.constants.constants import Backend
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     CsvOptions,
     JsonOptions,
     MaterializationSpec,

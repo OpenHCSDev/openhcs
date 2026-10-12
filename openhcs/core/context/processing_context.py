@@ -172,6 +172,12 @@ class ProcessingContext:
         self.execution_runtime = runtime
         self.reset_completed_step_outputs()
 
+    def execution_axis_count(self) -> int:
+        """Return how many axis values the bound execution runs; 0 before binding."""
+        if self.execution_runtime is None:
+            return 0
+        return len(self.execution_runtime.execution_axis_values)
+
     def reset_completed_step_outputs(self) -> None:
         """Start an execution's saved-output facts without retaining old payloads."""
         from openhcs.core.steps.abstract import StepExecutionObservation

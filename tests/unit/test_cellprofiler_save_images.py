@@ -68,7 +68,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,

@@ -11,12 +11,12 @@ from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
-from openhcs.processing.materialization import (
+from openhcs.core.materialization import (
     ImageFileOptions,
     MaterializationSpec,
     ROIOptions,
 )
-from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
+from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
 
 def test_disabling_automatic_materialization_keeps_only_declared_exports(

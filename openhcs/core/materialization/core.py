@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 import numpy as np
 import pandas as pd
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import JsonValue, to_jsonable
 from polystore.config import TiffConfig
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
@@ -32,6 +33,7 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
+import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 from openhcs.core.source_path_identity import source_path_identity
 from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
@@ -84,8 +86,8 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamViewerComponentMetadataProjector,
     StreamScopedDisplayConfig,
 )
-from openhcs.processing.materialization.constants import WriteMode
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.constants import WriteMode
+from openhcs.core.materialization.options import (
     CsvOptions,
     FileBundleOptions,
     FileOutputOptions,
@@ -205,12 +207,7 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
             )
             for indices, config in ImageFileFormat.storage_write_batches(
                 tuple(
-                    (
-                        ImagePayload.of(output.content).with_metadata(output.metadata)
-                        if output.metadata is not None
-                        and ImageFileFormat.is_image_path(output.path)
-                        else output.content
-                    )
+                    output.stored_content()
                     for output in outputs
                 ),
                 tuple(output.path for output in outputs),
@@ -282,6 +279,13 @@ BackendKwargs: TypeAlias = dict[str, BackendKwargsValue]
 NormalizedBackendKwargs: TypeAlias = dict[str, "BackendCallKwargs"]
 BackendKwargsInput = BackendKwargs | BackendKwargsAbsent
 PrimaryPathSelector = Callable[[list["Output"]], str]
+
+NONFINITE_FLOAT_CODES: tuple[tuple[int, Callable[[np.ndarray], np.ndarray], float], ...] = (
+    (1, np.isnan, np.nan),
+    (2, np.isposinf, np.inf),
+    (3, np.isneginf, -np.inf),
+)
+"""Code stored for each non-finite float a CSV cell cannot spell, its test and value."""
 CandidatePathSelector = Callable[[FileOutputOptions, str], tuple[str, ...]]
 
 
@@ -299,12 +303,29 @@ class Output:
 
     def same_materialization_owner(self, other: Output) -> bool:
         """Compare current destination/source declarations, independent of content."""
+        return self._declared_owner() == other._declared_owner()
+
+    def _declared_owner(self) -> tuple[object, ...]:
         return (
-            self.path == other.path
-            and self.metadata == other.metadata
-            and self.variable_components == other.variable_components
-            and self.sample_numbers_by_axis == other.sample_numbers_by_axis
+            self.path,
+            self.metadata,
+            self.variable_components,
+            self.sample_numbers_by_axis,
         )
+
+    def stored_content(self) -> MaterializationValue:
+        """Return the content as a backend stores it: an image carries its metadata."""
+        if self.metadata is None or not ImageFileFormat.is_image_path(self.path):
+            return self.content
+        return ImagePayload.of(self.content).with_metadata(self.metadata)
+
+    def describes_image(self) -> bool:
+        """Whether this output carries image metadata to project for viewers."""
+        return self.metadata is not None
+
+    def numbers_samples(self) -> bool:
+        """Whether this output already carries its per-axis sample numbers."""
+        return self.sample_numbers_by_axis is not None
 
     @classmethod
     def from_metadata(
@@ -525,12 +546,6 @@ class ColumnarCsvOutput(Output):
     content: ColumnarRows
     options: CsvOptions = field(default_factory=CsvOptions)
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.content, ColumnarRows):
-            raise TypeError("Columnar CSV content must be ColumnarRows.")
-        if not isinstance(self.options, CsvOptions):
-            raise TypeError("Columnar CSV output requires CSV writer options.")
-
     def rendered(self) -> Utf8TextOutput:
         return Utf8TextOutput(
             path=self.path,
@@ -576,7 +591,7 @@ class ColumnarCsvOutput(Output):
         for name in self.content.columns:
             values = ColumnarRows.column_array(self.content.column_values(name))
             selected = name in rendered_columns or name in partition_fields
-            if not selected and self.options.fields is not None:
+            if not selected and self.options.declares_fields():
                 continue
             mask = MeasurementSparseColumnarRows.present_mask(values)
             if not selected and bool(np.any(mask)):
@@ -618,9 +633,8 @@ class ColumnarCsvOutput(Output):
                 elif values.dtype.kind == "f":
                     if bool(np.any(~np.isfinite(values))):
                         codes = np.zeros(len(values), dtype=np.uint8)
-                        codes[np.isnan(values)] = 1
-                        codes[np.isposinf(values)] = 2
-                        codes[np.isneginf(values)] = 3
+                        for code, is_member, _value in NONFINITE_FLOAT_CODES:
+                            codes[is_member(values)] = code
                         nonfinite_codes[name] = (
                             RenderedColumnarCsvOutput.pack_nonfinite_codes(codes)
                         )
@@ -689,7 +703,7 @@ class ColumnarCsvOutput(Output):
                 raise ValueError(
                     "CSV partitions declare incompatible paths/schema/policy."
                 )
-            if output.sample_numbers_by_axis is not None:
+            if output.numbers_samples():
                 raise ValueError(
                     "CSV source numbering must be composed by its existing owner."
                 )
@@ -749,8 +763,6 @@ class RenderedColumnarCsvOutput(
     )
 
     def __post_init__(self) -> None:
-        if not isinstance(self.options, CsvOptions):
-            raise TypeError("Realized CSV requires its writer options.")
         if not self.content.startswith(self.header_content):
             raise ValueError("Realized CSV does not contain its rendered header.")
         if self.data_row_count < 0 or tuple(self.key_columns) != self.partition_fields:
@@ -919,9 +931,8 @@ class RenderedColumnarCsvOutput(
                     values = np.asarray(texts, dtype=object)
                 if dtype.kind == "f" and codes is not None:
                     original = codes[offset : offset + count]
-                    values[original == 1] = np.nan
-                    values[original == 2] = np.inf
-                    values[original == 3] = -np.inf
+                    for code, _is_member, value in NONFINITE_FLOAT_CODES:
+                        values[original == code] = value
                 segments.append(values)
                 offset += count
             values = np.concatenate(segments) if segments else np.empty(0, dtype=object)
@@ -982,7 +993,7 @@ class RenderedColumnarCsvOutput(
             raise ValueError(
                 "Realized CSV partitions declare incompatible output ownership."
             )
-        if any(output.sample_numbers_by_axis is not None for output in values):
+        if any(output.numbers_samples() for output in values):
             raise ValueError(
                 "CSV source numbering must be composed by its existing owner."
             )
@@ -1220,6 +1231,11 @@ class MaterializationInputItem(RuntimeProjectedPayloadItem):
     def data(self) -> MaterializationValue:
         return runtime_array_operand(array_data_of(self.value))
 
+    def has_leading_plane_axis(self) -> bool:
+        """Whether the payload's first dimension is a declared plane axis."""
+        plane_axis = self.metadata.plane_axis
+        return plane_axis is not None
+
     @property
     def runtime_plane(self) -> RuntimeProjectionPlaneMetadata | None:
         """Return runtime display-plane identity for this materialized item."""
@@ -1233,20 +1249,8 @@ class ROIMaterializationSourceSpatialDomain:
         metadata_domain = item.metadata.source_spatial_domain.with_value_name(
             "ROI materialization source image",
         )
-        if metadata_domain.source_shape_yx is not None:
-            return metadata_domain
-        local_shape_yx = item.metadata.spatial_shape_yx(item.data)
-        if local_shape_yx is None:
-            return metadata_domain
-        return SourceSpatialDomain(
-            origin_yx=(
-                metadata_domain.origin_yx
-                if metadata_domain.origin_yx is not None
-                else (0, 0)
-            ),
-            source_shape_yx=local_shape_yx,
-            fill_value=metadata_domain.fill_value,
-            value_name=metadata_domain.value_name,
+        return metadata_domain.with_undeclared_shape_from(
+            lambda: item.metadata.spatial_shape_yx(item.data)
         )
 
     def domain_for_target(
@@ -1346,6 +1350,9 @@ class SourceStemAuthoritySelection:
         if microscope_handler is None:
             return cls(parser=None)
         return cls(parser=microscope_handler.parser)
+
+    def has_parser(self) -> bool:
+        return self.parser is not None
 
     def required_parser(self) -> FilenameParser:
         if self.parser is None:
@@ -1479,10 +1486,7 @@ class ComponentMetadataSourceStemResolutionPolicy(MissingSourceStemResolutionPol
     strategy_key = "component_metadata"
 
     def matches(self, context: ImagePayloadMetadata) -> bool:
-        return (
-            context.source_provenance.scalar_source_identity.component_metadata
-            is not None
-        )
+        return context.source_provenance.scalar_source_identity.has_component_metadata()
 
     def source_stem(
         self,
@@ -1557,7 +1561,7 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
         cls,
         context: SourceStemAuthoritySelection,
     ) -> bool:
-        return context.parser is not None
+        return context.has_parser()
 
     @classmethod
     def build_for_context(
@@ -1720,19 +1724,17 @@ class ROIMaterializationArchiveIdentity:
     ) -> bool:
         if self.path != other.path:
             return False
-        if self.source_identity is None or other.source_identity is None:
-            return True
-        if (
-            self.component_address_identity is not None
-            and other.component_address_identity is not None
+        # The first facet both identities declare decides; an identity that
+        # declares none is compatible with any.
+        for mine, theirs in zip(
+            self._identity_facets(), other._identity_facets(), strict=True
         ):
-            return self.component_address_identity == other.component_address_identity
-        if (
-            self.source_stem_identity is not None
-            and other.source_stem_identity is not None
-        ):
-            return self.source_stem_identity == other.source_stem_identity
+            if mine is not None and theirs is not None:
+                return mine == theirs
         return True
+
+    def _identity_facets(self) -> tuple[object | None, object | None]:
+        return (self.component_address_identity, self.source_stem_identity)
 
     def merge_with(
         self,
@@ -2032,6 +2034,10 @@ class MaterializationInput:
                 tuple(item.value for item in unprojected.items)
             ),
         )
+
+    def is_sequence(self) -> bool:
+        """Whether the writer received an explicit sequence of payloads."""
+        return self.sequence_type is not None
 
     @property
     def data(self) -> MaterializationValue:
@@ -2348,7 +2354,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         display_semantics = self.values.stream_request.display_semantics
         parser = self.values.stream_request.source.identity.microscope_handler.parser
         for output in outputs:
-            if output.metadata is None:
+            if not output.describes_image():
                 result.append(output)
                 continue
             items = StreamImagePayloadMetadataProjector.payload_items_for_display(
@@ -2399,12 +2405,12 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             source_identity.component_metadata if source_identity is not None else None
         )
         if component_metadata is None:
-            if not output.viewer_stream_requires_source_metadata:
-                return None
-            raise ValueError(
-                "Viewer stream materialization requires output metadata with "
-                "source_component_metadata."
-            )
+            if output.viewer_stream_requires_source_metadata:
+                raise ValueError(
+                    "Viewer stream materialization requires output metadata with "
+                    "source_component_metadata."
+                )
+            return None
         item_fields = output.viewer_item_fields()
         display_config = output.viewer_display_config(
             self.values.stream_request.display_config
@@ -2484,9 +2490,10 @@ class BackendSaver:
         return saved_outputs
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
-        if not backend_instance.requires_filesystem_validation:
-            return
+        if backend_instance.requires_filesystem_validation:
+            self._prepare_filesystem_path(backend, path)
 
+    def _prepare_filesystem_path(self, backend: str, path: str) -> None:
         self.filemanager.ensure_directory(
             str(source_path_identity(path).parent), backend
         )
@@ -2517,6 +2524,17 @@ class MaterializationContext:
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan = field(kw_only=True)
     materialization_spec: MaterializationSpec | None = None
+
+    def sample_numbers_for_export(
+        self, relative_path: Path
+    ) -> Mapping[str, tuple[int, ...]] | None:
+        """Return the sample numbers the running step recorded for an exported file."""
+        if self.context is None:
+            return None
+        step_outputs = self.context.runtime_step_outputs
+        if step_outputs is None:
+            return None
+        return step_outputs.sample_numbers_by_export_path.get(relative_path)
 
     def named_source_filename(
         self, metadata: ImagePayloadMetadata, extension: str,
@@ -2699,21 +2717,25 @@ def columnar_rows_tabular_rows(
     return TabularRows(TabularRow(dict(row)) for row in data.row_mappings())
 
 
+@singledispatch
 def _mapping_column_length(value: MaterializationValue) -> int | None:
     """Return row count for a mapping value that behaves like a table column."""
-    if isinstance(value, Mapping):
-        return None
-    if isinstance(value, (str, bytes, bytearray)):
-        return None
     shape = getattr(value, "shape", None)
     if shape:
         return int(shape[0])
-    if isinstance(value, Sequence):
-        return len(value)
     try:
         return len(value)  # type: ignore[arg-type]
     except TypeError:
         return None
+
+
+@_mapping_column_length.register(Mapping)
+@_mapping_column_length.register(str)
+@_mapping_column_length.register(bytes)
+@_mapping_column_length.register(bytearray)
+def _one_cell_column_length(value: MaterializationValue) -> None:
+    """A mapping or a text value is one cell repeated on every row."""
+    return None
 
 
 def _mapping_column_value(
@@ -2764,15 +2786,6 @@ class TabularRowsAuthority:
     """Build canonical tabular rows for CSV and JSON materialization."""
 
     SLICE_INDEX_FIELD: ClassVar[str] = "slice_index"
-
-    @staticmethod
-    def requested(options: TabularExtractionOptions) -> bool:
-        return bool(
-            options.fields
-            or options.row_field
-            or options.row_unpacker
-            or options.row_columns
-        )
 
     @classmethod
     def build(
@@ -2872,7 +2885,7 @@ def _direct_csv_mapping_rows(
     options: CsvOptions,
 ) -> tuple[Sequence[Mapping], tuple[str, ...]] | None:
     """Return existing mapping rows when generic extraction would be a no-op."""
-    if options.row_unpacker is not None or options.row_field is not None:
+    if options.extracts_rows():
         return None
     if not isinstance(data, (list, tuple)):
         return None
@@ -2899,9 +2912,8 @@ def _direct_csv_object_rows(
 ) -> tuple[Sequence, tuple[str, ...]] | None:
     """Return object rows when declared fields let us avoid dict materialization."""
     if (
-        options.row_unpacker is not None
-        or options.row_field is not None
-        or not options.fields
+        options.extracts_rows()
+        or not options.has_fields()
         or not isinstance(data, (list, tuple))
     ):
         return None
@@ -2993,7 +3005,7 @@ class CsvFieldnamesAuthority:
 
 def _render_json(data: MaterializationValue, options: JsonOptions) -> str:
     payload: MaterializationValue
-    if TabularRowsAuthority.requested(options):
+    if options.requests_extraction():
         payload = TabularRowsAuthority.build(data, options)
     else:
         payload = data
@@ -3001,68 +3013,17 @@ def _render_json(data: MaterializationValue, options: JsonOptions) -> str:
     if options.wrap_list and isinstance(payload, list):
         payload = {"total_items": len(payload), "results": payload}
 
-    return json.dumps(JsonPayloadAuthority.jsonable(payload), indent=options.indent)
+    return json.dumps(to_jsonable(payload), indent=options.indent)
 
 
-class JsonPayloadAuthority:
-    """Convert materialized payloads into JSON-native values before encoding."""
-
-    @classmethod
-    def jsonable(cls, value: MaterializationValue) -> MaterializationValue:
-        return json_payload_value(value)
+@to_jsonable.register(pd.DataFrame)
+def _jsonable_dataframe(value: pd.DataFrame) -> JsonValue:
+    return to_jsonable(value.to_dict(orient="records"))
 
 
-@singledispatch
-def json_payload_value(value: MaterializationValue) -> MaterializationValue:
-    if supports_measurement_row_mapping(value):
-        return {
-            key: JsonPayloadAuthority.jsonable(item)
-            for key, item in measurement_row_mapping(value).items()
-        }
-    return value
-
-
-@json_payload_value.register(dict)
-def json_payload_mapping(value: dict) -> dict:
-    return {key: JsonPayloadAuthority.jsonable(item) for key, item in value.items()}
-
-
-@json_payload_value.register(ColumnarRows)
-def json_payload_columnar_rows(value: ColumnarRows) -> list[dict]:
-    return [
-        {key: JsonPayloadAuthority.jsonable(item) for key, item in row.items()}
-        for row in value.iter_row_mappings()
-    ]
-
-
-@json_payload_value.register(list)
-def json_payload_list(value: list) -> list:
-    return [JsonPayloadAuthority.jsonable(item) for item in value]
-
-
-@json_payload_value.register(tuple)
-def json_payload_tuple(value: tuple) -> tuple:
-    return tuple(JsonPayloadAuthority.jsonable(item) for item in value)
-
-
-@json_payload_value.register(pd.DataFrame)
-def json_payload_dataframe(value: pd.DataFrame) -> TabularRows:
-    return TabularRows(TabularRow(dict(row)) for row in value.to_dict(orient="records"))
-
-
-@json_payload_value.register(pd.Series)
-def json_payload_series(value: pd.Series) -> dict:
-    return value.to_dict()
-
-
-@json_payload_value.register(np.generic)
-def json_payload_numpy_scalar(value: np.generic) -> MaterializationValue:
-    return value.item()
-
-
-@json_payload_value.register(np.ndarray)
-def json_payload_numpy_array(value: np.ndarray) -> list:
-    return value.tolist()
+@to_jsonable.register(pd.Series)
+def _jsonable_series(value: pd.Series) -> JsonValue:
+    return to_jsonable(value.to_dict())
 
 
 class SingleFileWriterAuthority:
@@ -3214,7 +3175,7 @@ def _image_relative_output_path(
     *,
     sequence_index: int,
 ) -> str:
-    if options.relative_path_template is None:
+    if not options.names_files_by_template():
         return context.paths(options).primary_output_path(options)
 
     metadata = data.metadata
@@ -3261,7 +3222,7 @@ class ImageFileCandidatePathAuthority:
             raise TypeError(
                 "ImageFileCandidatePathAuthority requires ImageFileOptions."
             )
-        if options.relative_path_template is None:
+        if not options.names_files_by_template():
             candidate = PathHelper(base_path, options).primary_output_path(options)
         else:
             candidate = _relative_materialization_output_path(
@@ -3315,7 +3276,7 @@ def write_image_file(
     )
     outputs = []
     for sequence_index, item in enumerate(projected_items, start=1):
-        if options.relative_path_template is not None:
+        if options.names_files_by_template():
             path = _image_relative_output_path(
                 item.value, options, context, sequence_index=sequence_index,
             )
@@ -3357,9 +3318,6 @@ def _file_bundle_outputs(
 
     outputs: list[Output] = []
     normalized_paths: set[PurePosixPath] = set()
-    step_outputs = (
-        context.context.runtime_step_outputs if context.context is not None else None
-    )
     for relative_value, content in data.items():
         relative_path = _normalized_relative_materialization_path(relative_value)
         if relative_path in normalized_paths:
@@ -3371,33 +3329,43 @@ def _file_bundle_outputs(
             context.base_path,
             relative_path,
         )
-        sample_numbers = (
-            step_outputs.sample_numbers_by_export_path.get(Path(relative_value))
-            if step_outputs is not None
-            else None
-        )
-        if isinstance(content, Output):
-            output = replace(
+        outputs.append(
+            _file_bundle_entry_output(
                 content,
-                path=output_path,
-                sample_numbers_by_axis=sample_numbers,
-            ).rendered()
-        elif isinstance(content, str):
-            output = Utf8TextOutput.from_text(
-                path=output_path,
-                content=content,
-                sample_numbers_by_axis=sample_numbers,
+                output_path,
+                context.sample_numbers_for_export(Path(relative_value)),
             )
-        elif isinstance(content, bytes):
-            output = Output(
-                path=output_path,
-                content=content,
-                sample_numbers_by_axis=sample_numbers,
-            )
-        else:
-            raise TypeError("File bundle values must be text, bytes or typed outputs.")
-        outputs.append(output)
+        )
     return outputs
+
+
+@singledispatch
+def _file_bundle_entry_output(
+    content: MaterializationValue,
+    path: str,
+    sample_numbers: Mapping[str, tuple[int, ...]] | None,
+) -> Output:
+    """Return the output one file-bundle entry declares."""
+    raise TypeError("File bundle values must be text, bytes or typed outputs.")
+
+
+@_file_bundle_entry_output.register(Output)
+def _typed_file_bundle_entry_output(content, path, sample_numbers) -> Output:
+    return replace(
+        content, path=path, sample_numbers_by_axis=sample_numbers
+    ).rendered()
+
+
+@_file_bundle_entry_output.register(str)
+def _text_file_bundle_entry_output(content, path, sample_numbers) -> Output:
+    return Utf8TextOutput.from_text(
+        path=path, content=content, sample_numbers_by_axis=sample_numbers
+    )
+
+
+@_file_bundle_entry_output.register(bytes)
+def _bytes_file_bundle_entry_output(content, path, sample_numbers) -> Output:
+    return Output(path=path, content=content, sample_numbers_by_axis=sample_numbers)
 
 
 @writer_for(FileBundleOptions)
@@ -3469,12 +3437,8 @@ class ROIPlaneSourceIdentitySet:
     def has_single_component_address(self) -> bool:
         if len(self.items) != 1:
             return False
-        return (
-            self.items[
-                0
-            ].metadata.source_provenance.scalar_source_identity.component_metadata
-            is not None
-        )
+        metadata = self.items[0].metadata
+        return metadata.source_provenance.scalar_source_identity.has_component_metadata()
 
     @property
     def requires_source_identity(self) -> bool:
@@ -4014,18 +3978,11 @@ def _write_point_roi_zip(
     if id_field is None:
         raise ValueError("PointROIOptions requires an object-measurement subject.")
     features = (options.z_feature, options.y_feature, options.x_feature)
-    if payload.measurement_feature_owner is not None:
-        foreign = [
-            feature.value
-            for feature in features
-            if not payload.measurement_feature_owner.owns_measurement_feature_name(
-                feature.value
-            )
-        ]
-        if foreign:
-            raise ValueError(
-                f"Point coordinate features are not owned by the table: {foreign!r}."
-            )
+    foreign = payload.unowned_feature_names(feature.value for feature in features)
+    if foreign:
+        raise ValueError(
+            f"Point coordinate features are not owned by the table: {foreign!r}."
+        )
     coordinate_fields = tuple(
         feature.measurement_row_field_name for feature in features
     )
@@ -4034,10 +3991,7 @@ def _write_point_roi_zip(
         raise ValueError(f"Point measurement fields are missing: {sorted(missing)!r}.")
     provenance = payload.source_provenance.with_common_scalar_identity_from_planes()
     source_planes = provenance.source_image_provenance_planes
-    if provenance.source_path is None and (
-        not source_planes.has_values
-        or any(path is None for path in source_planes.paths)
-    ):
+    if not (provenance.source_identity.has_path() or source_planes.names_every_path()):
         raise ValueError(
             "Point ROI ZIP requires a source-image path or exact paths for every "
             "source plane."
@@ -4167,7 +4121,7 @@ class TiffStackSlicePayloadAuthority:
     def slices(
         materialization_input: MaterializationInput,
     ) -> tuple[MaterializationValue, ...]:
-        if materialization_input.sequence_type is not None:
+        if materialization_input.is_sequence():
             return tuple(item.data for item in materialization_input.items)
         if len(materialization_input.items) != 1:
             raise ValueError(
@@ -4175,7 +4129,7 @@ class TiffStackSlicePayloadAuthority:
                 "explicit payload sequence."
             )
         item = materialization_input.items[0]
-        if item.metadata.plane_axis is None:
+        if not item.has_leading_plane_axis():
             return (item.data,)
         data = np.asarray(item.data)
         if data.ndim < 3 or data.shape[0] <= 0:
@@ -4344,8 +4298,12 @@ class TiffArrayAuthority:
         value: MaterializationValue,
         options: TiffStackOptions,
     ) -> MaterializationValue:
-        if not options.normalize_uint8:
-            return value
+        if options.normalize_uint8:
+            return cls.as_uint8(value)
+        return value
+
+    @classmethod
+    def as_uint8(cls, value: MaterializationValue) -> MaterializationValue:
         array = np.asarray(value)
         if array.dtype == cls.UINT8_DTYPE:
             return value
@@ -4471,12 +4429,13 @@ class RuntimePlaneStackAxesProjectionSelection:
             )
         return frozenset(ordered_axes)
 
+    def runtime_planes(self) -> tuple[RuntimeProjectionPlaneMetadata, ...]:
+        """Return the runtime plane identities the items carry."""
+        planes = (item.runtime_plane for item in self.items)
+        return tuple(plane for plane in planes if plane is not None)
+
     def runtime_plane_rank(self) -> int:
-        ranks = tuple(
-            len(item.runtime_plane.plane_indices)
-            for item in self.items
-            if item.runtime_plane is not None
-        )
+        ranks = tuple(len(plane.plane_indices) for plane in self.runtime_planes())
         if not ranks:
             return 0
         first = ranks[0]
@@ -4488,11 +4447,7 @@ class RuntimePlaneStackAxesProjectionSelection:
         return first
 
     def runtime_plane_shape(self) -> tuple[int, ...]:
-        shapes = tuple(
-            item.runtime_plane.plane_shape
-            for item in self.items
-            if item.runtime_plane is not None
-        )
+        shapes = tuple(plane.plane_shape for plane in self.runtime_planes())
         if not shapes:
             return ()
         first = shapes[0]
@@ -4505,9 +4460,7 @@ class RuntimePlaneStackAxesProjectionSelection:
 
     def runtime_planes_carry_source_identity(self) -> bool:
         states = tuple(
-            item.runtime_plane.carries_source_plane_identity
-            for item in self.items
-            if item.runtime_plane is not None
+            plane.carries_source_plane_identity for plane in self.runtime_planes()
         )
         if not states:
             return False
@@ -4808,6 +4761,12 @@ class MaterializationSpec(ArtifactMaterializationPayload):
             write_mode=write_mode,
         )
 
+    def disallowed_backends(self, backends: Sequence[str]) -> list[str]:
+        """Return the backends outside this spec's allow-list; none without a list."""
+        if not self.allowed_backends:
+            return []
+        return [backend for backend in backends if backend not in self.allowed_backends]
+
     def participates_in_runtime_export_observation(self) -> bool:
         """Explicit materialization specs are externally observed exports."""
         return True
@@ -4940,9 +4899,7 @@ class AllowedBackendsAuthority:
 
     @staticmethod
     def validate(spec: MaterializationSpec, backends: list[str]) -> None:
-        if not spec.allowed_backends:
-            return
-        invalid = [b for b in backends if b not in spec.allowed_backends]
+        invalid = spec.disallowed_backends(backends)
         if invalid:
             raise ValueError(
                 f"Backend(s) {invalid} not in allowed backends for this spec: "

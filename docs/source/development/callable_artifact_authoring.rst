@@ -143,7 +143,7 @@ The dataclass owns the row schema, including the empty-row case.
        RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
    from openhcs.core.processing_contracts import Pure2DContract
-   from openhcs.processing.materialization import (
+   from openhcs.core.materialization import (
        CsvOptions, MaterializationSpec, ROIOptions,
    )
 
@@ -297,7 +297,7 @@ This declaration block is for an operation that already produces labels and
    from openhcs.core.runtime_measurements import (
        ObjectCoreMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
-   from openhcs.processing.materialization import (
+   from openhcs.core.materialization import (
        CsvOptions, MaterializationSpec, PointROIOptions,
    )
 
@@ -514,7 +514,7 @@ runtime axis, not biological object counts or an inferred well identity:
    )
    from openhcs.core.runtime_measurements import MeasurementTable
    from openhcs.core.runtime_stores import RuntimeArtifactBatch
-   from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+   from openhcs.core.materialization import CsvOptions, MaterializationSpec
 
    @dataclass(frozen=True)
    class PlateSummaryRow:

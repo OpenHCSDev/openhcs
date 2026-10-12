@@ -9,8 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from typing import Any, Callable, Dict, List, Optional
 
-from openhcs.processing.materialization.core import MaterializationSpec
-from openhcs.processing.materialization.options import (
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.options import (
     CsvOptions,
     JsonOptions,
     ROIOptions,

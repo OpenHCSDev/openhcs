@@ -1,6 +1,6 @@
 """Default retained image artifacts keep their declared output role identity."""
 
-from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
+from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import replace
 from pathlib import Path
 import json
@@ -151,7 +151,7 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
     "explicit_source_declared_terminal", "terminal_source_declared_explicit",
 ))
 def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_path, purpose):
-    from openhcs.processing.materialization import (
+    from openhcs.core.materialization import (
         ImageFileOptions, MaterializationSpec,
         TerminalMaterializationSpec, materialization_outputs,
     )
@@ -211,7 +211,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
 
 
 def test_authored_duplicate_template_still_fails_before_any_save(tmp_path):
-    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec, materialization_outputs
+    from openhcs.core.materialization import ImageFileOptions, TerminalMaterializationSpec, materialization_outputs
 
     spec = TerminalMaterializationSpec(ImageFileOptions(
         filename_suffix=".tif", relative_path_template="same.tif",
@@ -235,7 +235,7 @@ def test_authored_duplicate_template_still_fails_before_any_save(tmp_path):
 @pytest.mark.parametrize("plane_count", (1, 2))
 def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suffix, plane_count):
     from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization
-    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
+    from openhcs.core.materialization import ImageFileOptions, TerminalMaterializationSpec
 
     manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
     context = context_stub(manager, parser=SourceSchemaFilenameParser())
@@ -274,7 +274,7 @@ def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suff
 
 def test_distinct_aliases_that_normalize_to_one_filename_still_conflict(tmp_path):
     from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization
-    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
+    from openhcs.core.materialization import ImageFileOptions, TerminalMaterializationSpec
 
     manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
     context = context_stub(manager, parser=SourceSchemaFilenameParser())
@@ -301,8 +301,8 @@ def test_distinct_aliases_that_normalize_to_one_filename_still_conflict(tmp_path
 
 
 def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkeypatch, tmp_path):
-    from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec
-    from openhcs.processing.materialization.core import MaterializationBatch, MaterializationContext, Output, WriterSpec, _WRITERS_BY_OPTIONS
+    from openhcs.core.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec
+    from openhcs.core.materialization.core import MaterializationBatch, MaterializationContext, Output, WriterSpec, _WRITERS_BY_OPTIONS
 
     options = ImageFileOptions(filename_suffix=".tif")
     declared = TerminalMaterializationSpec(options)
@@ -340,8 +340,8 @@ def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkey
 
 
 def test_direct_image_writer_without_purpose_binding_retains_legacy_source_path(tmp_path):
-    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
-    from openhcs.processing.materialization.core import MaterializationContext, write_image_file
+    from openhcs.core.materialization import ImageFileOptions, TerminalMaterializationSpec
+    from openhcs.core.materialization.core import MaterializationContext, write_image_file
 
     options = ImageFileOptions(filename_suffix=".tif")
     plan = ArtifactOutputPlan(name="Role", path="/memory/role", artifact_type=ImageArtifactType,
@@ -362,7 +362,7 @@ def test_direct_image_writer_without_purpose_binding_retains_legacy_source_path(
 
 @pytest.mark.parametrize("purpose", ("named_terminal", "explicit", "unnamed_terminal"))
 def test_parser_free_render_requires_parser_only_for_automatic_named_role(tmp_path, purpose):
-    from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec, materialization_outputs
+    from openhcs.core.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec, materialization_outputs
 
     options = ImageFileOptions(filename_suffix=".tif")
     spec = MaterializationSpec(options) if purpose == "explicit" else TerminalMaterializationSpec(options)
