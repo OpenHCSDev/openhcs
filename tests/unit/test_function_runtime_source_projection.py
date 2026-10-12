@@ -16,7 +16,6 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
@@ -2146,16 +2145,8 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
     }
 
 
-@pytest.fixture
-def preserve_global_pipeline_context():
-    context = GlobalContextValues.capture(GlobalPipelineConfig)
-    yield
-    context.apply()
-
-
 def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     tmp_path: Path,
-    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
@@ -3239,7 +3230,6 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
 
 def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     tmp_path: Path,
-    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 

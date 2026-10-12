@@ -344,6 +344,29 @@ class CustomFunctionRuntimeRegistry:
             cls._ensure_export_available_locked(metadata.original_name)
 
     @classmethod
+    def ensure_can_publish_persisted(cls, metadata: FunctionMetadata) -> None:
+        """Fail unless a persisted source may take its name when all are replaced.
+
+        ``replace_all`` applies this to every member, so one source that cannot
+        be published is found on its own before the set is replaced.
+        """
+
+        with cls._lock:
+            function_name = metadata.original_name
+            cls._ensure_export_available_locked(function_name)
+            existing = cls._declarations_by_name.get(function_name)
+            if (
+                existing is not None
+                and existing.lifetime is EphemeralLifetime
+                and cls._declaration_revision(existing.metadata)
+                != cls._declaration_revision(metadata)
+            ):
+                raise ValueError(
+                    f"Persisted custom function {function_name!r} conflicts with "
+                    "an ephemeral declaration in this process."
+                )
+
+    @classmethod
     def ensure_can_replace(
         cls,
         old_name: str,
@@ -408,25 +431,14 @@ class CustomFunctionRuntimeRegistry:
                 name: cls._canonical_metadata_for_publication(metadata)
                 for name, metadata in metadata_by_name.items()
             }
-            for function_name in metadata_by_name:
-                cls._ensure_export_available_locked(function_name)
+            for metadata in metadata_by_name.values():
+                cls.ensure_can_publish_persisted(metadata)
             ephemeral_declarations = {
                 name: declaration
                 for name, declaration in cls._declarations_by_name.items()
                 if declaration.lifetime is EphemeralLifetime
+                and name not in metadata_by_name
             }
-            for function_name, metadata in metadata_by_name.items():
-                ephemeral = ephemeral_declarations.get(function_name)
-                if ephemeral is None:
-                    continue
-                if cls._declaration_revision(
-                    ephemeral.metadata
-                ) != cls._declaration_revision(metadata):
-                    raise ValueError(
-                        f"Persisted custom function {function_name!r} conflicts with "
-                        "an ephemeral declaration in this process."
-                    )
-                ephemeral_declarations.pop(function_name)
 
             previous_names = tuple(cls._declarations_by_name)
             persisted_names = {

@@ -228,36 +228,33 @@ def test_claim_scope_is_retrievable_through_composed_context_declarations() -> N
     ):
         kind = "temporary_claim_scope_review"
 
-    try:
-        service = AgentAuthoringContextService(
-            function_catalog=_UnexpectedFunctionCatalog()
-        )
-        target = ImageAnalysisQaPolicy.claim_scope_target
-        document = service.knowledge_base.get_document(
-            KnowledgeBaseDocumentRequest(target=target)
-        )
-        assert not document.errors and not document.truncated
-        assert document.selected_section_id == target.section_id
-        source = Path(__file__).resolve().parents[3] / document.document.source_path
-        lines = tuple(source.read_text(encoding="utf-8").splitlines())
-        section = target.find_section(document.sections)
-        assert document.content.strip() == "\n".join(
-            section.span.line_slice(lines)
-        ).strip()
-        for declaration in (
-            ImageAnalysisWorkflowAuthoringContext,
-            ViewerReviewAuthoringContext,
-            _CombinedReviewContext,
-        ):
-            assert target in declaration.require_route().knowledge_targets
-            context = service.get_authoring_context(declaration.require_kind())
-            assert f"{target.document_id}#{target.section_id}" in context.content
-            assert document.content not in context.content
-        combined = service.get_authoring_context(_CombinedReviewContext.kind)
-        assert ImageAnalysisWorkflowSection.render(service) in combined.content
-        assert ViewerReviewStepsSection.render(service) in combined.content
-    finally:
-        AuthoringContextDeclaration.__registry__.pop(_CombinedReviewContext.kind)
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog()
+    )
+    target = ImageAnalysisQaPolicy.claim_scope_target
+    document = service.knowledge_base.get_document(
+        KnowledgeBaseDocumentRequest(target=target)
+    )
+    assert not document.errors and not document.truncated
+    assert document.selected_section_id == target.section_id
+    source = Path(__file__).resolve().parents[3] / document.document.source_path
+    lines = tuple(source.read_text(encoding="utf-8").splitlines())
+    section = target.find_section(document.sections)
+    assert document.content.strip() == "\n".join(
+        section.span.line_slice(lines)
+    ).strip()
+    for declaration in (
+        ImageAnalysisWorkflowAuthoringContext,
+        ViewerReviewAuthoringContext,
+        _CombinedReviewContext,
+    ):
+        assert target in declaration.require_route().knowledge_targets
+        context = service.get_authoring_context(declaration.require_kind())
+        assert f"{target.document_id}#{target.section_id}" in context.content
+        assert document.content not in context.content
+    combined = service.get_authoring_context(_CombinedReviewContext.kind)
+    assert ImageAnalysisWorkflowSection.render(service) in combined.content
+    assert ViewerReviewStepsSection.render(service) in combined.content
 
 
 def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> None:
@@ -368,13 +365,10 @@ def test_first_use_projects_new_routes_from_the_nominal_registry() -> None:
             ),
         )
 
-    try:
-        service, _ = _service()
-        content = service.get_authoring_context("first_use").content
-        assert 'kind="temporary_progressive_test"' in content
-        assert "Temporary registry route" in content
-    finally:
-        AuthoringContextDeclaration.__registry__.pop("temporary_progressive_test")
+    service, _ = _service()
+    content = service.get_authoring_context("first_use").content
+    assert 'kind="temporary_progressive_test"' in content
+    assert "Temporary registry route" in content
 
 
 def test_every_context_is_complete_within_the_progressive_bound() -> None:

@@ -112,7 +112,7 @@ def remote_sensing() -> Iterator[type[RemoteSensing]]:
         yield RemoteSensing
     finally:
         Microscopy.activate()
-        _reset_global_config()
+        ObjectStateRegistry.clear()
 
 
 def _reset_global_config() -> None:
