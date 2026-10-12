@@ -1,7 +1,6 @@
 """Operate an installed OpenHCS GUI through MCP outside the source checkout."""
 
 from __future__ import annotations
-from openhcs.authoring.session.operations.datasets import ShowDatasetCode
 
 import argparse
 import faulthandler
@@ -39,6 +38,7 @@ if TYPE_CHECKING:
 
 JsonValue = str | int | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
 AgentDtoT = TypeVar("AgentDtoT")
+ResultT = TypeVar("ResultT")
 
 
 @dataclass(frozen=True, slots=True)
@@ -458,13 +458,14 @@ def _typed_tool_payload(
     return payload
 
 
-def require_ui_action_accepted(action_result: UiActionInvokeResult) -> None:
-    """Fail the smoke unless the live GUI took the requested action."""
+def accepted_ui_action_status(action_result: UiActionInvokeResult) -> str:
+    """The wire name of the accepted status; fail unless the GUI took the action."""
 
     from formbridge.bridge.dto import ActionAccepted
 
     if action_result.status is not ActionAccepted:
         raise AssertionError(f"Installed UI action was not accepted: {action_result}")
+    return action_result.status.name
 
 
 def _window_ids(catalog: UiWindowCatalog) -> frozenset[str]:
@@ -510,20 +511,31 @@ def _capture_installed_gui_snapshot(
     )
 
 
-def verify_installed_function_catalog(
-    service: ZMQFunctionCatalogService,
-    *,
-    deadline: OperationDeadline,
-) -> InstalledFunctionCatalogSmokeResult:
-    """Require the GUI's background endpoint catalogue and one usable reference."""
+def _result_within(future: Future[ResultT], deadline: OperationDeadline) -> ResultT:
+    """Wait inside the smoke deadline; an owner's own timeout stays its own."""
 
-    future = service.prepare()
     try:
-        page = future.result(timeout=deadline.remaining_seconds())
+        return future.result(timeout=deadline.remaining_seconds())
     except TimeoutError as error:
         if not future.cancelled() and future.done() and future.exception() is error:
             raise
         raise deadline.timeout_error() from error
+
+
+def verify_installed_function_catalog(
+    service: ZMQFunctionCatalogService,
+    *,
+    execution_services_prepared: Future[None],
+    deadline: OperationDeadline,
+) -> InstalledFunctionCatalogSmokeResult:
+    """Require the GUI's background endpoint catalogue and one usable reference.
+
+    The catalog attaches only to an existing endpoint, so first wait for the
+    GUI's own endpoint start and catalog prewarm to finish.
+    """
+
+    _result_within(execution_services_prepared, deadline)
+    page = _result_within(service.prepare(), deadline)
     if not page.revision.strip():
         raise AssertionError("Installed function catalog omitted its revision.")
     if page.total <= 0 or not page.items:
@@ -555,6 +567,7 @@ def run_installed_live_mcp_smoke(
     evidence_directory: Path,
     forbidden_root: Path,
     function_catalog_service: ZMQFunctionCatalogService,
+    execution_services_prepared: Future[None],
     execution_config: OpenHCSZMQConfig,
     deadline: OperationDeadline,
     journal: InstalledGuiSmokeEvidenceJournal,
@@ -577,6 +590,7 @@ def run_installed_live_mcp_smoke(
         MainWindowWidgetIdentity,
         DatasetListWidgetIdentity,
     )
+    from openhcs.authoring.session.operations.datasets import ShowDatasetCode
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
     from openhcs.mcp.dev_client_commands.ui import (
@@ -587,6 +601,7 @@ def run_installed_live_mcp_smoke(
     journal.record(InstalledGuiSmokePhase.WAITING_FOR_FUNCTION_CATALOG)
     function_catalog = verify_installed_function_catalog(
         function_catalog_service,
+        execution_services_prepared=execution_services_prepared,
         deadline=deadline,
     )
     journal.record(
@@ -703,7 +718,7 @@ def run_installed_live_mcp_smoke(
             capability=agent_capabilities.ui_invoke_action,
             payload_type=UiActionInvokeResult,
         )
-        require_ui_action_accepted(action_result)
+        action_status = accepted_ui_action_status(action_result)
 
         timeout_text = f"{deadline.remaining_seconds():g}"
         windows_execution = client.execute(
@@ -743,12 +758,14 @@ def run_installed_live_mcp_smoke(
 
     journal.record(InstalledGuiSmokePhase.LIVE_MCP_COMPLETE)
     return InstalledLiveMcpSmokeResult(
-        action_status=action_result.status,
+        action_status=action_status,
         bridge_count=len(bridge_catalog.bridges),
         bridge_port=bridge_status.connection.require_port("Installed UI bridge smoke"),
         bridge_reachable=bridge_status.reachable,
         bridge_transport=(
-            bridge_status.connection.transport_endpoint().transport_mode.value
+            bridge_status.connection.transport_endpoint(
+                execution_config
+            ).transport_mode.value
         ),
         execution_server_log=execution_server_log,
         function_catalog=function_catalog,
@@ -877,6 +894,9 @@ def run_installed_gui_smoke(
                         evidence_directory=evidence_directory,
                         forbidden_root=forbidden_root,
                         function_catalog_service=application.function_catalog_service,
+                        execution_services_prepared=(
+                            main_window.execution_services_prepared
+                        ),
                         execution_config=ui_config.zmq,
                         deadline=deadline,
                         journal=journal,

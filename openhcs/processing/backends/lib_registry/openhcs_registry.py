@@ -9,6 +9,7 @@ while producing the same FunctionMetadata format as external libraries.
 import ast
 import importlib
 import importlib.abc
+import importlib.metadata
 import inspect
 import logging
 from abc import ABC, abstractmethod
@@ -22,6 +23,8 @@ from weakref import WeakKeyDictionary
 
 import numpy as np
 from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
 from openhcs.core.callable_contract import (
@@ -293,6 +296,18 @@ def _catalog_memory_types(func: Callable) -> frozenset[MemoryType] | None:
     return declared
 
 
+def _module_source(module_name: str) -> tuple[str, str] | None:
+    """Return loader-decoded module source and origin, or None without source."""
+
+    spec = importlib.util.find_spec(module_name)
+    if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+        return None
+    source = spec.loader.get_source(module_name)
+    if source is None:
+        return None
+    return source, spec.origin or module_name
+
+
 def _module_declares_allowed_memory_type(
     module_name: str,
     allowed_memory_types: frozenset[str],
@@ -300,15 +315,135 @@ def _module_declares_allowed_memory_type(
     spec = importlib.util.find_spec(module_name)
     if spec is not None and spec.submodule_search_locations is not None:
         return True
-    if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+    module_source = _module_source(module_name)
+    if module_source is None:
         return False
-    source = spec.loader.get_source(module_name)
-    if source is None:
+    return _source_declares_allowed_memory_type(*module_source, allowed_memory_types)
+
+
+_REQUIRED_DISTRIBUTIONS_NAME = "REQUIRED_DISTRIBUTIONS"
+
+
+def _openhcs_requirements() -> tuple[Requirement, ...]:
+    """Return the installed OpenHCS distribution's declared requirements."""
+
+    return tuple(
+        Requirement(value) for value in importlib.metadata.requires("openhcs") or ()
+    )
+
+
+def _distribution_excluded_by_package_metadata(name: str) -> bool:
+    """Return whether OpenHCS's own requirement markers leave ``name`` out here.
+
+    A distribution is legitimately absent only when no OpenHCS requirement for
+    it applies to this environment (markers, extras) and it is not installed.
+    A distribution OpenHCS requires here is never excluded, so its absence
+    surfaces as the module's import failure.
+    """
+
+    canonical = canonicalize_name(name)
+    requirements = tuple(
+        requirement
+        for requirement in _openhcs_requirements()
+        if canonicalize_name(requirement.name) == canonical
+    )
+    if not requirements:
+        raise ValueError(
+            f"Distribution {name!r} is not declared by the OpenHCS package "
+            "requirements; a module cannot depend on an undeclared distribution."
+        )
+    if any(
+        marker is None or marker.evaluate({"extra": ""})
+        for marker in (requirement.marker for requirement in requirements)
+    ):
         return False
-    return _source_declares_allowed_memory_type(
-        source,
-        spec.origin or module_name,
-        allowed_memory_types,
+    try:
+        importlib.metadata.distribution(name)
+    except importlib.metadata.PackageNotFoundError:
+        return True
+    return False
+
+
+@lru_cache(maxsize=1024)
+def _source_required_distributions(source: str, origin: str) -> tuple[str, ...]:
+    """Read a module's literal ``REQUIRED_DISTRIBUTIONS`` declaration."""
+
+    for statement in ast.parse(source, filename=origin).body:
+        if isinstance(statement, ast.Assign):
+            targets = statement.targets
+        elif isinstance(statement, ast.AnnAssign):
+            targets = (statement.target,)
+        else:
+            continue
+        if not any(
+            isinstance(target, ast.Name) and target.id == _REQUIRED_DISTRIBUTIONS_NAME
+            for target in targets
+        ):
+            continue
+        value = ast.literal_eval(statement.value)
+        if not isinstance(value, tuple) or not all(
+            isinstance(item, str) and item for item in value
+        ):
+            raise ValueError(
+                f"{origin}: {_REQUIRED_DISTRIBUTIONS_NAME} must be a literal tuple "
+                "of distribution names."
+            )
+        return value
+    return ()
+
+
+def _module_in_this_catalog(
+    module_name: str,
+    allowed_memory_types: frozenset[str],
+) -> bool:
+    """Memory-type eligibility and the package requirement markers decide.
+
+    A module whose ``REQUIRED_DISTRIBUTIONS`` names a distribution those
+    markers leave out of this environment is not in this installation's catalog.
+    """
+
+    if not _module_declares_allowed_memory_type(module_name, allowed_memory_types):
+        logger.debug(
+            "Skipping OpenHCS module %s - no allowed memory decorators", module_name
+        )
+        return False
+    excluded = _module_distributions_excluded_by_package_metadata(module_name)
+    if excluded:
+        logger.info(
+            "Skipping OpenHCS module %s - package requirements exclude %s here",
+            module_name,
+            ", ".join(excluded),
+        )
+    return not excluded
+
+
+def _catalog_policy_context() -> dict[str, Any]:
+    """The declaration-import policy as catalogue cache identity."""
+
+    return {
+        "allowed_memory_types": sorted(_allowed_openhcs_memory_types()),
+        "distributions_excluded_by_package_metadata": sorted(
+            {
+                canonicalize_name(requirement.name)
+                for requirement in _openhcs_requirements()
+                if _distribution_excluded_by_package_metadata(requirement.name)
+            }
+        ),
+    }
+
+
+def _module_distributions_excluded_by_package_metadata(
+    module_name: str,
+) -> tuple[str, ...]:
+    """Return the module's declared distributions this installation excludes."""
+
+    module_source = _module_source(module_name)
+    if module_source is None:
+        return ()
+    return tuple(
+        name
+        for name in _source_required_distributions(*module_source)
+        if _distribution_excluded_by_package_metadata(name)
     )
 
 
@@ -487,29 +622,19 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         return modules
 
     def get_modules_to_scan(self) -> List[Tuple[str, Any]]:
-        """Import every admitted native declaration before catalog publication.
+        """Import every native declaration in this installation's catalog.
 
-        Memory-type eligibility owns exclusions. An eligible OpenHCS module
-        that cannot import is a broken installation, not an optional function
-        inventory; its failure must prevent apparent catalog readiness.
+        ``_module_in_this_catalog`` owns exclusions; any other OpenHCS module
+        that cannot import is a broken installation and fails catalog readiness.
         """
         self._ensure_module_inventory()
         assert self.MODULES_TO_SCAN is not None
-        modules = []
         allowed_memory_types = _allowed_openhcs_memory_types()
-        for module_name in self.MODULES_TO_SCAN:
-            if not _module_declares_allowed_memory_type(
-                module_name,
-                allowed_memory_types,
-            ):
-                logger.debug(
-                    "Skipping OpenHCS module %s - no allowed memory decorators",
-                    module_name,
-                )
-                continue
-            module = import_module_preserving_root_logging(module_name)
-            modules.append((module_name, module))
-        return modules
+        return [
+            (module_name, import_module_preserving_root_logging(module_name))
+            for module_name in self.MODULES_TO_SCAN
+            if _module_in_this_catalog(module_name, allowed_memory_types)
+        ]
 
     # ===== ESSENTIAL ABC METHODS =====
     def get_library_version(self) -> str:
@@ -540,7 +665,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     def cache_discovery_context(self) -> dict[str, Any]:
         """Project the declaration-import policy into catalogue cache identity."""
 
-        return {"allowed_memory_types": sorted(_allowed_openhcs_memory_types())}
+        return _catalog_policy_context()
 
     def is_library_available(self) -> bool:
         """OpenHCS is always available."""

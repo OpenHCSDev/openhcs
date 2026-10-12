@@ -5,7 +5,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from test_viewer_feature_measurement import native_route
+from tests.unit.test_viewer_feature_measurement import native_route
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRequest

@@ -105,8 +105,9 @@ def test_openhcs_adapter_retains_declared_path_policy_and_explicit_exports(
         for path in result.output_path.rglob("*")
         if path.is_file() and path.suffix.lower() in {".tif", ".tiff"}
     )
-    assert tiff_outputs
-    assert all(path.name.endswith(".labels.tif") for path in tiff_outputs)
+    # With automatic materialization disabled only declared exports persist:
+    # the spreadsheet. Retained labels and QA checkpoints stay in memory.
+    assert tiff_outputs == ()
 
 
 def test_openhcs_adapter_resolves_dataset_reference_cppipe(

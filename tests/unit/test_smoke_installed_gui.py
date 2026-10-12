@@ -35,7 +35,7 @@ from scripts.smoke_installed_gui import (
     InstalledGuiSnapshotEvidenceAuthority,
     _StartupObservation,
     assert_not_source_checkout_import,
-    require_ui_action_accepted,
+    accepted_ui_action_status,
     verify_installed_function_catalog,
     with_isolated_runtime_topology,
 )
@@ -170,12 +170,41 @@ def test_gui_smoke_allows_wheel_venv_inside_checkout(tmp_path: Path) -> None:
     )
 
 
+def _prepared_execution_services() -> Future[None]:
+    future: Future[None] = Future()
+    future.set_result(None)
+    return future
+
+
+def test_gui_smoke_waits_for_gui_endpoint_before_reading_catalog() -> None:
+    class UnreachableFunctionCatalogService:
+        @staticmethod
+        def prepare() -> Future[FunctionCatalogPage]:
+            raise AssertionError(
+                "The catalog attaches only after the GUI endpoint starts."
+            )
+
+    with pytest.raises(
+        OperationTimeoutError,
+        match="Timed out waiting for test installed function catalog",
+    ):
+        verify_installed_function_catalog(
+            UnreachableFunctionCatalogService(),
+            execution_services_prepared=Future(),
+            deadline=OperationDeadline.after_milliseconds(
+                1,
+                operation="test installed function catalog",
+            ),
+        )
+
+
 def test_gui_smoke_requires_prepared_catalog_and_resolvable_reference() -> None:
     entry = _catalog_entry()
     service = _FunctionCatalogService(_catalog_page(entry))
 
     result = verify_installed_function_catalog(
         service,
+        execution_services_prepared=_prepared_execution_services(),
         deadline=OperationDeadline.after_milliseconds(
             2_000,
             operation="test installed function catalog",
@@ -201,6 +230,7 @@ def test_gui_smoke_reports_its_operation_when_catalog_wait_expires() -> None:
     ):
         verify_installed_function_catalog(
             PendingFunctionCatalogService(),
+            execution_services_prepared=_prepared_execution_services(),
             deadline=OperationDeadline.after_milliseconds(
                 1,
                 operation="test installed function catalog",
@@ -221,6 +251,7 @@ def test_gui_smoke_preserves_catalog_owner_timeout() -> None:
     with pytest.raises(TimeoutError, match="catalog owner timed out") as caught:
         verify_installed_function_catalog(
             FailedFunctionCatalogService(),
+            execution_services_prepared=_prepared_execution_services(),
             deadline=OperationDeadline.after_milliseconds(
                 2_000,
                 operation="test installed function catalog",
@@ -413,7 +444,7 @@ def test_gui_smoke_accepts_only_an_accepted_ui_action(
     action_result = SimpleNamespace(status=status)
 
     if status is ActionAccepted:
-        require_ui_action_accepted(action_result)
+        assert json.dumps(accepted_ui_action_status(action_result)) == '"accepted"'
     else:
         with pytest.raises(AssertionError, match="not accepted"):
-            require_ui_action_accepted(action_result)
+            accepted_ui_action_status(action_result)
