@@ -117,7 +117,6 @@ ALLOWED: dict[tuple[str, str], str] = {
     ('PlateFileKind', 'openhcs/agent/services/selected_plate_service.py'): "U2: MCP tool-input choice with an 'all' literal; needs the MCP binder to project family fields (python-introspect 0.2.8)",
     ('PlateFileKind', 'openhcs/core/plate_image_inventory.py'): "U2: MCP tool-input choice with an 'all' literal; needs the MCP binder to project family fields (python-introspect 0.2.8)",
     ('PlateFileKind', 'openhcs/mcp/installed_demo.py'): "U2: MCP tool-input choice with an 'all' literal; needs the MCP binder to project family fields (python-introspect 0.2.8)",
-    ('PlateFileKind', 'openhcs/pyqt_gui/widgets/image_browser.py'): "U2: MCP tool-input choice with an 'all' literal; needs the MCP binder to project family fields (python-introspect 0.2.8)",
     ('PlateInspectionIssueCode', 'openhcs/mcp/dev_client_renderers/plate.py'): 'AgentError.code spellings read by the client',
     ('QtPlatformName', 'openhcs/runtime/viewer_protocol.py'): 'Qt QPA plugin names (QT_QPA_PLATFORM)',
     ('RuntimeCellValueKind', 'openhcs/core/equivalence/cells.py'): 'K3 measurement vocabulary (#1199 merged, still an enum); needs an owner',
