@@ -117,4 +117,49 @@ None runs on plate add, initialisation, compile or run.
 
 ## Gates
 
-Filled in at the end of the gate run (see PR body).
+ObjectState submodule at the start of the gate run: `02393c4aa482da320b5c529945968020ce14adc4`.
+
+- Guardrails (head `f8264b500`): `ratchet openhcs exit 0`, `ratchet scripts exit 0`,
+  `ratchet benchmark exit 0`, `38 passed, 22 warnings in 39.42s`,
+  `nra-r1 exit 0: "increased": []`, `guardrails rc=0`. Ratchet deltas:
+  `GodClassExcess Session` -1, `GodClassExcess ZMQExecutionServer` -2.
+- Smoke (head `f8264b500`): `smoke pytest exit 0 (105 s): 7 passed, 2 warnings in 101.83s`,
+  `smoke gui exit 0 (25 s)`, `smoke rc=0`.
+- `verify_branch.sh os4` (started at head `6cc3ff795`, complete):
+  `suite: = 63 failed, 11646 passed, 25 skipped, 354 warnings, 2 errors, 6 subtests passed in 923.33s (0:15:23) =`,
+  `collected 11733, reported 11710, crash lines 0`, `new vs known: 29`,
+  `only on os4:` empty, `fails on both with a different error:` empty.
+  NOT CLEAN: the 29 (ids in `/home/ts/code/projects/openhcs/.claude/verify/os4.new`)
+  failed in the suite and passed in the per-file rerun. Smoke, guardrails and other
+  pytest runs were going on the same machine during the suite, and several of the 29
+  have 5 s timeouts; the other candidate is a global state left registered by one test
+  file and read by a later one in the same worker. Not decided. Candidates for the
+  leak: test files that build an `OpenHCSAgentContext` (its `session` property opens
+  a session, which registers the global state) and have no registry teardown:
+  `tests/unit/agent/test_knowledge_base_service.py`, `test_mcp_plate_stream_progress.py`,
+  `test_mcp_server.py`, `test_native_presentation_mcp_451452.py`,
+  `test_neurite_body_gate_authoring.py`, `test_official30_knowledge_examples.py`,
+  `test_owned_runtime_bootstrap.py`, `test_plate_streaming_service.py`,
+  `test_progressive_authoring_context.py`, `test_ui_bridge_service.py`,
+  `tests/unit/test_benchmark_control.py`, `test_catalog_endpoint_incarnation.py`,
+  `test_function_catalog_zmq.py`, `test_napari_reset_transitions.py`,
+  `test_native_viewer_presentation.py`, `test_viewer_receipt_replay.py`
+  (scan: a text match, not a trace). Seven of these files are among the 29.
+
+- Official30 parity (heavy slot, `official30.lock`, head `f8264b500`):
+  `1 passed in 726.83s (0:12:06)`, `parity rc=0` (the test asserts the 30 cases).
+  ObjectState submodule at the end: `02393c4aa482da320b5c529945968020ce14adc4`
+  (same as at the start).
+
+## Remaining (for the next agent)
+
+1. Decide the 29: rerun the suite with nothing else running; if they persist, find the
+   test that leaves a global state registered (an autouse fixture that fails a test
+   leaving `ObjectStateRegistry.global_config_state(GlobalPipelineConfig)` set would
+   name it) and give the headless context an end (`close_session`).
+2. `tests/unit/test_bioformats_microscope_handler.py::test_openhcs_output_subdirectory_initializes_from_metadata_root`
+   failed in a sub-run (`MetadataNotFoundError`); it is not in the 29, so it either is
+   in `known.fail` or passed in the suite. Check.
+3. The plan-inspection gateway receives the child's objects through `singledispatch`;
+   the coordinator is replacing that with a message family the child constructs.
+4. Open the PR (non-draft) once the suite is clean. Do not merge.
