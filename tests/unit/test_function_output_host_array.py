@@ -12,7 +12,9 @@ import types
 
 import numpy as np
 import pytest
+from arraybridge import MemoryType
 
+from openhcs.core.device_assignment import DevicePreference, DeviceRule
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_array_values import host_array
@@ -88,16 +90,26 @@ def _torch_cpu(pixels: np.ndarray) -> object:
     return torch.from_numpy(pixels.copy())
 
 
+def _on_assigned_accelerator(memory_type: MemoryType, pixels: np.ndarray) -> object:
+    """``pixels`` in the library, on the accelerator this process assigns it."""
+    library = memory_type.library
+    if not library.is_installed():
+        pytest.skip(f"{library.display_name} is an optional dependency")
+    try:
+        assigned = DeviceRule.assign(library, DevicePreference())
+    except ValueError as no_device:
+        pytest.skip(str(no_device))
+    if assigned.device in library.host_devices():
+        pytest.skip(f"{assigned.describe()}: no accelerator array to test")
+    return library.from_numpy(pixels.copy(), assigned.device)
+
+
 def _torch_cuda(pixels: np.ndarray) -> object:
-    torch = pytest.importorskip("torch", reason="torch is an optional dependency")
-    if not torch.cuda.is_available():
-        pytest.skip("no CUDA device")
-    return torch.from_numpy(pixels.copy()).to("cuda:0")
+    return _on_assigned_accelerator(MemoryType.TORCH, pixels)
 
 
 def _cupy(pixels: np.ndarray) -> object:
-    cupy = pytest.importorskip("cupy", reason="CuPy is an optional dependency")
-    return cupy.asarray(pixels)
+    return _on_assigned_accelerator(MemoryType.CUPY, pixels)
 
 
 REAL_LIBRARY_ARRAYS = pytest.mark.parametrize(

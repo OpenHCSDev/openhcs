@@ -58,8 +58,7 @@ def test_explicit_runtime_slice_stack_rejects_mismatched_slice_shapes() -> None:
     with pytest.raises(ValueError, match="one exact shape"):
         stack_runtime_slices(
             (np.zeros((4, 5)), np.zeros((4, 6))),
-            MemoryType.NUMPY.value,
-            0,
+            ArrayPlacement(MemoryType.NUMPY.library, HOST),
         )
 
 

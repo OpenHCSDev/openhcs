@@ -15,7 +15,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 from arraybridge import MemoryType
-from arraybridge.libraries import ArrayLibrary
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.processing_contracts import VolumetricToSliceContract

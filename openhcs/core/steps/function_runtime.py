@@ -1482,7 +1482,6 @@ class PatternGroupData(PatternGroupExecutionScope):
     def execute_chain(self) -> RuntimeArrayData | NoMainFlowOutput:
         self.require_invocations()
         current_stack: RuntimeArrayData | NoMainFlowOutput = self.main_data_stack
-        current_memory_type = self.execution_plan.input_memory_type
         debug_sink = debug_event_sink_from_context(self.context)
         declared_source_bindings = self.execution_plan.source_binding_plan
         for invocation in self.compiled_group.invocations:
@@ -1490,7 +1489,6 @@ class PatternGroupData(PatternGroupExecutionScope):
                 self,
                 invocation,
                 main_data_arg=current_stack,
-                source_memory_type=current_memory_type,
                 declared_source_bindings=declared_source_bindings,
             )
             if executor is None:
@@ -1537,7 +1535,6 @@ class PatternGroupData(PatternGroupExecutionScope):
             )
             if isinstance(current_stack, NoMainFlowOutput):
                 return current_stack
-            current_memory_type = executor.invocation.contract.output_memory_type
         if self.compiled_group.preserves_input_main_flow() and all(
             invocation.contract.artifact_output_policy.records_outputs
             for invocation in self.compiled_group.invocations
@@ -1604,7 +1601,6 @@ class FunctionCoreExecutor:
     group_key: str | None
     plane_projection: RuntimePlaneProjection
     main_data_arg: RuntimeArrayData
-    source_memory_type: str
 
     @classmethod
     def from_group_invocation(
@@ -1613,7 +1609,6 @@ class FunctionCoreExecutor:
         invocation: CompiledFunctionInvocation,
         *,
         main_data_arg: RuntimeArrayData,
-        source_memory_type: str,
         declared_source_bindings: CompiledSourceBindingPlan,
     ) -> "FunctionCoreExecutor | None":
         """Admit the selected compiled edges and outputs for this live invocation."""
@@ -1660,7 +1655,6 @@ class FunctionCoreExecutor:
                 group_data.runtime_plane_count
             ),
             main_data_arg=main_data_arg,
-            source_memory_type=source_memory_type,
         )
 
     def runtime_adapter_request(

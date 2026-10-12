@@ -132,17 +132,13 @@ def test_runtime_slice_projection_rejects_undeclared_value_type() -> None:
         )
 
 
-def test_runtime_slice_projection_accepts_arraybridge_payloads(monkeypatch) -> None:
-    """Optional framework arrays use one protocol adapter, not type mirrors."""
+def test_runtime_slice_projection_accepts_arraybridge_payloads(
+    cupy_arrays_that_record_their_device,
+) -> None:
+    """An array of any ArrayBridge library is recognised by asking the family."""
 
-    class ExternalArray:
-        pass
-
-    value = ExternalArray()
-    monkeypatch.setattr(
-        "openhcs.core.runtime_array_values.detect_memory_type",
-        lambda candidate: "tensor" if candidate is value else None,
-    )
+    device_array, _state = cupy_arrays_that_record_their_device
+    value = device_array(np.zeros((2, 3, 4)))
 
     assert (
         RuntimeSliceProjection.value_for_slice(

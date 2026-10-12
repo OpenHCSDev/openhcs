@@ -8,7 +8,7 @@ import threading
 from pathlib import Path
 
 import numpy as np
-from arraybridge.decorators import ThreadGPUContext
+from arraybridge.libraries import CudaLibrary
 from arraybridge.types import MemoryType
 from objectstate import ObjectStateRegistry
 from formbridge.services.scope_token_service import ScopeTokenService
@@ -30,10 +30,13 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
 ):
     ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(SCOPE)
-    runtime = ThreadGPUContext.current()
-    runtime_key = (MemoryType.CUPY, -2)
+    # The per-thread CUDA streams of the array libraries are process state that
+    # a retained callable reaches through its wrapper; history must not copy it.
+    thread_streams = CudaLibrary._thread_streams
+    streams = thread_streams.__dict__.setdefault("streams", {})
+    runtime_key = (MemoryType.CUPY.value, -2)
     runtime_handle = threading.local()
-    runtime._streams[runtime_key] = runtime_handle
+    streams[runtime_key] = runtime_handle
     try:
         # An old callable no longer exported by its original package is retained
         # by undo. Its wrapper's globals own thread-local GPU context storage.
@@ -90,9 +93,9 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
         )
         assert ObjectStateRegistry.time_travel_to_snapshot(head_id)
         assert PipelineObjectStateBinding.steps_for_plate(SCOPE)[0].func == current.func
-        assert ThreadGPUContext.current() is runtime
-        assert runtime._streams[runtime_key] is runtime_handle
+        assert CudaLibrary._thread_streams is thread_streams
+        assert thread_streams.streams[runtime_key] is runtime_handle
     finally:
-        runtime._streams.pop(runtime_key, None)
+        streams.pop(runtime_key, None)
         ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(SCOPE)

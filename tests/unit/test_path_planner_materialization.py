@@ -1,3 +1,5 @@
+from tests.device_assignment_support import assign_devices, assign_pattern_devices
+from tests.device_assignment_support import compile_assigned_pattern
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -68,7 +70,6 @@ from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
-    compile_function_pattern,
 )
 from openhcs.core.pipeline.artifact_planning import (
     ArtifactConsumer,
@@ -133,7 +134,8 @@ from tests.context_support import (
 def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_outputs=()):
     """Execute the original compiler result through the real callable runtime."""
     input_plans = {} if input_plans is None else input_plans
-    plan = CompiledStepPlan(
+    compiled = assign_pattern_devices(compiled)
+    plan = assign_devices(CompiledStepPlan(
         step_index=3,
         step_scope_id="plate::functionstep_3",
         step_name="metadata-consumer",
@@ -145,7 +147,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         compiled_function_pattern=compiled,
         artifact_inputs=input_plans,
         artifact_outputs={},
-    )
+    ))
     context = SimpleNamespace(axis_id="A01", runtime_value_store=RuntimeValueStore())
     for producer, value in stored_outputs:
         context.runtime_value_store.record(
@@ -177,7 +179,6 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         scope,
         invocation,
         main_data_arg=ImagePayloadMetadata().payload_with(source),
-        source_memory_type=MemoryType.NUMPY.value,
         declared_source_bindings=scope.execution_plan.source_binding_plan,
     ).execute()
     np.testing.assert_array_equal(result.data, source)
@@ -271,18 +272,18 @@ def _artifact_planner_stub() -> PathPlanner:
         get_component_keys=lambda _component, *, resolved_config: (),
     )
     planner.plans = {
-        2: CompiledStepPlan(
+        2: assign_devices(CompiledStepPlan(
             step_index=2,
             step_scope_id="plate::functionstep_2",
             step_name="identify",
             axis_id="A01",
-        ),
-        3: CompiledStepPlan(
+        )),
+        3: assign_devices(CompiledStepPlan(
             step_index=3,
             step_scope_id="plate::functionstep_3",
             step_name="filter",
             axis_id="A01",
-        ),
+        )),
     }
     planner.declared = {}
     planner.future_artifact_inputs = [set() for _ in range(5)]
@@ -711,7 +712,7 @@ def test_plate_artifact_output_plan_is_independent_of_axis_context():
             variable_components=ComponentSet(),
             step_name="PlateExporter",
         )
-        compiled_by_axis[axis_id] = compile_function_pattern(
+        compiled_by_axis[axis_id] = compile_assigned_pattern(
             admitted_graph(export_measurements),
             {},
             output_plans,
@@ -778,7 +779,7 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
         ValueError,
         match="Conflicting (producer|compiled invocation output) artifact sidecar role",
     ):
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph(
                 pattern,
                 invocation_contract_provider=planner.invocation_contract_provider,
@@ -793,7 +794,7 @@ def test_materialization_collision_updates_results_dir_and_config():
     planner = PathPlanner.__new__(PathPlanner)
     planner.dataset_root = Path("/data/plate1")
     planner.plans = {
-        3: CompiledStepPlan(
+        3: assign_devices(CompiledStepPlan(
             step_index=3,
             step_name="materialize",
             axis_id="A01",
@@ -805,7 +806,7 @@ def test_materialization_collision_updates_results_dir_and_config():
                 analysis_results_dir="/data/plate1_processed/images_results",
             ),
             materialization_config=PathConfigStub(sub_dir="images"),
-        )
+        ))
     }
     snapshot = _resolved_step(
         name="materialize", step_materialization_config=PathConfigStub(sub_dir="images")
@@ -1127,7 +1128,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
     def combine_sources(image, secondary=None):
         return image
 
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(combine_sources),
         {},
         {plan.ref(): plan for plan in (output_plan,)},
@@ -1197,11 +1198,11 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     session = CompilationSession.from_context(
         context=executing_context(
             step_plans={
-                index: CompiledStepPlan(
+                index: assign_devices(CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
                     axis_id="A01",
-                )
+                ))
                 for index, step in enumerate(steps)
             },
             axis_id="A01",
@@ -1230,13 +1231,13 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         ("1", "2", "4"),
         component=Microscopy.Channel,
     )
-    planner.plans[0] = CompiledStepPlan(
+    planner.plans[0] = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="percentile_normalize",
         axis_id="A01",
         execution_group_scope=channel_scope,
-    )
-    native_pattern = compile_function_pattern(
+    ))
+    native_pattern = compile_assigned_pattern(
         admitted_graph(percentile_normalize),
         {},
         {},
@@ -1300,7 +1301,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     )
     assert compiled_inputs == {}
 
-    compiled_consumer = compile_function_pattern(
+    compiled_consumer = compile_assigned_pattern(
         admitted_graph(
             steps[1].func,
             invocation_contract_provider=provider,
@@ -1743,7 +1744,7 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
         group_by=Microscopy.Channel,
     )
     compiled = planner.artifacts.compile_invocation_input_edges(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
@@ -2675,7 +2676,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         execution_scope,
         source_bindings=source_bindings,
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(functions),
         maps.inputs,
         maps.outputs,
@@ -2820,7 +2821,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
     assert measurement_plan.group_scope_sources_by_group == {
         "2": (labels_input.ref(),),
     }
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(
             pattern,
             invocation_contract_provider=provider,
@@ -3508,7 +3509,7 @@ def test_adapter_managed_edges_bind_only_compatible_special_parameters():
         )
         for spec in (labels, measurements)
     }
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(consume),
         input_plans,
         {},
@@ -4983,7 +4984,7 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
         group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/relationships_channel_2.pkl"},
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(consume),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
@@ -5010,12 +5011,12 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
 
 def test_realized_source_scopes_compile_cross_group_artifact_consumption():
     planner = _artifact_planner_stub()
-    planner.plans[4] = CompiledStepPlan(
+    planner.plans[4] = assign_devices(CompiledStepPlan(
         step_index=4,
         step_scope_id="plate::functionstep_4",
         step_name="consume",
         axis_id="A01",
-    )
+    ))
     planner.session.realized_source_metadata = (
         {"source_alias": "Blue", "channel": "1"},
         {"source_alias": "Green", "channel": "2"},
@@ -5114,7 +5115,7 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
         declarations,
         broad_channel_scope,
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(consume),
         maps.inputs,
         maps.outputs,
@@ -5173,7 +5174,7 @@ def test_compilation_rejects_declared_lineage_from_multi_group_producer():
         image_plan.ref(): image_plan,
         source_plan.ref(): source_plan,
     }
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(consume),
         input_plans,
         {},
@@ -5276,7 +5277,7 @@ def test_realized_component_domain_does_not_replace_dynamic_projection_coordinat
             "2": "/memory/illumination_channel_2.pkl",
         },
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(apply),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
@@ -5346,7 +5347,7 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         component=Microscopy.Channel,
     )
     storage = {first.ref(): first, second.ref(): second}
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph({"1": apply_first, "2": apply_second}),
         storage,
         {},
@@ -5361,7 +5362,7 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         execution_group_scope=execution_scope,
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
-    execution_plan = CompiledStepPlan(
+    execution_plan = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="plate::functionstep_2",
         step_name="CorrectIlluminationApply",
@@ -5369,7 +5370,7 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         artifact_inputs=storage,
         execution_group_scope=execution_scope,
         compiled_function_pattern=compiled,
-    )
+    ))
     invocations = tuple(compiled.iter_invocations())
     first_plans = invocations[0].select_inputs(storage)
     second_plans = invocations[1].select_inputs(storage)
@@ -5425,7 +5426,7 @@ def test_grouped_invocation_is_independent_of_source_artifact_domain():
         component=Microscopy.Channel,
     )
     invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph({"1": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
@@ -5458,7 +5459,7 @@ def test_fixed_producer_coordinate_precedes_consumer_group_lineage():
         artifact_type=input_spec.artifact_type,
     )
     invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
@@ -5499,7 +5500,7 @@ def test_relation_selects_one_coordinate_from_multi_coordinate_producer_domain()
         artifact_type=input_spec.artifact_type,
     )
     invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
@@ -5546,7 +5547,7 @@ def test_produced_artifact_projection_does_not_revalidate_source_binding_domain(
         group_scope=ComponentGroupScope.of(("3",), component=Microscopy.Channel),
         source_step_id=4,
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph({"5": relate_objects}),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
@@ -5595,7 +5596,7 @@ def test_non_dict_artifact_input_uses_function_step_execution_scope():
         group_scope=ComponentGroupScope.of((None,), component=Microscopy.Channel),
     )
     execution_scope = DynamicGroupScope(Microscopy.Channel)
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph(assemble),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
@@ -5640,7 +5641,7 @@ def test_grouped_invocations_keep_distinct_edges_for_same_artifact_ref():
             "3": "/memory/crop_mask_3.pkl",
         },
     )
-    compiled = compile_function_pattern(
+    compiled = compile_assigned_pattern(
         admitted_graph({"2": crop_green, "3": crop_red}),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
@@ -5672,19 +5673,19 @@ def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
     planner.artifact_context = ArtifactDeclarationStepContext.empty()
     planner.declared = {}
     planner.plans = {
-        0: CompiledStepPlan(
+        0: assign_devices(CompiledStepPlan(
             step_index=0,
             step_scope_id="plate::functionstep_0",
             step_name="load",
             axis_id="A01",
             output_dir=Path("/data/plate1_processed/images"),
-        ),
-        1: CompiledStepPlan(
+        )),
+        1: assign_devices(CompiledStepPlan(
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="measure",
             axis_id="A01",
-        ),
+        )),
     }
     snapshots_by_index = {
         0: _resolved_step(),
@@ -5714,12 +5715,12 @@ def test_main_input_dependency_uses_declared_artifact_producer_not_previous_step
     planner.artifact_context = ArtifactDeclarationStepContext.empty()
     planner.declared = {}
     planner.plans = {
-        index: CompiledStepPlan(
+        index: assign_devices(CompiledStepPlan(
             step_index=index,
             step_scope_id=f"plate::functionstep_{index}",
             step_name=name,
             axis_id="A01",
-        )
+        ))
         for index, name in enumerate(("CropBlue", "CropRed", "Identify"))
     }
     planner.artifact_context = ArtifactDeclarationStepContext.empty()
@@ -5807,26 +5808,26 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
     planner.artifact_context = ArtifactDeclarationStepContext.empty()
     planner.declared = {}
     planner.plans = {
-        0: CompiledStepPlan(
+        0: assign_devices(CompiledStepPlan(
             step_index=0,
             step_scope_id="plate::functionstep_0",
             step_name="load",
             axis_id="A01",
-        ),
-        1: CompiledStepPlan(
+        )),
+        1: assign_devices(CompiledStepPlan(
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="measure",
             axis_id="A01",
             main_input_dependency=source_dependency,
             compiled_function_pattern=preserving_pattern,
-        ),
-        2: CompiledStepPlan(
+        )),
+        2: assign_devices(CompiledStepPlan(
             step_index=2,
             step_scope_id="plate::functionstep_2",
             step_name="consume",
             axis_id="A01",
-        ),
+        )),
     }
     planner.session = SimpleNamespace(
         snapshot=lambda index: _resolved_step(),
@@ -5846,12 +5847,12 @@ def test_main_input_dependency_preserves_pipeline_start_edges():
     planner.artifact_context = ArtifactDeclarationStepContext.empty()
     planner.declared = {}
     planner.plans = {
-        1: CompiledStepPlan(
+        1: assign_devices(CompiledStepPlan(
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="qc",
             axis_id="A01",
-        )
+        ))
     }
     planner.initial_input = Path("/data/plate1/images")
     planner.session = SimpleNamespace(

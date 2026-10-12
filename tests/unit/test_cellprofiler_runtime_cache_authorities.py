@@ -1,6 +1,7 @@
 """Focused tests for retained CellProfiler runtime cache authorities."""
 
 from __future__ import annotations
+from arraybridge import MemoryType
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
@@ -94,7 +95,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
     producer_pixels = np.full((2, 2), 1.0, dtype=np.float32)
     first_payload = AlignedImageStack.from_output_slices(
-        (producer_pixels,), memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
+        (producer_pixels,), library=MemoryType.NUMPY.library, plane_axis=RuntimeSlicePlaneAxis,
     )
     first_value = RuntimeValue.normalize(
         output_plan,

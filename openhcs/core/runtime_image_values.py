@@ -2176,7 +2176,7 @@ class ImagePayloadSliceProjector:
             return candidate
         raise ValueError(
             "Image payload mask cannot be projected into slice domain; "
-            f"got mask {mask_array.shape!r} for slice "
+            f"got mask {mask_shape!r} for slice "
             f"{array_geometry(data_slice).shape!r}."
         )
 

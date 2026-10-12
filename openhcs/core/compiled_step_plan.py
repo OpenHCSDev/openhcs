@@ -386,21 +386,17 @@ class CompiledStepPlan:
     def declared_libraries(self) -> frozenset[ArrayLibrary[Array]]:
         """Every array library this step's plan and callables declare."""
 
-        memory_types = {
-            MemoryType(declaration)
+        libraries = frozenset(
+            MemoryType(declaration).library
             for declaration in (
                 self.input_memory_type,
                 self.output_memory_type,
             )
             if declaration is not None
-        }
-        if self.compiled_function_pattern is not None:
-            memory_types.update(
-                memory_type
-                for invocation in self.compiled_function_pattern.iter_invocations()
-                for memory_type in invocation.contract.declared_memory_types
-            )
-        return frozenset(memory_type.library for memory_type in memory_types)
+        )
+        if self.compiled_function_pattern is None:
+            return libraries
+        return libraries | self.compiled_function_pattern.declared_libraries
 
     @property
     def uses_accelerator(self) -> bool:

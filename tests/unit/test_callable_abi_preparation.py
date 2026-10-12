@@ -1,10 +1,13 @@
 """Prepared canonical signatures survive compilation and worker transport."""
 
+from tests.device_assignment_support import compile_assigned_pattern
+from openhcs.core.runtime_array_values import ArrayPlacement
+from arraybridge.devices import HOST
+from arraybridge import MemoryType
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import inspect
 import pickle
 from types import SimpleNamespace
-from dataclasses import replace
 from functools import wraps
 from unittest.mock import Mock
 from typing import Any
@@ -422,7 +425,6 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
     from openhcs.core.aligned_image_payload import (
         AlignedImageSliceContext, ImageOutputBundle,
     )
-    from openhcs.core.function_patterns import compile_function_pattern
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     pixels = tuple(np.full((3, 4), value, dtype=np.float32) for value in (0.25, 0.75))
@@ -436,12 +438,12 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
     calls = []
     original = ImageOutputBundle.compose
 
-    def observed(value, **destination):
-        calls.append(destination)
-        return original(value, **destination)
+    def observed(value, placement=None):
+        calls.append(placement)
+        return original(value, placement)
 
     monkeypatch.setattr(ImageOutputBundle, "compose", observed)
-    invocation = compile_function_pattern(
+    invocation = compile_assigned_pattern(
         admitted_graph(gaussian_blur),
         {},
         {},
@@ -451,7 +453,7 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
     placed.data
     placed.mask
 
-    assert calls == [{"memory_type": "numpy", "device_id": None}]
+    assert calls == [ArrayPlacement(MemoryType.NUMPY.library, HOST)]
     np.testing.assert_array_equal(placed.data, np.stack(pixels))
     assert placed.data.shape == (2, 3, 4)
     assert placed.mask.shape == (2, 3, 4)
@@ -461,16 +463,15 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
 
 def test_compiled_input_reuses_produced_stack_realization_without_copy():
     from openhcs.core.aligned_image_payload import (
-        AlignedImageSliceContext, ProducedImageStack,
+        ProducedImageStack,
     )
-    from openhcs.core.function_patterns import compile_function_pattern
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     source = ProducedImageStack(
         tuple(np.full((3, 4), value, dtype=np.float32) for value in (1, 2)),
-        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
+        library=MemoryType.NUMPY.library, plane_axis=RuntimeSlicePlaneAxis,
     )
-    invocation = compile_function_pattern(
+    invocation = compile_assigned_pattern(
         admitted_graph(gaussian_blur),
         {},
         {},

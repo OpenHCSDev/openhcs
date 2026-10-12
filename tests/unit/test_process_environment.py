@@ -73,29 +73,25 @@ def test_process_environment_resolves_boolean_modes() -> None:
     assert OpenHCSProcessEnvironment.use_threading_mode(environment) is True
 
 
-def test_cpu_only_mode_projects_gpu_import_policy_to_dependencies() -> None:
+def test_excluding_accelerators_sets_one_flag_and_tells_jax() -> None:
     environment = {}
 
     OpenHCSProcessEnvironment.exclude_accelerators(environment)
 
     assert environment == {
         OpenHCSProcessEnvironment.cpu_only_key: "true",
-        OpenHCSProcessEnvironment.subprocess_no_gpu_key: "1",
-        OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key: "1",
         OpenHCSProcessEnvironment.jax_platforms_key: "cpu",
         OpenHCSProcessEnvironment.numpy_hugepage_advice_key: "0",
     }
-    assert OpenHCSProcessEnvironment.gpu_imports_disabled(environment) is True
+    assert OpenHCSProcessEnvironment.accelerators_excluded(environment) is True
 
 
-def test_subprocess_gpu_suppression_projects_without_enabling_cpu_only() -> None:
-    environment = {OpenHCSProcessEnvironment.subprocess_no_gpu_key: "1"}
+def test_dependency_defaults_leave_accelerators_alone_without_the_flag() -> None:
+    environment = {}
 
     OpenHCSProcessEnvironment.project_dependency_import_policy(environment)
 
     assert OpenHCSProcessEnvironment.accelerators_excluded(environment) is False
-    assert environment[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
-    assert environment[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
     assert OpenHCSProcessEnvironment.jax_platforms_key not in environment
 
 

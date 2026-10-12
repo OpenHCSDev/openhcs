@@ -137,9 +137,9 @@ def test_independent_normalization_and_composition_capabilities_use_cooperative_
         pass
 
     class PixelAudit:
-        def compose_unmasked(self, payloads, **kwargs):
+        def compose_unmasked(self, payloads, placement):
             calls.append('pixels')
-            return super().compose_unmasked(payloads, **kwargs)
+            return super().compose_unmasked(payloads, placement)
 
     class MaskAudit:
         def compose_mask(self, data, metadata):

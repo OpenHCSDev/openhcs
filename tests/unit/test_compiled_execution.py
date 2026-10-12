@@ -5,7 +5,9 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from arraybridge import MemoryType
+from arraybridge.devices import AcceleratorDevice
+
+from openhcs.core.device_assignment import DeviceAssignment, DevicePreference
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
@@ -16,7 +18,6 @@ from openhcs.core.compiled_execution import (
     CompiledWorkerStartPlan,
 )
 from openhcs.core.compiled_step_plan import (
-    FrameworkDeviceAssignment,
     RuntimeArtifactMaterializationPlan,
 )
 from openhcs.core.config import MultiprocessingStartMethod
@@ -379,7 +380,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         step_plans={
             0: SimpleNamespace(
                 execution_scope=FunctionStepExecutionScope.AXIS,
-                device_assignment=FrameworkDeviceAssignment(),
+                device_assignment=DeviceAssignment(),
                 owns_runtime_outputs=False,
             )
         },
@@ -408,7 +409,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
 
 
 def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
-    monkeypatch,
+    monkeypatch, stand_in_library
 ) -> None:
     cleaned = []
 
@@ -424,7 +425,10 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
     def fail_reset() -> None:
         raise RuntimeError("reset failure")
 
-    assignment = FrameworkDeviceAssignment.from_mapping({MemoryType.CUPY: 2})
+    cupy = stand_in_library("cupy", 3)
+    assignment = DeviceAssignment.for_libraries(
+        (cupy,), DevicePreference(AcceleratorDevice(2), accelerators_excluded=False)
+    )
     context = compiled_context(
         axis_id="A01",
         step_plans={
@@ -445,9 +449,9 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
         fail_reset,
     )
     monkeypatch.setattr(
-        MemoryType,
+        type(cupy),
         "cleanup_loaded",
-        lambda memory_type, device_id=None: cleaned.append((memory_type, device_id)),
+        lambda library, device=None: cleaned.append((library, device)),
     )
 
     with pytest.raises(RuntimeError, match="step failure"):
@@ -464,7 +468,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
             runtime_observation_mode=OmitRuntimeRecords,
         )
 
-    assert cleaned == [(MemoryType.CUPY, 2)]
+    assert cleaned == [(cupy, AcceleratorDevice(2))]
     held.clear()
     assert pixel_reference() is None
 

@@ -364,7 +364,3 @@ def non_local_means_denoise_jax(
     logger.info("Rescaled NLM output to [0, 1] range to prevent uint16 clipping")
 
     return result
-
-
-# Alias for convenience
-jax_nlm_denoise = non_local_means_denoise_jax

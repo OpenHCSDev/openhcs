@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.device_assignment import DeviceAssignment, DevicePreference
 
@@ -31,18 +29,6 @@ def assign_framework_devices(
         )
         pattern = step_plan.compiled_function_pattern
         if pattern is not None:
-            step_plan.compiled_function_pattern = replace(
-                pattern,
-                groups=tuple(
-                    replace(
-                        group,
-                        invocations=tuple(
-                            invocation.with_device_assignment(
-                                step_plan.device_assignment
-                            )
-                            for invocation in group.invocations
-                        ),
-                    )
-                    for group in pattern.groups
-                ),
+            step_plan.compiled_function_pattern = pattern.with_device_assignment(
+                step_plan.device_assignment
             )

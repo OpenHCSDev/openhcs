@@ -1,5 +1,6 @@
 """Dense full-stack ABI must consume aligned source/artifact values correctly."""
 
+from arraybridge import MemoryType
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
@@ -89,7 +90,7 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     literal = ImagePayloadSliceStack.from_output_slices(
         tuple(RuntimeSliceProjection.value_for_slice(dense, projection.selected_plane(index))
               for index in range(60)),
-        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
+        library=MemoryType.NUMPY.library, plane_axis=RuntimeSlicePlaneAxis,
     )
     assert not isinstance(literal, AlignedImageStack)
     composition = compose_aligned_image_payload("literal volume", (literal,))
@@ -416,9 +417,9 @@ def test_independent_composition_capabilities_cooperate_in_both_mro_orders(rever
     calls = []
 
     class PixelCapability:
-        def compose_unmasked(self, payloads, **kwargs):
+        def compose_unmasked(self, payloads, placement):
             calls.append("pixels")
-            return super().compose_unmasked(payloads, **kwargs) + 1
+            return super().compose_unmasked(payloads, placement) + 1
 
     class MaskCapability:
         def compose_mask(self, composed, metadata):

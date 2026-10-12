@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from arraybridge import MemoryType
+from arraybridge.libraries import Array, ArrayLibrary
 from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
@@ -1333,6 +1334,33 @@ class CompiledFunctionPattern:
         """Yield all compiled invocations in runtime order."""
         for group in self.groups:
             yield from group.invocations
+
+    @property
+    def declared_libraries(self) -> frozenset[ArrayLibrary[Array]]:
+        """Every array library the callables of this pattern declare."""
+        return frozenset(
+            memory_type.library
+            for invocation in self.iter_invocations()
+            for memory_type in invocation.contract.declared_memory_types
+        )
+
+    def with_device_assignment(
+        self, assignment: DeviceAssignment
+    ) -> "CompiledFunctionPattern":
+        """This pattern with every invocation placed by ``assignment``."""
+        return replace(
+            self,
+            groups=tuple(
+                replace(
+                    group,
+                    invocations=tuple(
+                        invocation.with_device_assignment(assignment)
+                        for invocation in group.invocations
+                    ),
+                )
+                for group in self.groups
+            ),
+        )
 
     def coalesced_artifact_output_specs(self) -> tuple[ArtifactSpec, ...]:
         """Return exact selected outputs under the canonical merge policy."""

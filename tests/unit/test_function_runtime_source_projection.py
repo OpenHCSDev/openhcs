@@ -1,3 +1,5 @@
+from tests.device_assignment_support import assign_devices
+from tests.device_assignment_support import compile_assigned_pattern
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.abstract import StepExecutionObservation
 from tests.artifact_graphs import admitted_graph
@@ -49,7 +51,6 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     RuntimeInvocationDomain,
-    compile_function_pattern,
 )
 from openhcs.core.memory.decorators import numpy as numpy_memory
 from openhcs.core.pipeline.function_contracts import (
@@ -156,14 +157,14 @@ def _anchor_executor(
 
 
 def _source_manifest(plan, paths_and_components):
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=plan.main_input_dependency.source_step_index,
         step_scope_id=plan.main_input_dependency.source_step_scope_id,
         step_name="producer",
         pipeline_position=plan.main_input_dependency.source_step_index,
         axis_id=plan.axis_id,
         output_dir=Path("/memory"),
-    )
+    ))
     parser = SourceSchemaFilenameParser()
     records = []
     for path, overrides in paths_and_components:
@@ -567,13 +568,13 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
 
     runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(filemanager=SourceFileManager()),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
             source_binding_plan=source_binding_plan,
-        ),
-        compiled_group=compile_function_pattern(
+        )),
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -619,7 +620,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
     bindings = CompiledSourceBindingPlan()
-    plan = CompiledStepPlan(
+    plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="Physical source",
         axis_id="A01",
@@ -632,12 +633,12 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         pipeline_position=0,
         variable_components=(),
         source_binding_plan=bindings,
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
         ),
-    )
+    ))
     context = SimpleNamespace(
         input_dir=tmp_path,
         filemanager=filemanager,
@@ -650,7 +651,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     runtime = PatternGroupExecutionRequest(
         context=context,
         execution_plan=replace(plan, source_binding_plan=bindings),
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -932,14 +933,14 @@ def test_payload_slices_do_not_infer_alignment_from_source_provenance() -> None:
 
 def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="enhance",
         step_name="Enhance",
         pipeline_position=1,
         axis_id="A14",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A14",
         main_input_dependency=StepOutputInput(
@@ -948,7 +949,7 @@ def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> Non
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1024,14 +1025,14 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=4,
         step_scope_id="mask_image",
         step_name="MaskImage",
         pipeline_position=4,
         axis_id="A14",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A14",
         main_input_dependency=StepOutputInput(
@@ -1040,7 +1041,7 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1098,22 +1099,22 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    cells_producer = CompiledStepPlan(
+    cells_producer = assign_devices(CompiledStepPlan(
         step_index=6,
         step_scope_id="identify_cells",
         step_name="IdentifySecondaryObjects",
         pipeline_position=6,
         axis_id="A14",
         output_dir=output_dir,
-    )
-    nuclei_producer = CompiledStepPlan(
+    ))
+    nuclei_producer = assign_devices(CompiledStepPlan(
         step_index=5,
         step_scope_id="identify_nuclei",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=5,
         axis_id="A14",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A14",
         main_input_dependency=PipelineStartInput(),
@@ -1137,7 +1138,7 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1202,22 +1203,22 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    requested_producer = CompiledStepPlan(
+    requested_producer = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="crop_blue",
         step_name="CropBlue",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-    )
-    previous_producer = CompiledStepPlan(
+    ))
+    previous_producer = assign_devices(CompiledStepPlan(
         step_index=3,
         step_scope_id="crop_red",
         step_name="CropRed",
         pipeline_position=3,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
@@ -1237,7 +1238,7 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1310,14 +1311,14 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="image_set",
         step_name="ImageSet",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
@@ -1337,7 +1338,7 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1400,7 +1401,7 @@ def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() ->
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1433,7 +1434,7 @@ def test_step_output_manifest_preserves_pipeline_start_source_bound_anchor() -> 
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1482,7 +1483,7 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
             ("0",),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1509,7 +1510,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
     def identify_secondary(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph({"2": identify_secondary}),
         {},
         {},
@@ -1565,7 +1566,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         path="/memory/CropBlue.pkl",
         artifact_type=runtime_image.artifact_type,
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(identify_primary_objects),
         {plan.ref(): plan for plan in (runtime_plan,)},
         {},
@@ -1647,11 +1648,11 @@ def test_artifact_managed_missing_output_context_is_an_error(
         context=SimpleNamespace(
             microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser())
         ),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
-        ),
+        )),
         compiled_group=SimpleNamespace(
             runtime_domain=RuntimeInvocationDomain.ARTIFACT_MANAGED,
         ),
@@ -1672,7 +1673,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
             source_step_scope_id="crop",
         ),
         execution_group_scope=DynamicGroupScope(Microscopy.Site),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1708,7 +1709,7 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
             ("1",),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -1789,7 +1790,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             ("1", "2"),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(measure_source_set),
             {},
             {plan.ref(): plan for plan in (measurement_plan,)},
@@ -1837,7 +1838,7 @@ def test_callable_contract_source_inputs_project_bindings_through_exact_ref_auth
         del runtime
         return image
 
-    compiled_group = compile_function_pattern(
+    compiled_group = compile_assigned_pattern(
         admitted_graph(exact_source_input),
         {},
         {},
@@ -1894,7 +1895,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         artifact_type=output.artifact_type,
         relations=output.relations,
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph({"3": save_image}),
         {plan.ref(): plan for plan in (runtime_plan,)},
         {plan.ref(): plan for plan in (output_plan,)},
@@ -1985,7 +1986,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
     def exact_source_input(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph({"1": exact_source_input}),
         {},
         {},
@@ -2067,7 +2068,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
             ("1",),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(exact_source_input),
             {},
             {},
@@ -2120,7 +2121,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             ("MCP_DNA", "MCP_AGP"),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -2280,7 +2281,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
         ),
         match_plan=PairByOrder(),
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(source_bound_module),
         {},
         {
@@ -2339,13 +2340,13 @@ def test_default_callable_runtime_scope_projects_bindings_to_selected_group() ->
             axis_id="A01",
             execution_group_scope=DynamicGroupScope(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
-            compiled_function_pattern=compile_function_pattern(
+            compiled_function_pattern=compile_assigned_pattern(
                 admitted_graph(lambda image: image),
                 {},
                 {},
             ),
         ),
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -2373,7 +2374,7 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
             ),
         )
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph({"1": lambda image: image}),
         {},
         {},
@@ -2415,12 +2416,12 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
             ),
         )
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(lambda image: image),
         {},
         {},
     )
-    execution_plan = CompiledStepPlan(
+    execution_plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
@@ -2428,7 +2429,7 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         source_binding_plan=source_binding_plan,
         compiled_function_pattern=compiled_pattern,
         variable_components=(Microscopy.Site,),
-    )
+    ))
     scope = PatternGroupData(
         matching_files=["first.tif", "second.tif"],
         main_data_stack=np.zeros((2, 3, 4), dtype=np.uint16),
@@ -2450,7 +2451,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         group_key="1",
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=scope.main_data_stack,
-        source_memory_type="numpy",
     )
     request = executor.runtime_adapter_request(scope.main_data_stack)
 
@@ -2509,7 +2509,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     def consume_channel_source(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(consume_channel_source),
         {},
         output_plans,
@@ -2538,7 +2538,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         compiled_pattern.default_group,
         invocations=(invocation,),
     )
-    execution_plan = CompiledStepPlan(
+    execution_plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
@@ -2549,7 +2549,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         compiled_function_pattern=compiled_pattern,
         artifact_inputs={},
         artifact_outputs=output_plans,
-    )
+    ))
     scope = PatternGroupData(
         matching_files=["input.tif"],
         main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
@@ -2635,7 +2635,7 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
         path="/memory/Original.pkl",
         source_step_id=0,
     )
-    invocation = compile_function_pattern(
+    invocation = compile_assigned_pattern(
         admitted_graph(consume_original),
         {storage.ref(): storage},
         {},
@@ -2660,13 +2660,13 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
     )
     loaded = PatternGroupData(
         context=SimpleNamespace(),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="Stored",
             axis_id="A01",
             source_binding_plan=bindings,
-        ),
-        compiled_group=compile_function_pattern(
+        )),
+        compiled_group=compile_assigned_pattern(
             admitted_graph(consume_original),
             {storage.ref(): storage},
             {},
@@ -2685,7 +2685,6 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
             loaded,
             invocation,
             main_data_arg=payload,
-            source_memory_type="numpy",
             declared_source_bindings=loaded.execution_plan.source_binding_plan,
         )
 
@@ -2734,14 +2733,14 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         return image
 
     first_invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph(record_first_labels),
             {},
             {first_plan.ref(): first_plan},
         ).iter_invocations()
     )
     second_invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph(record_second_labels),
             {},
             {second_plan.ref(): second_plan},
@@ -2755,7 +2754,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         first_plan.ref(): first_plan,
         second_plan.ref(): second_plan,
     }
-    execution_plan = CompiledStepPlan(
+    execution_plan = assign_devices(CompiledStepPlan(
         axis_id="A01",
         step_index=0,
         step_scope_id="pipeline::step_0",
@@ -2766,7 +2765,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         variable_components=(Microscopy.Site,),
         artifact_inputs={},
         artifact_outputs=output_plans,
-    )
+    ))
     scope = PatternGroupData(
         matching_files=["input.tif"],
         main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
@@ -2830,7 +2829,7 @@ def test_invocation_source_artifact_owns_cross_component_runtime_binding_scope()
     def exact_source_input(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(exact_source_input),
         {},
         {},
@@ -2877,7 +2876,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
     def main_flow_with_auxiliary_source(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(main_flow_with_auxiliary_source),
         {},
         {},
@@ -2951,7 +2950,7 @@ def test_payload_provenance_excludes_auxiliary_binding_from_main_flow_scope() ->
     def save_main_flow_with_source_prefix(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(save_main_flow_with_source_prefix),
         {},
         {},
@@ -2989,7 +2988,7 @@ def test_payload_provenance_outranks_unrelated_artifact_execution_group() -> Non
             ),
         )
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(lambda image: image),
         {},
         {},
@@ -3040,7 +3039,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
     def consume_channel_stack(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(consume_channel_stack),
         {},
         {},
@@ -3116,7 +3115,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
     def consume_selected_channels(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(consume_selected_channels),
         {},
         {},
@@ -3189,7 +3188,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
         del pixel_size
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(measure_neurites),
         {},
         {},
@@ -3367,7 +3366,7 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
     request = PatternGroupExecutionRequest(
         context=SimpleNamespace(),
         execution_plan=plan,
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -3461,7 +3460,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
     def correct_illumination(image):
         return image
 
-    compiled_group = compile_function_pattern(
+    compiled_group = compile_assigned_pattern(
         admitted_graph(correct_illumination),
         {},
         {plan.ref(): plan for plan in (corrected_stain_1, corrected_stain_2)},
@@ -3510,7 +3509,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
         del runtime
         return image
 
-    compiled_group = compile_function_pattern(
+    compiled_group = compile_assigned_pattern(
         admitted_graph(record_mixed_outputs),
         {},
         output_plans,
@@ -3636,7 +3635,7 @@ def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
             request = PatternGroupExecutionRequest(
                 context=SimpleNamespace(),
                 execution_plan=step_plan,
-                compiled_group=compile_function_pattern(
+                compiled_group=compile_assigned_pattern(
                     admitted_graph(lambda image: image),
                     {},
                     {},
@@ -3652,7 +3651,7 @@ def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
     from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 
     source_binding_plan = CompiledSourceBindingPlan()
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(lambda image: image),
         {},
         {},
@@ -3706,7 +3705,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
             ),
         )
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph({"1": lambda image: image}),
         {},
         {},
@@ -3811,14 +3810,14 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
         context=SimpleNamespace(
             source_image_set_identity_policy=SourceImageSetIdentityPolicy()
         ),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="MetaXpress",
             axis_id="A01",
             main_input_dependency=PipelineStartInput(),
             source_binding_plan=selected_plan,
-        ),
-        compiled_group=compile_function_pattern(
+        )),
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -3888,15 +3887,15 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
 
     runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(filemanager=SourceFileManager()),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
             source_binding_plan=CompiledSourceBindingPlan(
                 bindings=(NamedSourceBinding(alias="FilenamePrefix"),),
             ),
-        ),
-        compiled_group=compile_function_pattern(
+        )),
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -3950,7 +3949,7 @@ def test_step_output_load_filter_skips_source_binding_filter() -> None:
     runtime = PatternGroupExecutionRequest(
         execution_plan=plan,
         context=SimpleNamespace(),
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -3972,7 +3971,7 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
         PatternGroupExecutionRequest,
     )
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(lambda image: image),
         {},
         {},
@@ -4104,12 +4103,12 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         ),
     )
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(lambda image: image),
         {},
         {},
     )
-    plan = CompiledStepPlan(
+    plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="PipelineStart",
         axis_id="A01",
@@ -4119,7 +4118,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         variable_components=(),
         main_input_dependency=PipelineStartInput(),
         source_binding_plan=source_binding_plan,
-    )
+    ))
     context = SimpleNamespace(
         microscope_handler=SimpleNamespace(
             parser=SourceSchemaFilenameParser(),
@@ -4216,14 +4215,14 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         "_filter_matching_files_for_source_bindings",
         lambda _self, paths: paths,
     )
-    plan = CompiledStepPlan(
+    plan = assign_devices(CompiledStepPlan(
         step_index=1,
         step_name="Resize",
         axis_id="A01",
         input_dir=tmp_path,
         input_memory_type="numpy",
         variable_components=(Microscopy.ZIndex,),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -4232,14 +4231,14 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
             source_step_index=0,
             source_step_scope_id="producer",
         ),
-    )
-    producer = CompiledStepPlan(
+    ))
+    producer = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="producer",
         step_scope_id="producer",
         axis_id="A01",
         output_dir=tmp_path,
-    )
+    ))
     producer_manifest = StepOutputManifestStore()
     producer_manifest.begin_step(producer)
     producer_manifest.record_outputs(
@@ -4297,12 +4296,12 @@ def test_artifact_managed_group_uses_compiler_group_without_filtering_anchor_fil
         compiled_group=SimpleNamespace(
             runtime_domain=RuntimeInvocationDomain.ARTIFACT_MANAGED,
         ),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
             main_input_dependency=PipelineStartInput(),
-        ),
+        )),
         component_value="1",
         context=SimpleNamespace(),
         pattern_group_info="fixture",
@@ -4321,7 +4320,7 @@ def test_step_output_group_does_not_reinterpret_producer_path_component() -> Non
         compiled_group=SimpleNamespace(
             runtime_domain=RuntimeInvocationDomain.SOURCE_ANCHORED,
         ),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
             axis_id="A01",
@@ -4329,7 +4328,7 @@ def test_step_output_group_does_not_reinterpret_producer_path_component() -> Non
                 source_step_index=4,
                 source_step_scope_id="object_to_image",
             ),
-        ),
+        )),
         component_value="0",
         context=SimpleNamespace(),
         pattern_group_info="fixture",
@@ -4365,14 +4364,14 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="correct_illumination",
         step_name="CorrectIlluminationApply",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
@@ -4391,7 +4390,7 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -4457,21 +4456,21 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="align",
         step_name="Align",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     input_spec = ArtifactSpec.input("Stain1", ImageArtifactType)
 
     @artifact_inputs(input_spec)
     def identify_stain_1(image):
         return image
 
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(identify_stain_1),
         {},
         {},
@@ -4556,15 +4555,15 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
-    )
-    update = CompiledStepPlan(
+    ))
+    update = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="update",
         step_name="Update",
@@ -4577,12 +4576,12 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
         ),
-    )
+    ))
     store = StepOutputManifestStore()
     store.begin_step(producer)
     store.record_outputs(
@@ -4655,15 +4654,15 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
     collapsed_input_domain: bool,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
-    )
-    collapse = CompiledStepPlan(
+    ))
+    collapse = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="collapse",
         step_name="Collapse",
@@ -4676,12 +4675,12 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(func),
             {},
             {},
         ),
-    )
+    ))
     store = StepOutputManifestStore()
     store.begin_step(producer)
     store.record_outputs(
@@ -4730,15 +4729,15 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
-    )
-    replacement = CompiledStepPlan(
+    ))
+    replacement = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="replacement",
         step_name="Replacement",
@@ -4751,12 +4750,12 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
         ),
-    )
+    ))
     store = StepOutputManifestStore()
     store.begin_step(producer)
     store.record_outputs(
@@ -4818,15 +4817,15 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=1,
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
-    )
-    subset = CompiledStepPlan(
+    ))
+    subset = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="subset",
         step_name="Subset",
@@ -4839,12 +4838,12 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
         ),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph({"2": lambda image: image}),
             {},
             {},
         ),
-    )
+    ))
     store = StepOutputManifestStore()
     store.begin_step(producer)
     store.record_outputs(
@@ -4891,14 +4890,14 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=2,
         step_scope_id="identify_primary",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
@@ -4917,7 +4916,7 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -4956,14 +4955,14 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=4,
         step_scope_id="correct_illumination_apply",
         step_name="CorrectIlluminationApply",
         pipeline_position=4,
         axis_id="A01",
         output_dir=output_dir,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
@@ -4982,7 +4981,7 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -5600,7 +5599,6 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
     from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
     from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.function_patterns import compile_function_pattern
     from openhcs.core.aligned_image_payload import AlignedImageStack
 
     class OutputFileManager:
@@ -5645,12 +5643,12 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
             runtime_image_stack_cache=RuntimeImageStackCache(),
         ),
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(func),
             {},
             output_plans,
         ).default_group,
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             axis_id="A01",
             output_dir=tmp_path,
@@ -5661,7 +5659,7 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             step_scope_id="explicit-identity",
             execution_group_scope=UngroupedScope(),
             artifact_outputs=output_plans,
-        ),
+        )),
         pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
         component_value=None,
         component_index=0,
@@ -5712,20 +5710,20 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
 @pytest.fixture
 def qualified_producer_manifest(tmp_path):
     parser = SourceSchemaFilenameParser()
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=0,
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=0,
         axis_id="A01",
         output_dir=tmp_path,
-    )
+    ))
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepOutputInput(
             source_step_index=0, source_step_scope_id="producer"
         ),
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -5914,20 +5912,20 @@ def test_producer_loader_validates_ambiguity_before_cache(
 ):
     from openhcs.core.steps import function_runtime
 
-    producer = CompiledStepPlan(
+    producer = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="producer",
         step_scope_id="producer",
         axis_id="A01",
         output_dir=Path("/memory"),
-    )
-    plan = CompiledStepPlan(
+    ))
+    plan = assign_devices(CompiledStepPlan(
         step_index=1,
         step_name="consumer",
         axis_id="A01",
         input_dir=Path("/memory"),
         input_memory_type="numpy",
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(lambda image: image),
             {},
             {},
@@ -5936,7 +5934,7 @@ def test_producer_loader_validates_ambiguity_before_cache(
             source_step_index=0,
             source_step_scope_id="producer",
         ),
-    )
+    ))
     manifest = StepOutputManifestStore()
     manifest.begin_step(producer)
     manifest.record_outputs(
@@ -6010,13 +6008,13 @@ def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
         source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
     )
     source = metadata.payload_with(pixels, mask)
-    plan = CompiledStepPlan(
+    plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="Volume",
         axis_id="A01",
         step_scope_id="volume",
         input_memory_type="numpy",
-    )
+    ))
     loaded = ImagePayloadStackComposition.from_loaded_images(
         (source,),
         producer_records=None,

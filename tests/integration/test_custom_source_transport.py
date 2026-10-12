@@ -61,7 +61,6 @@ def transport_environment(tmp_path):
         PYTHONDONTWRITEBYTECODE="1",
         OPENHCS_CPU_ONLY="true",
         OPENHCS_HEADLESS="true",
-        OPENHCS_SUBPROCESS_NO_GPU="1",
         QT_QPA_PLATFORM="offscreen",
         CUDA_VISIBLE_DEVICES="",
         PYTEST_DISABLE_PLUGIN_AUTOLOAD="1",

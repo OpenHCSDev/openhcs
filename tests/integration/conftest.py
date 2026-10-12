@@ -11,6 +11,11 @@ import pytest
 from zmqruntime import EndpointShutdownMode, ZMQClient
 from zmqruntime.transport import DataControlPortPairAuthority
 
+import openhcs.processing.custom_functions.manager as manager_module
+from openhcs.processing.custom_functions import CustomFunctionManager
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+)
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 from tests.integration.helpers.fixture_utils import (
@@ -173,3 +178,30 @@ def free_port_pair() -> Iterator[Callable[[], int]]:
 @pytest.fixture(autouse=True)
 def reap_integration_processes(reap_spawned_processes) -> None:
     """Every integration test reaps the processes it spawned."""
+
+
+@pytest.fixture
+def register_source(monkeypatch, tmp_path):
+    """Register a custom-function source the way the editor and the MCP service do."""
+    storage_dir = tmp_path / "custom_functions"
+    storage_dir.mkdir()
+    monkeypatch.setattr(
+        manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir
+    )
+    for attribute in (
+        "_declarations_by_name",
+        "_published_exports",
+        "_preparation_outcomes",
+        "_preparation_threads",
+    ):
+        monkeypatch.setattr(CustomFunctionRuntimeRegistry, attribute, {})
+    monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_source_revision", None)
+
+    def register(source: str):
+        [function] = CustomFunctionManager().register_from_code(
+            source, persist=False, emit_signal=False
+        )
+        return function
+
+    yield register
+    CustomFunctionRuntimeRegistry.clear()

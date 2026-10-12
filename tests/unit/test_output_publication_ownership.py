@@ -1,5 +1,7 @@
 """Real output publication keeps buffer preparation and commit effects ordered."""
 
+from tests.device_assignment_support import assign_devices
+from tests.device_assignment_support import compile_assigned_pattern
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -19,7 +21,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
@@ -42,7 +43,7 @@ def _runtime(tmp_path):
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     context = executing_context(axis_id="A01", filemanager=filemanager)
     context = with_facts(context, microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()))
-    plan = CompiledStepPlan(
+    plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="OutputOwnership",
         step_scope_id="output-ownership",
@@ -54,10 +55,10 @@ def _runtime(tmp_path):
         artifact_inputs={},
         artifact_outputs={},
         execution_group_scope=UngroupedScope(),
-    )
+    ))
     runtime = PatternGroupExecutionRequest(context=context,
             execution_plan=plan,
-            compiled_group=compile_function_pattern(
+            compiled_group=compile_assigned_pattern(
                 admitted_graph(_identity),
                 {},
                 {},

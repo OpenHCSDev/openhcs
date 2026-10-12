@@ -84,8 +84,7 @@ def run(args) -> None:
             os.environ[key] = '1'
         os.environ.update(
             OPENHCS_CPU_ONLY='true', OPENHCS_HEADLESS='true',
-            OPENHCS_USE_THREADING='true', OPENHCS_SUBPROCESS_NO_GPU='1',
-            POLYSTORE_SUBPROCESS_NO_GPU='1', CUDA_VISIBLE_DEVICES='',
+            OPENHCS_USE_THREADING='true', CUDA_VISIBLE_DEVICES='',
             QT_QPA_PLATFORM='offscreen', PYTHONDONTWRITEBYTECODE='1',
             POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD='false',
             POLYSTORE_IMAGEJ_CACHE_ROOT='/home/ts/.cache/polystore/imagej',

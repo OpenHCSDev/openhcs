@@ -1,15 +1,19 @@
 import ast
+from contextlib import contextmanager
 from dataclasses import fields
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from arraybridge.devices import HOST, AcceleratorDevice
 
 from tests.artifact_graphs import admitted_graph
+from tests.device_assignment_support import assign_devices
+from openhcs.core.runtime_array_values import ArrayPlacement
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.constants.constants import MemoryType
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
-    FrameworkDeviceAssignment,
     InputConversionPlan,
     MaterializedOutputPlan,
 )
@@ -134,9 +138,11 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert isinstance(plan.main_input_dependency, StepOutputInput)
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
     assert plan.source_binding_plan == CompiledSourceBindingPlan()
-    assert plan.device_id_for(plan.input_memory_type) is None
-    assert not plan.requires_gpu
-    assert plan.gpu_memory_types == frozenset()
+    assert plan.declared_libraries == frozenset({MemoryType.NUMPY.library})
+    assert assign_devices(plan).placement_for(plan.input_memory_type) == ArrayPlacement(
+        MemoryType.NUMPY.library, HOST
+    )
+    assert not plan.uses_accelerator
     assert plan.input_conversion is not None
     assert plan.input_conversion.output_dir == Path("/tmp/converted")
     assert plan.input_conversion.original_subdir == "input"
@@ -146,64 +152,56 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert plan.streaming_configs == {}
 
 
-def test_compiled_step_plan_owns_gpu_memory_classification() -> None:
-    compiled_plan = _compiled_plan(
-        input_memory_type="numpy",
-        output_memory_type="cupy",
-        device_assignment=FrameworkDeviceAssignment.from_mapping({MemoryType.CUPY: 2}),
-    )
-
-    assert compiled_plan.requires_gpu
-    assert compiled_plan.gpu_memory_types == frozenset({MemoryType.CUPY})
-    assert compiled_plan.device_id_for("cupy") == 2
-
-
-def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) -> None:
+def test_a_step_is_assigned_a_device_for_every_library_its_invocations_declare(
+    stand_in_library, monkeypatch
+) -> None:
     def numpy_boundary_with_torch_execution(image):
         return image
 
     numpy_boundary_with_torch_execution.input_memory_type = "numpy"
     numpy_boundary_with_torch_execution.output_memory_type = "numpy"
     numpy_boundary_with_torch_execution.execution_memory_type = "torch"
+    torch = stand_in_library("torch", 5)
+    monkeypatch.delenv(OpenHCSProcessEnvironment.cpu_only_key, raising=False)
     compiled_plan = _compiled_plan(
         compiled_function_pattern=compile_function_pattern(
             admitted_graph(numpy_boundary_with_torch_execution),
             {},
             {},
         ),
-        device_assignment=FrameworkDeviceAssignment.from_mapping({MemoryType.TORCH: 4}),
     )
 
-    assert compiled_plan.gpu_memory_types == frozenset({MemoryType.TORCH})
-    assert compiled_plan.device_id_for("torch") == 4
-    from contextlib import contextmanager
-    from openhcs.core.pipeline.framework_device_assignment import (
-        assign_framework_devices,
+    assert compiled_plan.declared_libraries == frozenset(
+        {MemoryType.NUMPY.library, torch}
     )
+    assign_devices(compiled_plan)
 
-    monkeypatch.setattr(
-        "openhcs.core.pipeline.framework_device_assignment.resolve_framework_devices",
-        lambda _required: compiled_plan.device_assignment,
+    assert compiled_plan.uses_accelerator
+    assert compiled_plan.placement_for("torch") == ArrayPlacement(
+        torch, AcceleratorDevice(0)
     )
-    assign_framework_devices({0: compiled_plan})
     (placed_invocation,) = tuple(
         compiled_plan.compiled_function_pattern.iter_invocations()
     )
-    assert placed_invocation.input_device_id is None
-    assert placed_invocation.execution_device_id == 4
+    assert placed_invocation.input_placement == ArrayPlacement(
+        MemoryType.NUMPY.library, HOST
+    )
+    assert placed_invocation.execution_placement == ArrayPlacement(
+        torch, AcceleratorDevice(0)
+    )
     entered = []
 
     @contextmanager
-    def recorded_scope(memory_type, device_id):
-        entered.append((memory_type, device_id))
+    def recorded_scope(library, device):
+        entered.append((library, device))
         yield
 
-    monkeypatch.setattr(MemoryType, "device_scope", recorded_scope)
+    monkeypatch.setattr(type(torch), "device_scope", recorded_scope)
     with placed_invocation.execution_device_scope():
-        assert entered == [(MemoryType.TORCH, 4)]
+        assert entered == [(torch, AcceleratorDevice(0))]
 
 
-def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:
+def test_a_step_declares_the_libraries_between_its_invocations() -> None:
     def to_cupy(image):
         return image
 
@@ -226,7 +224,9 @@ def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:
         ),
     )
 
-    assert compiled_plan.gpu_memory_types == frozenset({MemoryType.CUPY})
+    assert compiled_plan.declared_libraries == frozenset(
+        {MemoryType.NUMPY.library, MemoryType.CUPY.library}
+    )
 
 
 def test_compiled_step_plan_rejects_missing_variable_components():

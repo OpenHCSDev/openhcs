@@ -334,7 +334,6 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/debug_session_projection.py", "current_plate_scope_id"),
         ("openhcs/core/debug_session_projection.py", "no_plate"),
         ("openhcs/core/execution_state.py", "has_compiled_plate"),
-        ("openhcs/core/function_patterns.py", "PLATE"),
         ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
         ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
         ("openhcs/core/pipeline/artifact_planning.py", "PLATE"),

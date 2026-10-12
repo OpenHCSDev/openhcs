@@ -4,6 +4,8 @@ import pytest
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import MultiprocessingStartMethod
+from openhcs.core.pipeline.framework_device_assignment import assign_framework_devices
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.worker_start_policy import (
     WorkerStartPlatform,
     WorkerStartExecutionFacts,
@@ -62,47 +64,41 @@ def test_macos_downgrades_fork_without_unsafe_override() -> None:
     assert "macOS" in decision.reason
 
 
-def test_execution_facts_use_compiled_step_plan_semantics() -> None:
-    compiled_contexts = {
-        "A01": executing_context(
-            step_plans={
-                0: CompiledStepPlan(
-                    step_index=0,
-                    step_name="cpu",
-                    axis_id="A01",
-                    input_memory_type="numpy",
-                    output_memory_type="numpy",
-                ),
-                1: CompiledStepPlan(
-                    step_index=1,
-                    step_name="gpu",
-                    axis_id="A01",
-                    output_memory_type="cupy",
-                ),
-            },
-        )
+@pytest.mark.parametrize(
+    ("declared", "accelerators", "uses_accelerator"),
+    [
+        ("cupy", 1, True),
+        ("torch", 1, True),
+        # torch is declared but assigned its host device: nothing uses a GPU.
+        ("torch", 0, False),
+        ("numpy", None, False),
+    ],
+)
+def test_execution_facts_follow_the_assigned_devices(
+    stand_in_library, monkeypatch, declared, accelerators, uses_accelerator
+) -> None:
+    if accelerators is not None:
+        stand_in_library(declared, accelerators)
+    monkeypatch.delenv(OpenHCSProcessEnvironment.cpu_only_key, raising=False)
+    step_plans = {
+        0: CompiledStepPlan(
+            step_index=0,
+            step_name="first",
+            axis_id="A01",
+            input_memory_type="numpy",
+            output_memory_type="numpy",
+        ),
+        1: CompiledStepPlan(
+            step_index=1,
+            step_name="second",
+            axis_id="A01",
+            output_memory_type=declared,
+        ),
     }
+    assign_framework_devices(step_plans)
+    compiled_contexts = {"A01": executing_context(step_plans=step_plans)}
 
-    assert WorkerStartExecutionFacts.from_compiled_contexts(
-        compiled_contexts
-    ).gpu_enabled
-
-
-def test_execution_facts_treat_numpy_contexts_as_cpu() -> None:
-    compiled_contexts = {
-        "A01": executing_context(
-            step_plans={
-                0: CompiledStepPlan(
-                    step_index=0,
-                    step_name="cpu",
-                    axis_id="A01",
-                    input_memory_type="numpy",
-                    output_memory_type="numpy",
-                )
-            },
-        )
-    }
-
-    assert not WorkerStartExecutionFacts.from_compiled_contexts(
-        compiled_contexts
-    ).gpu_enabled
+    assert (
+        WorkerStartExecutionFacts.from_compiled_contexts(compiled_contexts).gpu_enabled
+        is uses_accelerator
+    )

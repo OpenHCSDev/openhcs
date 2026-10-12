@@ -1,3 +1,5 @@
+from tests.device_assignment_support import assign_devices
+from tests.device_assignment_support import assign_invocation_devices, compile_assigned_pattern
 from arraybridge.devices import HOST
 from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
@@ -45,7 +47,6 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     MainFlowInputProjection,
-    compile_function_pattern,
 )
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -58,7 +59,6 @@ from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
     runtime_adapter,
 )
-from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
@@ -200,7 +200,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         if not request.execution_group_scope.as_grouped()
         else {request.group_key: [request.func_callable]}
     )
-    compiled_pattern = compile_function_pattern(
+    compiled_pattern = compile_assigned_pattern(
         admitted_graph(pattern),
         request.artifact_inputs,
         request.artifact_outputs,
@@ -223,12 +223,12 @@ def _execute_function_core(request: CoreExecutionRequest):
         declared_contract,
         input_memory_type=MemoryType.NUMPY.value, output_memory_type=MemoryType.NUMPY.value, processing_contract=request.processing_contract,
     )
-    invocation = replace(
+    invocation = assign_invocation_devices(replace(
         compiled_invocation,
         contract=contract,
         kwargs=tuple(request.base_kwargs.items()),
-    )
-    execution_plan = CompiledStepPlan(
+    ))
+    execution_plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_scope_id="test::function_step",
         step_name="test",
@@ -240,7 +240,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         compiled_function_pattern=compiled_pattern,
         artifact_inputs=request.artifact_inputs,
         artifact_outputs=request.artifact_outputs,
-    )
+    ))
     component_value = (
         None if not request.execution_group_scope.as_grouped() else request.group_key
     )
@@ -269,7 +269,6 @@ def _execute_function_core(request: CoreExecutionRequest):
         runtime_scope,
         invocation,
         main_data_arg=request.main_data_arg,
-        source_memory_type=MemoryType.NUMPY.value,
         declared_source_bindings=runtime_scope.execution_plan.source_binding_plan,
     ).execute()
 
@@ -1735,7 +1734,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
         artifact_type=ImageArtifactType,
     )
     invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph(rgb_output),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
@@ -1746,7 +1745,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             group_key="default",
             invocations=(invocation,),
         ),
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="RGB output",
             axis_id="A01",
@@ -1756,7 +1755,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             artifact_outputs={
                 output_plan.ref(): output_plan,
             },
-        ),
+        )),
         component_value=None,
         context=SimpleNamespace(),
         pattern_group_info="fixture",
@@ -1788,12 +1787,12 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     runtime = PatternGroupExecutionRequest(
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(passthrough),
             {},
             {},
         ).default_group,
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="DeclaredOutput",
             axis_id="A01",
@@ -1801,7 +1800,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
             artifact_inputs={},
             execution_group_scope=UngroupedScope(),
             artifact_outputs={},
-        ),
+        )),
         component_value=None,
         context=SimpleNamespace(),
         pattern_group_info="fixture",
@@ -1839,12 +1838,12 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
     )
 
     runtime = PatternGroupExecutionRequest(
-        compiled_group=compile_function_pattern(
+        compiled_group=compile_assigned_pattern(
             admitted_graph(passthrough),
             {},
             {},
         ).default_group,
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="DeclaredObjectLabels",
             axis_id="A01",
@@ -1852,7 +1851,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
             artifact_inputs={},
             execution_group_scope=UngroupedScope(),
             artifact_outputs={},
-        ),
+        )),
         component_value=None,
         context=SimpleNamespace(),
         pattern_group_info="fixture",
@@ -2351,7 +2350,7 @@ def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
 
             CallableContract.from_callable(count).validate_artifact_output_declarations()
         else:
-            compile_function_pattern(admitted_graph(count), {}, {})
+            compile_assigned_pattern(admitted_graph(count), {}, {})
     assert "ImageMeasurementSubjectRelation" in str(exc.value)
     assert "ArtifactSpec.output" in str(exc.value)
 
@@ -2416,7 +2415,7 @@ def test_compile_rejects_conflicting_measurement_subject_relations():
         return image
 
     with pytest.raises(ValueError, match="multiple measurement subjects"):
-        compile_function_pattern(admitted_graph(count), {}, {})
+        compile_assigned_pattern(admitted_graph(count), {}, {})
 
 
 def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_identity():
@@ -2869,29 +2868,6 @@ def test_execute_function_core_validates_tuple_artifact_kind():
         )
 
 
-def test_function_runtime_stacks_and_unstacks_explicit_runtime_slices():
-    slices = [
-        np.zeros((4, 5, 3), dtype=np.float32),
-        np.ones((4, 5, 3), dtype=np.float32),
-    ]
-
-    stack = stack_runtime_slices(
-        slices,
-        "numpy",
-        0,
-    )
-    unstacked = unstack_runtime_slices(
-        stack,
-        "numpy",
-        0,
-        expected_count=2,
-    )
-
-    assert stack.shape == (2, 4, 5, 3)
-    assert [slice_data.shape for slice_data in unstacked] == [(4, 5, 3), (4, 5, 3)]
-    np.testing.assert_array_equal(unstacked[1], slices[1])
-
-
 def _declared_source_executor(
     spec: ArtifactSpec,
     *,
@@ -2905,7 +2881,7 @@ def _declared_source_executor(
         return image
 
     invocation = next(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph(declared_source_origin),
             {},
             {},
@@ -2931,10 +2907,10 @@ def _declared_source_executor(
                 component=None,
                 value=None,
             ),
-            execution_plan=CompiledStepPlan(
+            execution_plan=assign_devices(CompiledStepPlan(
                 step_index=0, step_name="source-bound", axis_id="A01",
                 variable_components=(),
-            ),
+            )),
         ),
         invocation=invocation,
         artifact_inputs={edge.key: edge},
@@ -2942,7 +2918,6 @@ def _declared_source_executor(
         group_key=None,
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=object(),
-        source_memory_type=MemoryType.NUMPY.value,
     )
 
 

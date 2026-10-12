@@ -1,4 +1,6 @@
 from __future__ import annotations
+from arraybridge.libraries import ArrayLibrary, HostDevices
+from arraybridge.devices import AcceleratorDevice
 
 import ast
 import inspect
@@ -489,7 +491,10 @@ def test_openhcs_registry_valid_cache_skips_full_module_scan(
 def test_openhcs_registry_cache_identity_includes_memory_import_policy(
     tmp_path,
     monkeypatch,
+    stand_in_library,
 ) -> None:
+    # CuPy has no host device, so excluding accelerators changes the catalogue.
+    stand_in_library("cupy", 1)
     registry = OpenHCSRegistry()
     registry._cache_path = tmp_path / "openhcs_function_metadata.json"
     registry.MODULES_TO_SCAN = []
@@ -502,11 +507,14 @@ def test_openhcs_registry_cache_identity_includes_memory_import_policy(
     gpu_enabled_signature = json.loads(registry.get_discovery_signature())
     gpu_enabled_path = registry.persistent_cache_path()
 
-    assert cpu_only_signature["context"]["allowed_memory_types"] == [
-        MemoryType.NUMPY.value
-    ]
+    # With accelerators excluded a library stays when it has a host device.
+    assert cpu_only_signature["context"]["allowed_memory_types"] == sorted(
+        str(library.name)
+        for library in ArrayLibrary.all()
+        if library.is_installed() and isinstance(library, HostDevices)
+    )
     assert gpu_enabled_signature["context"]["allowed_memory_types"] == sorted(
-        memory_type.value for memory_type in MemoryType if memory_type.is_installed()
+        str(library.name) for library in ArrayLibrary.all() if library.is_installed()
     )
     assert cpu_only_signature != gpu_enabled_signature
     assert cpu_only_path != gpu_enabled_path
@@ -519,14 +527,19 @@ def test_openhcs_registry_cache_identity_includes_framework_packages(
     registry = OpenHCSRegistry()
     registry.MODULES_TO_SCAN = []
     monkeypatch.delenv(OpenHCSProcessEnvironment.cpu_only_key, raising=False)
-    monkeypatch.setattr(
-        MemoryType,
-        "is_installed",
-        lambda memory_type: memory_type is MemoryType.NUMPY,
-    )
+    for library in ArrayLibrary.all():
+        monkeypatch.setattr(
+            type(library),
+            "is_installed",
+            lambda library: library is MemoryType.NUMPY.library,
+        )
     numpy_only_signature = json.loads(registry.get_discovery_signature())
 
-    monkeypatch.setattr(MemoryType, "is_installed", lambda _memory_type: True)
+    for library in ArrayLibrary.all():
+        monkeypatch.setattr(type(library), "is_installed", lambda _library: True)
+        monkeypatch.setattr(
+            type(library), "accelerator_devices", lambda _library: (AcceleratorDevice(0),)
+        )
     full_signature = json.loads(registry.get_discovery_signature())
 
     assert numpy_only_signature["context"]["allowed_memory_types"] == [

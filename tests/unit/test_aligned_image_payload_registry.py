@@ -1,4 +1,5 @@
 from __future__ import annotations
+from arraybridge import MemoryType
 from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
@@ -72,7 +73,7 @@ def test_image_aligned_operation_does_not_remove_runtime_plane_axis():
 def test_produced_literal_stack_uses_image_aligned_operation_without_selecting_a_plane(axis):
     value = ProducedImageStack(
         tuple(np.full((3, 4), index, dtype=np.float32) for index in (1, 2, 3)),
-        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
+        library=MemoryType.NUMPY.library, plane_axis=RuntimeSlicePlaneAxis,
     )
     assert _resolver(axis=axis).resolve(value) is value
     assert value._composed_payload is None

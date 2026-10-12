@@ -1,5 +1,7 @@
 """Loaded cohorts retain original input facts while plans and call images remain live."""
 
+from tests.device_assignment_support import assign_devices
+from tests.device_assignment_support import compile_assigned_pattern
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
@@ -18,7 +20,6 @@ from openhcs.core.component_group_scope import (
     UngroupedScope,
 )
 from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
-from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -46,8 +47,8 @@ def _identity(image):
 
 
 def _fixture():
-    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
-    plan = CompiledStepPlan(
+    pattern = compile_assigned_pattern(admitted_graph(_identity), {}, {})
+    plan = assign_devices(CompiledStepPlan(
         step_index=0,
         step_name="Loaded",
         axis_id="A01",
@@ -57,7 +58,7 @@ def _fixture():
         execution_group_scope=DynamicGroupScope(Microscopy.Channel),
         variable_components=(Microscopy.Site,),
         source_binding_plan=CompiledSourceBindingPlan(),
-    )
+    ))
     context = executing_context(axis_id="A01")
     request = PatternGroupExecutionRequest(
         context=context,
@@ -178,9 +179,7 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
 
     def execute(executor, *, debug_sink=None):
         assert debug_sink is None
-        seen.append(
-            (executor.group_data, executor.main_data_arg, executor.source_memory_type)
-        )
+        seen.append((executor.group_data, executor.main_data_arg))
         if len(seen) == 1:
             paths.append("during-call.tif")
             payload.data[:] = -3
@@ -196,7 +195,6 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
     assert loaded.execute_chain() is second_output
     assert seen[0][0] is loaded and seen[1][0] is loaded
     assert seen[0][1] is payload and seen[1][1] is first_output
-    assert seen[0][2] == "numpy" and seen[1][2] == "next-memory"
     assert loaded.main_data_stack is payload
     assert loaded.runtime_plane_count == 2
     assert loaded.fixed_component_values == (
@@ -312,7 +310,6 @@ def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoc
         "1",
         function_runtime.RuntimePlaneProjection.stack(2),
         current,
-        "numpy",
     )
     adapter = executor.runtime_adapter_request(current)
     assert adapter.context is loaded.context
@@ -342,7 +339,6 @@ def test_adapter_tuple_admission_precedes_output_map_validation():
         "1",
         function_runtime.RuntimePlaneProjection.stack(2),
         initial,
-        "numpy",
     )
     request.execution_plan.variable_components = None
     with pytest.raises(TypeError, match="NoneType.*not iterable"):
@@ -410,7 +406,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         artifact_type=ImageArtifactType,
         source_step_id=0,
     )
-    pattern = compile_function_pattern(
+    pattern = compile_assigned_pattern(
         admitted_graph(consume),
         {},
         {output_plan.ref(): output_plan},
@@ -563,7 +559,7 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
         source,
         step_index=2,
         step_scope_id="native",
-        compiled_function_pattern=compile_function_pattern(
+        compiled_function_pattern=compile_assigned_pattern(
             admitted_graph(_identity),
             {},
             {},
@@ -801,7 +797,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     pattern = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(
-        compile_function_pattern(
+        compile_assigned_pattern(
             admitted_graph([consume, consume]),
             {},
             {},
@@ -827,7 +823,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     edge = invocation.artifact_input_edges[0]
     executor = FunctionCoreExecutor(
         loaded, invocation, {edge.key: edge}, {}, None,
-        RuntimePlaneProjection.stack(2), payload, "numpy",
+        RuntimePlaneProjection.stack(2), payload,
     )
     adapter = executor.runtime_adapter_request(payload)
     adapter = replace(adapter, plane_projection=(

@@ -435,14 +435,6 @@ def test_no_gpu_launch_uses_cpu_only_authority_without_gpu_setup(monkeypatch) ->
     _install_fake_signal_relay(monkeypatch, signal_events)
     monkeypatch.setitem(sys.modules, window_utils_module.__name__, window_utils_module)
     monkeypatch.setenv(OpenHCSProcessEnvironment.cpu_only_key, "false")
-    monkeypatch.setenv(
-        OpenHCSProcessEnvironment.subprocess_no_gpu_key,
-        "false",
-    )
-    monkeypatch.setenv(
-        OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key,
-        "false",
-    )
     monkeypatch.setattr(launch, "setup_logging", lambda *args, **kwargs: None)
     monkeypatch.setattr(launch, "setup_qt_platform", lambda: None)
     monkeypatch.setattr(launch, "check_dependencies", lambda: True)
@@ -461,8 +453,6 @@ def test_no_gpu_launch_uses_cpu_only_authority_without_gpu_setup(monkeypatch) ->
     assert result == 0
     assert [event[0] for event in signal_events] == ["installed", "closed"]
     assert OpenHCSProcessEnvironment.accelerators_excluded() is True
-    assert os.environ[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
-    assert os.environ[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
 
 
 def test_launcher_version_uses_source_version_authority(

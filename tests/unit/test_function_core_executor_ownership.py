@@ -92,7 +92,6 @@ def _executor():
         None,
         RuntimePlaneProjection.stack(),
         initial_image,
-        "numpy",
     )
 
 
@@ -105,7 +104,6 @@ def test_executor_retains_positional_layout_with_loaded_group_owner_and_frozen_s
         "group_key",
         "plane_projection",
         "main_data_arg",
-        "source_memory_type",
     )
     declaration = fields(FunctionCoreExecutor)
     assert tuple(field.name for field in declaration) == expected
@@ -121,7 +119,7 @@ def test_executor_retains_positional_layout_with_loaded_group_owner_and_frozen_s
     executor = _executor()
     assert not hasattr(executor, "__dict__")
     with pytest.raises(FrozenInstanceError):
-        executor.source_memory_type = "other"
+        executor.main_data_arg = None
     replaced = replace(executor, group_key="changed")
     assert replaced.group_key == "changed"
     assert replaced.group_data is executor.group_data
@@ -134,7 +132,7 @@ def test_executor_pickle_retains_real_scope_edges_and_ordered_field_state():
     original_state = executor.__getstate__()
     assert len(original_state) == len(fields(FunctionCoreExecutor))
     assert original_state[0] is executor.group_data
-    assert original_state[-1] == "numpy"
+    assert original_state[-1] is executor.main_data_arg
     restored = pickle.loads(pickle.dumps(executor))
     assert type(restored) is FunctionCoreExecutor
     assert restored.group_data.execution_plan.step_scope_id == "metadata-binding"

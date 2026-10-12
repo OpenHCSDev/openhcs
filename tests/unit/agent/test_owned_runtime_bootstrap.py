@@ -160,7 +160,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
     monkeypatch.setattr(module.subprocess, "Popen", launch)
     environment = {"PLAN_TEST": "owned"}
     monkeypatch.setattr(
-        module.MemoryType, "subprocess_environment", lambda: environment
+        module.ArrayLibrary, "child_environment", classmethod(lambda cls: environment)
     )
 
     launch_record = EndpointLaunch.by_this_process(

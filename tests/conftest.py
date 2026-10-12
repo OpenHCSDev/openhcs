@@ -81,6 +81,38 @@ else:
 
 
 @pytest.fixture
+def stand_in_library(monkeypatch):
+    """Install a stand-in module for an array library and return the real library.
+
+    ``stand_in_library("torch", 2)`` makes the real ``arraybridge`` torch class
+    see two accelerators without torch being installed.
+    """
+    import sys
+
+    from arraybridge.libraries import ArrayLibrary
+
+    from tests.device_assignment_support import stand_in_module
+
+    def install(name: str, accelerator_count):
+        monkeypatch.setitem(sys.modules, name, stand_in_module(name, accelerator_count))
+        return ArrayLibrary.named(name)
+
+    return install
+
+
+@pytest.fixture
+def cupy_arrays_that_record_their_device(monkeypatch):
+    """Stand-in CuPy arrays on numbered devices; returns the array class and state."""
+    import sys
+
+    from tests.device_assignment_support import recording_cupy_module
+
+    module, device_array, state = recording_cupy_module()
+    monkeypatch.setitem(sys.modules, "cupy", module)
+    return device_array, state
+
+
+@pytest.fixture
 def viewer_ack_return_route():
     """Nominal producer route for message construction without a live listener."""
     return AckReturnRoute(

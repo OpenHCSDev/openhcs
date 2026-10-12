@@ -1007,7 +1007,7 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     (placed,) = tuple(plan.compiled_function_pattern.iter_invocations())
     assert placed.input_memory_type is None
     assert placed.output_memory_type is None
-    assert placed.input_device_id is None
+    assert placed.input_placement is None
     assert (
         placed.artifact_input_edges
         == compiled.default_group.invocations[0].artifact_input_edges

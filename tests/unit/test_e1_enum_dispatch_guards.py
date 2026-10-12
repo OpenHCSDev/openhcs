@@ -39,7 +39,6 @@ ALLOWED: dict[tuple[str, str], str] = {
     ('CellProfilerSourceImageProjectionField', 'openhcs/interop/cellprofiler/analyst_export.py'): CELLPROFILER_SPELLING,
     ('FunctionStepExecutionScope', 'openhcs/core/artifacts/input_projection.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/callable_contract.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
-    ('FunctionStepExecutionScope', 'openhcs/core/function_patterns.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/function_reference.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/orchestrator/bundle_execution.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',
     ('FunctionStepExecutionScope', 'openhcs/core/orchestrator/worker_execution.py'): 'K5 callable contract (#1202 merged, still an enum); needs an owner',

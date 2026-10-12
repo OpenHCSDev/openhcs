@@ -517,8 +517,8 @@ def test_catalog_inventory_excludes_a_registry_that_cannot_warm(
         availability_checks = 0
 
         @classmethod
-        def supports_cpu_only(cls) -> bool:
-            return True
+        def library_ruled_out(cls) -> bool:
+            return False
 
         def is_available_for_catalog(self) -> bool:
             type(self).availability_checks += 1
@@ -528,8 +528,8 @@ def test_catalog_inventory_excludes_a_registry_that_cannot_warm(
         library_name = "available"
 
         @classmethod
-        def supports_cpu_only(cls) -> bool:
-            return True
+        def library_ruled_out(cls) -> bool:
+            return False
 
         def is_available_for_catalog(self) -> bool:
             return True
@@ -620,11 +620,9 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
     )
     subprocess_environment = {"FRAMEWORK_IMPORTS": "prepared"}
     monkeypatch.setattr(
-        registry_service,
-        "MemoryType",
-        SimpleNamespace(
-            subprocess_environment=lambda: subprocess_environment,
-        ),
+        registry_service.ArrayLibrary,
+        "child_environment",
+        classmethod(lambda cls: subprocess_environment),
     )
 
     process = object()

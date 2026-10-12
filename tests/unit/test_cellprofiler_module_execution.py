@@ -12722,7 +12722,7 @@ def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
     )
     stack = ProducedImageStack(
         (metadata.payload_with(pixels, mask),),
-        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
+        library=MemoryType.NUMPY.library, plane_axis=RuntimeSlicePlaneAxis,
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones(pixels.shape, dtype=np.int32)),

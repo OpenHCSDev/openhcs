@@ -152,7 +152,6 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
         group_key=None,
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=np.zeros((2, 3)),
-        source_memory_type="numpy",
     )
     kwargs = {}
     executor.bind_runtime_owned_parameters(kwargs)

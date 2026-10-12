@@ -265,7 +265,7 @@ def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, sp
     source = ProducedImageStack(
         tuple(MaskedImagePayload(data, mask, metadata)
               for data, mask in zip(pixels, masks, strict=True)),
-        memory_type="numpy", plane_axis=(
+        library=MemoryType.NUMPY.library, plane_axis=(
             SourceBindingPlaneAxis if spatial_mask
             else RuntimeSlicePlaneAxis
         ),

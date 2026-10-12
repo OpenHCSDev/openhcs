@@ -1,5 +1,7 @@
 """Whole image domains survive the producer/cache/next-load handoff."""
 
+from tests.device_assignment_support import assign_devices
+from tests.device_assignment_support import compile_assigned_pattern
 from arraybridge.devices import HOST
 from openhcs.core.runtime_array_values import ArrayPlacement
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
@@ -16,7 +18,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
+from openhcs.core.function_patterns import MainFlowInputProjection
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -40,12 +42,12 @@ def _identity(image):
 
 
 def _runtime():
-    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
+    pattern = compile_assigned_pattern(admitted_graph(_identity), {}, {})
     runtime = PatternGroupExecutionRequest(
         context=executing_context(axis_id="A01"),
         pattern_group_info="", component_index=0, component_count=1,
         compiled_group=pattern.default_group,
-        execution_plan=CompiledStepPlan(
+        execution_plan=assign_devices(CompiledStepPlan(
             step_index=0,
             step_name="WholeImage",
             axis_id="A01",
@@ -55,7 +57,7 @@ def _runtime():
             artifact_inputs={},
             artifact_outputs={},
             execution_group_scope=UngroupedScope(),
-        ),
+        )),
         component_value=None,
     )
     return runtime
@@ -198,7 +200,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     if raw_named:
         mask = None
     producer = _runtime()
-    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
+    pattern = compile_assigned_pattern(admitted_graph(_identity), {}, {})
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="whole-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
@@ -331,7 +333,7 @@ def _selected_pattern(name):
     def consume(image):
         return image
 
-    pattern = compile_function_pattern(admitted_graph(consume), {}, {})
+    pattern = compile_assigned_pattern(admitted_graph(consume), {}, {})
     invocation = pattern.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges((InvocationArtifactInputEdgePlan(
         key=InvocationArtifactInputProjectionKey(invocation_key=invocation.key, input_index=0),
@@ -355,7 +357,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     opaque_pixels = np.arange(20, dtype=np.float32).reshape(4, 5) + 100
     opaque = scalar_metadata.payload_with(opaque_pixels)
     producer = _runtime()
-    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
+    pattern = compile_assigned_pattern(admitted_graph(_identity), {}, {})
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="mixed-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
@@ -463,7 +465,7 @@ def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path, sites):
     np.testing.assert_array_equal(output.data, np.stack([p.data for p in payloads]))
 
 
-def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
+def test_input_bundle_is_composed_beside_its_payloads_without_asking_the_plan(tmp_path, monkeypatch):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
     plan = replace(_runtime().execution_plan, output_dir=tmp_path)
@@ -476,10 +478,10 @@ def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, 
     payloads = tuple(ImagePayloadMetadata(source_image_names=(name,)).payload_with(
         np.ones((4, 5), dtype=np.float32) * i) for i, name in enumerate(("First", "Second")))
 
-    def unexpected_device_resolution(self, memory_type):
-        raise AssertionError("BUNDLE composition must retain its own memory allocation authority")
+    def unexpected_placement(self, declaration):
+        raise AssertionError("a bundle is composed beside its payloads, not at the plan's placement")
 
-    monkeypatch.setattr(CompiledStepPlan, "device_id_for", unexpected_device_resolution)
+    monkeypatch.setattr(CompiledStepPlan, "placement_for", unexpected_placement)
     output = ImagePayloadStackComposition.from_loaded_images(
         payloads,
         producer_records=records,

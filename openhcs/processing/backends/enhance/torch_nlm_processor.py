@@ -143,7 +143,3 @@ def non_local_means_denoise_torch(
         kernel_size_mean=kernel_size_mean,
         sub_filter_size=sub_filter_size,
     )
-
-
-# Alias for convenience
-torch_nlm_denoise = non_local_means_denoise_torch

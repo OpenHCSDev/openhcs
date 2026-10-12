@@ -23,7 +23,7 @@ OPTIONAL_FRAMEWORKS = tuple(
     memory_type for memory_type in MemoryType if memory_type is not MemoryType.NUMPY
 )
 FRAMEWORK_BY_IMPORT_ROOT = {
-    memory_type.import_name: memory_type for memory_type in OPTIONAL_FRAMEWORKS
+    memory_type.library.import_name: memory_type for memory_type in OPTIONAL_FRAMEWORKS
 }
 OPTIONAL_IMPORT_FUNCTIONS = frozenset(
     {"optional_import_or_none", "optional_import_placeholder"}
@@ -109,7 +109,7 @@ def _required_here(memory_type: MemoryType) -> bool:
     """Whether the package metadata makes this framework part of the installation."""
 
     distributions = importlib.metadata.packages_distributions().get(
-        memory_type.import_name, ()
+        memory_type.library.import_name, ()
     )
     required = _distributions_required_here()
     return any(canonicalize_name(name) in required for name in distributions)
@@ -129,18 +129,18 @@ def test_catalog_keeps_every_other_installed_framework_when_one_is_absent(
     tmp_path: Path,
 ) -> None:
     installed = frozenset(
-        memory_type for memory_type in MemoryType if memory_type.is_installed()
+        memory_type for memory_type in MemoryType if memory_type.library.is_installed()
     )
     assert counts_with_nothing_blocked.keys() == {
         memory_type.value for memory_type in installed
     }
 
-    outcome = _discover(tmp_path, absent.import_name)
+    outcome = _discover(tmp_path, absent.library.import_name)
 
     if absent in installed and _required_here(absent):
         # The package metadata installs it here, so its absence is a broken
         # installation and discovery says which import failed.
-        assert outcome == {"import_error": absent.import_name}
+        assert outcome == {"import_error": absent.library.import_name}
         return
     assert outcome["counts"] == {
         memory_type.value: counts_with_nothing_blocked[memory_type.value]

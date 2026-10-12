@@ -200,7 +200,6 @@ def run(args) -> None:
         OPENHCS_CPU_ONLY="true",
         OPENHCS_HEADLESS="true",
         OPENHCS_USE_THREADING="true",
-        OPENHCS_SUBPROCESS_NO_GPU="1",
         CUDA_VISIBLE_DEVICES="",
         QT_QPA_PLATFORM="offscreen",
         PYTHONDONTWRITEBYTECODE="1",

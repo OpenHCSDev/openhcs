@@ -1,3 +1,4 @@
+from tests.device_assignment_support import assign_invocation_devices, devices_for
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import ast
 import json
@@ -295,7 +296,7 @@ class DebugRuntimeFixture:
             )
             for plan in artifact_input_plans
         )
-        return CompiledFunctionInvocation(
+        return assign_invocation_devices(CompiledFunctionInvocation(
             key=invocation_key,
             contract=resolved_contract,
             kwargs=kwargs,
@@ -323,12 +324,13 @@ class DebugRuntimeFixture:
             ),
             artifact_output_plans=artifact_output_plans,
             runtime_parameter_bindings=runtime_parameter_bindings,
-        )
+        ))
 
     @staticmethod
     def execution_plan(*, artifact_inputs, artifact_outputs) -> CompiledStepPlan:
         return CompiledStepPlan(
             step_index=3,
+            device_assignment=devices_for(MemoryType.NUMPY.value),
             step_scope_id="plate::functionstep_3",
             step_name="debuggable",
             axis_id=DebugRuntimeFixture.AXIS_ID,
