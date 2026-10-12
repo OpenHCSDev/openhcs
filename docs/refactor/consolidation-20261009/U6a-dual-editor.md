@@ -76,14 +76,14 @@ pyqt-reactive `windows/tabbed_editor_window.py`:
 
 OpenHCS keeps declarations: `StepEdit(EditedObject)`, `StepEditorTab(EditorTab)` family with
 `StepSettingsTab`, `FunctionPatternTab`, `ArtifactsTab`, and `DualEditorWindow(TabbedEditorWindow)` with
-the pipeline-following code only. `DualEditorTab` (enum), `_DualEditorTabBuildContext`,
+the pipeline-following code only. `DualEditorTab.select`, `_DualEditorTabBuildContext`,
 `_DualEditorTabBuilder`, `_DualEditorTabs`, `DualEditorFunctionPatternController` and
 `DualEditorWindowNavigationDriver` are deleted.
 
 ## Guards
 
 - `dual_editor_window.py` names no tab class except to parametrise family hooks.
-- No `DualEditorTab` enum; no `is None` on an editor widget in the window.
+- No `is None` on an editor widget in the window.
 
 ## Tests
 
@@ -99,9 +99,74 @@ throwaway fourth `StepEditorTab` hosted by `DualEditorWindow` unchanged.
 
 Guards pass, `guardrails rc=0`, `smoke rc=0`, pyqt-reactive suite passes.
 
-## Progress
+## Navigation ownership (design choice)
 
-- [x] classification (this commit)
-- [ ] library: `TabbedEditorWindow`
-- [ ] OpenHCS port
-- [ ] tests, new-case
+`CompositeWindowNavigationDriver` asks every driver and uses all that accept. It has no order. The
+step form's ObjectState holds `func`, so the step form's own driver accepts `func...` paths that the
+function tab also accepts. `TabbedEditorNavigationDriver` (a subclass of the composite) declares the
+rule once: every driver accepts what it positively owns, and where two accept, the tab declared later
+owns the target. No driver names another tab's fields; a first draft whose step driver negated
+`FunctionPatternField.owns_field_path` was removed.
+
+## What was done
+
+Library (pyqt-reactive, branch `refactor/U6a-tabbed-editor-window`):
+`windows/tabbed_editor_window.py` (`EditorTab`, `EditedObject`, `SaveRefused`,
+`TabbedEditorNavigationDriver`, `TabbedEditorWindow`), `ActionTabbedWindowBody.apply_accent`,
+`FunctionListEditorWidget.window_navigation_driver` with `FunctionFieldNavigationDriver`.
+
+OpenHCS: `dual_editor_window.py` 1,310 -> 225 lines (the three files: 1,622 -> 615); `DualEditorWindow` keeps `__init__`, session-event
+dispatch and `_on_pipeline_changed`. `dual_editor_session.py` holds `StepEdit` and the `StepEditorTab`
+family base. `dual_editor_tab_builder.py` became `dual_editor_tabs.py` with the three tab declarations.
+
+Removed: 44 generic methods from the window class; forwarding record `_DualEditorTabBuildContext`
+(18 fields, 6 of them callbacks back into the window) with `_DualEditorTabBuilder`, `_DualEditorTabs`,
+`DualEditorFunctionPatternController`; `DualEditorWindowNavigationDriver` (9 methods, 2 kind
+switches on `is_function_field_path`); `DualEditorTab.select` (label lookup); 3 `None`-until-built editor attributes and
+5 `None`-until-connected signal attributes (now lists owned by the tab); `is None` checks in the
+window file 51 -> 4 (none on an editor widget); 11 places that named a tab -> 0 in the window.
+
+### Deletion certificates
+
+- `DualEditorWindow.select_and_scroll_to_field`, `get_function_info`,
+  `set_original_step_for_change_detection`, `current_tab`/`on_tab_changed`, `parameter_editors`,
+  `class_hierarchy`, `original_step`, `DualEditorSession.current_source_bindings`: **unused**
+  (no reader in openhcs, scripts or the libraries).
+- `step_saved` / `step_cancelled` signals: **unused** (no connection anywhere); the library window
+  has `saved` / `cancelled`.
+- `connect_orchestrator_config_signal`, `connect_artifact_signals` on the window: **derived**; the
+  owning tab declares `follow_orchestrator_config` / `follow_artifact_signals`, both callers updated.
+- `step_data=None` (window creates `New_Step`): **contract**; `StepEditorStateRequest` already raised
+  for a step whose ObjectState the pipeline editor had not registered, so the path could not open.
+- `has_parameter("func")` fallbacks to the unsaved clone in the old session: **tests-only**. The
+  ObjectState of a `FunctionStep` holds its constructor parameters, `func` among them; a state without
+  it now raises instead of writing to the clone. Not exercised: a step subclass whose state omits `func`.
+- Navigation `ROOT_WIDGETS` wait when an editor did not exist yet: **derived**; tabs are built in the
+  window constructor, before a driver can be asked.
+
+### Behaviour changes
+
+- Save on main called `self._session.apply_function_spec_to_state`, but `connect_session_events` had
+  overwritten `self._session` with the authoring `Session`, which has no such method (by inspection;
+  both callers call `connect_session_events`). The two are now separate attributes.
+- A new step's `pipeline_step` is the step object the caller passed, not `None`.
+- Step-tab tree subscriptions and tab signal connections are released on accept and reject as well as
+  on close.
+- The Save error dialog reads "Failed to save:" (was "Failed to save step:").
+
+### Kept: `DualEditorTab` labels
+
+`tests/unit/test_build_website.py::test_gallery_catalog_import_does_not_require_qt_runtime` requires
+the gallery catalog to name step-editor tabs without importing Qt. The enum stays as that Qt-free
+boundary view of the labels (its `select` behaviour is gone); each tab class takes its label from it,
+so a label is still written once. It is not derived from the tab family, which is the open part.
+
+## Done / next
+
+Done: classification, library window, OpenHCS port, tests, both new-case experiments.
+
+Next (not done here): `pyqt_reactive.windows.config_window.ConfigWindow` still builds its own
+Cancel/Save header, default size, accent on save button and header, and agent-save capabilities. Those
+are now also in `TabbedEditorWindow`. `ConfigWindow` hosts N ObjectStates (one per tab) where
+`TabbedEditorWindow` hosts one, so it cannot simply inherit; the shared shell should become one base
+both use. Until then the shell exists twice in the library.

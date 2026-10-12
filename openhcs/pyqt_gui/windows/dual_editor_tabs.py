@@ -19,6 +19,7 @@ from openhcs.authoring.session.progress_notifications import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
 from openhcs.pyqt_gui.widgets.artifact_plan_view import ArtifactPlanViewWidget
 from openhcs.pyqt_gui.widgets.step_parameter_editor import StepParameterEditorWidget
 from openhcs.pyqt_gui.windows.dual_editor_session import StepEditorTab
@@ -45,7 +46,7 @@ def step_relative_form_path(param_name: str) -> tuple[str, ...]:
 class StepSettingsTab(StepEditorTab):
     """The step's own parameters as a form."""
 
-    label = "Step Settings"
+    label = DualEditorTab.STEP_SETTINGS.label
 
     def build(self) -> ActionTabMaterialization:
         edit = self.edit
@@ -116,7 +117,7 @@ class StepSettingsTab(StepEditorTab):
 class FunctionPatternTab(StepEditorTab):
     """The step's function pattern as a list of function panes."""
 
-    label = "Function Pattern"
+    label = DualEditorTab.FUNCTION_PATTERN.label
 
     def build(self) -> ActionTabMaterialization:
         edit = self.edit
@@ -178,7 +179,7 @@ class FunctionPatternTab(StepEditorTab):
 class ArtifactsTab(StepEditorTab):
     """What the compiled plan and the last run produced for this step."""
 
-    label = "Artifacts"
+    label = DualEditorTab.ARTIFACTS.label
 
     def build(self) -> ActionTabMaterialization:
         self.view = ArtifactPlanViewWidget(
