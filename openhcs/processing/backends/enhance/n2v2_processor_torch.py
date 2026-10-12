@@ -348,8 +348,6 @@ def n2v2_denoise_torch(
     # Input validation
     if image.ndim != 3:
         raise ValueError(f"Input must be 3D tensor, got {image.ndim}D")
-    if device.type != "cuda":
-        raise RuntimeError(f"CUDA required, got device: {device}")
 
     # Set seeds
     torch.manual_seed(random_seed)

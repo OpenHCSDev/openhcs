@@ -17,7 +17,7 @@ from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
-from arraybridge.libraries import ArrayLibrary
+from arraybridge.libraries import ArrayLibrary, ArrayMath
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
@@ -58,7 +58,7 @@ def weight_mask_extent(shape: Any) -> tuple[int, int]:
 
 
 def linear_weight_mask(
-    ops: ArrayLibrary,
+    ops: ArrayMath,
     height: int,
     width: int,
     margin_ratio: float,

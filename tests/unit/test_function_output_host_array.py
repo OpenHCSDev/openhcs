@@ -43,6 +43,8 @@ class _DeviceArray:
     def __init__(self, host: np.ndarray) -> None:
         self._host = host
         self.host_copies = 0
+        # A cupy.ndarray names its device; ArrayBridge reads it before a copy.
+        self.device = types.SimpleNamespace(id=0)
 
     @property
     def shape(self) -> tuple[int, ...]:

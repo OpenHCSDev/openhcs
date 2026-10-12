@@ -175,3 +175,19 @@ def test_an_image_output_aligned_to_its_sources_stays_on_the_torch_host_device()
     np.testing.assert_array_equal(
         MemoryType.TORCH.library.to_numpy(aligned.data), np.full((2, 16, 16), 3.0)
     )
+
+
+def test_the_shipped_n2v2_function_trains_on_the_device_its_image_is_on():
+    torch = pytest.importorskip("torch", reason="torch is an optional dependency")
+    from openhcs.processing.backends.enhance.n2v2_processor_torch import (
+        n2v2_denoise_torch,
+    )
+
+    noisy = torch.rand((2, 64, 64), generator=torch.Generator().manual_seed(3))
+
+    denoised = n2v2_denoise_torch(noisy, max_epochs=1, batch_size=2, patch_size=32)
+
+    assert ArrayPlacement.of(denoised) == ArrayPlacement(MemoryType.TORCH.library, HOST)
+    assert tuple(denoised.shape) == (2, 64, 64)
+    assert bool(torch.isfinite(denoised).all())
+
