@@ -178,6 +178,28 @@ def restored_family_registries(module_family_members) -> Iterator[None]:
     family_registries.restore_registries(before)
 
 
+@pytest.fixture(autouse=True)
+def restored_global_configs() -> Iterator[None]:
+    """The saved and live global config of every config type is, after a test, what it was before it."""
+    from objectstate import global_config
+
+    def config_types() -> set[type]:
+        return {
+            *global_config._saved_global_config_contexts,
+            *global_config._live_global_config_contexts,
+        }
+
+    before = {
+        config_type: global_config.GlobalContextValues.capture(config_type)
+        for config_type in config_types()
+    }
+    yield
+    for config_type in config_types():
+        before.get(
+            config_type, global_config.GlobalContextValues(config_type, None, None)
+        ).apply()
+
+
 @pytest.fixture
 def stand_in_members() -> Iterator[Callable[..., None]]:
     """Let a test define stand-in members of a registered family.
