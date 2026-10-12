@@ -127,13 +127,14 @@ class SourceSetPairingRow:
             return next(
                 item.default for item in fields(owner) if item.name == "match_plan"
             )
-        return rows[0].method.keyed_by(
-            tuple(
-                SourceBindingMatchDimension(fields=row.fields)
-                for row in rows
-                if row.fields
-            )
+        method = rows[0].method
+        keys = tuple(
+            SourceBindingMatchDimension(fields=row.fields) for row in rows if row.fields
         )
+        current = owner.match_plan
+        # Rows show a pairing's keys only: whatever else the stored pairing
+        # declares (the source sets a table lists) is kept, not rebuilt empty.
+        return current.with_keys(keys) if type(current) is method else method.keyed_by(keys)
 
 
 def source_binding_suggestions(

@@ -14,6 +14,9 @@ from pycodify import Assignment, generate_python_source
 from openhcs.core.source_binding_selection import SourceBoundAnchorPatternPolicy
 from openhcs.core.source_binding_workspace import SourceSetAssembler
 from openhcs.core.source_bindings import (
+    ListedSourceFile,
+    ListedSourceSet,
+    PairAsListed,
     PairByMetadata,
     PairByOrder,
     SourceBindingMatchDimension,
@@ -153,6 +156,32 @@ def test_pairing_names_decode_case_insensitively():
     keys = (SourceBindingMatchDimension((SourceBindingMatchField("DNA", "well"),)),)
     assert PairByOrder.keyed_by(keys) == PairByOrder()
     assert PairByMetadata.keyed_by(keys) == PairByMetadata(dimensions=keys)
+
+
+def test_rekeying_a_pairing_keeps_what_else_it_declares():
+    keys = (SourceBindingMatchDimension((SourceBindingMatchField("DNA", "well"),)),)
+    listed = PairAsListed(
+        source_sets=(ListedSourceSet(files=(ListedSourceFile("DNA", "a.tif"),)),)
+    )
+    assert listed.with_keys(keys) is listed
+    assert PairByMetadata().with_keys(keys) == PairByMetadata(dimensions=keys)
+    assert SourceSetPairing.named("listed") is PairAsListed
+
+
+@pytest.mark.parametrize(
+    ("listed", "plate_path", "shared"),
+    (
+        ("a.tif", "images/a.tif", 1),
+        ("D:/run/images/a.tif", "images/a.tif", 2),
+        ("images/a.tif", "a.tif", 1),
+        ("other/a.tif", "images/a.tif", 0),
+        ("a.tif", "images/ba.tif", 0),
+    ),
+)
+def test_a_listed_file_names_a_plate_file_by_whole_trailing_path_parts(
+    listed, plate_path, shared
+):
+    assert ListedSourceFile("DNA", listed).shared_trailing_parts(plate_path) == shared
 
 
 def test_source_modules_compare_paths_only_by_identity():

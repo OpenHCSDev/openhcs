@@ -61,6 +61,7 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.interop.cellprofiler.settings_binder import (
     MeasurementFeatureSettingBinding,
+    SettingsBinder,
     SettingToKeywordBinding,
 )
 
@@ -219,6 +220,7 @@ class SourceSetupCellProfilerModule(NonExecutableCellProfilerModule, ABC):
         cls,
         module: "ModuleBlock",
         config: "SourceBindingsConfig",
+        binder: "SettingsBinder",
     ) -> "SourceBindingsConfig":
         """Return source declarations contributed by this setup module."""
 
@@ -236,6 +238,51 @@ class InteractiveCellProfilerModule(NonExecutableCellProfilerModule, ABC):
             "interactive desktop input and cannot be imported as a headless "
             "OpenHCS FunctionStep."
         )
+
+
+class SettingsOnlyCellProfilerModule(NonExecutableCellProfilerModule, ABC):
+    """Nominal root for modules whose import consists of checking their settings.
+
+    The module emits no step and contributes nothing to the pipeline. Importing
+    it still reads every setting row: a row no ``setting_bindings`` entry names
+    is rejected, and each declared parser rejects a malformed value.
+    """
+
+    @classmethod
+    def validate_pipeline_import(cls, module: "ModuleBlock") -> None:
+        cls.checked_settings(module)
+
+    @classmethod
+    def checked_settings(cls, module: "ModuleBlock") -> dict[str, object]:
+        """Return the parsed declared settings, or fail naming the bad row."""
+
+        from openhcs.interop.cellprofiler.module_settings import (
+            ModuleSettingRowRecord,
+            UnmappedModuleSettingsError,
+        )
+        from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+
+        try:
+            bound = cls._bind_declared_settings(module, binder=SettingsBinder())
+        except ValueError as error:
+            raise ValueError(
+                f"CellProfiler module {module.name}({module.module_num}) has a "
+                f"setting OpenHCS cannot accept: {error}"
+            ) from error
+        if bound.unmapped_kwargs:
+            raise UnmappedModuleSettingsError(
+                tuple(
+                    ModuleSettingRowRecord(
+                        module_name=module.name,
+                        module_num=module.module_num,
+                        setting_name=setting_name,
+                        normalized_setting_name=setting_name,
+                        value=value,
+                    )
+                    for setting_name, value in sorted(bound.unmapped_kwargs.items())
+                )
+            )
+        return dict(bound.kwargs)
 
 
 class ObjectArtifactInputModule(CellProfilerModule):

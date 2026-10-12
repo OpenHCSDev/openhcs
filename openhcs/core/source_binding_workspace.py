@@ -20,6 +20,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataTable,
     NamedSourceBinding,
+    ListedSourceFile,
+    PairAsListed,
     PairByMetadata,
     PairByOrder,
     BroadcastSource,
@@ -500,6 +502,83 @@ class OrderSourceSetAssembler(SourceSetAssembler):
             )
             for index in range(source_set_count)
         )
+
+
+class ListedSourceSetAssembler(SourceSetAssembler):
+    """Build each source set from the files one listed set names."""
+
+    value_type = PairAsListed
+
+    def _matched_source_sets(
+        self,
+        match_plan: SourceSetPairing,
+        candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
+    ) -> tuple[_SourceSet, ...]:
+        listed_sets = cast(PairAsListed, match_plan).source_sets
+        if not listed_sets:
+            raise ValueError("Pairing as listed requires at least one listed source set.")
+        source_sets: list[_SourceSet] = []
+        for index, listed_set in enumerate(listed_sets):
+            unlisted = tuple(
+                alias
+                for alias in candidates_by_alias
+                if alias not in {listed.alias for listed in listed_set.files}
+            )
+            if unlisted:
+                raise ValueError(
+                    f"Listed source set {index + 1} names no file for matched "
+                    f"source aliases {unlisted!r}."
+                )
+            source_set = _source_set(
+                index,
+                {
+                    listed.alias: self._listed_candidate(
+                        index, listed, candidates_by_alias.get(listed.alias, ())
+                    )
+                    for listed in listed_set.files
+                },
+            )
+            if listed_set.metadata:
+                source_set = source_set.with_imported_metadata(
+                    {item.field: item.value for item in listed_set.metadata},
+                    path=f"listed source set {index + 1}",
+                )
+            source_sets.append(source_set)
+        return tuple(source_sets)
+
+    @staticmethod
+    def _listed_candidate(
+        index: int,
+        listed: ListedSourceFile,
+        candidates: tuple[SourceCandidate, ...],
+    ) -> SourceCandidate:
+        """The one plate file ``listed`` names: the closest path match, if unique."""
+
+        shared_parts = tuple(
+            max(
+                listed.shared_trailing_parts(path)
+                for path in candidate.source_filter_path_identities()
+            )
+            for candidate in candidates
+        )
+        closest = max(shared_parts, default=0)
+        if closest == 0:
+            raise ValueError(
+                f"Listed source set {index + 1} names {listed.path!r} for source "
+                f"alias {listed.alias!r}, but the plate has no such file."
+            )
+        matches = tuple(
+            candidate
+            for candidate, shared in zip(candidates, shared_parts, strict=True)
+            if shared == closest
+        )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Listed source set {index + 1} names {listed.path!r} for source "
+                f"alias {listed.alias!r}, which matches several plate files: "
+                f"{tuple(match.relative_path for match in matches)!r}."
+            )
+        return matches[0]
 
 
 class SourceBindingProjectionStrategy(ABC, metaclass=AutoRegisterMeta):

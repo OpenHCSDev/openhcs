@@ -77,7 +77,10 @@ from openhcs.interop.cellprofiler.setting_names import (
     repeating_setting_blocks,
     setting_name_matches,
 )
-from openhcs.interop.cellprofiler.settings_binder import parse_cellprofiler_bool
+from openhcs.interop.cellprofiler.settings_binder import (
+    SettingsBinder,
+    parse_cellprofiler_bool,
+)
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
 )
@@ -495,6 +498,7 @@ class ImagesModule(SourceSetupCellProfilerModule):
         cls,
         module: ModuleBlock,
         config: SourceBindingsConfig,
+        binder: SettingsBinder,
     ) -> SourceBindingsConfig:
         del cls
         return replace(
@@ -606,6 +610,7 @@ class LoadImagesModule(SourceSetupCellProfilerModule):
         cls,
         module: ModuleBlock,
         config: SourceBindingsConfig,
+        binder: SettingsBinder,
     ) -> SourceBindingsConfig:
         del cls
         file_type = module.get_setting("What type of files are you loading?", "")
@@ -913,6 +918,7 @@ class MetadataModule(SourceSetupCellProfilerModule):
         cls,
         module: ModuleBlock,
         config: SourceBindingsConfig,
+        binder: SettingsBinder,
     ) -> SourceBindingsConfig:
         enabled = _metadata_extraction_enabled(module)
         rules = list(config.metadata_rule_declarations)
@@ -1205,6 +1211,7 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
         cls,
         module: ModuleBlock,
         config: SourceBindingsConfig,
+        binder: SettingsBinder,
     ) -> SourceBindingsConfig:
         assignment_count = _names_and_types_count(module, "Assignments count")
         single_count = _names_and_types_count(
@@ -1395,6 +1402,7 @@ class GroupsModule(SourceSetupCellProfilerModule):
         cls,
         module: ModuleBlock,
         config: SourceBindingsConfig,
+        binder: SettingsBinder,
     ) -> SourceBindingsConfig:
         del cls
         if module.get_setting("Do you want to group your images?", "No") != "Yes":

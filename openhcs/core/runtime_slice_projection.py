@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import PurePath
 from typing import TYPE_CHECKING, Any, TypeAlias, overload
 
 import numpy as np
@@ -307,7 +308,7 @@ class RuntimeSliceProjection:
 
     Owned runtime values answer through ``RuntimeSliceProjectableValue``.
     Tuples and lists project item by item; other foreign values (arrays,
-    mappings, primitives, enums) carry no runtime-slice axis.
+    mappings, primitives, file paths, enums) carry no runtime-slice axis.
     """
 
     FOREIGN_VALUE_TYPES: tuple[type, ...] = (
@@ -318,6 +319,7 @@ class RuntimeSliceProjection:
         bytearray,
         int,
         float,
+        PurePath,
         Enum,
         DtypeConversionConfig,
         type(None),

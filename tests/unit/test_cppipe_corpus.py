@@ -16,9 +16,7 @@ from openhcs.core.config import PipelineConfig, SourceBindingsConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler import import_cellprofiler_pipeline
-from openhcs.interop.cellprofiler.module_artifact_contracts import (
-    UnknownArtifactInput,
-)
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 
@@ -129,9 +127,10 @@ def test_in_tree_cppipe_corpus_import_expectations(
     case: CPPipeCorpusCase,
 ) -> None:
     if case.status is not CPPipeCorpusStatus.SUPPORTED:
+        assert case.expected_error is not None
         assert case.expected_error_substring is not None
         with pytest.raises(
-            UnknownArtifactInput,
+            case.expected_error,
             match=re.escape(case.expected_error_substring),
         ):
             import_cellprofiler_pipeline(case.cppipe_path)
@@ -172,6 +171,7 @@ def test_in_tree_cppipe_corpus_import_expectations(
         == CellProfilerModule.source_bindings_for_modules(
             parsed_modules,
             SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+            SettingsBinder(source_root=case.cppipe_path.parent),
         )
     )
 

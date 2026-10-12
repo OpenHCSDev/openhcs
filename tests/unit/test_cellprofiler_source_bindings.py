@@ -50,6 +50,7 @@ from openhcs.core.source_bindings import (
     TextDoesNotContain,
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.interop.cellprofiler.parser import (
     CPPipeParser,
     ModuleBlock,
@@ -87,7 +88,9 @@ def _fold_setup_modules(*modules: ModuleBlock) -> SourceBindingsConfig:
             continue
         module_type = CellProfilerModule.require_module(module.name)
         assert module_type.emits_function_step() is False
-        config = module_type.contribute_source_bindings(module, config)
+        config = module_type.contribute_source_bindings(
+            module, config, SettingsBinder()
+        )
         assert isinstance(config, SourceBindingsConfig)
     return config
 
@@ -378,6 +381,7 @@ def test_images_setup_preserves_pipeline_owned_embedded_planes() -> None:
         SourceBindingsConfig(
             image_plane_sources=(ImagePlaneSource(uri="/data/A01.npy", index="2"),)
         ),
+        SettingsBinder(),
     )
 
     assert config.source_filters[0].match_type is PathIsImage

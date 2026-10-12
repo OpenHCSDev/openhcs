@@ -1439,6 +1439,7 @@ MeasureObjectIntensity:[module_num:6|enabled:True]
         CellProfilerModule.source_bindings_for_modules(
             modules,
             SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+            SettingsBinder(source_root=cppipe_path.parent),
         ),
         binder=SettingsBinder(source_root=cppipe_path.parent),
     )

@@ -32,6 +32,7 @@ class CPPipeCorpusCase:
     cppipe_path: Path
     status: CPPipeCorpusStatus
     source_root: Path | None = None
+    expected_error: type[Exception] | None = None
     expected_error_substring: str | None = None
 
 
@@ -54,12 +55,12 @@ def in_tree_cppipe_corpus() -> tuple[CPPipeCorpusCase, ...]:
             name="ExampleFly",
             cppipe_path=pipelines_dir / "ExampleFly.cppipe",
             status=CPPipeCorpusStatus.KNOWN_INVALID,
-            # LoadData has no declaration and names its images in a CSV file,
-            # not in its settings, so the images later modules read have no
-            # provider the importer can derive.
+            # LoadData names its images in a CSV file, and this pipeline's
+            # load_data.csv is not in the tree: it imports once that file is
+            # beside it, and says which file is missing until then.
+            expected_error=FileNotFoundError,
             expected_error_substring=(
-                "Module IdentifyPrimaryObjects references unknown image artifact "
-                "'OrigBlue'"
+                "LoadData(1) names its images in the CSV file 'load_data.csv'"
             ),
         ),
         CPPipeCorpusCase(

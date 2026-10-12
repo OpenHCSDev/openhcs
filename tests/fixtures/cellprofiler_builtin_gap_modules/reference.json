@@ -1,0 +1,60 @@
+{
+  "cellprofiler": "4.2.8.1",
+  "files_written": {
+    "1": [
+      "Cells_1.png",
+      "Cells_2.png",
+      "Cells_5.png",
+      "Cells_7.png"
+    ],
+    "2": [
+      "crops/plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_1.tiff",
+      "crops/plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_2.tiff",
+      "crops/plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_5.tiff",
+      "crops/plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_7.tiff"
+    ],
+    "3": [
+      "plate1_A01_s1_w1_Cells_1.tiff",
+      "plate1_A01_s1_w1_Cells_2.tiff",
+      "plate1_A01_s1_w1_Cells_5.tiff",
+      "plate1_A01_s1_w1_Cells_7.tiff"
+    ],
+    "4": [
+      "Cells/Cells_1.png",
+      "Cells/Cells_2.png",
+      "Cells/Cells_5.png",
+      "Cells/Cells_7.png"
+    ],
+    "5": [
+      "color/deep/Cells_1.tiff",
+      "color/deep/Cells_2.tiff",
+      "color/deep/Cells_5.tiff",
+      "color/deep/Cells_7.tiff"
+    ],
+    "6": [
+      "masks16/Cells_1.tiff",
+      "masks16/Cells_2.tiff",
+      "masks16/Cells_5.tiff",
+      "masks16/Cells_7.tiff"
+    ],
+    "7": [
+      "plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_1.png",
+      "plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_2.png",
+      "plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_5.png",
+      "plate1_A01_s1_w1/plate1_A01_s1_w1_Cells_7.png"
+    ],
+    "8": [
+      "Blobs_1.tiff",
+      "Blobs_3.tiff"
+    ],
+    "9": [
+      "plate1_A01_s1_w1_Blobs_1.tiff",
+      "plate1_A01_s1_w1_Blobs_3.tiff"
+    ]
+  },
+  "numpy": "1.24.4",
+  "python": "3.9.25",
+  "scikit-image": "0.18.3",
+  "source_file_name": "plate1_A01_s1_w1.tif",
+  "tifffile": "2022.4.8"
+}

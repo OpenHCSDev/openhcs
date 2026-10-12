@@ -132,16 +132,18 @@ def import_cellprofiler_pipeline(
     modules = tuple(parser.parse(path, filemanager=filemanager, backend=backend))
     if not modules:
         raise ValueError(f"CellProfiler pipeline {path} contains no modules.")
+    binder = SettingsBinder(
+        source_root=path.parent if source_root is None else source_root,
+    )
     source_bindings = CellProfilerModule.source_bindings_for_modules(
         modules,
         SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+        binder,
     )
     return _public_pipeline(
         modules,
         source_bindings,
-        binder=SettingsBinder(
-            source_root=path.parent if source_root is None else source_root,
-        ),
+        binder=binder,
     )
 
 
@@ -166,16 +168,18 @@ def cellprofiler_terminal_artifact_specs(
     modules = tuple(parser.parse(path, filemanager=filemanager, backend=backend))
     if not modules:
         raise ValueError(f"CellProfiler pipeline {path} contains no modules.")
+    binder = SettingsBinder(
+        source_root=path.parent if source_root is None else source_root,
+    )
     source_bindings = CellProfilerModule.source_bindings_for_modules(
         modules,
         SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+        binder,
     )
     declaration = _parsed_pipeline_declaration(
         modules,
         source_bindings,
-        binder=SettingsBinder(
-            source_root=path.parent if source_root is None else source_root,
-        ),
+        binder=binder,
     )
     terminal_specs: list[ArtifactSpec] = []
     units = declaration.target_units

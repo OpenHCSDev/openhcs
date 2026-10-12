@@ -348,9 +348,10 @@ def test_export_modules_are_processing_declarations_not_infrastructure(
     )
     cppipe_modules = {module.module_name: module for module in report.cppipe_modules}
 
+    # CreateBatchFiles is declared and emits no step: OpenHCS distributes work itself.
     assert (
         cppipe_modules["CreateBatchFiles"].absorption_coverage
-        is CPPipeModuleAbsorptionCoverage.MISSING_PROCESSING
+        is CPPipeModuleAbsorptionCoverage.INFRASTRUCTURE
     )
     assert (
         cppipe_modules["ExportToDatabase"].absorption_coverage

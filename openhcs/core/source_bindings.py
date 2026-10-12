@@ -802,7 +802,14 @@ class SourceSetPairing(ABC, metaclass=AutoRegisterMeta):
     ) -> SourceSetPairing:
         """This pairing keyed by ``dimensions``; pairing by order takes no keys."""
 
-        return cls()
+        return cls().with_keys(dimensions)
+
+    def with_keys(
+        self, dimensions: tuple[SourceBindingMatchDimension, ...]
+    ) -> SourceSetPairing:
+        """This pairing with its shared keys replaced and the rest of it kept."""
+
+        return self
 
     @staticmethod
     def named(name: str) -> type[SourceSetPairing]:
@@ -833,11 +840,10 @@ class PairByMetadata(SourceSetPairing):
     dimensions: tuple[SourceBindingMatchDimension, ...] = ()
     """Ordered shared metadata keys; each names one field per alias."""
 
-    @classmethod
-    def keyed_by(
-        cls, dimensions: tuple[SourceBindingMatchDimension, ...]
+    def with_keys(
+        self, dimensions: tuple[SourceBindingMatchDimension, ...]
     ) -> SourceSetPairing:
-        return cls(dimensions=dimensions)
+        return replace(self, dimensions=dimensions)
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -847,6 +853,109 @@ class PairByMetadata(SourceSetPairing):
                 "PairByMetadata.dimensions",
                 self.dimensions,
                 SourceBindingMatchDimension,
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ListedSourceFile:
+    """The file one listed source set names for one alias."""
+
+    alias: str
+    """Source-binding alias the file belongs to."""
+
+    path: str
+    """File name, optionally preceded by folders, with ``/`` separators.
+
+    A plate file is the listed one when one path ends with the other, compared by
+    whole path parts: ``a.tif`` names ``images/a.tif``, and so does
+    ``D:/run/images/a.tif``.
+    """
+
+    def __post_init__(self) -> None:
+        _require_name(self.alias, "ListedSourceFile.alias")
+        if not self.path_parts:
+            raise ValueError("ListedSourceFile.path cannot be empty.")
+
+    @property
+    def path_parts(self) -> tuple[str, ...]:
+        """The path's parts, file name last."""
+
+        return tuple(part for part in self.path.split("/") if part)
+
+    def shared_trailing_parts(self, plate_path: str) -> int:
+        """How many trailing path parts ``plate_path`` shares; 0 when it is another file."""
+
+        listed = self.path_parts
+        plate = tuple(part for part in plate_path.split("/") if part)
+        shared = min(len(listed), len(plate))
+        return shared if listed[-shared:] == plate[-shared:] else 0
+
+
+@dataclass(frozen=True, slots=True)
+class ListedMetadata:
+    """One metadata value a listed source set carries."""
+
+    field: str
+    """Metadata field name."""
+
+    value: SourceMetadataScalar
+    """The field's value for this source set."""
+
+    def __post_init__(self) -> None:
+        _require_name(self.field, "ListedMetadata.field")
+        object.__setattr__(self, "value", source_metadata_scalar(self.value))
+
+
+@dataclass(frozen=True, slots=True)
+class ListedSourceSet:
+    """One source set written out in full: its file per alias and its metadata."""
+
+    files: tuple[ListedSourceFile, ...] = ()
+    """The file of each alias in this set."""
+
+    metadata: tuple[ListedMetadata, ...] = ()
+    """Metadata of the set as a whole, such as its plate, well and site."""
+
+    def __post_init__(self) -> None:
+        files = normalize_source_binding_values(
+            "ListedSourceSet.files", self.files, ListedSourceFile
+        )
+        aliases = tuple(listed.alias for listed in files)
+        if len(set(aliases)) != len(aliases):
+            raise ValueError(
+                f"ListedSourceSet names an alias more than once: {aliases!r}."
+            )
+        object.__setattr__(self, "files", files)
+        object.__setattr__(
+            self,
+            "metadata",
+            normalize_source_binding_values(
+                "ListedSourceSet.metadata", self.metadata, ListedMetadata
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class PairAsListed(PairByOrder):
+    """Pair the aliases' sources as a table lists them, one source set per row.
+
+    The order is the table's: set N holds the files row N names, whatever order
+    the plate's files come in. After assembly the sets are ordinary ordered sets,
+    which is why this is a kind of ``PairByOrder``.
+    """
+
+    name = "listed"
+
+    source_sets: tuple[ListedSourceSet, ...] = ()
+    """The source sets, in order."""
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "source_sets",
+            normalize_source_binding_values(
+                "PairAsListed.source_sets", self.source_sets, ListedSourceSet
             ),
         )
 

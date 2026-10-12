@@ -77,6 +77,7 @@ if TYPE_CHECKING:
         NormalizedFunctionItem,
     )
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 
 def _required_string(value: object, name: str, owner: str) -> str:
@@ -410,9 +411,13 @@ class CellProfilerModule(
         cls,
         module: "ModuleBlock",
         config: "SourceBindingsConfig",
+        binder: "SettingsBinder",
     ) -> "SourceBindingsConfig":
-        """Return source declarations contributed by one parsed setup module."""
-        del cls, module
+        """Return source declarations contributed by one parsed setup module.
+
+        ``binder`` resolves the files a module's settings name.
+        """
+        del cls, module, binder
         return config
 
     @classmethod
@@ -420,6 +425,7 @@ class CellProfilerModule(
         cls,
         modules: Iterable["ModuleBlock"],
         config: "SourceBindingsConfig",
+        binder: "SettingsBinder",
     ) -> "SourceBindingsConfig":
         """Fold enabled modules into one public source-binding configuration."""
         from openhcs.core.config import SourceBindingsConfig
@@ -440,6 +446,7 @@ class CellProfilerModule(
             config = cls.declaration_for_block(module).contribute_source_bindings(
                 module,
                 config,
+                binder,
             )
         return config
 

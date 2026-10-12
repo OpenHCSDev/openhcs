@@ -846,6 +846,35 @@ class TuplePure2DAuxiliaryOutputAggregator(FlatSequencePure2DAuxiliaryOutputAggr
     value_type = tuple
 
 
+class DictPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
+    """Unite dict auxiliary outputs (such as file bundles) across slices.
+
+    Every slice contributes its own entries. A key two slices both return has
+    no single value, so it is an error rather than a silent overwrite.
+    """
+
+    value_type = dict
+
+    def aggregate_values(
+        self,
+        values: list[dict[object, object]],
+        memory_type: str,
+        *,
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> dict[object, object]:
+        del memory_type, plane_axis
+        united: dict[object, object] = {}
+        for value in values:
+            repeated = sorted(str(key) for key in united.keys() & value.keys())
+            if repeated:
+                raise ValueError(
+                    "PURE_2D dict auxiliary outputs of different slices share the "
+                    f"keys {repeated!r}; each slice must name its own entries."
+                )
+            united.update(value)
+        return united
+
+
 
 
 # ---------------------------------------------------------------------------

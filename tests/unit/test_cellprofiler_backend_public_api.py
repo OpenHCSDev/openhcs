@@ -386,15 +386,3 @@ def test_display_module_declaration_and_callable_are_colocated(
         "openhcs.processing.backends.cellprofiler.display_modules"
     )
     assert implementation.__module__ == module_type.__module__
-
-
-@pytest.mark.parametrize(
-    "module_name",
-    ("LoadData", "LabelImages", "CreateBatchFiles", "SaveCroppedObjects"),
-)
-def test_unsupported_pass_through_modules_have_no_declaration(
-    module_name: str,
-) -> None:
-    assert CellProfilerModule.for_module(module_name) is None
-    with pytest.raises(KeyError, match="No CellProfiler module declaration"):
-        CellProfilerModule.require_module(module_name)

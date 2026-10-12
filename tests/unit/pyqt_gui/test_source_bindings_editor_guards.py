@@ -220,3 +220,25 @@ def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> 
     finally:
         del SourceFilterSubject.__registry__["u6b_throwaway_subject"]
         del SourceSetPairing.__registry__["u6b_throwaway_pairing"]
+
+
+def test_pairing_rows_keep_what_the_stored_pairing_declares_beyond_its_keys():
+    """Rows show a pairing's keys; the source sets a table lists are not keys."""
+    from openhcs.core.config import SourceBindingsConfig
+    from openhcs.core.source_bindings import (
+        ListedSourceFile,
+        ListedSourceSet,
+        PairAsListed,
+        PairByMetadata,
+    )
+
+    listed = PairAsListed(
+        source_sets=(ListedSourceSet(files=(ListedSourceFile("DNA", "a.tif"),)),)
+    )
+    owner = SourceBindingsConfig(match_plan=listed)
+    rows = editor_module.SourceSetPairingRow.from_plan(listed)
+
+    assert editor_module.SourceSetPairingRow.to_plan(rows, owner) == listed
+    assert editor_module.SourceSetPairingRow.to_plan(
+        (editor_module.SourceSetPairingRow(method=PairByMetadata),), owner
+    ) == PairByMetadata()

@@ -1,0 +1,96 @@
+CellProfiler Pipeline: http://www.cellprofiler.org
+Version:5
+DateRevision:426
+GitHash:
+ModuleCount:9
+HasImagePlaneDetails:False
+
+SaveCroppedObjects:[module_num:1|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Images
+    Objects:Cells
+    Directory:Default Output Folder|Argonne/git_repos/JUMP_vision_model/rad_pipeline/segmented_image_temp
+    Prefix saved crop image name with input image name?:No
+    Select image name to use as a prefix:None
+    Save output crops in nested folders?:No
+    Saved file format:png
+    Image to crop:ImageAfterMath
+
+SaveCroppedObjects:[module_num:2|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Masks
+    Objects:Cells
+    Directory:Default Output Folder sub-folder|crops
+    Prefix saved crop image name with input image name?:Yes
+    Select image name to use as a prefix:DNA
+    Save output crops in nested folders?:Yes
+    Saved file format:8-bit tiff
+    Image to crop:None
+
+SaveCroppedObjects:[module_num:3|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Images
+    Objects:Cells
+    Directory:Default Output Folder|
+    Prefix saved crop image name with input image name?:Yes
+    Select image name to use as a prefix:DNA
+    Save output crops in nested folders?:No
+    Saved file format:16-bit tiff
+    Image to crop:ImageAfterMath
+
+SaveCroppedObjects:[module_num:4|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Masks
+    Objects:Cells
+    Directory:Default Output Folder|
+    Prefix saved crop image name with input image name?:No
+    Select image name to use as a prefix:None
+    Save output crops in nested folders?:Yes
+    Saved file format:png
+    Image to crop:None
+
+SaveCroppedObjects:[module_num:5|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Images
+    Objects:Cells
+    Directory:Default Output Folder sub-folder|color/deep
+    Prefix saved crop image name with input image name?:No
+    Select image name to use as a prefix:None
+    Save output crops in nested folders?:No
+    Saved file format:8-bit tiff
+    Image to crop:Color
+
+SaveCroppedObjects:[module_num:6|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Masks
+    Objects:Cells
+    Directory:Default Output Folder sub-folder|masks16
+    Prefix saved crop image name with input image name?:No
+    Select image name to use as a prefix:None
+    Save output crops in nested folders?:No
+    Saved file format:16-bit tiff
+    Image to crop:None
+
+SaveCroppedObjects:[module_num:7|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Images
+    Objects:Cells
+    Directory:Default Output Folder|
+    Prefix saved crop image name with input image name?:Yes
+    Select image name to use as a prefix:DNA
+    Save output crops in nested folders?:Yes
+    Saved file format:png
+    Image to crop:Color
+
+SaveCroppedObjects:[module_num:8|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Images
+    Objects:Blobs
+    Directory:Default Output Folder|
+    Prefix saved crop image name with input image name?:No
+    Select image name to use as a prefix:None
+    Save output crops in nested folders?:No
+    Saved file format:8-bit tiff
+    Image to crop:Volume
+
+SaveCroppedObjects:[module_num:9|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Do you want to save cropped images or object masks?:Masks
+    Objects:Blobs
+    Directory:Default Output Folder|
+    Prefix saved crop image name with input image name?:Yes
+    Select image name to use as a prefix:DNA
+    Save output crops in nested folders?:No
+    Saved file format:16-bit tiff
+    Image to crop:None
