@@ -200,15 +200,7 @@ Execution and compile-plus-run total speedups for thirty workflows, with one ass
 ![Execution speedups for all thirty workflows in each of seven assignment configurations.](../figures/slas/supp_benchmark_assignments.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. Main Figure 6A shows four configurations from this sweep; this view includes all seven and makes assignments per worker explicit.
-:::
-
-## Supplementary Figure 6, continued. Fixed-workload scaling
-
-![Measured execution scaling at twelve assignments and one to four workers.](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Execution scaling for thirty workflows: measured one-worker time divided by measured time at each worker count, with twelve assignments held fixed. Each time is the median of three repetitions after warmup. Points are workflows, bars means and black lines medians. These ratios use only measured OpenHCS times. The corresponding total-time and efficiency plots are linked in Supplementary Data 3.
+Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. These mixed-workload comparisons do not isolate worker scaling; main Figure 6A instead holds twelve assignments fixed and compares measured OpenHCS times across worker counts.
 :::
 
 ## Supplementary Figure 6, continued. One-worker batch comparisons

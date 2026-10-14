@@ -129,16 +129,16 @@ def scaling():
 
 
 def benchmark_publication():
-    """Keep worker speedups and coverage in main; assignment detail in supplement."""
+    """Keep fixed-workload scaling in main; mixed workloads in supplement."""
     pages = (
         ("submission_benchmark_schedule", (
-            ("A", "reference_core_summary_log"),
+            ("A", "fixed12/execution/scaling/fixed12_execution_scaling_log"),
         )),
         ("supp_benchmark_assignments", (
-            ("", "reference_assignments_summary_log"),
+            ("", "reference-layout/reference_assignments_summary_log"),
         )),
         ("submission_benchmark_coverage", (
-            ("B", "reference_module_coverage"),
+            ("B", "reference-layout/reference_module_coverage"),
         )),
     )
     for stem, panels in pages:
@@ -148,7 +148,7 @@ def benchmark_publication():
             y, height = 1, 93
             if letter:
                 sheet.text(1, y + height + 2, letter, size=14, weight="bold", va="top")
-            sheet.artwork(f"benchmark-publication/reference-layout/{artwork}", (1, y, 98, height))
+            sheet.artwork(f"benchmark-publication/{artwork}", (1, y, 98, height))
         sheet.save(dpi=400)
 
 

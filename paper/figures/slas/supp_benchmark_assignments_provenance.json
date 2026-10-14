@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "c03f0668a4e82eb64020169aa56f1a6d7d22ff81ba71fbe73befdffb284e8612",
+    "paper/figures/build_slas_supplement.py": "bd5606bcebe444addcc6ea791b139aadcdc660980e493810251ec78c8f7a05fa",
     "paper/figures/slas/benchmark-publication/reference-layout/figure2_provenance.json": "d99fa5a4ff6d6ca6e5123ea375b2666be64f6b2fe2e91c65cd4a5f36ff633a8f",
     "paper/figures/slas/benchmark-publication/reference-layout/reference_assignments_summary_log.png": "3504c11bca313b4c4ece5ea11eb002a2a81c41172a2ea36a0b87aa57c8da576c"
   },
@@ -9,8 +9,8 @@
   "display_transforms": [],
   "output_sha256": {
     "supp_benchmark_assignments.png": "4b8183d3f331c66b252c31617a8dbbdcf03fcfbc2f7bfa40338376bdf1136c7c",
-    "supp_benchmark_assignments.pdf": "05b5bc2eaefb7f0899deb4a473dfa1906fdcbed47980c6eeb4ce77fb47d8dc52",
-    "supp_benchmark_assignments.svg": "68534e0e7478f39125ec5d69754a49636d1fbf253e9ec72fbb7b81d21992fba4"
+    "supp_benchmark_assignments.pdf": "6e38b53508e0dffd41921d28f8032dfbf66063ca59b17f7ffd1cc9c1cc568450",
+    "supp_benchmark_assignments.svg": "922afd464d24c457a243188e83d3f90c52fdb06b1c14954ee200ec3edd3cbc44"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

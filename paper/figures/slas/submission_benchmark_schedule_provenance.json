@@ -1,16 +1,16 @@
 {
-  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "c03f0668a4e82eb64020169aa56f1a6d7d22ff81ba71fbe73befdffb284e8612",
-    "paper/figures/slas/benchmark-publication/reference-layout/figure2_provenance.json": "d99fa5a4ff6d6ca6e5123ea375b2666be64f6b2fe2e91c65cd4a5f36ff633a8f",
-    "paper/figures/slas/benchmark-publication/reference-layout/reference_core_summary_log.png": "d60114cc8ff474148fe92f8f38f488dd3a52dfc7a0743f53589a367630fa8dd7"
+    "paper/figures/build_slas_supplement.py": "bd5606bcebe444addcc6ea791b139aadcdc660980e493810251ec78c8f7a05fa",
+    "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/figure2_provenance.json": "2684c68e06a4740100a9071f4c89a0a8a6dfe0af12b78722ea439fc88ab011ac",
+    "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png": "580f80d9a506cf760b2f1e8619c67965d12af21dede6924e0611666ddd59c028"
   },
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "submission_benchmark_schedule.png": "20c275244ba2dac693243d95fda6b1fea40f7a1b5f3ec64d84dcd7f4fd5538ea",
-    "submission_benchmark_schedule.pdf": "51247ea7c455459d1f727fc720e3d924c668dbe8099f574b18ce4bb25e66f7ea",
-    "submission_benchmark_schedule.svg": "9576c1f0eb179c42efa454015fb5f3964557b24b8b3e560aaa1efaeb4236ceb0"
+    "submission_benchmark_schedule.png": "8312020193e01029ecdb3bc67ce2aae879f06c3b6747e6d737331bb9da50cd22",
+    "submission_benchmark_schedule.pdf": "36bd8d7198847841dc6b7758cb02040e11d4902fc97eb6ee8554895d9927b8cc",
+    "submission_benchmark_schedule.svg": "76d48525f31039daba7e19dc604d08db79e83277d573c4e702d4c84617a60148"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
