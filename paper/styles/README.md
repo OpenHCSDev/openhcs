@@ -1,8 +1,10 @@
 # Review citation style
 
-`elsevier-vancouver.csl` is the unmodified Elsevier NLM/Vancouver citation-sequence
+`elsevier-vancouver.csl` adapts the Elsevier NLM/Vancouver citation-sequence
 style from the [Citation Style Language project](https://github.com/citation-style-language/styles/blob/master/elsevier-vancouver.csl),
 retrieved 2026-09-09. Its embedded attribution and CC BY-SA 3.0 license are retained.
+The access macro displays URLs for software and other references without a DOI,
+and prints an access date when one is supplied.
 It is used for a consistent numbered author-review copy, not as a claim of exact
 compliance with the current SLAS Technology production style.
 

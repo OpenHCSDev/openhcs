@@ -187,20 +187,12 @@ separated without spatial ground truth. Both methods recovered concordant
 positive outgrowth responses with different measured magnitudes. This is an
 assisted-development evaluation, separate from autonomous authoring.
 
-## Supplementary Figure 6. Single-sample execution and total speedups
-
-![Execution and compile-plus-run total speedups for one assignment and one worker.](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Execution and compile-plus-run total speedups for thirty workflows, with one assignment, one worker and one numerical thread. Points are workflows; bars show arithmetic means, black lines medians and the dashed line equal runtime. Each ratio uses one measured CellProfiler first-use-inclusive batch divided by the median of three OpenHCS repetitions after warmup. Native internal initialization is included; external process and server startup are excluded. Supplementary Data 3 links linear views, paired clocks, efficiency tables and native projection calibration.
-:::
-
-## Supplementary Figure 6, continued. Assignments per worker
+## Supplementary Figure 6. Batch comparisons and module-test coverage
 
 ![Execution speedups for all thirty workflows in each of seven assignment configurations.](../figures/slas/supp_benchmark_assignments.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. These mixed-workload comparisons do not isolate worker scaling; main Figure 6A instead holds twelve assignments fixed and compares measured OpenHCS times across worker counts.
+Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. These mixed-workload comparisons do not isolate worker scaling; main Figure 6B holds twelve assignments fixed and compares measured OpenHCS times across worker counts. Main Figure 6A shows the single-sample speedups.
 :::
 
 ## Supplementary Figure 6, continued. One-worker batch comparisons
@@ -208,37 +200,45 @@ Each configuration contains thirty workflow points; bars show arithmetic means a
 ![Cp relative speedup, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+One-worker execution speedups for thirty workflows. CellProfiler's one-sample first batch is measured; its twelve-sample reference is projected from measured serial eight-sample first/warm batches. OpenHCS uses medians of three measured repetitions. Points are workflows, bars means and black lines medians. Supplementary Data 3 gives CPU affinities and projection calibration.
 :::
 
 ![Seconds per sample, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+Execution seconds per sample for thirty workflows, dividing batch duration by sample count. CellProfiler's one-sample times are measured and twelve-sample times projected; OpenHCS times are measured medians of three repetitions. Both systems use one processing worker.
 :::
 
 ![Amortization factor, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+Reduction in execution time per sample across thirty workflows: single-sample time divided by twelve-sample time per sample. Values above one indicate lower time per sample. CellProfiler's twelve-sample times are projected; OpenHCS times are measured with one worker.
 :::
 
 ![Cp relative speedup, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+One-worker compile-plus-run speedups for thirty workflows. CellProfiler's one-sample first batch is measured and twelve-sample reference projected. OpenHCS uses medians of three measured repetitions, including client compilation. Points are workflows, bars means and black lines medians.
 :::
 
 ![Seconds per sample, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+Compile-plus-run seconds per sample for thirty workflows, dividing total batch duration by sample count. CellProfiler's twelve-sample times are projected; OpenHCS times are measured medians of three repetitions with one worker and include client compilation.
 :::
 
 ![Amortization factor, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+Reduction in compile-plus-run time per sample across thirty workflows. Ratios compare a single sample with twelve-sample time per sample, including OpenHCS compilation. CellProfiler's twelve-sample times are projected; OpenHCS times are measured with one worker.
+:::
+
+## Supplementary Figure 6, continued. Processing-module test coverage
+
+![Graded test evidence for current executable processing modules.](../figures/slas/submission_benchmark_coverage.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+Each executable processing module receives its strongest supported evidence tier: exercised in the thirty-workflow corpus, module-specific behavior tests, shared-path behavior tests, declaration/import checks only, or no evidence. Shared-path tests cover the named common behavior rather than every module-specific setting or algorithm. Setup modules and non-executable declarations are excluded. Supplementary Data 3 links the per-module evidence and credited tests.
 :::
 
 ## Supplementary Table 1. Reusable libraries and their roles
@@ -260,7 +260,11 @@ All thirty workflows are retained. CellProfiler’s one-sample first batch is me
 
 ### Continuous integration
 
-The [versioned integration workflow](../../.github/workflows/integration-tests.yml) defines the operating-system, Python-version, backend, microscope, numerical-parity and installed-desktop matrices described in Methods. The [Official30 comparator](../../tests/integration/test_cellprofiler_official30_zmq.py) runs the manifest-owned workflows through ZeroMQ and compares their declared outputs against retained native CellProfiler values. These CI checks are separate from the timed performance captures.
+The [versioned integration workflow](../../.github/workflows/integration-tests.yml) defines the operating-system, Python-version, backend, microscope, numerical-parity and installed-desktop matrices. The [Official30 comparator](../../tests/integration/test_cellprofiler_official30_zmq.py) runs the manifest-owned workflows through ZeroMQ and compares their declared outputs against retained native CellProfiler values. These CI checks are separate from the timed performance captures.
+
+Python 3.11 and 3.13 each run the generated CellProfiler workflow corpus through multiprocessing and the ZeroMQ server on Linux, Windows and macOS. Python 3.12 tests every combination of disk or Zarr storage and ImageXpress or OperaPhenix inputs on those systems. A separate Python 3.14 Linux job checks the installed core runtime without the optional Centrosome comparison dependency. The full thirty-workflow numerical comparison runs through ZeroMQ against committed native CellProfiler references on Linux with Python 3.12 and on all three operating systems with Python 3.14.
+
+The full integration matrix runs nightly, on release tags and on demand; PyPI publication requires a successful run on the exact release commit. Pull requests run focused checks and structural guardrails rather than the full matrix. Additional jobs exercise package installation, the GUI and installed desktop candidates through MCP, including Intel and Apple Silicon macOS, and native Windows and macOS installers.
 
 ### Import, export and comparison methods
 
@@ -399,6 +403,10 @@ category totals must not be added as mutually exclusive classes. They are not a
 current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker measurements
+
+### Single-sample timing summaries
+
+With one sample, one worker and one numerical thread, execution was a median [pending]{.benchmark-claim key=execution_median}-fold faster than native CellProfiler, with minimum [pending]{.benchmark-claim key=execution_min}-fold. Compile-plus-run speedup was a median [pending]{.benchmark-claim key=total_median}-fold, with minimum [pending]{.benchmark-claim key=total_min}-fold. Main Figure 6A shows all thirty workflows. Native times include internal initialization within the first pipeline call; external process/server startup and OpenHCS library readiness and warmup are excluded. OpenHCS times are medians of three measured repetitions after warmup. Compile-plus-run time includes client compilation plus execution submission/wait; nested server and worker durations are counted once.
 
 ### Serial batching and preparation amortization
 
@@ -577,12 +585,12 @@ link the plotted values to the original evaluations.
 | BBBC007 DNA/actin | Directed boundary fraction | Manual-outline union |
 | BBBC013 translocation | Well-level GFP ratio and control Z′ | Treatment groups |
 | H002 3D centres | Matched-centre voxel distance | Manual centre annotations |
-| Retinal somata | Counts and distributed image review | Matched raw/result views; [TODO: annotated soma centres] |
-| Public and laboratory neurites | Shaft and path recovery | Matched raw/path views; [TODO: crossing ownership labels] |
+| Retinal somata | Counts and distributed image review | Matched raw/result views |
+| Public and laboratory neurites | Shaft and path recovery | Matched raw/path views |
 
 ### Trial-level autonomous results
 
-Labels identify authors in the linked records in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons. [TODO: additional repetitions and models, from new trial outputs.]
+Labels identify authors in the linked records in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons.
 
 | Assay | Model | Data partition | Endpoint | Result |
 |---|---|---|---|---|

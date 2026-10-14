@@ -46,7 +46,7 @@ autonomous loop alongside a recorded repair trajectory; task-specific results
 with matched nuclear, retinal and volume repair evidence; public/laboratory
 neurite analysis with treatment responses from three independent blind authors;
 and matched CellProfiler execution
-and total time. Table 1 summarizes the later autonomous assay results; full
+and total time, followed by measured fixed-workload worker scaling. Table 1 summarizes the later autonomous assay results; full
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, historical measurements and prospective held-out results.
@@ -136,9 +136,10 @@ For layout-only changes, pass `rebuild_coverage=False` to
 `build_reference_figures`. This checks the retained coverage artwork and table
 against `reference-layout/retained_coverage_provenance.json`, keeping the original
 coverage evidence intact rather than regrading the current registry. Figure 6
-contains measured OpenHCS worker scaling at a fixed twelve-sample workload and
-coverage; mixed-workload CellProfiler comparisons and the seven-configuration
-assignment chart are in Supplementary Figure 6.
+contains measured single-sample CellProfiler speedups and OpenHCS worker scaling
+at a fixed twelve-sample workload. Module-test coverage, mixed-workload
+CellProfiler comparisons and the seven-configuration assignment chart are in
+Supplementary Figure 6.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.

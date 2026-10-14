@@ -129,16 +129,19 @@ def scaling():
 
 
 def benchmark_publication():
-    """Keep fixed-workload scaling in main; mixed workloads in supplement."""
+    """Show measured speed and fixed-workload scaling in the main figures."""
     pages = (
+        ("submission_benchmark_speed", (
+            ("A", "measured_benchmark_publication_log"),
+        )),
         ("submission_benchmark_schedule", (
-            ("A", "fixed12/execution/scaling/fixed12_execution_scaling_log"),
+            ("B", "fixed12/execution/scaling/fixed12_execution_scaling_log"),
+        )),
+        ("submission_benchmark_coverage", (
+            ("", "reference-layout/reference_module_coverage"),
         )),
         ("supp_benchmark_assignments", (
             ("", "reference-layout/reference_assignments_summary_log"),
-        )),
-        ("submission_benchmark_coverage", (
-            ("B", "reference-layout/reference_module_coverage"),
         )),
     )
     for stem, panels in pages:

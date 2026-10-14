@@ -38,6 +38,21 @@ def test_upload_names_are_derived_from_the_paper_prefix():
             )
 
 
+def test_software_references_render_their_source_urls():
+    bibliography = PAPER.root / "openhcs_references.json"
+    result = subprocess.run(
+        ["pandoc", "--from=markdown", "--to=plain", "--wrap=none", "--citeproc",
+         "--bibliography", str(bibliography), "--csl",
+         str(PAPER.root / "styles/elsevier-vancouver.csl")],
+        input="[@CellProfiler4281Dependencies; @MCMICROImplementation; @Stirling2021]",
+        capture_output=True, text=True, check=True,
+    )
+    references = {item["id"]: item for item in json.loads(bibliography.read_text())}
+    for key in ("CellProfiler4281Dependencies", "MCMICROImplementation"):
+        assert references[key]["URL"] in result.stdout
+    assert "https://doi.org/" + references["Stirling2021"]["DOI"] in result.stdout
+
+
 def test_ordinary_figure_validation_reuses_receipts(tmp_path):
     _, checks = resolve_inputs(
         PAPER,
