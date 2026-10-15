@@ -31,6 +31,7 @@ parser.add_argument('--output', type=Path, default=output)
 parser.add_argument('--before-label', default='Frozen Blind 2')
 parser.add_argument('--after-label', default='Corrected engine')
 parser.add_argument('--after-step', type=int, default=0)
+parser.add_argument('--before-step', type=int, default=0)
 parser.add_argument('--overlay-window', choices=('dim', 'moderate'), default='dim')
 args = parser.parse_args()
 old, new, output = args.before, args.after, args.output
@@ -46,7 +47,7 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
     dim_limits = np.percentile(fitc, [1, 90])
     dapi_limits = np.percentile(dapi, [1, 99.5])
     graphs = [load_rois_from_zip(folder / f'{stem}_neurite_morphology_step{index}.graph.roi.zip')
-              for folder, index in ((old, 0), (new, args.after_step))]
+              for folder, index in ((old, args.before_step), (new, args.after_step))]
     segments = [[shape.coordinates[:, ::-1] for roi in graph for shape in roi.shapes]
                 for graph in graphs]
     fig, axes = plt.subplots(2, 3, figsize=(15, 10), layout='constrained')
@@ -75,7 +76,8 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
     states.append(dict(well=well, site=site, x=x, y=y, fitc_low=fitc_limits[0],
                        fitc_high=fitc_limits[1], fitc_dim_high=dim_limits[1],
                        dapi_low=dapi_limits[0], dapi_high=dapi_limits[1],
-                       overlay_window=args.overlay_window, after_step=args.after_step))
+                       overlay_window=args.overlay_window, before_step=args.before_step,
+                       after_step=args.after_step))
 with (output / 'display-windows.csv').open('w', newline='') as stream:
     writer = csv.DictWriter(stream, fieldnames=list(states[0]))
     writer.writeheader()
