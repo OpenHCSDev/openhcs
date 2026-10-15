@@ -1950,13 +1950,13 @@ def test_crossing_arms_adopted_after_the_first_topology_stay_joined():
 def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
 
-    def broad_secondary_ownership(source_image, primary_labels, **_kwargs):
+    def broad_secondary_ownership(admission, primary_labels, **_kwargs):
         del primary_labels
-        return np.ones(source_image.shape, dtype=np.int32)
+        return np.ones(admission.mask.shape, dtype=np.int32)
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth."
-        "_identify_secondary_owner_regions_cellprofiler",
+        "_propagate_neurite_owner_regions",
         broad_secondary_ownership,
     )
 
@@ -1981,7 +1981,7 @@ def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
     assert np.count_nonzero(neurons) < neurons.size
 
 
-def test_neurite_candidate_and_secondary_ownership_thresholds_are_independent():
+def test_neurite_candidate_and_cell_body_growth_thresholds_are_independent():
     engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
     permissive_candidate_factor = 0.05
 
@@ -2275,7 +2275,7 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth."
-        "_identify_secondary_owner_regions_cellprofiler",
+        "_identify_cell_body_growth_regions_cellprofiler",
         reject_hidden_secondary_threshold,
     )
 
@@ -2352,6 +2352,29 @@ def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
     assert np.all(owner_regions[4:17, 3] == 1)
     assert np.all(owner_regions[response < 100.0] == 0)
     assert set(np.unique(owner_regions)) == {0, 1, 2}
+
+
+def test_bright_signal_body_does_not_rethreshold_accepted_shaft_ownership():
+    image = _draw_fluorescent_neuron()
+    image[image == 1000] = 45000
+    result = _implementation()(
+        image,
+        neurite_channel_index=0,
+        cell_body=_cell_body_settings(channel_index=0),
+        outgrowth=replace(_outgrowth_settings(), enhance_neurites=False),
+        use_nuclear_stain=False,
+        pixel_size=1.0,
+    )
+    bodies, traces, candidate, owners = (
+        result[3][0], result[4][0], result[7].data[0], result[9].data[0]
+    )
+    body_owner = bodies[64, 20]
+    assert body_owner > 0
+    assert np.all(candidate[64, 40:110])
+    assert np.all(owners[64, 40:110] == body_owner)
+    assert np.all(traces[64, 40:110] == body_owner)
+    assert owners[20, 20] == 0
+    assert traces[20, 20] == 0
 
 
 def test_provisional_owner_cannot_reach_a_shaft_through_unadmitted_background():

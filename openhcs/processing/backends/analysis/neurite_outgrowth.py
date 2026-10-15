@@ -351,35 +351,30 @@ class CellProfilerNeuriteEngineProfile:
         nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
             nuclear_stain.channel_index
         )
-        if nuclear_seeded_signal_body_mode:
-            secondary_owner_regions = _propagate_neurite_owner_regions(
-                admission,
-                cell_body_labels,
-                minimum_response=outgrowth.intensity_above_local_background,
-            )
-        else:
-            secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
+        if nuclear_seed_mode and not nuclear_seeded_signal_body_mode:
+            body_growth_regions = _identify_cell_body_growth_regions_cellprofiler(
                 neurite_image,
                 cell_body_payload,
                 body_width_px=cell_body.maximum_width_px(coordinate_scale),
                 bright_objects=bright_objects,
             )
-        if nuclear_seed_mode and not nuclear_seeded_signal_body_mode:
             cell_body_payload = _qualify_nuclear_cell_bodies(
                 cell_body_payload,
                 cell_body_labels,
-                secondary_owner_regions,
+                body_growth_regions,
             )
             cell_body_labels = object_label_dense_array(
                 cell_body_payload,
                 dtype=np.int32,
             )
-            secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
-                neurite_image,
-                cell_body_payload,
-                body_width_px=cell_body.maximum_width_px(coordinate_scale),
-                bright_objects=bright_objects,
-            )
+        # Once bodies are accepted, every detection route propagates ownership
+        # through the same admitted shaft support. A second intensity threshold
+        # here can remove a continuous shaft that the detector already retained.
+        secondary_owner_regions = _propagate_neurite_owner_regions(
+            admission,
+            cell_body_labels,
+            minimum_response=outgrowth.intensity_above_local_background,
+        )
 
         outgrowth_skeleton = admission.skeleton_for(cell_body_labels)
         topology = _analyze_topology(
@@ -2564,14 +2559,17 @@ def _seeded_candidate_components(
     return keep[candidate_labels]
 
 
-def _identify_secondary_owner_regions_cellprofiler(
+def _identify_cell_body_growth_regions_cellprofiler(
     image: np.ndarray,
     cell_body_payload,
     *,
     body_width_px: float,
     bright_objects: bool,
 ) -> np.ndarray:
-    """Return CP seed-propagated regions used as detection evidence."""
+    """Return cytoplasmic growth used to qualify nuclear cell-body candidates.
+
+    This body eligibility test does not define neurite repair support.
+    """
 
     *_, unified_payload = _raw_processing_leaf(identify_secondary_objects)(
         _cellprofiler_foreground_image(image, bright_objects=bright_objects),
