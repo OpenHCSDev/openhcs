@@ -12,6 +12,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
 from build_slas_benchmark import ROOT, sha256, write_provenance
@@ -128,6 +129,9 @@ def submission_benchmark_summary() -> None:
                              edgecolors="white", linewidths=.35, zorder=3)
                 summary = SpeedupSummaryStatistics.from_series(
                     SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
+                axis.bar(group_index + offset, summary.median - 1, bottom=1,
+                         width=.26, color=colors[scope_index], alpha=.20,
+                         edgecolor=colors[scope_index], linewidth=.8, zorder=1)
                 axis.plot([group_index + offset - .12, group_index + offset + .12],
                           [summary.median] * 2, color="#152536", lw=2.1, zorder=4)
         axis.set_yscale("log")
@@ -216,10 +220,12 @@ def submission_benchmark_summary() -> None:
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=colors[0], label="Execution"),
         Line2D([], [], marker="o", ls="", color=colors[1], label="Compile + run"),
-        Line2D([], [], color="#152536", lw=2, label="Median"),
+        Patch(facecolor="#152536", alpha=.20, label="Median bars + lines"),
     ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=3, frameon=False, fontsize=12)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots and median lines; log axes; no mean bars",
+        "operation": "Paired workflow dots, translucent bars from 1x to the median, and median lines; log axes",
+        "bar_statistic": "median",
+        "bar_baseline": 1.0,
         "workflow_count_per_distribution": len(names),
         "single_worker_batch_policy": claims["amortized_policy"],
         "native_policy": claims["native_policy"],
