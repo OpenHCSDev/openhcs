@@ -1,5 +1,181 @@
 [
   {
+    "id": "NapariMagicgui",
+    "type": "webpage",
+    "title": "Creating widgets",
+    "author": [
+      {
+        "literal": "napari contributors"
+      }
+    ],
+    "URL": "https://napari.org/stable/howtos/extending/magicgui.html",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ]
+    }
+  },
+  {
+    "id": "NapariWidgetWorkshop",
+    "type": "webpage",
+    "title": "From pure Python to interactive napari widget",
+    "author": [
+      {
+        "literal": "napari contributors"
+      }
+    ],
+    "URL": "https://napari.org/workshops/express/python-to-widget/",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ]
+    }
+  },
+  {
+    "id": "Stringer2021Cellpose",
+    "type": "article-journal",
+    "title": "Cellpose: a generalist algorithm for cellular segmentation",
+    "author": [
+      {
+        "given": "Carsen",
+        "family": "Stringer"
+      },
+      {
+        "given": "Tim",
+        "family": "Wang"
+      },
+      {
+        "given": "Michalis",
+        "family": "Michaelos"
+      },
+      {
+        "given": "Marius",
+        "family": "Pachitariu"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "volume": "18",
+    "issue": "1",
+    "page": "100–106",
+    "issued": {
+      "date-parts": [
+        [
+          2021
+        ]
+      ]
+    },
+    "DOI": "10.1038/s41592-020-01018-x"
+  },
+  {
+    "id": "Hock2022N2V2",
+    "type": "article",
+    "title": "N2V2 — Fixing Noise2Void Checkerboard Artifacts with Modified Sampling Strategies and a Tweaked Network Architecture",
+    "author": [
+      {
+        "given": "Eva",
+        "family": "Höck"
+      },
+      {
+        "given": "Tim-Oliver",
+        "family": "Buchholz"
+      },
+      {
+        "given": "Anselm",
+        "family": "Brachmann"
+      },
+      {
+        "given": "Florian",
+        "family": "Jug"
+      },
+      {
+        "given": "Alexander",
+        "family": "Freytag"
+      }
+    ],
+    "publisher": "arXiv",
+    "genre": "Preprint",
+    "number": "2211.08512",
+    "issued": {
+      "date-parts": [
+        [
+          2022,
+          11,
+          15
+        ]
+      ]
+    },
+    "DOI": "10.48550/arXiv.2211.08512",
+    "URL": "https://arxiv.org/abs/2211.08512"
+  },
+  {
+    "id": "FijiCellpose",
+    "type": "webpage",
+    "title": "Fiji-Cellpose",
+    "author": [
+      {
+        "literal": "Fiji-Cellpose contributors"
+      }
+    ],
+    "URL": "https://imagej.github.io/plugins/fiji-cellpose",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ]
+    }
+  },
+  {
+    "id": "CellposeNapari",
+    "type": "webpage",
+    "title": "cellpose-napari documentation",
+    "author": [
+      {
+        "literal": "cellpose-napari contributors"
+      }
+    ],
+    "URL": "https://cellpose-napari.readthedocs.io/en/latest/",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ]
+    }
+  },
+  {
+    "id": "NapariN2V",
+    "type": "webpage",
+    "title": "napari-n2v documentation",
+    "author": [
+      {
+        "literal": "Jug Lab"
+      }
+    ],
+    "URL": "https://juglab.github.io/napari-n2v/documentation.html",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ]
+    }
+  },
+  {
     "id": "Rueden2019Forum",
     "type": "article-journal",
     "title": "Scientific Community Image Forum: A discussion forum for scientific image software",
