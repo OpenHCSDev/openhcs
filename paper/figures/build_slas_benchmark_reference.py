@@ -134,6 +134,9 @@ def submission_benchmark_summary() -> None:
                          edgecolor=colors[scope_index], linewidth=.8, zorder=1)
                 axis.plot([group_index + offset - .20, group_index + offset + .20],
                           [summary.median] * 2, color="#152536", lw=2.1, zorder=4)
+                axis.text(group_index + offset, -.025, f"min {summary.minimum:.1f}×",
+                          transform=axis.get_xaxis_transform(), ha="center", va="top",
+                          fontsize=8, color=colors[scope_index], clip_on=False)
                 for label, value, shift, alignment in (
                     ("max", summary.maximum, 6, "bottom"),
                     ("mean", summary.mean, 5, "bottom"),
@@ -157,6 +160,7 @@ def submission_benchmark_summary() -> None:
         axis.set_xticks(range(len(labels)), labels)
         axis.set_xlim(-.46, len(labels) - .54)
         axis.tick_params(labelsize=12)
+        axis.tick_params(axis="x", pad=18)
         axis.grid(axis="y", alpha=.2)
         axis.set_axisbelow(True)
         axis.spines[["top", "right"]].set_visible(False)
@@ -201,7 +205,7 @@ def submission_benchmark_summary() -> None:
     axis = sheet.figure.add_axes((.60, .62, .37, .28))
     distributions(axis, (single, amortized), ("1 well each", "CP 8 / OH 12\nper well"))
     axis.set_ylim(.8, 800)
-    sheet.text(57, 53, "Both measured; OpenHCS median of three runs", size=11, color="#59697b")
+    sheet.text(57, 51.5, "Both measured; OpenHCS median of three runs", size=11, color="#59697b")
 
     sheet.text(2, 48, "C  Same cores and wells · CellProfiler estimated", size=14, weight="bold")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
@@ -227,7 +231,7 @@ def submission_benchmark_summary() -> None:
     labels = [f"{modes[key]['openhcs_worker_count']} / {modes[key]['assignment_count']}\n"
               + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} wells/core"
               for key in ordered]
-    axis = sheet.figure.add_axes((.09, .14, .88, .31))
+    axis = sheet.figure.add_axes((.09, .17, .88, .28))
     distributions(axis, groups, labels)
     axis.set_ylim(.8, 800)
     axis.set_xlabel("Cores / total wells, the same for both applications", fontsize=12, labelpad=7)
@@ -238,7 +242,7 @@ def submission_benchmark_summary() -> None:
         Line2D([], [], color="#152536", lw=2, label="Median"),
     ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False, fontsize=11)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, and mean/median/maximum labels; log axes",
+        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, mean/median/maximum labels and minimum labels below each bar; log axes",
         "bar_statistic": "arithmetic mean",
         "bar_baseline": 1.0,
         "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},

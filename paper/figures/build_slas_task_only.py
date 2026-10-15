@@ -358,12 +358,12 @@ def submission_summary() -> None:
     axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.15))
             for bottom in (0.79, 0.55) for col in (0, 1)]
     axes.append(sheet.figure.add_axes((0.09, 0.32, 0.86, 0.12)))
-    titles = ("A  Bright objects", "B  Independent nuclear analyses",
-            "C  DNA / actin cell boundaries", "D  Three-dimensional centres",
-              "E  Protein translocation")
+    titles = ("A  Bright-object detection", "B  Nuclear detection 2–4",
+            "C  Cell-boundary analyses 2–3", "D  3D nuclear localisation",
+              "E  Protein translocation analysis 2")
     details = ("Same image · computational reference",
-               "Three authors · independent instance annotations",
-               "16 fields each · manual-outline union",
+               "Three agents · reference nuclear outlines",
+               "16 fields each · manual cell outlines",
                "15 manual centres · coverage not exhaustive",
                "96 wells, including development · 4 wells / dose")
     for axis, title, detail in zip(axes, titles, details, strict=True):
@@ -378,12 +378,12 @@ def submission_summary() -> None:
     values = [item["derived_f1"] for item in h001["attempts"]]
     bars = axes[0].bar((0, 1), values, color=(BLUE, TEAL), width=0.5)
     axes[0].bar_label(bars, labels=[f"{v:.3f}" for v in values], padding=4, fontsize=11)
-    axes[0].set(xticks=(0, 1), xticklabels=("First", "Final"), ylabel="Object F1", ylim=(0, 1.08))
+    axes[0].set(xticks=(0, 1), xticklabels=("First", "Final"), ylabel="Detection F1 (1 is best)", ylim=(0, 1.08))
 
     fields = list(csv.DictReader((ROOT / sources[2]).open()))
     authors = ("fresh612", "fresh10", "fresh13")
     for subset, marker, color, label in ((False, "o", BLUE, "All 200 fields"),
-                                        (True, "s", TEAL, "175 image-uninspected")):
+                                        (True, "s", TEAL, "175 uninspected fields")):
         scores = []
         for author in authors:
             rows = [row for row in fields if row["author"] == author
@@ -395,12 +395,12 @@ def submission_summary() -> None:
             scores.append(2 * tp / (2 * tp + fp + fn))
         positions = np.arange(3) + (0.045 if subset else -0.045)
         axes[1].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
-    axes[1].set(xticks=range(3), xticklabels=("Author 1", "Author 2", "Author 3"),
-                ylabel="Pooled object F1", ylim=(0.87, 0.94))
+    axes[1].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
+                ylabel="Pooled F1 (1 is best)", ylim=(0.87, 0.94))
     axes[1].legend(frameon=False, fontsize=9, loc="upper left")
     paired = bbbc039["first_vs_final_same_three"]
     axes[1].text(0.02, 0.055,
-                 f"Author 1, same 3 fields: {paired['first']['micro_f1']:.3f} → {paired['final']['micro_f1']:.3f}",
+                 f"Analysis 2, same 3 fields: {paired['first']['micro_f1']:.3f} → {paired['final']['micro_f1']:.3f}",
                  transform=axes[1].transAxes, fontsize=9, color=MUTED)
 
     # Decode the two existing publication tables; their units and populations differ
@@ -421,7 +421,7 @@ def submission_summary() -> None:
         axes[2].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
         axes[2].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
         axes[2].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=10)
-    axes[2].set(xticks=(0, 1), xticklabels=("Author 1", "Author 2"), ylim=(0.55, 0.90),
+    axes[2].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
                 ylabel="Boundary fraction within 2 px")
 
     scores = json.loads((ROOT / sources[5]).read_text())["scores"]

@@ -51,11 +51,11 @@ def infrastructure():
 
 def translocation():
     sheet = SupplementFigure("supp_translocation", 7.4)
-    sheet.heading("A–B  Full-plate eligible-cell fractions", 99)
+    sheet.heading("A–B  Protein translocation 2: cells with measurable cytoplasm", 99)
     sheet.text(13, 92, "A  LY294002", size=12, weight="bold")
     sheet.text(61, 92, "B  Wortmannin", size=12, weight="bold")
     sheet.artwork("translocation_fresh23", (2, 53, 96, 36), crop=(1, 59, 99, 88))
-    sheet.heading("C–D  Independent prospective held-out endpoints", 51.5)
+    sheet.heading("C–D  Protein translocation 1: held-out wells", 51.5)
     sheet.text(13, 45.5, "C  Wortmannin", size=12, weight="bold")
     sheet.text(61, 45.5, "D  LY294002", size=12, weight="bold")
     sheet.artwork("independent_agent_validation", (2, 1, 96, 44), crop=(0, 55, 100, 100))
@@ -64,9 +64,9 @@ def translocation():
 
 def nuclear_instances():
     sheet = SupplementFigure("supp_nuclear_instances", 7.4)
-    sheet.heading("I  Independent BBBC039 authors: the same 200 fields", 99)
+    sheet.heading("I  Nuclear detection 2 and 3: the same 200 fields", 99)
     sheet.artwork("bbbc039_independent_repeat", (2, 51, 96, 45), crop=(0, 10, 100, 92))
-    sheet.heading("II  Prospective held-out nuclei and cell-boundary assays", 49)
+    sheet.heading("II  Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 49)
     sheet.artwork("independent_agent_validation", (2, 1, 96, 44), crop=(0, 3, 100, 52))
     sheet.save()
 

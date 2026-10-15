@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "fe9a6e642799e66638641cb01aecdba2111fb1e176179291f728b64c06bcf5db",
+  "generator_sha256": "2748740a1e27cb041d6abf85ce7401ec842876f83b79b0931fecb4b9a15d5df9",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "11e1afdf7de31ff9ed16c4e1c5176be3323ab555f44d31b3e082eacb4a8b6cdf",
+    "paper/figures/build_slas_benchmark_reference.py": "9609e56c6f50927157adb22eab149717329c355dac381a0a54191c5d71b48914",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -52,7 +52,7 @@
   "ui_crops": [],
   "display_transforms": [
     {
-      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, and mean/median/maximum labels; log axes",
+      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, mean/median/maximum labels and minimum labels below each bar; log axes",
       "bar_statistic": "arithmetic mean",
       "bar_baseline": 1.0,
       "reference_lines": {
@@ -77,9 +77,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "f83e9d8ed90caa792afe8d6b7c7eb512190c41335d7438966e169a03591f9d45",
-    "submission_benchmark_summary.pdf": "d177ebff3de21155d63a8a9ca8b76deb23583ad50588537a0320d25f185d03b1",
-    "submission_benchmark_summary.svg": "01a8e156765bdb95efc2909e1728473d050f7c8c596d337536bc90bd57ec5d80"
+    "submission_benchmark_summary.png": "cd7ce026e49c975208c0934b3ed2c8b8e67bd9fed3f6b3dc8d3e939966d4ef85",
+    "submission_benchmark_summary.pdf": "d67eba17f460da248c07f76d2f7146babd870d5935e9801212393b8a554a7238",
+    "submission_benchmark_summary.svg": "3aac022e7ada22a1ac2c833ad99e67df2fc18f616903950787496437bb6dbdaf"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -595,7 +595,7 @@ def bbbc039_repeat():
         sheet = FigureSheet("bbbc039_independent_repeat", "", 4.9)
         sheet.source(earlier_path)
         sheet.source(repeat_path)
-        sheet.text(3, 98, "Independent authors: agreement across the same 200 fields",
+        sheet.text(3, 98, "Nuclear detection 2 and 3: the same 200 fields",
                    size=18, weight="bold", va="top")
         scatter = sheet.figure.add_axes((.09, .27, .35, .55))
         pooled = sheet.figure.add_axes((.61, .27, .35, .55))
@@ -605,26 +605,26 @@ def bbbc039_repeat():
         ):
             rows = [row for row in current.values()
                     if (row["reference_count"] == 0) == empty]
-            scatter.scatter([100 * previous[key(row)]["f1"] for row in rows],
-                            [100 * row["f1"] for row in rows],
+            scatter.scatter([previous[key(row)]["f1"] for row in rows],
+                            [row["f1"] for row in rows],
                             s=24, alpha=.75, color=color, label=label, zorder=3)
-        scatter.plot((0, 100), (0, 100), "--", color=MUTED, linewidth=1)
-        scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
-                    ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
+        scatter.plot((0, 1), (0, 1), "--", color=MUTED, linewidth=1)
+        scatter.set(title="A  Paired field scores", xlabel="Nuclear detection 2: F1",
+                    ylabel="Nuclear detection 3: F1", xlim=(-.03, 1.03), ylim=(-.03, 1.03))
         scatter.set_aspect("equal", adjustable="box")
         for offset, record, color, label in (
-            (-.18, earlier, BLUE, "Earlier author"),
-            (.18, repeat, TEAL, "Independent repeat"),
+            (-.18, earlier, BLUE, "Analysis 2"),
+            (.18, repeat, TEAL, "Analysis 3"),
         ):
-            values = [100 * record["summary"][name]
+            values = [record["summary"][name]
                       for name in ("precision", "recall", "micro_f1")]
             bars = pooled.bar([index + offset for index in range(3)], values,
                               width=.34, color=color, label=label)
-            pooled.bar_label(bars, labels=[f"{value:.2f}" for value in values],
-                             padding=3, fontsize=12, rotation=90)
-        pooled.set(title="B  Pooled object agreement", ylabel="Agreement (%)",
+            pooled.bar_label(bars, labels=[f"{value:.3f}" for value in values],
+                             label_type="center", fontsize=12, rotation=90, color="white")
+        pooled.set(title="B  Pooled detection scores", ylabel="Score (1 is best)",
                    xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
-                   ylim=(0, 112), yticks=(0, 20, 40, 60, 80, 100))
+                   ylim=(0, 1.12), yticks=(0, .2, .4, .6, .8, 1))
         pooled.legend(frameon=False, fontsize=11, loc="upper center",
                       bbox_to_anchor=(.5, -.24), ncol=2)
         for axis in (scatter, pooled):

@@ -23,7 +23,7 @@ Development history and full instructions are kept in the [archived supplementar
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=5.7in}
 
 ::: {custom-style="ImageCaption"}
-(A–B) Eligible-nucleus fractions in 96 BBBC013 wells, including four development wells. Dots show four wells per dose; marks and whiskers show their mean and sample SD. Main Figure 4E shows the response curves. (C–D) An earlier independent held-out trial used mean cell-level GFP ratios, with four wells per control condition. The two trials used different well summaries: mean GFP ratio and median log2 ratio. Supplementary Data 7–8 give the methods and source data.
+(A–B) Protein translocation analysis 2: fraction of nuclei with measurable cytoplasm in 96 BBBC013 wells, including four development wells. Dots show four wells per dose; marks and whiskers show their mean and sample standard deviation (variation among wells). Main Figure 4E shows the response curves. (C–D) Protein translocation analysis 1: mean cell-level GFP ratios on held-out wells, with four wells per control condition. Z′ measures separation between positive and negative controls relative to their variation; higher is better, and values above 0.5 indicate an excellent assay. Analyses 1 and 2 use different well summaries: mean GFP ratio and median log2 ratio, respectively. Supplementary Data 7–8 give the methods and source data.
 :::
 
 ## Supplementary Figure 3. Nuclear-instance evaluation and object separation
@@ -31,7 +31,7 @@ Development history and full instructions are kept in the [archived supplementar
 ![Independent-author scores and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=5.7in}
 
 ::: {custom-style="ImageCaption"}
-(I, A–B) Final BBBC039 segmentations from two independent authors on 200 fields, with pooled object F1 of 0.898 and 0.906 at intersection over union ≥ 0.5. (II, A–B) Earlier prospective BBBC039 F1/Dice on 50 held-out fields and BBBC007 boundary support on 12. Each trial used four development fields. Boundary support is the fraction of predicted boundary pixels within two pixels of a manual outline. Supplementary Data 7–8 provide counts and per-field scores.
+(I, A–B) Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. F1 balances missed and false detections; 1 is best. Matching required intersection over union ≥ 0.5: overlap covering at least half the total area of the two outlines together. (II, A–B) Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields. Each used four development fields. Dice measures area overlap, with 1 indicating identical areas. Boundary support is the fraction of predicted boundary pixels within two pixels of a manual outline; it does not measure whether every manual border was found. Supplementary Data 7–8 provide counts and per-field scores.
 :::
 
 ## Supplementary Figure 4. Independent morphology checks and remaining ambiguities
@@ -553,13 +553,13 @@ Supplementary Data 1.
 
 ## Supplementary Data 7. Prospective agent-authored assay validation
 
-### Earlier prospective held-out results
+### Nuclear detection 1, cell-boundary 1 and protein translocation 1
 
-The three prospectively authored workflows were applied without scientific parameter changes after their held-out partitions were disclosed (Supplementary Figures 2–3). On the 50 BBBC039 fields, 4,733 of 5,720 reference nuclei matched at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and object F1 was 0.746; mean field foreground Dice was 0.935. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and the overlap diagnostic identified more split reference instances than merged predictions. The first blind pipeline therefore recovered nuclear foreground well while over-segmenting instances.
+These three analyses were applied without changing their processing settings after their held-out images were disclosed (Supplementary Figures 2–3). Nuclear detection analysis 1 matched 4,733 of 5,720 reference nuclei on 50 BBBC039 fields at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and F1 was 0.746; mean field Dice area overlap was 0.935. Precision measures how many detections are correct, recall how many reference nuclei were found, and F1 balances both; 1 is best. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and more reference nuclei were split than merged. It therefore recovered nuclear area well while often splitting nuclei into multiple detections.
 
-On the 12 BBBC007 fields, 29,450 of 43,875 relevant predicted adjacent-cell boundary pixels were within two pixels of a manual outline, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the boundary score is directed from predictions to the outline union, it can reward an incomplete segmentation and does not establish object correspondence.
+Cell-boundary analysis 1 placed 29,450 of 43,875 predicted adjacent-cell boundary pixels within two pixels of a manual outline on 12 BBBC007 fields, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the score checks predicted borders against manual outlines, it can reward an incomplete segmentation and does not establish that each detected cell matches a reference cell.
 
-The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out wells. Wortmannin controls separated with Z-prime 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z-prime 0.554 and means of 7.219 and 1.127. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
+Protein translocation analysis 1 produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out BBBC013 wells. Wortmannin controls separated with Z′ of 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z′ of 0.554 and means of 7.219 and 1.127. Z′ measures control separation relative to variation between wells; both scores exceed the 0.5 threshold for an excellent screening assay. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
 
 The [validation report](independent_agent_validation.md) gives the prospective
 design and results for BBBC039, BBBC007 and BBBC013. Each trial used a
@@ -598,42 +598,42 @@ link the plotted values to the original evaluations.
 
 ### Trial-level autonomous results
 
-Labels identify authors in the linked records in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons.
+Analysis names describe the task; numbers distinguish independent methods, not successive repairs or quality rankings. Parentheses retain the original run identifiers for locating source files. A repair remains part of the same numbered analysis. Multiple measurements from one analysis are listed separately.
 
 | Assay | Model | Data partition | Endpoint | Result |
 |---|---|---|---|---|
-| BBBC039, earlier trial | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
-| BBBC039, fresh612 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
-| BBBC039, fresh10 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
-| BBBC039, fresh13 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
-| BBBC039, fresh612 repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
-| BBBC007, earlier trial | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
-| BBBC007, fresh19 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
-| BBBC007, fresh26 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
-| BBBC007/H003, fresh26 | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
-| BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
-| BBBC013, fresh23 | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
-| H001, fresh586 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
-| H001, fresh25 rotation | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
-| H002, fresh15 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
-| H002, fresh23 rotation | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
-| Retina, fresh09 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
-| Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
-| Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
-| Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
-| Laboratory treatment, blind 1/2/3 | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
+| Nuclear detection 1 (BBBC039, gpt-5.6-sol run) | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
+| Nuclear detection 2 (BBBC039, fresh612) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
+| Nuclear detection 3 (BBBC039, fresh10) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
+| Nuclear detection 4 (BBBC039, fresh13) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
+| Nuclear detection 2, repair (fresh612) | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
+| Cell-boundary analysis 1 (BBBC007, gpt-5.6-sol run) | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
+| Cell-boundary analysis 2 (BBBC007, fresh19) | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
+| Cell-boundary analysis 3 (BBBC007, fresh26) | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
+| Paired nuclear/cell detection (H003, fresh26) | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
+| Protein translocation 1 (BBBC013, gpt-5.6-sol run) | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
+| Protein translocation 2 (BBBC013, fresh23) | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
+| Bright-object detection 1 (H001, fresh586) | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| Bright-object detection 2 (H001, fresh25) | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
+| 3D nuclear localisation 1 (H002, fresh15) | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| 3D nuclear localisation 2 (H002, fresh23) | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
+| Retinal cell detection 1 (fresh09) | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
+| Retinal cell detection 2 (fresh26) | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
+| Public-image neurite tracing (fresh20) | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
+| Laboratory-image neurite tracing (fresh13) | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
+| Neurite drug-response analyses 1–3 (blind 1/2/3) | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
 
 ### Additional assays: detailed results
 
 The main text reports these single- and two-agent demonstrations in one summary paragraph. Their detailed results are given here; the trial-level table above lists every score.
 
-**BBBC007 DNA/actin.** Two later agents reached directed boundary fractions of 0.743 and 0.740 across 16 DNA/actin fields; the earlier held-out trial reached 0.671 across 12 fields (main Figure 4C; Supplementary Data 7). In one paired-field analysis, the agent detected 56 nuclei and kept 54 actin-supported cells after removing two seed-only candidates. Each cell mask included all pixels of its associated nucleus. Main Figure 4F shows a same-region merge repair.
+**Cell-boundary analyses (BBBC007).** Analyses 2 and 3 reached directed boundary fractions of 0.743 and 0.740 across 16 DNA/actin fields; analysis 1 reached 0.671 across 12 held-out fields (main Figure 4C; Supplementary Data 7). In one paired-field analysis, the agent detected 56 nuclei and kept 54 actin-supported cells after removing two seed-only candidates. Each cell mask included all pixels of its associated nucleus. Main Figure 4F shows a same-region merge repair.
 
-**H001 bright objects.** The H001 agent matched 59 of 64 computational-reference objects and raised F1 from 0.929 to 0.944 through self-directed repair (main Figures 3B and 4A). The matched views show correction of an elongated object's split and recovery of a pair lost during an intermediate revision.
+**Bright-object detection.** Analysis 1 matched 59 of 64 computational-reference objects and raised F1 from 0.929 to 0.944 through self-directed repair (main Figures 3B and 4A). The matched views show correction of an elongated object's split and recovery of a pair lost during an intermediate revision.
 
-**H002 3D centres.** The H002 agent recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (main Figure 4D,I); a second agent also recovered 15 of 15, with mean matched error of 4.86 voxels. Eleven predictions of the first agent had no matching annotation; because annotations cover only some centres, these are not yet classified as false detections. A different agent repaired an internal body partition at Z=36 while keeping its neighbour separate (main Figure 4H).
+**3D nuclear localisation.** Analysis 1 recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (main Figure 4D,I); analysis 2 also recovered 15 of 15, with mean matched error of 4.86 voxels. Eleven predictions of the first agent had no matching annotation; because annotations cover only some centres, these are not yet classified as false detections. A different agent repaired an internal body partition at Z=36 while keeping its neighbour separate (main Figure 4H).
 
-**Retinal somata.** The retinal repair trial detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (main Figure 4G). A repeat detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4).
+**Retinal cell detection.** Analysis 1 detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (main Figure 4G). Analysis 2 detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4).
 
 **Neurite fields.** One autonomous agent analysed all nine laboratory neurite fields and revised its neurite admission settings after inspecting thin processes (main Figure 5II). Matched sparse and dense views showed recovery of raw-visible paths with the same soma labels in the reviewed field. In the public NeuronCyto II field, the initial pipeline recovered principal shafts and junctions (main Figure 5I); the final repair extended beyond that target. The initial result is shown alongside the published algorithm output.
 
@@ -643,13 +643,13 @@ The [per-field scores](task_only_analysis/bbbc039-uninspected-fields.csv) for th
 
 | Agent | Fields with F1 ≥ 0.90 | Fields below 0.80 | Median field F1 | Missed nuclei | False detections | Fields with more misses than false detections |
 |---|---:|---:|---:|---:|---:|---:|
-| fresh612 | 121 | 6 | 0.919 | 2,661 | 951 | 171 |
-| fresh10 | 117 | 7 | 0.917 | 2,929 | 806 | 173 |
-| fresh13 | 121 | 6 | 0.915 | 2,743 | 1,033 | 171 |
+| Nuclear detection 2 | 121 | 6 | 0.919 | 2,661 | 951 | 171 |
+| Nuclear detection 3 | 117 | 7 | 0.917 | 2,929 | 806 | 173 |
+| Nuclear detection 4 | 121 | 6 | 0.915 | 2,743 | 1,033 | 171 |
 
-Misses made up 73% to 78% of each agent's errors. The same six fields (20641_A12_7, 20591_L01_3, 20590_D08_7, 20586_O15_6, 20626_E05_2 and 20630_P09_4) scored below 0.80 for all three agents; fresh10 also scored 0.727 on 20589_P23_7. These six fields hold 17 to 180 reference nuclei (median 59), against a median of 126 across all 175 fields. In field 20641_A12_7, all three agents missed 57 to 59 of 69 nuclei, giving F1 of 0.23 to 0.27. Field F1 was only weakly related to the number of nuclei (Spearman ρ −0.15 to −0.24); in the third of fields with the most nuclei (138 to 199), pooled F1 was 0.893 to 0.897, against 0.920 to 0.928 in the middle third.
+Misses made up 73% to 78% of each agent's errors. The same six fields (20641_A12_7, 20591_L01_3, 20590_D08_7, 20586_O15_6, 20626_E05_2 and 20630_P09_4) scored below 0.80 for all three agents; nuclear detection analysis 3 also scored 0.727 on 20589_P23_7. These six fields hold 17 to 180 reference nuclei (median 59), against a median of 126 across all 175 fields. In field 20641_A12_7, all three agents missed 57 to 59 of 69 nuclei, giving F1 of 0.23 to 0.27. Field F1 was only weakly related to the number of nuclei (Spearman rank correlation ρ −0.15 to −0.24, indicating a weak tendency for more crowded fields to score lower); in the third of fields with the most nuclei (138 to 199), pooled F1 was 0.893 to 0.897, against 0.920 to 0.928 in the middle third.
 
-A same-input repair by fresh612 lowered the maxima-suppression size from 14 to 10 and raised F1 from 0.908 to 0.934 on the three inspected fields, recovering 14 missed nuclei while split reference nuclei increased from 28 to 43. The repair was not separately evaluated on the full collection. Between two independent agents' final pipelines on all 200 fields, per-field F1 differed mostly by less than 0.03, and the lower pooled score came chiefly from 314 additional missed nuclei (Supplementary Figure 3).
+A same-input repair in nuclear detection analysis 2 lowered the maxima-suppression size from 14 to 10 and raised F1 from 0.908 to 0.934 on the three inspected fields, recovering 14 missed nuclei while split reference nuclei increased from 28 to 43. The repair was not separately evaluated on the full collection. Between two independent agents' final pipelines on all 200 fields, per-field F1 differed mostly by less than 0.03, and the lower pooled score came chiefly from 314 additional missed nuclei (Supplementary Figure 3).
 
 ### Skill revisions in reported trials
 
@@ -657,13 +657,13 @@ The [trial resource table](task_only_analysis/trial_resources.csv) records, for 
 
 | Trial | Skill hash prefix |
 |---|---|
-| BBBC039, BBBC007 and BBBC013 earlier trials (gpt-5.6-sol, OpenHCS 0.8.5) | Not recorded |
-| BBBC039 fresh612 | 328600bf182d |
-| BBBC039 fresh10 | ccfb712b2ecb |
-| BBBC039 fresh13 | 997f30271129 |
-| BBBC013 fresh23 | 2eb9298d369f |
-| BBBC007 fresh19 | 997f30271129 |
-| BBBC007 fresh26 | ffb73f78ae93 |
+| Nuclear detection 1, cell-boundary 1 and protein translocation 1 (gpt-5.6-sol, OpenHCS 0.8.5) | Not recorded |
+| Nuclear detection 2 | 328600bf182d |
+| Nuclear detection 3 | ccfb712b2ecb |
+| Nuclear detection 4 | 997f30271129 |
+| Protein translocation 2 | 2eb9298d369f |
+| Cell-boundary analysis 2 | 997f30271129 |
+| Cell-boundary analysis 3 | ffb73f78ae93 |
 | H001 fresh586 | c0cc4e8db8aa (qualified managed delivery copy) |
 | H002 fresh15 | 997f30271129 |
 | H002 fresh23 rotation | 2eb9298d369f |

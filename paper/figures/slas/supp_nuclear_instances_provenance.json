@@ -1,9 +1,9 @@
 {
-  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "generator_sha256": "898d6f8bab842daa54d89b29161fd4060f7cece35afc69aba416b02492bfc084",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "c03f0668a4e82eb64020169aa56f1a6d7d22ff81ba71fbe73befdffb284e8612",
-    "paper/figures/slas/bbbc039_independent_repeat_provenance.json": "c7329bfa73fc27a4f70ee699e6b8040571d31763d3a49ba670f854dcc89788ad",
-    "paper/figures/slas/bbbc039_independent_repeat.png": "12ae34da397aafaaa39d80ffed0003f306d2efc926beb43199a67eb97dadb918",
+    "paper/figures/build_slas_supplement.py": "b29a8d05b0842eab1bbd995e43ec8f0c493976d4937cdbcc6379604764ba206a",
+    "paper/figures/slas/bbbc039_independent_repeat_provenance.json": "7ce688453665142d440fc6d8218c4900bc1bfe0b24312bcabb6a6aca87ae5d01",
+    "paper/figures/slas/bbbc039_independent_repeat.png": "8f02e637fce2eaba7bad607dc6f4ddfd5196a2fa87a5037e1042282ceef89ec3",
     "paper/figures/slas/independent_agent_validation_provenance.json": "8a26e3dcd1589dc31b6f4713148acf4cdcc7f9ee8a041a728d1dc5bfb7757bc8",
     "paper/figures/slas/independent_agent_validation.png": "6fb1bc3fb340713f2ed1247feb13e4d72908c4fe5003e2f91620cf160d2d6a39"
   },
@@ -37,9 +37,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_nuclear_instances.png": "01b0a40d3d55ed65cde9ae1d17bdfbe443af8afa94bb428f9c65b976f7be4ae1",
-    "supp_nuclear_instances.pdf": "1b322f40406cae1c3bb6e24ce03d98af26ee555d73e584d747c406f52a16a59e",
-    "supp_nuclear_instances.svg": "d790b733dab16d0544aceb9781e1a8bb5ff389ecb8b1aaebeb3892af64730bee"
+    "supp_nuclear_instances.png": "e85a94d3604fcb211f2e36aa5323d75050a52a22b0b1f39e7696180ea9fb277e",
+    "supp_nuclear_instances.pdf": "20936b97dde2e16fa24255a51a34fd6d92da40ea21a2e08cce00b1eaa5f5d086",
+    "supp_nuclear_instances.svg": "3624e1fd970d9f40a32550de4c4c0ae852bc1bcdca8d26cb4b5ee25aeaa0458d"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
