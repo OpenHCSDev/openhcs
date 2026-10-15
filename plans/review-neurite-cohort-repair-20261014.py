@@ -34,13 +34,21 @@ parser.add_argument('--after-step', type=int, default=0)
 parser.add_argument('--before-step', type=int, default=0)
 parser.add_argument('--overlay-window', choices=('dim', 'moderate'), default='dim')
 parser.add_argument('--body-contours', action='store_true', help='Show saved cell-body boundaries in cyan on both combined views.')
+parser.add_argument('--center', nargs=2, type=float, metavar=('X', 'Y'), help='Override the crop center in native pixels for a selected witness.')
+parser.add_argument('--crop-size', type=float, default=400, help='Square view width in native pixels (default: 400).')
 args = parser.parse_args()
+if args.crop_size <= 0 or not np.isfinite(args.crop_size):
+    parser.error('--crop-size must be finite and positive')
+if args.center is not None and (not args.well or len(args.well) != 1 or not np.all(np.isfinite(args.center))):
+    parser.error('--center requires one --well and finite X Y coordinates')
 old, new, output = args.before, args.after, args.output
 output.mkdir(parents=True, exist_ok=True)
 for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                           ('A34', 2, 520, 550), ('A60', 5, 500, 420)]:
     if args.well and well not in args.well:
         continue
+    if args.center is not None:
+        x, y = args.center
     stem = f'{well}_s{site:03d}_w2_z001_t001'
     fitc = tifffile.imread(root / 'cohort-input' / f'{stem}.tif').squeeze()
     dapi = tifffile.imread(root / 'cohort-input' / f'{stem.replace("_w2_", "_w1_")}.tif').squeeze()
@@ -73,8 +81,8 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                                                colors='#ff3da5', linewidths=.65))
         if args.body_contours and i in (3, 4):
             axis.contour(bodies[i - 3], levels=[0.5], colors=['cyan'], linewidths=.6)
-        axis.set_xlim(x - 200, x + 200)
-        axis.set_ylim(y + 200, y - 200)
+        axis.set_xlim(x - args.crop_size / 2, x + args.crop_size / 2)
+        axis.set_ylim(y + args.crop_size / 2, y - args.crop_size / 2)
         axis.set_title(titles[i])
     fig.suptitle(f'{well} site {site}; source crop center x={x}, y={y}; native pixels\n'
                  f'FITC {tuple(np.round(fitc_limits, 2).tolist())}, dim {tuple(np.round(dim_limits, 2).tolist())}; '
@@ -85,7 +93,8 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                        fitc_high=fitc_limits[1], fitc_dim_high=dim_limits[1],
                        dapi_low=dapi_limits[0], dapi_high=dapi_limits[1],
                        overlay_window=args.overlay_window, before_step=args.before_step,
-                       after_step=args.after_step, body_contours=args.body_contours))
+                       after_step=args.after_step, body_contours=args.body_contours,
+                       crop_size=args.crop_size))
 with (output / 'display-windows.csv').open('w', newline='') as stream:
     writer = csv.DictWriter(stream, fieldnames=list(states[0]))
     writer.writeheader()

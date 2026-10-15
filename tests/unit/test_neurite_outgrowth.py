@@ -509,6 +509,7 @@ def test_signature_exposes_metaxpress_controls_and_declared_openhcs_extensions()
         "intensity_above_local_background",
         "channel_index",
         "minimum_inscribed_diameter_px",
+        "candidate_threshold_correction_factor",
     ]
     assert [field.name for field in fields(MetaXpressOutgrowthSettings)] == [
         "maximum_width",

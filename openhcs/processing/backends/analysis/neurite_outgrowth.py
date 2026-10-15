@@ -727,7 +727,24 @@ class MetaXpressCellBodySettings:
     change the CellProfiler candidate smoothing or declumping scale.
     """
 
+    candidate_threshold_correction_factor: float = 1.0
+    """Multiplier on the compact detector's adaptive foreground threshold.
+
+    Values below one include dimmer soma boundaries before declumping and
+    size qualification. This differs from intensity_above_local_background,
+    which accepts or rejects the resulting compact object by its mean response.
+    Lower values can join neighbours or include unwanted signal; inspect body
+    boundaries and neurite exits together. Applies only to compact body
+    detection, not the separate nuclear-seeded signal-growth route.
+    """
+
     def validate(self) -> None:
+        if (
+            isinstance(self.candidate_threshold_correction_factor, (bool, np.bool_))
+            or not np.isfinite(self.candidate_threshold_correction_factor)
+            or self.candidate_threshold_correction_factor <= 0
+        ):
+            raise ValueError("cell_body.candidate_threshold_correction_factor must be > 0")
         if (
             not np.isfinite(self.minimum_inscribed_diameter_px)
             or self.minimum_inscribed_diameter_px < 0
@@ -2595,6 +2612,7 @@ def _identify_cell_bodies_cellprofiler(
                 image.shape,
             ),
         ),
+        threshold_correction_factor=settings.candidate_threshold_correction_factor,
     )
     detected_labels = object_label_dense_array(detected_payload, dtype=np.int32)
     response = local_background_response(

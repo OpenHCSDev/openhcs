@@ -114,6 +114,34 @@ def test_gate_pixel_units_do_not_replace_area_calibration_and_zero_is_explicit()
     np.testing.assert_array_equal(_small_body_contract(settings, 1.0), [False, False])
 
 
+@pytest.mark.parametrize('value', [0, -1, np.nan, np.inf, True])
+def test_body_foreground_correction_rejects_invalid_values(value):
+    with pytest.raises(ValueError, match='cell_body.candidate_threshold_correction_factor'):
+        MetaXpressCellBodySettings(candidate_threshold_correction_factor=value).validate()
+
+
+def test_body_foreground_correction_expands_a_dim_rim_before_qualification():
+    image = np.full((80, 80), 200, dtype=np.uint16)
+    yy, xx = np.ogrid[:80, :80]
+    radius_squared = (yy - 40)**2 + (xx - 40)**2
+    image[radius_squared < 12**2] = 2000
+    image[radius_squared < 5**2] = 30000
+    settings = MetaXpressCellBodySettings(
+        approximate_max_width=40, minimum_area=30,
+        intensity_above_local_background=500, minimum_inscribed_diameter_px=4,
+    )
+    before = object_label_dense_array(_identify_cell_bodies_cellprofiler(
+        image, settings, 1.0, bright_objects=True,
+    ))
+    after = object_label_dense_array(_identify_cell_bodies_cellprofiler(
+        image, replace(settings, candidate_threshold_correction_factor=0.25),
+        1.0, bright_objects=True,
+    ))
+    assert before.max() == after.max() == 1
+    assert np.count_nonzero(after) > np.count_nonzero(before)
+    assert np.all(after[radius_squared >= 14**2] == 0)
+
+
 @pytest.mark.parametrize("nuclear_seeded", (False, True))
 def test_independent_gate_audit_composes_through_original_detector_consumers(nuclear_seeded):
     gates = []
