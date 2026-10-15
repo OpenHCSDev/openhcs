@@ -7,6 +7,7 @@ replicates, not independent biological experiments.
 from pathlib import Path
 from runpy import run_path
 import csv
+import argparse
 
 import matplotlib
 matplotlib.use('Agg')
@@ -15,7 +16,15 @@ import matplotlib.pyplot as plt
 repo = Path('/home/ts/code/projects/openhcs')
 scratch = Path('/home/ts/.cache/agent-scratch/neurite-detector-20261014')
 science = Path('/run/media/ts/hdd/openhcs-science')
-output = scratch / 'cohort-evaluation'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--summaries', type=Path, default=scratch / 'cohort-repaired/cohort-input_openhcs/results')
+parser.add_argument('--pipeline', type=Path, default=repo / 'plans/neurite-cohort-repair-comparison-20261014.py')
+parser.add_argument('--output', type=Path, default=scratch / 'cohort-evaluation')
+parser.add_argument('--label', default='Assisted fixed-recipe replay on main 09a808015; not a new blind trial')
+parser.add_argument('--plot-label', default='Corrected engine')
+parser.add_argument('--plot-title', default='Same 20 wells / 180 fields; fixed Blind 2 recipe on corrected engine')
+args = parser.parse_args()
+output = args.output
 comparison = run_path(str(repo / 'paper/figures/compare_personal_neurite.py'))
 comparison['compare'](
     Path('/home/ts/code/projects/mfd/papers/mfd_platform/supplementary_bio/'
@@ -31,9 +40,9 @@ comparison['compare'](
     metrics=comparison['METRICS'],
     workbook=Path('/run/media/ts/0BA20E780BA20E78/axotomy_testing/'
                   '2026-09-04-(complete)/neurite outgrowth/results.xlsx'),
-    guided_summaries=scratch / 'cohort-repaired/cohort-input_openhcs/results',
-    guided_pipeline=repo / 'plans/neurite-cohort-repair-comparison-20261014.py',
-    guided_label='Assisted fixed-recipe replay on main 09a808015; not a new blind trial',
+    guided_summaries=args.summaries,
+    guided_pipeline=args.pipeline,
+    guided_label=args.label,
 )
 with (output / 'treatment_effects.csv').open() as stream:
     effects = list(csv.DictReader(stream))
@@ -42,7 +51,7 @@ with (output / 'joined_wells.csv').open() as stream:
 conditions = list(dict.fromkeys(row['condition'] for row in effects))
 methods = [('metaxpress', 'MetaXpress', '#222222', '-'),
            ('openhcs', 'Frozen Blind 2', '#ae6a00', '--'),
-           ('guided_openhcs', 'Corrected engine', '#0072b2', '-')]
+           ('guided_openhcs', args.plot_label, '#0072b2', '-')]
 for name, metrics in [
     ('per-cell-effects', [('mean_outgrowth', 'Length per cell'),
                          ('branches_per_cell', 'Branches per cell'),
@@ -74,7 +83,7 @@ for name, metrics in [
             axis.set_xticks([0, 5, 10, 20, 40])
             axis.spines[['top', 'right']].set_visible(False)
     axes[0, 0].legend(frameon=False, fontsize=9)
-    fig.suptitle('Same 20 wells / 180 fields; fixed Blind 2 recipe on corrected engine\n'
+    fig.suptitle(args.plot_title + '\n'
                  'Nine-field well means; two technical wells per dose; algorithm comparison, not manual truth',
                  fontsize=11)
     fig.savefig(output / f'{name}.png', dpi=180)

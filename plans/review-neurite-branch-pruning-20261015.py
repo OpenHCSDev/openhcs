@@ -22,6 +22,7 @@ root = Path('/home/ts/.cache/agent-scratch/neurite-detector-20261014')
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--before', default='cohort-repaired/cohort-input_openhcs/results')
 parser.add_argument('--after', default='pruning-5um')
+parser.add_argument('--results-subdir', default='input_openhcs/results')
 parser.add_argument('--label', default='5 µm pruning')
 parser.add_argument('--before-label', default='Before')
 parser.add_argument('--check-geometry', action='store_true')
@@ -31,7 +32,7 @@ parser.add_argument('--pruning-cutoff', type=float,
                     help='Check a pruning-only change and inspect removed paths near this cutoff')
 args = parser.parse_args()
 before = root / args.before
-after = root / args.after / 'input_openhcs/results'
+after = root / args.after / args.results_subdir
 output = root / args.after / 'review'
 output.mkdir(parents=True, exist_ok=True)
 rows = []

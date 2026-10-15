@@ -22,11 +22,17 @@ old = Path('/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-2
            'P001_GRAPHICAL_115/final-attempt/source-plate_openhcs/results')
 new = root / 'cohort-repaired/cohort-input_openhcs/results'
 output = root / 'cohort-evaluation/qa'
-output.mkdir(parents=True, exist_ok=True)
 states = []
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--well', action='append', help='Render only these already completed selected wells.')
+parser.add_argument('--before', type=Path, default=old)
+parser.add_argument('--after', type=Path, default=new)
+parser.add_argument('--output', type=Path, default=output)
+parser.add_argument('--before-label', default='Frozen Blind 2')
+parser.add_argument('--after-label', default='Corrected engine')
 args = parser.parse_args()
+old, new, output = args.before, args.after, args.output
+output.mkdir(parents=True, exist_ok=True)
 for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                           ('A34', 2, 520, 550), ('A60', 5, 500, 420)]:
     if args.well and well not in args.well:
@@ -43,7 +49,7 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                 for graph in graphs]
     fig, axes = plt.subplots(2, 3, figsize=(15, 10), layout='constrained')
     titles = ['Raw DAPI', 'Raw FITC', 'Raw FITC, dim window',
-              'Frozen Blind 2 + dim raw', 'Corrected engine + dim raw', 'Corrected graph only']
+              f'{args.before_label} + dim raw', f'{args.after_label} + dim raw', f'{args.after_label}: graph only']
     for i, axis in enumerate(axes.flat):
         if i == 0:
             axis.imshow(dapi, cmap='gray', vmin=dapi_limits[0], vmax=dapi_limits[1])
