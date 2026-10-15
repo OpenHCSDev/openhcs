@@ -278,6 +278,14 @@ biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
 
+For `neurite_outgrowth_metaxpress`, `outgrowth.enhance_neurites=False` bypasses
+the embedded tubeness/adaptive-threshold gate while retaining local-background
+support, soma exclusion and rooted ownership. Compare this route when the
+enhanced mask removes raw-supported shafts; preprocessing can be composed in
+earlier steps or callables. Candidate correction and hysteresis settings are
+inactive in this mode, and the uncomputed enhancement checkpoint contains NaN.
+Do not lower the local cutoff to compensate for a different gate's rejection.
+
 If a raw-supported junction disappears from a ridge-enhanced candidate, compare
 the raw pixels, enhanced response and admitted mask at that junction and an
 ordinary path. More permissive thresholding cannot recover pixels absent from

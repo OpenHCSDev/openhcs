@@ -131,10 +131,47 @@ def test_admission_exports_the_original_independent_gates(seed_factor):
         assert output.source_indices == (2,)
 
 
+@pytest.mark.parametrize("bright_objects", [False, True])
+def test_disabled_enhancement_preserves_local_signal_and_rejects_background(
+    bright_objects,
+):
+    image = np.full((64, 64), 100.0)
+    image[30:33, 8:56] = 300.0
+    if not bright_objects:
+        image = 400.0 - image
+    settings = MetaXpressOutgrowthSettings(
+        maximum_width=4,
+        intensity_above_local_background=50,
+        enhance_neurites=False,
+        # Inactive settings must not alter the direct local-response route.
+        candidate_threshold_correction_factor=np.nan,
+        candidate_hysteresis_seed_correction_factor=-1,
+    )
+    settings.validate()
+    result = _identify_neurites_cellprofiler(
+        image, _cell_body_settings(), settings, 1.0,
+        bright_objects=bright_objects,
+    )
+    assert np.all(result.mask[30:33, 8:56])
+    assert not np.any(result.mask[:20])
+    assert not np.any(result.mask[40:])
+    assert result.mask is result.planes.local_support
+    assert result.planes.threshold_support is result.mask
+    assert result.planes.retained_support is result.mask
+    assert np.isnan(result.planes.enhanced_response).all()
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "false"])
+def test_enhancement_switch_rejects_non_boolean_values(value):
+    with pytest.raises(ValueError, match="enhance_neurites must be a boolean"):
+        MetaXpressOutgrowthSettings(enhance_neurites=value).validate()
+
+
+@pytest.mark.parametrize("enhance_neurites", [False, True])
 @pytest.mark.parametrize("branched", [False, True])
 @pytest.mark.parametrize("with_nuclei", [False, True])
 def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
-    branched, with_nuclei
+    branched, with_nuclei, enhance_neurites
 ):
     image = _draw_fluorescent_neuron(branched=branched)
     if with_nuclei:
@@ -152,6 +189,7 @@ def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
     pixel_growth = PixelOutgrowthSettings(
         maximum_width=3, intensity_above_local_background=100,
         minimum_cell_growth_to_log_as_significant=20,
+        enhance_neurites=enhance_neurites,
     )
     contract = CallableContract.from_callable(neurite_outgrowth_metaxpress_pixels)
     assert contract.artifact_inputs.names() == ()
@@ -172,6 +210,7 @@ def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
         outgrowth=MetaXpressOutgrowthSettings(
             maximum_width=1.5, intensity_above_local_background=100,
             minimum_cell_growth_to_log_as_significant=10,
+            enhance_neurites=enhance_neurites,
         ),
         pixel_size=0.5,
         neurite_channel_index=1 if with_nuclei else 0,
@@ -475,6 +514,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "minimum_cell_growth_to_log_as_significant",
         "candidate_threshold_correction_factor",
         "candidate_hysteresis_seed_correction_factor",
+        "enhance_neurites",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",

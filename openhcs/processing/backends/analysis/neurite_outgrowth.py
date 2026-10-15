@@ -868,9 +868,10 @@ class MetaXpressOutgrowthSettings:
     intensity_above_local_background: float = 50.0
     """Per-pixel local-background response cutoff in consumed-image units.
 
-    Initial process admission requires BOTH the enhanced candidate mask and
-    this local-response gate. At this initial admission stage, lowering the
-    cutoff cannot admit pixels excluded by the enhanced candidate mask. Later
+    With enhancement enabled, initial process detection requires BOTH the
+    enhanced candidate mask and this local-response gate. Lowering the cutoff
+    cannot admit pixels excluded by that mask. Disable enhance_neurites to use
+    the local-response gate alone with separately composed preprocessing. Later
     rooting, ownership and signal-supported repair determine reported traces.
     """
 
@@ -891,11 +892,23 @@ class MetaXpressOutgrowthSettings:
     candidate_hysteresis_seed_correction_factor: float | None = None
     """Optional stricter seed threshold retaining connected dim candidates."""
 
+    enhance_neurites: bool = True
+    """Apply embedded tubeness enhancement and adaptive candidate thresholding.
+
+    Disable when preprocessing is composed in earlier steps or callables, or
+    when matched image review shows that enhancement removes supported shafts.
+    The local-background cutoff, soma exclusion, rooting and ownership still
+    apply. Candidate correction and hysteresis settings are inactive when
+    disabled. This switch does not imply equivalence to a vendor algorithm.
+    """
+
     def maximum_width_px(self, coordinate_scale: float) -> float:
         """Project this declaration's outgrowth width into image pixels."""
         return self.maximum_width / coordinate_scale
 
     def validate(self) -> None:
+        if type(self.enhance_neurites) is not bool:
+            raise ValueError("outgrowth.enhance_neurites must be a boolean")
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
             raise ValueError("outgrowth.maximum_width must be > 0")
         if (
@@ -910,6 +923,8 @@ class MetaXpressOutgrowthSettings:
             raise ValueError(
                 "outgrowth.minimum_cell_growth_to_log_as_significant must be >= 0"
             )
+        if not self.enhance_neurites:
+            return
         if (
             not np.isfinite(self.candidate_threshold_correction_factor)
             or self.candidate_threshold_correction_factor <= 0
@@ -1229,7 +1244,10 @@ class NeuriteAdmissionPlanes(NeuriteDiagnosticPlanes):
     threshold_support precedes optional seeded-component retention;
     retained_support follows it. With retention disabled they are the same
     computed support, not evidence of an executed seed gate. local_support is
-    the independent raw-unit response gate, before intersection/body exclusion.
+    the independent consumed-unit response gate, before intersection/body exclusion.
+    With enhancement disabled, enhanced_response is NaN (not computed), and
+    threshold_support and retained_support expose the local support actually
+    consumed, not a fictitious enhanced threshold execution.
     """
 
     enhanced_response: np.ndarray
@@ -2457,6 +2475,25 @@ def _identify_neurites_cellprofiler(
 
     outgrowth_width_px = settings.maximum_width_px(coordinate_scale)
     body_width_px = cell_body.maximum_width_px(coordinate_scale)
+    response = local_background_response(
+        image,
+        object_width_px=outgrowth_width_px,
+        bright_objects=bright_objects,
+    )
+    local_support = response >= settings.intensity_above_local_background
+    soma_attachment_response = local_background_response(
+        image, object_width_px=body_width_px, bright_objects=bright_objects,
+    )
+    if not settings.enhance_neurites:
+        return NeuriteAdmissionResult(
+            local_support,
+            NeuriteAdmissionPlanes(
+                np.full(image.shape, np.nan, dtype=float),
+                local_support, local_support, response, local_support,
+                soma_attachment_response,
+            ),
+            outgrowth_width_px,
+        )
     cp_image = _cellprofiler_foreground_image(
         image,
         bright_objects=bright_objects,
@@ -2493,15 +2530,6 @@ def _identify_neurites_cellprofiler(
         )
         seed_mask = np.asarray(seed_mask_payload.data) > 0
         cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
-    response = local_background_response(
-        image,
-        object_width_px=outgrowth_width_px,
-        bright_objects=bright_objects,
-    )
-    local_support = response >= settings.intensity_above_local_background
-    soma_attachment_response = local_background_response(
-        image, object_width_px=body_width_px, bright_objects=bright_objects,
-    )
     outgrowth_mask = cp_mask & local_support
     return NeuriteAdmissionResult(
         outgrowth_mask,
