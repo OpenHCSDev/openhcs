@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "2748740a1e27cb041d6abf85ce7401ec842876f83b79b0931fecb4b9a15d5df9",
+  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "9609e56c6f50927157adb22eab149717329c355dac381a0a54191c5d71b48914",
+    "paper/figures/build_slas_benchmark_reference.py": "1817357cdd50aae8756d3c8f92ab4033aafd4554d799fdaf41864b885dddc625",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -70,16 +70,16 @@
         "formula": "T_CP(N,C) = T_CP(8,first) + (N/C - 8) * median(T_CP(8,warm))/8",
         "total": "Add first-batch pre-pipeline overhead once per concurrent process",
         "assumptions": "Balanced independent one-thread processes; no contention or coordination overhead; external startup excluded",
-        "validation_scope": "Serial batches at 8,12,16 wells on three workflows; does not validate parallel scaling or 3-6 wells per process",
+        "validation_scope": "Serial batches at 8,12,16 samples on three workflows; does not validate parallel scaling or 3-6 samples per process",
         "target_native_observation_count": 0
       },
       "analysis_rerun": false
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "cd7ce026e49c975208c0934b3ed2c8b8e67bd9fed3f6b3dc8d3e939966d4ef85",
-    "submission_benchmark_summary.pdf": "d67eba17f460da248c07f76d2f7146babd870d5935e9801212393b8a554a7238",
-    "submission_benchmark_summary.svg": "3aac022e7ada22a1ac2c833ad99e67df2fc18f616903950787496437bb6dbdaf"
+    "submission_benchmark_summary.png": "487e21c7107711759c3f7badbb505faef05e04d4f7658c7eca5c09d0a2c2db5c",
+    "submission_benchmark_summary.pdf": "92e8d9b937ca600635700172c89e90efe1b99e5dafbdfea0601cb42d17830132",
+    "submission_benchmark_summary.svg": "a95bc0962b47cd33cc54a690a75123b182a7d7594e8afddc16330f23cf523246"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

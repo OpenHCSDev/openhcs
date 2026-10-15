@@ -431,7 +431,10 @@ def submission_summary() -> None:
     for t, error in zip(thresholds, errors, strict=True):
         axes[3].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
                          textcoords="offset points", ha="center", fontsize=10)
-    axes[3].set(xlabel="Matching distance (voxels)", ylabel="Mean matched-centre error (voxels)",
+    axes[3].axvline(30, color=MUTED, linestyle="--", linewidth=0.8)
+    axes[3].text(0.97, 0.04, "Predeclared limit: 30 voxels", transform=axes[3].transAxes,
+                 ha="right", fontsize=8, color=MUTED)
+    axes[3].set(xlabel="Allowed matching distance (voxels)", ylabel="Mean matched-centre error (voxels)",
                 ylim=(0, 6.1), xticks=thresholds)
 
     series = AssaySeries.load(SOURCE)
@@ -452,7 +455,7 @@ def submission_summary() -> None:
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
     sheet.artwork("h003_native_repair", (2, 2, 96, 21), crop=(1, 4, 99, 42))
-    sheet.text(3, 0.5, "Uncoached H003 author, same C4 region; local separation repaired, not complete segmentation accuracy.",
+    sheet.text(3, 0.5, "An independent agent separates merged cells in the same region; this is a local correction.",
                size=8.5, color=MUTED)
     sheet.save()
 

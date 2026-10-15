@@ -198,13 +198,13 @@ def extension(*, main_panel=False):
         if digest(source_path) != live_evidence["function_source_sha256"]:
             raise ValueError("Current function source differs from the native authoring record")
         sheet.source(live_evidence_path)
-        sheet.text(3, 96, "II", size=14, weight="bold", color=BLUE)
+        sheet.text(3, 96, "B", size=14, weight="bold", color=BLUE)
         sheet.text(11, 96, "Function definition → generated form ↔ live code", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
         sheet.axis.add_patch(Rectangle((3, 24), 44, 65, color=PALE))
         python_excerpt(sheet, 5, 85, excerpt)
-        sheet.text(5, 26, "Docstring excerpt; registered source retained", size=8.5, color=MUTED)
+        sheet.text(5, 26, "Documentation from the function definition", size=8.5, color=MUTED)
         sheet.arrow((48, 70), (52, 70), color=BLUE)
         sheet.text(50, 78, "Register", size=8, ha="center", rotation=90)
         sheet.text(53, 87, "Generated form controls", size=12, weight="bold")
@@ -215,14 +215,14 @@ def extension(*, main_panel=False):
         sheet.native_image("custom_extension_live_code_capture", (53, 25, 44, 23.3),
                            crop=(70, 38, 530, 194), response_path=())
         sheet.text(53, 23, "Native form and code • OpenHCS 0.8.7", size=9, color=PURPLE)
-        sheet.text(3, 20, "The same declaration also supplies the agent-facing catalog", size=11, weight="bold")
+        sheet.text(3, 20, "Agents receive the same parameter descriptions", size=11, weight="bold")
         for index, name in enumerate(parameter_names):
             parameter = parameters[name]
             x = 3 + index * 48
             sheet.text(x, 14, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
                        size=10, family="DejaVu Sans Mono", color=TEAL)
             sheet.text(x, 10, parameter["description"], size=10, color=MUTED)
-        sheet.text(50, 4, "Declaration-derived controls and catalog • editable Python uses the same workflow",
+        sheet.text(50, 4, "One function definition supplies the controls, editable Python and agent descriptions",
                    size=11, ha="center", color=MUTED)
         sheet.save()
         return

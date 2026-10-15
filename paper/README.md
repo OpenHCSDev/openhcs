@@ -42,9 +42,9 @@ to understand the scientific findings in the main text.
 
 The current main layout has six figures and Table 1: native editing and custom
 function authoring; process architecture with integration logos; an intended
-autonomous loop alongside a recorded repair trajectory; task-specific results
-with matched nuclear, retinal and volume repair evidence; public/laboratory
-neurite analysis with treatment responses from three independent blind authors;
+autonomous loop alongside a recorded repair trajectory; treatment responses
+from three independent blind agents with separate public/laboratory neurite
+demonstrations; task-specific results with matched nuclear, retinal and volume corrections;
 and matched CellProfiler execution
 and total time, followed by measured fixed-workload worker scaling. Table 1 summarizes the later autonomous assay results; full
 trial results and reference types are retained in Supplementary Data 8.
@@ -69,7 +69,7 @@ PYTHONPATH=paper/figures python -c \
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output
-receipts. Figure 4 uses post-freeze evaluation records through
+receipts. Figure 5 uses post-freeze evaluation records through
 `build_slas_task_only.py`; its wider assay views remain in the supplement.
 `PYTHONPATH=paper/figures python paper/figures/build_slas_supplement.py`
 regenerates the consolidated supplement from retained artwork without rerunning

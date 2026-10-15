@@ -26,6 +26,8 @@ Image analysis blocks biological investigation when extracting measurements requ
 
 Image analysis becomes a bottleneck when answering a biological question first requires assembling and debugging software. A biologist who wants to count cells or measure neurite growth must choose processing methods, install their dependencies, connect their inputs and outputs, and check whether the measurements reflect the images. Finding an appropriate algorithm does not complete that work.
 
+OpenHCS lets scientists delegate method development and debugging while retaining control over biological interpretation and a method they can inspect, revise and extend (Figure 1). An agent selects and configures methods, runs them and examines the outputs. The scientist can review detections against the images, change settings through graphical controls or Python, and add laboratory-specific functions.
+
 These methods sit within substantial software ecosystems built over decades. ImageJ, released in 1997, established a Java-based platform extended through plugins and macros; Fiji, first released in 2007, packages ImageJ with community plugins and an updater [@Schneider2012; @Schindelin2012]. CellProfiler, released in 2005 and first described in 2006, organizes analysis into configurable modules; its later Python implementation supports additional plugin modules [@Carpenter2006; @McQuin2018; @Weisbart2024]. Icy, introduced in 2011, combines Java plugins, scripting and graphical workflows [@deChaumont2011; @deChaumont2012]. Napari's first minor release, in 2019, brought multidimensional viewing to Python; its plugin packages add readers, writers and interactive analysis tools [@NapariRelease2019; @NapariPlugins].
 
 The available methods and learning resources are extensive. On 15 October 2026, Icy's catalogue listed 448 plugins and napari's dashboard listed 680 [@IcyCatalogue; @NapariDashboard]. Project-hosted tutorials, scripts and example pipelines provide working starting points (Supplementary Table 2). The remaining task is to select, adapt and connect those methods for a particular experiment.
@@ -38,9 +40,7 @@ Other integrations manage separate software environments. BioImageIT, described 
 
 AI assistants can also help develop the analysis itself. BioImage.IO Chatbot connects community resources to analysis extensions, and Omega generates and runs Python in napari [@Lei2024; @Royer2024]. Agentic-J combines bioimage knowledge, instructions for using individual plugins and specialized agents to generate, debug and audit Fiji scripts. Scientists can inspect those scripts and connect external tools through the Model Context Protocol (MCP), an interface through which agents call software tools [@Johanns2026]. BIABench compares agent analyses with reference answers and expert assessments; agents did better on routine 2D tasks, and repeated runs were unreliable on more complex data [@Pan2026BIABench].
 
-Delegation is useful only if the scientist can take over the resulting analysis. OpenHCS lets scientists delegate method development and debugging while retaining control over biological interpretation and a method they can inspect, revise and extend (Figure 1). An agent selects and configures methods, runs them and examines the outputs. The scientist can review detections against the images, change settings through graphical controls or Python, and add laboratory-specific functions.
-
-This requires more than connecting applications. OpenHCS supplies a shared processing system in which graphical controls, Python and agents edit the same analysis (Figure 2). Function definitions supply settings and documentation; the runtime converts data between libraries, distributes processing across workers and links outputs to their samples and processing steps. Custom functions and imported CellProfiler workflows run together without Docker containers connecting the processing tools. The architecture supports both developing a new method and continuing an established one.
+Graphical controls, Python and agents edit the same analysis in OpenHCS (Figure 2). Function definitions supply settings and documentation; the runtime converts data between libraries, distributes processing across workers and links outputs to their samples and processing steps. Custom functions and imported CellProfiler workflows run together without Docker containers connecting the processing tools. The architecture supports both developing a new method and continuing an established one.
 
 We asked three questions: can agents develop biologically useful analyses from task descriptions; can scientists inspect, revise and extend the delivered methods; and can established workflows run in the same system while preserving their outputs and improving execution speed? We evaluated independent agent-developed analyses, demonstrated shared graphical and code editing, and compared imported CellProfiler workflows with native outputs and run times.
 
@@ -61,7 +61,7 @@ Each step's input selection names the channels, planes or stacks it reads and di
 ![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(I)** OpenHCS window with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman analysis. Blue boxes mark the plate manager, pipeline editor and execution-server list.
+**(A)** OpenHCS window with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman analysis. Blue boxes mark the plate manager, pipeline editor and execution-server list.
 :::
 
 ### Execution and viewers
@@ -76,14 +76,14 @@ The streaming service checks viewer readiness and waits for display updates. Vie
 
 MCP operations cover function discovery, pipeline editing and validation, execution, progress and result inspection [@MCP]. Each operation declares request and result types, implementation, permitted changes, data access and security requirements. These declarations generate the interface and govern execution.
 
-Function descriptions let agents select methods and edit the analysis. Registering a custom function makes its parameters and documentation available in the graphical controls and MCP tool list (Figure 1II). Agents can edit an analysis open in the desktop application or run a separate analysis without opening a window. Local clients communicate through standard input/output. Desktop connections require authentication; revision checks prevent an agent from overwriting intervening edits, and file access is restricted to permitted directories. The hosted HTTP interface offers selected read-only operations.
+Function descriptions let agents select methods and edit the analysis. Registering a custom function makes its parameters and documentation available in the graphical controls and MCP tool list (Figure 1B). Agents can edit an analysis open in the desktop application or run a separate analysis without opening a window. Local clients communicate through standard input/output. Desktop connections require authentication; revision checks prevent an agent from overwriting intervening edits, and file access is restricted to permitted directories. The hosted HTTP interface offers selected read-only operations.
 
 ### Figure 1, continued. The laboratory's own Python joins the shared analysis
 
 ![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(II)** A Python function's definition and documentation supply its graphical controls and agent-tool descriptions. Form and code views show gain 1.2 and offset 0.0.
+**(B)** A Python function's definition and documentation supply its graphical controls and agent-tool descriptions. Form and code views show gain 1.2 and offset 0.0.
 :::
 
 ### CellProfiler import and output comparison
@@ -115,6 +115,14 @@ Agents finalized their pipelines before any comparison with reference data, and 
 For the laboratory treatment assay, three new gpt-6.1-sol agents independently analysed the same 20 coded wells, each containing nine fields. All received the same biological brief, acquisition information, MCP access and fixed version of the packaged skill using the same OpenHCS 0.8.7 installation. They chose six, four and eight development fields and, after fixing their methods, reviewed 20, eight and twelve further fields. Each analysed all 180 fields, and its final outputs were fixed before the evaluator opened treatment identities, MetaXpress measurements or assisted results. Supplementary Figure 5 reports the individual agents.
 
 For nuclear detection analyses 2–4, image-delivery records identified 25 of the 200 fields as opened by at least one agent. The remaining 175 fields, which none of the three agents opened, form the uninspected subset used for retrospective evaluation. This retrospectively identified subset is reported separately from the images withheld in nuclear detection analysis 1. Supplementary Data 7–8 provide final pipelines, data partitions, scores, model and software versions, task times and computational usage.
+
+### Figure 3. Delegated specialist work leaves an analysis the scientist can inspect
+
+![Skill-directed workflow with Fiji and napari inspection, followed by the recorded H001 decisions and matched raw/repair images.](figures/slas/submission_autonomous_loop.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(A)** Instructions supplied to the agent: read the biological task, inspect images, run the analysis, compare results with raw images, correct errors and deliver the analysis. **(B)** Bright-object detection analysis 1 (H001) across four runs, with the same region shown before analysis and with the first and final results. The elongated object is initially split into separate detections; the final analysis detects it as one object. Colours distinguish detected objects within each view. Times include inspection, repair, reporting and cleanup.
+:::
 
 ### Endpoints and references
 
@@ -164,13 +172,13 @@ Table 1. Main results from the three neurite drug-response analyses, nuclear det
 
 #### Three blind agents recover drug responses in a laboratory neurite assay
 
-We tested whether independently authored analyses recovered drug responses in laboratory data without access to treatment identities or commercial measurements. Three agents independently analysed the same coded 20-well neurite outgrowth experiment. All three found increased mean outgrowth per cell and total outgrowth at every tested dose of FC-A and Y27632 (Figure 5III). Across the 20 wells, each agent's mean outgrowth per cell correlated closely with MetaXpress (Pearson r 0.963 to 0.996). The biological responses were recovered, but their measured magnitudes differed: at 40 µM, fold changes in mean outgrowth per cell were 1.32 to 1.65 for FC-A and 1.49 to 1.69 for Y27632, against 1.98 and 2.05 for MetaXpress. Two agents were close to the scientist-assisted analysis, which gave 1.77 and 1.76; the third gave weaker responses. Cell-count fold changes were 0.94 to 0.99 for FC-A and 0.92 to 0.94 for Y27632, against 0.95 and 0.91 for MetaXpress.
+We tested whether independently authored analyses recovered drug responses in laboratory data without access to treatment identities or commercial measurements. Three agents independently analysed the same coded 20-well neurite outgrowth experiment. All three found increased mean outgrowth per cell and total outgrowth at every tested dose of FC-A and Y27632 (Figure 4A–B). Across the 20 wells, each agent's mean outgrowth per cell correlated closely with MetaXpress (Pearson r 0.963 to 0.996). The biological responses were recovered, but their measured magnitudes differed: at 40 µM, fold changes in mean outgrowth per cell were 1.32 to 1.65 for FC-A and 1.49 to 1.69 for Y27632, against 1.98 and 2.05 for MetaXpress. Two agents were close to the scientist-assisted analysis, which gave 1.77 and 1.76; the third gave weaker responses. Cell-count fold changes were 0.94 to 0.99 for FC-A and 0.92 to 0.94 for Y27632, against 0.95 and 0.91 for MetaXpress.
 
 Branches per cell also increased at every tested dose, and well-level values correlated with MetaXpress (r 0.875 to 0.990). Fold changes at 40 µM were smaller: 1.24 to 1.63 for FC-A and 1.50 to 1.73 for Y27632, against 3.00 and 3.26 for MetaXpress. The agents' control wells started higher, at 2.1 to 5.3 branches per cell, against 1.3 to 1.5 for MetaXpress. For drug-response analysis 3, the absolute increases from zero dose to 40 µM were 2.44 and 2.65 branches per cell for FC-A and Y27632, compared with MetaXpress's 2.94 and 2.90. Its higher baselines compressed the fold changes; the cause of the baseline differences was not established. Smaller branching responses also appeared in the assisted analysis and persisted in total branches and branches per primary process (Supplementary Figure 5), so cell-count denominators do not explain the difference. These algorithm-defined measurements capture the biological response but do not establish equivalent anatomical branching.
 
 #### Three agents reach similar pooled nuclear accuracy
 
-Independent agents may choose different pipelines for the same task; the practical question is whether they reach comparable accuracy. Nuclear detection analyses 2–4 reached pooled F1 of 0.906 to 0.910 on the 175 BBBC039 fields that none of their agents opened (Figure 4B). F1 balances finding reference nuclei against avoiding false detections, with 1 indicating a perfect match. Across all 200 fields, including those the agents inspected, F1 was 0.898 to 0.906. Despite choosing different settings, the agents' pooled scores on the uninspected fields differed by at most 0.004.
+Independent agents may choose different pipelines for the same task; the practical question is whether they reach comparable accuracy. Nuclear detection analyses 2–4 reached pooled F1 of 0.906 to 0.910 on the 175 BBBC039 fields that none of their agents opened (Figure 5B). F1 balances finding reference nuclei against avoiding false detections, with 1 indicating a perfect match. Across all 200 fields, including those the agents inspected, F1 was 0.898 to 0.906. Despite choosing different settings, the agents' pooled scores on the uninspected fields differed by at most 0.004.
 
 On the dataset's official 50-image test partition (5,720 nuclei), the agents' per-image mean F1 at IoU 0.5 was 0.898 to 0.903. Caicedo et al. used this dataset to evaluate learned and CellProfiler segmentation methods [@Caicedo2019]. Our agents received no reference labels while building their pipelines.
 
@@ -180,25 +188,29 @@ Between nuclear detection analyses 2 and 3 on all 200 fields, per-field F1 mostl
 
 #### An agent-developed translocation analysis separates assay controls
 
-For a screening assay, an analysis must separate biological controls, not merely produce plausible segmentations. Protein translocation analysis 2 analysed all 96 BBBC013 wells and obtained Z′ of 0.849 for LY294002 and 0.726 for Wortmannin (Figure 4E). Z′ measures control separation relative to variation between wells; higher values mean clearer separation. Both exceed 0.5, the conventional threshold for an excellent screening assay [@Zhang1999]. The agent chose its own readout: each well's median log2 ratio of nuclear to cytoplasmic GFP across eligible cells. Cytoplasm could be measured around 14,631 of 17,320 nuclei (84.5%); this fraction varied with treatment (Supplementary Figure 2). Four wells contributed to each treatment group. Protein translocation analysis 1 obtained Z′ of 0.554 for LY294002 and 0.751 for Wortmannin on 92 held-out wells (Supplementary Data 7). The two analyses used different well summaries and evaluation sets, so these scores are not a controlled before-and-after comparison.
+For a screening assay, an analysis must separate biological controls, not merely produce plausible segmentations. Protein translocation analysis 2 analysed all 96 BBBC013 wells and obtained Z′ of 0.849 for LY294002 and 0.726 for Wortmannin (Figure 5E). Z′ measures control separation relative to variation between wells; higher values mean clearer separation. Both exceed 0.5, the conventional threshold for an excellent screening assay [@Zhang1999]. The agent chose its own readout: each well's median log2 ratio of nuclear to cytoplasmic GFP across eligible cells. Cytoplasm could be measured around 14,631 of 17,320 nuclei (84.5%); this fraction varied with treatment (Supplementary Figure 2). Four wells contributed to each treatment group. Protein translocation analysis 1 obtained Z′ of 0.554 for LY294002 and 0.751 for Wortmannin on 92 held-out wells (Supplementary Data 7). The two analyses used different well summaries and evaluation sets, so these scores are not a controlled before-and-after comparison.
 
 ### Scientists can inspect, revise and extend the delivered analysis
 
-The delivered method must remain editable outside the agent's conversation. OpenHCS keeps agent, graphical and Python edits in the same workflow: an agent-tool request changed a normalization step's high percentile from 99.8 to 99.6, and the graphical form showed 99.6. Changing the setting back to 99.8 also updated the generated Python (Supplementary material, Figure assembly and interface records). Figure 1II shows how adding a custom Python function also makes its settings available in the graphical controls and to agents, without writing a separate interface.
+Scientists can adjust image normalization in the graphical interface and continue editing the same settings in Python. In the recorded demonstration, an agent changed the upper percentile used for normalization from 99.8 to 99.6, and the graphical form showed 99.6. Changing the setting back to 99.8 also updated the generated Python. These edits changed the same pipeline settings through each interface (Supplementary material, Figure assembly and interface records). Figure 1B shows how adding a custom Python function also makes its settings available in the graphical controls and to agents, without writing a separate interface.
 
 #### Image review identifies repairs and remaining errors
 
-Smaller tasks, scored against partial references or by matched image review, are detailed in Supplementary Data 8. On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 0.743 and 0.740 of their predicted borders between touching cells within two pixels of a manual outline (directed boundary fraction; Figure 4C,F). On single development images, bright-object detection analysis 1 (H001) raised F1 against a computational reference from 0.929 to 0.944 through its own repair (Figures 3B and 4A), and 3D nuclear localisation analysis 1 (H002) recovered all 15 annotated 3D nuclear centres within 30 voxels (Figure 4D,H,I). Eleven predictions had no matching annotation; the partial reference does not establish precision. Agents also detected retinal cell bodies (Figure 4G; Supplementary Figure 4) and traced neurite shafts in a public NeuronCyto II field and in nine laboratory fields (Figure 5I–II). Retinal detection and neurite recovery were assessed by matched image review without exhaustive spatial annotations; unresolved crossings limit per-neuron path assignment. Figure 5I shows the public neurite initial prediction; the final repair extended beyond principal shafts, and the shaft-only target was clarified after the run. Each task involved one or two agents.
+Agents also corrected split and merged detections after inspecting the images. Bright-object detection analysis 1 (H001) increased F1 against computational reference labels from 0.929 to 0.944 on one development image (Figures 3B and 5A). On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 0.743 and 0.740 of their predicted borders between touching cells within two pixels of a manual outline (Figure 5C). Figure 5F shows a local correction of merged cell detections; Figure 5G shows improved retinal cell-body outlines while neighbouring cells remain separate.
 
-### Figure 3. Delegated specialist work leaves an analysis the scientist can inspect
+Three-dimensional images require checking object positions across image planes. Nuclear localisation analysis 1 (H002) recovered all 15 manually annotated centres within 30 voxels (Figure 5D,I). Eleven predictions had no matching annotation; because the reference covers only some centres, those predictions do not establish a false-detection rate. A separate agent corrected a cell body split into two detections in a 3D image (Figure 5H).
 
-![Skill-directed workflow with Fiji and napari inspection, followed by the recorded H001 decisions and matched raw/repair images.](figures/slas/submission_autonomous_loop.png){width=6.5in}
+For datasets without exhaustive spatial annotations, we compared analysis results with the same raw-image regions. These examples include retinal cell bodies (Supplementary Figure 4), a public NeuronCyto II field and nine laboratory neurite fields (Figure 4C–H). The comparisons show recovered structures and remaining errors; unresolved neurite crossings limit per-neuron path assignment. Figure 4C–E shows the public field's initial prediction. The final revision extended beyond principal shafts, and the shaft-only target was clarified after the run. These demonstrations involved one or two agents per task; Supplementary Data 8 gives their methods and reference definitions.
+
+### Figure 4. Three independent agents recover both neurite outgrowth responses
+
+![Drug responses from three independent blind agents, followed by separate public and laboratory neurite tracing demonstrations.](figures/slas/submission_neurite_results.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Instructions supplied to the agent: read the biological task, inspect images, run the analysis, compare results with raw images, correct errors and deliver the analysis. **(B)** Bright-object detection analysis 1 (H001) across four runs, with the same region shown before analysis and with the first and final results. The elongated object is initially split into separate detections; the final analysis detects it as one object. Colours distinguish detected objects within each view. Times include inspection, repair, reporting and cleanup.
+**(A–B)** Drug responses from three independent blind agents and MetaXpress across 20 wells, relative to each drug curve's own DMSO mean. Analyses 1–3 identify the three agent-developed methods. Dots are two technical wells per dose for each analysis or method; whiskers show sample SD among those wells. All three analyses recover increased outgrowth for both drugs, with smaller response magnitudes than MetaXpress. **(C–E)** Raw public image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale. The published output is an algorithm comparison, not manual ground truth. **(F–H)** A laboratory field shown as a raw image, detected cell bodies and neurites, and an overlay on the raw image. This separate nine-field autonomous analysis is not one of the three drug-response analyses in A–B. Supplementary Figure 5 shows additional measurements and the scientist-assisted comparison.
 :::
 
-### Figure 4. Analysis accuracy and visible corrections
+### Figure 5. Analysis accuracy and visible corrections
 
 ![Task-specific nuclear, boundary, volume and translocation endpoints alongside an independent DNA/actin merge repair.](figures/slas/submission_analysis_summary.png){width=6in}
 
@@ -206,12 +218,12 @@ Smaller tasks, scored against partial references or by matched image review, are
 **(A)** Bright-object detection analysis 1: F1 against computational reference labels, first and final, one image. F1 balances missed and false detections; 1 is best.
 **(B)** Nuclear detection analyses 2–4: F1 on all 200 fields and on the 175 fields none of the agents opened.
 **(C)** Cell-boundary analyses 2–3: fraction of predicted borders within two pixels of manual outlines; higher is better. Dots are fields; lines combine border pixels across fields.
-**(D)** 3D nuclear localisation analysis 1: distances from the 15 matched manual centres, in voxels (3D pixels); lower is better.
+**(D)** 3D nuclear localisation analysis 1: mean centre-to-centre error among matched detections as the allowed matching distance changes. Numbers above points give matched centres out of 15 manual annotations. The dashed line marks the predeclared 30-voxel matching limit; lower error is better. A voxel is a three-dimensional image pixel.
 **(E)** Protein translocation analysis 2: dose means and SD (variation among four wells per dose). Z′ measures positive–negative control separation, using four wells of each type; higher is better and values above 0.5 indicate an excellent assay.
 **(F)** BBBC007 raw image and detected cells in the same C4 region, before and after correcting merged cell detections. Colours distinguish detected cells within each view.
 :::
 
-### Figure 4, continued. Correcting cell detection in two and three dimensions
+### Figure 5, continued. Correcting cell detection in two and three dimensions
 
 ![Matched retinal and volumetric body repairs, with separate finalized three-dimensional localisation evidence.](figures/slas/submission_quantitative_results.png){width=6in}
 
@@ -219,14 +231,6 @@ Smaller tasks, scored against partial references or by matched image review, are
 **(G)** Retinal raw image, first analysis and final analysis, showing fragmented cell-body detections and a neighbouring pair of cells.
 **(H)** Correction of a cell body split into two detections at Z=36 in a 3D image.
 **(I)** 3D nuclear localisation analysis 1 (H002): XY labels, XZ/YZ outlines (yellow) and in-plane centres (magenta), with 15 matched manual centres and 11 unmatched predictions. Distances are voxels. Colours distinguish labels within each view.
-:::
-
-### Figure 5. Neurite analysis and independently authored drug responses
-
-![Public neurite shafts, matched autonomous laboratory-field analysis and drug responses from three independent blind agents.](figures/slas/submission_neurite_results.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**(I)** Raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale; the published output is an algorithm comparison, not manual ground truth. **(II)** The same field shown as a raw image, detected cell bodies and neurites, and an overlay of both. This earlier nine-field autonomous analysis is separate from the three drug-response analyses. **(III)** Drug responses from all three blind agents and MetaXpress across 20 wells, relative to each drug curve's own DMSO mean. Dots are two technical wells per dose for each agent or method; whiskers are sample SD, not variation between agents. Supplementary Figure 5 shows additional measurements and the scientist-assisted comparison.
 :::
 
 ### Established CellProfiler workflows retain their measurements
@@ -271,7 +275,7 @@ Faster execution supports both method revision and larger experiments. OpenHCS w
 
 The software's reusable components also make it useful beyond microscopy. The eight libraries in Supplementary Table 1 handle graphical controls, edit history, Python editing, storage and communication between processes without depending on biological methods. Pipelines organize data by dimensions and processing groups rather than requiring microscope-specific fields; source tests include remote-sensing and telemetry examples. Work is underway to release the pipeline preparation and execution code separately as ArrayPipe [@ArrayPipe]. This would let other data-science and machine-learning applications combine array libraries, run processing steps in parallel and inspect intermediate results.
 
-These trials establish agent authoring and software behavior, not novice-user success or hands-on time savings, which were not measured. They also do not isolate the effects of the model, skill or runtime on analysis reliability: model and skill versions changed across the broader trial series, and agent counts varied by assay. The treatment-assay cohort held model, software and skill fixed, whereas the three nuclear agents received different skill revisions. The nuclear uninspected subset was identified retrospectively. Independent agents repeat analysis of the same experimental material; they do not add biological replication.
+The trials measured agent-developed analyses and demonstrated editing through graphical controls and Python. Novice-user success and hands-on time savings remain to be measured in a user study. The trials do not isolate the effects of the model, skill or runtime on analysis reliability: model and skill versions changed across the broader trial series, and agent counts varied by assay. The treatment-assay cohort held model, software and skill fixed, whereas the three nuclear agents received different skill revisions. The nuclear uninspected subset was identified retrospectively. Independent agents repeat analysis of the same experimental material; they do not add biological replication.
 
 The same design can supply image analysis for self-driving laboratories, where measurements inform the next experiment. Systems using SiLA, a standard for laboratory automation, connect instrument control and laboratory data [@Hinkel2023; @Lange2026; @Courtney2025; @Thieme2024; @Rihm2024]; OpenHCS supplies an image-analysis component whose measurements remain linked to an inspectable method. In either a conventional or automated laboratory, the aim is the same: delegate the technical work of developing an analysis while keeping the scientist able to judge, change and extend it.
 

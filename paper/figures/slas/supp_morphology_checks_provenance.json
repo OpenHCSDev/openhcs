@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "c03f0668a4e82eb64020169aa56f1a6d7d22ff81ba71fbe73befdffb284e8612",
+    "paper/figures/build_slas_supplement.py": "f48c34b37dbfed78ddf259b3a4cd19ebeb57d95de1a815fe43302a379599fef0",
     "paper/figures/slas/h002_fresh10_native_provenance.json": "1e1ff40b4289e03ba8acac85f09e144920389e9382d3acd5d3d4254fa7a27b7c",
     "paper/figures/slas/h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
     "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
@@ -93,9 +93,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_morphology_checks.png": "af68605671297255762b68f720758d3c39e09dcbc42ce4c1404df80a27521953",
-    "supp_morphology_checks.pdf": "d63d3740d4e0ad7a2c106c5928ca6c775a8c719c9aff652b9ffaf0c62ab5ad88",
-    "supp_morphology_checks.svg": "b01225ebca7ac58051b43d1e57ea85f05261eb166dd6a33f526a956eeeff29ae"
+    "supp_morphology_checks.png": "6fd9d2deb686c6dbed37eb8e1cff30c389a2eb6bd4c52d48ce29e967aebb7595",
+    "supp_morphology_checks.pdf": "8cb77524cbbd0a24cfc1e13bdba343a6dd6b993e67c98496ad770a06df5bcd2f",
+    "supp_morphology_checks.svg": "539933ddad6266882601740096243e1116c357c2c44312b840cdf5b5f42f37e2"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

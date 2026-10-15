@@ -203,11 +203,12 @@ def submission_benchmark_summary() -> None:
             raise ValueError("Per-well ratios differ from the canonical amortized claim")
         amortized.append(numbers)
     axis = sheet.figure.add_axes((.60, .62, .37, .28))
-    distributions(axis, (single, amortized), ("1 well each", "CP 8 / OH 12\nper well"))
+    distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
+    axis.tick_params(axis="x", labelsize=10)
     axis.set_ylim(.8, 800)
-    sheet.text(57, 51.5, "Both measured; OpenHCS median of three runs", size=11, color="#59697b")
+    sheet.text(54, 51.5, "Measured time per sample; OpenHCS median of three runs", size=9, color="#59697b")
 
-    sheet.text(2, 48, "C  Same cores and wells · CellProfiler estimated", size=14, weight="bold")
+    sheet.text(2, 48, "C  Same cores and samples · CellProfiler estimated", size=14, weight="bold")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
     groups = []
@@ -229,12 +230,13 @@ def submission_benchmark_summary() -> None:
                     "openhcs_measured_seconds": values(key, scope)[i],
                     "speedup": groups[-1][j][i]})
     labels = [f"{modes[key]['openhcs_worker_count']} / {modes[key]['assignment_count']}\n"
-              + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} wells/core"
+              + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} samples/core"
               for key in ordered]
     axis = sheet.figure.add_axes((.09, .17, .88, .28))
     distributions(axis, groups, labels)
     axis.set_ylim(.8, 800)
-    axis.set_xlabel("Cores / total wells, the same for both applications", fontsize=12, labelpad=7)
+    axis.tick_params(axis="x", labelsize=10)
+    axis.set_xlabel("Cores / total repeated samples, the same for both applications", fontsize=11, labelpad=7)
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=colors[0], label="Processing"),
         Line2D([], [], marker="o", ls="", color=colors[1], label="Setup + processing"),
@@ -253,7 +255,7 @@ def submission_benchmark_summary() -> None:
             "formula": "T_CP(N,C) = T_CP(8,first) + (N/C - 8) * median(T_CP(8,warm))/8",
             "total": "Add first-batch pre-pipeline overhead once per concurrent process",
             "assumptions": "Balanced independent one-thread processes; no contention or coordination overhead; external startup excluded",
-            "validation_scope": "Serial batches at 8,12,16 wells on three workflows; does not validate parallel scaling or 3-6 wells per process",
+            "validation_scope": "Serial batches at 8,12,16 samples on three workflows; does not validate parallel scaling or 3-6 samples per process",
             "target_native_observation_count": 0,
         },
         "analysis_rerun": False,

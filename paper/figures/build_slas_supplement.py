@@ -64,17 +64,19 @@ def translocation():
 
 def nuclear_instances():
     sheet = SupplementFigure("supp_nuclear_instances", 7.4)
-    sheet.heading("I  Nuclear detection 2 and 3: the same 200 fields", 99)
+    sheet.heading("Nuclear detection 2 and 3: the same 200 fields", 99)
     sheet.artwork("bbbc039_independent_repeat", (2, 51, 96, 45), crop=(0, 10, 100, 92))
-    sheet.heading("II  Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 49)
-    sheet.artwork("independent_agent_validation", (2, 1, 96, 44), crop=(0, 3, 100, 52))
+    sheet.heading("Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 49)
+    sheet.text(13, 44, "C  Nuclear detections", size=12, weight="bold")
+    sheet.text(60, 44, "D  Cell boundaries", size=12, weight="bold")
+    sheet.artwork("independent_agent_validation", (2, 1, 96, 41), crop=(0, 7, 100, 52))
     sheet.save()
 
 
 def morphology_checks():
     """Independent checks and residual failures, not repeated main overviews."""
     sheet = SupplementFigure("supp_morphology_checks", 8.4)
-    sheet.heading("A–C  Separate volume author: centres in XY, XZ and YZ", 99)
+    sheet.heading("A–C  Independent volume analysis: centres in XY, XZ and YZ", 99)
     for column, crop in enumerate(((52, 10, 98, 42), (52, 47, 98, 70), (52, 75, 98, 99))):
         sheet.artwork("h002_fresh10_native", (2 + column*32, 76, 31, 20), crop=crop)
     sheet.heading("D–F  Retinal acquisition border: raw, first and final", 74)
@@ -90,20 +92,20 @@ def treatment_endpoints():
     """Additional endpoints from the existing well tables, not new analysis."""
     from build_slas_neurite_effects import NeuriteEffectFigure
 
-    for stem, metrics in (
-        ("supp_neurite_autonomous_endpoints", ("cell_count", "total_outgrowth",
+    for stem, first_letter, metrics in (
+        ("supp_neurite_autonomous_endpoints", "A", ("cell_count", "total_outgrowth",
                                              "branches_per_cell", "mean_process_length")),
-        ("supp_neurite_autonomous_endpoints_continued", ("median_process_length", "total_branches",
+        ("supp_neurite_autonomous_endpoints_continued", "I", ("median_process_length", "total_branches",
                                                        "total_processes", "branches_per_process")),
     ):
         autonomous = SupplementFigure(stem, 10.4)
-        autonomous.heading("Additional responses from three independent blind authors", 99)
+        autonomous.heading("Additional responses from three independent blind analyses", 99)
         NeuriteEffectFigure.draw_panels(
             autonomous, NeuriteEffectFigure.cohort_tables(
                 autonomous, OUTPUT.parents[1] / "supplementary/personal_neurite_autonomous"),
-            metrics=metrics,
+            metrics=metrics, start_letter=first_letter,
         )
-        autonomous.text(3, 6, "Dots: two technical wells per author/method; whiskers: between-well SD.", size=10)
+        autonomous.text(3, 6, "Dots: two technical wells per analysis/method; whiskers: between-well SD.", size=10)
         autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
         autonomous.save()
 
@@ -113,6 +115,7 @@ def treatment_endpoints():
         sheet, OUTPUT.parents[1] / "supplementary/personal_neurite_repaired_morphometry",
         metrics=("cell_count", "total_outgrowth", "branches_per_cell",
                  "mean_process_length", "median_process_length"),
+        start_letter="Q",
     )
     sheet.text(3, 6, "Dots: two technical wells. Whiskers: between-well SD, not confidence intervals.", size=10)
     sheet.text(3, 3, "Each drug curve uses its own zero-dose DMSO mean; neither method is ground truth.", size=10)

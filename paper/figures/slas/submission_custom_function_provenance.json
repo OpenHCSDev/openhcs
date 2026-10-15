@@ -1,10 +1,10 @@
 {
-  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
   "source_sha256": {
     "paper/figures/slas/custom_signal_example.py": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
     "paper/figures/slas/custom_extension_fixed_openhcs_register_custom_function.json": "04d98eeb7559fdcbd9710810f72aebdea14eaa6d219d09db0bef3d0f8af87d25",
     "paper/figures/slas/custom_extension_live_function_detail.json": "538d863131beb12f3dc0c3c24310cad350147d1209e40dcbf5c12c4d7c3a48a5",
-    "paper/figures/build_slas_extension.py": "9bcb85be8ed252ab89edf3582359ccb8c76a258b827499d18ba7e3915046c989",
+    "paper/figures/build_slas_extension.py": "7da9b36abdc2cc0c25d198a6c1a56a2341a22599c842b6a4f92451ba959e8d81",
     "paper/figures/slas/custom_extension_evidence.json": "dd72dc4c73be803c61ac6864ec611b6f2a37048caa2a0b8f7176a67a345d98bc",
     "paper/figures/slas/custom_extension_code_before.json": "0643feb3e37b62fab001619e68e6ff993a35cc9919e96aabe696c4ad47d99f0f",
     "paper/figures/slas/custom_extension_load_authoring.json": "178c109f95ed1793d616c319cceecca7d353a5292223e8e0d501cd14fc24ceec",
@@ -19,9 +19,9 @@
     "paper/figures/slas/custom_extension_selector_selected_tree.json": "ab7c7a4f0011aa3130952fb69e6ddc645d229e397d54e4434b1d2b7158e823c8",
     "paper/figures/slas/custom_extension_accept_custom_function.json": "83f1edffcf055087ec218b77ac21ba78abab4f139fa7d00519f6b34b9661488c",
     "paper/figures/slas/custom_extension_custom_parameters_tree.json": "62fb8fd96c919eb39f9e6228a7f98ae1399b5560d4acc606234761aa1fa6ac58",
-    "openhcs/processing/custom_functions/manager.py": "f87d622c4e03db3b6d7f977daa86187b892f59133be264ffa381472785247e56",
-    "openhcs/agent/services/function_catalog_service.py": "ec6f27abbf3145d3f2b12cb46569220ec002d63f827fd91779bd97c97457c927",
-    "openhcs/core/steps/function_step.py": "8e1243404095691030e9ebb95bb5611679f96c66c6b6819ae71e4b41249e74bc",
+    "openhcs/processing/custom_functions/manager.py": "f0b97f40384f8ad1acd3b018592be940386fc16af4c3bb2521764c4913a78cc7",
+    "openhcs/agent/services/function_catalog_service.py": "6b697e56fe05cea564f648dda68632c89a4f6425f3a6456a5d39a86334e57da6",
+    "openhcs/core/steps/function_step.py": "b3ead022a8b62f4b5cdd8e0d3fa326b6b53546bf7f5657a915340bfb68d8c849",
     "paper/figures/slas/custom_extension_live_code_document.json": "68c3ff38182720c8c30916edc2fb64f75dbd8942a226e37287ff80b3d57a4dcb",
     "paper/figures/slas/custom_extension_live_evidence.json": "dbde62764c5050a4d33f61d2734659892d45ab6b782d309aad0af2ebebba2bac",
     "paper/figures/slas/custom_extension_live_parameters_capture_provenance.json": "b733220db62aba8ec0838318b784678b844546f817516f394e9083d3f4e43230",
@@ -59,9 +59,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_custom_function.png": "929f00b1d0802539cdea26e35aa4077fcbfc16a14c2979efb82b29b62c0b0786",
-    "submission_custom_function.pdf": "9e8cc0847fb7c291b780772240966579e7c72b1c233c62717ff62d02ae402a5d",
-    "submission_custom_function.svg": "45825aee09855f005a901d520e6f68d0e973dbe8a8a838b9818b5b59615081ac"
+    "submission_custom_function.png": "b1d680f1f8e6a0affa4aef10f641c248632e04bef14de83dcc2bcf15365c97f4",
+    "submission_custom_function.pdf": "537c5a55c76aedf4d00d4906c7b880884b2cb2ecf0307883b7d47a0f1b31e696",
+    "submission_custom_function.svg": "8793d1f3282809bfe7876c30bad84a23f37ec28e5b0d12a88696d5aabdc83dad"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

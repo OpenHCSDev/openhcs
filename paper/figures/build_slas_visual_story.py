@@ -799,40 +799,39 @@ def submission_neurite_results():
     views = json.loads(views_path.read_text())
     public_view = FrozenNeuriteView(sheet, views["public"])
     laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
-    sheet.panel("I", "Public neurites: OpenHCS and published NeuronCyto II", 3, 97)
+    sheet.text(3, 97, "Three independent blind analyses recover both drug responses", size=12, weight="bold")
+    NeuriteEffectFigure.draw_panels(
+        sheet, NeuriteEffectFigure.cohort_tables(
+            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
+        metrics=("mean_outgrowth",), bounds=(3, 63, 94, 35), start_letter="A",
+    )
+    sheet.text(3, 62, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
+               size=9, color=MUTED)
+    sheet.text(3, 58, "Public-field comparison: initial OpenHCS and published NeuronCyto II results", size=11, weight="bold")
     matched = reference["matched_wholefield_layout"]
     for x, name, title, record in (
-        (3, "first-full-raw", "A  Raw field", matched["raw"]),
-        (35, "first-full-result", "B  OpenHCS initial result", matched["openhcs_initial"]),
+        (3, "first-full-raw", "C  Raw field", matched["raw"]),
+        (35, "first-full-result", "D  Initial OpenHCS tracing", matched["openhcs_initial"]),
     ):
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
-        sheet.text(x, 91, title, size=10.5, weight="bold")
-        public_view.draw((x, 61, 30, 26), raw=name == "first-full-raw",
+        sheet.text(x, 54, title, size=10.5, weight="bold")
+        public_view.draw((x, 30, 30, 22), raw=name == "first-full-raw",
                          result=name == "first-full-result")
-    sheet.text(67, 91, "C  Published NeuronCyto II", size=10.5, weight="bold")
-    sheet.source_image(reference_image, (67, 61, 30, 26),
+    sheet.text(67, 54, "E  Published NeuronCyto II", size=10.5, weight="bold")
+    sheet.source_image(reference_image, (67, 30, 30, 22),
                        crop=tuple(reference["crop_xyxy_pixels"]))
-    sheet.text(67, 59, "Algorithm comparison, not manual GT", size=8.5, color=MUTED)
-    sheet.text(3, 56, "A/B: frozen 800-pixel field and vector paths. C: Ong et al., Fig. 2D; 450-pixel PDF crop; CC BY-NC 4.0.",
+    sheet.text(3, 28, "E: published algorithm output, not manual tracing. Ong et al., Fig. 2D; CC BY-NC 4.0.",
                size=9, color=MUTED)
-    sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 52)
+    sheet.text(3, 24, "Separate laboratory tracing demonstration (not analyses 1–3 above)", size=11, weight="bold")
     for x, name, title in (
-        (3, "raw", "D  Raw FITC"),
-        (35, "result", "E  Body and path result"),
-        (67, "combined", "F  Combined"),
+        (3, "raw", "F  Raw neurite channel"),
+        (35, "result", "G  Cell bodies and neurites"),
+        (67, "combined", "H  Overlay on raw image"),
     ):
-        sheet.text(x, 48, title, size=10.5, weight="bold")
-        laboratory_view.draw((x, 27, 30, 19.5), raw=name != "result", result=name != "raw")
-    sheet.panel("III", "Three blind authors: treatment responses", 3, 24)
-    NeuriteEffectFigure.draw_panels(
-        sheet, NeuriteEffectFigure.cohort_tables(
-            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
-        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 24), start_letter="G",
-    )
-    sheet.text(3, 1, "Each author: twenty matched wells, two technical wells per dose. All recover increased outgrowth; magnitudes vary.",
-               size=9.5, color=MUTED)
+        sheet.text(x, 20, title, size=10, weight="bold")
+        laboratory_view.draw((x, 0, 30, 18.5), raw=name != "result", result=name != "raw")
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
 
@@ -931,7 +930,7 @@ def submission_autonomous_loop():
     sheet.text(50, 67, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
     sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
-    sheet.panel("B", "The agent corrects a split nuclear detection (H001)", 3, 32)
+    sheet.panel("B", "The agent corrects an object detected as two", 3, 32)
     candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
@@ -974,10 +973,11 @@ def submission_shared_workflow():
                         for region in ("plate_manager", "pipeline_editor"))
     crop = (0, round(workspace_top * sy), width_px, height_px)
     sheet = FigureSheet("submission_shared_workflow", "",
-                        9 * (crop[3] - crop[1]) / width_px)
+                        9 * (crop[3] - crop[1]) / width_px / .94)
+    sheet.panel("A", "One window for plates, pipeline editing and execution", 1, 97)
     sheet.source(evidence_path)
     sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
-                       (0, 0, 100, 100), response_path=(), crop=crop,
+                       (0, 0, 100, 94), response_path=(), crop=crop,
                        provenance_path=folder / evidence["selected_capture"])
     window = sheet.figure.axes[-1]
     # Derive native-pixel outlines from the recorded Qt logical rectangles.

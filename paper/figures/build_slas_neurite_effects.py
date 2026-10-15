@@ -34,7 +34,8 @@ class NeuriteEffectFigure(FigureSheet):
         record = cohort / "cohort.json"
         sheet.source(record)
         authors = json.loads(record.read_text())["authors"]
-        return {author["label"]: cohort / author["tables"] for author in authors}
+        return {author["label"].replace("Blind ", "Analysis ", 1): cohort / author["tables"]
+                for author in authors}
 
     def __init__(self, tables: Path, *, stem: str, metrics=DEFAULT_METRICS):
         super().__init__(
@@ -157,7 +158,7 @@ class NeuriteEffectFigure(FigureSheet):
                 if row == 0:
                     sheet.panel(
                         letter,
-                        condition,
+                        "Y27632" if condition == "Y27" else condition,
                         left * 100,
                         (bottom + height + extent * 0.02) * 100,
                     )
