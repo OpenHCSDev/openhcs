@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "cfe60dc98631164b2cbd4bf841f2040152a9999eb6109142720669d79b962391",
+  "generator_sha256": "fe9a6e642799e66638641cb01aecdba2111fb1e176179291f728b64c06bcf5db",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
     "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
@@ -65,9 +65,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_autonomous_loop.png": "0173616e7a4086fc748a9df9628718739608424fdc8e2fc6a1c625d356750e52",
-    "submission_autonomous_loop.pdf": "34c6554d504427f41290915a4d5aef4b427d2b794132e09b3ebdcd8de3eeca16",
-    "submission_autonomous_loop.svg": "33f5d4559cac7d1a391a4ded3519975127517e01d1162216bc8bf5f02a4d8e8d"
+    "submission_autonomous_loop.png": "616634d74377a34d58899be7f439579dedb36b2ea5b4c0d135eedb223380e75e",
+    "submission_autonomous_loop.pdf": "df4aa8be4ce23d288e875f0272a6d4950e051ff3f3525af654e326f85a68dd9d",
+    "submission_autonomous_loop.svg": "455a418e1fbfd2144ec5ff9d6efca997870ad1727377a21b808be8965d5463a3"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

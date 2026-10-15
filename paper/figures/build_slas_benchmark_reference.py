@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
+from matplotlib.ticker import FixedLocator, FuncFormatter, NullFormatter
 
 from build_slas_benchmark import ROOT, sha256, write_provenance
 
@@ -150,8 +150,8 @@ def submission_benchmark_summary() -> None:
                     )
         axis.set_yscale("log")
         axis.set_ylim(.8, 2200)
-        axis.yaxis.set_major_locator(LogLocator(base=10))
-        axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+        axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, 10, 100)))
+        axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
         axis.yaxis.set_minor_formatter(NullFormatter())
         axis.axhline(1, color="#a64343", ls="--", lw=1)
         axis.set_xticks(range(len(labels)), labels)
@@ -160,9 +160,9 @@ def submission_benchmark_summary() -> None:
         axis.grid(axis="y", alpha=.2)
         axis.set_axisbelow(True)
         axis.spines[["top", "right"]].set_visible(False)
-        axis.set_ylabel("CP time / OpenHCS time", fontsize=12)
+        axis.set_ylabel("Speedup over CellProfiler", fontsize=12)
 
-    sheet.text(2, 96, "A  Processing-module coverage", size=14, weight="bold")
+    sheet.text(2, 96, "A  How modules were tested", size=14, weight="bold")
     coverage = retained(publication / "reference-layout/reference_module_coverage.csv",
                         "retained_coverage_provenance.json")
     with coverage.open(newline="") as stream:
@@ -179,13 +179,13 @@ def submission_benchmark_summary() -> None:
             startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
     pie.text(0, .09, str(len(coverage_rows)), ha="center", va="center", fontsize=23, weight="bold")
     pie.text(0, -.22, "modules", ha="center", va="center", fontsize=11)
-    for i, label in enumerate(("Workflow corpus", "Module-specific tests", "Shared-path tests",
-                                "Declaration checks only", "Untested")):
+    for i, label in enumerate(("In 30 workflows", "Individual tests", "Shared code only",
+                                "Import checks only", "No tests")):
         y = 87 - i * 5.2
         if counts[i]:
             sheet.axis.plot(23, y, marker="s", color=coverage_colors[i], markersize=8)
         sheet.text(25, y, f"{label}: {counts[i]}", size=11.5, va="center")
-    sheet.text(3, 58, "Strongest evidence per module; shared-path tests\ndo not validate each module's algorithm.",
+    sheet.text(3, 58, "Each module counted once. Shared-code tests\ndo not test the module's own algorithm.",
                size=11, color="#59697b", va="top")
 
     sheet.text(54, 96, "B  One-worker comparisons", size=14, weight="bold")
@@ -201,9 +201,9 @@ def submission_benchmark_summary() -> None:
     axis = sheet.figure.add_axes((.60, .62, .37, .28))
     distributions(axis, (single, amortized), ("1 well each", "CP 8 / OH 12\nper well"))
     axis.set_ylim(.8, 800)
-    sheet.text(57, 53, "Measured CP; OpenHCS median of three runs", size=11, color="#59697b")
+    sheet.text(57, 53, "Both measured; OpenHCS median of three runs", size=11, color="#59697b")
 
-    sheet.text(2, 48, "C  Matched cores and wells · CP projected", size=14, weight="bold")
+    sheet.text(2, 48, "C  Same cores and wells · CellProfiler estimated", size=14, weight="bold")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
     groups = []
@@ -230,10 +230,10 @@ def submission_benchmark_summary() -> None:
     axis = sheet.figure.add_axes((.09, .14, .88, .31))
     distributions(axis, groups, labels)
     axis.set_ylim(.8, 800)
-    axis.set_xlabel("Cores / total wells, matched between engines", fontsize=12, labelpad=7)
+    axis.set_xlabel("Cores / total wells, the same for both applications", fontsize=12, labelpad=7)
     sheet.figure.legend(handles=[
-        Line2D([], [], marker="o", ls="", color=colors[0], label="Execution"),
-        Line2D([], [], marker="o", ls="", color=colors[1], label="Compile + run"),
+        Line2D([], [], marker="o", ls="", color=colors[0], label="Processing"),
+        Line2D([], [], marker="o", ls="", color=colors[1], label="Setup + processing"),
         Patch(facecolor="#152536", alpha=.20, label="Mean bars"),
         Line2D([], [], color="#152536", lw=2, label="Median"),
     ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False, fontsize=11)
@@ -241,6 +241,7 @@ def submission_benchmark_summary() -> None:
         "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, and mean/median/maximum labels; log axes",
         "bar_statistic": "arithmetic mean",
         "bar_baseline": 1.0,
+        "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},
         "workflow_count_per_distribution": len(names),
         "single_worker_batch_policy": claims["amortized_policy"],
         "native_policy": claims["native_policy"],

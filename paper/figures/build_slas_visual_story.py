@@ -884,20 +884,20 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.panel("A", "Specialist work delegated through the packaged skill", 3, 96)
+    sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 96)
     stages = (
         (3, 69, "1  Biological brief", "clipboard-list",
-         "Biological question\nDesired measurements\nAcquisition context", BLUE),
+         "Biological question\nDesired measurements\nHow images were taken", BLUE),
         (36, 69, "2  Inspect inputs", "microscope",
          "Channels and scales\nBright / dim regions\nCentre and borders", BLUE),
-        (69, 69, "3  Build and execute", "workflow",
-         "Editable pipeline\nDeclared functions\nCompile and run", BLUE),
-        (69, 41, "4  Audit the result", "scan-eye",
-         "Raw / result / overlay\nMatched position / scale\nMasks / measurements", TEAL),
+        (69, 69, "3  Build and run", "workflow",
+         "Choose methods\nSet parameters\nRun the analysis", BLUE),
+        (69, 41, "4  Check the result", "scan-eye",
+         "Raw image and overlay\nSame region and scale\nDetections and values", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
-         "Earliest failing stage\nOne change at a time\nFailure + control view", ORANGE),
-        (3, 41, "6  Freeze and deliver", "files",
-         "Pipeline and settings\nImages and tables\nQA and limitations", TEAL),
+         "Find the faulty step\nChange and rerun\nCheck other regions too", ORANGE),
+        (3, 41, "6  Finalize and deliver", "files",
+         "Pipeline and settings\nImages and tables\nChecks and limitations", TEAL),
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
@@ -929,9 +929,9 @@ def submission_autonomous_loop():
         sheet.arrow(start, end)
     sheet.route(((50,64),(50,66),(83,66),(83,69)), color=ORANGE, dashed=True)
     sheet.text(50, 67, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
-    sheet.text(50, 37, "Scientist audits images, masks and measurements; the pipeline remains editable",
+    sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
-    sheet.panel("B", "Nuclear segmentation: observed H001 repair sequence", 3, 32)
+    sheet.panel("B", "The agent corrects a split nuclear detection (H001)", 3, 32)
     candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
@@ -946,16 +946,16 @@ def submission_autonomous_loop():
     final = float(trial["final_elapsed_s"]) / 60
     sheet.source(OUTPUT / "h001_scored_native_provenance.json")
     for column, (view, label) in enumerate((
-        ("raw", "Raw • same input"), ("first", "First a01 • split body"),
-        ("final", "Final a04 • split repaired"),
+        ("raw", "Raw image"), ("first", "First result • split object"),
+        ("final", "Final result • split corrected"),
     )):
         x = 3 + column * 32
         sheet.text(x, 22, label, size=11, weight="bold")
         sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{view}.png",
                            (x, 5, 30, 16), crop=(620, 90, 980, 355))
-    sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
+    sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)
-    sheet.text(4, 1.4, "Counts and decisions: author report; whole task includes review, reporting and cleanup.",
+    sheet.text(4, 1.4, "Counts and decisions: agent's report; whole task includes review, reporting and cleanup.",
                size=8.5, color=MUTED)
     sheet.save()
 
@@ -994,7 +994,7 @@ def submission_quantitative_results():
     from build_slas_supplement import SupplementFigure
 
     sheet = SupplementFigure("submission_quantitative_results", 9.5)
-    sheet.heading("G  Retinal repair preserves neighbouring somata", 98)
+    sheet.heading("G  Correcting retinal cell detection preserves neighbouring cells", 98)
     sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
     for column, (view, label) in enumerate((
@@ -1004,7 +1004,7 @@ def submission_quantitative_results():
         sheet.text(x, 93, label, size=11, weight="bold")
         sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
                            (x, 73, 30, 18), crop=(297, 28, 1250, 470))
-    sheet.heading("H  Independent 3-D author repairs a continuous-body split", 69)
+    sheet.heading("H  An independent agent corrects a split cell body in 3D", 69)
     sources = OUTPUT / "h002_fresh22_sources"
     receipt_path = sources / "source-receipt.json"
     receipt = json.loads(receipt_path.read_text())
@@ -1020,9 +1020,9 @@ def submission_quantitative_results():
         x = 3 + column * 24
         sheet.text(x, 63, label, size=10.5, weight="bold")
         sheet.source_image(path, (x, 44, 22, 17), crop=(610, 28, 1250, 448))
-    sheet.text(3, 40, "Same XY viewport and Z=36; local repair is not proof of complete volume segmentation.",
+    sheet.text(3, 40, "Same region at Z=36; this correction does not assess every cell in the 3D image.",
                size=9, color=MUTED)
-    sheet.heading("I  Separate frozen analysis: XY, XZ and YZ localisation", 36)
+    sheet.heading("I  A separate finalized analysis locates nuclei in three dimensions", 36)
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
     sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 30),
                        crop=(50, 110, 2660, 1300))

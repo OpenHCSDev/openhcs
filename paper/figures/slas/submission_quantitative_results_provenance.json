@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "generator_sha256": "9d4339754b5c55ed42a4a5036fd8657458f86298c8131d2344a565dcb9f08451",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "2256616b5111420bb4789748466ca224f8e13a1750316edad975dc93484f23e0",
+    "paper/figures/build_slas_supplement.py": "a47a15d0925fce72a9a8d7298b012f2d7e078783ba7bc839ae7d10f037e8f523",
     "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
     "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst": "6ef4dc1a8f79379c19d5309cc77e133aa8d11da971470e70511830b780cefb72",
     "paper/figures/slas/retina_fresh16_sources/nw-raw.png": "d38ca5c3901a95fad0e4006859d7a374f4a048b9f320648d875717900202bf4b",
@@ -124,9 +124,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_quantitative_results.png": "52760f7e709e62f58f1163068107d38f3a4afe150aa071f1f4e9bb5c6d0aadea",
-    "submission_quantitative_results.pdf": "0d10d4af82a225e0c5384c23da3a74b7b1f39d4aa3c64b44a398a8b73cd4ea58",
-    "submission_quantitative_results.svg": "e4f86f0ef1fc91cf3d84c3a766f6fac6ca50ba1109437959f0b520f426e95986"
+    "submission_quantitative_results.png": "54434eaaebc8f3e0ceeb2023fb997b3e21c91d08968d8d274297aa5ddad78b3f",
+    "submission_quantitative_results.pdf": "b9634e5bef7b42cd314ba9f5a2e6651f39d8e26591eb9c894dd48c5d70e96ab6",
+    "submission_quantitative_results.svg": "22e782a80c02e31db63d11c7874c46982c4d311ae6ad79f055eac29c0f58e0d5"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
