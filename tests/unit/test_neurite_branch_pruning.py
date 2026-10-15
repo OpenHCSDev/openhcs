@@ -102,6 +102,48 @@ def test_multiple_daughters_cannot_pool_their_lengths_to_qualify():
     np.testing.assert_array_equal(prune(t, b, s, 5).path_owners, [1, 1, 0, 0, 0])
 
 
+@pytest.mark.parametrize('scale', [1.0, 1.3556, 2.0])
+def test_removed_side_twigs_do_not_truncate_the_continuing_shaft(scale):
+    # Same failure as the reported A25 fork: the terminal arm is below the
+    # cutoff by itself, but continues through an intermediate fork whose
+    # shorter daughter is removed. Do not leave that now-two-way fork as a
+    # stopping point. A second, proximal side arm must still be pruned.
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 14), 2: (24, 18), 3: (24, 25),
+         4: (22, 18), 5: (21, 14)},
+        [(0, 1), (1, 2), (2, 3), (2, 4), (1, 5)], scale=scale,
+    )
+    result = prune(t, b, s, 7.5 * scale)
+    np.testing.assert_array_equal(result.path_owners, [1, 1, 1, 0, 0])
+    assert not result.branch_nodes_by_cell.get(1)
+    np.testing.assert_array_equal(prune(result, b, s, 7.5 * scale).path_owners, result.path_owners)
+    graph = _build_neurite_morphology_graph(
+        result, b, coordinate_spacing=SourceVoxelSpacing((scale, scale)), outgrowth_width_px=1,
+    )
+    assert sum(e.feature_mapping()['branch_distance'] for e in graph.edges) == pytest.approx(21 * scale)
+
+
+def test_short_side_tree_keeps_its_qualifying_stem_and_longest_tip():
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 14), 2: (24, 44), 3: (20, 14),
+         4: (13, 14), 5: (20, 16)},
+        [(0, 1), (1, 2), (1, 3), (3, 4), (3, 5)],
+    )
+    # The lateral subtree reaches 4+7, so retain it and prune only its 2-px twig.
+    np.testing.assert_array_equal(prune(t, b, s, 7.5).path_owners, [1, 1, 1, 1, 0])
+
+
+def test_equal_longest_tips_do_not_depend_on_path_enumeration():
+    points = {0: (24, 4), 1: (24, 14), 2: (20, 14), 3: (28, 14), 4: (24, 16)}
+    for edges in ([(0, 1), (1, 2), (1, 3), (1, 4)],
+                  [(0, 1), (4, 1), (3, 1), (2, 1)]):
+        t, b, s = topology_for(points, edges)
+        result = prune(t, b, s, 5)
+        assert {frozenset(edges[i]) for i in result.owned_paths()} == {
+            frozenset((0, 1)), frozenset((1, 2)), frozenset((1, 3)),
+        }
+
+
 def test_soma_paths_and_loops_are_preserved_but_a_loop_tooth_is_pruned():
     t, b, s = topology_for(
         {0: (24, 4), 1: (24, 14), 2: (24, 17), 3: (27, 17), 4: (27, 14), 5: (22, 17)},

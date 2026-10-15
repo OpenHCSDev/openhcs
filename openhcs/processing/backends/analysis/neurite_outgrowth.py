@@ -916,10 +916,13 @@ class MetaXpressOutgrowthSettings:
     """Minimum outward branch continuation in micrometers; zero disables pruning.
 
     OpenHCS extension, not the MetaXpress significant-cell-growth score. At a
-    junction, remove a terminal arm if its longest outward continuation is
-    shorter than this length. Accumulate traced length through intervening
-    segments and daughter junctions, never back through the starting junction.
-    Decisions use the original topology in one pass, not repeated erosion.
+    junction, remove a shorter side arm if its longest outward continuation is
+    shorter than this length. Preserve the longest continuation through a fork
+    so removing a side arm does not truncate the remaining shaft. Exact longest
+    ties are retained rather than choosing a direction arbitrarily. Accumulate
+    traced length through intervening segments, never pool daughter lengths or
+    borrow length by turning back through a surviving junction. Arms attached
+    to cyclic/reconnecting cores must meet the cutoff on their own.
     Short standalone soma-rooted processes are also removed. Attachments that
     lead to sufficiently long growth and cyclic/reconnecting cores remain; cycles
     cannot accumulate length by repeated traversal. Measurements and exported
@@ -1586,9 +1589,12 @@ class _TopologyResult:
         """Prune short outward trees without changing soma or crossing identity.
 
         Leaf elimination orients pendant trees toward their existing soma roots
-        or cyclic core. Each child's height is its longest original continuation,
-        not the sum of its daughters. Only original junctions can cut an arm;
-        short internal segments therefore contribute to a longer continuation.
+        or cyclic core. Each child's height is its longest continuation, not
+        the sum of its daughters. Within a pendant tree the longest child
+        continues its parent's shaft, even when shorter side arms disappear.
+        Preserve exact longest ties: path enumeration cannot choose biology.
+        At a core with multiple unpeeled incidences there is no incoming tree
+        shaft to continue, so each attached arm must qualify independently.
         Anchoring both ends of existing soma attachment paths preserves the
         topology's root declaration while measuring its outward continuations.
         An isolated root tree must also reach the minimum; proximity to a soma
@@ -1614,13 +1620,11 @@ class _TopologyResult:
             if path in endpoints for node in endpoints[path]
         }
         degree = {node: len(paths) for node, paths in incidence.items()}
-        original_degree = degree.copy()
         path_lengths = self.path_lengths
         leaves = deque(node for node in incidence if degree[node] == 1 and node not in anchors)
         heights: dict[tuple[int, int], float] = defaultdict(float)
         children: dict[tuple[int, int], list[int]] = defaultdict(list)
         outward_end = {}
-        cuts = []
         peeled = set()
         while leaves:
             node = leaves.popleft()
@@ -1634,12 +1638,21 @@ class _TopologyResult:
             children[parent].append(path)
             reach = float(path_lengths[path]) + heights[node]
             heights[parent] = max(heights[parent], reach)
-            if original_degree[parent] >= 3 and reach < minimum_length:
-                cuts.append(path)
             degree[node] -= 1
             degree[parent] -= 1
             if degree[parent] == 1 and parent not in anchors:
                 leaves.append(parent)
+
+        # Decide after orienting the whole tree. Cutting every short child
+        # against the original junction would also cut its longest tip after
+        # the shorter side arm vanished, leaving an artificial shaft stump.
+        # Heights remain valid: the longest continuation is never cut within
+        # a surviving tree; a rejected whole arm takes all its children with it.
+        cuts = [
+            path for parent, paths in children.items() for path in paths
+            if (reach := float(path_lengths[path]) + heights[outward_end[path]]) < minimum_length
+            and (degree[parent] >= 2 or reach < heights[parent])
+        ]
 
         # A root whose two ends have no other unpeeled edge is a standalone
         # process tree, not a connection to another root or a cyclic core.
