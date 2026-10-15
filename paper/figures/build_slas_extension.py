@@ -199,19 +199,20 @@ def extension(*, main_panel=False):
             raise ValueError("Current function source differs from the native authoring record")
         sheet.source(live_evidence_path)
         sheet.text(3, 96, "B", size=14, weight="bold", color=BLUE)
-        sheet.text(11, 96, "Function definition → generated form ↔ live code", size=12, weight="bold")
+        sheet.text(11, 96, "Add a laboratory method; edit its settings in a form or Python", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
         sheet.axis.add_patch(Rectangle((3, 24), 44, 65, color=PALE))
+        sheet.text(5, 90, "Define the method in Python", size=12, weight="bold")
         python_excerpt(sheet, 5, 85, excerpt)
         sheet.text(5, 26, "Documentation from the function definition", size=8.5, color=MUTED)
         sheet.arrow((48, 70), (52, 70), color=BLUE)
         sheet.text(50, 78, "Register", size=8, ha="center", rotation=90)
-        sheet.text(53, 87, "Generated form controls", size=12, weight="bold")
+        sheet.text(53, 87, "Adjust settings in a generated form", size=11, weight="bold")
         sheet.native_image("custom_extension_live_parameters_capture",
                            (53, 57, 44, 26), crop=(20, 113, 310, 224), response_path=())
         sheet.text(53, 54, "The same function and parameters", size=10, color=MUTED)
-        sheet.text(53, 49, "Live editable Python", size=12, weight="bold")
+        sheet.text(53, 49, "Or edit the same settings in Python", size=11, weight="bold")
         sheet.native_image("custom_extension_live_code_capture", (53, 25, 44, 23.3),
                            crop=(70, 38, 530, 194), response_path=())
         sheet.text(53, 23, "Native form and code • OpenHCS 0.8.7", size=9, color=PURPLE)

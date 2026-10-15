@@ -49,7 +49,11 @@ and matched CellProfiler execution
 and total time, followed by measured fixed-workload worker scaling. Table 1 summarizes the later autonomous assay results; full
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
-runtime explanations, historical measurements and prospective held-out results.
+runtime explanations, measured worker scaling and prospective held-out results.
+The reading supplement links additional benchmark chart variants and detailed
+run histories instead of repeating them. Its pre-condensation text is preserved
+in `supplementary/README_before_readability_20261015.md`, with the detailed
+resource tables beside their condensed version in `supplementary/task_only_analysis/`.
 
 `PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
 regenerates the heterogeneous results panels from the retained score and endpoint

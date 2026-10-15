@@ -974,7 +974,7 @@ def submission_shared_workflow():
     crop = (0, round(workspace_top * sy), width_px, height_px)
     sheet = FigureSheet("submission_shared_workflow", "",
                         9 * (crop[3] - crop[1]) / width_px / .94)
-    sheet.panel("A", "One window for plates, pipeline editing and execution", 1, 97)
+    sheet.panel("A", "Select images, edit the analysis and follow its progress", 1, 97)
     sheet.source(evidence_path)
     sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
                        (0, 0, 100, 94), response_path=(), crop=crop,
@@ -986,6 +986,14 @@ def submission_shared_workflow():
         x, width, y, height = x * sx, width * sx, y * sy - crop[1], height * sy
         window.add_patch(Rectangle((x, y), width, height, fill=False,
                                    edgecolor=BLUE, linewidth=2))
+        label = {"plate_manager": "Select a plate",
+                 "pipeline_editor": "Edit analysis steps and settings",
+                 "zmq_servers": "Check execution status"}[region]
+        window.text(x + width - 12 if region == "zmq_servers" else x + 10,
+                    y + height - 100, label, fontsize=11,
+                    color=BLUE, weight="bold", va="bottom",
+                    ha="right" if region == "zmq_servers" else "left",
+                    bbox={"facecolor": "white", "edgecolor": BLUE, "pad": 3})
     sheet.save(dpi=600)
 
 

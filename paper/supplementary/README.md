@@ -8,7 +8,7 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-This supplement gives additional results, measurement definitions and reproducible methods. Linked source records provide the original pipelines, instructions and data.
+Additional images, measurements and methods support the main results. The [earlier supplement](README_before_readability_20261015.md) preserves detailed run histories, source inventories and extra chart variants.
 
 ## Supplementary Figure 1. Runtime composition and preparation
 
@@ -58,21 +58,13 @@ This supplement gives additional results, measurement definitions and reproducib
 (I–J) Mean cell median process length; (K–L) total branches; (M–N) total primary processes; (O–P) branches per primary process. Normalization, technical wells and whiskers are as above. Total quantities are mean field totals, not deduplicated whole-well measurements. OpenHCS branch/process values are means of field ratios; MetaXpress values are ratios of exported well totals. These remain distinct algorithm-defined endpoints.
 :::
 
-### Independent laboratory analyses finalized before scoring
+### Three independent analyses of the same treatment assay
 
-Three fresh gpt-6.1-sol agents (high reasoning effort, OpenAI provider) received the identical [task brief](personal_neurite_autonomous/TASK.rst), [acquisition information](personal_neurite_autonomous/ACQUISITION.json), MCP and fixed version of the OpenHCS instructions. The [trial record](personal_neurite_autonomous/cohort.json) identifies the software and instruction versions, planned development and evaluation images, finalized methods and outputs, and original supporting files. Analyses 1–3 use the same numbering as main Figure 4. Each completed all 20 wells with nine sites per well. Reference and scientist-assisted measurements were opened only after all three agents' outputs were finalized. No agent received score feedback or treatment identities.
+Three new gpt-6.1-sol agents received the same [task brief](personal_neurite_autonomous/TASK.rst), [acquisition information](personal_neurite_autonomous/ACQUISITION.json), MCP access and OpenHCS guide. Each analysed 20 coded wells with nine fields per well. Treatment identities, MetaXpress measurements and assisted results remained hidden until all three methods and outputs were finalized. The [trial record](personal_neurite_autonomous/cohort.json) identifies software, instructions, development images and final outputs.
 
-The files below preserve the original methods, agents' assessments and unsuccessful attempts without changes after evaluation:
+All three recovered increased mean and total outgrowth at every nonzero dose of both drugs. At 40 µM, mean-outgrowth-per-cell fold changes were 1.646, 1.323 and 1.601 for FC-A, and 1.694, 1.487 and 1.660 for Y27632. Assisted values were 1.766 and 1.765; MetaXpress values were 1.977 and 2.053. These are independent analyses of the same two technical wells per dose, not additional biological replicates.
 
-- Analysis 1: [pipeline](personal_neurite_autonomous/author114/pipeline.py), [method freeze](personal_neurite_autonomous/author114/method-freeze.json), [author report](personal_neurite_autonomous/author114/author-report.txt), [matched wells](personal_neurite_autonomous/author114/joined_wells.csv) and [effects](personal_neurite_autonomous/author114/treatment_effects.csv).
-- Analysis 2: [pipeline](personal_neurite_autonomous/author115/pipeline.py), [method freeze](personal_neurite_autonomous/author115/method-freeze.json), [author report](personal_neurite_autonomous/author115/author-report.txt), [matched wells](personal_neurite_autonomous/author115/joined_wells.csv) and [effects](personal_neurite_autonomous/author115/treatment_effects.csv).
-- Analysis 3: [pipeline](personal_neurite_autonomous/author116/pipeline.py), [method freeze](personal_neurite_autonomous/author116/method-freeze.json), [author report](personal_neurite_autonomous/author116/author-report.txt), [matched wells](personal_neurite_autonomous/author116/joined_wells.csv) and [effects](personal_neurite_autonomous/author116/treatment_effects.csv). Its registered custom sources for [channel-selective smoothing](personal_neurite_autonomous/author116/selected_channel_gaussian_v1.py), [compact native output](personal_neurite_autonomous/author116/rooted_arbor_compact_v1.py) and [coded-well summaries](personal_neurite_autonomous/author116/coded_well_summary_v1.py) are included.
-
-All three recovered increased mean and total outgrowth at every nonzero dose of both drugs and the same cell-count response directions as MetaXpress. Two were close to the assisted response magnitudes; Analysis 2 gave weaker increases. At 40 µM, mean-outgrowth-per-cell fold changes for analyses 1–3 were 1.646/1.323/1.601 for FC-A and 1.694/1.487/1.660 for Y27632. The assisted values were 1.766/1.765, and MetaXpress's were 1.977/2.053. These are three independent analyses of the same two technical wells per dose, not additional biological replicates.
-
-Reviewing raw images beside the tracings showed recovery of substantial neurite shafts and branches, but did not establish complete tracing or anatomically correct branch counts. After inspecting held-out images, Analysis 3 reported that its measurements should not be interpreted as complete neuron reconstructions or anatomical branch counts. Treatment-effect recovery was evaluated separately, after the analysis was finalized. The linked report also records an operational protocol deviation: execution began before the computer-resource check completed. The report preserves the sequence; treatment identities and reference measurements remained withheld until finalization.
-
-Each agent's [input and output record](personal_neurite_autonomous/author114/source_evidence.json) contains checksums identifying the private treatment key, workbook, pipeline and original CSV files. The records for [Analysis 2](personal_neurite_autonomous/author115/source_evidence.json) and [Analysis 3](personal_neurite_autonomous/author116/source_evidence.json) use the same sampling and averaging rules. Tables pair the same fields and report differences and ratios between assisted and blind results. The assisted analysis is unchanged and used a different software version. Undefined measurements are not replaced with zero. Process-length means in these comparison tables include all detected cells, with zero for cells without processes; the agents' separate summaries included only cells with processes.
+Image review showed substantial shaft and branch recovery, but did not establish complete tracing or anatomically correct branch counts. Analysis 3 explicitly noted that limitation. Its report also records execution starting before a resource check finished; treatment identities and reference measurements remained hidden. Original pipelines, reports and matched-well data are retained for [Analysis 1](personal_neurite_autonomous/author114/author-report.txt), [Analysis 2](personal_neurite_autonomous/author115/author-report.txt) and [Analysis 3](personal_neurite_autonomous/author116/author-report.txt), with full file links in the earlier supplement.
 
 ## Supplementary Figure 5, continued. Scientist-assisted analysis
 
@@ -82,110 +74,19 @@ Each agent's [input and output record](personal_neurite_autonomous/author114/sou
 (Q–R) Detected cells; (S–T) total outgrowth; (U–V) branches per cell; (W–X) mean cell process length; (Y–Z) mean cell median process length. Twenty matched wells were analysed after assisted repair. Each curve is normalized to its own DMSO mean; dots show two technical wells per dose and whiskers their sample SD. Mean outgrowth per detected cell is included in the linked six-endpoint sheet.
 :::
 
-### Treatment evaluation and endpoint definitions
+### How neurite measurements were compared
 
-For the laboratory neurite comparison, we applied the frozen recipe settings
-to nine fields in each of 20 FC-A and Y27632 wells using the recorded software version. An evaluation-only source key linked coded inputs to physical wells.
-Each well's endpoint was the unweighted mean of nine field-level measurements:
-outgrowth per detected cell, cell count, total outgrowth, branches per cell,
-and mean and median process length. For the last two endpoints, we first
-averaged the corresponding per-cell values within each field, including
-zero-growth cells. Overlapping fields were not deduplicated; total outgrowth
-therefore denotes a mean field total, not unique whole-well length.
-Existing MetaXpress well exports supplied the
-comparison response, not manual tracing truth. This fixed-recipe transfer was
-separate from autonomous pipeline authoring.
+OpenHCS well values are unweighted means of nine field values. For process length, each field first averages the per-cell means or medians, including zero for cells without processes. The agents' separate summaries used only cells with processes; the comparison tables use all detected cells. Missing measurements are never filled with zero. Overlapping fields were not deduplicated: total outgrowth and cell counts are **mean field totals**, not unique whole-well totals.
 
-We retained these predictions when subsequent visual inspection identified
-shafts included in soma masks, spurious soma-edge branches and supported paths
-lost during tracing. Repairs informed by those external observations were
-evaluated separately as assisted development, not autonomous authoring. The
-comparison retained the same channels, pixel calibration, field sampling and
-well aggregation. Matched raw-image, soma-mask and path views were used to
-check recovered shafts and genuine branches alongside unsupported routes;
-agreement with MetaXpress fold changes was not a tuning criterion.
+Each curve is divided by its own drug's zero-dose DMSO mean. Dots are two technical wells per dose; whiskers are their sample standard deviation after normalization. They are not confidence intervals and do not include uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted.
 
-The commercial export contains 120 well summaries from two plates. The assisted analysis used DAPI w1 and calcein w2, XY spacing 1.3556 µm per pixel, neurite response 30 and candidate admission 0.03. Changes to neurite assignment and branch counting left detected-cell counts unchanged in every field of the 180-field evaluation. The [analysis record](personal_neurite_repaired_morphometry/source_evidence.json) identifies the software and settings.
+MetaXpress measurements are an algorithm comparison, not manual ground truth. Its exact site weighting and settings were not retained. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, but does not specify crossing resolution. OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root, rather than individual segments between junctions. Its branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. Thus equal endpoint names do not establish identical topology.
 
-Each FC-A and Y27632 concentration has two technical wells. Y27632 is labelled Y27 in the export. The [six-endpoint sheet](../figures/slas/personal_neurite_effects_repaired.png) includes mean outgrowth per detected cell and the endpoints in Supplementary Figure 5.
+The assisted analysis used DAPI and calcein, spacing 1.3556 µm/pixel, neurite response 30 and candidate threshold 0.03. External image review informed repairs to soma-edge branches and missing paths; MetaXpress fold changes were not a tuning target. The [settings record](personal_neurite_repaired_morphometry/source_evidence.json), [matched wells](personal_neurite_repaired_morphometry/joined_wells.csv), [treatment effects](personal_neurite_repaired_morphometry/treatment_effects.csv) and [original comparison](personal_neurite_baseline_morphometry/treatment_effects.csv) preserve the separate versions. Changes to path assignment and branching left cell counts unchanged in all 180 fields.
 
-Every endpoint is divided by the same drug
-curve's zero-dose DMSO mean. Dots show the two technical
-wells at each concentration. Marks and whiskers show their mean and sample
-standard deviation after division by the observed control mean; they do not
-propagate uncertainty in that denominator or represent confidence intervals.
-Dose positions are equally spaced for display, not a fitted concentration–response
-model. Paired treatment panels use the same vertical scale. The plot and
-numerical tables are generated from the same well measurements.
+At 40 µM, assisted branches-per-cell fold changes were 1.65 versus 3.00 for FC-A and 1.82 versus 3.26 for Y27632 (OpenHCS versus MetaXpress). Smaller responses also persisted in [total branches and branches per primary process](personal_neurite_branch_diagnostics/treatment_effects.csv), so cell-count denominators alone cannot explain them. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. Without spatial ground truth, tracing, assignment and measurement-definition differences cannot be separated. Both methods recovered positive outgrowth responses.
 
-The commercial endpoint is an existing well export whose exact site weighting
-and software settings are not retained. The
-[MetaXpress 6 Neurite Outgrowth guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf)
-defines total outgrowth in micrometres with diagonal-length correction, primary
-processes as outgrowths attached to cell bodies, and branches as branching
-junctions rather than daughter-process counts. It does not specify how the
-module distinguishes crossings from branches. These documented definitions
-do not establish identical segmentation or topology for the retained export;
-absolute lengths and counts are not treated as equivalent.
-Within-method ratios avoid a constant unit conversion but do not remove those
-measurement differences. Neither method is manual ground truth, and two
-technical wells do not establish biological replication or significance.
-
-OpenHCS process lengths describe the connected paths assigned to a
-soma-adjacent root, including daughter branches, rather than individual
-segments between graph junctions. Branches require at least three same-neuron paths and distinct
-admitted image arms around the junction. Paths sharing one image corridor
-and graph stars confined within a foreground cap do not add branch events;
-resolved crossings are not automatically branches. These
-definitions specify the OpenHCS measurements without asserting that the
-commercial algorithm uses identical topology or aggregation.
-
-The [joined physical-well table](personal_neurite_repaired_morphometry/joined_wells.csv)
-and [treatment-effect table](personal_neurite_repaired_morphometry/treatment_effects.csv)
-retain well identities, means, sample standard deviations, counts, raw deltas,
-fold changes and fractional-change differences. Cell-count changes accompany
-outgrowth to expose denominator changes without inferring toxicity. The
-[source hashes](personal_neurite_repaired_morphometry/source_evidence.json) identify the
-exact submitted pipeline, source key, commercial export and all 180 native
-summaries. The comparison script processes tables only and does not tune images.
-Like total outgrowth, averaged field counts do not denote unique whole-well
-neurons. Unselected wells are not filled with zero.
-The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
-is retained separately for before/after evaluation; it was not overwritten.
-
-Additional [branch and primary-process totals](personal_neurite_branch_diagnostics/joined_wells.csv)
-and their [treatment responses](personal_neurite_branch_diagnostics/treatment_effects.csv)
-test whether smaller estimated branching fold changes are explained by the cell denominator.
-At 40 µM, total-branch fold changes are 1.65 versus 3.01 for FC-A and 1.73
-versus 3.03 for Y27632 (OpenHCS versus MetaXpress). Branches per primary
-process likewise give smaller estimated fold changes: 1.31 versus 2.48 and 1.29 versus
-2.23, respectively. The difference therefore persists without a cell-count
-denominator. OpenHCS totals are means of field totals, and its branch/process
-endpoint is the mean of the nine field ratios. The commercial comparison
-uses ratios of exported well totals; its internal site weighting and primary
-process definition remain unspecified. These diagnostic ratios are not proof
-of equivalent topology or of which method is more accurate. Their
-[source record](personal_neurite_branch_diagnostics/source_evidence.json)
-identifies the same completed assisted evaluation, not an additional autonomous trial.
-
-### Assisted transfer results
-
-Following externally informed repairs, analysis of all 180 fields in 20 matched
-wells recovered increasing outgrowth-per-cell responses to FC-A and Y27632
-(Supplementary Figure 5Q–Z). At 40 µM, OpenHCS fold changes were
-1.77 and 1.76, respectively, versus MetaXpress's 1.98 and 2.05. Total-outgrowth
-estimated fold changes were also smaller. Branches-per-cell fold changes were 1.65 versus
-3.00 for FC-A and 1.82 versus 3.26 for Y27632. OpenHCS control branch counts
-per cell were approximately 10–11% higher, but treated counts were 38–39%
-lower. Cell counts were unchanged in all 180 fields after the changes to neurite assignment and branch counting;
-the difference persisted in total branches and branches per primary process.
-Control excess alone therefore does not explain the smaller estimated branching fold changes. Remaining
-branch recall, assignment and measurement-definition differences cannot be
-separated without spatial ground truth. Both methods recovered concordant
-positive outgrowth responses with different measured magnitudes. This is an
-assisted-development evaluation, separate from autonomous authoring.
-
-## Supplementary Figure 6. Measured worker scaling and serial-CP comparisons
+## Supplementary Figure 6. Measured speed gains from additional workers
 
 ![Measured OpenHCS execution scaling for all thirty workflows at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
@@ -193,51 +94,7 @@ assisted-development evaluation, separate from autonomous authoring.
 Measured OpenHCS execution scaling with twelve repeated samples held fixed and 1, 2, 3 or 4 workers. Each point is one workflow's one-worker time divided by its time at the indicated worker count; all thirty workflows appear in each configuration. Times are medians of three repetitions after warmup. Bars show arithmetic means, black lines medians and the dashed line equal runtime. These measurements require no CellProfiler projection.
 :::
 
-## Supplementary Figure 6, continued. Serial CellProfiler reference
-
-![Execution speedups for all thirty workflows in each of seven assignment configurations.](../figures/slas/supp_benchmark_assignments.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give OpenHCS workers (w), assignments per worker and total assignments. CellProfiler remains serial: its 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. Unlike main Figure 6C, these ratios do not match CellProfiler's process count to OpenHCS workers. Main Figure 6B shows the measured single-sample and per-sample batch comparisons.
-:::
-
-## Supplementary Figure 6, continued. One-worker batch comparisons
-
-![Cp relative speedup, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-One-worker execution speedups for thirty workflows. CellProfiler's one-sample first batch is measured; its twelve-sample reference is projected from measured serial eight-sample first/warm batches. OpenHCS uses medians of three measured repetitions. Points are workflows, bars means and black lines medians. Supplementary Data 3 gives CPU affinities and projection calibration.
-:::
-
-![Seconds per sample, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Execution seconds per sample for thirty workflows, dividing batch duration by sample count. CellProfiler's one-sample times are measured and twelve-sample times projected; OpenHCS times are measured medians of three repetitions. Both systems use one processing worker.
-:::
-
-![Amortization factor, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Reduction in execution time per sample across thirty workflows: single-sample time divided by twelve-sample time per sample. Values above one indicate lower time per sample. CellProfiler's twelve-sample times are projected; OpenHCS times are measured with one worker.
-:::
-
-![Cp relative speedup, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-One-worker compile-plus-run speedups for thirty workflows. CellProfiler's one-sample first batch is measured and twelve-sample reference projected. OpenHCS uses medians of three measured repetitions, including client compilation. Points are workflows, bars means and black lines medians.
-:::
-
-![Seconds per sample, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Compile-plus-run seconds per sample for thirty workflows, dividing total batch duration by sample count. CellProfiler's twelve-sample times are projected; OpenHCS times are measured medians of three repetitions with one worker and include client compilation.
-:::
-
-![Amortization factor, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Reduction in compile-plus-run time per sample across thirty workflows. Ratios compare a single sample with twelve-sample time per sample, including OpenHCS compilation. CellProfiler's twelve-sample times are projected; OpenHCS times are measured with one worker.
-:::
+Additional serial CellProfiler comparisons and one-worker batch plots are linked in Supplementary Data 3. Main Figure 6 already shows measured single-worker comparisons and the matching-core estimates; those charts are not repeated here.
 
 ## Supplementary Table 1. Reusable libraries and their roles
 
@@ -282,338 +139,103 @@ Web inventories were inspected on 15 October 2026. Counts describe the named col
 
 ## Supplementary Data 1. CellProfiler workflow comparison
 
+### What was compared
 
+The 30-workflow collection contains 22 official CellProfiler examples, seven tutorials and one workflow from the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The [benchmark report](../../benchmark/results/matched_min3_integrated_main_20261007/README.md) identifies pipelines, images and reference outputs.
 
-### Continuous integration
+Every declared image, CSV and database export matched in one warmup and three measured repetitions: 120 OpenHCS observations. This coverage describes exported files, not every internal image or measurement column. The [per-workflow file counts](README_before_readability_20261015.md#declared-exported-file-coverage) retain the complete inventory.
 
-The [versioned integration workflow](../../.github/workflows/integration-tests.yml) defines the operating-system, Python-version, backend, microscope, numerical-parity and installed-desktop matrices. The [Official30 comparator](../../tests/integration/test_cellprofiler_official30_zmq.py) runs the manifest-owned workflows through ZeroMQ and compares their declared outputs against retained native CellProfiler values. These CI checks are separate from the timed performance captures.
+Five workflows had no file exports. We appended terminal image or label exports without changing their processing settings, producing eight additional native CellProfiler references listed in the [export manifest](../../benchmark/manifests/official30_value_completion_20260914.json). All five label images matched exactly after removing singleton dimensions. All three numerical images matched within absolute and relative tolerances of `1e-6`; maximum absolute difference was `2.9802322387695312e-8`. The [comparison table](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/artifact_comparisons.csv) lists each output.
 
-Python 3.11 and 3.13 each run the generated CellProfiler workflow corpus through multiprocessing and the ZeroMQ server on Linux, Windows and macOS. Python 3.12 tests every combination of disk or Zarr storage and ImageXpress or OperaPhenix inputs on those systems. A separate Python 3.14 Linux job checks the installed core runtime without the optional Centrosome comparison dependency. The full thirty-workflow numerical comparison runs through ZeroMQ against committed native CellProfiler references on Linux with Python 3.12 and on all three operating systems with Python 3.14.
+The [recorded environment](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/run_environment.json) was OpenHCS on Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.0, against CellProfiler 4.2.8.1 on Python 3.9.25, NumPy 1.24.4 and SciPy 1.9.0. A subsequent [unified run](../../benchmark/results/official30_unified_value_comparison_20260916/README.md) re-executed all 30 workflows and reported zero selected-reference differences. Its [inventory](../../benchmark/results/official30_unified_value_comparison_20260916/reference_inventory.csv) contains 21 CSV, three SQLite and six image/array-only profiles. That run's environment was not recorded; the earlier audit's versions cannot establish it.
 
-The full integration matrix runs nightly, on release tags and on demand; PyPI publication requires a successful run on the exact release commit. Pull requests run focused checks and structural guardrails rather than the full matrix. Additional jobs exercise package installation, the GUI and installed desktop candidates through MCP, including Intel and Apple Silicon macOS, and native Windows and macOS installers.
+### Database exports and automated checks
 
-### Import, export and comparison methods
+Imported `ExportToDatabase` steps run once per plate and produce a SQLite database plus CellProfiler Analyst properties files [@Jones2008]. Non-SQLite databases, custom filters, workspace generation and some historical aggregation options remain unsupported.
 
-Imported `ExportToDatabase` modules run once per plate after image-group processing. They collect the selected images, objects, measurements, relationships, thumbnails and grouping information into CellProfiler Analyst tables [@Jones2008]. The export produces a self-contained SQLite database and matching `.properties` files. Non-SQLite databases, custom filter rows, `.workspace` generation and some historical aggregation settings remain unsupported; unsupported requests fail or are identified in the compatibility documentation.
+The [integration workflow](../../.github/workflows/integration-tests.yml) defines Linux, Windows and macOS checks across Python versions, storage types, microscope inputs and installed desktop paths. The [30-workflow comparison](../../tests/integration/test_cellprofiler_official30_zmq.py) executes through ZeroMQ against retained native values. Full checks run nightly, on release tags and on demand; publication requires success on the release commit. Pull requests run focused checks. These automated checks are separate from timed benchmarks. The earlier [OpenHCS 0.8.5 release record](ci_official30_085/README.md) retains its own test results.
 
-The OpenHCS 0.8.5 [release test](ci_official30_085/README.md) preceded the unified 30-workflow value comparison below.
+## Supplementary Data 2. Module coverage
 
-An earlier matched performance evaluation compared the declared table, database and image outputs for all 30 workflows in a warmup and three measured repetitions per engine. All 120 OpenHCS observations matched complete native CellProfiler runs. The [original matched benchmark](../../benchmark/results/matched_min3_integrated_main_20261007/README.md) gives its output inventories and timing boundaries. Supplementary Data 3 describes the subsequent first-use-inclusive worker sweep used in main Figure 6.
+Main Figure 6A assigns each of 85 modules its strongest available test: 54 in complete workflows, 29 in individual tests and two tested only through shared code. Shared-code tests do not establish that each module's own algorithm works. The [module table](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv) identifies the evidence for every module.
 
-For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The following sections give the export definitions, reference inventory and per-workflow comparisons. The original unified-run environment was not recorded; the five-workflow export audit has its own recorded environment.
+Older [module](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_cppipe_modules.csv), [setting](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_cppipe_settings.csv) and [registration](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_absorbed_modules.csv) inventories are historical, not a current compatibility matrix. Registration and supported-setting categories are not output-equivalence tests, and their overlapping counts must not be added.
 
-The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The retained manifest maps workflow names to pipeline and image locations; Supplementary Data 1-3 provide the corresponding comparison, coverage and throughput tables.
+## Supplementary Data 3. Timing methods and additional charts
 
+### Measured times
 
-This supplement indexes source tables and evaluation records. Figure scripts
-derive panels and plotted-row exports from the linked files; paths are relative
-to this file.
+With one sample and one worker, median processing speedup was [pending]{.benchmark-claim key=execution_median}-fold (minimum [pending]{.benchmark-claim key=execution_min}); including pipeline setup, it was [pending]{.benchmark-claim key=total_median}-fold (minimum [pending]{.benchmark-claim key=total_min}). Main Figure 6B shows all 30 workflows.
 
-The acquisition scripts pin the official CellProfiler examples to
-`4972b59e670a4ae96c3d453803c92eeff378d054`, the official tutorials to
-`264a8155da21a2d468051f78211bed2e580a8934`, and the CellProfiler 4 benchmark
-supplement to `40abc2e600fd46b74c213999dd25c5245048dc92`.
+OpenHCS times are medians of three repetitions after warmup. Setup includes client compilation and submission/wait; nested worker time is counted once. Both CellProfiler timing measures include its internal initialization. External application/server startup, OpenHCS library loading and warmup are excluded. Batches repeat the same image sample to measure processing, not biological variation.
 
+With twelve samples held fixed, every workflow ran faster with two, three and four OpenHCS workers than with one, for processing alone and with setup included. These are measured times throughout (Supplementary Figure 6).
 
+### Estimated CellProfiler times
 
-### Declared exported-file coverage
+Main Figure 6C estimates CellProfiler time for the same cores and samples as OpenHCS. It divides the work evenly among independent single-threaded processes, each paying its own initialization cost. For N samples and C processes:
 
-The matched run checked every declared exported file in each workflow: a
-file-level fraction of 1.00. Counts below come from the original
-[matched-run reports](../../benchmark/results/matched_min3_integrated_main_20261007/README.md),
-with one warmup and three measured repetitions. All four observations per
-workflow had complete output inventories and zero image, CSV or database
-differences. The original comparator rejects files without a value-comparison
-route. This fraction describes exported files; internal intermediates and
-individual measurement columns are not its denominator.
+`Estimated time = T8_first + (N/C − 8) × median(T8_warm)/8`
 
-| Workflow | Declared files checked / declared files |
-| --- | --- |
-| [ExampleColocalization](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleColocalization/candidate_report.json) | 1 / 1 |
-| [ExampleCometAssay](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleCometAssay/candidate_report.json) | 6 / 6 |
-| [ExampleFly](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleFly/candidate_report.json) | 7 / 7 |
-| [ExampleFlyURL](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleFlyURL/candidate_report.json) | 7 / 7 |
-| [ExampleHuman](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleHuman/candidate_report.json) | 7 / 7 |
-| [ExampleIlluminationCorrection_Example1_AllMethod](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example1_AllMethod/candidate_report.json) | 1 / 1 |
-| [ExampleIlluminationCorrection_Example1_EachMethod](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example1_EachMethod/candidate_report.json) | 1 / 1 |
-| [ExampleIlluminationCorrection_Example2](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example2/candidate_report.json) | 3 / 3 |
-| [ExampleIlluminationCorrection_Example3](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example3/candidate_report.json) | 2 / 2 |
-| [ExampleImagingFlowCytometryObjectsInGrid](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleImagingFlowCytometryObjectsInGrid/candidate_report.json) | 1 / 1 |
-| [ExampleNeighbors](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleNeighbors/candidate_report.json) | 4 / 4 |
-| [ExamplePercentPositive](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExamplePercentPositive/candidate_report.json) | 5 / 5 |
-| [ExampleSpeckles](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleSpeckles/candidate_report.json) | 3 / 3 |
-| [ExampleTrackObjects](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleTrackObjects/candidate_report.json) | 23 / 23 |
-| [ExampleTumor](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleTumor/candidate_report.json) | 3 / 3 |
-| [ExampleUntangleAndStraightenWorms](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleAndStraightenWorms/candidate_report.json) | 1 / 1 |
-| [ExampleUntangleWorms](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleWorms/candidate_report.json) | 4 / 4 |
-| [ExampleUntangleWormsBrightField](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleWormsBrightField/candidate_report.json) | 1 / 1 |
-| [ExampleVitra](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleVitra/candidate_report.json) | 5 / 5 |
-| [ExampleWoundHealing](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleWoundHealing/candidate_report.json) | 1 / 1 |
-| [ExampleYeastColonies](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleYeastColonies/candidate_report.json) | 3 / 3 |
-| [ExampleYeastPatches](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleYeastPatches/candidate_report.json) | 7 / 7 |
-| [cp4_supplement_combine_objects](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp4_supplement_combine_objects/candidate_report.json) | 1 / 1 |
-| [cp_tutorial_3d_monolayer](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_3d_monolayer/candidate_report.json) | 8 / 8 |
-| [cp_tutorial_advanced_segmentation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_advanced_segmentation_final/candidate_report.json) | 8 / 8 |
-| [cp_tutorial_beginner_segmentation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_beginner_segmentation_final/candidate_report.json) | 9 / 9 |
-| [cp_tutorial_pixel_based_classification](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_pixel_based_classification/candidate_report.json) | 3 / 3 |
-| [cp_tutorial_quality_control](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_quality_control/candidate_report.json) | 3 / 3 |
-| [cp_tutorial_translocation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_translocation_final/candidate_report.json) | 3 / 3 |
-| [cp_tutorial_translocation_start](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_translocation_start/candidate_report.json) | 1 / 1 |
+Here `T8_first` is the measured first eight-sample batch and `T8_warm` a later batch after initialization. Total time adds pre-pipeline overhead once per process. The estimate assumes no slowdown from running processes together. The measured eight-sample batch had one numerical thread with access to four cores; the estimate assumes that rate on one core per process. Matching multicore CellProfiler runs were not measured.
 
-### Unified 30-workflow value comparison
+The [calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) tested three workflows at 8, 12 and 16 samples. Maximum absolute prediction error was 7.06% using the same-session eight-sample model, versus 5.21% using a two-sample model; an earlier-session eight-sample model underpredicted by up to 14.03%. These are not multicore confidence intervals. Counts of 3, 4 and 6 samples per process fall below the validated range. Combined memory use was not measured.
 
-The [unified evidence directory](../../benchmark/results/official30_unified_value_comparison_20260916/README.md)
-preserves one immutable run in which all 30 workflows were compiled and executed
-afresh through isolated ZMQ execution endpoints. All 30 selected reference-value
-comparisons were equivalent and reported zero differences. Its fresh
-[reference inventory](../../benchmark/results/official30_unified_value_comparison_20260916/reference_inventory.csv)
-contains 21 CSV profiles, three SQLite profiles and six image- or array-only
-profiles. Image comparison executed for seven workflows, including the completed
-translocation overlay compared alongside its SQLite values.
+### Data and chart links
 
-The [observations](../../benchmark/results/official30_unified_value_comparison_20260916/observations.csv),
-[phase timings](../../benchmark/results/official30_unified_value_comparison_20260916/phase_timing.csv),
-and [summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
-retain the comparison results. The original observations identify the candidate
-as OpenHCS 0.8.5 and retain endpoint, executable and submitted-pipeline provenance.
-The original run environment was not recorded in this bundle; versions from later runs cannot supply it.
+- [Benchmark protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md), [measured one- and eight-sample CellProfiler calibration](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [Figure 6 measured/estimated values](../figures/slas/submission_benchmark_summary_projection.csv).
+- Every processing time and ratio: [variable batches](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
+- Twelve-sample OpenHCS scaling: [processing](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv).
+- Serial CellProfiler comparison: [all batch configurations](../figures/slas/supp_benchmark_assignments.png). Unlike main Figure 6C, CellProfiler stays serial.
+- One-worker charts: [processing speedup](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png), [seconds per sample](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png) and [reduction from batching](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png). Corresponding [setup-plus-processing charts](README_before_readability_20261015.md#supplementary-figure-6-continued-one-worker-batch-comparisons) are retained separately.
 
-### Five-workflow image and object-label exports
-
-Five source workflows compute images or objects without exporting files. The
-[export-extension manifest](../../benchmark/manifests/official30_value_completion_20260914.json)
-selects versions of those workflows with terminal exports added. Its generated
-pipelines retain the original processing modules and settings. Native CellProfiler
-produced the exported references; OpenHCS processed the same scoped inputs.
-
-| Workflow | Exported values compared | Result |
-| --- | --- | --- |
-| Combine objects | Combined-object labels | Exact label agreement |
-| Translocation starter | Nuclear labels | Exact label agreement |
-| Illumination Example 1, EachMethod | Corrected green image | Float-tolerance agreement |
-| Illumination Example 2 | Uncorrected, small-block-corrected and large-block-corrected nuclear labels | Exact agreement for all three label images |
-| Illumination Example 3 | Polynomial-corrected and convex-hull-corrected images | Float-tolerance agreement for both images |
-
-The [per-artifact comparison table](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/artifact_comparisons.csv)
-records eight passing artifacts. All five integer label images agree exactly
-after normalization of singleton dimensions. The three numerical images have
-zero pixels outside the absolute and relative tolerances of `1e-6`; their
-maximum absolute difference is `2.9802322387695312e-8`. The
-[per-workflow observations](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/observations.jsonl)
-link these comparisons to fresh candidate executions and the retained native
-outputs.
-
-The [run environment](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/run_environment.json)
-identifies OpenHCS execution source `7ca8ecb8e73a882ef0f15616d57b00f0dabf73e0`,
-Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.0. Native references were generated
-with CellProfiler 4.2.8.1 on Python 3.9.25, NumPy 1.24.4 and SciPy 1.9.0.
-Each candidate ran through a fresh matching OpenHCS endpoint. Source revisions,
-native-reference origin and endpoint identities are retained with the results.
-These exported references are incorporated into the unified 30-workflow run;
-the earlier five-workflow audit and release records retain their own protocols
-and identities.
-
-
-
-## Supplementary Data 2. Archived CellProfiler coverage
-
-- [Module names and associated workflows](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_cppipe_modules.csv).
-- [Individual settings and recorded handling categories](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_cppipe_settings.csv).
-- [Processing registration and corpus membership](../../benchmark/results/labmeeting_20260513/official30_well_throughput/figures/module_coverage_absorbed_modules.csv).
-
-These files describe the archived coverage report. Setting categories distinguish
-bound parameters, artifact contracts, infrastructure, and intentionally ignored
-settings. Registration or a handling category is not itself an output-equivalence
-test. Module aliases and source/export roles differ between the tables, so their
-category totals must not be added as mutually exclusive classes. They are not a
-current-version compatibility matrix.
-
-## Supplementary Data 3. Worker measurements
-
-### Single-sample timing summaries
-
-With one sample, one worker and one numerical thread, execution was a median [pending]{.benchmark-claim key=execution_median}-fold faster than native CellProfiler, with minimum [pending]{.benchmark-claim key=execution_min}-fold. Compile-plus-run speedup was a median [pending]{.benchmark-claim key=total_median}-fold, with minimum [pending]{.benchmark-claim key=total_min}-fold. Main Figure 6B shows all thirty workflows. Native times include internal initialization within the first pipeline call; external process/server startup and OpenHCS library readiness and warmup are excluded. OpenHCS times are medians of three measured repetitions after warmup. Compile-plus-run time includes client compilation plus execution submission/wait; nested server and worker durations are counted once.
-
-### Matched-core CellProfiler projection
-
-Main Figure 6C estimates parallel CellProfiler execution from measured serial batches of eight repeated samples, dividing the workload evenly among independent single-threaded processes. For N total samples and C processes, projected execution time is `T8_first + (N/C - 8) * median(T8_warm)/8`. Each process retains its initialization term; total time adds the first batch's pre-pipeline overhead once, not once per sample. Concurrent processes are assumed equally fast, with no contention or coordination overhead. These estimates assume parallel execution; multicore CellProfiler runs were not measured. The measured eight-sample batch used one numerical thread with access to four CPU cores; the projection assumes the same processing rate on one core per process.
-
-The retained [serial calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) tested three workflows at 8, 12 and 16 samples. A model based on a two-sample batch had maximum absolute error 5.21%; the model based on an eight-sample batch from the same measurement session, used here, had maximum error 7.06%. Using an eight-sample batch from an earlier session underpredicted later observations by up to 14.03%. These errors are not multicore confidence intervals. Per-process counts of 3, 4 and 6 in Figure 6C extrapolate below the validated batch sizes; actual matched multicore measurements are still needed. The one-worker/twelve-sample column stays within the serial model's validation range, though validation covered only three workflows.
-
-[Individual projected and measured times](../figures/slas/submission_benchmark_summary_projection.csv) and [source identities and assumptions](../figures/slas/submission_benchmark_summary_provenance.json) retain every plotted value. The source reports preserve measured times separately from estimates. Figure 6A summarizes the module tests; the per-module results and test sources are linked below.
-
-### Serial batching and preparation amortization
-
-The one-worker controls compare one and twelve samples. Both systems amortize preparation across a batch: CellProfiler initialization remains inside its first execution, while OpenHCS library readiness precedes pipeline timing and compilation is included in total time. The twelve-sample CellProfiler times are estimated from measured serial eight-sample batches before and after initialization; twelve-sample times were not measured in this thirty-workflow comparison. Each panel retains all thirty workflows. Different CPU affinities between the single-sample and batch captures are retained in the record; these plots show the observed comparison rather than isolating initialization alone.
-
-- One-worker CP-relative speedups: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png) and [compile-plus-run total](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png).
-- Time per sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png).
-- Batching reduction in time per sample, relative to one sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png).
-
-### Thirty-workflow timing measurements
-
-- [Benchmark protocol and timing definitions](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json).
-- [Single-sample execution and total, linear](../figures/slas/benchmark-publication/measured_benchmark_publication.png) and [logarithmic](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), with [manuscript numerical claims](../figures/slas/benchmark-publication/benchmark_claims.json).
-- Charts and source tables: [per-workflow speedups](../figures/slas/benchmark-publication/reference-layout/reference_pipeline_speedup_log.svg), [worker summary](../figures/slas/benchmark-publication/reference-layout/reference_core_summary_log.svg), [assignment summary](../figures/slas/benchmark-publication/reference-layout/reference_assignments_summary_log.svg), [output agreement](../figures/slas/benchmark-publication/reference-layout/reference_parity.svg), and [graded module coverage](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.svg), with the [per-module behavior and test attribution](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv).
-- Variable-batch processing speedups: [linear](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv).
-- Variable-batch setup-plus-processing speedups: [linear](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
-- Measured processing times for twelve repeated samples: [linear](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/execution/efficiency/derived_workflow_metrics.csv).
-- Measured setup-plus-processing times for twelve repeated samples: [linear](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/total/efficiency/derived_workflow_metrics.csv).
-- [Measured one- and eight-sample CellProfiler batches](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json).
-
-All thirty workflows met the output-comparison criteria. One- and eight-sample CellProfiler times were measured; twelve- and sixteen-sample times were estimated. Every workflow had a processing and setup-plus-processing speedup above one in each measured or projected comparison, including the one-worker, twelve-sample batch comparison. With twelve repeated samples held fixed, every workflow also ran faster with two, three and four OpenHCS workers than with one. These OpenHCS scaling results use measured times throughout.
-
-The one- and eight-sample CellProfiler measurements permitted different CPU counts. Checks of the timing model covered three workflows, rather than the full set of thirty. The linked record reports prediction errors within and between measurement sessions. Combined memory use across processes was not measured.
-
-Historical timing panels and scaling protocols are in the archived supplementary source linked above.
+In the one-worker twelve-sample charts, CellProfiler times are estimated from measured eight-sample batches; OpenHCS times are measured. Different CPU affinities in single-sample and batch captures mean these comparisons do not isolate initialization alone.
 
 ## Figure assembly and interface records
 
-The [supplement generator](../figures/build_slas_supplement.py) combines existing artwork and saves editable SVG, PDF and PNG outputs. It changes layout only; measurements, segmentation and display contrast are unchanged.
+Figures reuse retained images and measurements; editorial changes do not rerun analyses or alter segmentation. The [figure generator](../figures/build_slas_supplement.py) and accompanying source records identify crops, display choices and original files. Lucide icons retain their [licence](../figures/assets/lucide/LICENSE).
 
-Source illustrations show [array grouping and scheduling](../figures/slas/runtime_composition.png), [function preparation](../figures/slas/compiler_preparation.png), [connected images and measurements](../figures/slas/outputs_and_inspection.png), [custom-function registration](../figures/slas/custom_function_extension.png), [CellProfiler translation](../figures/slas/cellprofiler_translation.png), and [Fiji/napari inspection](../figures/slas/inspectable_results.png).
+Main Figure 1 uses the [two-plate capture](../figures/slas/figure1_two_plate_native_20261007/capture_evidence.json) and [custom-function form/code recording](../figures/slas/custom_extension_live_evidence.json). Gain 1.2 and offset 0.0 identify the same function in the form and [Python readback](../figures/slas/custom_extension_live_code_document.json). This demonstrates authoring; the function was not executed on an assay. A separate [interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json) documents parameter changes propagating between Python and graphical controls.
 
-The [native code/field interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json) documents the parameter-edit round trip. Main Figure 1 uses the [two-plate capture](../figures/slas/figure1_two_plate_native_20261007/capture_evidence.json), with ExampleHuman's nine-step recipe displayed, and the native [custom-function form](../figures/slas/custom_extension_live_parameters_capture_provenance.json) and [code capture](../figures/slas/custom_extension_live_code_capture_provenance.json). The [capture-source record](../figures/slas/custom_extension_live_evidence.json) identifies the source state at capture. The custom function has gain 1.2 and offset 0.0; the [code readback](../figures/slas/custom_extension_live_code_document.json) identifies the same function. These captures show authoring controls; the function was not executed on an assay.
+## Supplementary Data 4. Public NeuronCyto demonstration and references
 
-The [translation source](../figures/slas/cellprofiler_translation_provenance.json) maps ExampleCometAssay to 12 OpenHCS steps and checks the generated Python round trip. Image and ROI inspection examples are attributed in the [gallery source record](../../website/assets/gallery/release-media-record.json).
+The [original gpt-5.6-sol demonstration](../../website/assets/agent/cold-start-workflow-record.json) used a method-directed brief specifying normalization, segmentation and neurite assignment. It produced nine neurons, ten nuclei, eight branches, 25 graph paths and 1,982 pixels of outgrowth. It demonstrates authoring and inspection, not unassisted method selection or manual-reference accuracy. A [later OpenHCS 0.8.5 replay](current_neurite_replay_summary.md) is recorded separately.
 
-## Supplementary Data 4. Method-directed NeuronCyto demonstration
+The NeuronCyto II publication [@NeuronCytoII] provides eight manually traced cell entries for image 1, aggregate length 3,832.601 in unspecified units, and three crossovers, of which its algorithm resolved two. Our two input TIFFs match the public image files byte-for-byte. Manual trace coordinates were not located; cell correspondence, length definitions and units remain unaligned.
 
-A gpt-5.6-sol agent analysed NeuronCyto II image 1 through MCP using a method-directed brief. The brief specified channel roles, normalization, neurite enhancement, nucleus and soma segmentation, rooted neurite assignment, and morphology outputs. The original run produced nine neurons, ten nuclei, eight branches, 25 graph paths and 1,982 pixels of total outgrowth. It demonstrates authoring, execution and inspection; no manual segmentation score was supplied.
+A separate [image-1 comparison](neuroncyto_length_evaluation/conclusion.rst) found 4,085.1925 pixels of rooted outgrowth in the first H004 prediction. This is not an accuracy ratio against the published total. The [reference audit](neuroncyto_reference_audit.md) and [unit checks](neuroncyto_length_evaluation/unit_followthrough.rst) retain the evidence. The final attempted repair extended beyond the intended main-shaft target, which was clarified only after that run. Main Figure 4C–E shows the initial result, not the later revision.
 
-The [original evaluation](../../website/assets/agent/cold-start-workflow-record.json) contains the prompt, input hashes, software/model versions, tool calls, outputs and viewer checks. The [figure source](../figures/slas/figure3_provenance.json) identifies the original recording. Later corrections and replays used the same images with their own pipelines and outputs.
+Main Figure 4C–D and F–H use full-resolution raw arrays and saved paths identified by the [source manifest](../figures/slas/frozen_neurite_views.json). Figure 4E is the published algorithm's output, not manual ground truth: an unmodified embedded JPEG from the article, cropped to 450 pixels and attributed in the [source record](../figures/slas/neuroncyto_published_reference/source.json).
 
-Figure artwork uses unmodified Lucide icons under the [licence](../figures/assets/lucide/LICENSE); the [source record](../figures/assets/lucide/SOURCE.txt) identifies their revision.
+## Supplementary Data 5. Complex workflow imports
 
-### Separate evaluation after neurite algorithm changes
-
-A separate OpenHCS 0.8.5 replay used the same two public images with
-nuclear-supported soma detection and soma-rooted path assignment. It produced
-eight neuronal cell bodies, eight nuclei, 18 processes, two branch events,
-one resolved crossover and 24 graph paths. The eight per-cell table totals
-agree with the graph distance features and sum to 2556.137 pixels under unit
-spacing. The [evaluation summary](current_neurite_replay_summary.md)
-identifies its execution, saved source and outputs separately from
-the original demonstration and the OpenHCS 0.7.14 correction.
-
-### Published manual-tracing references
-
-The [NeuronCyto II publication](https://doi.org/10.1002/cyto.a.22872) supplies independent measurements
-for image 1 in its supplementary files 8–10. The two input TIFFs used here are
-byte-identical to `CrossOvers_Images/1_w1.tif` and `1_w2.tif` in the public
-`Testing image.zip` archive. The checksums are listed in the original run record.
-
-| Published reference | Image 1 entry | Source file |
-| --- | --- | --- |
-| Manually traced neurons | Eight per-cell entries | Supplement 9 |
-| Neurite length by branch order | Primary 3,633.672; secondary 198.929; tertiary 0; total 3,832.601 | Supplement 8 |
-| Crossover count | Three crossovers; NeuronCyto II resolved two | Supplement 10 |
-
-Lengths above retain the numerical units of the source tables. The eight
-per-cell reference lengths are 426.82, 172.375, 751.962, 395.04, 669.783,
-343.629, 587.841 and 485.152. These entries give a reference against which to
-investigate the nine reported neurons. Spatial cell matching, measurement-unit
-alignment and agreement on the definition of neurite length are needed before
-computing per-cell accuracy. The public testing archive contains the images;
-downloadable manual trace coordinates have not been located. The published
-crossover count and the OpenHCS branch count measure different quantities.
-
-Main Figure 4C–D and F–H are full-resolution presentations of the frozen raw
-arrays, body-label planes and graph-path archives, rather than reduced native
-viewer screenshots. The [source manifest](../figures/slas/frozen_neurite_views.json)
-records the six original file hashes and the recorded raw display windows.
-Dark label colours and vector strokes are display choices only; no analysis
-was rerun or coordinates changed. Figure 4E uses an unmodified embedded JPEG
-from page 4 of the published article PDF, giving a 450-pixel panel crop instead
-of the earlier 225-pixel web crop. Its source, extraction and attribution are
-recorded in the [published-reference record](../figures/slas/neuroncyto_published_reference/source.json).
-
-The [reference audit](neuroncyto_reference_audit.md) records the source links,
-file checksums and ROI identifiers. These measurements were examined after the
-recorded agent run and were not supplied to the agent during authoring.
-
-
-
-## Supplementary Data 5. Complex CellProfiler workflow imports
-
-The [derived workflow report](complex_cellprofiler_workflows.md) lists every
-imported step, its function names and call count for the advanced segmentation
-and 3D monolayer tutorials. It links the source pipelines and generated editable
-Python. The generator checks function identities and parameters after reloading
-each document and records the hashes of the source pipelines, importer and
-function implementations.
-
-These are import and code-round-trip checks. Supplementary Data 1 separately
-records the release CI executions and selected output comparisons for both
-workflows.
+The [workflow report](complex_cellprofiler_workflows.md) lists imported steps and editable Python for the advanced-segmentation and 3D-monolayer tutorials. It checks that function identities and settings survive Python export and reload. These are import/editing checks; Supplementary Data 1 separately reports execution and output agreement.
 
 ## Supplementary Data 6. Workflow regression tests
 
-The tests exercise representative authoring and validation cases alongside the
-recorded UI demonstration. The following source files are pinned to commit
-`7a7d21fee726905b87b9020cebf0bdfc350631f4`; these three test files are unchanged
-from the OpenHCS 0.8.5 release commit.
+The [Python-generation](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_pycodify_formatters.py), [function-validation](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_funcstep_contract_validator.py) and [catalogue-revision](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_function_catalog_zmq.py) tests cover inherited settings, reconstruction, invalid image dimensions/memory types and stale catalogue requests. These files are pinned to a revision unchanged from OpenHCS 0.8.5. The [test job](https://github.com/OpenHCSDev/openhcs/actions/runs/34870874969/job/104066142788) passed. These focused checks do not replace the real-workflow comparisons in Data 1.
 
-| Tested behavior | Source tests |
-| --- | --- |
-| Nested and inherited configuration, parameter order, enum identity and function-step reconstruction | [Python generation tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_pycodify_formatters.py) |
-| Rejection of incompatible memory types, grouping, required axes and stack configuration | [Compiled-function validation tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_funcstep_contract_validator.py) |
-| Rejection of a function-detail request using a stale catalog revision | [Function-catalog tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_function_catalog_zmq.py) |
+## Supplementary Data 7. Earlier held-out analyses
 
-The [unit-test job](https://github.com/OpenHCSDev/openhcs/actions/runs/34870874969/job/104066142788)
-passed while selecting `tests/unit` and `tests/core`. These focused tests include
-controlled fixtures and isolate the stated behavior. The real-corpus execution
-and value comparisons are provided by the separate Official30 job in
-Supplementary Data 1.
+Each fresh gpt-5.6-sol author used four development fields or wells, then fixed its method before receiving the held-out inputs. [Final pipelines and scores](independent_validation/README.md) and the [validation report](independent_agent_validation.md) preserve that prospective design.
 
-## Supplementary Data 7. Prospective agent-authored assay validation
+| Analysis | Held-out data | Result |
+| --- | --- | --- |
+| Nuclear detection 1 | 50 BBBC039 fields | 4,733 of 5,720 reference nuclei matched; precision 0.680, recall 0.827, F1 0.746; mean field Dice 0.935. |
+| Cell-boundary analysis 1 | 12 BBBC007 fields | 29,450 of 43,875 predicted border pixels within two pixels of a manual outline: 0.671. |
+| Protein translocation 1 | 92 BBBC013 wells | 14,262 cells measured; Z′ 0.751 for Wortmannin and 0.554 for LY294002. |
 
-### Nuclear detection 1, cell-boundary 1 and protein translocation 1
+Precision is the fraction of detections matched to references; recall is the fraction of references found. F1 balances both, and Dice measures area overlap; 1 is best for each. Nuclear matching required intersection over union ≥ 0.5. The nuclear analysis predicted 6,964 objects and often split reference nuclei, despite high area overlap.
 
-These three analyses were applied without changing their processing settings after their held-out images were disclosed (Supplementary Figures 2–3). Nuclear detection analysis 1 matched 4,733 of 5,720 reference nuclei on 50 BBBC039 fields at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and F1 was 0.746; mean field Dice area overlap was 0.935. Precision measures how many detections are correct, recall how many reference nuclei were found, and F1 balances both; 1 is best. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and more reference nuclei were split than merged. It therefore recovered nuclear area well while often splitting nuclei into multiple detections.
+Boundary agreement checks predicted borders only; it does not show that every manual border was recovered or that cells match one-to-one. The cell-boundary analysis predicted 1,274 nuclei and 1,273 cells; every nucleus overlapped a cell. Manual outlines enclosed 1,082 closed nuclear interiors, excluding 12 open/frame-connected regions.
 
-Cell-boundary analysis 1 placed 29,450 of 43,875 predicted adjacent-cell boundary pixels within two pixels of a manual outline on 12 BBBC007 fields, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the score checks predicted borders against manual outlines, it can reward an incomplete segmentation and does not establish that each detected cell matches a reference cell.
+Protein translocation analysis 1 used each well's mean cell-level nuclear/cytoplasmic GFP ratio. Positive/negative control means were 7.235/0.915 for Wortmannin and 7.219/1.127 for LY294002. Z′ measures their separation relative to well variation; both exceeded 0.5. BBBC013 has no manual masks for segmentation scoring. Analysis 2 instead used median log2 ratios on 96 wells including development, so the two results are not a controlled before–after comparison.
 
-Protein translocation analysis 1 produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out BBBC013 wells. Wortmannin controls separated with Z′ of 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z′ of 0.554 and means of 7.219 and 1.127. Z′ measures control separation relative to variation between wells; both scores exceed the 0.5 threshold for an excellent screening assay. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
+## Supplementary Data 8. Agent-developed analyses
 
-The [validation report](independent_agent_validation.md) gives the prospective
-design and results for BBBC039, BBBC007 and BBBC013. Each trial used a
-fresh gpt-5.6-sol author through the connected OpenHCS desktop and MCP surface.
-Four development fields or wells were visible before the scientific pipeline
-was frozen; held-out references and treatment metadata were then scored by the
-typed evaluator in
-[`benchmark/annotated_validation.py`](../../benchmark/annotated_validation.py).
+### Results and reference types
 
-The [evidence index](independent_validation/README.md) links final pipelines and
-held-out scores. The [preparation record](../../benchmark/annotated_validation_20260915.md)
-describes deterministic partitions, image normalization and evaluation definitions.
-Prediction arrays, source images and file inventories are indexed in the linked
-archive records.
-
-The prospective held-out panels in Supplementary Figures 2–3 are generated by
-[`build_slas_independent_validation.py`](../figures/build_slas_independent_validation.py)
-from the three held-out scores. Its
-[plot data](../figures/slas/independent_agent_validation_plot_data.csv) and
-[source record](../figures/slas/independent_agent_validation_provenance.json)
-link the plotted values to the original evaluations.
-
-## Supplementary Data 8. Autonomous analysis evidence
-
-### Evaluation endpoints and reference types
-
-| Assay | Endpoint | Reference |
-|---|---|---|
-| H001 bright objects | One-to-one object F1 | Computational notebook labels |
-| BBBC039 nuclei | One-to-one object F1 and foreground Dice | Independent instance annotations |
-| BBBC007 DNA/actin | Directed boundary fraction | Manual-outline union |
-| BBBC013 translocation | Well-level GFP ratio and control Z′ | Treatment groups |
-| H002 3D centres | Matched-centre voxel distance | Manual centre annotations |
-| Retinal somata | Counts and distributed image review | Matched raw/result views |
-| Public and laboratory neurites | Shaft and path recovery | Matched raw/path views |
-
-### Trial-level autonomous results
-
-Analysis names describe the task; numbers distinguish independently developed methods. A correction remains part of the same numbered analysis. Multiple measurements from one analysis are listed separately. The linked trial records map these names to original files and identifiers.
+Names identify the task; numbers distinguish independently developed methods. Corrections remain part of the same analysis. **Held-out** means the method was fixed before those inputs were released. **Uninspected** means the agent did not open those fields during development, determined retrospectively. **Development** results may include images used to choose the method.
 
 | Assay | Model | Data partition | Endpoint | Result |
 |---|---|---|---|---|
@@ -638,23 +260,13 @@ Analysis names describe the task; numbers distinguish independently developed me
 | Laboratory-image neurite tracing | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
 | Neurite drug-response analyses 1–3 | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
 
-### Additional assays: detailed results
+Object scores use computational labels for H001 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; H002 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
 
-The main text groups these single- and two-agent demonstrations by the corrections and measurements they demonstrate. Their detailed results are given here; the trial-level table above lists every score.
+### Errors that remain
 
-**Cell-boundary analyses (BBBC007).** Analyses 2 and 3 reached directed boundary fractions of 0.743 and 0.740 across 16 DNA/actin fields; analysis 1 reached 0.671 across 12 held-out fields (main Figure 5C; Supplementary Data 7). In one paired-field analysis, the agent detected 56 nuclei and kept 54 actin-supported cells after removing two seed-only candidates. Each cell mask included all pixels of its associated nucleus. Main Figure 5F shows a same-region merge repair.
+Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 5H is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
 
-**Bright-object detection.** Analysis 1 matched 59 of 64 computational-reference objects and raised F1 from 0.929 to 0.944 through self-directed repair (main Figures 3B and 5A). The matched views show correction of an elongated object's split and recovery of a pair lost during an intermediate revision.
-
-**3D nuclear localisation.** Analysis 1 recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (main Figure 5D,I); analysis 2 also recovered 15 of 15, with mean matched error of 4.86 voxels. Eleven predictions of the first agent had no matching annotation; because annotations cover only some centres, these are not yet classified as false detections. A different agent repaired an internal body partition at Z=36 while keeping its neighbour separate (main Figure 5H).
-
-**Retinal cell detection.** Analysis 1 detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (main Figure 5G). Analysis 2 detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4).
-
-**Neurite fields.** One autonomous agent analysed all nine laboratory neurite fields and revised its tracing sensitivity after inspecting thin processes (main Figure 4F–H). Matched sparse and dense views showed recovery of raw-visible paths with the same soma labels in the reviewed field. In the public NeuronCyto II field, the initial pipeline recovered principal shafts and junctions (main Figure 4C–E); the final repair extended beyond that target. The initial result is shown alongside the published algorithm output.
-
-### BBBC039 field-level errors and repair
-
-The [per-field scores](task_only_analysis/bbbc039-uninspected-fields.csv) for the 175 fields that none of the three agents opened (rows with `opened_by_any_of_three_authors=False`) give the following pattern. Pooled counts reproduce the reported F1 values of 0.910, 0.906 and 0.906.
+Across the 175 uninspected BBBC039 fields, missed nuclei made up 73–78% of the three agents' errors:
 
 | Agent | Fields with F1 ≥ 0.90 | Fields below 0.80 | Median field F1 | Missed nuclei | False detections | Fields with more misses than false detections |
 |---|---:|---:|---:|---:|---:|---:|
@@ -662,121 +274,17 @@ The [per-field scores](task_only_analysis/bbbc039-uninspected-fields.csv) for th
 | Nuclear detection 3 | 117 | 7 | 0.917 | 2,929 | 806 | 173 |
 | Nuclear detection 4 | 121 | 6 | 0.915 | 2,743 | 1,033 | 171 |
 
-Misses made up 73% to 78% of each agent's errors. The same six fields (20641_A12_7, 20591_L01_3, 20590_D08_7, 20586_O15_6, 20626_E05_2 and 20630_P09_4) scored below 0.80 for all three agents; nuclear detection analysis 3 also scored 0.727 on 20589_P23_7. These six fields hold 17 to 180 reference nuclei (median 59), against a median of 126 across all 175 fields. In field 20641_A12_7, all three agents missed 57 to 59 of 69 nuclei, giving F1 of 0.23 to 0.27. Field F1 was only weakly related to the number of nuclei (Spearman rank correlation ρ −0.15 to −0.24, indicating a weak tendency for more crowded fields to score lower); in the third of fields with the most nuclei (138 to 199), pooled F1 was 0.893 to 0.897, against 0.920 to 0.928 in the middle third.
+The same six fields scored below 0.80 for all three agents. In the hardest field, all missed 57–59 of 69 nuclei. The [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) identifies those images. On three inspected fields, analysis 2's repair recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, but split reference nuclei increased from 28 to 43. That repair was not separately evaluated across all fields.
 
-A same-input repair in nuclear detection analysis 2 lowered the maxima-suppression size from 14 to 10 and raised F1 from 0.908 to 0.934 on the three inspected fields, recovering 14 missed nuclei while split reference nuclei increased from 28 to 43. The repair was not separately evaluated on the full collection. Between two independent agents' final pipelines on all 200 fields, per-field F1 differed mostly by less than 0.03, and the lower pooled score came chiefly from 314 additional missed nuclei (Supplementary Figure 3).
+A further [paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst) recovered three crowded nuclear omissions and removed two cells without actin-supported growth, leaving 56 nuclei and 54 cells. [Cell-boundary analysis 3](task_only_analysis/bbbc007-fresh26-final-candidate.rst) produced 1,428 nuclear and cell IDs across sixteen fields, with remaining merge/boundary uncertainty. Retinal source images were user-provided R0010 RBPMS images with unverified physical calibration; DNA/actin images were BBBC007v1 A02 from the Sabatini laboratory, Whitehead Institute (CC0).
 
-### Instructions used in the reported trials
+The [assisted nine-field mosaic](../figures/slas/p001_stitched_dev13_native.png) is development work, not another fresh autonomous trial. Its [continuation](task_only_analysis/p001-allchannel25-qualified-completion.rst) reported 1,740 soma candidates and 123,054 µm of computed outgrowth, but overlapping fields, uncertain ownership and absent spatial ground truth prevent interpreting those totals as a unique biological census.
 
-Nuclear detection analyses 2–4 received different revisions of the OpenHCS guide. The three neurite drug-response analyses received the same revision. The [trial resource table](task_only_analysis/trial_resources.csv) and [treatment-assay record](personal_neurite_autonomous/cohort.json) identify the delivered instructions by file checksum, so the exact versions can be recovered. No instruction-guide version was recorded for nuclear detection 1, cell-boundary 1 or protein translocation 1.
+### Instructions and reproducibility
 
-### Source artwork and assisted mosaic review
+The [original instruction archive](task_only_analysis/original_task_briefs.json), [trial resource table](task_only_analysis/trial_resources.csv) and [neurite cohort record](personal_neurite_autonomous/cohort.json) identify briefs, model/software versions, timing and retained outputs. Nuclear detection analyses 2–4 received different guide revisions; the three drug-response analyses received the same revision. Guide versions and original instruction files were not retained for the three earlier held-out analyses.
 
-Main Figure 4 shows public shafts, autonomous laboratory-field analysis and
-three independently authored treatment responses. The earlier assisted response
-comparison remains in Supplementary Figure 5.
-The separate [assisted nine-field mosaic artwork](../figures/slas/p001_stitched_dev13_native.png)
-and [overlap/core layout](../figures/slas/supp_neurite_morphology.png)
-show stitching at the acquisition coordinates.
-One pooled percentile pair was fitted per complete nine-field channel stack
-before assembly. Some faint segments were missed, and ownership was unresolved
-in crowded regions.
-The [completed all-channel continuation](task_only_analysis/p001-allchannel25-qualified-completion.rst)
-reported 1,740 soma candidates and 123,054 micrometres of computed outgrowth
-at the declared spacing. These computed totals describe the continuation;
-the earlier panels show sampled regions. Overlapping fields and uncertain
-ownership prevent their interpretation as a unique biological census, and no
-spatial reference validates the lengths.
-
-The independent BBBC039 repeat matched 20,207 of 23,615 reference instances,
-with 1,164 excess predictions and 3,408 misses. The earlier author matched
-20,521, with 1,153 excess predictions and 3,094 misses. Pooled F1 values are
-0.898 and 0.906, respectively, at intersection over union ≥ 0.5. The
-[independent-author sheet](../figures/slas/bbbc039_independent_repeat.png)
-shows this comparison; annotation-empty fields coincide
-at the scatter origin.
-
-The original artwork shows wider image regions and additional comparisons:
-[process architecture](../figures/slas/process_architecture.png),
-[runtime composition](../figures/slas/runtime_composition.png),
-[compiler preparation](../figures/slas/compiler_preparation.png),
-[typed extension](../figures/slas/custom_function_extension.png),
-[full-plate translocation](../figures/slas/translocation_fresh23.png),
-[translocation development](../figures/slas/bbbc013_development_repair.png),
-[H001 scored review](../figures/slas/h001_scored_native.png),
-[volume repair](../figures/slas/h002_fresh22_split_repair.png),
-[orthogonal localisation](../figures/slas/h002_fresh10_native.png),
-[retinal review](../figures/slas/retina_fresh16_repair.png),
-[retinal development](../figures/slas/retinal_development_repair.png),
-[paired DNA repair](../figures/slas/h003_native_repair.png),
-[actin support checks](../figures/slas/h003_fresh19_matched.png),
-[public shaft/junction review](../figures/slas/h004_assay_review.png) and
-[public main shafts](../figures/slas/h004_main_shafts.png).
-Retinal source: user-provided R0010 RBPMS images; physical calibration unverified.
-DNA/actin source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
-
-### Scientific instructions supplied to authors
-
-The [instruction archive](task_only_analysis/original_task_briefs.json) links each trial to its original brief. The table summarizes the scientific instructions; original trial identifiers and operational instructions remain in the archive. The thick-shaft-only target was clarified after the neurite run and was absent from its original brief.
-
-| Brief | Scientific instruction |
-| --- | --- |
-| 1: BBBC007 nuclei and cells | Segment nuclei and seeded cells from paired DNA/actin images across 16 source sets, with labels and object tables. Source bindings and optional custom-function tracks were supplied. |
-| 2: Paired DNA and actin: full released sixteen-source collection | Analyse all sixteen paired DNA/actin fields, choosing the method from image measurements and packaged guidance. Inspect separated regions before selecting the final pipeline. |
-| 3: BBBC013 GFP translocation | Measure nuclear and cytoplasmic GFP in 96 paired source sets and produce cell/well response tables. Source bindings, catalogue tracks and optional statistics extensions were supplied. |
-| 4: BBBC039 nuclei | Segment nuclear instances in 200 source sets and save label images and object measurements. The brief supplied source bindings and catalogue-only authoring. |
-| 5: H001: bright-object segmentation | Segment bright objects in one two-dimensional image and report pixel areas and count. Review raw images and labels across positions and intensity windows. |
-| 6: H002: 3-D centre detection | Detect nuclear centres in a three-dimensional volume and report z/y/x voxel coordinates and count. Inspect separated slices and orthogonal views; physical spacing was unverified. |
-| 7: Paired nucleus and cell segmentation | Segment nuclei and actin-supported cells in one paired field, preserving w1/w2 identity. Explicit source pairing and distributed multi-window review were required. |
-| 8: H004 blind neurite-outgrowth analysis | Infer channel roles in one paired neurite field and measure supported somata and outgrowth. Review faint paths, background connections and crossing ownership before evaluation. |
-| 9: Paired-field soma and neurite-outgrowth analysis | Analyse paired soma/neurite images, infer channel roles and save object/path measurements in pixel units. Keep the first attempt and later self-directed repairs. |
-| 10: Blind neurite-outgrowth development task | Analyse nine paired fields from one coded well, with w1 DAPI, w2 FITC and declared spacing 1.3556 µm per pixel. Choose the method independently and report uncertain crossing ownership. |
-| 11: Personal nine-field neurite analysis | Analyse nine paired DAPI/calcein fields and their acquisition layout, including authorized mosaic work. Report fieldwise geometry without counting overlapping fields as unique cells. |
-| 12: Personal nine-field neurite analysis: retained development | Continue a saved nine-field analysis and assembled mosaics, reviewing misses, bridges and ownership. This is a retained-development continuation. |
-| 13: Unavailable pooled-stack scientific brief | The brief for this trial was not kept. |
-| 14: R0010 independent-author development trial | Segment RBPMS-positive retinal somata in one development CZI and report labels, measurements and count. RBPMS/Hoechst hints and distributed review were supplied. Retinal analyses 1–2 used fresh sessions; the archive documents their launch context. |
-| 15: Retinal whole-mount RBPMS analysis | Segment RBPMS-positive somata in the retinal development field, confirming channels from raw images. Preserve the first attempt, self-directed repairs and matched regional review. |
-| 16: Retinal whole-mount RBPMS analysis | Analyse the authorized retinal development input with RBPMS/Hoechst hints and packaged MCP guidance. Report uncertain soma identity, extent and boundaries. |
-
-The original instruction files for nuclear detection 1, cell-boundary 1 and protein translocation 1 were not retained; Supplementary Data 7 describes their design and partitions. Although an archived retinal brief mentions inherited conversation, the launch records for retinal analyses 1–2 show new sessions with memory disabled and no parent conversation. Other trials associated with that brief have not been checked for inherited context. The [trial resource table](task_only_analysis/trial_resources.csv) links the original launch records.
-
-The current skill describes inspection and repair practice, including additions made after earlier trials. Main Figure 3 shows that procedure alongside the H001 author's actual decisions. Wall times come from the trial resource catalogue, and the candidate sequence comes from the author's report; screenshot counts were not used to estimate review rounds.
-
-Supplementary Figures 2–5 group additional evidence by assay. Main Figure 5 shows
-translocation and volume localisation; main Figure 4 leads with three blind treatment analyses and includes separate public and laboratory neurite demonstrations. The assisted
-mosaic is linked below as a development example. Reference evaluation follows
-pipeline selection; examples lacking exhaustive annotations do not receive an
-accuracy percentage.
-
-- [Bright-object analysis](task_only_analysis/h001-fresh25-qualified-review.rst).
-- [Volume localisation](task_only_analysis/h002-fresh23-paired-localisation.rst).
-- [Paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst).
-- [Retinal soma localisation](task_only_analysis/retinal-fresh26-qualified-completion.rst).
-- [Personal nine-field mosaic](task_only_analysis/p001-allchannel25-qualified-completion.rst).
-- [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
-- [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
-- [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
-- [BBBC039 frozen predictions on image-uninspected fields](task_only_analysis/bbbc039-uninspected-fields.rst),
-  with the [field-level scores and exposure flags](task_only_analysis/bbbc039-uninspected-fields.csv)
-  and [source and image-opening evidence](task_only_analysis/bbbc039-uninspected-fields.json).
-- [BBBC013 endpoint selection and development-well inclusion](task_only_analysis/bbbc013-fresh23-endpoint-provenance.rst).
-- [Trial wall times, usage and dated model/software identities](task_only_analysis/trial_resources.rst),
-  with the [complete resource catalogue](task_only_analysis/trial_resources.csv).
-
-Two additional final-pipeline repeats appear in the trial-level inventory above. Bright-object detection analysis 2 selected 62 labels after matched image review; no computational-reference
-score was reported for that repeat. 3D nuclear localisation analysis 2 matched all 15 annotated
-centres within 30 voxels, with mean error 4.8580507660 voxels and eleven unmatched
-predictions. The original records linked above give their selected candidates and
-review scope. These repeats are separate from bright-object detection analysis 1 and 3D nuclear localisation analysis 1, plotted in main Figures 3 and 5.
-
-The [final nine-field pipeline](task_only_analysis/pipelines/p001-fresh13.py)
-is supplied unchanged. To reproduce it, relocate input/output destinations and
-the viewer endpoint, then validate, compile and execute through MCP with the
-recorded installation. The linked review gives the input manifest and review scope.
-
-The following source files are also supplied byte-for-byte from the authors'
-selected frozen attempts. Their run identities and original hashes remain in
-the linked analysis records; no candidate was reselected using reference scores.
+Briefs supplied biological tasks and, in some cases, technical guidance: source bindings and allowed catalogue tracks, nuclear/cytoplasmic GFP measurement, seeded cell segmentation or channel hints. These were not tests of scientists writing completely unaided prompts. An archived retinal brief mentions inherited conversation, but launch records for retinal analyses 1–2 show fresh sessions with memory disabled; other trials attached to that brief were not checked. The current guide includes later improvements and must not be treated as the exact guide given to earlier agents. The [earlier supplement](README_before_readability_20261015.md#scientific-instructions-supplied-to-authors) summarizes all sixteen briefs.
 
 | Analysis | Final pipeline |
 |---|---|
@@ -790,63 +298,8 @@ the linked analysis records; no candidate was reselected using reference scores.
 | Nuclear detection 3 | [Source](task_only_analysis/pipelines/bbbc039-fresh10.py) |
 | Cell-boundary analysis 3 | [Source](task_only_analysis/pipelines/bbbc007-fresh26.py) |
 
-The two BBBC039 sources correspond to the plotted full-200 result (pooled
-F1 0.906) and the independent coverage repeat (0.898), respectively. Both
-require the original [image metadata table](task_only_analysis/pipelines/bbbc039/source_manifest.csv);
-Nuclear detection analysis 3 also imports the supplied [source binding](task_only_analysis/pipelines/bbbc039/source_bindings.py).
-Relocate its original import directory and metadata location to these supplied
-files when reproducing the workflow. The binding matches the original source record for analysis 3 and the final input manifest for analysis 2. The final manifest for analysis 3 does not list the binding directly.
-The BBBC007 source is the final analysis of all 16 paired fields; its relative `source_sets.csv` location refers to the
-supplied [paired-field metadata](task_only_analysis/pipelines/bbbc007/source_sets.csv).
+The [nine-field neurite pipeline](task_only_analysis/pipelines/p001-fresh13.py) is also supplied. These are the agents' selected sources, unchanged by reference scoring. Reproduction requires the recorded software and inputs; relocate file destinations and viewer endpoints without changing scientific settings.
 
-The volume pipeline also requires the original [centre-detection custom function](task_only_analysis/pipelines/h002-fresh23/custom_function.py).
-The translocation pipeline requires its original [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py),
-[assay statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py)
-and [dose-response summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py)
-functions. Register these sources through MCP under their recorded function
-names before validating the corresponding pipeline. Reproduction also requires
-the recorded inputs, metadata and software version. Preserve scientific
-settings while relocating destinations and use an isolated viewer endpoint.
-These are frozen analysis artifacts, not additions to the processing library.
-The retinal and volume sources in this table correspond to Data 8's named
-trials, not the different retinal trial in Supplementary Figure 4 or the
-volume trial in main Figure 5.
+Additional supplied dependencies are the BBBC039 [image metadata](task_only_analysis/pipelines/bbbc039/source_manifest.csv) and [source binding](task_only_analysis/pipelines/bbbc039/source_bindings.py), BBBC007 [paired-field metadata](task_only_analysis/pipelines/bbbc007/source_sets.csv), 3D [centre-detection function](task_only_analysis/pipelines/h002-fresh23/custom_function.py), and translocation [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py), [statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py) and [dose summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py). Register custom functions under their recorded names before validation and execution. The original records identify which trial each source supports; the retinal and 3D sources above are not the distinct trials shown in Supplementary Figure 4 and main Figure 5, respectively.
 
-The personal mosaic and explicitly labelled development examples retain assisted
-provenance; they are not counted as fresh unguided trials. Recovery of principal
-neurite shafts is the relevant illustrated result, not exhaustive filopodial
-tracing or definitive neuron ownership at crossings.
-
-Original attempts, unsuccessful candidates and delivery history remain in the
-linked records and the [archived evidence inventory](https://github.com/OpenHCSDev/openhcs/blob/7f318f36969cae281964a31f4f43899a45a9a8f3/paper/supplementary/README.md#supplementary-data-8-task-only-authoring-and-independent-repair).
-They are not additional experimental replicates.
-
-For NeuronCyto II image 1, the published manual-reference table contains eight
-traced-cell entries, without spatial identifiers or an exhaustive-coverage
-statement. The official testing archive contains the two source images but no
-manual spatial tracing files. Aggregate agreement therefore does not establish
-shaft recall, neuron ownership or calibrated length accuracy. The
-[reference audit](neuroncyto_reference_audit.md) retains the source-table
-checksums, image correspondence and interpretation. The manual-reference
-construction is described by [Ong et al. (2016)](https://doi.org/10.1002/cyto.a.22872).
-
-The [image-1 length comparison](neuroncyto_length_evaluation/conclusion.rst)
-verifies that the H004 first prediction used the same source field. It reports
-4,085.1925 pixels of rooted outgrowth; the published manual total is 3,832.601
-in unspecified units. These values are descriptive, not an accuracy ratio:
-the length definitions and units have not been aligned, and the retained
-reference has no spatial traces or cell correspondences. The
-[aggregate table](neuroncyto_length_evaluation/aggregate_lengths.csv) keeps the
-first prediction separate from the overextended final attempted repair. Main
-Figure 4C–E illustrates the initial tracing rather than that later revision. The intended
-thick-shaft endpoint was clarified after the run; the original brief and all
-predictions remain unchanged. This clarification is not evidence that the
-original author received that more specific target.
-The [primary-source follow-through](neuroncyto_length_evaluation/unit_followthrough.rst)
-records the article and user-guide checks and the remaining unit requirement.
-
-## Additional paired-channel results
-
-A further BBBC007 author analysed sixteen paired fields after self-directed repair, producing 1,428 nuclear and seeded-cell IDs. Saved masks reconcile reported areas and same-ID nucleus containment. The [final-candidate analysis](task_only_analysis/bbbc007-fresh26-final-candidate.rst) describes a possible remaining merge and crowded-boundary uncertainty.
-
-An independent paired DNA/actin author recovered three crowded nuclear omissions and removed two candidates with no actin-supported growth beyond their nuclear seeds. Its final 56 nuclei and 54 cell regions have reconciled labels, areas and parent relationships. The [completed analysis](task_only_analysis/h003-fresh26-qualified-completion.rst) contains matched raw/label review and own-nucleus containment checks.
+Original attempts, unsuccessful revisions and complete source inventories remain in the [earlier supplement](README_before_readability_20261015.md) and its linked records. They are not additional experimental replicates.

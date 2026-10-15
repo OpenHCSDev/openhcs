@@ -44,7 +44,7 @@ def submission_benchmark_summary() -> None:
     from build_slas_visual_story import FigureSheet, OUTPUT
 
     publication = OUTPUT / "benchmark-publication"
-    sheet = FigureSheet("submission_benchmark_summary", "", 8.4)
+    sheet = FigureSheet("submission_benchmark_summary", "", 9.0)
     sheet.source(Path(__file__))
 
     def retained(path, record_name="figure2_provenance.json"):
@@ -143,10 +143,10 @@ def submission_benchmark_summary() -> None:
                     ("med", summary.median, -7, "top"),
                 ):
                     axis.annotate(
-                        f"{label}\n{value:.1f}×",
+                        f"{label} {value:.1f}×" if label == "med" else f"{label}\n{value:.1f}×",
                         (group_index + offset, value), xytext=(0, shift),
                         textcoords="offset points", ha="center", va=alignment,
-                        fontsize=9, color=colors[scope_index],
+                        fontsize=8.5 if label == "med" else 9, color=colors[scope_index],
                         weight="bold" if label == "mean" else "normal",
                         bbox={"facecolor": "white", "edgecolor": "none",
                               "alpha": .85, "pad": .5}, zorder=5,
@@ -192,7 +192,7 @@ def submission_benchmark_summary() -> None:
     sheet.text(3, 58, "Each module counted once. Shared-code tests\ndo not test the module's own algorithm.",
                size=11, color="#59697b", va="top")
 
-    sheet.text(54, 96, "B  One-worker comparisons", size=14, weight="bold")
+    sheet.text(54, 96, "B  One worker · measured times", size=14, weight="bold")
     single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
     amortized = []
     for scope in ("execution", "total"):
@@ -206,9 +206,11 @@ def submission_benchmark_summary() -> None:
     distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
     axis.tick_params(axis="x", labelsize=10)
     axis.set_ylim(.8, 800)
-    sheet.text(54, 51.5, "Measured time per sample; OpenHCS median of three runs", size=9, color="#59697b")
+    sheet.text(54, 52.5, "Each dot is one workflow (30 per distribution)", size=10, weight="bold")
+    sheet.text(54, 50.5, "Time per sample; OpenHCS median of three runs", size=9, color="#59697b")
 
-    sheet.text(2, 48, "C  Same cores and samples · CellProfiler estimated", size=14, weight="bold")
+    sheet.text(2, 47, "C  Same cores and samples", size=14, weight="bold")
+    sheet.text(2, 44.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution", size=10, color="#59697b")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
     groups = []
@@ -229,14 +231,15 @@ def submission_benchmark_summary() -> None:
                     "cp_projected_seconds": predicted[i, j],
                     "openhcs_measured_seconds": values(key, scope)[i],
                     "speedup": groups[-1][j][i]})
-    labels = [f"{modes[key]['openhcs_worker_count']} / {modes[key]['assignment_count']}\n"
-              + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} samples/core"
+    labels = [f"{modes[key]['openhcs_worker_count']} {'core' if modes[key]['openhcs_worker_count'] == 1 else 'cores'}\n"
+              + f"{modes[key]['assignment_count']} samples\n"
+              + f"({modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} per core)"
               for key in ordered]
-    axis = sheet.figure.add_axes((.09, .17, .88, .28))
+    axis = sheet.figure.add_axes((.09, .18, .88, .23))
     distributions(axis, groups, labels)
     axis.set_ylim(.8, 800)
     axis.tick_params(axis="x", labelsize=10)
-    axis.set_xlabel("Cores / total repeated samples, the same for both applications", fontsize=11, labelpad=7)
+    axis.set_xlabel("Same workload and core count for both applications", fontsize=11, labelpad=7)
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=colors[0], label="Processing"),
         Line2D([], [], marker="o", ls="", color=colors[1], label="Setup + processing"),

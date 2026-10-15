@@ -65,7 +65,7 @@ Each step's input selection names the channels, planes or stacks it reads and di
 ![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** OpenHCS window with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman analysis. Blue boxes mark the plate manager, pipeline editor and execution-server list.
+**(A)** OpenHCS window with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman analysis. Blue boxes show where to select a plate, edit analysis steps and settings, and check execution status.
 :::
 
 ### Execution and viewers
@@ -219,12 +219,12 @@ For datasets without exhaustive spatial annotations, we compared analysis result
 ![Task-specific nuclear, boundary, volume and translocation endpoints alongside an independent DNA/actin merge repair.](figures/slas/submission_analysis_summary.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Bright-object detection analysis 1: F1 against computational reference labels, first and final, one image. F1 balances missed and false detections; 1 is best.
-**(B)** Nuclear detection analyses 2–4: F1 on all 200 fields and on the 175 fields none of the agents opened.
-**(C)** Cell-boundary analyses 2–3: fraction of predicted borders within two pixels of manual outlines; higher is better. Dots are fields; lines combine border pixels across fields.
-**(D)** 3D nuclear localisation analysis 1: mean centre-to-centre error among matched detections as the allowed matching distance changes. Numbers above points give matched centres out of 15 manual annotations. The dashed line marks the predeclared 30-voxel matching limit; lower error is better. A voxel is a three-dimensional image pixel.
-**(E)** Protein translocation analysis 2: dose means and SD (variation among four wells per dose). Z′ measures positive–negative control separation, using four wells of each type; higher is better and values above 0.5 indicate an excellent assay.
-**(F)** BBBC007 raw image and detected cells in the same C4 region, before and after correcting merged cell detections. Colours distinguish detected cells within each view.
+**(A)** Bright-object analysis 1, before and after repair on one image; computational-reference F1 (1 is best).
+**(B)** Nuclear analyses 2–4: all 200 fields and the 175 none of the agents opened.
+**(C)** Cell-boundary analyses 2–3: predicted borders within two pixels of manual outlines. Dots are fields; lines pool border pixels.
+**(D)** Mean error among matched 3D centres; labels count matches out of 15 annotations. Dashed line: predeclared 30-voxel (3D pixel) matching limit. Annotations are incomplete.
+**(E)** Translocation analysis 2: means ± SD of four well medians per dose, with shared vertical limits. Each well's median cell-level log2(nuclear/cytoplasmic GFP) increases with relative nuclear GFP. Z′ measures control separation (four wells/type; >0.5 is excellent). The 96 wells include four development wells.
+**(F)** Same BBBC007 region, raw and before/after correcting merged cells. Colours identify cells within each view.
 :::
 
 ### Figure 5, continued. Correcting cell detection in two and three dimensions
@@ -262,7 +262,7 @@ On the same twelve-sample workload, every workflow ran faster with two, three an
 ![Graded module coverage, measured one-worker comparisons and matched-core CellProfiler projections, with all thirty workflows shown as points.](figures/slas/submission_benchmark_summary.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Most complete test available for each of 85 processing modules. Each module appears once; categories with zero modules have no slice. Testing shared components does not test each module's own algorithm. **(B)** Measured times with one worker: one sample each, then time per sample in batches of eight for CellProfiler (CP) and twelve for OpenHCS (OH). **(C)** Same cores and samples per core for both applications. OpenHCS times are measured; CellProfiler times are estimated for independent single-threaded processes, each with its own initialization cost. The estimate assumes evenly divided work and no slowdown from running processes together. Smaller batches per process fall outside the tested serial batch sizes. **(B, C)** Each dot is one of 30 workflows. Translucent bars show the arithmetic mean; black lines show medians. Labels give mean, median and maximum speedups on logarithmic axes, with the minimum beneath each bar. The red dashed line marks equal speed (1×); faint guides mark 2×, 4× and 10×. OpenHCS times are medians of three runs after warmup. Setup includes OpenHCS compilation; both timing measures include CellProfiler's internal initialization. Application startup, OpenHCS library loading and warmup are excluded. Batches repeat the same image sample. Supplementary Data 3 gives timing definitions, estimation checks and individual values.
+**(A)** Strongest test per module; zero-count categories have no slice. Shared-code tests do not test each module's own algorithm. **(B)** Measured one-worker times: one sample each, then per-sample time for batches of eight (CellProfiler) or twelve (OpenHCS). **(C)** Matching cores and samples: measured OpenHCS versus estimated CellProfiler. Estimates assume independent single-threaded processes, each with initialization, evenly divided work and no parallel slowdown. Some per-process batch sizes fall below the validated range (Supplementary Data 3). **(B, C)** Each dot is one of 30 workflows; translucent bars are arithmetic means and black lines medians. Labels give minimum, mean, median and maximum. Logarithmic axes; red dashed line is equal speed, guides are 2×, 4× and 10×. OpenHCS times are medians of three runs after warmup. Setup includes compilation; both CellProfiler timing measures include initialization. External startup, OpenHCS library loading and warmup are excluded. Repeated samples measure processing, not biological variation.
 :::
 
 ## Discussion

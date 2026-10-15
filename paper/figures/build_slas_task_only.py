@@ -357,15 +357,12 @@ def submission_summary() -> None:
         sheet.source(ROOT / path)
     axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.15))
             for bottom in (0.79, 0.55) for col in (0, 1)]
-    axes.append(sheet.figure.add_axes((0.09, 0.32, 0.86, 0.12)))
-    titles = ("A  Bright-object detection", "B  Nuclear detection 2–4",
-            "C  Cell-boundary analyses 2–3", "D  3D nuclear localisation",
-              "E  Protein translocation analysis 2")
+    titles = ("A  Repair improves detection", "B  Three agents reach similar accuracy",
+              "C  Cell borders match manual outlines", "D  All 15 annotated centres located")
     details = ("Same image · computational reference",
-               "Three agents · reference nuclear outlines",
-               "16 fields each · manual cell outlines",
-               "15 manual centres · coverage not exhaustive",
-               "96 wells, including development · 4 wells / dose")
+               "F1 balances missed and false detections",
+               "Within 2 pixels · 16 fields per analysis",
+               "Within 30 voxels · annotations are incomplete")
     for axis, title, detail in zip(axes, titles, details, strict=True):
         axis.set_title(title, loc="left", fontsize=12, fontweight="bold", pad=28)
         axis.text(0, 1.06, detail, transform=axis.transAxes, fontsize=9, color=MUTED)
@@ -422,7 +419,7 @@ def submission_summary() -> None:
         axes[2].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
         axes[2].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=10)
     axes[2].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
-                ylabel="Boundary fraction within 2 px")
+                ylabel="Predicted borders supported\nby manual outlines (fraction)")
 
     scores = json.loads((ROOT / sources[5]).read_text())["scores"]
     thresholds = sorted(map(int, scores))
@@ -434,23 +431,30 @@ def submission_summary() -> None:
     axes[3].axvline(30, color=MUTED, linestyle="--", linewidth=0.8)
     axes[3].text(0.97, 0.04, "Predeclared limit: 30 voxels", transform=axes[3].transAxes,
                  ha="right", fontsize=8, color=MUTED)
-    axes[3].set(xlabel="Allowed matching distance (voxels)", ylabel="Mean matched-centre error (voxels)",
+    axes[3].set(xlabel="Allowed matching distance (voxels)", ylabel="Mean matched-centre error\n(voxels; lower is better)",
                 ylim=(0, 6.1), xticks=thresholds)
 
+    sheet.text(3, 46, "E  Both drugs produce a translocation response", size=12, weight="bold")
+    sheet.text(3, 44, "96 wells, including 4 development wells · mean ± SD of 4 wells per dose", size=9, color=MUTED)
     series = AssaySeries.load(SOURCE)
-    for assay, color in zip(series, (BLUE, TEAL), strict=True):
+    for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
+        axis = sheet.figure.add_axes((0.09 + column * 0.49, 0.305, 0.37, 0.105))
         means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
         deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
-        axes[4].errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
-                         color=color, label=f"{assay.compound} · Z′ {assay.control_zprime:.3f}", capsize=2)
-    axes[4].set(xticks=range(9), xticklabels=[f"{a.concentration:g}\n{b.concentration:g}"
-                for a, b in zip(series[0].doses, series[1].doses, strict=True)],
-                xlabel="Concentration: LY294002 (µM) / Wortmannin (nM)",
-                ylabel="Well median cell log₂(N/C GFP)", ylim=(-0.5, 2.7))
-    axes[4].tick_params(axis="x", labelsize=8)
-    axes[4].legend(frameon=False, fontsize=9, loc="upper left")
+        axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
+                      color=color, capsize=2)
+        axis.set_title(f"{assay.compound} · control separation Z′ = {assay.control_zprime:.3f}",
+                       loc="left", fontsize=10, color=color)
+        axis.set(xticks=range(9), xticklabels=[f"{dose.concentration:g}" for dose in assay.doses],
+                 xlabel=f"Concentration ({assay.unit.replace('uM', 'µM')})", ylim=(-0.5, 2.7))
+        axis.tick_params(labelsize=8)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
+        axis.set_axisbelow(True)
+        if column == 0:
+            axis.set_ylabel("Nuclear / cytoplasmic GFP\n(log₂ ratio)", fontsize=9)
 
-    sheet.text(3, 24, "F  Independent DNA / actin analysis: local merge repair",
+    sheet.text(3, 24, "F  An agent separates previously merged cell detections",
                size=12, weight="bold")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")

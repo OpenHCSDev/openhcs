@@ -1,10 +1,10 @@
 {
-  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
+  "generator_sha256": "ef8896d6ea6e86f5c6ebbe866878ace2b21368970face535665edf584a78f3f9",
   "source_sha256": {
     "paper/figures/slas/custom_signal_example.py": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
     "paper/figures/slas/custom_extension_fixed_openhcs_register_custom_function.json": "04d98eeb7559fdcbd9710810f72aebdea14eaa6d219d09db0bef3d0f8af87d25",
     "paper/figures/slas/custom_extension_live_function_detail.json": "538d863131beb12f3dc0c3c24310cad350147d1209e40dcbf5c12c4d7c3a48a5",
-    "paper/figures/build_slas_extension.py": "7da9b36abdc2cc0c25d198a6c1a56a2341a22599c842b6a4f92451ba959e8d81",
+    "paper/figures/build_slas_extension.py": "4d21ce33adb9570c3dd3c08f9d20586afa2f16b5e4712fb7b2109d153bcead2f",
     "paper/figures/slas/custom_extension_evidence.json": "dd72dc4c73be803c61ac6864ec611b6f2a37048caa2a0b8f7176a67a345d98bc",
     "paper/figures/slas/custom_extension_code_before.json": "0643feb3e37b62fab001619e68e6ff993a35cc9919e96aabe696c4ad47d99f0f",
     "paper/figures/slas/custom_extension_load_authoring.json": "178c109f95ed1793d616c319cceecca7d353a5292223e8e0d501cd14fc24ceec",
@@ -59,9 +59,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_custom_function.png": "b1d680f1f8e6a0affa4aef10f641c248632e04bef14de83dcc2bcf15365c97f4",
-    "submission_custom_function.pdf": "537c5a55c76aedf4d00d4906c7b880884b2cb2ecf0307883b7d47a0f1b31e696",
-    "submission_custom_function.svg": "8793d1f3282809bfe7876c30bad84a23f37ec28e5b0d12a88696d5aabdc83dad"
+    "submission_custom_function.png": "b0a99cc354ae5a210a012586f5012d6dcb115bd80579ce7e182a9a93d91dfeec",
+    "submission_custom_function.pdf": "2918fec040b5f4da773234f1d57e7bec682fd563b8a5c984af238d4da7ad1317",
+    "submission_custom_function.svg": "d33f8f0405404b35c137d088ef7748804fe915d05c7d8e605a1e092a4e419933"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
