@@ -254,14 +254,26 @@ Reduction in compile-plus-run time per sample across thirty workflows. Ratios co
 
 ## Supplementary Table 2. Software ecosystems and project-hosted learning resources
 
+**Development history and extension interfaces.** Release dates and first descriptions are distinguished below; they are not interchangeable measures of a project's age.
+
+| Platform | Release or description | Implementation and extension route |
+| --- | --- | --- |
+| ImageJ / Fiji | ImageJ released in 1997; Fiji first released in 2007. | Java-based ImageJ supports plugins and macros; Fiji packages ImageJ with community plugins and an updater [@Schneider2012; @Schindelin2012]. |
+| CellProfiler | Released in 2005; first described in 2006. | Configurable analysis modules; the later Python implementation also supports plugin modules [@Carpenter2006; @McQuin2018; @Weisbart2024]. |
+| Icy | Introduced in 2011. | Java plugins, scripting and graphical workflows [@deChaumont2011; @deChaumont2012]. |
+| napari | First minor release in 2019. | Python viewing and analysis; plugin packages add readers, writers and interactive tools [@NapariRelease2019; @NapariPlugins]. |
+| PyImageJ | Described in 2022. | Connects Java-based ImageJ and Python within a Python process; napari-imagej uses this bridge within napari [@Rueden2022PyImageJ; @NapariImageJ]. |
+| OMERO | Data-management system described in 2012. | Shared image storage, metadata management and access from analysis tools [@Allan2012]. |
+| BioImageIT | Described in 2022. | Links image-data management with analysis tools and packaged processing environments [@Prigent2022]. |
+
 Web inventories were inspected on 15 October 2026. Counts describe the named collections, not every resource available for a platform. A project-hosted resource can be community-contributed; hosting does not imply that every item is maintained or validated. Plugins, tutorial pages, script files and complete workflows are different units and should not be ranked as equivalent capabilities.
 
 | Platform | Extensions | Tutorials and training | Scripts and workflows |
 | --- | --- | --- | --- |
 | ImageJ / Fiji | >500 plugins reported in 2012 [@Schneider2012]; historical count. | 26 pages under “Tutorials on this site” in the [index](https://imagej.net/tutorials/). | 402 top-level macro/script files in the [archive](https://imagej.net/ij/macros/). |
 | CellProfiler | 24 [supported plugins](https://plugins.cellprofiler.org/supported_plugins.html); >90 built-in modules reported separately [@Weisbart2024]. | 10 main [tutorial exercises](https://tutorials.cellprofiler.org/). | 16 [application collections](https://cellprofiler.org/examples), each potentially containing multiple pipelines. |
-| Icy | 448 [plugins](https://icy.bioimageanalysis.org/plugins/). | 6 project-produced [training PDFs](https://icy.bioimageanalysis.org/trainings/), including a shortcut reference. | 82 [scripts](https://icy.bioimageanalysis.org/scripts/); 87 [graphical protocols](https://icy.bioimageanalysis.org/protocols/). |
-| napari | 680 plugins in the [dashboard](https://napari.org/weather-report/). | 4 worked tutorials in the [index](https://napari.org/stable/tutorials/index.html). | 115 examples in the [code gallery](https://napari.org/stable/gallery.html). |
+| Icy | 448 [plugins](https://icy.bioimageanalysis.org/plugins/) [@IcyCatalogue]. | 6 project-produced [training PDFs](https://icy.bioimageanalysis.org/trainings/), including a shortcut reference. | 82 [scripts](https://icy.bioimageanalysis.org/scripts/); 87 [graphical protocols](https://icy.bioimageanalysis.org/protocols/). |
+| napari | 680 plugins in the [dashboard](https://napari.org/weather-report/) [@NapariDashboard]. | 4 worked tutorials in the [index](https://napari.org/stable/tutorials/index.html). | 115 examples in the [code gallery](https://napari.org/stable/gallery.html). |
 | BioImageIT | [Python tools](https://bioimageit.readthedocs.io/en/stable/documentation/tool_integration.html) with declared dependencies and environments; total not established. | 2 worked tutorials in the [documentation index](https://bioimageit.readthedocs.io/en/latest/documentation/documentation.html). | No separate total established from the inspected index. |
 
 **Counting rules.** Tutorial counts exclude navigation links, translations of the same exercise, linked external courses, how-to sections and video playlists. The CellProfiler count runs from beginner segmentation through UnmixColors, excluding bonus material, profiling resources and older-version tutorials. ImageJ archive counts use unique top-level filenames ending in `.txt`, `.ijm` or `.js`, excluding `AA_ReadMe.txt`, subdirectories and ZIP bundles; a file can contain several macros. Napari examples are unique `gallery/*.html` destinations. Icy uses its catalogue totals and the six PDFs under “Our own course and tutorial,” not six equivalent tutorials. An unestablished count is not zero.
