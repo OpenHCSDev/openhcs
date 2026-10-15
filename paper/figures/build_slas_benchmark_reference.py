@@ -44,7 +44,7 @@ def submission_benchmark_summary() -> None:
     from build_slas_visual_story import FigureSheet, OUTPUT
 
     publication = OUTPUT / "benchmark-publication"
-    sheet = FigureSheet("submission_benchmark_summary", "", 6.8)
+    sheet = FigureSheet("submission_benchmark_summary", "", 8.4)
     sheet.source(Path(__file__))
 
     def retained(path, record_name="figure2_provenance.json"):
@@ -120,8 +120,8 @@ def submission_benchmark_summary() -> None:
         for group_index, pair in enumerate(groups):
             for scope_index, numbers in enumerate(pair):
                 # Fixed workflow offsets reveal the distribution without adding data.
-                offset = -.17 if scope_index == 0 else .17
-                jitter = np.linspace(-.105, .105, len(names))
+                offset = -.22 if scope_index == 0 else .22
+                jitter = np.linspace(-.14, .14, len(names))
                 if len(numbers) != 30 or not np.all(np.isfinite(numbers) & (numbers > 0)):
                     raise ValueError("Each distribution requires thirty positive workflow values")
                 axis.scatter(group_index + offset + jitter, numbers, s=33,
@@ -129,11 +129,25 @@ def submission_benchmark_summary() -> None:
                              edgecolors="white", linewidths=.35, zorder=3)
                 summary = SpeedupSummaryStatistics.from_series(
                     SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
-                axis.bar(group_index + offset, summary.median - 1, bottom=1,
-                         width=.26, color=colors[scope_index], alpha=.20,
+                axis.bar(group_index + offset, summary.mean - 1, bottom=1,
+                         width=.40, color=colors[scope_index], alpha=.20,
                          edgecolor=colors[scope_index], linewidth=.8, zorder=1)
-                axis.plot([group_index + offset - .12, group_index + offset + .12],
+                axis.plot([group_index + offset - .20, group_index + offset + .20],
                           [summary.median] * 2, color="#152536", lw=2.1, zorder=4)
+                for label, value, shift, alignment in (
+                    ("max", summary.maximum, 6, "bottom"),
+                    ("mean", summary.mean, 5, "bottom"),
+                    ("med", summary.median, -7, "top"),
+                ):
+                    axis.annotate(
+                        f"{label}\n{value:.1f}×",
+                        (group_index + offset, value), xytext=(0, shift),
+                        textcoords="offset points", ha="center", va=alignment,
+                        fontsize=9, color=colors[scope_index],
+                        weight="bold" if label == "mean" else "normal",
+                        bbox={"facecolor": "white", "edgecolor": "none",
+                              "alpha": .85, "pad": .5}, zorder=5,
+                    )
         axis.set_yscale("log")
         axis.set_ylim(.8, 2200)
         axis.yaxis.set_major_locator(LogLocator(base=10))
@@ -141,7 +155,7 @@ def submission_benchmark_summary() -> None:
         axis.yaxis.set_minor_formatter(NullFormatter())
         axis.axhline(1, color="#a64343", ls="--", lw=1)
         axis.set_xticks(range(len(labels)), labels)
-        axis.set_xlim(-.55, len(labels) - .45)
+        axis.set_xlim(-.46, len(labels) - .54)
         axis.tick_params(labelsize=12)
         axis.grid(axis="y", alpha=.2)
         axis.set_axisbelow(True)
@@ -184,12 +198,12 @@ def submission_benchmark_summary() -> None:
         if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
             raise ValueError("Per-well ratios differ from the canonical amortized claim")
         amortized.append(numbers)
-    axis = sheet.figure.add_axes((.60, .64, .37, .25))
+    axis = sheet.figure.add_axes((.60, .62, .37, .28))
     distributions(axis, (single, amortized), ("1 well each", "CP 8 / OH 12\nper well"))
     axis.set_ylim(.8, 800)
     sheet.text(57, 53, "Measured CP; OpenHCS median of three runs", size=11, color="#59697b")
 
-    sheet.text(2, 46, "C  Matched cores and wells · CP projected", size=14, weight="bold")
+    sheet.text(2, 48, "C  Matched cores and wells · CP projected", size=14, weight="bold")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
     groups = []
@@ -213,18 +227,19 @@ def submission_benchmark_summary() -> None:
     labels = [f"{modes[key]['openhcs_worker_count']} / {modes[key]['assignment_count']}\n"
               + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} wells/core"
               for key in ordered]
-    axis = sheet.figure.add_axes((.09, .19, .88, .23))
+    axis = sheet.figure.add_axes((.09, .14, .88, .31))
     distributions(axis, groups, labels)
     axis.set_ylim(.8, 800)
     axis.set_xlabel("Cores / total wells, matched between engines", fontsize=12, labelpad=7)
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=colors[0], label="Execution"),
         Line2D([], [], marker="o", ls="", color=colors[1], label="Compile + run"),
-        Patch(facecolor="#152536", alpha=.20, label="Median bars + lines"),
-    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=3, frameon=False, fontsize=12)
+        Patch(facecolor="#152536", alpha=.20, label="Mean bars"),
+        Line2D([], [], color="#152536", lw=2, label="Median"),
+    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False, fontsize=11)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots, translucent bars from 1x to the median, and median lines; log axes",
-        "bar_statistic": "median",
+        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, and mean/median/maximum labels; log axes",
+        "bar_statistic": "arithmetic mean",
         "bar_baseline": 1.0,
         "workflow_count_per_distribution": len(names),
         "single_worker_batch_policy": claims["amortized_policy"],

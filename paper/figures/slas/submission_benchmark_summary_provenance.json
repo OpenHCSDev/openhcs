@@ -1,7 +1,7 @@
 {
   "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "e3e273559c9f352df7835f3123816094d91d9d5f878a7606d89687fe286b9edc",
+    "paper/figures/build_slas_benchmark_reference.py": "b5e080e6906e488efeaad283ef64ab0d9e2db9a2d2ae5069d0f4668d6f0f55a1",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -52,8 +52,8 @@
   "ui_crops": [],
   "display_transforms": [
     {
-      "operation": "Paired workflow dots, translucent bars from 1x to the median, and median lines; log axes",
-      "bar_statistic": "median",
+      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, and mean/median/maximum labels; log axes",
+      "bar_statistic": "arithmetic mean",
       "bar_baseline": 1.0,
       "workflow_count_per_distribution": 30,
       "single_worker_batch_policy": "Per-sample ratio of one measured serial CP8 first batch (CPUs2-5 affinity, one numerical thread) to the median of three measured OH one-worker twelve-assignment runs. OH preparation is spread over twelve samples, CP initialization over eight.",
@@ -69,9 +69,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "91c61c3cabf96bebe60cc709bab312a95abe3a4026b6fd47946451dcd9d4ddd4",
-    "submission_benchmark_summary.pdf": "093e691542b11cae9545380339d1c050fa9248a9774e3a7b63a89cbabcdb12ae",
-    "submission_benchmark_summary.svg": "17fed0e620a8ceb25bb3ebb12af4935f785bc5cf4f6d81bc63b1ad62dd157711"
+    "submission_benchmark_summary.png": "68047980cba2367120438fc5a7af8214b1773baffede5161a9e9914d452d8243",
+    "submission_benchmark_summary.pdf": "bcb31d5357189b7c3a8afab6caded77cc44ef16375628b5273d16ebd743d3017",
+    "submission_benchmark_summary.svg": "7829f96bc07144080229df6b50667cf4cf5f70bab86e36cb2ad3abfe4b028de4"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
