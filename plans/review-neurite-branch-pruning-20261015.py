@@ -23,8 +23,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--before', default='cohort-repaired/cohort-input_openhcs/results')
 parser.add_argument('--after', default='pruning-5um')
 parser.add_argument('--label', default='5 µm pruning')
+parser.add_argument('--before-label', default='Before')
 parser.add_argument('--check-geometry', action='store_true')
-parser.add_argument('--show-changes', action='store_true', help='Highlight added and removed graph paths')
+parser.add_argument('--show-changes', action='store_true', help='Highlight only removed graph paths')
 parser.add_argument('--pruning-cutoff', type=float,
                     help='Check a pruning-only change and inspect removed paths near this cutoff')
 args = parser.parse_args()
@@ -43,7 +44,6 @@ for well, site, dim in [('A25', 7, (84, 600)), ('A34', 8, (72, 700))]:
     graphs = [load_rois_from_zip(path) for path in paths]
     segments = [[shape.coordinates[:, ::-1] for roi in graph for shape in roi.shapes] for graph in graphs]
     removed = []
-    added = []
     if args.show_changes or args.pruning_cutoff is not None:
         def path_key(roi):
             shapes = tuple(min(shape.coordinates.tobytes(), shape.coordinates[::-1].tobytes())
@@ -54,20 +54,16 @@ for well, site, dim in [('A25', 7, (84, 600)), ('A34', 8, (72, 700))]:
         assert len(previous_paths) == len(graphs[0])
         assert len(current_paths) == len(graphs[1])
         removed = [roi for key, roi in previous_paths.items() if key not in current_paths]
-        added = [roi for key, roi in current_paths.items() if key not in previous_paths]
         if args.pruning_cutoff is not None:
-            assert not added, 'Retained geometry or ownership changed'
+            assert current_paths.keys() <= previous_paths.keys(), 'Retained geometry or ownership changed'
             assert all(roi.metadata['branch_distance'] < args.pruning_cutoff for roi in removed)
         print(dict(well=well, removed_edges=len(removed),
                    removed_length_um=sum(roi.metadata['branch_distance'] for roi in removed),
-                   added_edges=len(added),
-                   added_length_um=sum(roi.metadata['branch_distance'] for roi in added),
-                   unchanged_edges=len(current_paths.keys() & previous_paths.keys())), flush=True)
-        for change, changed_paths in [('removed', removed), ('added', added)]:
-            with (output / f'{well}-{change}-paths.csv').open('w', newline='') as stream:
-                writer = csv.DictWriter(stream, fieldnames=['edge_id', 'neuron_label', 'branch_distance'])
-                writer.writeheader()
-                writer.writerows({key: roi.metadata[key] for key in writer.fieldnames} for roi in changed_paths)
+                   retained_edges=len(current_paths)), flush=True)
+        with (output / f'{well}-removed-paths.csv').open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=['edge_id', 'neuron_label', 'branch_distance'])
+            writer.writeheader()
+            writer.writerows({key: roi.metadata[key] for key in writer.fieldnames} for roi in removed)
     for method, folder, path, graph in zip(('before', args.after), (before, after), paths, graphs):
         name = f'{well}_site-{site}_z_index-1_timepoint-1_neurite_outgrowth'
         with (folder / f'{name}_summary_step0_details.csv').open() as stream:
@@ -116,15 +112,11 @@ for well, site, dim in [('A25', 7, (84, 600)), ('A34', 8, (72, 700))]:
                 axis.add_collection(LineCollection(
                     [shape.coordinates[:, ::-1] for roi in removed for shape in roi.shapes],
                     colors='#ffd343', linewidths=1.2))
-            if i == 5 and added:
-                axis.add_collection(LineCollection(
-                    [shape.coordinates[:, ::-1] for roi in added for shape in roi.shapes],
-                    colors='#40e8ef', linewidths=1.2))
             axis.set(xlim=(x0, x1), ylim=(y1, y0))
+            axis.set_aspect('equal')
             axis.set_title(['Raw DAPI', 'Raw FITC moderate', 'Raw FITC dim',
-                            'Before + dim raw', f'{args.label} + dim raw',
-                            ('Graph: unchanged pink; added cyan; removed yellow'
-                             if added or removed else f'{args.label}: graph only')][i])
+                            f'{args.before_label} + dim raw', f'{args.label} + dim raw',
+                            ('Tracing; yellow = removed' if removed else 'Tracing')][i])
         fig.suptitle(f'{well} site {site}; source pixels; 1.3556 µm/px; gamma 1\n'
                      f'FITC moderate {tuple(map(float, moderate.round(2)))}, dim {dim}; DAPI {tuple(map(float, dapi_window.round(2)))}')
         fig.savefig(output / f'{well}-{label}.png', dpi=160)
