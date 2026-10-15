@@ -1,7 +1,7 @@
 """Matched saved-artifact review; no detector work and no synthetic annotations.
 
-The native viewer is unavailable owing to its Napari slicing-state API error.
-Render persisted graph coordinates directly against the unchanged input TIFFs.
+For saved-artifact review when the managed viewer is unavailable, render
+persisted graph coordinates directly against the unchanged input TIFFs.
 Four fields/crop centers were selected in the frozen author's prior review,
 not by their new effect sizes. Display fits never enter the detector.
 """
@@ -33,6 +33,7 @@ parser.add_argument('--after-label', default='Corrected engine')
 parser.add_argument('--after-step', type=int, default=0)
 parser.add_argument('--before-step', type=int, default=0)
 parser.add_argument('--overlay-window', choices=('dim', 'moderate'), default='dim')
+parser.add_argument('--body-contours', action='store_true', help='Show saved cell-body boundaries in cyan on both combined views.')
 args = parser.parse_args()
 old, new, output = args.before, args.after, args.output
 output.mkdir(parents=True, exist_ok=True)
@@ -50,6 +51,11 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
               for folder, index in ((old, args.before_step), (new, args.after_step))]
     segments = [[shape.coordinates[:, ::-1] for roi in graph for shape in roi.shapes]
                 for graph in graphs]
+    bodies = []
+    if args.body_contours:
+        for folder, index in ((old, args.before_step), (new, args.after_step)):
+            body = tifffile.imread(folder / f'{well}_site-{site}_z_index-1_timepoint-1_cell_bodies_step{index}.labels.tif').squeeze()
+            bodies.append(np.any(body > 0, axis=0) if body.ndim == 3 else body > 0)
     fig, axes = plt.subplots(2, 3, figsize=(15, 10), layout='constrained')
     titles = ['Raw DAPI', 'Raw FITC', 'Raw FITC, dim window',
               f'{args.before_label} + {args.overlay_window} raw',
@@ -65,6 +71,8 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
         if i >= 3:
             axis.add_collection(LineCollection(segments[0 if i == 3 else 1],
                                                colors='#ff3da5', linewidths=.65))
+        if args.body_contours and i in (3, 4):
+            axis.contour(bodies[i - 3], levels=[0.5], colors=['cyan'], linewidths=.6)
         axis.set_xlim(x - 200, x + 200)
         axis.set_ylim(y + 200, y - 200)
         axis.set_title(titles[i])
@@ -77,7 +85,7 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
                        fitc_high=fitc_limits[1], fitc_dim_high=dim_limits[1],
                        dapi_low=dapi_limits[0], dapi_high=dapi_limits[1],
                        overlay_window=args.overlay_window, before_step=args.before_step,
-                       after_step=args.after_step))
+                       after_step=args.after_step, body_contours=args.body_contours))
 with (output / 'display-windows.csv').open('w', newline='') as stream:
     writer = csv.DictWriter(stream, fieldnames=list(states[0]))
     writer.writeheader()
