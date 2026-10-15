@@ -254,6 +254,22 @@ Reduction in compile-plus-run time per sample across thirty workflows. Ratios co
 | [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads, writes and streams data through supported storage interfaces. |
 | [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates communication, startup, shutdown and progress between processes. |
 
+## Supplementary Table 2. Software ecosystems and project-hosted learning resources
+
+Web inventories were inspected on 15 October 2026. Counts describe the named collections, not every resource available for a platform. A project-hosted resource can be community-contributed; hosting does not imply that every item is maintained or validated. Plugins, tutorial pages, script files and complete workflows are different units and should not be ranked as equivalent capabilities.
+
+| Platform | Extensions | Tutorials and training | Scripts and workflows |
+| --- | --- | --- | --- |
+| ImageJ / Fiji | >500 plugins reported in 2012 [@Schneider2012]; historical count. | 26 pages under “Tutorials on this site” in the [index](https://imagej.net/tutorials/). | 402 top-level macro/script files in the [archive](https://imagej.net/ij/macros/). |
+| CellProfiler | 24 [supported plugins](https://plugins.cellprofiler.org/supported_plugins.html); >90 built-in modules reported separately [@Weisbart2024]. | 10 main [tutorial exercises](https://tutorials.cellprofiler.org/). | 16 [application collections](https://cellprofiler.org/examples), each potentially containing multiple pipelines. |
+| Icy | 448 [plugins](https://icy.bioimageanalysis.org/plugins/). | 6 project-produced [training PDFs](https://icy.bioimageanalysis.org/trainings/), including a shortcut reference. | 82 [scripts](https://icy.bioimageanalysis.org/scripts/); 87 [graphical protocols](https://icy.bioimageanalysis.org/protocols/). |
+| napari | 680 plugins in the [dashboard](https://napari.org/weather-report/). | 4 worked tutorials in the [index](https://napari.org/stable/tutorials/index.html). | 115 examples in the [code gallery](https://napari.org/stable/gallery.html). |
+| BioImageIT | [Python tools](https://bioimageit.readthedocs.io/en/stable/documentation/tool_integration.html) with declared dependencies and environments; total not established. | 2 worked tutorials in the [documentation index](https://bioimageit.readthedocs.io/en/latest/documentation/documentation.html). | No separate total established from the inspected index. |
+
+**Counting rules.** Tutorial counts exclude navigation links, translations of the same exercise, linked external courses, how-to sections and video playlists. The CellProfiler count runs from beginner segmentation through UnmixColors, excluding bonus material, profiling resources and older-version tutorials. ImageJ archive counts use unique top-level filenames ending in `.txt`, `.ijm` or `.js`, excluding `AA_ReadMe.txt`, subdirectories and ZIP bundles; a file can contain several macros. Napari examples are unique `gallery/*.html` destinations. Icy uses its catalogue totals and the six PDFs under “Our own course and tutorial,” not six equivalent tutorials. An unestablished count is not zero.
+
+**Community support.** Rueden et al. reported approximately 10,000 image.sc users and more than 15,000 posts per year in 2019 [@Rueden2019Forum]. Ouyang et al.'s 2023 sample found installation mentioned in 9.9% of opening posts and approximately 19% of roughly 500 threads [@Ouyang2023]. Napari's dashboard reported 1,460 tagged topics and 938 participating users on 15 October 2026 [@NapariDashboard]. Posts are individual messages; topics are discussion threads. The napari total does not distinguish bugs, usage questions, integration requests or announcements. Comparable per-platform bug/help counts were not established: direct image.sc access was unavailable, and neither the published sample nor project resource catalogues provide that breakdown. Missing counts must not be interpreted as absence of support requests, and raw forum volume is not a failure rate.
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 

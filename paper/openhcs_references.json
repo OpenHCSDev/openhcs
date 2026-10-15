@@ -1,5 +1,102 @@
 [
   {
+    "id": "Rueden2019Forum",
+    "type": "article-journal",
+    "title": "Scientific Community Image Forum: A discussion forum for scientific image software",
+    "author": [
+      {"given": "Curtis T.", "family": "Rueden"},
+      {"given": "Jeanelle", "family": "Ackerman"},
+      {"given": "Ellen T.", "family": "Arena"},
+      {"given": "Jan", "family": "Eglinger"},
+      {"given": "Beth A.", "family": "Cimini"},
+      {"given": "Allen", "family": "Goodman"},
+      {"given": "Anne E.", "family": "Carpenter"},
+      {"given": "Kevin W.", "family": "Eliceiri"}
+    ],
+    "container-title": "PLOS Biology",
+    "volume": "17",
+    "issue": "6",
+    "page": "e3000340",
+    "issued": {"date-parts": [[2019, 6, 19]]},
+    "DOI": "10.1371/journal.pbio.3000340"
+  },
+  {
+    "id": "Rueden2022PyImageJ",
+    "type": "article-journal",
+    "title": "PyImageJ: A library for integrating ImageJ and Python",
+    "author": [
+      {"given": "Curtis T.", "family": "Rueden"},
+      {"given": "Mark C.", "family": "Hiner"},
+      {"given": "Edward L.", "family": "Evans", "suffix": "III"},
+      {"given": "Michael A.", "family": "Pinkert"},
+      {"given": "Alice M.", "family": "Lucas"},
+      {"given": "Anne E.", "family": "Carpenter"},
+      {"given": "Beth A.", "family": "Cimini"},
+      {"given": "Kevin W.", "family": "Eliceiri"}
+    ],
+    "container-title": "Nature Methods",
+    "volume": "19",
+    "issue": "11",
+    "page": "1326–1327",
+    "issued": {"date-parts": [[2022, 10, 17]]},
+    "DOI": "10.1038/s41592-022-01655-4"
+  },
+  {
+    "id": "deChaumont2011",
+    "type": "paper-conference",
+    "title": "ICY: A new open-source community image processing software",
+    "author": [
+      {"given": "Fabrice", "family": "de Chaumont"},
+      {"given": "Stéphane", "family": "Dallongeville"},
+      {"given": "Jean-Christophe", "family": "Olivo-Marin"}
+    ],
+    "container-title": "2011 IEEE International Symposium on Biomedical Imaging: From Nano to Macro",
+    "page": "234–237",
+    "issued": {"date-parts": [[2011]]},
+    "DOI": "10.1109/ISBI.2011.5872395"
+  },
+  {
+    "id": "NapariRelease2019",
+    "type": "webpage",
+    "title": "napari 0.1.0 release notes",
+    "author": [{"literal": "napari contributors"}],
+    "issued": {"date-parts": [[2019]]},
+    "URL": "https://napari.org/stable/release/release_0_1_0.html",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
+    "id": "NapariPlugins",
+    "type": "webpage",
+    "title": "Finding and installing plugins",
+    "author": [{"literal": "napari contributors"}],
+    "URL": "https://napari.org/stable/plugins/start_using_plugins/finding_and_installing_plugins.html",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
+    "id": "NapariDashboard",
+    "type": "webpage",
+    "title": "napari dashboard: plugin statistics and forum engagement",
+    "author": [{"literal": "napari contributors"}],
+    "URL": "https://napari.org/weather-report/",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
+    "id": "IcyCatalogue",
+    "type": "webpage",
+    "title": "Icy community resource catalogues: plugins, scripts and protocols",
+    "author": [{"literal": "Icy contributors"}],
+    "URL": "https://icy.bioimageanalysis.org/",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
+    "id": "NapariImageJ",
+    "type": "webpage",
+    "title": "napari-imagej: ImageJ Ecosystem Access within napari",
+    "author": [{"literal": "napari-imagej contributors"}],
+    "URL": "https://napari.imagej.net/en/stable/",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
     "id": "Ouyang2023",
     "type": "article-journal",
     "title": "Moving beyond the desktop: prospects for practical bioimage analysis via the web",
