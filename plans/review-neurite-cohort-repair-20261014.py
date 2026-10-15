@@ -30,6 +30,8 @@ parser.add_argument('--after', type=Path, default=new)
 parser.add_argument('--output', type=Path, default=output)
 parser.add_argument('--before-label', default='Frozen Blind 2')
 parser.add_argument('--after-label', default='Corrected engine')
+parser.add_argument('--after-step', type=int, default=0)
+parser.add_argument('--overlay-window', choices=('dim', 'moderate'), default='dim')
 args = parser.parse_args()
 old, new, output = args.before, args.after, args.output
 output.mkdir(parents=True, exist_ok=True)
@@ -43,18 +45,19 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
     fitc_limits = np.percentile(fitc, [1, 98])
     dim_limits = np.percentile(fitc, [1, 90])
     dapi_limits = np.percentile(dapi, [1, 99.5])
-    graphs = [load_rois_from_zip(folder / f'{stem}_neurite_morphology_step0.graph.roi.zip')
-              for folder in (old, new)]
+    graphs = [load_rois_from_zip(folder / f'{stem}_neurite_morphology_step{index}.graph.roi.zip')
+              for folder, index in ((old, 0), (new, args.after_step))]
     segments = [[shape.coordinates[:, ::-1] for roi in graph for shape in roi.shapes]
                 for graph in graphs]
     fig, axes = plt.subplots(2, 3, figsize=(15, 10), layout='constrained')
     titles = ['Raw DAPI', 'Raw FITC', 'Raw FITC, dim window',
-              f'{args.before_label} + dim raw', f'{args.after_label} + dim raw', f'{args.after_label}: graph only']
+              f'{args.before_label} + {args.overlay_window} raw',
+              f'{args.after_label} + {args.overlay_window} raw', f'{args.after_label}: graph only']
     for i, axis in enumerate(axes.flat):
         if i == 0:
             axis.imshow(dapi, cmap='gray', vmin=dapi_limits[0], vmax=dapi_limits[1])
         elif i < 5:
-            limits = dim_limits if i >= 2 else fitc_limits
+            limits = dim_limits if i == 2 or (i >= 3 and args.overlay_window == 'dim') else fitc_limits
             axis.imshow(fitc, cmap='gray', vmin=limits[0], vmax=limits[1])
         else:
             axis.set_facecolor('black')
@@ -71,7 +74,8 @@ for well, site, x, y in [('A49', 3, 450, 490), ('A02', 8, 520, 540),
     plt.close(fig)
     states.append(dict(well=well, site=site, x=x, y=y, fitc_low=fitc_limits[0],
                        fitc_high=fitc_limits[1], fitc_dim_high=dim_limits[1],
-                       dapi_low=dapi_limits[0], dapi_high=dapi_limits[1]))
+                       dapi_low=dapi_limits[0], dapi_high=dapi_limits[1],
+                       overlay_window=args.overlay_window, after_step=args.after_step))
 with (output / 'display-windows.csv').open('w', newline='') as stream:
     writer = csv.DictWriter(stream, fieldnames=list(states[0]))
     writer.writeheader()
