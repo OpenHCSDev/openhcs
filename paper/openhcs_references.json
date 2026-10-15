@@ -1,5 +1,70 @@
 [
   {
+    "id": "Ouyang2023",
+    "type": "article-journal",
+    "title": "Moving beyond the desktop: prospects for practical bioimage analysis via the web",
+    "author": [
+      {"given": "Wei", "family": "Ouyang"},
+      {"given": "Kevin W.", "family": "Eliceiri"},
+      {"given": "Beth A.", "family": "Cimini"}
+    ],
+    "container-title": "Frontiers in Bioinformatics",
+    "volume": "3",
+    "page": "1233748",
+    "issued": {"date-parts": [[2023, 7, 25]]},
+    "DOI": "10.3389/fbinf.2023.1233748"
+  },
+  {
+    "id": "Dobson2021",
+    "type": "article-journal",
+    "title": "ImageJ and CellProfiler: Complements in Open-Source Bioimage Analysis",
+    "author": [
+      {"given": "Ellen T. A.", "family": "Dobson"},
+      {"given": "Beth A.", "family": "Cimini"},
+      {"given": "Anna H.", "family": "Klemm"},
+      {"given": "Carolina", "family": "Wählby"},
+      {"given": "Anne E.", "family": "Carpenter"},
+      {"given": "Kevin W.", "family": "Eliceiri"}
+    ],
+    "container-title": "Current Protocols",
+    "volume": "1",
+    "issue": "5",
+    "page": "e89",
+    "issued": {"date-parts": [[2021, 5]]},
+    "DOI": "10.1002/cpz1.89"
+  },
+  {
+    "id": "Weisbart2024",
+    "type": "article-journal",
+    "title": "CellProfiler plugins – An easy image analysis platform integration for containers and Python tools",
+    "author": [
+      {"given": "Erin", "family": "Weisbart"},
+      {"given": "Callum", "family": "Tromans-Coia"},
+      {"given": "Barbara", "family": "Diaz-Rohrer"},
+      {"given": "David R.", "family": "Stirling"},
+      {"given": "Fernanda", "family": "Garcia-Fossa"},
+      {"given": "Rebecca A.", "family": "Senft"},
+      {"given": "Mark C.", "family": "Hiner"},
+      {"given": "Marcelo B.", "family": "de Jesus"},
+      {"given": "Kevin W.", "family": "Eliceiri"},
+      {"given": "Beth A.", "family": "Cimini"}
+    ],
+    "container-title": "Journal of Microscopy",
+    "volume": "296",
+    "issue": "3",
+    "page": "227–234",
+    "issued": {"date-parts": [[2024, 12]]},
+    "DOI": "10.1111/jmi.13223"
+  },
+  {
+    "id": "ArrayPipe",
+    "type": "software",
+    "author": [{"literal": "OpenHCS contributors"}],
+    "title": "ArrayPipe: pipelines for arrays",
+    "URL": "https://github.com/OpenHCSDev/arraypipe",
+    "accessed": {"date-parts": [[2026, 10, 15]]}
+  },
+  {
     "id": "Pan2026BIABench",
     "type": "article",
     "title": "BIABench: Evaluating AI agents on real-world bioimage analysis tasks",
