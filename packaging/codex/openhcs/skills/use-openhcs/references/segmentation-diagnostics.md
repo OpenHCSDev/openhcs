@@ -280,12 +280,22 @@ For short dead-end teeth on otherwise supported shafts,
 `outgrowth.minimum_branch_length` prunes outward arms whose longest continuation
 is below the chosen length (micrometers; pixels in the pixel-based callable).
 Zero disables it. Short connecting segments accumulate; daughter lengths are
-not pooled and the route cannot turn back through the junction. Soma attachment
-paths and cyclic/reconnecting cores are preserved. This is an OpenHCS extension,
+not pooled and the route cannot turn back through the junction. A short complete
+soma-rooted process is subject to the same cutoff; a short attachment leading to
+longer growth and cyclic/reconnecting cores are preserved. This is an OpenHCS extension,
 distinct from the scoring-only significant-cell-growth threshold. It changes
 both traces and measurements, but does not fix long false loops or a wrong soma
 mask. Measure native spur lengths, inspect real short branches and a long-path
 control, and never choose the cutoff merely to match a reference fold change.
+
+`outgrowth.centerline_smoothing_sigma_px` controls subpixel geometry, not image
+preprocessing (default 1 native pixel; zero disables smoothing). Junctions and
+endpoints stay fixed and the displacement is bounded to half a native pixel.
+The graph, SWC and measured lengths all derive from the same centreline; the
+integer skeleton remains the diagnostic detection support. Compare an oblique
+shaft and a curved/branched control against raw signal. Smoother geometry is an
+estimate at image resolution, not proof of exact biological length. Keep the
+setting explicit when comparing a new run with historical pixel-chain lengths.
 
 ### Separate support recovery from rooted graph validity
 

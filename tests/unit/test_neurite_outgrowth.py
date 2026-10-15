@@ -324,7 +324,9 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     geometry = ROIArchiveSourceMetadata.geometry(restored)
     assert len(geometry) == len(graph.edges)
     for roi, edge in zip(geometry, graph.edges, strict=True):
-        np.testing.assert_array_equal(roi.shapes[0].coordinates, edge.coordinates)
+        # ImageJ ROI's external coordinate format is float32, unlike the
+        # double-precision centreline used for measurement.
+        np.testing.assert_array_equal(roi.shapes[0].coordinates, edge.coordinates.astype(np.float32))
         assert roi.metadata["coordinate_unit"] == "pixels"
         assert roi.metadata["branch_distance"] == edge.feature_mapping()["branch_distance"]
     assert not tuple(tmp_path.glob("*.swc"))
@@ -516,6 +518,7 @@ def test_signature_exposes_metaxpress_controls_and_declared_openhcs_extensions()
         "candidate_hysteresis_seed_correction_factor",
         "enhance_neurites",
         "minimum_branch_length",
+        "centerline_smoothing_sigma_px",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -856,7 +859,9 @@ def test_edgeless_skeleton_has_empty_topology(coordinates):
     topology = _analyze_topology(
         skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0, branch_support=skeleton,
     )
-    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+    assert topology.owned_paths() == ()
+    assert not topology.path_coordinates and not topology.transitions
+    assert topology.path_lengths.size == 0 and not topology.root_paths_by_cell
     assert np.array_equal(skeleton, original)
 
 
@@ -879,7 +884,9 @@ def test_sparse_owned_singleton_regression_has_no_neurite_paths():
         assigned_path_labels=cell_bodies,
         branch_support=skeleton,
     )
-    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+    assert topology.owned_paths() == ()
+    assert not topology.path_coordinates and not topology.transitions
+    assert topology.path_lengths.size == 0 and not topology.root_paths_by_cell
 
 
 @pytest.mark.parametrize("diagonal", (False, True))
@@ -920,7 +927,9 @@ def test_three_pixel_cycle_has_empty_topology():
         branch_support=skeleton,
     )
 
-    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+    assert topology.owned_paths() == ()
+    assert not topology.path_coordinates and not topology.transitions
+    assert topology.path_lengths.size == 0 and not topology.root_paths_by_cell
     np.testing.assert_array_equal(skeleton, original)
 
 
@@ -1459,8 +1468,7 @@ def test_neurite_morphology_breaks_cycle_without_dropping_path_geometry():
     topology = _TopologyResult(
         path_owners=np.ones(3, dtype=np.int32),
         path_distances=np.array([0.0, 12.0, 12.0]),
-        path_lengths=np.array([12.0, 12.0, np.hypot(12.0, 12.0)]),
-        path_euclidean_lengths=np.array([12.0, 12.0, np.hypot(12.0, 12.0)]),
+        coordinate_scale=1.0,
         path_coordinates=path_coordinates,
         path_endpoint_groups=((1, 2), (2, 3), (3, 1)),
         path_branch_types=np.full(3, 2, dtype=np.int32),
@@ -1510,8 +1518,7 @@ def test_neurite_morphology_does_not_fabricate_links_between_components():
     topology = _TopologyResult(
         path_owners=np.ones(2, dtype=np.int32),
         path_distances=np.zeros(2, dtype=float),
-        path_lengths=np.array([8.0, 10.0]),
-        path_euclidean_lengths=np.array([8.0, 10.0]),
+        coordinate_scale=1.0,
         path_coordinates=(
             np.array([[12, 12], [12, 20]], dtype=int),
             np.array([[14, 12], [24, 12]], dtype=int),
@@ -3085,8 +3092,7 @@ def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
     topology = _TopologyResult(
         path_owners=np.array([1, 2], dtype=np.int32),
         path_distances=np.zeros(2),
-        path_lengths=np.array([1.0, 1.0 + np.sqrt(2.0)]),
-        path_euclidean_lengths=np.ones(2),
+        coordinate_scale=1.0,
         path_coordinates=paths,
         path_endpoint_groups=((1, 2), (1, 2)),
         path_branch_types=np.zeros(2, dtype=np.int32),

@@ -435,6 +435,9 @@ class CellProfilerNeuriteEngineProfile:
             crossing_topology=topology,
             branch_support=admission.mask,
         )
+        topology = replace(
+            topology, centerline_smoothing_sigma_px=outgrowth.centerline_smoothing_sigma_px,
+        )
         topology_trace = _render_owned_skeleton(pre_topology_owner_skeleton.shape, topology)
         topology = topology.prune_short_branches(
             outgrowth.minimum_branch_length,
@@ -917,9 +920,20 @@ class MetaXpressOutgrowthSettings:
     shorter than this length. Accumulate traced length through intervening
     segments and daughter junctions, never back through the starting junction.
     Decisions use the original topology in one pass, not repeated erosion.
-    Soma attachment paths and cyclic/reconnecting cores remain intact; cycles
+    Short standalone soma-rooted processes are also removed. Attachments that
+    lead to sufficiently long growth and cyclic/reconnecting cores remain; cycles
     cannot accumulate length by repeated traversal. Measurements and exported
     traces both use the pruned topology. Short real branches can also be removed.
+    """
+
+    centerline_smoothing_sigma_px: float = 1.0
+    """Subpixel centreline smoothing scale in native image pixels; zero disables.
+
+    Gaussian smoothing along traced arc length removes pixel-grid stair steps.
+    Endpoints and junctions stay fixed; displacement is bounded to half a pixel.
+    The same coordinates supply graph/SWC exports and all length measurements,
+    including pruning. Detection and raster support remain unchanged. This is
+    a bounded geometric estimate, not recovery of unobserved subpixel biology.
     """
 
     def maximum_width_px(self, coordinate_scale: float) -> float:
@@ -927,6 +941,12 @@ class MetaXpressOutgrowthSettings:
         return self.maximum_width / coordinate_scale
 
     def validate(self) -> None:
+        if (
+            isinstance(self.centerline_smoothing_sigma_px, (bool, np.bool_))
+            or not np.isfinite(self.centerline_smoothing_sigma_px)
+            or self.centerline_smoothing_sigma_px < 0
+        ):
+            raise ValueError("outgrowth.centerline_smoothing_sigma_px must be finite and >= 0")
         if (
             isinstance(self.minimum_branch_length, (bool, np.bool_))
             or not np.isfinite(self.minimum_branch_length)
@@ -1495,8 +1515,7 @@ class _ResolvedCrossing:
 class _TopologyResult:
     path_owners: np.ndarray
     path_distances: np.ndarray
-    path_lengths: np.ndarray
-    path_euclidean_lengths: np.ndarray
+    coordinate_scale: float
     path_coordinates: tuple[np.ndarray, ...]
     path_endpoint_groups: tuple[tuple[int, int], ...]
     path_branch_types: np.ndarray
@@ -1505,6 +1524,56 @@ class _TopologyResult:
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
     branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
     resolved_crossings: tuple[_ResolvedCrossing, ...]
+    centerline_smoothing_sigma_px: float = 0.0
+
+    def path_centerline(self, path: int) -> np.ndarray:
+        """Canonical graph geometry, distinct from integer detection support.
+
+        Resolve shared endpoints here, not in the exporter. Smooth uniformly
+        sampled arc length with an odd-reflected residual about the endpoint
+        chord: straight paths and fixed endpoints are preserved. Limit the
+        entire displacement field together to half a native pixel, retaining
+        the smoothing shape without independent per-point clipping artefacts.
+        """
+        coordinates = self.path_coordinates[path].astype(float, copy=True)
+        first, last = self.path_endpoint_groups[path]
+        coordinates[0] = self.endpoint_group_coordinates[first]
+        coordinates[-1] = self.endpoint_group_coordinates[last]
+        if self.centerline_smoothing_sigma_px == 0 or len(coordinates) < 3:
+            return coordinates
+        distance = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(coordinates, axis=0), axis=1))]
+        if distance[-1] == 0:
+            return coordinates
+        samples = np.linspace(0, distance[-1], max(3, int(np.ceil(distance[-1] / 0.5)) + 1))
+        uniform = np.column_stack([np.interp(samples, distance, axis) for axis in coordinates.T])
+        chord = coordinates[0] + (samples / samples[-1])[:, None] * (coordinates[-1] - coordinates[0])
+        sigma = self.centerline_smoothing_sigma_px / (samples[1] - samples[0])
+        # Past the whole path, a larger kernel supplies no additional local
+        # information. Bound allocation by the already sampled path length.
+        sigma = min(sigma, len(samples) - 1)
+        radius = int(np.ceil(4 * sigma))
+        residual = np.pad(uniform - chord, ((radius, radius), (0, 0)), mode="reflect", reflect_type="odd")
+        smoothed = ndi.gaussian_filter1d(residual, sigma, axis=0)[radius:-radius] + chord
+        fitted = np.column_stack([np.interp(distance, samples, axis) for axis in smoothed.T])
+        delta = fitted - coordinates
+        delta[[0, -1]] = 0
+        displacement = float(np.linalg.norm(delta, axis=1).max())
+        return coordinates + delta * (min(1.0, 0.5 / displacement) if displacement else 1.0)
+
+    @property
+    def path_lengths(self) -> np.ndarray:
+        """Lengths derived from the exported centreline, never a second input."""
+        return np.array([
+            np.linalg.norm(np.diff(self.path_centerline(path), axis=0), axis=1).sum()
+            * self.coordinate_scale for path in range(len(self.path_coordinates))
+        ])
+
+    @property
+    def path_euclidean_lengths(self) -> np.ndarray:
+        return np.array([
+            np.linalg.norm(np.subtract(self.endpoint_group_coordinates[last], self.endpoint_group_coordinates[first]))
+            * self.coordinate_scale for first, last in self.path_endpoint_groups
+        ])
 
     def prune_short_branches(
         self,
@@ -1521,7 +1590,9 @@ class _TopologyResult:
         not the sum of its daughters. Only original junctions can cut an arm;
         short internal segments therefore contribute to a longer continuation.
         Anchoring both ends of existing soma attachment paths preserves the
-        topology's root declaration, including multiple exits from one soma.
+        topology's root declaration while measuring its outward continuations.
+        An isolated root tree must also reach the minimum; proximity to a soma
+        is not an exemption for a short complete process.
         Loops and routes between roots never become leaves and are not pruned.
         """
         if minimum_length == 0 or not self.owned_paths():
@@ -1544,6 +1615,7 @@ class _TopologyResult:
         }
         degree = {node: len(paths) for node, paths in incidence.items()}
         original_degree = degree.copy()
+        path_lengths = self.path_lengths
         leaves = deque(node for node in incidence if degree[node] == 1 and node not in anchors)
         heights: dict[tuple[int, int], float] = defaultdict(float)
         children: dict[tuple[int, int], list[int]] = defaultdict(list)
@@ -1560,7 +1632,7 @@ class _TopologyResult:
             peeled.add(path)
             outward_end[path] = node
             children[parent].append(path)
-            reach = float(self.path_lengths[path]) + heights[node]
+            reach = float(path_lengths[path]) + heights[node]
             heights[parent] = max(heights[parent], reach)
             if original_degree[parent] >= 3 and reach < minimum_length:
                 cuts.append(path)
@@ -1569,13 +1641,24 @@ class _TopologyResult:
             if degree[parent] == 1 and parent not in anchors:
                 leaves.append(parent)
 
+        # A root whose two ends have no other unpeeled edge is a standalone
+        # process tree, not a connection to another root or a cyclic core.
+        short_roots = {
+            path for roots in self.root_paths_by_cell.values() for path in roots
+            if path in endpoints and endpoints[path][0] != endpoints[path][1]
+            and all(degree[node] == 1 for node in endpoints[path])
+            and path_lengths[path] + max(heights[node] for node in endpoints[path]) < minimum_length
+        }
+        cuts.extend(short_roots)
         removed = set()
         while cuts:
             path = cuts.pop()
             if path in removed:
                 continue
             removed.add(path)
-            cuts.extend(children[outward_end[path]])
+            ends = endpoints[path] if path in short_roots else (outward_end[path],)
+            for node in ends:
+                cuts.extend(children[node])
         if not removed:
             return self
         owners = self.path_owners.copy()
@@ -1587,6 +1670,10 @@ class _TopologyResult:
             transitions={
                 path: (() if path in removed else tuple(n for n in neighbors if n not in removed))
                 for path, neighbors in self.transitions.items()
+            },
+            root_paths_by_cell={
+                cell: tuple(path for path in roots if path not in removed)
+                for cell, roots in self.root_paths_by_cell.items()
             },
         )
         branch_types, branch_nodes = pruned.classify_owned_endpoints(
@@ -3196,7 +3283,6 @@ def _analyze_topology(
         for path_index in range(path_count)
     )
     path_lengths = branch_table["branch_distance"].to_numpy(dtype=float)
-    path_euclidean_lengths = branch_table["euclidean_distance"].to_numpy(dtype=float)
     node_incidence: dict[int, list[int]] = defaultdict(list)
     node_endpoints: dict[int, list[tuple[int, int]]] = defaultdict(list)
     path_endpoint_nodes: list[tuple[int, int]] = []
@@ -3379,8 +3465,7 @@ def _analyze_topology(
     topology = _TopologyResult(
         path_owners=path_owners,
         path_distances=path_distances,
-        path_lengths=path_lengths,
-        path_euclidean_lengths=path_euclidean_lengths,
+        coordinate_scale=coordinate_scale,
         path_coordinates=path_coordinates,
         path_endpoint_groups=tuple(
             tuple(endpoint_groups) for endpoint_groups in path_endpoint_groups
@@ -3433,8 +3518,6 @@ def _analyze_owned_topology(
 
     path_owners: list[np.ndarray] = []
     path_distances: list[np.ndarray] = []
-    path_lengths: list[np.ndarray] = []
-    path_euclidean_lengths: list[np.ndarray] = []
     path_coordinates: list[np.ndarray] = []
     path_endpoint_groups: list[tuple[int, int]] = []
     path_branch_types: list[np.ndarray] = []
@@ -3493,8 +3576,6 @@ def _analyze_owned_topology(
         )
         path_owners.append(local.path_owners)
         path_distances.append(local.path_distances)
-        path_lengths.append(local.path_lengths)
-        path_euclidean_lengths.append(local.path_euclidean_lengths)
         path_coordinates.extend(
             coordinates + spatial_offset for coordinates in local.path_coordinates
         )
@@ -3550,8 +3631,7 @@ def _analyze_owned_topology(
     return _TopologyResult(
         path_owners=np.concatenate(path_owners),
         path_distances=np.concatenate(path_distances),
-        path_lengths=np.concatenate(path_lengths),
-        path_euclidean_lengths=np.concatenate(path_euclidean_lengths),
+        coordinate_scale=coordinate_scale,
         path_coordinates=tuple(path_coordinates),
         path_endpoint_groups=tuple(path_endpoint_groups),
         path_branch_types=np.concatenate(path_branch_types),
@@ -3599,8 +3679,7 @@ def _empty_topology() -> _TopologyResult:
     return _TopologyResult(
         path_owners=np.zeros(0, dtype=np.int32),
         path_distances=np.zeros(0, dtype=float),
-        path_lengths=np.zeros(0, dtype=float),
-        path_euclidean_lengths=np.zeros(0, dtype=float),
+        coordinate_scale=1.0,
         path_coordinates=(),
         path_endpoint_groups=(),
         path_branch_types=np.zeros(0, dtype=np.int32),
@@ -3764,6 +3843,8 @@ def _build_neurite_morphology_graph(
     """Project owned Skan paths into deterministic soma-rooted forests."""
 
     coordinate_scale = coordinate_spacing.isotropic_xy_spacing
+    path_lengths = topology.path_lengths
+    path_euclidean_lengths = topology.path_euclidean_lengths
     paths_by_owner: dict[int, list[int]] = defaultdict(list)
     for path_index, owner in enumerate(topology.path_owners):
         if path_index in topology.crossing_core_paths:
@@ -3929,7 +4010,7 @@ def _build_neurite_morphology_graph(
                     if path_index not in component_paths:
                         continue
                     candidate_distance = node_distances[group_id] + float(
-                        topology.path_lengths[path_index]
+                        path_lengths[path_index]
                     )
                     heapq.heappush(
                         candidate_edges,
@@ -3953,13 +4034,9 @@ def _build_neurite_morphology_graph(
                     continue
 
                 endpoint_groups = topology.path_endpoint_groups[path_index]
-                coordinates = np.asarray(
-                    topology.path_coordinates[path_index],
-                    dtype=float,
-                ).copy()
+                coordinates = topology.path_centerline(path_index)
                 if endpoint_groups != (source_group, target_group):
                     coordinates = coordinates[::-1]
-                coordinates[0] = nodes_by_group[source_group].coordinates
                 target_is_cycle_break = target_group in visited_groups
                 if target_is_cycle_break:
                     target_node = SpatialGraphNode.from_features(
@@ -3978,10 +4055,9 @@ def _build_neurite_morphology_graph(
                     visited_groups.add(target_group)
                     node_distances[target_group] = target_distance
                     target_node = nodes_by_group[target_group]
-                    coordinates[-1] = target_node.coordinates
-                branch_distance = float(topology.path_lengths[path_index])
+                branch_distance = float(path_lengths[path_index])
                 euclidean_distance = float(
-                    topology.path_euclidean_lengths[path_index]
+                    path_euclidean_lengths[path_index]
                 )
                 graph_edges.append(
                     SpatialGraphEdge.from_features(
@@ -4222,15 +4298,17 @@ def _build_cell_results(
                     outgrowth_pixel_counts[owner] += 1
                     outgrowth_intensity_sums[owner] += float(neurite_image.flat[index])
     results = []
+    path_lengths = topology.path_lengths
+    path_euclidean_lengths = topology.path_euclidean_lengths
 
     for cell in range(1, cell_count + 1):
         path_indexes = np.flatnonzero(topology.path_owners == cell)
         roots = topology.root_paths_by_cell.get(cell, ())
-        process_lengths = _measure_process_lengths(cell, roots, topology)
+        process_lengths = _measure_process_lengths(cell, roots, topology, path_lengths)
         total_outgrowth = float(np.sum(process_lengths))
         process_count = len(process_lengths)
-        curve_length = float(np.sum(topology.path_lengths[path_indexes]))
-        euclidean_length = float(np.sum(topology.path_euclidean_lengths[path_indexes]))
+        curve_length = float(np.sum(path_lengths[path_indexes]))
+        euclidean_length = float(np.sum(path_euclidean_lengths[path_indexes]))
         straightness = euclidean_length / curve_length if curve_length else 0.0
         mean_intensity = (
             float(outgrowth_intensity_sums[cell] / outgrowth_pixel_counts[cell])
@@ -4267,11 +4345,12 @@ def _measure_process_lengths(
     cell: int,
     roots: Sequence[int],
     topology: _TopologyResult,
+    path_lengths: np.ndarray,
 ) -> list[float]:
     if not roots:
         return []
-    root_owner = np.full(len(topology.path_lengths), -1, dtype=int)
-    distances = np.full(len(topology.path_lengths), np.inf, dtype=float)
+    root_owner = np.full(len(path_lengths), -1, dtype=int)
+    distances = np.full(len(path_lengths), np.inf, dtype=float)
     queue: list[tuple[float, int, int]] = []
     for root_number, path_index in enumerate(sorted(set(roots))):
         heapq.heappush(queue, (0.0, root_number, path_index))
@@ -4290,7 +4369,7 @@ def _measure_process_lengths(
             if topology.path_owners[neighbor] != cell:
                 continue
             next_distance = distance + 0.5 * (
-                topology.path_lengths[path_index] + topology.path_lengths[neighbor]
+                path_lengths[path_index] + path_lengths[neighbor]
             )
             if next_distance <= distances[neighbor]:
                 heapq.heappush(queue, (next_distance, process, neighbor))
@@ -4298,7 +4377,7 @@ def _measure_process_lengths(
     process_lengths = np.zeros(len(set(roots)), dtype=float)
     for path_index, process in enumerate(root_owner):
         if process >= 0:
-            process_lengths[process] += topology.path_lengths[path_index]
+            process_lengths[process] += path_lengths[path_index]
     return [float(length) for length in process_lengths if length > 0]
 
 

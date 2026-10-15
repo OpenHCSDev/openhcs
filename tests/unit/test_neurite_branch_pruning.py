@@ -16,7 +16,6 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 
 def topology_for(points, edges, *, scale=1.0):
     paths = tuple(np.column_stack(line(*points[a], *points[b])) for a, b in edges)
-    lengths = np.array([np.linalg.norm(np.diff(p, axis=0), axis=1).sum() * scale for p in paths])
     incidence = defaultdict(list)
     for i, ends in enumerate(edges):
         for node in ends:
@@ -32,8 +31,7 @@ def topology_for(points, edges, *, scale=1.0):
         support[tuple(p.T)] = True
     topology = _TopologyResult(
         path_owners=np.ones(len(edges), dtype=np.int32),
-        path_distances=np.zeros(len(edges)), path_lengths=lengths,
-        path_euclidean_lengths=np.array([np.linalg.norm(p[-1] - p[0]) * scale for p in paths]),
+        path_distances=np.zeros(len(edges)), coordinate_scale=scale,
         path_coordinates=paths, path_endpoint_groups=tuple(edges),
         path_branch_types=np.zeros(len(edges), dtype=np.int32),
         endpoint_group_coordinates=points, transitions=transitions,
@@ -118,8 +116,7 @@ def test_owner_identity_prevents_borrowing_a_foreign_continuation():
     # Same geometric group numbers, distinct neurons: owner 2 cannot qualify
     # owner 1's short arm, and its independent soma path must survive.
     t = replace(t, path_owners=np.array([1, 1, 1, 2]),
-                path_distances=np.zeros(4), path_lengths=np.r_[t.path_lengths, 30.],
-                path_euclidean_lengths=np.r_[t.path_euclidean_lengths, 30.],
+                path_distances=np.zeros(4),
                 path_coordinates=t.path_coordinates + (t.path_coordinates[1],),
                 path_endpoint_groups=t.path_endpoint_groups + ((3, 2),),
                 path_branch_types=np.zeros(4, dtype=np.int32),
@@ -127,3 +124,77 @@ def test_owner_identity_prevents_borrowing_a_foreign_continuation():
                 transitions={**t.transitions, 3: ()})
     b[28:30, 14:16] = 2
     np.testing.assert_array_equal(prune(t, b, s, 5).path_owners, [1, 1, 0, 2])
+
+
+def test_standalone_short_soma_process_is_removed_without_removing_the_cell():
+    t, b, s = topology_for({0: (24, 4), 1: (23, 5)}, [(0, 1)])
+    result = prune(t, b, s, 5)
+    assert result.path_owners.tolist() == [0]
+    assert result.root_paths_by_cell == {1: ()}
+    assert not _render_owned_skeleton(b.shape, result).any()
+    assert not _build_neurite_morphology_graph(
+        result, b, coordinate_spacing=SourceVoxelSpacing((1., 1.)), outgrowth_width_px=1,
+    ).edges
+    rendered = _render_owned_skeleton(b.shape, result)
+    rows = _build_cell_results(b, rendered, rendered, np.ones(b.shape), result,
+                              10, SourceVoxelSpacing((1., 1.)), slice_index=0)
+    assert len(rows) == 1
+    assert rows[0].processes == rows[0].total_outgrowth == 0
+
+
+def test_short_root_is_kept_when_its_outward_continuation_is_long():
+    t, b, s = topology_for({0: (24, 4), 1: (24, 5), 2: (24, 15)}, [(0, 1), (1, 2)])
+    np.testing.assert_array_equal(prune(t, b, s, 5).path_owners, [1, 1])
+
+
+def test_short_complete_root_tree_uses_longest_path_not_total_daughters():
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 5), 2: (21, 5), 3: (27, 5)}, [(0, 1), (1, 2), (1, 3)],
+    )
+    assert not prune(t, b, s, 5).path_owners.any()
+
+
+@pytest.mark.parametrize('value', [-1, np.nan, np.inf, True])
+def test_invalid_smoothing_is_rejected_even_without_enhancement(value):
+    with pytest.raises(ValueError, match='centerline_smoothing_sigma_px'):
+        MetaXpressOutgrowthSettings(centerline_smoothing_sigma_px=value, enhance_neurites=False).validate()
+
+
+@pytest.mark.parametrize('scale', [1.0, 1.3556, 2.0])
+def test_subpixel_geometry_corrects_staircase_length_and_agrees_with_export(scale):
+    t, b, s = topology_for({0: (24, 4), 1: (44, 44)}, [(0, 1)], scale=scale)
+    refined = replace(t, centerline_smoothing_sigma_px=1.0)
+    curve = refined.path_centerline(0)
+    assert np.any(curve != np.round(curve))
+    np.testing.assert_array_equal(curve[[0, -1]], t.path_coordinates[0][[0, -1]])
+    assert np.linalg.norm(curve - t.path_coordinates[0], axis=1).max() <= 0.5 + 1e-12
+    ideal = np.hypot(20, 40) * scale
+    assert refined.path_lengths[0] < t.path_lengths[0]
+    assert refined.path_lengths[0] == pytest.approx(ideal, rel=.01)
+    graph = _build_neurite_morphology_graph(refined, b, coordinate_spacing=SourceVoxelSpacing((scale, scale)), outgrowth_width_px=1)
+    edge = graph.edges[0]
+    measured = np.linalg.norm(np.diff(edge.coordinates, axis=0), axis=1).sum() * scale
+    assert edge.feature_mapping()['branch_distance'] == pytest.approx(measured)
+    rendered = _render_owned_skeleton(b.shape, refined)
+    rows = _build_cell_results(b, rendered, rendered, np.ones(b.shape), refined,
+                              10, SourceVoxelSpacing((scale, scale)), slice_index=0)
+    assert rows[0].total_outgrowth == pytest.approx(measured)
+    np.testing.assert_array_equal(rendered, _render_owned_skeleton(b.shape, t))
+
+
+def test_smoothing_preserves_axis_diagonal_bends_and_cycle_closure():
+    for end in [(24, 44), (44, 24)]:
+        t, _, _ = topology_for({0: (24, 4), 1: end}, [(0, 1)])
+        refined = replace(t, centerline_smoothing_sigma_px=1.0)
+        np.testing.assert_allclose(refined.path_centerline(0), t.path_coordinates[0], atol=1e-12)
+    # A right-angle bend and a ring cannot be replaced by endpoint chords.
+    t, _, _ = topology_for({0: (24, 4), 1: (44, 24)}, [(0, 1)])
+    bend = np.r_[np.column_stack((np.full(21, 24), np.arange(4, 25))),
+                 np.column_stack((np.arange(25, 45), np.full(20, 24)))]
+    t = replace(t, path_coordinates=(bend,), centerline_smoothing_sigma_px=1.0)
+    assert 39 < t.path_lengths[0] <= 40
+    ring = np.r_[bend, np.column_stack((np.full(20, 44), np.arange(23, 3, -1))),
+                 np.column_stack((np.arange(43, 23, -1), np.full(20, 4)))]
+    t = replace(t, path_coordinates=(ring,), path_endpoint_groups=((0, 0),))
+    np.testing.assert_array_equal(t.path_centerline(0)[0], t.path_centerline(0)[-1])
+    assert 76 < t.path_lengths[0] <= 80
