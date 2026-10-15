@@ -441,6 +441,7 @@ class CellProfilerNeuriteEngineProfile:
         topology_trace = _render_owned_skeleton(pre_topology_owner_skeleton.shape, topology)
         topology = topology.prune_short_branches(
             outgrowth.minimum_branch_length,
+            minimum_soma_extension=outgrowth.minimum_soma_extension,
             cell_body_labels=cell_body_labels,
             branch_support=admission.mask,
             outgrowth_width_px=outgrowth_width_px,
@@ -939,11 +940,30 @@ class MetaXpressOutgrowthSettings:
     a bounded geometric estimate, not recovery of unobserved subpixel biology.
     """
 
+    minimum_soma_extension: float = 0.0
+    """Required outward reach from the owning soma boundary in micrometers.
+
+    Zero disables this OpenHCS extension. After branch-length pruning, remove
+    a connected process, including loops, if it lies entirely closer than this
+    distance to its own segmented cell body. Measure spatial reach, not summed
+    path length: winding around a soma does not qualify as outward growth.
+    Keep the whole attachment when any of its connected paths reaches this
+    distance. Do not dilate the soma or clip the beginnings of real neurites.
+    Loops connected to qualifying outgrowth remain; this is not a general
+    cycle-breaking operation. Short real processes can also be removed.
+    """
+
     def maximum_width_px(self, coordinate_scale: float) -> float:
         """Project this declaration's outgrowth width into image pixels."""
         return self.maximum_width / coordinate_scale
 
     def validate(self) -> None:
+        if (
+            isinstance(self.minimum_soma_extension, (bool, np.bool_))
+            or not np.isfinite(self.minimum_soma_extension)
+            or self.minimum_soma_extension < 0
+        ):
+            raise ValueError("outgrowth.minimum_soma_extension must be finite and >= 0")
         if (
             isinstance(self.centerline_smoothing_sigma_px, (bool, np.bool_))
             or not np.isfinite(self.centerline_smoothing_sigma_px)
@@ -1027,6 +1047,9 @@ class PixelOutgrowthSettings(MetaXpressOutgrowthSettings):
 
     minimum_branch_length: float = MetaXpressOutgrowthSettings().minimum_branch_length
     """Minimum outward branch continuation in pixels; zero disables pruning."""
+
+    minimum_soma_extension: float = MetaXpressOutgrowthSettings().minimum_soma_extension
+    """Required outward reach from the owning soma boundary in pixels; zero disables."""
 
 
 @dataclass(frozen=True)
@@ -1582,6 +1605,7 @@ class _TopologyResult:
         self,
         minimum_length: float,
         *,
+        minimum_soma_extension: float = 0.0,
         cell_body_labels: np.ndarray,
         branch_support: np.ndarray,
         outgrowth_width_px: float,
@@ -1599,9 +1623,12 @@ class _TopologyResult:
         topology's root declaration while measuring its outward continuations.
         An isolated root tree must also reach the minimum; proximity to a soma
         is not an exemption for a short complete process.
-        Loops and routes between roots never become leaves and are not pruned.
+        Loops and routes between roots never become leaves. The independent
+        soma-extension control removes whole surviving components confined to
+        their own soma's neighborhood, including loops, without clipping the
+        attachments of components that extend out of that neighborhood.
         """
-        if minimum_length == 0 or not self.owned_paths():
+        if (minimum_length == 0 and minimum_soma_extension == 0) or not self.owned_paths():
             return self
 
         incidence: dict[tuple[int, int], list[int]] = defaultdict(list)
@@ -1672,6 +1699,10 @@ class _TopologyResult:
             ends = endpoints[path] if path in short_roots else (outward_end[path],)
             for node in ends:
                 cuts.extend(children[node])
+        if minimum_soma_extension > 0:
+            removed.update(self.soma_confined_paths(
+                minimum_soma_extension, cell_body_labels, excluded_paths=removed,
+            ))
         if not removed:
             return self
         owners = self.path_owners.copy()
@@ -1695,6 +1726,56 @@ class _TopologyResult:
             merge_radius=max(1.0, outgrowth_width_px),
         )
         return replace(pruned, path_branch_types=branch_types, branch_nodes_by_cell=branch_nodes)
+
+    def soma_confined_paths(
+        self, minimum_extension: float, cell_body_labels: np.ndarray, *,
+        excluded_paths: set[int],
+    ) -> set[int]:
+        """Owned connected components that never leave their soma neighborhood.
+
+        Use the existing logical transitions, including resolved crossings,
+        rather than reconnecting paths by pixel contact or through the soma.
+        Distance belongs to the component's own soma, never the nearest foreign
+        cell. Integer detection coordinates determine spatial support; retained
+        centreline geometry is unchanged. Bound each distance transform by that
+        soma's box plus the requested distance, not by the entire image.
+        """
+        paths_by_owner: dict[int, set[int]] = defaultdict(set)
+        for path in self.owned_paths():
+            if path not in excluded_paths:
+                paths_by_owner[int(self.path_owners[path])].add(path)
+        body_slices = ndi.find_objects(cell_body_labels)
+        margin = int(np.ceil(min(
+            minimum_extension / self.coordinate_scale, max(cell_body_labels.shape),
+        ))) + 1
+        removed: set[int] = set()
+        for owner, remaining in paths_by_owner.items():
+            body_slice = body_slices[owner - 1] if owner <= len(body_slices) else None
+            if body_slice is None:
+                raise ValueError(f"Owned neurite {owner} has no cell body")
+            lower = np.maximum(0, [axis.start - margin for axis in body_slice])
+            upper = np.minimum(cell_body_labels.shape, [axis.stop + margin for axis in body_slice])
+            region = tuple(slice(int(start), int(stop)) for start, stop in zip(lower, upper))
+            distance = ndi.distance_transform_edt(cell_body_labels[region] != owner)
+            while remaining:
+                seed = remaining.pop()
+                component = {seed}
+                frontier = [seed]
+                while frontier:
+                    path = frontier.pop()
+                    adjacent = remaining.intersection(self.transitions[path])
+                    remaining.difference_update(adjacent)
+                    component.update(adjacent)
+                    frontier.extend(adjacent)
+                for path in component:
+                    coordinates = self.path_coordinates[path]
+                    if np.any((coordinates < lower) | (coordinates >= upper)):
+                        break
+                    if np.any(distance[tuple((coordinates - lower).T)] * self.coordinate_scale >= minimum_extension):
+                        break
+                else:
+                    removed.update(component)
+        return removed
 
     @staticmethod
     def soma_attachment_radius(outgrowth_width_px: float) -> int:
@@ -2368,8 +2449,9 @@ def neurite_outgrowth_metaxpress(
     wavelength with minimum/maximum width and local-background intensity.
     OpenHCS additionally exposes the existing engine's minimum-inscribed-
     diameter acceptance gate in pixels and optional minimum outward branch
-    length pruning. These are OpenHCS extensions, not claims that the vendor's
-    MetaXpress module exposes those controls or that segmentation is equivalent.
+    length and soma-extension pruning. These are OpenHCS extensions, not claims
+    that the vendor's MetaXpress module exposes those controls or that
+    segmentation is equivalent.
 
     This implementation is deliberately 2D. ``image`` must have shape
     ``(C, Y, X)`` and should be produced by a step whose variable component is
@@ -2386,8 +2468,9 @@ def neurite_outgrowth_metaxpress(
         cell_body: Optional channel plus width, area, and local-background
             thresholds for cell bodies.
         outgrowth: Width, intensity, significant-growth scoring, and optional
-            minimum_branch_length pruning for attached neurites. Pruning uses
-            traced outward continuation and updates both measurements and traces.
+            minimum_branch_length and minimum_soma_extension pruning for attached
+            neurites. Pruning uses traced continuation and spatial reach from the
+            owning soma, and updates both measurements and traces.
         use_nuclear_stain: Whether to segment a nuclear channel and return nuclei.
         nuclear_stain: Nuclear channel and size/intensity thresholds used when
             nuclear staining is enabled.

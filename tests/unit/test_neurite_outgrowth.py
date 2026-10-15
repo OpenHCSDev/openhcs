@@ -519,6 +519,7 @@ def test_signature_exposes_metaxpress_controls_and_declared_openhcs_extensions()
         "enhance_neurites",
         "minimum_branch_length",
         "centerline_smoothing_sigma_px",
+        "minimum_soma_extension",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",

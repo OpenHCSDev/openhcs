@@ -196,6 +196,95 @@ def test_short_complete_root_tree_uses_longest_path_not_total_daughters():
     assert not prune(t, b, s, 5).path_owners.any()
 
 
+@pytest.mark.parametrize('settings', [MetaXpressOutgrowthSettings, PixelOutgrowthSettings])
+@pytest.mark.parametrize('value', [-1, np.nan, np.inf, True])
+def test_invalid_soma_extension_is_rejected_without_enhancement(settings, value):
+    with pytest.raises(ValueError, match='minimum_soma_extension'):
+        settings(minimum_soma_extension=value, enhance_neurites=False).validate()
+
+
+@pytest.mark.parametrize('scale', [1.0, 1.3556, 2.0])
+def test_soma_confined_loop_is_removed_but_long_process_keeps_its_attachment(scale):
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 6), 2: (24, 44),
+         3: (20, 4), 4: (20, 7), 5: (22, 7), 6: (22, 4)},
+        [(0, 1), (1, 2), (3, 4), (4, 5), (5, 6), (6, 3)], scale=scale,
+    )
+    t = replace(t, root_paths_by_cell={1: (0, 2)})
+    result = t.prune_short_branches(
+        0, minimum_soma_extension=6 * scale,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    )
+    np.testing.assert_array_equal(result.path_owners, [1, 1, 0, 0, 0, 0])
+    assert result.root_paths_by_cell == {1: (0,)}
+    assert result.transitions == {0: (1,), 1: (0,), 2: (), 3: (), 4: (), 5: ()}
+    rendered = _render_owned_skeleton(b.shape, result)
+    assert np.all(rendered[24, 4:45] == 1)
+    graph = _build_neurite_morphology_graph(
+        result, b, coordinate_spacing=SourceVoxelSpacing((scale, scale)), outgrowth_width_px=1,
+    )
+    assert len(graph.edges) == 2
+    rows = _build_cell_results(b, rendered, rendered, np.ones(b.shape), result,
+                              10, SourceVoxelSpacing((scale, scale)), slice_index=0)
+    assert len(rows) == 1
+    assert rows[0].total_outgrowth == pytest.approx(40 * scale)
+    assert rows[0].processes == 1
+
+
+def test_soma_extension_preserves_loops_connected_to_distal_growth():
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 6), 2: (24, 8), 3: (21, 8), 4: (21, 6), 5: (24, 44)},
+        [(0, 1), (1, 2), (2, 3), (3, 4), (4, 1), (2, 5)],
+    )
+    assert t.prune_short_branches(
+        0, minimum_soma_extension=6,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    ) is t
+
+
+def test_soma_extension_uses_the_owning_body_not_a_nearby_foreign_body():
+    t, b, s = topology_for({0: (24, 4), 1: (24, 44)}, [(0, 1)])
+    b[23:26, 40:45] = 2
+    assert t.prune_short_branches(
+        0, minimum_soma_extension=6,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    ) is t
+
+
+@pytest.mark.parametrize('scale', [1.0, 1.3556, 2.0])
+def test_soma_extension_threshold_equality_is_retained(scale):
+    t, b, s = topology_for({0: (24, 4), 1: (24, 9)}, [(0, 1)], scale=scale)
+    assert t.prune_short_branches(
+        0, minimum_soma_extension=6 * scale,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    ) is t
+
+
+def test_soma_extension_removes_a_long_winding_component_with_little_outward_reach():
+    t, b, s = topology_for(
+        {0: (24, 4), 1: (24, 6), 2: (21, 6), 3: (21, 8), 4: (24, 8)},
+        [(0, 1), (1, 2), (2, 3), (3, 4)],
+    )
+    assert t.path_lengths.sum() == 10
+    result = t.prune_short_branches(
+        0, minimum_soma_extension=6,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    )
+    assert not result.path_owners.any()
+    assert result.root_paths_by_cell == {1: ()}
+
+
+def test_soma_extension_does_not_borrow_a_foreign_continuation():
+    t, b, s = topology_for({0: (24, 4), 1: (24, 6), 2: (24, 44)}, [(0, 1), (1, 2)])
+    t = replace(t, path_owners=np.array([1, 2]), root_paths_by_cell={1: (0,), 2: (1,)})
+    b[23:26, 44:47] = 2
+    result = t.prune_short_branches(
+        0, minimum_soma_extension=6,
+        cell_body_labels=b, branch_support=s, outgrowth_width_px=1,
+    )
+    np.testing.assert_array_equal(result.path_owners, [0, 2])
+
+
 @pytest.mark.parametrize('value', [-1, np.nan, np.inf, True])
 def test_invalid_smoothing_is_rejected_even_without_enhancement(value):
     with pytest.raises(ValueError, match='centerline_smoothing_sigma_px'):
