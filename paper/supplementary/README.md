@@ -187,12 +187,20 @@ separated without spatial ground truth. Both methods recovered concordant
 positive outgrowth responses with different measured magnitudes. This is an
 assisted-development evaluation, separate from autonomous authoring.
 
-## Supplementary Figure 6. Batch comparisons and module-test coverage
+## Supplementary Figure 6. Measured worker scaling and serial-CP comparisons
+
+![Measured OpenHCS execution scaling for all thirty workflows at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+Measured OpenHCS execution scaling with twelve repeated samples held fixed and 1, 2, 3 or 4 workers. Each point is one workflow's one-worker time divided by its time at the indicated worker count; all thirty workflows appear in each configuration. Times are medians of three repetitions after warmup. Bars show arithmetic means, black lines medians and the dashed line equal runtime. These measurements require no CellProfiler projection.
+:::
+
+## Supplementary Figure 6, continued. Serial CellProfiler reference
 
 ![Execution speedups for all thirty workflows in each of seven assignment configurations.](../figures/slas/supp_benchmark_assignments.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. These mixed-workload comparisons do not isolate worker scaling; main Figure 6B holds twelve assignments fixed and compares measured OpenHCS times across worker counts. Main Figure 6A shows the single-sample speedups.
+Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give OpenHCS workers (w), assignments per worker and total assignments. CellProfiler remains serial: its 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. Unlike main Figure 6C, these ratios do not match CellProfiler's process count to OpenHCS workers. Main Figure 6B shows the measured single-sample and per-sample batch comparisons.
 :::
 
 ## Supplementary Figure 6, continued. One-worker batch comparisons
@@ -231,14 +239,6 @@ Compile-plus-run seconds per sample for thirty workflows, dividing total batch d
 
 ::: {custom-style="ImageCaption"}
 Reduction in compile-plus-run time per sample across thirty workflows. Ratios compare a single sample with twelve-sample time per sample, including OpenHCS compilation. CellProfiler's twelve-sample times are projected; OpenHCS times are measured with one worker.
-:::
-
-## Supplementary Figure 6, continued. Processing-module test coverage
-
-![Graded test evidence for current executable processing modules.](../figures/slas/submission_benchmark_coverage.png){width=6in}
-
-::: {custom-style="ImageCaption"}
-Each executable processing module receives its strongest supported evidence tier: exercised in the thirty-workflow corpus, module-specific behavior tests, shared-path behavior tests, declaration/import checks only, or no evidence. Shared-path tests cover the named common behavior rather than every module-specific setting or algorithm. Setup modules and non-executable declarations are excluded. Supplementary Data 3 links the per-module evidence and credited tests.
 :::
 
 ## Supplementary Table 1. Reusable libraries and their roles
@@ -406,7 +406,15 @@ current-version compatibility matrix.
 
 ### Single-sample timing summaries
 
-With one sample, one worker and one numerical thread, execution was a median [pending]{.benchmark-claim key=execution_median}-fold faster than native CellProfiler, with minimum [pending]{.benchmark-claim key=execution_min}-fold. Compile-plus-run speedup was a median [pending]{.benchmark-claim key=total_median}-fold, with minimum [pending]{.benchmark-claim key=total_min}-fold. Main Figure 6A shows all thirty workflows. Native times include internal initialization within the first pipeline call; external process/server startup and OpenHCS library readiness and warmup are excluded. OpenHCS times are medians of three measured repetitions after warmup. Compile-plus-run time includes client compilation plus execution submission/wait; nested server and worker durations are counted once.
+With one sample, one worker and one numerical thread, execution was a median [pending]{.benchmark-claim key=execution_median}-fold faster than native CellProfiler, with minimum [pending]{.benchmark-claim key=execution_min}-fold. Compile-plus-run speedup was a median [pending]{.benchmark-claim key=total_median}-fold, with minimum [pending]{.benchmark-claim key=total_min}-fold. Main Figure 6B shows all thirty workflows. Native times include internal initialization within the first pipeline call; external process/server startup and OpenHCS library readiness and warmup are excluded. OpenHCS times are medians of three measured repetitions after warmup. Compile-plus-run time includes client compilation plus execution submission/wait; nested server and worker durations are counted once.
+
+### Matched-core CellProfiler projection
+
+Main Figure 6C uses the same retained serial CP8 first and warm batches but partitions the workload among equal independent one-thread processes. For N total samples and C processes, projected execution time is `T8_first + (N/C - 8) * median(T8_warm)/8`. Each process retains its initialization term; total time adds the first batch's pre-pipeline overhead once, not once per sample. Concurrent processes are assumed equally fast, with no contention or coordination overhead. This is a new parallel-use assumption applied to the retained batch model, not measured multicore CellProfiler performance. The CP8 anchor was serial with one numerical thread but permitted four CPU-affinity slots; the projection assumes its per-process rate transfers to one core.
+
+The retained [serial calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) tested three workflows at 8, 12 and 16 samples. The two-sample model's maximum absolute error was 5.21%; the same-campaign eight-anchor model used here had maximum error 7.06%. Earlier eight-anchor measurements underpredicted later observations by up to 14.03%. These errors are not multicore confidence intervals. Per-process counts of 3, 4 and 6 in Figure 6C extrapolate below the validated batch sizes; actual matched multicore measurements are still needed. The one-worker/twelve-sample column stays within the serial model's validation range, though validation covered only three workflows.
+
+[Individual projected and measured times](../figures/slas/submission_benchmark_summary_projection.csv) and [source identities and assumptions](../figures/slas/submission_benchmark_summary_provenance.json) retain every plotted value. Original measured reports and the qualified sweep's serial comparisons remain unchanged. Figure 6A promotes the module-evidence summary; the per-module evidence and credited tests remain linked below.
 
 ### Serial batching and preparation amortization
 

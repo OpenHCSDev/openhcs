@@ -10,8 +10,235 @@ from dataclasses import replace
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.lines import Line2D
+from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
 from build_slas_benchmark import ROOT, sha256, write_provenance
+
+
+def balanced_cp_projection(anchor, assignments: int, workers: int):
+    """Apply the retained affine batch model to equal independent CP processes.
+
+    This is an ideal parallel projection, not measured multicore performance.
+    Each process pays initialization; only assignments are partitioned. Below
+    eight assignments/process this extrapolates beyond the validation domain.
+    """
+    if workers < 1 or assignments < workers or assignments % workers:
+        raise ValueError("CP projection requires equal positive process workloads")
+    per_worker = assignments // workers
+    execution = (anchor["observed_source_fresh_execution_seconds"]
+                 + (per_worker - anchor["source_assignment_count"])
+                 * anchor["derived_warm_assignment_execution_seconds"])
+    total = execution + anchor["observed_source_fresh_pre_pipeline_seconds"]
+    if not np.isfinite(execution) or execution <= 0 or total < execution:
+        raise ValueError("Retained affine model cannot predict this workload")
+    return execution, total
+
+
+def submission_benchmark_summary() -> None:
+    """Dense main-paper view of the existing sweep and retained evidence grades."""
+    from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
+    from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
+    from build_slas_visual_story import FigureSheet, OUTPUT
+
+    publication = OUTPUT / "benchmark-publication"
+    sheet = FigureSheet("submission_benchmark_summary", "", 6.8)
+    sheet.source(Path(__file__))
+
+    def retained(path, record_name="figure2_provenance.json"):
+        record_path = path.parent / record_name
+        record = json.loads(record_path.read_text())
+        if sha256(path) != record["output_sha256"][path.name]:
+            raise ValueError(f"Figure source differs from its retained output: {path}")
+        sheet.source(record_path)
+        sheet.source(path)
+        return path
+
+    claims = json.loads(retained(publication / "benchmark_claims.json").read_text())
+    if claims["status"] != "qualified-first-use-sweep":
+        raise ValueError("The main figure requires the qualified sweep")
+    tables = {}
+    for schedule in ("may", "fixed12"):
+        for scope in ("execution", "total"):
+            path = retained(publication / schedule / scope / "first_use_workflow_metrics.csv")
+            with path.open(newline="") as stream:
+                rows = tuple(csv.DictReader(stream))
+            table = {(row["method"], row["pipeline_name"]): row for row in rows}
+            if len(table) != len(rows):
+                raise ValueError("Duplicate workflow rows in retained figure input")
+            tables[schedule, scope] = table
+    names = tuple(sorted({name for method, name in tables["may", "execution"]}))
+    if len(names) != 30:
+        raise ValueError("Expected all thirty workflows")
+    modes = claims["mode_statistics"]
+
+    # Read actual anchor reports through their existing model owner. Never turn
+    # these derived times into observations or change the qualified sweep.
+    record = ROOT / "benchmark/results/matched_worker_sweep_20261008_latestproduction"
+    source_path = record / "data/first_use/8assignments-2workers/summary_custody.json"
+    source = json.loads(source_path.read_text())
+    if source["status"] != "PASS":
+        raise ValueError("The CP anchors must come from a qualified comparison")
+    sheet.source(source_path)
+    anchors = {}
+    for case in source["cases"]:
+        path = record / "reports/8assignments-2workers" / case["case"] / "native_report.json"
+        digest = sha256(path)
+        if digest != case["native_headline_reference"]["source_report_sha256"]:
+            raise ValueError(f"Changed CP anchor: {path}")
+        report = RepeatedSourceNativeBatchReport.from_payload(json.loads(path.read_text()))
+        anchors[case["case"]] = report.projected_fresh_batch(
+            8, source_report_path=path, source_report_sha256=digest)
+        sheet.source(path)
+    if set(anchors) != set(names):
+        raise ValueError("CP projection must cover the exact measured workflow cohort")
+    sheet.source(Path(inspect.getfile(RepeatedSourceNativeBatchReport)))
+    sheet.source(record / "calibration/cold_first/cold-first-model-validation.json")
+
+    def values(mode_name, scope, *, native=False):
+        mode = modes[mode_name]
+        label = mode["scope_statistics"][scope]["label"]
+        if native:
+            label = f"CP first batch ({label})"
+        schedule = "fixed12" if mode["assignment_count"] == 12 else "may"
+        return np.array([float(tables[schedule, scope][label, name]["raw_seconds"])
+                         for name in names])
+
+    def ratios(mode_name, scope):
+        result = values(mode_name, scope, native=True) / values(mode_name, scope)
+        summary = SpeedupSummaryStatistics.from_series(
+            SpeedupDistributionSeries(mode_name, tuple(result)))
+        expected = modes[mode_name]["scope_statistics"][scope]
+        if not np.isclose(summary.median, expected["median"], rtol=1e-12):
+            raise ValueError("Plotted ratios differ from the canonical claim")
+        return result
+
+    colors = ("#087e8b", "#c76828")
+    def distributions(axis, groups, labels):
+        for group_index, pair in enumerate(groups):
+            for scope_index, numbers in enumerate(pair):
+                # Fixed workflow offsets reveal the distribution without adding data.
+                offset = -.17 if scope_index == 0 else .17
+                jitter = np.linspace(-.105, .105, len(names))
+                if len(numbers) != 30 or not np.all(np.isfinite(numbers) & (numbers > 0)):
+                    raise ValueError("Each distribution requires thirty positive workflow values")
+                axis.scatter(group_index + offset + jitter, numbers, s=33,
+                             color=colors[scope_index], alpha=.78,
+                             edgecolors="white", linewidths=.35, zorder=3)
+                summary = SpeedupSummaryStatistics.from_series(
+                    SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
+                axis.plot([group_index + offset - .12, group_index + offset + .12],
+                          [summary.median] * 2, color="#152536", lw=2.1, zorder=4)
+        axis.set_yscale("log")
+        axis.set_ylim(.8, 2200)
+        axis.yaxis.set_major_locator(LogLocator(base=10))
+        axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+        axis.yaxis.set_minor_formatter(NullFormatter())
+        axis.axhline(1, color="#a64343", ls="--", lw=1)
+        axis.set_xticks(range(len(labels)), labels)
+        axis.set_xlim(-.55, len(labels) - .45)
+        axis.tick_params(labelsize=12)
+        axis.grid(axis="y", alpha=.2)
+        axis.set_axisbelow(True)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.set_ylabel("CP time / OpenHCS time", fontsize=12)
+
+    sheet.text(2, 96, "A  Processing-module coverage", size=14, weight="bold")
+    coverage = retained(publication / "reference-layout/reference_module_coverage.csv",
+                        "retained_coverage_provenance.json")
+    with coverage.open(newline="") as stream:
+        coverage_rows = tuple(csv.DictReader(stream))
+    tiers = ("30-workflow corpus", "Module-specific behavior tested", "Shared-path behavior tested",
+             "Declaration/import checks only", "No evidence")
+    counts = [sum(row["tier"] == tier for row in coverage_rows) for tier in tiers]
+    if sum(counts) != len(coverage_rows):
+        raise ValueError("Unknown retained coverage grade")
+    coverage_colors = ("#16877f", "#4682b4", "#e2a23b", "#969696", "#b2182b")
+    pie = sheet.figure.add_axes((.015, .65, .20, .25))
+    present = [i for i, count in enumerate(counts) if count]
+    pie.pie([counts[i] for i in present], colors=[coverage_colors[i] for i in present],
+            startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
+    pie.text(0, .09, str(len(coverage_rows)), ha="center", va="center", fontsize=23, weight="bold")
+    pie.text(0, -.22, "modules", ha="center", va="center", fontsize=11)
+    for i, label in enumerate(("Workflow corpus", "Module-specific tests", "Shared-path tests",
+                                "Declaration checks only", "Untested")):
+        y = 87 - i * 5.2
+        if counts[i]:
+            sheet.axis.plot(23, y, marker="s", color=coverage_colors[i], markersize=8)
+        sheet.text(25, y, f"{label}: {counts[i]}", size=11.5, va="center")
+    sheet.text(3, 58, "Strongest evidence per module; shared-path tests\ndo not validate each module's algorithm.",
+               size=11, color="#59697b", va="top")
+
+    sheet.text(54, 96, "B  One-worker comparisons", size=14, weight="bold")
+    single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
+    amortized = []
+    for scope in ("execution", "total"):
+        numbers = (values("8assignments-2workers", scope, native=True) / 8
+                   / (values("12assignments-1worker", scope) / 12))
+        summary = SpeedupSummaryStatistics.from_series(SpeedupDistributionSeries(scope, tuple(numbers)))
+        if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
+            raise ValueError("Per-well ratios differ from the canonical amortized claim")
+        amortized.append(numbers)
+    axis = sheet.figure.add_axes((.60, .64, .37, .25))
+    distributions(axis, (single, amortized), ("1 well each", "CP 8 / OH 12\nper well"))
+    axis.set_ylim(.8, 800)
+    sheet.text(57, 53, "Measured CP; OpenHCS median of three runs", size=11, color="#59697b")
+
+    sheet.text(2, 46, "C  Matched cores and wells · CP projected", size=14, weight="bold")
+    ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
+    ordered = [key for key in ordered if key != "singlewell"]
+    groups = []
+    projected_rows = []
+    for key in ordered:
+        mode = modes[key]
+        predicted = np.array([balanced_cp_projection(
+            anchors[name], mode["assignment_count"], mode["openhcs_worker_count"])
+            for name in names])
+        groups.append(tuple(predicted[:, i] / values(key, scope)
+                            for i, scope in enumerate(("execution", "total"))))
+        for i, name in enumerate(names):
+            for j, scope in enumerate(("execution", "total")):
+                projected_rows.append({"workflow": name, "scope": scope,
+                    "workers_each": mode["openhcs_worker_count"],
+                    "wells_each": mode["assignment_count"],
+                    "wells_per_worker": mode["assignment_count"] // mode["openhcs_worker_count"],
+                    "cp_projected_seconds": predicted[i, j],
+                    "openhcs_measured_seconds": values(key, scope)[i],
+                    "speedup": groups[-1][j][i]})
+    labels = [f"{modes[key]['openhcs_worker_count']} / {modes[key]['assignment_count']}\n"
+              + f"{modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} wells/core"
+              for key in ordered]
+    axis = sheet.figure.add_axes((.09, .19, .88, .23))
+    distributions(axis, groups, labels)
+    axis.set_ylim(.8, 800)
+    axis.set_xlabel("Cores / total wells, matched between engines", fontsize=12, labelpad=7)
+    sheet.figure.legend(handles=[
+        Line2D([], [], marker="o", ls="", color=colors[0], label="Execution"),
+        Line2D([], [], marker="o", ls="", color=colors[1], label="Compile + run"),
+        Line2D([], [], color="#152536", lw=2, label="Median"),
+    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=3, frameon=False, fontsize=12)
+    sheet.display_transforms.append({
+        "operation": "Paired workflow dots and median lines; log axes; no mean bars",
+        "workflow_count_per_distribution": len(names),
+        "single_worker_batch_policy": claims["amortized_policy"],
+        "native_policy": claims["native_policy"],
+        "matched_core_projection": {
+            "formula": "T_CP(N,C) = T_CP(8,first) + (N/C - 8) * median(T_CP(8,warm))/8",
+            "total": "Add first-batch pre-pipeline overhead once per concurrent process",
+            "assumptions": "Balanced independent one-thread processes; no contention or coordination overhead; external startup excluded",
+            "validation_scope": "Serial batches at 8,12,16 wells on three workflows; does not validate parallel scaling or 3-6 wells per process",
+            "target_native_observation_count": 0,
+        },
+        "analysis_rerun": False,
+    })
+    table_path = OUTPUT / "submission_benchmark_summary_projection.csv"
+    with table_path.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=tuple(projected_rows[0]))
+        writer.writeheader()
+        writer.writerows(projected_rows)
+    sheet.source(table_path)
+    sheet.save(dpi=450)
 
 
 def build_reference_figures(

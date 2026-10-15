@@ -130,15 +130,19 @@ the coverage build. From the repository root:
 .venv/bin/python -c 'import json, subprocess, sys; evidence=json.load(open("paper/figures/cellprofiler_coverage_evidence.json")); nodes=sorted({node for group in evidence["groups"] for node in group["test_nodeids"]}); sys.exit(subprocess.call([sys.executable, "-m", "pytest", "-q", "--junitxml=paper/figures/slas/benchmark-publication/reference-layout/coverage_test_results.xml", *nodes]))'
 PYTHONPATH=paper/figures .venv/bin/python -c 'from pathlib import Path; from build_slas_benchmark_reference import build_reference_figures; build_reference_figures(Path("paper/figures/slas/benchmark-publication"), Path("paper/figures/slas/benchmark-publication/reference-layout"))'
 PYTHONPATH=paper/figures .venv/bin/python -c 'from build_slas_supplement import benchmark_publication; benchmark_publication()'
+PYTHONPATH=paper/figures .venv/bin/python -c 'from build_slas_benchmark_reference import submission_benchmark_summary; submission_benchmark_summary()'
 ```
 
 For layout-only changes, pass `rebuild_coverage=False` to
 `build_reference_figures`. This checks the retained coverage artwork and table
 against `reference-layout/retained_coverage_provenance.json`, keeping the original
-coverage evidence intact rather than regrading the current registry. Figure 6
-contains measured single-sample CellProfiler speedups and OpenHCS worker scaling
-at a fixed twelve-sample workload. Module-test coverage, mixed-workload
-CellProfiler comparisons and the seven-configuration assignment chart are in
+coverage evidence intact rather than regrading the current registry. The final
+command alone rebuilds compact Figure 6 from retained inputs: graded module
+coverage, measured one-worker comparisons and matched-core CP projections.
+The projection retains initialization in every independent CP process and
+assumes balanced work without contention; it is not a measured multicore run.
+Its CSV and figure provenance retain individual values and assumptions.
+Measured fixed-twelve OpenHCS scaling and serial-CP comparisons remain in
 Supplementary Figure 6.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
