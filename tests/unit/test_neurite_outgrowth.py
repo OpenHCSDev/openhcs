@@ -482,7 +482,7 @@ def test_compact_physical_recipe_uses_declared_dimension_hooks_without_consumer_
     assert DeclaredBody in projections and DeclaredOutgrowth in projections
 
 
-def test_signature_exposes_documented_metaxpress_controls_only():
+def test_signature_exposes_metaxpress_controls_and_declared_openhcs_extensions():
     parameters = signature(_implementation()).parameters
     contract = CallableContract.from_callable(neurite_outgrowth_metaxpress)
     runtime_artifact_parameter_names = contract.artifact_inputs.names()
@@ -515,6 +515,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "candidate_threshold_correction_factor",
         "candidate_hysteresis_seed_correction_factor",
         "enhance_neurites",
+        "minimum_branch_length",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -1579,6 +1580,34 @@ def test_disconnected_neurites_are_absent_from_owned_output_and_measurements():
     )
 
 
+def test_public_pruning_reports_deliberate_removal_separately_from_rooting_loss():
+    # A single lateral arm is a T junction, not the four-arm crossing in the
+    # general branched fixture. Use the same local-support mode as the real run.
+    neurites = _draw_fluorescent_neuron()
+    neurites[0, 58:65, 75] = 700
+    image = _with_separate_body_channel(neurites)
+    results = [
+        _implementation()(
+            image, neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=replace(_outgrowth_settings(), minimum_branch_length=minimum,
+                              enhance_neurites=False),
+            pixel_size=1.0,
+        ) for minimum in (0, 10)
+    ]
+    baseline, pruned = (_rows(result[1])[0] for result in results)
+    assert baseline['branch_pruned_trace_pixels'] == 0
+    assert pruned['branch_pruned_trace_pixels'] > 0
+    assert baseline['final_topology_owned_trace_pixels'] == pruned['final_topology_owned_trace_pixels']
+    assert baseline['final_topology_dropped_trace_pixels'] == pruned['final_topology_dropped_trace_pixels']
+    assert pruned['published_owned_trace_pixels'] == (
+        pruned['final_topology_owned_trace_pixels'] - pruned['branch_pruned_trace_pixels']
+    )
+    assert pruned['total_outgrowth'] < baseline['total_outgrowth']
+    assert pruned['total_branches'] < baseline['total_branches']
+    assert pruned['number_of_cells'] == baseline['number_of_cells']
+
+
 def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     neurite_image = _draw_fluorescent_neuron()[0]
     body_image = np.zeros_like(neurite_image)
@@ -1701,7 +1730,7 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     )
     assert (
         summary["published_owned_trace_pixels"]
-        >= summary["final_topology_owned_trace_pixels"]
+        == summary["final_topology_owned_trace_pixels"] - summary["branch_pruned_trace_pixels"]
     )
     assert summary["final_topology_dropped_trace_pixels"] == np.count_nonzero(
         np.asarray(topology_dropped_trace)

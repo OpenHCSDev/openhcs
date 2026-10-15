@@ -8,7 +8,7 @@ segmentation leaves and measures the final soma-rooted neurite topology.
 
 import heapq
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, fields, replace
 from enum import Enum
 from itertools import combinations
@@ -435,6 +435,13 @@ class CellProfilerNeuriteEngineProfile:
             crossing_topology=topology,
             branch_support=admission.mask,
         )
+        topology_trace = _render_owned_skeleton(pre_topology_owner_skeleton.shape, topology)
+        topology = topology.prune_short_branches(
+            outgrowth.minimum_branch_length,
+            cell_body_labels=cell_body_labels,
+            branch_support=admission.mask,
+            outgrowth_width_px=outgrowth_width_px,
+        )
         neurite_skeleton = _render_owned_skeleton(
             pre_topology_owner_skeleton.shape,
             topology,
@@ -449,10 +456,14 @@ class CellProfilerNeuriteEngineProfile:
             maximum_root_distance=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
         )
         topology_dropped_trace = (
-            (pre_topology_owner_skeleton > 0) & (neurite_skeleton == 0) & ~crossing_span_mask
+            (pre_topology_owner_skeleton > 0) & (topology_trace == 0) & ~crossing_span_mask
         )
-        topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
-        final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
+        topology_added_trace = (topology_trace > 0) & (pre_topology_owner_skeleton == 0)
+        final_topology_owned_trace_pixels = int(np.count_nonzero(topology_trace))
+        # Intentional pruning is not a failure to root an image-supported path.
+        branch_pruned_trace_pixels = int(np.count_nonzero(
+            (topology_trace > 0) & (neurite_skeleton == 0)
+        ))
         owner_outgrowth = _expand_skeleton_ownership(
             neurite_skeleton,
             outgrowth_binary,
@@ -557,6 +568,7 @@ class CellProfilerNeuriteEngineProfile:
             ),
             final_topology_added_trace_pixels=int(np.count_nonzero(topology_added_trace)),
             final_topology_owned_trace_pixels=final_topology_owned_trace_pixels,
+            branch_pruned_trace_pixels=branch_pruned_trace_pixels,
             published_owned_trace_pixels=int(np.count_nonzero(rooted_trace_mask)),
             secondary_owned_unrooted_trace_pixels=(secondary_owned_unrooted_trace_pixels),
             secondary_unowned_unrooted_trace_pixels=(
@@ -849,7 +861,7 @@ class MetaXpressCellBodySettings:
 
 @dataclass(frozen=True)
 class MetaXpressOutgrowthSettings:
-    """Documented outgrowth controls for Neurite Outgrowth."""
+    """MetaXpress-style outgrowth controls and explicit OpenHCS extensions."""
 
     maximum_width: float = 4.0
     """Outgrowth width scale in micrometers.
@@ -897,11 +909,30 @@ class MetaXpressOutgrowthSettings:
     disabled. This switch does not imply equivalence to a vendor algorithm.
     """
 
+    minimum_branch_length: float = 0.0
+    """Minimum outward branch continuation in micrometers; zero disables pruning.
+
+    OpenHCS extension, not the MetaXpress significant-cell-growth score. At a
+    junction, remove a terminal arm if its longest outward continuation is
+    shorter than this length. Accumulate traced length through intervening
+    segments and daughter junctions, never back through the starting junction.
+    Decisions use the original topology in one pass, not repeated erosion.
+    Soma attachment paths and cyclic/reconnecting cores remain intact; cycles
+    cannot accumulate length by repeated traversal. Measurements and exported
+    traces both use the pruned topology. Short real branches can also be removed.
+    """
+
     def maximum_width_px(self, coordinate_scale: float) -> float:
         """Project this declaration's outgrowth width into image pixels."""
         return self.maximum_width / coordinate_scale
 
     def validate(self) -> None:
+        if (
+            isinstance(self.minimum_branch_length, (bool, np.bool_))
+            or not np.isfinite(self.minimum_branch_length)
+            or self.minimum_branch_length < 0
+        ):
+            raise ValueError("outgrowth.minimum_branch_length must be finite and >= 0")
         if type(self.enhance_neurites) is not bool:
             raise ValueError("outgrowth.enhance_neurites must be a boolean")
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
@@ -971,6 +1002,9 @@ class PixelOutgrowthSettings(MetaXpressOutgrowthSettings):
     )
     """Scoring-only length in pixels; does not admit or remove detected paths."""
 
+    minimum_branch_length: float = MetaXpressOutgrowthSettings().minimum_branch_length
+    """Minimum outward branch continuation in pixels; zero disables pruning."""
+
 
 @dataclass(frozen=True)
 class PixelNuclearSettings(MetaXpressNuclearSettings):
@@ -1030,6 +1064,8 @@ class NeuriteOutgrowthSummary:
     secondary_owned_residual_pixels: int
     secondary_unowned_residual_pixels: int
     secondary_owned_residual_fraction: float
+    branch_pruned_trace_pixels: int = 0
+    """Owned pixels deliberately pruned after topology; distinct from rooting loss."""
 
 
 @dataclass(frozen=True)
@@ -1469,6 +1505,96 @@ class _TopologyResult:
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
     branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
     resolved_crossings: tuple[_ResolvedCrossing, ...]
+
+    def prune_short_branches(
+        self,
+        minimum_length: float,
+        *,
+        cell_body_labels: np.ndarray,
+        branch_support: np.ndarray,
+        outgrowth_width_px: float,
+    ) -> "_TopologyResult":
+        """Prune short outward trees without changing soma or crossing identity.
+
+        Leaf elimination orients pendant trees toward their existing soma roots
+        or cyclic core. Each child's height is its longest original continuation,
+        not the sum of its daughters. Only original junctions can cut an arm;
+        short internal segments therefore contribute to a longer continuation.
+        Anchoring both ends of existing soma attachment paths preserves the
+        topology's root declaration, including multiple exits from one soma.
+        Loops and routes between roots never become leaves and are not pruned.
+        """
+        if minimum_length == 0 or not self.owned_paths():
+            return self
+
+        incidence: dict[tuple[int, int], list[int]] = defaultdict(list)
+        endpoints = {}
+        crossing_core_paths = self.crossing_core_paths
+        for path in self.owned_paths():
+            if path in crossing_core_paths:
+                continue
+            owner = int(self.path_owners[path])
+            ends = tuple((owner, group) for group in self.path_endpoint_groups[path])
+            endpoints[path] = ends
+            for node in ends:
+                incidence[node].append(path)  # A self-loop supplies two incidences.
+        anchors = {
+            node for roots in self.root_paths_by_cell.values() for path in roots
+            if path in endpoints for node in endpoints[path]
+        }
+        degree = {node: len(paths) for node, paths in incidence.items()}
+        original_degree = degree.copy()
+        leaves = deque(node for node in incidence if degree[node] == 1 and node not in anchors)
+        heights: dict[tuple[int, int], float] = defaultdict(float)
+        children: dict[tuple[int, int], list[int]] = defaultdict(list)
+        outward_end = {}
+        cuts = []
+        peeled = set()
+        while leaves:
+            node = leaves.popleft()
+            if degree[node] != 1:
+                continue
+            path = next(path for path in incidence[node] if path not in peeled)
+            first, second = endpoints[path]
+            parent = second if node == first else first
+            peeled.add(path)
+            outward_end[path] = node
+            children[parent].append(path)
+            reach = float(self.path_lengths[path]) + heights[node]
+            heights[parent] = max(heights[parent], reach)
+            if original_degree[parent] >= 3 and reach < minimum_length:
+                cuts.append(path)
+            degree[node] -= 1
+            degree[parent] -= 1
+            if degree[parent] == 1 and parent not in anchors:
+                leaves.append(parent)
+
+        removed = set()
+        while cuts:
+            path = cuts.pop()
+            if path in removed:
+                continue
+            removed.add(path)
+            cuts.extend(children[outward_end[path]])
+        if not removed:
+            return self
+        owners = self.path_owners.copy()
+        distances = self.path_distances.copy()
+        owners[list(removed)] = 0
+        distances[list(removed)] = np.inf
+        pruned = replace(
+            self, path_owners=owners, path_distances=distances,
+            transitions={
+                path: (() if path in removed else tuple(n for n in neighbors if n not in removed))
+                for path, neighbors in self.transitions.items()
+            },
+        )
+        branch_types, branch_nodes = pruned.classify_owned_endpoints(
+            branch_support=branch_support, cell_body_labels=cell_body_labels,
+            outgrowth_width_px=outgrowth_width_px,
+            merge_radius=max(1.0, outgrowth_width_px),
+        )
+        return replace(pruned, path_branch_types=branch_types, branch_nodes_by_cell=branch_nodes)
 
     @staticmethod
     def soma_attachment_radius(outgrowth_width_px: float) -> int:
@@ -2141,8 +2267,9 @@ def neurite_outgrowth_metaxpress(
     local-background intensity, and scoring threshold; plus an optional nuclear
     wavelength with minimum/maximum width and local-background intensity.
     OpenHCS additionally exposes the existing engine's minimum-inscribed-
-    diameter acceptance gate in pixels. This is not a claim that the vendor's
-    MetaXpress module exposes that control or that segmentation is equivalent.
+    diameter acceptance gate in pixels and optional minimum outward branch
+    length pruning. These are OpenHCS extensions, not claims that the vendor's
+    MetaXpress module exposes those controls or that segmentation is equivalent.
 
     This implementation is deliberately 2D. ``image`` must have shape
     ``(C, Y, X)`` and should be produced by a step whose variable component is
@@ -2158,8 +2285,9 @@ def neurite_outgrowth_metaxpress(
             foreground detection.
         cell_body: Optional channel plus width, area, and local-background
             thresholds for cell bodies.
-        outgrowth: Width, intensity, and significant-growth thresholds for
-            attached neurites.
+        outgrowth: Width, intensity, significant-growth scoring, and optional
+            minimum_branch_length pruning for attached neurites. Pruning uses
+            traced outward continuation and updates both measurements and traces.
         use_nuclear_stain: Whether to segment a nuclear channel and return nuclei.
         nuclear_stain: Nuclear channel and size/intensity thresholds used when
             nuclear staining is enabled.
@@ -4199,6 +4327,7 @@ def _build_summary(
     final_topology_dropped_unrepresented_trace_pixels: int,
     final_topology_added_trace_pixels: int,
     final_topology_owned_trace_pixels: int,
+    branch_pruned_trace_pixels: int,
     published_owned_trace_pixels: int,
     secondary_owned_unrooted_trace_pixels: int,
     secondary_unowned_unrooted_trace_pixels: int,
@@ -4268,6 +4397,7 @@ def _build_summary(
         ),
         final_topology_added_trace_pixels=final_topology_added_trace_pixels,
         final_topology_owned_trace_pixels=final_topology_owned_trace_pixels,
+        branch_pruned_trace_pixels=branch_pruned_trace_pixels,
         published_owned_trace_pixels=published_owned_trace_pixels,
         secondary_owned_unrooted_trace_pixels=(secondary_owned_unrooted_trace_pixels),
         secondary_unowned_unrooted_trace_pixels=(
