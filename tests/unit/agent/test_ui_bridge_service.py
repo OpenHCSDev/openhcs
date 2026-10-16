@@ -1,4 +1,5 @@
 from __future__ import annotations
+from formbridge.bridge.dto import UiObjectStateFieldDeclaration
 from objectstate.field_value import Inherit, Value
 from formbridge.selection import AllItems, SelectedItems
 from openhcs.agent.dto.session import DatasetRowState
@@ -60,7 +61,7 @@ from formbridge.bridge.dto import (
     UiObjectStateScopeIdentity,
     UiObjectStateScopeListRequest,
     UiObjectStateScopeSummary,
-    UiObjectStateValuePreview,
+    UiObjectStateTextPreview,
     UiSemanticAddress,
     UiSnapshotCatalog,
     UiSnapshotListRequest,
@@ -1713,7 +1714,6 @@ def test_list_object_state_scopes_filters_requested_scope_ids(monkeypatch, tmp_p
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="global_config",
                         ),
-                        object_type="GlobalPipelineConfig",
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -1723,7 +1723,6 @@ def test_list_object_state_scopes_filters_requested_scope_ids(monkeypatch, tmp_p
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id=PLATE_SCOPE_ID,
                         ),
-                        object_type="PipelineOrchestrator",
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -1764,20 +1763,14 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
             ),
             field_name=field_path.rsplit(".", 1)[-1],
             container_path=(field_path.rsplit(".", 1)[0] if "." in field_path else ""),
-            object_state_path_type="openhcs.core.config.NapariStreamingConfig",
-            raw_value_type="Inherit" if inherited_value else "bool",
-            resolved_value_type="bool",
+            declared_by=UiObjectStateFieldDeclaration(module='openhcs.core.config', qualname='NapariStreamingConfig'),
             dirty=False,
             signature_diff=False,
             last_changed=False,
-            raw_value_preview=UiObjectStateValuePreview(
-                type_name="Inherit" if inherited_value else "bool",
-                is_none=False,
+            raw_value_preview=UiObjectStateTextPreview(
                 text="Inherit()" if inherited_value else "False",
             ),
-            resolved_value_preview=UiObjectStateValuePreview(
-                type_name="bool",
-                is_none=False,
+            resolved_value_preview=UiObjectStateTextPreview(
                 text="False",
             ),
             raw_value=Inherit() if inherited_value else Value(False),
@@ -1804,7 +1797,6 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="global_config",
                         ),
-                        object_type="GlobalPipelineConfig",
                         parameter_count=3,
                         dirty_field_count=0,
                         signature_diff_field_count=0,

@@ -1,3 +1,4 @@
+from formbridge.bridge.dto import UiObjectStateFieldDeclaration
 from objectstate.field_value import Value
 from dataclasses import dataclass
 from enum import Enum
@@ -69,7 +70,6 @@ def test_object_state_field_help_projects_declaration_owned_enum_inputs() -> Non
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="enum-config",
                         ),
-                        object_type=target_name,
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -82,9 +82,7 @@ def test_object_state_field_help_projects_declaration_owned_enum_inputs() -> Non
                                 ),
                                 field_name="mode",
                                 container_path="",
-                                object_state_path_type=target_name,
-                                raw_value_type="EnumHelpMode",
-                                resolved_value_type="EnumHelpMode",
+                                declared_by=UiObjectStateFieldDeclaration(module=target_name.rpartition(".")[0], qualname=target_name.rpartition(".")[2]),
                                 dirty=False,
                                 signature_diff=False,
                                 last_changed=False,
@@ -188,7 +186,6 @@ def test_object_state_field_help_describes_structured_callable_values():
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step_0",
                         ),
-                        object_type="FunctionStep",
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -201,11 +198,7 @@ def test_object_state_field_help_describes_structured_callable_values():
                                 ),
                                 field_name="func",
                                 container_path="",
-                                object_state_path_type=(
-                                    "openhcs.core.steps.function_step.FunctionStep"
-                                ),
-                                raw_value_type="tuple",
-                                resolved_value_type="tuple",
+                                declared_by=UiObjectStateFieldDeclaration(module='openhcs.core.steps.function_step', qualname='FunctionStep'),
                                 dirty=False,
                                 signature_diff=True,
                                 last_changed=False,
@@ -375,7 +368,6 @@ def test_object_state_field_help_describes_runtime_supplied_function_parameter()
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step::function_0",
                         ),
-                        object_type=target_name,
                         parameter_count=3,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -388,9 +380,7 @@ def test_object_state_field_help_describes_runtime_supplied_function_parameter()
                                 ),
                                 field_name="grid_dimensions",
                                 container_path="",
-                                object_state_path_type=target_name,
-                                raw_value_type="NoneType",
-                                resolved_value_type="NoneType",
+                                declared_by=UiObjectStateFieldDeclaration(module=target_name.rpartition(".")[0], qualname=target_name.rpartition(".")[2]),
                                 dirty=False,
                                 signature_diff=False,
                                 last_changed=False,

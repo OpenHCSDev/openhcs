@@ -2639,7 +2639,7 @@ def test_object_state_exact_field_paths_include_path_type_and_description() -> N
     assert len(global_scope.fields) == 1
     field = global_scope.fields[0]
     assert field.address.field_path == "napari_display_config"
-    assert field.object_state_path_type == "openhcs.core.config.NapariDisplayConfig"
+    assert field.declared_by.resolve() is state.fields.napari_display_config.declaring_type
     assert field.parameter_description is not None
     assert (
         field.parameter_description
