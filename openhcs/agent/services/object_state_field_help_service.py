@@ -319,15 +319,12 @@ class ObjectStateFieldHelpService:
         field: UiObjectStateFieldSummary,
         max_description_chars: int,
     ) -> str | None:
-        callable_context = self._callable_value_context(
-            field.resolved_value,
-            max_description_chars=max_description_chars,
+        describe = lambda value: self._callable_value_context(
+            value, max_description_chars=max_description_chars
         )
+        callable_context = field.resolved_value.project(describe)
         if callable_context is None:
-            callable_context = self._callable_value_context(
-                field.raw_value,
-                max_description_chars=max_description_chars,
-            )
+            callable_context = field.raw_value.project(describe)
         if callable_context is None:
             return parameter_description
         if parameter_description:

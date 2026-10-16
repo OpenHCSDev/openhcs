@@ -1,4 +1,5 @@
 from __future__ import annotations
+from objectstate.field_value import Inherit, Value
 from formbridge.selection import AllItems, SelectedItems
 from openhcs.agent.dto.session import DatasetRowState
 
@@ -1764,23 +1765,22 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
             field_name=field_path.rsplit(".", 1)[-1],
             container_path=(field_path.rsplit(".", 1)[0] if "." in field_path else ""),
             object_state_path_type="openhcs.core.config.NapariStreamingConfig",
-            raw_value_type="None" if inherited_value else "bool",
+            raw_value_type="Inherit" if inherited_value else "bool",
             resolved_value_type="bool",
             dirty=False,
             signature_diff=False,
             last_changed=False,
             raw_value_preview=UiObjectStateValuePreview(
-                type_name="None",
-                is_none=True,
-                text="None",
+                type_name="Inherit" if inherited_value else "bool",
+                is_none=False,
+                text="Inherit()" if inherited_value else "False",
             ),
             resolved_value_preview=UiObjectStateValuePreview(
                 type_name="bool",
                 is_none=False,
                 text="False",
             ),
-            raw_value_is_none=inherited_value,
-            resolved_value_is_none=False,
+            raw_value=Inherit() if inherited_value else Value(False),
             inherited_value=inherited_value,
         )
 

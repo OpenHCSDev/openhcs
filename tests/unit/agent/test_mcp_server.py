@@ -1,3 +1,4 @@
+from objectstate.field_value import Inherit, Value
 from openhcs.agent.dto.session import DatasetRowState
 from openhcs.mcp.dev_client_core import PollCompleted, PollFailed, PollTimedOut
 import asyncio
@@ -1068,20 +1069,18 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
                 field_path="microscope",
                 signature_diff=True,
                 semantic_markers=("_",),
-                raw_value=None,
-                resolved_value=0,
+                raw_value=Inherit(),
+                resolved_value=Value(0),
                 raw_value_preview=UiObjectStateValuePreview(
-                    type_name="None",
-                    is_none=True,
-                    text="None",
+                    type_name="Inherit",
+                    is_none=False,
+                    text="Inherit()",
                 ),
                 resolved_value_preview=UiObjectStateValuePreview(
                     type_name="int",
                     is_none=False,
                     text="0",
                 ),
-                raw_value_is_none=True,
-                resolved_value_is_none=False,
                 inherited_value=True,
                 provenance=UiObjectStateFieldProvenance(
                     source_scope_id="global_config",
@@ -1107,12 +1106,10 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
     assert action["signature_diff"] is True
     assert "dirty" not in action
     assert action["semantic_markers"] == ["_"]
-    assert "raw_value" not in action
-    assert action["raw_value_is_none"] is True
-    assert "resolved_value" not in action
-    assert action["raw_value_preview"]["text"] == "None"
+    assert action["raw_value"] == {"Inherit": {}}
+    assert action["resolved_value"] == {"Value": {"value": 0}}
+    assert action["raw_value_preview"]["text"] == "Inherit()"
     assert action["resolved_value_preview"]["text"] == "0"
-    assert "resolved_value_is_none" not in action
     assert action["inherited_value"] is True
     assert action["provenance"] == {
         "source_scope_id": "global_config",
@@ -1254,7 +1251,7 @@ def test_mcp_widget_tree_projection_can_return_full_action_fields():
     assert "object_name" in action
     assert "accessible_name" in action
     assert "raw_value" in action
-    assert action["raw_value"] is None
+    assert action["raw_value"] == {"Unset": {}}
 
 
 def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
@@ -1376,9 +1373,9 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     assert compact_payload["projected"] is True
     compact_action = compact_payload["actionable_widgets"][0]
     assert compact_action["path_id"] == "root/0"
-    assert "raw_value" not in compact_action
+    assert compact_action["raw_value"] == {"Unset": {}}
     assert full_payload["actionable_widgets"][0]["object_name"] == "compile_button"
-    assert full_payload["actionable_widgets"][0]["raw_value"] is None
+    assert full_payload["actionable_widgets"][0]["raw_value"] == {"Unset": {}}
     assert ui_bridge_service.connections[0].timeout_ms == 1234
     first_request = ui_bridge_service.widget_tree_requests[0]
     assert first_request.window_id == "datasets"
@@ -2132,8 +2129,7 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
                 is_none=False,
                 text="'resolved'",
             ),
-            raw_value_is_none=True,
-            resolved_value_is_none=False,
+            raw_value=Inherit(),
             inherited_value=True,
         )
 
@@ -2796,8 +2792,6 @@ def test_mcp_object_state_field_search_filters_before_paging():
                 is_none=False,
                 text="1",
             ),
-            raw_value_is_none=False,
-            resolved_value_is_none=False,
             inherited_value=False,
         )
 

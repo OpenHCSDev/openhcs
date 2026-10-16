@@ -1,6 +1,7 @@
 """Knowledge, function and ObjectState renderers over typed DTO fixtures."""
 
 from __future__ import annotations
+from objectstate.field_value import Inherit, Value
 
 import ast
 from pathlib import Path
@@ -183,19 +184,19 @@ FIELD_LIST = UiObjectStateFieldListResult(
                     raw_value_type="int",
                     resolved_value_type="int",
                     dirty=True,
-                    raw_value=4,
-                    resolved_value=4,
+                    raw_value=Value(4),
+                    resolved_value=Value(4),
                 ),
                 UiObjectStateFieldProjection(
                     field_path="worker_mode",
                     field_name="worker_mode",
                     container_path="",
                     object_state_path_type="openhcs.config.PipelineConfig",
-                    raw_value_type="NoneType",
+                    raw_value_type="Inherit",
                     resolved_value_type="str",
-                    raw_value_is_none=True,
+                    raw_value=Inherit(),
                     inherited_value=True,
-                    resolved_value="process",
+                    resolved_value=Value("process"),
                     provenance=UiObjectStateFieldProvenance(
                         "global", "openhcs.config.GlobalConfig", "worker_mode"
                     ),
@@ -316,7 +317,7 @@ FAMILY_CASES = (
         FIELD_LIST,
         (
             "returned=2 offset=0 limit=200 truncated=False",
-            "Returned semantics: dirty=1 default_diff=0 inherited=1 raw_none_resolved=1 resolved_none_raw=0 plain=0",
+            "Returned semantics: dirty=1 default_diff=0 inherited=1 plain=0",
             "Filters: scope_ids=scope-1 contains=worker field_filter=dirty",
             "Scope [*_] scope=scope-1:",
             "provenance=global:worker_mode (GlobalConfig)",

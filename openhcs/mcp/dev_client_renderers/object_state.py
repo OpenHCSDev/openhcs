@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from objectstate.field_value import FieldValue
+
 from formbridge.bridge.dto import (
     AllFields,
     UiCatalogPageMetadata,
@@ -78,9 +80,9 @@ class ObjectStatePresentation(McpDevOutputRenderer):
 
     @classmethod
     def _preview_text(
-        cls, preview: UiObjectStateValuePreview | None, value: object
+        cls, preview: UiObjectStateValuePreview | None, value: FieldValue
     ) -> str:
-        return cls.text(value) if preview is None else preview.text
+        return value.project(cls.text) if preview is None else preview.text
 
     @classmethod
     def _provenance_text(cls, provenance: UiObjectStateFieldProvenance | None) -> str:
@@ -218,31 +220,18 @@ class ObjectStateFieldRenderer(ObjectStatePresentation):
 
     @staticmethod
     def _semantic_summary(fields: tuple[UiObjectStateFieldSemanticCarrier, ...]) -> str:
-        raw_none_resolved = sum(
-            1
-            for field in fields
-            if field.raw_value_is_none and not field.resolved_value_is_none
-        )
-        resolved_none_raw = sum(
-            1
-            for field in fields
-            if not field.raw_value_is_none and field.resolved_value_is_none
-        )
         semantic = sum(
             1
             for field in fields
             if field.dirty
             or field.signature_diff
             or field.inherited_value
-            or field.raw_value_is_none is not field.resolved_value_is_none
         )
         return (
             "Returned semantics: "
             f"dirty={sum(1 for field in fields if field.dirty)} "
             f"default_diff={sum(1 for field in fields if field.signature_diff)} "
             f"inherited={sum(1 for field in fields if field.inherited_value)} "
-            f"raw_none_resolved={raw_none_resolved} "
-            f"resolved_none_raw={resolved_none_raw} "
             f"plain={len(fields) - semantic}"
         )
 

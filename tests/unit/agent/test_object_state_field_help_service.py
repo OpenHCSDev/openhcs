@@ -1,3 +1,4 @@
+from objectstate.field_value import Value
 from dataclasses import dataclass
 from enum import Enum
 
@@ -208,7 +209,7 @@ def test_object_state_field_help_describes_structured_callable_values():
                                 dirty=False,
                                 signature_diff=True,
                                 last_changed=False,
-                                raw_value=[
+                                raw_value=Value([
                                     {
                                         "kind": "callable",
                                         "name": "count_cells_single_channel",
@@ -226,8 +227,8 @@ def test_object_state_field_help_describes_structured_callable_values():
                                     {
                                         "min_cell_area": 40,
                                     },
-                                ],
-                                resolved_value=[
+                                ]),
+                                resolved_value=Value([
                                     {
                                         "kind": "callable",
                                         "name": "count_cells_single_channel",
@@ -245,7 +246,7 @@ def test_object_state_field_help_describes_structured_callable_values():
                                     {
                                         "min_cell_area": 40,
                                     },
-                                ],
+                                ]),
                             ),
                         ),
                     ),
@@ -394,8 +395,8 @@ def test_object_state_field_help_describes_runtime_supplied_function_parameter()
                                 signature_diff=False,
                                 last_changed=False,
                                 parameter_description="Logical tile grid.",
-                                raw_value_is_none=True,
-                                resolved_value_is_none=True,
+                                raw_value=Value(None),
+                                resolved_value=Value(None),
                             ),
                         ),
                     ),
