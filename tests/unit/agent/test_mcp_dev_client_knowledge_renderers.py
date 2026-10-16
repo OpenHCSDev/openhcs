@@ -1,6 +1,8 @@
 """Knowledge, function and ObjectState renderers over typed DTO fixtures."""
 
 from __future__ import annotations
+from formbridge.bridge.dto import UiObjectStateFieldDeclaration
+from objectstate.field_value import Inherit, Value
 
 import ast
 from pathlib import Path
@@ -49,7 +51,7 @@ from formbridge.bridge.dto import (
     UiObjectStateScopeCatalog,
     UiObjectStateScopeIdentity,
     UiObjectStateScopeSummary,
-    UiObjectStateValuePreview,
+    UiObjectStateTextPreview,
     UiSemanticAddress,
 )
 from openhcs.mcp.dev_client_core import (
@@ -114,9 +116,7 @@ def _field_summary(path: str, **semantics) -> UiObjectStateFieldSummary:
         address=UiSemanticAddress(object_state_scope_id="scope-1", field_path=path),
         field_name=path.rsplit(".", 1)[-1],
         container_path="",
-        object_state_path_type="openhcs.config.PipelineConfig",
-        raw_value_type="int",
-        resolved_value_type="int",
+        declared_by=UiObjectStateFieldDeclaration(module='openhcs.config', qualname='PipelineConfig'),
         **semantics,
     )
 
@@ -130,7 +130,6 @@ SCOPE_CATALOG = UiObjectStateScopeCatalog(
         UiObjectStateScopeSummary(
             schema_version=SCHEMA_VERSION,
             identity=UiObjectStateScopeIdentity(object_state_scope_id="scope-1"),
-            object_type="PipelineConfig",
             parameter_count=4,
             dirty_field_count=1,
             signature_diff_field_count=0,
@@ -141,8 +140,8 @@ SCOPE_CATALOG = UiObjectStateScopeCatalog(
                 _field_summary(
                     "num_workers",
                     dirty=True,
-                    raw_value_preview=UiObjectStateValuePreview("int", False, "4"),
-                    resolved_value_preview=UiObjectStateValuePreview("int", False, "4"),
+                    raw_value_preview=UiObjectStateTextPreview("4"),
+                    resolved_value_preview=UiObjectStateTextPreview("4"),
                 ),
             ),
         ),
@@ -169,7 +168,6 @@ FIELD_LIST = UiObjectStateFieldListResult(
     scopes=(
         UiObjectStateFieldScopeProjection(
             scope_id="scope-1",
-            object_type="PipelineConfig",
             dirty_field_count=1,
             signature_diff_field_count=1,
             has_unsaved_changes=True,
@@ -179,25 +177,21 @@ FIELD_LIST = UiObjectStateFieldListResult(
                     field_path="num_workers",
                     field_name="num_workers",
                     container_path="",
-                    object_state_path_type="openhcs.config.PipelineConfig",
-                    raw_value_type="int",
-                    resolved_value_type="int",
+                    declared_by=UiObjectStateFieldDeclaration(module='openhcs.config', qualname='PipelineConfig'),
                     dirty=True,
-                    raw_value=4,
-                    resolved_value=4,
+                    raw_value=Value(4),
+                    resolved_value=Value(4),
                 ),
                 UiObjectStateFieldProjection(
                     field_path="worker_mode",
                     field_name="worker_mode",
                     container_path="",
-                    object_state_path_type="openhcs.config.PipelineConfig",
-                    raw_value_type="NoneType",
-                    resolved_value_type="str",
-                    raw_value_is_none=True,
+                    declared_by=UiObjectStateFieldDeclaration(module='openhcs.config', qualname='PipelineConfig'),
+                    raw_value=Inherit(),
                     inherited_value=True,
-                    resolved_value="process",
+                    resolved_value=Value("process"),
                     provenance=UiObjectStateFieldProvenance(
-                        "global", "openhcs.config.GlobalConfig", "worker_mode"
+                        "global", "worker_mode"
                     ),
                 ),
             ),
@@ -306,7 +300,7 @@ FAMILY_CASES = (
         SCOPE_CATALOG,
         (
             "ObjectState scopes: scopes=1 token=7 branch=main snapshot=3 active=False",
-            "- [*] scope=scope-1: type=PipelineConfig params=4 dirty=1 default_diff=0",
+            "- [*] scope=scope-1: params=4 dirty=1 default_diff=0",
             "fields=1/4 next=1",
             "  [*] num_workers: target=PipelineConfig raw=4 -> resolved=4",
             "Next field page: rerun with --include-fields --field-offset 1 --field-limit 1",
@@ -316,10 +310,10 @@ FAMILY_CASES = (
         FIELD_LIST,
         (
             "returned=2 offset=0 limit=200 truncated=False",
-            "Returned semantics: dirty=1 default_diff=0 inherited=1 raw_none_resolved=1 resolved_none_raw=0 plain=0",
+            "Returned semantics: dirty=1 default_diff=0 inherited=1 plain=0",
             "Filters: scope_ids=scope-1 contains=worker field_filter=dirty",
             "Scope [*_] scope=scope-1:",
-            "provenance=global:worker_mode (GlobalConfig)",
+            "provenance=global:worker_mode",
         ),
     ),
     (
@@ -327,12 +321,11 @@ FAMILY_CASES = (
             schema_version=SCHEMA_VERSION,
             address=UiSemanticAddress("scope-1", "num_workers"),
             field=_field_summary("num_workers"),
-            object_type="openhcs.config.PipelineConfig",
             target_summary="  Worker   count. " * 30,
             description="Number of workers.",
             description_truncated=True,
         ),
-        ("scope=scope-1 field=num_workers", "object=PipelineConfig", "Field:", "...", "Description truncated"),
+        ("scope=scope-1 field=num_workers", "target=PipelineConfig", "Field:", "...", "Description truncated"),
     ),
     (
         UiObjectStateFieldMutationResult(

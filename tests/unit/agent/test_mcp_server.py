@@ -1,3 +1,5 @@
+from formbridge.bridge.dto import UiObjectStateFieldDeclaration
+from objectstate.field_value import Inherit, Value
 from openhcs.agent.dto.session import DatasetRowState
 from openhcs.mcp.dev_client_core import PollCompleted, PollFailed, PollTimedOut
 import asyncio
@@ -72,7 +74,7 @@ from formbridge.bridge.dto import (
     UiObjectStateScopeCatalog,
     UiObjectStateScopeIdentity,
     UiObjectStateScopeSummary,
-    UiObjectStateValuePreview,
+    UiObjectStateTextPreview,
     UiSemanticAddress,
     UiStateSurfaceDocument,
     UiStateSurfaceCatalog,
@@ -1068,24 +1070,17 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
                 field_path="microscope",
                 signature_diff=True,
                 semantic_markers=("_",),
-                raw_value=None,
-                resolved_value=0,
-                raw_value_preview=UiObjectStateValuePreview(
-                    type_name="None",
-                    is_none=True,
-                    text="None",
+                raw_value=Inherit(),
+                resolved_value=Value(0),
+                raw_value_preview=UiObjectStateTextPreview(
+                    text="Inherit()",
                 ),
-                resolved_value_preview=UiObjectStateValuePreview(
-                    type_name="int",
-                    is_none=False,
+                resolved_value_preview=UiObjectStateTextPreview(
                     text="0",
                 ),
-                raw_value_is_none=True,
-                resolved_value_is_none=False,
                 inherited_value=True,
                 provenance=UiObjectStateFieldProvenance(
                     source_scope_id="global_config",
-                    source_type="default",
                 ),
             ),
         ),
@@ -1107,16 +1102,13 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
     assert action["signature_diff"] is True
     assert "dirty" not in action
     assert action["semantic_markers"] == ["_"]
-    assert "raw_value" not in action
-    assert action["raw_value_is_none"] is True
-    assert "resolved_value" not in action
-    assert action["raw_value_preview"]["text"] == "None"
-    assert action["resolved_value_preview"]["text"] == "0"
-    assert "resolved_value_is_none" not in action
+    assert action["raw_value"] == {"Inherit": {}}
+    assert action["resolved_value"] == {"Value": {"value": 0}}
+    assert action["raw_value_preview"]["UiObjectStateTextPreview"]["text"] == "Inherit()"
+    assert action["resolved_value_preview"]["UiObjectStateTextPreview"]["text"] == "0"
     assert action["inherited_value"] is True
     assert action["provenance"] == {
         "source_scope_id": "global_config",
-        "source_type": "default",
         "source_field_path": None,
     }
 
@@ -1254,7 +1246,7 @@ def test_mcp_widget_tree_projection_can_return_full_action_fields():
     assert "object_name" in action
     assert "accessible_name" in action
     assert "raw_value" in action
-    assert action["raw_value"] is None
+    assert action["raw_value"] == {"Unset": {}}
 
 
 def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
@@ -1376,9 +1368,9 @@ def test_mcp_widget_tree_binding_projects_request_and_compact_actions():
     assert compact_payload["projected"] is True
     compact_action = compact_payload["actionable_widgets"][0]
     assert compact_action["path_id"] == "root/0"
-    assert "raw_value" not in compact_action
+    assert compact_action["raw_value"] == {"Unset": {}}
     assert full_payload["actionable_widgets"][0]["object_name"] == "compile_button"
-    assert full_payload["actionable_widgets"][0]["raw_value"] is None
+    assert full_payload["actionable_widgets"][0]["raw_value"] == {"Unset": {}}
     assert ui_bridge_service.connections[0].timeout_ms == 1234
     first_request = ui_bridge_service.widget_tree_requests[0]
     assert first_request.window_id == "datasets"
@@ -2116,24 +2108,17 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
             ),
             field_name=field_path.rsplit(".", 1)[-1],
             container_path=(field_path.rsplit(".", 1)[0] if "." in field_path else ""),
-            object_state_path_type="openhcs.core.config.NapariStreamingConfig",
-            raw_value_type="None",
-            resolved_value_type="str",
+            declared_by=UiObjectStateFieldDeclaration(module='openhcs.core.config', qualname='NapariStreamingConfig'),
             dirty=False,
             signature_diff=False,
             last_changed=False,
-            raw_value_preview=UiObjectStateValuePreview(
-                type_name="None",
-                is_none=True,
+            raw_value_preview=UiObjectStateTextPreview(
                 text="None",
             ),
-            resolved_value_preview=UiObjectStateValuePreview(
-                type_name="str",
-                is_none=False,
+            resolved_value_preview=UiObjectStateTextPreview(
                 text="'resolved'",
             ),
-            raw_value_is_none=True,
-            resolved_value_is_none=False,
+            raw_value=Inherit(),
             inherited_value=True,
         )
 
@@ -2158,7 +2143,6 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="global_config",
                         ),
-                        object_type="GlobalPipelineConfig",
                         parameter_count=5,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2284,7 +2268,6 @@ def test_mcp_list_object_state_scopes_filters_scope_ids(monkeypatch):
                             identity=UiObjectStateScopeIdentity(
                                 object_state_scope_id="global_config",
                             ),
-                            object_type="GlobalPipelineConfig",
                             parameter_count=1,
                             dirty_field_count=0,
                             signature_diff_field_count=0,
@@ -2294,7 +2277,6 @@ def test_mcp_list_object_state_scopes_filters_scope_ids(monkeypatch):
                             identity=UiObjectStateScopeIdentity(
                                 object_state_scope_id="/tmp/plate",
                             ),
-                            object_type="PipelineOrchestrator",
                             parameter_count=1,
                             dirty_field_count=0,
                             signature_diff_field_count=0,
@@ -2356,7 +2338,6 @@ def test_mcp_describe_object_state_field_tool_projects_request(monkeypatch):
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="global_config",
                         ),
-                        object_type="GlobalPipelineConfig",
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2370,22 +2351,14 @@ def test_mcp_describe_object_state_field_tool_projects_request(monkeypatch):
                                 ),
                                 field_name="colormap",
                                 container_path="napari_display_config",
-                                object_state_path_type=(
-                                    "openhcs.core.config.NapariDisplayConfig"
-                                ),
-                                raw_value_type="str",
-                                resolved_value_type="str",
+                                declared_by=UiObjectStateFieldDeclaration(module='openhcs.core.config', qualname='NapariDisplayConfig'),
                                 dirty=False,
                                 signature_diff=False,
                                 last_changed=False,
-                                raw_value_preview=UiObjectStateValuePreview(
-                                    type_name="str",
-                                    is_none=False,
+                                raw_value_preview=UiObjectStateTextPreview(
                                     text="'gray'",
                                 ),
-                                resolved_value_preview=UiObjectStateValuePreview(
-                                    type_name="str",
-                                    is_none=False,
+                                resolved_value_preview=UiObjectStateTextPreview(
                                     text="'gray'",
                                 ),
                             ),
@@ -2425,7 +2398,7 @@ def test_mcp_describe_object_state_field_tool_projects_request(monkeypatch):
     assert request.include_field_descriptions is True
     assert request.field_limit == 1
     assert request.field_paths == ("napari_display_config.colormap",)
-    assert payload["help_target_type"] == "openhcs.core.config.NapariDisplayConfig"
+    assert payload["field"]["declared_by"] == {"module": "openhcs.core.config", "qualname": "NapariDisplayConfig"}
     assert payload["summary"] == "• colormap (str)"
 
 
@@ -2461,7 +2434,6 @@ def test_mcp_describe_object_state_field_tool_infers_unique_scope(monkeypatch):
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step::function_0",
                         ),
-                        object_type=target_name,
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2474,23 +2446,17 @@ def test_mcp_describe_object_state_field_tool_infers_unique_scope(monkeypatch):
                                 ),
                                 field_name="threshold",
                                 container_path="",
-                                object_state_path_type=target_name,
-                                raw_value_type="float",
-                                resolved_value_type="float",
+                                declared_by=UiObjectStateFieldDeclaration(module=target_name.rpartition(".")[0], qualname=target_name.rpartition(".")[2]),
                                 dirty=False,
                                 signature_diff=False,
                                 last_changed=False,
                                 parameter_description=(
                                     "Numeric cutoff used for segmentation."
                                 ),
-                                raw_value_preview=UiObjectStateValuePreview(
-                                    type_name="float",
-                                    is_none=False,
+                                raw_value_preview=UiObjectStateTextPreview(
                                     text="1.0",
                                 ),
-                                resolved_value_preview=UiObjectStateValuePreview(
-                                    type_name="float",
-                                    is_none=False,
+                                resolved_value_preview=UiObjectStateTextPreview(
                                     text="1.0",
                                 ),
                             ),
@@ -2526,7 +2492,7 @@ def test_mcp_describe_object_state_field_tool_infers_unique_scope(monkeypatch):
     assert ui_bridge_service.requests[0].include_field_descriptions is False
     assert ui_bridge_service.requests[1].include_field_descriptions is True
     assert payload["address"]["object_state_scope_id"] == "plate::step::function_0"
-    assert payload["help_target_type"] == target_name
+    assert payload["field"]["declared_by"] == {"module": mcp_help_threshold_function.__module__, "qualname": mcp_help_threshold_function.__qualname__}
     assert payload["description"] == "Numeric cutoff used for segmentation."
 
 
@@ -2549,9 +2515,7 @@ def test_mcp_describe_object_state_field_tool_reports_ambiguous_scope(monkeypatc
             ),
             field_name="threshold",
             container_path="",
-            object_state_path_type=target_name,
-            raw_value_type="float",
-            resolved_value_type="float",
+            declared_by=UiObjectStateFieldDeclaration(module=target_name.rpartition(".")[0], qualname=target_name.rpartition(".")[2]),
             dirty=False,
             signature_diff=False,
             last_changed=False,
@@ -2579,7 +2543,6 @@ def test_mcp_describe_object_state_field_tool_reports_ambiguous_scope(monkeypatc
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step::function_0",
                         ),
-                        object_type=target_name,
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2590,7 +2553,6 @@ def test_mcp_describe_object_state_field_tool_reports_ambiguous_scope(monkeypatc
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step::function_1",
                         ),
-                        object_type=target_name,
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2649,7 +2611,6 @@ def test_object_state_field_help_service_describes_function_parameter_target():
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="plate::step::function_0",
                         ),
-                        object_type=target_name,
                         parameter_count=1,
                         dirty_field_count=0,
                         signature_diff_field_count=0,
@@ -2662,23 +2623,17 @@ def test_object_state_field_help_service_describes_function_parameter_target():
                                 ),
                                 field_name="threshold",
                                 container_path="",
-                                object_state_path_type=target_name,
-                                raw_value_type="float",
-                                resolved_value_type="float",
+                                declared_by=UiObjectStateFieldDeclaration(module=target_name.rpartition(".")[0], qualname=target_name.rpartition(".")[2]),
                                 dirty=False,
                                 signature_diff=False,
                                 last_changed=False,
                                 parameter_description=(
                                     "Numeric cutoff used for segmentation."
                                 ),
-                                raw_value_preview=UiObjectStateValuePreview(
-                                    type_name="float",
-                                    is_none=False,
+                                raw_value_preview=UiObjectStateTextPreview(
                                     text="1.0",
                                 ),
-                                resolved_value_preview=UiObjectStateValuePreview(
-                                    type_name="float",
-                                    is_none=False,
+                                resolved_value_preview=UiObjectStateTextPreview(
                                     text="1.0",
                                 ),
                             ),
@@ -2697,7 +2652,7 @@ def test_object_state_field_help_service_describes_function_parameter_target():
     )
 
     assert result.errors == ()
-    assert result.help_target_type == target_name
+    assert result.field.declared_by.import_path == target_name
     assert result.parameter_name == "threshold"
     assert result.summary == "• threshold (float)"
     assert result.description == "Numeric cutoff used for segmentation."
@@ -2780,24 +2735,16 @@ def test_mcp_object_state_field_search_filters_before_paging():
             ),
             field_name=field_path,
             container_path="",
-            object_state_path_type="openhcs.core.config.GlobalPipelineConfig",
-            raw_value_type="int",
-            resolved_value_type="int",
+            declared_by=UiObjectStateFieldDeclaration(module='openhcs.core.config', qualname='GlobalPipelineConfig'),
             dirty=False,
             signature_diff=signature_diff,
             last_changed=False,
-            raw_value_preview=UiObjectStateValuePreview(
-                type_name="int",
-                is_none=False,
+            raw_value_preview=UiObjectStateTextPreview(
                 text="1",
             ),
-            resolved_value_preview=UiObjectStateValuePreview(
-                type_name="int",
-                is_none=False,
+            resolved_value_preview=UiObjectStateTextPreview(
                 text="1",
             ),
-            raw_value_is_none=False,
-            resolved_value_is_none=False,
             inherited_value=False,
         )
 
@@ -2827,7 +2774,6 @@ def test_mcp_object_state_field_search_filters_before_paging():
                         identity=UiObjectStateScopeIdentity(
                             object_state_scope_id="global_config",
                         ),
-                        object_type="GlobalPipelineConfig",
                         parameter_count=10,
                         dirty_field_count=0,
                         signature_diff_field_count=5,
