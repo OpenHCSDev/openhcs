@@ -83,6 +83,7 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     NamedSourceBinding,
     SourceBindingDeclarationsMixin,
+    SourceFieldTransform,
     SourceFilterClause,
 )
 from openhcs.core.source_metadata import (
@@ -625,7 +626,9 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin):
     imported_metadata_tables: tuple[ImportedMetadataTable, ...] = ()
     """External metadata tables joined to source records before matching."""
 
-    grouping_metadata_fields: tuple[str, ...] = ()
+    grouping_metadata_fields: tuple[str, ...] = field(default=(), metadata={
+        SourceFieldTransform: SourceFieldTransform(lambda owner, value: owner._normalize_grouping_fields(value)),
+    })
     """Metadata field names used to partition matched sources into execution groups."""
 
     source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
@@ -637,16 +640,8 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin):
     but scalar physical-pixel-size functions require isotropic X/Y calibration.
     """
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        self._normalize_field("source_filters", self._tuple_values)
-        self._normalize_field("image_plane_sources", self._tuple_values)
-        self._normalize_field("imported_metadata_tables", self._tuple_values)
-        self._normalize_field("grouping_metadata_fields", self._normalize_grouping_fields)
-        self._normalize_field("source_voxel_spacing", self._validate_field_value)
-
-    def _normalize_bindings(self, name, values):
-        bindings = super()._normalize_bindings(name, values)
+    def _normalize_bindings(self, values):
+        bindings = super()._normalize_bindings(values)
         return tuple(
             replace(
                 binding,
@@ -664,7 +659,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin):
             for binding in bindings
         )
 
-    def _normalize_grouping_fields(self, name, values):
+    def _normalize_grouping_fields(self, values):
         names = tuple(str(value).strip() for value in values)
         if any(not value for value in names):
             raise ValueError(

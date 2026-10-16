@@ -8,8 +8,8 @@ import re
 import tempfile
 import urllib.request
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, fields, replace
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
@@ -18,6 +18,7 @@ from urllib.parse import unquote, urlsplit
 from metaclass_registry import AutoRegisterMeta
 from objectstate.field_value import FieldValue
 from objectstate.field_access import DataclassFieldAccess
+from objectstate.declarations import ValueDeclaration
 from python_introspect.annotation_types import resolved_class_annotations
 
 from openhcs.core.artifacts.plans import ArtifactSpecRef
@@ -26,7 +27,7 @@ from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_set import ComponentSet
 from polystore.formats import get_format_from_extension
 from python_introspect import (
-    AnnotatedDataclassValidationMixin, FieldLabel, RegisteredClassChoices,
+    DataclassPostInit, AnnotatedDataclassValidationMixin, FieldLabel, RegisteredClassChoices,
     resolve_declared_type, validate_annotation_value,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -1564,9 +1565,27 @@ class NamedSourceBinding(SourceAssignmentBase):
         )
 
 
+@dataclass(frozen=True)
+class SourceFieldTransform:
+    """A field-declared data coercion, followed by annotation validation."""
+
+    transform: Callable[[object, object], object]
+
+    def apply(self, owner, value, validate):
+        return validate(self.transform(owner, value))
+
+
+@dataclass(frozen=True)
+class ValidatedSourceFieldTransform(SourceFieldTransform):
+    """Extra behavior that requires already-valid declared input."""
+
+    def apply(self, owner, value, validate):
+        return self.transform(owner, validate(value))
+
+
 @dataclass(frozen=True, kw_only=True)
-class _SourceBindingPlanBase(ABC):
-    """Shared declarations and raw-field normalization for source-binding plans."""
+class _SourceBindingPlanBase(DataclassPostInit, ABC):
+    """Shared source-plan fields and declaration-driven raw initialization."""
 
     metadata_rules: tuple[MetadataExtractionRule, ...] = ()
     """Regex/metadata extraction rules adding semantic fields to matching sources."""
@@ -1574,57 +1593,57 @@ class _SourceBindingPlanBase(ABC):
     match_plan: SourceSetPairing = PairByOrder()
     """How the matched aliases pair into logical source sets."""
 
-    metadata_fields: tuple[FieldSpec, ...] = ()
+    metadata_fields: tuple[FieldSpec, ...] = field(default=(), metadata={
+        SourceFieldTransform: SourceFieldTransform(
+            lambda owner, value: FieldSpec.merge_exact(
+                (value,), context=f"{type(owner).__name__}.metadata_fields"
+            )
+        ),
+    })
     """Exact scalar schema for source-literal metadata fields."""
 
-    bindings: tuple[NamedSourceBinding, ...] = ()
+    bindings: tuple[NamedSourceBinding, ...] = field(default=(), metadata={
+        SourceFieldTransform: ValidatedSourceFieldTransform(lambda owner, value: owner._normalize_bindings(value)),
+    })
     """Named semantic source bindings available to pipelines and steps."""
 
-    source_stack_components: tuple[type[Axis], ...] = ()
+    source_stack_components: tuple[type[Axis], ...] = field(default=(), metadata={
+        SourceFieldTransform: SourceFieldTransform(lambda owner, value: ComponentSet.collect(value).as_tuple()),
+    })
     """Ordered plate components forming one logical source image stack."""
 
     source_spatial_domain: SourceSpatialDomain = field(default_factory=SourceSpatialDomain)
     """Declared intrinsic image dimensions, independent of stack transport."""
 
-    def _normalize_field(self, name, normalize):
-        """Normalize only declared data; leave inheritance and absence untouched."""
-        member = FieldValue.of(DataclassFieldAccess.raw_value(self, name))
-        object.__setattr__(self, name, member.map(lambda value: normalize(name, value)))
-
     def __post_init__(self) -> None:
-        self._normalize_field("metadata_rules", self._tuple_values)
-        self._normalize_field("match_plan", self._validate_field_value)
-        self._normalize_field("metadata_fields", self._normalize_metadata_fields)
-        self._normalize_field("bindings", self._normalize_bindings)
-        self._normalize_field("source_stack_components", self._normalize_stack_components)
+        annotations = resolved_class_annotations(resolve_declared_type(type(self)))
+        for declared in fields(self):
+            annotation = annotations[declared.name]
+            declaration = ValueDeclaration.of(annotation)
+            member = declaration.admit(DataclassFieldAccess.raw_value(self, declared.name))
 
-    def _tuple_values(self, name, values):
-        return self._validate_field_value(name, tuple(values))
+            def validate(value):
+                validate_annotation_value(annotation, value, path=f"{type(self).__name__}.{declared.name}")
+                return value
 
-    def _validate_field_value(self, name, value):
-        annotation = resolved_class_annotations(resolve_declared_type(type(self)))[name]
-        validate_annotation_value(annotation, value, path=f"{type(self).__name__}.{name}")
-        return value
+            def normalize(value):
+                value = declaration.normalize_data(value)
+                if SourceFieldTransform in declared.metadata:
+                    return declared.metadata[SourceFieldTransform].apply(self, value, validate)
+                return validate(value)
 
-    def _normalize_metadata_fields(self, name, values):
-        return FieldSpec.merge_exact(
-            (tuple(values),), context=f"{type(self).__name__}.metadata_fields"
-        )
+            object.__setattr__(self, declared.name, member.map(normalize))
+        super().__post_init__()
 
-    def _normalize_bindings(self, name, values):
-        bindings = self._tuple_values(name, values)
+    def _normalize_bindings(self, bindings):
         seen_aliases: set[str] = set()
         for binding in bindings:
             if binding.alias in seen_aliases:
                 raise ValueError(
-                    f"{type(self).__name__}.bindings contains duplicate alias "
-                    f"{binding.alias!r}."
+                    f"{type(self).__name__}.bindings contains duplicate alias {binding.alias!r}."
                 )
             seen_aliases.add(binding.alias)
         return bindings
-
-    def _normalize_stack_components(self, name, values):
-        return ComponentSet.collect(values).as_tuple()
 
     @property
     def metadata_rule_declarations(self) -> tuple[MetadataExtractionRule, ...]:
@@ -2109,10 +2128,6 @@ def source_binding_group_keys_for_group_by(
 @dataclass(frozen=True, slots=True)
 class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, AnnotatedDataclassValidationMixin):
     """Immutable, concrete compile-time source binding plan for one step."""
-
-    def __post_init__(self) -> None:
-        SourceBindingDeclarationsMixin.__post_init__(self)
-        AnnotatedDataclassValidationMixin.__post_init__(self)
 
     @property
     def has_primary_content(self) -> bool:

@@ -1,14 +1,16 @@
 """Shared source-plan declarations own normalization without consuming directives."""
-from dataclasses import fields
+from dataclasses import dataclass, field, fields
 from typing import get_type_hints
 
 import pytest
 
+from python_introspect import DataclassPostInit
 from objectstate import DataclassFieldAccess, LazyDataclassFactory
 from objectstate.field_value import Inherit, Unset
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan, NamedSourceBinding, SourceBindingDeclarationsMixin,
+    SourceFieldTransform,
 )
 
 
@@ -56,3 +58,46 @@ def test_binding_view_inherits_its_one_field_declaration():
         declared = {item.name: item for item in fields(owner)}
         for name in ("bindings", "source_stack_components", "source_spatial_domain"):
             assert declared[name] is base_fields[name]
+
+
+def test_new_field_normalizes_and_validates_without_a_roster_edit():
+    @dataclass(frozen=True)
+    class ExtendedPlan(CompiledSourceBindingPlan):
+        names: tuple[str, ...] = ()
+
+    assert ExtendedPlan(names=["DNA"]).names == ("DNA",)
+    with pytest.raises(TypeError, match=r"names\[0\].*str"):
+        ExtendedPlan(names=[3])
+
+
+def test_extra_behavior_is_declared_on_the_new_field():
+    @dataclass(frozen=True)
+    class ExtendedPlan(CompiledSourceBindingPlan):
+        names: tuple[str, ...] = field(default=(), metadata={
+            SourceFieldTransform: SourceFieldTransform(
+                lambda owner, values: tuple(value.strip() for value in values)
+            ),
+        })
+
+    assert ExtendedPlan(names=[" DNA "]).names == ("DNA",)
+
+
+def test_post_init_uses_c3_and_runs_the_next_capability_once():
+    events = []
+
+    class TrailingInit(DataclassPostInit):
+        def __post_init__(self):
+            assert type(self.bindings) is tuple or self.bindings == Inherit()
+            events.append("trailing")
+            super().__post_init__()
+
+    @dataclass(frozen=True)
+    class ExtendedPlan(CompiledSourceBindingPlan, TrailingInit):
+        pass
+
+    ExtendedPlan(bindings=[])
+    assert events == ["trailing"]
+    with pytest.raises(TypeError):
+        ExtendedPlan(bindings=Inherit())
+    assert events == ["trailing", "trailing"]
+    assert "__post_init__" not in CompiledSourceBindingPlan.__dict__
