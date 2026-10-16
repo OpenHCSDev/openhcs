@@ -84,8 +84,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingDeclarationsMixin,
     SourceFilterClause,
-    _SourceBindingPlanBase,
-    normalize_source_binding_values,
 )
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -608,7 +606,7 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     abbreviation="src",
 )
 @dataclass(frozen=True)
-class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBase):
+class SourceBindingsConfig(SourceBindingDeclarationsMixin):
     """Canonical pipeline declaration for selecting and naming plate sources.
 
     Normal plate initialization resolves these bindings over exact planes emitted
@@ -621,22 +619,11 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     source_filters: tuple[SourceFilterClause, ...] = ()
     """Filters limiting the source universe before named bindings are resolved."""
 
-    bindings: tuple[NamedSourceBinding, ...] = ()
-    """Named semantic source bindings available to pipelines and inherited by steps."""
-
     image_plane_sources: tuple[ImagePlaneSource, ...] = ()
     """Exact image-plane source records available for source-binding resolution."""
 
     imported_metadata_tables: tuple[ImportedMetadataTable, ...] = ()
     """External metadata tables joined to source records before matching."""
-
-    source_stack_components: tuple[type[Axis], ...] = ()
-    """Ordered plate components that form one logical source image stack."""
-
-    source_spatial_domain: SourceSpatialDomain = field(
-        default_factory=SourceSpatialDomain
-    )
-    """Declared intrinsic image dimensions, independent of stack transport."""
 
     grouping_metadata_fields: tuple[str, ...] = ()
     """Metadata field names used to partition matched sources into execution groups."""
@@ -651,115 +638,39 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     """
 
     def __post_init__(self) -> None:
-        self._normalize_common_fields()
-        source_filters = object.__getattribute__(self, "source_filters")
-        if source_filters is not None:
-            source_filters = normalize_source_binding_values(
-                "SourceBindingsConfig.source_filters",
-                source_filters,
-                SourceFilterClause,
-            )
-        bindings = object.__getattribute__(self, "bindings")
-        if bindings is not None:
-            bindings = normalize_source_binding_values(
-                f"{type(self).__name__}.bindings",
-                bindings,
-                NamedSourceBinding,
-            )
-            bindings = tuple(
-                replace(
-                    binding,
-                    selector=replace(
-                        binding.selector,
-                        metadata=tuple(
-                            replace(
-                                selector,
-                                value=self.coerce_metadata_scalar(
-                                    selector.field,
-                                    selector.value,
-                                ),
-                            )
-                            for selector in binding.selector.metadata
-                        ),
+        super().__post_init__()
+        self._normalize_field("source_filters", self._tuple_values)
+        self._normalize_field("image_plane_sources", self._tuple_values)
+        self._normalize_field("imported_metadata_tables", self._tuple_values)
+        self._normalize_field("grouping_metadata_fields", self._normalize_grouping_fields)
+        self._normalize_field("source_voxel_spacing", self._validate_field_value)
+
+    def _normalize_bindings(self, name, values):
+        bindings = super()._normalize_bindings(name, values)
+        return tuple(
+            replace(
+                binding,
+                selector=replace(
+                    binding.selector,
+                    metadata=tuple(
+                        replace(
+                            selector,
+                            value=self.coerce_metadata_scalar(selector.field, selector.value),
+                        )
+                        for selector in binding.selector.metadata
                     ),
-                )
-                for binding in bindings
+                ),
             )
-        seen_aliases: set[str] = set()
-        if bindings is not None:
-            for binding in bindings:
-                if binding.alias in seen_aliases:
-                    raise ValueError(
-                        f"{type(self).__name__}.bindings contains duplicate alias "
-                        f"{binding.alias!r}."
-                    )
-                seen_aliases.add(binding.alias)
-        object.__setattr__(self, "source_filters", source_filters)
-        object.__setattr__(self, "bindings", bindings)
-        image_plane_sources = object.__getattribute__(self, "image_plane_sources")
-        if image_plane_sources is not None:
-            image_plane_sources = normalize_source_binding_values(
-                f"{type(self).__name__}.image_plane_sources",
-                image_plane_sources,
-                ImagePlaneSource,
-            )
-        object.__setattr__(self, "image_plane_sources", image_plane_sources)
-
-        imported_metadata_tables = object.__getattribute__(
-            self,
-            "imported_metadata_tables",
-        )
-        if imported_metadata_tables is not None:
-            imported_metadata_tables = normalize_source_binding_values(
-                f"{type(self).__name__}.imported_metadata_tables",
-                imported_metadata_tables,
-                ImportedMetadataTable,
-            )
-        object.__setattr__(
-            self,
-            "imported_metadata_tables",
-            imported_metadata_tables,
+            for binding in bindings
         )
 
-        source_stack_components = object.__getattribute__(
-            self,
-            "source_stack_components",
-        )
-        if source_stack_components is not None:
-            source_stack_components = ComponentSet.collect(
-                source_stack_components
-            ).as_tuple()
-        object.__setattr__(
-            self,
-            "source_stack_components",
-            source_stack_components,
-        )
-
-        grouping_metadata_fields = object.__getattribute__(
-            self,
-            "grouping_metadata_fields",
-        )
-        if grouping_metadata_fields is not None:
-            grouping_metadata_fields = tuple(
-                str(value).strip() for value in grouping_metadata_fields
+    def _normalize_grouping_fields(self, name, values):
+        names = tuple(str(value).strip() for value in values)
+        if any(not value for value in names):
+            raise ValueError(
+                f"{type(self).__name__}.grouping_metadata_fields cannot contain empty names."
             )
-            if any(not value for value in grouping_metadata_fields):
-                raise ValueError(
-                    f"{type(self).__name__}.grouping_metadata_fields cannot contain "
-                    "empty names."
-                )
-            grouping_metadata_fields = tuple(dict.fromkeys(grouping_metadata_fields))
-        object.__setattr__(self, "grouping_metadata_fields", grouping_metadata_fields)
-
-        source_voxel_spacing = object.__getattribute__(self, "source_voxel_spacing")
-        if source_voxel_spacing is not None and not isinstance(
-            source_voxel_spacing,
-            SourceVoxelSpacing,
-        ):
-            raise TypeError(
-                f"{type(self).__name__}.source_voxel_spacing must be "
-                "SourceVoxelSpacing."
-            )
+        return tuple(dict.fromkeys(names))
 
     @property
     def has_primary_content(self) -> bool:

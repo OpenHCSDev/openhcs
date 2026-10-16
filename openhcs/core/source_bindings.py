@@ -16,13 +16,19 @@ from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
 from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
+from objectstate.field_value import FieldValue
+from objectstate.field_access import DataclassFieldAccess
+from python_introspect.annotation_types import resolved_class_annotations
 
 from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_set import ComponentSet
 from polystore.formats import get_format_from_extension
-from python_introspect import FieldLabel, RegisteredClassChoices
+from python_introspect import (
+    AnnotatedDataclassValidationMixin, FieldLabel, RegisteredClassChoices,
+    resolve_declared_type, validate_annotation_value,
+)
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -1558,12 +1564,81 @@ class NamedSourceBinding(SourceAssignmentBase):
         )
 
 
-class SourceBindingDeclarationsMixin:
-    """Shared named-binding view for editable and compiled source plans."""
+@dataclass(frozen=True, kw_only=True)
+class _SourceBindingPlanBase(ABC):
+    """Shared declarations and raw-field normalization for source-binding plans."""
 
-    bindings: tuple[NamedSourceBinding, ...] | None
-    source_stack_components: tuple[type[Axis], ...]
-    source_spatial_domain: SourceSpatialDomain
+    metadata_rules: tuple[MetadataExtractionRule, ...] = ()
+    """Regex/metadata extraction rules adding semantic fields to matching sources."""
+
+    match_plan: SourceSetPairing = PairByOrder()
+    """How the matched aliases pair into logical source sets."""
+
+    metadata_fields: tuple[FieldSpec, ...] = ()
+    """Exact scalar schema for source-literal metadata fields."""
+
+    bindings: tuple[NamedSourceBinding, ...] = ()
+    """Named semantic source bindings available to pipelines and steps."""
+
+    source_stack_components: tuple[type[Axis], ...] = ()
+    """Ordered plate components forming one logical source image stack."""
+
+    source_spatial_domain: SourceSpatialDomain = field(default_factory=SourceSpatialDomain)
+    """Declared intrinsic image dimensions, independent of stack transport."""
+
+    def _normalize_field(self, name, normalize):
+        """Normalize only declared data; leave inheritance and absence untouched."""
+        member = FieldValue.of(DataclassFieldAccess.raw_value(self, name))
+        object.__setattr__(self, name, member.map(lambda value: normalize(name, value)))
+
+    def __post_init__(self) -> None:
+        self._normalize_field("metadata_rules", self._tuple_values)
+        self._normalize_field("match_plan", self._validate_field_value)
+        self._normalize_field("metadata_fields", self._normalize_metadata_fields)
+        self._normalize_field("bindings", self._normalize_bindings)
+        self._normalize_field("source_stack_components", self._normalize_stack_components)
+
+    def _tuple_values(self, name, values):
+        return self._validate_field_value(name, tuple(values))
+
+    def _validate_field_value(self, name, value):
+        annotation = resolved_class_annotations(resolve_declared_type(type(self)))[name]
+        validate_annotation_value(annotation, value, path=f"{type(self).__name__}.{name}")
+        return value
+
+    def _normalize_metadata_fields(self, name, values):
+        return FieldSpec.merge_exact(
+            (tuple(values),), context=f"{type(self).__name__}.metadata_fields"
+        )
+
+    def _normalize_bindings(self, name, values):
+        bindings = self._tuple_values(name, values)
+        seen_aliases: set[str] = set()
+        for binding in bindings:
+            if binding.alias in seen_aliases:
+                raise ValueError(
+                    f"{type(self).__name__}.bindings contains duplicate alias "
+                    f"{binding.alias!r}."
+                )
+            seen_aliases.add(binding.alias)
+        return bindings
+
+    def _normalize_stack_components(self, name, values):
+        return ComponentSet.collect(values).as_tuple()
+
+    @property
+    def metadata_rule_declarations(self) -> tuple[MetadataExtractionRule, ...]:
+        """Metadata rules explicitly declared on this plan."""
+        return tuple(self.metadata_rules)
+
+    @property
+    @abstractmethod
+    def has_primary_content(self) -> bool:
+        """Whether the subclass-specific binding payload is empty."""
+
+
+class SourceBindingDeclarationsMixin(_SourceBindingPlanBase):
+    """Shared named-binding view for editable and compiled source plans."""
 
     @property
     def binding_declarations(self) -> tuple[NamedSourceBinding, ...]:
@@ -1995,60 +2070,6 @@ class SourceBindingDeclarationsMixin:
         )
 
 
-@dataclass(frozen=True, kw_only=True)
-class _SourceBindingPlanBase(ABC):
-    """Shared typed source-binding plan fields across editable and compiled views."""
-
-    metadata_rules: tuple[MetadataExtractionRule, ...] = ()
-    """Regex/metadata extraction rules that add semantic fields for matching sources."""
-
-    match_plan: SourceSetPairing = PairByOrder()
-    """How the matched aliases pair into logical source sets."""
-
-    metadata_fields: tuple[FieldSpec, ...] = ()
-    """Exact scalar schema for source-literal metadata fields."""
-
-    def _normalize_common_fields(self) -> None:
-        from objectstate.field_value import FieldValue
-        from objectstate.field_access import DataclassFieldAccess
-
-        metadata_rules = DataclassFieldAccess.raw_value(self, "metadata_rules")
-        if FieldValue.of(metadata_rules).available():
-            metadata_rules = tuple(metadata_rules)
-            for rule in metadata_rules:
-                if not isinstance(rule, MetadataExtractionRule):
-                    raise TypeError(
-                        f"{type(self).__name__}.metadata_rules must contain "
-                        "MetadataExtractionRule values, got "
-                        f"{type(rule).__name__}."
-                    )
-        object.__setattr__(self, "metadata_rules", metadata_rules)
-
-        match_plan = DataclassFieldAccess.raw_value(self, "match_plan")
-        if FieldValue.of(match_plan).available() and not isinstance(match_plan, SourceSetPairing | None):
-            raise TypeError(
-                f"{type(self).__name__}.match_plan must be a SourceSetPairing, "
-                f"got {type(match_plan).__name__}."
-            )
-
-        metadata_fields = DataclassFieldAccess.raw_value(self, "metadata_fields")
-        if FieldValue.of(metadata_fields).available():
-            metadata_fields = FieldSpec.merge_exact(
-                (tuple(metadata_fields),),
-                context=f"{type(self).__name__}.metadata_fields",
-            )
-        object.__setattr__(self, "metadata_fields", metadata_fields)
-
-    @property
-    def metadata_rule_declarations(self) -> tuple[MetadataExtractionRule, ...]:
-        """Metadata rules explicitly declared on this plan."""
-
-        return tuple(self.metadata_rules or ())
-
-    @property
-    @abstractmethod
-    def has_primary_content(self) -> bool:
-        """Whether the subclass-specific binding payload is empty."""
 
 
 
@@ -2086,36 +2107,12 @@ def source_binding_group_keys_for_group_by(
 
 
 @dataclass(frozen=True, slots=True)
-class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPlanBase):
-    """Immutable compile-time source binding plan for one step."""
-
-    bindings: tuple[NamedSourceBinding, ...] = ()
-    source_stack_components: tuple[type[Axis], ...] = ()
-    source_spatial_domain: SourceSpatialDomain = field(
-        default_factory=SourceSpatialDomain
-    )
+class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, AnnotatedDataclassValidationMixin):
+    """Immutable, concrete compile-time source binding plan for one step."""
 
     def __post_init__(self) -> None:
-        bindings = normalize_source_binding_values(
-            "CompiledSourceBindingPlan.bindings",
-            self.bindings,
-            NamedSourceBinding,
-        )
-        seen_aliases: set[str] = set()
-        for binding in bindings:
-            if binding.alias in seen_aliases:
-                raise ValueError(
-                    "CompiledSourceBindingPlan.bindings contains duplicate alias "
-                    f"{binding.alias!r}."
-                )
-            seen_aliases.add(binding.alias)
-        object.__setattr__(self, "bindings", bindings)
-        object.__setattr__(
-            self,
-            "source_stack_components",
-            ComponentSet.collect(self.source_stack_components).as_tuple(),
-        )
-        self._normalize_common_fields()
+        SourceBindingDeclarationsMixin.__post_init__(self)
+        AnnotatedDataclassValidationMixin.__post_init__(self)
 
     @property
     def has_primary_content(self) -> bool:
