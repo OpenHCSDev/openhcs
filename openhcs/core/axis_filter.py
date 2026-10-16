@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, TypeAlias
+from python_introspect import resolve_declared_type
 
 if TYPE_CHECKING:
     from openhcs.core.config import PartitionFilterConfig, PartitionFilterMode
@@ -53,13 +54,12 @@ class StepAxisFilterSet:
         self,
         config: "PartitionFilterConfig",
     ) -> StepAxisFilterResolution | None:
-        from objectstate import get_base_type_for_lazy
 
-        config_type = get_base_type_for_lazy(type(config)) or type(config)
+        config_type = resolve_declared_type(type(config))
         config_mro = config_type.mro()
         matches: list[tuple[int, StepAxisFilterResolution]] = []
         for owner_type, resolution in self.resolutions_by_config_type.items():
-            owner_base = get_base_type_for_lazy(owner_type) or owner_type
+            owner_base = resolve_declared_type(owner_type)
             if not isinstance(owner_base, type):
                 continue
             if owner_base not in config_mro:

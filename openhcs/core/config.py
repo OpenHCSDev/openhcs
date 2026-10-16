@@ -7,6 +7,7 @@ Configuration is intended to be immutable and provided as Python objects.
 """
 
 import hashlib
+from objectstate.ui_visibility import UIParameterVisibilityPolicy
 import json
 import logging
 import inspect
@@ -463,12 +464,11 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
         if source_type is None:
             return True
 
-        from objectstate import get_base_type_for_lazy
 
-        config_type = get_base_type_for_lazy(cls) or cls
-        source_base = get_base_type_for_lazy(source_type) or source_type
+        config_type = resolve_declared_type(cls)
+        source_base = resolve_declared_type(source_type)
         branch_type = cls.partition_filter_inheritance_branch()
-        branch_base = get_base_type_for_lazy(branch_type) or branch_type
+        branch_base = resolve_declared_type(branch_type)
         return issubclass(source_base, config_type) or source_base in branch_base.mro()
 
 
@@ -1026,10 +1026,9 @@ def source_bindings_defaults_to_base(
     defaults: SourceBindingsConfig,
 ) -> SourceBindingsConfig:
     """Return concrete source-binding defaults from eager or lazy config values."""
-    from objectstate import get_base_type_for_lazy
 
-    lazy_base_type = get_base_type_for_lazy(type(defaults))
-    if lazy_base_type is SourceBindingsConfig:
+    lazy_base_type = resolve_declared_type(type(defaults))
+    if lazy_base_type is SourceBindingsConfig and type(defaults) is not SourceBindingsConfig:
         concrete_defaults = SourceBindingsConfig()
         return SourceBindingsConfig(
             **{
@@ -1226,7 +1225,7 @@ class StreamingDefaults(Enableable, StepPartitionFilterConfig):
 
     scope_accent_color: Annotated[Optional[str], abbreviation("accent")] = field(
         default=None,
-        metadata={"ui_hidden": True},
+        metadata=UIParameterVisibilityPolicy.field_metadata(True),
     )
     """Exact owner-projected scope accent used to frame a managed viewer."""
 
@@ -1471,6 +1470,7 @@ register_namespace_provider(
 
 from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
+from python_introspect import resolve_declared_type
 
 with config_context(PipelineConfig()):
     EMPTY_SOURCE_BINDINGS: StepSourceBindingsConfig = (

@@ -2013,7 +2013,7 @@ class _SourceBindingPlanBase(ABC):
         from objectstate.field_access import DataclassFieldAccess
 
         metadata_rules = DataclassFieldAccess.raw_value(self, "metadata_rules")
-        if FieldValue.of(metadata_rules).has_value:
+        if FieldValue.of(metadata_rules).available():
             metadata_rules = tuple(metadata_rules)
             for rule in metadata_rules:
                 if not isinstance(rule, MetadataExtractionRule):
@@ -2025,14 +2025,14 @@ class _SourceBindingPlanBase(ABC):
         object.__setattr__(self, "metadata_rules", metadata_rules)
 
         match_plan = DataclassFieldAccess.raw_value(self, "match_plan")
-        if FieldValue.of(match_plan).has_value and not isinstance(match_plan, SourceSetPairing | None):
+        if FieldValue.of(match_plan).available() and not isinstance(match_plan, SourceSetPairing | None):
             raise TypeError(
                 f"{type(self).__name__}.match_plan must be a SourceSetPairing, "
                 f"got {type(match_plan).__name__}."
             )
 
         metadata_fields = DataclassFieldAccess.raw_value(self, "metadata_fields")
-        if FieldValue.of(metadata_fields).has_value:
+        if FieldValue.of(metadata_fields).available():
             metadata_fields = FieldSpec.merge_exact(
                 (tuple(metadata_fields),),
                 context=f"{type(self).__name__}.metadata_fields",
