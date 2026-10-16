@@ -509,8 +509,7 @@ class UiCodeDocumentExecutionService:
                 *projection.key_bindings.items(),
             )
         }
-        with operations.patch_lazy_constructors():
-            exec(executable, namespace)
+        exec(executable, namespace)
 
         try:
             payload = PlateManagerCodeDocumentAuthority.from_namespace(namespace)

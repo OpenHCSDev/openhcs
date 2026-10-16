@@ -2009,8 +2009,11 @@ class _SourceBindingPlanBase(ABC):
     """Exact scalar schema for source-literal metadata fields."""
 
     def _normalize_common_fields(self) -> None:
-        metadata_rules = object.__getattribute__(self, "metadata_rules")
-        if metadata_rules is not None:
+        from objectstate.field_value import FieldValue
+        from objectstate.field_access import DataclassFieldAccess
+
+        metadata_rules = DataclassFieldAccess.raw_value(self, "metadata_rules")
+        if FieldValue.of(metadata_rules).has_value:
             metadata_rules = tuple(metadata_rules)
             for rule in metadata_rules:
                 if not isinstance(rule, MetadataExtractionRule):
@@ -2021,16 +2024,15 @@ class _SourceBindingPlanBase(ABC):
                     )
         object.__setattr__(self, "metadata_rules", metadata_rules)
 
-        match_plan = object.__getattribute__(self, "match_plan")
-        # None is ObjectState's inherited (unset) value on lazy plans.
-        if not isinstance(match_plan, SourceSetPairing | None):
+        match_plan = DataclassFieldAccess.raw_value(self, "match_plan")
+        if FieldValue.of(match_plan).has_value and not isinstance(match_plan, SourceSetPairing | None):
             raise TypeError(
                 f"{type(self).__name__}.match_plan must be a SourceSetPairing, "
                 f"got {type(match_plan).__name__}."
             )
 
-        metadata_fields = object.__getattribute__(self, "metadata_fields")
-        if metadata_fields is not None:
+        metadata_fields = DataclassFieldAccess.raw_value(self, "metadata_fields")
+        if FieldValue.of(metadata_fields).has_value:
             metadata_fields = FieldSpec.merge_exact(
                 (tuple(metadata_fields),),
                 context=f"{type(self).__name__}.metadata_fields",

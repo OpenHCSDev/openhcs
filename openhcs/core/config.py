@@ -384,7 +384,7 @@ class NapariDisplayConfig(AxisRoleModeDisplayConfig, NapariDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by NapariStreamingConfig, so hide it from UI
-NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(NapariDisplayConfig)
+NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_fields=False)(NapariDisplayConfig)
 
 
 FijiDimensionMode = FijiSlots.choice_enum("FijiDimensionMode", __name__)
@@ -413,7 +413,7 @@ class FijiDisplayConfig(AxisRoleModeDisplayConfig, FijiDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by FijiStreamingConfig, so hide it from UI
-FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(FijiDisplayConfig)
+FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_fields=False)(FijiDisplayConfig)
 
 
 @abbreviation("pfc")
@@ -474,7 +474,7 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
 
 @abbreviation("zarr")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     field_abbreviations={
         "compressor": "compressor",
         "compression_level": "level",
@@ -492,7 +492,7 @@ class ZarrConfig(AnnotatedDataclassValidationMixin, _polystore_config.ZarrConfig
 
 @abbreviation("tiff")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     field_abbreviations={"compression": "codec", "compression_level": "level"},
 )
 @dataclass(frozen=True)
@@ -603,7 +603,7 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
 
 
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     preview_label="SRC",
     abbreviation="src",
 )
@@ -1239,7 +1239,7 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
 
     Uses multiple inheritance from StepPartitionFilterConfig and StreamingDefaults.
     Inherited fields (persistent, host, port, transport_mode) are automatically set to None
-    by @global_pipeline_config(inherit_as_none=True), enabling polymorphic access without
+    by @global_pipeline_config(inherit_fields=True), enabling polymorphic access without
     type-specific attribute names.
     """
 
@@ -1389,7 +1389,7 @@ for _section in GlobalConfigSection.declared_sections():
 
 @abbreviation("compile_dbg")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     always_viewable_fields=["enabled"],
 )
 @dataclass(frozen=True)
