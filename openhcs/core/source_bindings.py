@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
 from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
-from objectstate.field_value import FieldValue
 from objectstate.field_access import DataclassFieldAccess
 from objectstate.declarations import ValueDeclaration
 from python_introspect.annotation_types import resolved_class_annotations
