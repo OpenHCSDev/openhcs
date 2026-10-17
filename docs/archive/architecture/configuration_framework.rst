@@ -136,7 +136,7 @@ From ``tests/integration/test_main.py``:
    )
 
    # Establish global context
-   ensure_global_config_context(GlobalPipelineConfig, global_config)
+   set_global_config(GlobalPipelineConfig, global_config)
 
    # Create pipeline config with lazy configs for inheritance
    pipeline_config = PipelineConfig(

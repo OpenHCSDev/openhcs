@@ -24,7 +24,6 @@ class EnumConfig:
 
 
 def test_object_state_field_authorization_rejects_before_write() -> None:
-    ObjectStateRegistry.clear()
     state = ObjectState(MutableConfig(), scope_id="plate::functionstep_0")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     request = UiObjectStateFieldMutationRequest.from_fields(
@@ -38,31 +37,24 @@ def test_object_state_field_authorization_rejects_before_write() -> None:
         )
     )
 
-    try:
-        result = service.mutate(request)
-        assert not result.mutated
-        assert result.errors[0].code == "ui_object_state_field_mutation_failed"
-        assert state.parameters["threshold"] == 1
-    finally:
-        ObjectStateRegistry.clear()
+    result = service.mutate(request)
+    assert not result.mutated
+    assert result.errors[0].code == "ui_object_state_field_mutation_failed"
+    assert state.parameters["threshold"] == 1
 
 
 def test_object_state_field_mutation_accepts_declared_enum_member_name() -> None:
-    ObjectStateRegistry.clear()
     state = ObjectState(EnumConfig(), scope_id="enum-config")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
 
-    try:
-        result = ObjectStateFieldMutationService().mutate(
-            UiObjectStateFieldMutationRequest.from_fields(
-                object_state_scope_id=state.scope_id,
-                field_path="mode",
-                value="INHERIT",
-            )
+    result = ObjectStateFieldMutationService().mutate(
+        UiObjectStateFieldMutationRequest.from_fields(
+            object_state_scope_id=state.scope_id,
+            field_path="mode",
+            value="INHERIT",
         )
+    )
 
-        assert result.errors == ()
-        assert result.mutated
-        assert state.parameters["mode"] is InheritableMode.INHERIT
-    finally:
-        ObjectStateRegistry.clear()
+    assert result.errors == ()
+    assert result.mutated
+    assert state.parameters["mode"] is InheritableMode.INHERIT

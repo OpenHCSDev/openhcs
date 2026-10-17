@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from ome_zarr.format import Format
 from polystore.bioformats_java import BioFormatsJavaContext
 from zmqruntime.execution.responses import (
@@ -272,7 +272,7 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
         for binding in wire_pipeline_document.pipeline_config.source_bindings_config.bindings
     ] == list(stores)
 
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     orchestrator = PipelineOrchestrator(
         dataset_root=tmp_path,
         pipeline_config=pipeline_config,

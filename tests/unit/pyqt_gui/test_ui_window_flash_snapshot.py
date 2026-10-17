@@ -13,7 +13,6 @@ from formbridge.bridge.dto import (
 )
 from formbridge.bridge.service import UiBridgeOperation
 from python_introspect import dataclass_from_mapping, to_jsonable
-from formbridge.bridge.in_process import UiAgentBridgeService
 from pyqt_reactive.bridge.windows import QtTopLevelWindowProjection
 from formbridge.services.window_snapshot import WindowSnapshotFrameCondition
 from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
@@ -22,7 +21,7 @@ from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeServic
 @pytest.fixture
 def native_snapshot_bridge(qapp):
     import objectstate.config as config_module
-    from objectstate import ObjectState, ObjectStateRegistry, set_base_config_type
+    from objectstate import ObjectState, set_base_config_type
     from pyqt_reactive.animation.flash_mixin import (
         WindowFlashOverlay,
         _GlobalFlashCoordinator,
@@ -38,7 +37,6 @@ def native_snapshot_bridge(qapp):
         number: int = 3
 
     previous_base = config_module._base_config_type
-    ObjectStateRegistry.clear()
     set_base_config_type(Fields)
     window = QDialog()
     window.setWindowTitle("Snapshot engineering fixture")
@@ -71,7 +69,6 @@ def native_snapshot_bridge(qapp):
     window.deleteLater()
     qapp.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     qapp.processEvents()
-    ObjectStateRegistry.clear()
     config_module._base_config_type = previous_base
 
 

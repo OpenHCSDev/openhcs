@@ -231,7 +231,7 @@ def get_all_streaming_ports(
 ) -> list[int]:
     """Get all configured streaming ports for all registered streaming config types."""
 
-    from objectstate.global_config import get_current_global_config
+    from objectstate import get_live_global_config
 
     from openhcs.core.config import StreamingConfig
 
@@ -239,11 +239,11 @@ def get_all_streaming_ports(
     base_config_type = get_base_config_type()
 
     if config is None:
-        config = get_current_global_config(base_config_type)
+        config = get_live_global_config(base_config_type)
         if config is None:
             return ports
 
-    global_config = get_current_global_config(base_config_type)
+    global_config = get_live_global_config(base_config_type)
 
     for streaming_config_type in tuple(StreamingConfig.__registry__.values()):
         port = streaming_config_type.port_from_config(config)

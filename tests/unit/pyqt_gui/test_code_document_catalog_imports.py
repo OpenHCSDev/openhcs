@@ -167,97 +167,85 @@ def test_unlisted_import_fails_before_execution(catalog):
 
 @pytest.mark.parametrize("entry", [tophat, (tophat, {"selem_radius": 3}), [tophat]])
 def test_grouped_single_and_chained_functions_survive_object_state_round_trip(entry):
-    ObjectStateRegistry.clear()
-    try:
-        step = FunctionStep(func={"1": [tophat], "2": entry})
-        PipelineObjectStateBinding.update_plate_steps("/tmp/grouped-plate", [step])
-        reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/grouped-plate")
-        assert reconstructed[0].same_declaration(step)
-    finally:
-        ObjectStateRegistry.clear()
+    step = FunctionStep(func={"1": [tophat], "2": entry})
+    PipelineObjectStateBinding.update_plate_steps("/tmp/grouped-plate", [step])
+    reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/grouped-plate")
+    assert reconstructed[0].same_declaration(step)
 
 
 def test_explicit_function_dtype_override_survives_object_state_round_trip():
-    ObjectStateRegistry.clear()
-    try:
-        dtype_config = LazyDtypeConfig(default_dtype_conversion=DtypeConversion.UINT16)
-        step = FunctionStep(
-            func=(stack_percentile_normalize, {"dtype_config": dtype_config})
-        )
-        PipelineObjectStateBinding.update_plate_steps("/tmp/dtype-plate", [step])
-        reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/dtype-plate")[
-            0
-        ]
-        assert (
-            reconstructed.func[1]["dtype_config"].default_dtype_conversion
-            is DtypeConversion.UINT16
-        )
-        rendered = FunctionStepDocumentCodec.render(
-            FunctionStepDocumentCodec.from_value(reconstructed)
-        )
-        reparsed = FunctionStepDocumentCodec.from_source(rendered).step
-        assert (
-            reparsed.func[1]["dtype_config"].default_dtype_conversion
-            is DtypeConversion.UINT16
-        )
-    finally:
-        ObjectStateRegistry.clear()
+    dtype_config = LazyDtypeConfig(default_dtype_conversion=DtypeConversion.UINT16)
+    step = FunctionStep(
+        func=(stack_percentile_normalize, {"dtype_config": dtype_config})
+    )
+    PipelineObjectStateBinding.update_plate_steps("/tmp/dtype-plate", [step])
+    reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/dtype-plate")[
+        0
+    ]
+    assert (
+        reconstructed.func[1]["dtype_config"].default_dtype_conversion
+        is DtypeConversion.UINT16
+    )
+    rendered = FunctionStepDocumentCodec.render(
+        FunctionStepDocumentCodec.from_value(reconstructed)
+    )
+    reparsed = FunctionStepDocumentCodec.from_source(rendered).step
+    assert (
+        reparsed.func[1]["dtype_config"].default_dtype_conversion
+        is DtypeConversion.UINT16
+    )
 
 
 def test_added_nested_dataclass_field_survives_pipeline_code_round_trip():
     """A stale restored field schema cannot discard a newly declared value."""
 
     plate_scope = "/tmp/nested-schema-plate"
-    ObjectStateRegistry.clear()
-    try:
-        initial = FunctionStep(
-            func=(
-                neurite_outgrowth_metaxpress,
-                {
-                    "outgrowth": MetaXpressOutgrowthSettings(
-                        candidate_threshold_correction_factor=0.85,
-                    )
-                },
-            ),
-        )
-        PipelineObjectStateBinding.update_plate_steps(plate_scope, [initial])
-        [step_scope] = PipelineObjectStateBinding.editor_state_for_plate(
-            plate_scope
-        ).step_scope_ids
-        function_state = ObjectStateRegistry.get_by_scope(f"{step_scope}::func_0")
-        assert function_state is not None
+    initial = FunctionStep(
+        func=(
+            neurite_outgrowth_metaxpress,
+            {
+                "outgrowth": MetaXpressOutgrowthSettings(
+                    candidate_threshold_correction_factor=0.85,
+                )
+            },
+        ),
+    )
+    PipelineObjectStateBinding.update_plate_steps(plate_scope, [initial])
+    [step_scope] = PipelineObjectStateBinding.editor_state_for_plate(
+        plate_scope
+    ).step_scope_ids
+    function_state = ObjectStateRegistry.get_by_scope(f"{step_scope}::func_0")
+    assert function_state is not None
 
-        # Model a persisted ObjectState captured before the nested declaration
-        # gained ``correction_factor`` while retaining the current container.
-        stale_path = "outgrowth.candidate_threshold_correction_factor"
-        function_state.parameters.pop(stale_path)
-        function_state._saved_parameters.pop(stale_path)
+    # Model a persisted ObjectState captured before the nested declaration
+    # gained ``correction_factor`` while retaining the current container.
+    stale_path = "outgrowth.candidate_threshold_correction_factor"
+    function_state.parameters.pop(stale_path)
+    function_state._saved_parameters.pop(stale_path)
 
-        edited = FunctionStep(
-            func=(
-                neurite_outgrowth_metaxpress,
-                {
-                    "outgrowth": MetaXpressOutgrowthSettings(
-                        candidate_threshold_correction_factor=0.5,
-                    )
-                },
-            ),
-        )
-        PipelineObjectStateBinding.update_plate_steps(plate_scope, [edited])
+    edited = FunctionStep(
+        func=(
+            neurite_outgrowth_metaxpress,
+            {
+                "outgrowth": MetaXpressOutgrowthSettings(
+                    candidate_threshold_correction_factor=0.5,
+                )
+            },
+        ),
+    )
+    PipelineObjectStateBinding.update_plate_steps(plate_scope, [edited])
 
-        [reconstructed] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
-        assert reconstructed.func[1]["outgrowth"] == MetaXpressOutgrowthSettings(
-            candidate_threshold_correction_factor=0.5,
-        )
-        rendered = FunctionStepDocumentCodec.render(
-            FunctionStepDocumentCodec.from_value(reconstructed)
-        )
-        assert "correction_factor=0.5" in rendered
-        assert (
-            FunctionStepDocumentCodec.from_source(rendered)
-            .step.func[1]["outgrowth"]
-            .candidate_threshold_correction_factor
-            == 0.5
-        )
-    finally:
-        ObjectStateRegistry.clear()
+    [reconstructed] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+    assert reconstructed.func[1]["outgrowth"] == MetaXpressOutgrowthSettings(
+        candidate_threshold_correction_factor=0.5,
+    )
+    rendered = FunctionStepDocumentCodec.render(
+        FunctionStepDocumentCodec.from_value(reconstructed)
+    )
+    assert "correction_factor=0.5" in rendered
+    assert (
+        FunctionStepDocumentCodec.from_source(rendered)
+        .step.func[1]["outgrowth"]
+        .candidate_threshold_correction_factor
+        == 0.5
+    )

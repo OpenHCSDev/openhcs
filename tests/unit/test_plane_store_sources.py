@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import zarr
 from objectstate import ObjectState
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from ome_zarr.format import Format
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.bioformats_java import BioFormatsJavaContext
@@ -364,7 +364,7 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
         "instance",
         classmethod(lambda cls: _NoJavaStores()),
     )
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     initial_bindings = SourceBindingsConfig(
         bindings=tuple(
             _binding(alias, path.name) for alias, (path, _pixels) in stores.items()
@@ -465,7 +465,7 @@ def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
         "instance",
         classmethod(lambda cls: _NoJavaStores()),
     )
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     source_bindings = SourceBindingsConfig(
         bindings=tuple(
             _binding(alias, path.name) for alias, (path, _pixels) in stores.items()

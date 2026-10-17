@@ -9,7 +9,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from objectstate.object_state import ObjectStateRegistry
 from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import ExecutionStatus, MessageFields
 
@@ -81,7 +80,6 @@ def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("
 def mcp_session(tmp_path: Path):
     """An MCP server over a fresh session that runs on the calling thread."""
 
-    ObjectStateRegistry.clear()
     context = OpenHCSAgentContext(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,), writable_roots=(tmp_path,)
@@ -95,8 +93,7 @@ def mcp_session(tmp_path: Path):
     try:
         yield built, context.session
     finally:
-        context.session.close()
-        ObjectStateRegistry.clear()
+        context.close()
 
 
 def _call(built, name: str, arguments: dict) -> dict:

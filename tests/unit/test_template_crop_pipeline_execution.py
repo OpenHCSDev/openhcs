@@ -7,8 +7,7 @@ import cv2
 import numpy as np
 import pytest
 import tifffile
-from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -87,11 +86,10 @@ def test_template_crop_persists_each_source_channel(
     ]
     if first_step:
         steps = steps[1:]
-    ObjectStateRegistry.clear()
     queue = SimpleQueue()
     set_progress_queue(queue)
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(
                 dataset_source=ImageXpressHandler, num_workers=1, use_threading=True

@@ -19,9 +19,7 @@ class CallablePreviewHolder:
 
 @pytest.fixture(autouse=True)
 def clear_object_state_registry():
-    ObjectStateRegistry.clear()
     yield
-    ObjectStateRegistry.clear()
 
 
 def test_object_state_callable_previews_use_import_paths():

@@ -251,24 +251,6 @@ class PyQtServiceAdapter(UiHostServices):
             logger.error(f"Directory dialog failed: {e}")
             raise
 
-    def get_global_config(self):
-        """
-        Get global configuration from application.
-
-        Returns:
-            Global configuration object
-        """
-        return self.main_window.pipeline_runtime_config
-
-    def set_global_config(self, config):
-        """
-        Set global configuration on application.
-
-        Args:
-            config: Global configuration object
-        """
-        self.main_window.set_pipeline_runtime_config(config)
-
     def get_current_color_scheme(self) -> ColorScheme:
         """
         Get the current color scheme.

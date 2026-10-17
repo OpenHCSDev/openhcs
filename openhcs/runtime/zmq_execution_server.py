@@ -26,6 +26,7 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
+from objectstate import set_global_config
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.dataset_sources.discovery import discover_domain_registries
@@ -546,7 +547,18 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
                 request_context.pipeline_steps,
                 request_context.compile_artifact_id,
             )
-            self._ensure_request_global_config_context(request_context)
+            # The compiler resolves the pipeline config and every step through
+            # ObjectState.resolve_saved_object, which reads the process's global
+            # config and takes no other, so the request's is stored as the
+            # process's. Nothing else can read it in between: this process
+            # registers no global-config state, execute_task has one caller, the
+            # single queue worker thread, which finishes a request (workers
+            # joined, worker processes killed) before it takes the next, and no
+            # control message compiles or resolves configuration. Workers run
+            # the compiled bundle and read no global config.
+            set_global_config(
+                GlobalPipelineConfig, request_context.configs.global_pipeline
+            )
             execution_bundle = (
                 self._compiled_artifacts[
                     request_context.compile_artifact_id
@@ -893,19 +905,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         progress_emitter.compile_failed(
             axis_ids=self._compile_failure_axis_ids(partition_values),
             error=str(error),
-        )
-
-    @staticmethod
-    def _ensure_request_global_config_context(
-        request_context: ZMQExecutionContext,
-    ) -> None:
-        from objectstate.lazy_factory import (
-            ensure_global_config_context,
-        )
-
-        ensure_global_config_context(
-            GlobalPipelineConfig,
-            request_context.configs.global_pipeline,
         )
 
     @staticmethod

@@ -5,7 +5,7 @@ import inspect
 
 from PyQt6.QtTest import QTest
 
-from objectstate.global_config import set_global_config_for_editing
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -39,7 +39,6 @@ def _registered_callable_pair():
 
 def test_registered_function_pane_moves_only_enabled_control_to_title(qapp) -> None:
     """The canonical registered callable drives title-only enableable chrome."""
-    ObjectStateRegistry.clear()
     _declared, registered = _registered_callable_pair()
     pane = FunctionPaneWidget(
         (registered, {}),
@@ -67,13 +66,11 @@ def test_registered_function_pane_moves_only_enabled_control_to_title(qapp) -> N
     finally:
         pane.close()
         pane.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_step_lazy_enableable_contents_stay_dimmed_after_async_build(qapp) -> None:
     """Parent refreshes must not overwrite a nested Enableable's resolved state."""
-    ObjectStateRegistry.clear()
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     plate_state = ObjectState(PipelineConfig(), scope_id="enableable-plate")
     step_state = ObjectState(
         FunctionStep(func=lambda image: image),
@@ -145,4 +142,3 @@ def test_step_lazy_enableable_contents_stay_dimmed_after_async_build(qapp) -> No
             )
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()

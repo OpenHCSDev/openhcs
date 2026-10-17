@@ -236,8 +236,8 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self.desktop_update_service.check_failed.connect(self._on_update_check_failed)
 
         self.session = Session(
+            global_config=runtime_context.pipeline_runtime,
             transport_config=runtime_context.ui_config.zmq,
-            global_config=self.pipeline_runtime_config,
             main_thread=DispatcherThread(main_window_services.ui_dispatcher),
             progress_interval_seconds=(
                 runtime_context.ui_config.progress.update_interval_ms / 1000
@@ -285,13 +285,6 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         logger.info(
             "OpenHCS PyQt6 main window initialized (deferred initialization pending)"
         )
-
-    @property
-    def pipeline_runtime_config(self) -> GlobalPipelineConfig:
-        return self.runtime_context.pipeline_runtime
-
-    def set_pipeline_runtime_config(self, new_config: GlobalPipelineConfig) -> None:
-        self.runtime_context = self.runtime_context.with_pipeline_runtime(new_config)
 
     def set_ui_config(self, new_config: UIConfig) -> None:
         """Apply and publish one UI configuration without partial live state."""
@@ -927,9 +920,6 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self.config_changed.connect(self.on_config_changed)
         self._connect_zmq_lifecycle()
 
-        # Connect service adapter to application
-        self.service_adapter.set_global_config(self.pipeline_runtime_config)
-
         self._connect_object_state_lifecycle()
 
         # Register OpenHCS window handlers with the generic factory
@@ -1167,7 +1157,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             return
 
         try:
-            from objectstate.global_config import get_current_global_config
+            from objectstate import get_live_global_config
 
             from openhcs.core.config import GlobalPipelineConfig
             from openhcs.processing.backends.analysis.consolidate_analysis_results import (
@@ -1175,7 +1165,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             )
 
             # Get global config
-            global_config = get_current_global_config(GlobalPipelineConfig)
+            global_config = get_live_global_config(GlobalPipelineConfig)
 
             # Run consolidation
             summary_df = consolidate_analysis_results(
@@ -1500,9 +1490,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
     def on_config_changed(self, new_config: GlobalPipelineConfig):
         """Handle global configuration changes."""
-        self.set_pipeline_runtime_config(new_config)
-        self.service_adapter.set_global_config(new_config)
-        self.lifecycle_workflow.propagate_config(new_config)
+        self.session.saved_global_config_changed()
 
     def closeEvent(self, event):
         """Handle application close event."""
@@ -1517,6 +1505,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             ),
             ("closing shortcut routing", self.shortcut_lifecycle.close),
             ("closing window resources", self.lifecycle_workflow.close),
+            ("closing the session", self.session.close),
         )
         for description, operation in shutdown_operations:
             try:

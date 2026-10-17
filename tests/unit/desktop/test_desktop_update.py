@@ -18,7 +18,7 @@ from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module
-from tests.unit.desktop.conftest import headless_session
+from tests.unit.desktop.sessions import headless_session
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -1294,7 +1294,6 @@ def test_restart_reconciles_saved_document_after_history_materialization(
         assert "blend_method" not in restored_entries[0][1]
         assert "target_max" not in restored_entries[1][1]
     finally:
-        ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(plate_scope)
 
 

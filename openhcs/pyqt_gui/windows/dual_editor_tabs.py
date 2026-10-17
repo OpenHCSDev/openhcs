@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import cache
 
-from objectstate.context_manager import config_context
 from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
@@ -48,22 +47,20 @@ class StepSettingsTab(StepEditorTab):
 
     def build(self) -> ActionTabMaterialization:
         edit = self.edit
-        pipeline_config = edit.orchestrator.pipeline_config
-        with config_context(pipeline_config), config_context(edit.step):
-            self.editor = StepParameterEditorWidget(
-                edit.step,
-                service_adapter=None,
-                color_scheme=self.window.color_scheme,
-                pipeline_config=pipeline_config,
-                scope_id=edit.scope_id,
-                step_index=edit.list_position,
-                scope_accent_color=self.window.get_scope_accent_color(),
-                render_header=False,
-                button_style="compact",
-                source_bindings=edit.source_bindings,
-                source_binding_context=edit.source_binding_context,
-                before_mutation=edit.before_mutation,
-            )
+        self.editor = StepParameterEditorWidget(
+            edit.step,
+            service_adapter=None,
+            color_scheme=self.window.color_scheme,
+            pipeline_config=edit.orchestrator.pipeline_config,
+            scope_id=edit.scope_id,
+            step_index=edit.list_position,
+            scope_accent_color=self.window.get_scope_accent_color(),
+            render_header=False,
+            button_style="compact",
+            source_bindings=edit.source_bindings,
+            source_binding_context=edit.source_binding_context,
+            before_mutation=edit.before_mutation,
+        )
         self.editor.form_manager.parameter_changed.connect(self._on_form_parameter_changed)
         self._orchestrator_config_signals: list = []
         return ActionTabMaterialization(self.editor, self.editor.get_action_buttons())

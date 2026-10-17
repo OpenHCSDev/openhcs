@@ -490,8 +490,8 @@ This was completely redundant because ``FieldChangeDispatcher`` already handles 
        current_values = self.form_manager.get_current_values()
        updated_config = self.config_class(**current_values)
        self.current_config = updated_config
-       set_global_config_for_editing(self.config_class, updated_config)
-       self._global_context_dirty = True
+       # (stored the edited global config; that setter was removed in
+       # ObjectState 4.0.0, see ObjectState CHANGELOG.md)
        ParameterFormManager.trigger_global_cross_window_refresh()  # ❌ REDUNDANT!
 
    # AFTER (fast):
@@ -499,8 +499,8 @@ This was completely redundant because ``FieldChangeDispatcher`` already handles 
        current_values = self.form_manager.get_current_values()
        updated_config = self.config_class(**current_values)
        self.current_config = updated_config
-       set_global_config_for_editing(self.config_class, updated_config)
-       self._global_context_dirty = True
+       # (stored the edited global config; that setter was removed in
+       # ObjectState 4.0.0, see ObjectState CHANGELOG.md)
        # FieldChangeDispatcher already handles cross-window updates
 
 **Performance Impact**

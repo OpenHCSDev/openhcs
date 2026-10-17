@@ -43,11 +43,8 @@ def test_microscopy_grid_axis_is_the_well_and_places_its_values() -> None:
 
 
 def test_a_family_without_a_grid_axis_has_no_plate_grid() -> None:
-    _Survey.activate()
-    try:
+    with _Survey.activated():
         assert AxisFamily.active().with_role(GridAddressed) == ()
-    finally:
-        Microscopy.activate()
     assert AxisFamily.active().with_role(GridAddressed) == (Microscopy.Well,)
 
 

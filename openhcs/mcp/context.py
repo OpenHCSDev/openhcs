@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from contextlib import ExitStack
+from types import TracebackType
+from typing import TYPE_CHECKING, Self
 
 from openhcs.agent.path_policy import AgentPathPolicy
 
@@ -54,6 +56,7 @@ class OpenHCSAgentContext:
         "_config_service",
         "_artifact_plan_service",
         "_session",
+        "_opened",
         "_main_thread",
         "_session_transport_config",
         "_endpoint_function_catalog",
@@ -101,6 +104,7 @@ class OpenHCSAgentContext:
         self._config_service = config_service
         self._artifact_plan_service = artifact_plan_service
         self._session = session
+        self._opened = ExitStack()
         self._main_thread: "MainThread | None" = None
         self._session_transport_config = session_transport_config
         self._function_catalog = function_catalog
@@ -267,12 +271,29 @@ class OpenHCSAgentContext:
             from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
             self._session = Session(
-                transport_config=self._session_transport_config or OpenHCSZMQConfig(),
                 global_config=GlobalPipelineConfig(),
+                transport_config=self._session_transport_config or OpenHCSZMQConfig(),
                 main_thread=self._main_thread or CallerThread(),
                 dataset_access=AgentPathDatasetAccess(self.path_policy),
             )
+            self._opened.callback(self._session.close)
         return self._session
+
+    def close(self) -> None:
+        """Close what this context opened (a session passed in is its giver's)."""
+
+        self._opened.close()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self.close()
 
     @property
     def runtime_server_service(self) -> "RuntimeServerService":
