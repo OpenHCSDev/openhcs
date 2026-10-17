@@ -65,6 +65,7 @@ from openhcs.core.progress.types import (
 from tests.context_support import (
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 class QtApplication:
@@ -147,6 +148,7 @@ def _compiled_fixture() -> tuple[
         transport_contexts={"A01": context},
         worker_assignments={},
         runtime_environment=object(),
+        run_declaration=minimal_run_declaration(),
     )
     inspection = CompiledArtifactInspection.from_execution_bundle(
         compile_artifact_id="compile-1",

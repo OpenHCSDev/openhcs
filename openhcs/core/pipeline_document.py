@@ -58,6 +58,31 @@ class PipelineDocumentCodec:
         )
 
     @classmethod
+    def render_with_every_parameter(cls, document: PipelineDocument) -> str:
+        """Render the copy a run's record keeps: nothing is left to a default.
+
+        The saved pipeline (``render``) leaves out what equals a default, so it
+        means whatever the installed defaults are when it is loaded. This text
+        writes every stored field and, for every function, every parameter it
+        takes a value for, so it means the same after a default changes.
+        """
+
+        from openhcs.serialization.pycodify_formatters import (
+            with_every_parameter_written,
+        )
+
+        return cls.render(
+            PipelineDocument(
+                pipeline_config=document.pipeline_config,
+                pipeline_steps=[
+                    step.with_function_spec(with_every_parameter_written(step.func))
+                    for step in document.pipeline_steps
+                ],
+            ),
+            clean_mode=False,
+        )
+
+    @classmethod
     def from_namespace(
         cls,
         namespace: Mapping[str, object],
