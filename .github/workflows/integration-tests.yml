@@ -243,7 +243,7 @@ jobs:
           --cov-report=
 
       - name: Upload unit coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-unit
           path: .coverage
@@ -336,7 +336,7 @@ jobs:
           --cov-report=
 
       - name: Upload GUI coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-gui
           path: .coverage
@@ -401,7 +401,7 @@ jobs:
 
       - name: Upload native GUI evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-candidate-gui-${{ matrix.os }}
           path: |
@@ -493,7 +493,7 @@ jobs:
           --it-visualizers none -v --tb=short
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-python-${{ matrix.python-version }}-${{ matrix.os }}
           path: .coverage
@@ -548,7 +548,7 @@ jobs:
 
       - name: Upload ZMQ logs on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: zmq-logs-python-${{ matrix.python-version }}-${{ matrix.os }}
           path: |
@@ -621,7 +621,7 @@ jobs:
           --it-visualizers none -v --tb=short
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.backend }}-${{ matrix.microscope }}
           path: .coverage
@@ -676,7 +676,7 @@ jobs:
 
       - name: Upload ZMQ logs on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: zmq-logs-${{ matrix.os }}-${{ matrix.backend }}-${{ matrix.microscope }}
           path: |
@@ -749,7 +749,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-omero-python-${{ matrix.python-version }}
           path: .coverage
@@ -1775,7 +1775,7 @@ jobs:
 
       - name: Upload native installer UI evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: native-installer-ui-${{ matrix.platform }}-${{ matrix.architecture }}
           path: ${{ runner.temp }}/openhcs-native-installer-ui
@@ -1977,7 +1977,7 @@ jobs:
 
       - name: Retain installed GUI and native crash evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pypi-gui-${{ matrix.python-version }}-${{ matrix.os }}
           path: |
@@ -1988,7 +1988,7 @@ jobs:
 
       - name: Retain macOS native crash reports
         if: always() && runner.os == 'macOS'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pypi-gui-crash-${{ matrix.python-version }}-${{ matrix.os }}
           path: ~/Library/Logs/DiagnosticReports
@@ -2123,7 +2123,7 @@ jobs:
 
       - name: Upload per-case Official30 evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: official30-headless-parity-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
@@ -2137,7 +2137,7 @@ jobs:
 
       - name: Upload ZMQ logs on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: official30-headless-zmq-logs-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
@@ -2170,7 +2170,7 @@ jobs:
           python-version: "3.12"
 
       - name: Expose incompatible system Java 26
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "26"
@@ -2370,7 +2370,7 @@ jobs:
 
       - name: Upload viewer smoke evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: official30-real-viewer-smoke
           path: |
@@ -2383,7 +2383,7 @@ jobs:
 
       - name: Upload viewer and ZMQ logs on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: official30-real-viewer-zmq-logs
           path: |
@@ -2478,7 +2478,7 @@ jobs:
           deactivate
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-wheel-integration
           path: .coverage.wheel
