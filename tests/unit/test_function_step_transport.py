@@ -49,6 +49,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     compiled_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 def _execute_spawned_custom_invocation(
@@ -458,6 +459,7 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
             GlobalPipelineConfig(), compiled_contexts=contexts, server_mode=False,
         ),
+        run_declaration=minimal_run_declaration(),
     )
     transport_context = bundle.transport_contexts["A01"]
     transport_plan = transport_context.step_plans[0]

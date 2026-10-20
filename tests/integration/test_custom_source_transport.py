@@ -25,6 +25,7 @@ from openhcs.core.progress.types import (
 from tests.context_support import (
     compiled_context,
 )
+from tests.run_records import minimal_run_declaration
 
 WORKTREE = Path(__file__).resolve().parents[2]
 PYTHON = Path(sys.executable)
@@ -498,6 +499,7 @@ def _compiled_custom_contexts(payload, runtime):
         pipeline_definition=(), runtime_contexts=contexts,
         worker_assignments={f"worker_{i}": [axis] for i, axis in enumerate(contexts)},
         runtime_environment=runtime,
+        run_declaration=minimal_run_declaration(),
     ).transport_contexts
 
 

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         PipelineAuthoringService,
     )
     from openhcs.agent.services.plate_inspection_service import PlateInspectionService
+    from openhcs.agent.services.run_record_service import RunRecordService
     from openhcs.agent.services.plate_streaming_service import PlateStreamingService
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
     from openhcs.agent.services.selected_plate_service import SelectedPlateService
@@ -62,6 +63,7 @@ class OpenHCSAgentContext:
         "_object_state_field_help_service",
         "_pipeline_service",
         "_plate_inspection_service",
+        "_run_record_service",
         "_plate_streaming_service",
         "_runtime_server_service",
         "_viewer_endpoint_discovery_service",
@@ -109,6 +111,7 @@ class OpenHCSAgentContext:
         self._object_state_field_help_service = object_state_field_help_service
         self._pipeline_service = pipeline_service
         self._plate_inspection_service = plate_inspection_service
+        self._run_record_service: "RunRecordService | None" = None
         self._plate_streaming_service = plate_streaming_service
         self._runtime_server_service = runtime_server_service
         self._viewer_endpoint_discovery_service = viewer_endpoint_discovery_service
@@ -211,6 +214,14 @@ class OpenHCSAgentContext:
 
             self._plate_inspection_service = PlateInspectionService(self.path_policy)
         return self._plate_inspection_service
+
+    @property
+    def run_record_service(self) -> "RunRecordService":
+        if self._run_record_service is None:
+            from openhcs.agent.services.run_record_service import RunRecordService
+
+            self._run_record_service = RunRecordService(self.path_policy)
+        return self._run_record_service
 
     @property
     def plate_streaming_service(self) -> "PlateStreamingService":
