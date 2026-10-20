@@ -6,6 +6,9 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from objectstate import get_saved_global_config
+
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.execution_state import ExecutionCompleted
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     consolidate_multi_plate_summaries,
@@ -20,7 +23,7 @@ logger = logging.getLogger(__name__)
 def consolidate_batch_results(session: "Session") -> None:
     """Write one global summary over every completed dataset's summary."""
 
-    config = session.global_config
+    config = get_saved_global_config(GlobalPipelineConfig)
     path_config = config.path_planning_config
     analysis_config = config.analysis_consolidation_config
     summary_paths: list[str] = []

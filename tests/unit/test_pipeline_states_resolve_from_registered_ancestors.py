@@ -17,8 +17,6 @@ from arraybridge.decorators import DtypeConversion
 from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
 from formbridge.services.scope_token_service import ScopeTokenService
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import GlobalContextValues
-from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.scope_key import ScopeKey
 
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
@@ -55,14 +53,11 @@ def _step(name: str, dtype_conversion: DtypeConversion | None = None) -> Functio
 def plate_state() -> Iterator[ObjectState]:
     """A global config holding ``GLOBAL_VALUE`` and an empty plate config below it."""
 
-    previous_global = GlobalContextValues.capture(GlobalPipelineConfig)
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(PLATE)
     global_config = dataclasses.replace(
         GlobalPipelineConfig(),
         dtype_config=DtypeConfig(default_dtype_conversion=GLOBAL_VALUE),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     global_state = ObjectState(object_instance=global_config, scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
     state = ObjectState(
@@ -72,9 +67,7 @@ def plate_state() -> Iterator[ObjectState]:
     try:
         yield state
     finally:
-        ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(PLATE)
-        previous_global.apply()
 
 
 def _step_and_function_states() -> list[tuple[ObjectState, list[ObjectState]]]:

@@ -6,7 +6,6 @@ import time
 
 from PyQt6.QtTest import QTest
 
-from objectstate import ObjectStateRegistry
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from pyqt_reactive.widgets.function_pane import FunctionPaneWidget
 
@@ -40,7 +39,6 @@ def test_every_catalog_function_materializes_in_function_pane(qapp) -> None:
     assert metadata_by_key
 
     failures: list[str] = []
-    ObjectStateRegistry.clear()
 
     for composite_key, metadata in sorted(metadata_by_key.items()):
         pane = None
@@ -67,7 +65,6 @@ def test_every_catalog_function_materializes_in_function_pane(qapp) -> None:
                 pane.close()
                 pane.deleteLater()
             qapp.processEvents()
-            ObjectStateRegistry.clear()
 
     assert failures == [], "Catalog functions with unrenderable forms:\n" + "\n".join(
         failures

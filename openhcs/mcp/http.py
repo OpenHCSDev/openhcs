@@ -214,7 +214,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run stateless Streamable HTTP MCP."""
     _build_parser().parse_args(argv)
-    build_http_server().run(transport="streamable-http")
+    with create_hosted_agent_context() as context:
+        build_http_server(context=context).run(transport="streamable-http")
     return 0
 
 

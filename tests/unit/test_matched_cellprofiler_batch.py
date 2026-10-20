@@ -576,7 +576,7 @@ def test_candidate_pipeline_inherits_benchmark_worker_count(tmp_path: Path) -> N
             multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
         )
         candidate = _candidate_pipeline_config(
-            imported, global_config, tmp_path, ("A01", "A12")
+            imported, tmp_path, ("A01", "A12")
         )
 
         assert candidate.num_workers == 2

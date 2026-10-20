@@ -46,7 +46,6 @@ class PlateSignals(QObject):
 
 @pytest.fixture
 def open_step_editor(qapp, monkeypatch):
-    ObjectStateRegistry.clear()
     monkeypatch.setattr(
         component_selection,
         "_component_selection_provider",
@@ -76,7 +75,6 @@ def open_step_editor(qapp, monkeypatch):
         window._cleanup_managed_resources()
         window.deleteLater()
     qapp.processEvents()
-    ObjectStateRegistry.clear()
 
 
 def _step() -> FunctionStep:

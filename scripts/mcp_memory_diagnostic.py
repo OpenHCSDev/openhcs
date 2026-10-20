@@ -328,11 +328,15 @@ class MemoryDiagnosticMcpClient:
 
 def serve(surface_profile: LocalCapabilitySurfaceProfile) -> None:
     """Instrument the real server without substituting any application owner."""
+    from openhcs.mcp.context import create_agent_context
     from openhcs.mcp.server import build_server
     from openhcs.mcp.stdio import McpStdioTransport
 
-    with McpStdioTransport.reserve_process_stdio() as transport:
-        server = build_server(capability_surface_profile=surface_profile)
+    with (
+        McpStdioTransport.reserve_process_stdio() as transport,
+        create_agent_context() as context,
+    ):
+        server = build_server(context, capability_surface_profile=surface_profile)
 
         @server.tool(name=PROBE_TOOL)
         def process_memory(collect: bool = False) -> dict:

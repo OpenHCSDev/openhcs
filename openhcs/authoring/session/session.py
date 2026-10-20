@@ -23,7 +23,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import get_saved_global_config, set_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from polystore.base import _create_storage_registry
 from formbridge.services.async_operation_executor import AsyncOperationExecutor
@@ -313,13 +313,22 @@ class FinishedExecution:
 
 
 class Session:
-    """Datasets, their pipelines and executions, and the events they emit."""
+    """Datasets, their pipelines and executions, and the events they emit.
+
+    A process has one session at a time, and the session is what holds the
+    global config: constructing it registers the ObjectState at the global
+    scope (``scope_id=""``) around ``global_config``, and :meth:`close`
+    unregisters that state. No other code registers a global-config state and
+    nothing keeps a copy: read it with ``get_live_global_config`` /
+    ``get_saved_global_config`` and replace it with :meth:`apply_global_config`.
+    Whoever constructs a session closes it.
+    """
 
     def __init__(
         self,
         *,
-        transport_config: OpenHCSZMQConfig,
         global_config: GlobalPipelineConfig,
+        transport_config: OpenHCSZMQConfig,
         main_thread: MainThread,
         progress_interval_seconds: float = 1 / 30,
         dataset_access: DatasetAccess = UnrestrictedDatasetAccess(),
@@ -335,7 +344,6 @@ class Session:
         """Where workspaces for sources the session may not write are made."""
         self.renderer: Renderer = NoRenderer()
         self.event_log = SessionEventLog()
-        self.global_config = global_config
         self.client = ZMQClientService(
             config=transport_config,
             status_callback=lambda status: self.publish(ServerConnectionChanged(status)),
@@ -377,6 +385,10 @@ class Session:
         self._work = AsyncOperationExecutor()
         self._closed = False
 
+        self._global_config_state = ObjectState(
+            object_instance=global_config, scope_id=""
+        )
+        ObjectStateRegistry.register(self._global_config_state, _skip_snapshot=True)
         dataset_list_state()
         self._split_dataset_scopes()
 
@@ -427,12 +439,17 @@ class Session:
         return future
 
     def close(self) -> None:
+        """Stop the session's work and unregister the state it registered."""
+
         if self._closed:
             return
         self._closed = True
         self.progress.close()
         self._work.close()
         self.execution_control.disconnect()
+        registered = ObjectStateRegistry.global_config_state(GlobalPipelineConfig)
+        if registered is self._global_config_state:
+            ObjectStateRegistry.unregister(registered, _skip_snapshot=True)
 
     # -- configuration --------------------------------------------------------
 
@@ -461,11 +478,9 @@ class Session:
             phase=EndpointStartupPhase.DISCONNECTED, message="Not connected"
         )
 
-    def adopt_global_config(self, config: GlobalPipelineConfig) -> None:
-        """A saved global config: every dataset now resolves against it."""
+    def saved_global_config_changed(self) -> None:
+        """Tell listeners that every dataset now resolves against another saved global config."""
 
-        self.global_config = config
-        ensure_global_config_context(GlobalPipelineConfig, config)
         for scope_id in dataset_scope_ids():
             orchestrator = ObjectStateRegistry.get_object(scope_id)
             if orchestrator is not None:
@@ -474,13 +489,11 @@ class Session:
                 )
 
     def apply_global_config(self, config: GlobalPipelineConfig) -> None:
-        """Write ``config`` into the global ObjectState and adopt it."""
+        """Replace the global config, live and saved, dropping its unsaved edits."""
 
         self.require_definition_mutation_allowed()
-        global_state = ObjectStateRegistry.get_by_scope("")
-        if global_state is not None:
-            global_state.update_object_instance(config)
-        self.adopt_global_config(config)
+        set_global_config(GlobalPipelineConfig, config)
+        self.saved_global_config_changed()
         self.publish(GlobalConfigChanged(config))
 
     def apply_dataset_configs(self, configs: dict[str, PipelineConfig]) -> None:
@@ -1027,7 +1040,6 @@ class Session:
         )
 
     async def initialize_datasets(self, scope_ids: tuple[str, ...]) -> None:
-        ensure_global_config_context(GlobalPipelineConfig, self.global_config)
         for scope_id in scope_ids:
             self.require_work_allowed(scope_id)
         self.init_pending.update(scope_ids)
@@ -1052,7 +1064,6 @@ class Session:
                 self.publish(DatasetsChanged())
 
                 def run() -> InputWorkspacePreparationResult | None:
-                    ensure_global_config_context(GlobalPipelineConfig, self.global_config)
                     workspace = scope.prepare_input_workspace()
                     if workspace is None and not self.dataset_access.initializes_in_place(
                         scope.root
@@ -1197,7 +1208,9 @@ class Session:
                 )
             )
             requests = [
-                dataset_pipeline_request(scope_id, self.global_config)
+                dataset_pipeline_request(
+                    scope_id, get_saved_global_config(GlobalPipelineConfig)
+                )
                 for scope_id in scope_ids
             ]
             artifacts = await self.compile_batch.compile_before_execution(requests)
@@ -1336,7 +1349,10 @@ class Session:
     def finish_batch(self, completed_count: int, failed_count: int) -> None:
         self.execution_state = ManagerExecutionState.IDLE
         summary = f"All done: {completed_count} completed, {failed_count} failed"
-        if completed_count > 1 and self.global_config.analysis_consolidation_config.enabled:
+        consolidation = get_saved_global_config(
+            GlobalPipelineConfig
+        ).analysis_consolidation_config
+        if completed_count > 1 and consolidation.enabled:
             try:
                 consolidate_batch_results(self)
                 summary += ". Global summary created."
@@ -1394,7 +1410,9 @@ class Session:
                 start_after_invocation_key=start_after_invocation_key,
                 replay_mode=PersistentPausedWorkerReplay,
             )
-            request = dataset_pipeline_request(scope_id, self.global_config)
+            request = dataset_pipeline_request(
+                scope_id, get_saved_global_config(GlobalPipelineConfig)
+            )
             artifact_id = await self.debug_runs.compile_artifact_id(request, debug_request)
             self.publish(StatusReported(f"Submitting debug run for {scope_id}..."))
             await self.debug_runs.submit(

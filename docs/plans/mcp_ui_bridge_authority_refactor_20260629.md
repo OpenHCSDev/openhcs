@@ -565,7 +565,8 @@ git diff --check
 - `PlateManagerAction` and `PlateOperation` live in the agent-facing action
   declaration module, while `plate_manager.py` re-exports them through normal
   imports for existing widget callers.
-- Fixed the real undefined `set_saved_global_config` reference in
+- Fixed a real undefined global config setter reference (a name ObjectState 4.0.0
+  removed, see ObjectState `CHANGELOG.md`) in
   `plate_manager.py` while this file was in the ruff slice, and removed stale
   imports surfaced by the focused lint pass.
 

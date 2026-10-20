@@ -7,7 +7,7 @@ import json
 import queue
 from pathlib import Path
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.constants.constants import Backend
 from openhcs.core.config import (
@@ -50,7 +50,7 @@ def _prepared_workspace_plate(root: Path) -> Path:
 def test_zarr_conversion_keys_store_outputs_by_plate_relative_virtual_path(tmp_path):
     """Store paths are relative to the source subdirectory; virtual paths are not."""
     plate = _prepared_workspace_plate(tmp_path / "plate")
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
             num_workers=1,

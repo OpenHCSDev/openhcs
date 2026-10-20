@@ -6,8 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from objectstate import ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
+from objectstate import set_global_config
 from PyQt6.QtCore import Qt
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.record_table_browser import LabelledValue
@@ -106,18 +105,13 @@ def synchronous_threads(monkeypatch) -> None:
 def remote_sensing() -> Iterator[type[RemoteSensing]]:
     # Config defaults name the active family's axes, so the global config other
     # tests left behind is rebuilt under each family.
-    RemoteSensing.activate()
-    _reset_global_config()
-    try:
+    with RemoteSensing.activated():
+        _reset_global_config()
         yield RemoteSensing
-    finally:
-        Microscopy.activate()
-        ObjectStateRegistry.clear()
 
 
 def _reset_global_config() -> None:
-    ObjectStateRegistry.clear()
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
 
 def test_microscopy_files_show_axis_columns_filters_grid_and_folders(qapp) -> None:

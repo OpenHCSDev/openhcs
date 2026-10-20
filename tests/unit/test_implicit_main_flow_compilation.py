@@ -3,10 +3,9 @@
 from multiprocessing import SimpleQueue
 
 import numpy as np
-from objectstate import ObjectStateRegistry
 import tifffile
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.config import (
@@ -67,10 +66,9 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         ),
     ]
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         orchestrator = PipelineOrchestrator(
             tmp_path,
             pipeline_config=PipelineConfig(),

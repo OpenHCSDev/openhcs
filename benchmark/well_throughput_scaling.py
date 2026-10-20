@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import psutil
-from objectstate.lazy_factory import rebuild_lazy_config_with_new_global_reference
+from objectstate import set_global_config
 
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
@@ -2100,25 +2100,22 @@ def run_case_well_throughput(
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )
-    pipeline_config = rebuild_lazy_config_with_new_global_reference(
-        replace(
-            prepared.pipeline_config,
-            num_workers=None,
-            use_threading=None,
-            multiprocessing_start_method=None,
-            materialize_runtime_artifacts=False,
-            partition_filter_config=LazyPartitionFilterConfig(partition_filter=list(well_ids)),
-            path_planning_config=LazyPathPlanningConfig(
-                partition_filter=0,
-                global_output_folder=output_root,
-                output_dir_suffix="_well_throughput",
-            ),
-            vfs_config=LazyVFSConfig(
-                materialization_backend=MaterializeToDisk
-            ),
+    set_global_config(GlobalPipelineConfig, global_config)
+    pipeline_config = replace(
+        prepared.pipeline_config,
+        num_workers=None,
+        use_threading=None,
+        multiprocessing_start_method=None,
+        materialize_runtime_artifacts=False,
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter=list(well_ids)),
+        path_planning_config=LazyPathPlanningConfig(
+            partition_filter=0,
+            global_output_folder=output_root,
+            output_dir_suffix="_well_throughput",
         ),
-        global_config,
-        GlobalPipelineConfig,
+        vfs_config=LazyVFSConfig(
+            materialization_backend=MaterializeToDisk
+        ),
     )
     run_id = f"{case_name}-{mode.name}-{time.time_ns()}"
     observation_path = (

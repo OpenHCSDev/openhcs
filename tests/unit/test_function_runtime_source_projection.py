@@ -16,6 +16,9 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+from objectstate import (
+    set_global_config,
+)
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
@@ -2151,8 +2154,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from multiprocessing import SimpleQueue
 
     import tifffile
-    from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -2198,10 +2199,9 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         num_workers=1,
     )
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,
@@ -3234,8 +3234,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from multiprocessing import SimpleQueue
 
     import tifffile
-    from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.config import (
@@ -3293,10 +3291,9 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
         num_workers=1,
     )
 
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,

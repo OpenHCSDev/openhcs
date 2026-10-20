@@ -6,8 +6,7 @@ from multiprocessing import SimpleQueue
 
 import numpy as np
 import tifffile
-from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -34,11 +33,10 @@ def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
     pixels = np.random.default_rng(31).integers(0, 1000, (96, 96), dtype=np.uint16)
     filename = "A01_s001_w1_z001_t001.tif"
     tifffile.imwrite(image_dir / filename, pixels)
-    ObjectStateRegistry.clear()
     queue = SimpleQueue()
     set_progress_queue(queue)
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(
                 dataset_source=ImageXpressHandler, num_workers=1, use_threading=True

@@ -28,7 +28,6 @@ SCOPE = "/isolated/durable-decorated-history"
 def test_declarations_and_retained_callable_history_survive_native_restart(
     tmp_path: Path,
 ):
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(SCOPE)
     runtime = ThreadGPUContext.current()
     runtime_key = (MemoryType.CUPY, -2)
@@ -94,5 +93,4 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
         assert runtime._streams[runtime_key] is runtime_handle
     finally:
         runtime._streams.pop(runtime_key, None)
-        ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(SCOPE)

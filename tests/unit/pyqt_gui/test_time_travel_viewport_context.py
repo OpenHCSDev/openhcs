@@ -41,7 +41,6 @@ def _process_events(count: int = 20) -> None:
 
 def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None:
     app = QApplication.instance() or QApplication([])
-    ObjectStateRegistry.clear()
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -127,4 +126,3 @@ def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None
     finally:
         scroll_area.close()
         manager.deleteLater()
-        ObjectStateRegistry.clear()

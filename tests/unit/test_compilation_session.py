@@ -4,7 +4,7 @@ from inspect import signature
 from types import SimpleNamespace
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
@@ -144,32 +144,27 @@ def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
 
 @pytest.mark.parametrize("pipeline_workers, expected_workers", [(None, 2), (3, 3)])
 def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_workers):
-    ObjectStateRegistry.clear()
     global_config = GlobalPipelineConfig(num_workers=2)
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     global_state = ObjectState(global_config, scope_id="")
     pipeline_state = ObjectState(
         PipelineConfig(num_workers=pipeline_workers),
         scope_id="plate",
         parent_state=global_state,
     )
-    try:
-        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        captured = pipeline_state.to_saved_resolved_object()
-        assert captured.num_workers == expected_workers
-        assignments = PipelineCompiler._calculate_worker_assignments(
-            ["A", "B", "C", "D"], captured.num_workers
-        )
-        assert len(assignments) == expected_workers
+    ObjectStateRegistry.register(global_state, _skip_snapshot=True)
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    captured = pipeline_state.to_saved_resolved_object()
+    assert captured.num_workers == expected_workers
+    assignments = PipelineCompiler._calculate_worker_assignments(
+        ["A", "B", "C", "D"], captured.num_workers
+    )
+    assert len(assignments) == expected_workers
 
-        # The compiled snapshot must not resolve again in a different context.
-        ensure_global_config_context(
-            GlobalPipelineConfig, GlobalPipelineConfig(num_workers=4)
-        )
-        assert captured.num_workers == expected_workers
-    finally:
-        ObjectStateRegistry.clear()
+    # The compiled snapshot must not resolve again in a different context.
+    set_global_config(
+        GlobalPipelineConfig, GlobalPipelineConfig(num_workers=4)
+    )
+    assert captured.num_workers == expected_workers
 
 
 def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
@@ -514,7 +509,6 @@ def test_compiler_keeps_variable_components_as_stack_source():
 
 
 def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
-    ObjectStateRegistry.clear()
     metadata_rule = MetadataExtractionRule(
         source=FromFileName,
         pattern=r"(?P<well>[A-H]\d{2})\.tif",
@@ -526,7 +520,7 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
             components=(ComponentSelector(Microscopy.Channel, "1"),)
         ),
     )
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(
@@ -537,45 +531,42 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(
-            func=_external_source_consumer,
-            name="source-bound",
-            source_bindings=LazyStepSourceBindingsConfig(
-                bindings=(binding,),
-                enabled=True,
-            ),
-        )
-        step_state = ObjectState(
-            step,
-            scope_id="plate::functionstep_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        resolved_step = step_state.to_saved_resolved_object()
-        snapshot = resolved_step
-        session = CompilationSession.from_context(
-            context=_context(),
-            orchestrator=_orchestrator(pipeline_state.to_object()),
-            global_config=GlobalPipelineConfig(),
-            pipeline=ResolvedPipelineDefinition(
-                steps=(snapshot,),
-                step_scope_ids={0: step_state.scope_id},
-                step_provenance={0: {}},
-            ),
-        )
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(
+        func=_external_source_consumer,
+        name="source-bound",
+        source_bindings=LazyStepSourceBindingsConfig(
+            bindings=(binding,),
+            enabled=True,
+        ),
+    )
+    step_state = ObjectState(
+        step,
+        scope_id="plate::functionstep_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    resolved_step = step_state.to_saved_resolved_object()
+    snapshot = resolved_step
+    session = CompilationSession.from_context(
+        context=_context(),
+        orchestrator=_orchestrator(pipeline_state.to_object()),
+        global_config=GlobalPipelineConfig(),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_scope_ids={0: step_state.scope_id},
+            step_provenance={0: {}},
+        ),
+    )
 
-        execution_bindings, (source_binding_plan, _source_universe_plan) = (
-            _compile_source_plans_for_contract(
-                session,
-                snapshot,
-                _external_source_consumer,
-            )
+    execution_bindings, (source_binding_plan, _source_universe_plan) = (
+        _compile_source_plans_for_contract(
+            session,
+            snapshot,
+            _external_source_consumer,
         )
-    finally:
-        ObjectStateRegistry.clear()
+    )
 
     assert snapshot.source_bindings.bindings == (binding,)
     assert snapshot.source_bindings.metadata_rules == (metadata_rule,)
@@ -587,14 +578,12 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
 
 
 def test_compiler_streaming_config_snapshot_preserves_inherited_port():
-    ObjectStateRegistry.clear()
     global_config = GlobalPipelineConfig(
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=True,
             persistent=False,
         ),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     global_state = ObjectState(global_config, scope_id="")
     pipeline_state = ObjectState(
         PipelineConfig(),
@@ -602,35 +591,32 @@ def test_compiler_streaming_config_snapshot_preserves_inherited_port():
         parent_state=global_state,
     )
 
-    try:
-        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(func=_identity, name="streamed")
-        step_state = ObjectState(
-            step,
-            scope_id="plate::functionstep_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        resolved_step = step_state.to_saved_resolved_object()
-        snapshot = resolved_step
-        context = _context()
-        context.required_visualizers = []
-        session = CompilationSession.from_context(
-            context=context,
-            orchestrator=_orchestrator(pipeline_state.to_object()),
-            global_config=global_config,
-            pipeline=ResolvedPipelineDefinition(
-                steps=(snapshot,),
-                step_scope_ids={0: step_state.scope_id},
-                step_provenance={0: {}},
-            ),
-        )
+    ObjectStateRegistry.register(global_state, _skip_snapshot=True)
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(func=_identity, name="streamed")
+    step_state = ObjectState(
+        step,
+        scope_id="plate::functionstep_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    resolved_step = step_state.to_saved_resolved_object()
+    snapshot = resolved_step
+    context = _context()
+    context.required_visualizers = []
+    session = CompilationSession.from_context(
+        context=context,
+        orchestrator=_orchestrator(pipeline_state.to_object()),
+        global_config=global_config,
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_scope_ids={0: step_state.scope_id},
+            step_provenance={0: {}},
+        ),
+    )
 
-        PipelineCompiler._collect_streaming_configs(session)
-    finally:
-        ObjectStateRegistry.clear()
+    PipelineCompiler._collect_streaming_configs(session)
 
     assert context.required_visualizers
     required = context.required_visualizers[0]
@@ -1008,10 +994,9 @@ def test_path_planner_freezes_only_contract_selected_source_bindings():
 def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inheritance(
     tmp_path,
 ):
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     plate_path = tmp_path / "plate"
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
     first_orchestrator = SimpleNamespace(
         dataset_root=plate_path,
@@ -1040,8 +1025,7 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
 
 
 def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_path):
-    ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     plate_path = tmp_path / "plate"
     saved_binding = NamedSourceBinding(alias="DNA")
     live_binding = NamedSourceBinding(alias="Memb")
@@ -1096,4 +1080,3 @@ def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_
         ]
     finally:
         subscription.release()
-        ObjectStateRegistry.clear()

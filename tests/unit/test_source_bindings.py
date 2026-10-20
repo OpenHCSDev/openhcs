@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from polystore.virtual_workspace import SourcePixelRef
@@ -179,7 +179,7 @@ def test_step_source_bindings_reject_duplicate_aliases():
 
 
 def test_step_source_bindings_global_config_merge_resolves_lazy_default():
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     merged = ObjectState(PipelineConfig()).to_saved_resolved_object()
 
     assert isinstance(merged, GlobalPipelineConfig)
@@ -369,10 +369,9 @@ def test_production_code_has_no_unresolved_empty_step_source_config_shortcuts():
 
 
 def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
     metadata_fields = (FieldSpec("Dose", float, required=False),)
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(
@@ -385,19 +384,16 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(func=lambda image: image)
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(func=lambda image: image)
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.bindings == (binding,)
     assert snapshot.source_bindings.source_stack_components == (Microscopy.ZIndex,)
@@ -448,9 +444,8 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
 
 
 def test_enabled_step_source_bindings_compile_inherited_bindings():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(bindings=(binding,)),
@@ -458,31 +453,27 @@ def test_enabled_step_source_bindings_compile_inherited_bindings():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(
-            func=lambda image: image,
-            source_bindings=LazyStepSourceBindingsConfig(enabled=True),
-        )
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(
+        func=lambda image: image,
+        source_bindings=LazyStepSourceBindingsConfig(enabled=True),
+    )
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.bindings == (binding,)
     assert snapshot.source_bindings.compiled_plan().bindings == (binding,)
 
 
 def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
-    ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     pipeline_state = ObjectState(
         PipelineConfig(
             step_source_bindings_config=LazyStepSourceBindingsConfig(
@@ -493,19 +484,16 @@ def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
         scope_id="plate",
     )
 
-    try:
-        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        step = FunctionStep(func=lambda image: image)
-        step_state = ObjectState(
-            step,
-            scope_id="plate::step_0",
-            parent_state=pipeline_state,
-            exclude_params=["func"],
-        )
-        ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = step_state.to_saved_resolved_object()
-    finally:
-        ObjectStateRegistry.clear()
+    ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+    step = FunctionStep(func=lambda image: image)
+    step_state = ObjectState(
+        step,
+        scope_id="plate::step_0",
+        parent_state=pipeline_state,
+        exclude_params=["func"],
+    )
+    ObjectStateRegistry.register(step_state, _skip_snapshot=True)
+    snapshot = step_state.to_saved_resolved_object()
 
     assert snapshot.source_bindings.enabled is True
     assert snapshot.source_bindings.bindings == (binding,)
@@ -615,7 +603,7 @@ def test_source_lineage_projection_preserves_declaration_order() -> None:
 
 
 def test_saved_resolved_pipeline_config_preserves_scalar_override():
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(dataset_source=AutoDetectedSource, num_workers=7),
     )
@@ -635,7 +623,7 @@ def test_orchestrator_microscope_init_uses_saved_resolved_pipeline_config(
 ):
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(dataset_source=AutoDetectedSource),
     )
@@ -667,12 +655,12 @@ def test_admitted_request_config_survives_next_live_global_context(
     )
 
     authored = PipelineConfig(dataset_source=OpenHCSDatasetSource)
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(num_workers=2, auto_add_output_dataset=True),
     )
     admitted = ObjectState(authored).to_saved_resolved_object()
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(num_workers=4, auto_add_output_dataset=False),
     )

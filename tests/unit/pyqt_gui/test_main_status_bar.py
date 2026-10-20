@@ -33,7 +33,9 @@ class _MainWindowLifecycleHarness(_MainWindowStatusBarHarness):
 
 def _configure_status_bar_harness(window) -> None:
     window.service_adapter = SimpleNamespace(get_current_color_scheme=ColorScheme)
-    window.session = SimpleNamespace(require_definition_mutation_allowed=lambda: None)
+    window.session = SimpleNamespace(
+        require_definition_mutation_allowed=lambda: None, close=lambda: None
+    )
     window.button_refreshes = []
     for name in ("plate_manager_widget", "pipeline_editor_widget"):
         setattr(

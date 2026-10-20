@@ -9,7 +9,7 @@ import re
 import sys
 import time
 import tomllib
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -644,8 +644,9 @@ def test_mcp_bootstrap_defaults_to_desktop_surface():
     if importlib.util.find_spec("mcp") is None:
         return
 
-    built = bootstrap.build_bootstrapped_server()
-    tools = asyncio.run(built.list_tools())
+    with ExitStack() as lifetime:
+        built = bootstrap.build_bootstrapped_server(lifetime=lifetime)
+        tools = asyncio.run(built.list_tools())
     desktop_registry = get_capability_registry(
         capability_surface_profile=DesktopLocalCapabilitySurfaceProfile()
     )
@@ -8671,20 +8672,21 @@ def test_mcp_bootstrap_wraps_server_construction_failure(monkeypatch):
     if importlib.util.find_spec("mcp") is None:
         return
 
-    def fail_build_server(**kwargs):
-        del kwargs
+    def fail_build_server(context, **kwargs):
+        del context, kwargs
         raise RuntimeError("construction failed")
 
     monkeypatch.setattr(server, "build_server", fail_build_server)
 
-    async def call_bootstrap_failure_tool():
-        built = bootstrap.build_bootstrapped_server()
+    async def call_bootstrap_failure_tool(lifetime: ExitStack):
+        built = bootstrap.build_bootstrapped_server(lifetime=lifetime)
         return await asyncio.wait_for(
             built.call_tool("openhcs_bootstrap_failure", {}),
             timeout=2,
         )
 
-    result = asyncio.run(call_bootstrap_failure_tool())
+    with ExitStack() as lifetime:
+        result = asyncio.run(call_bootstrap_failure_tool(lifetime))
     payload = json.loads(_direct_tool_text(result))
 
     assert payload["schema_version"] == "openhcs.mcp.bootstrap.v1"
@@ -8701,10 +8703,12 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     messages: list[str] = []
     failure_server_runs: list[bool] = []
     transports: list[str] = []
+    lifetimes_closed: list[bool] = []
 
     class FailingRunServer:
         def __init__(self, *args, **kwargs):
             assert kwargs["main_thread_dispatcher"] is recording_transport.execution.dispatcher
+            kwargs["lifetime"].callback(lifetimes_closed.append, True)
 
         def run(self, *, transport: str) -> None:
             transports.append(transport)
@@ -8751,6 +8755,7 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     assert messages == ["run failed"]
     assert failure_server_runs == [True]
     assert transports == ["stdio", "stdio"]
+    assert lifetimes_closed == [True]
 
 
 def test_mcp_bootstrap_main_quiets_info_logs_and_restores_logging(monkeypatch):

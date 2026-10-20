@@ -60,7 +60,6 @@ def _baseline_steps() -> list[FunctionStep]:
 
 
 def _reset() -> None:
-    ObjectStateRegistry.clear()
     ScopeTokenService.clear_scope(SCOPE)
 
 

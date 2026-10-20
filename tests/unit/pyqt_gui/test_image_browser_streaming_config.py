@@ -3,7 +3,6 @@
 from types import SimpleNamespace
 
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
 from PyQt6 import sip
 from PyQt6.QtTest import QTest
 from pyqt_reactive.widgets.shared.responsive_layout_widgets import (
@@ -40,48 +39,43 @@ def _browser() -> ImageBrowserWidget:
 def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
     """The browser is a sibling of steps under its associated PipelineConfig."""
 
-    ObjectStateRegistry.clear()
     global_config = GlobalPipelineConfig(
         streaming_defaults=StreamingDefaults(host="global-host"),
     )
-    set_global_config_for_editing(GlobalPipelineConfig, global_config)
-    try:
-        global_state = ObjectState(global_config, scope_id="")
-        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
+    global_state = ObjectState(global_config, scope_id="")
+    ObjectStateRegistry.register(global_state, _skip_snapshot=True)
 
-        plate_path = tmp_path / "plate"
-        plate_state = ObjectState(
-            PipelineConfig(),
-            scope_id=str(plate_path),
-            parent_state=global_state,
-        )
-        ObjectStateRegistry.register(plate_state, _skip_snapshot=True)
+    plate_path = tmp_path / "plate"
+    plate_state = ObjectState(
+        PipelineConfig(),
+        scope_id=str(plate_path),
+        parent_state=global_state,
+    )
+    ObjectStateRegistry.register(plate_state, _skip_snapshot=True)
 
-        orchestrator = SimpleNamespace(dataset_root=plate_path)
-        browser_state = OrchestratorDataset.scoped_to_dataset(orchestrator).config_state(
-            ImageBrowserConfig()
-        )
-        nested = OrchestratorDataset(orchestrator, scope_parent=f"{plate_path}::plate_viewer")
-        nested_state = nested.config_state(ImageBrowserConfig())
+    orchestrator = SimpleNamespace(dataset_root=plate_path)
+    browser_state = OrchestratorDataset.scoped_to_dataset(orchestrator).config_state(
+        ImageBrowserConfig()
+    )
+    nested = OrchestratorDataset(orchestrator, scope_parent=f"{plate_path}::plate_viewer")
+    nested_state = nested.config_state(ImageBrowserConfig())
 
-        assert browser_state._parent_state is plate_state
-        assert nested_state._parent_state is plate_state
-        assert nested_state.scope_id == f"{plate_path}::plate_viewer::image_browser"
-        assert ObjectStateRegistry.get_by_scope(browser_state.scope_id) is browser_state
-        nested.release_state(nested_state)
-        assert ObjectStateRegistry.get_by_scope(nested_state.scope_id) is None
-        assert NoDataset().config_state(ImageBrowserConfig()).scope_id is None
-        for config_key in StreamingConfig.supported_config_keys():
-            path = f"{config_key}.host"
-            assert browser_state.get_resolved_value(path) == "global-host"
+    assert browser_state._parent_state is plate_state
+    assert nested_state._parent_state is plate_state
+    assert nested_state.scope_id == f"{plate_path}::plate_viewer::image_browser"
+    assert ObjectStateRegistry.get_by_scope(browser_state.scope_id) is browser_state
+    nested.release_state(nested_state)
+    assert ObjectStateRegistry.get_by_scope(nested_state.scope_id) is None
+    assert NoDataset().config_state(ImageBrowserConfig()).scope_id is None
+    for config_key in StreamingConfig.supported_config_keys():
+        path = f"{config_key}.host"
+        assert browser_state.get_resolved_value(path) == "global-host"
 
-            plate_state.update_parameter(path, f"plate-{config_key}")
-            assert browser_state.get_resolved_value(path) == f"plate-{config_key}"
+        plate_state.update_parameter(path, f"plate-{config_key}")
+        assert browser_state.get_resolved_value(path) == f"plate-{config_key}"
 
-            browser_state.update_parameter(path, f"browser-{config_key}")
-            assert browser_state.get_resolved_value(path) == f"browser-{config_key}"
-    finally:
-        ObjectStateRegistry.clear()
+        browser_state.update_parameter(path, f"browser-{config_key}")
+        assert browser_state.get_resolved_value(path) == f"browser-{config_key}"
 
 
 def test_right_panel_replacement_releases_previous_server_browser(
@@ -119,7 +113,6 @@ def test_right_panel_replacement_releases_previous_server_browser(
 def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -> None:
     """Each registered viewer owns one title checkbox and its group flash target."""
 
-    ObjectStateRegistry.clear()
     browser = _browser()
     browser.resize(1400, 900)
     browser.show()
@@ -214,4 +207,3 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
         browser.cleanup()
         browser.close()
         browser.deleteLater()
-        ObjectStateRegistry.clear()

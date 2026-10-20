@@ -4,11 +4,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
-from objectstate import (
-    ObjectState,
-    ObjectStateRegistry,
-    set_global_config_for_editing,
-)
+from objectstate import ObjectState, ObjectStateRegistry
 from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
     ParameterFormManager,
@@ -38,7 +34,6 @@ from openhcs.pyqt_gui.services.window_handlers import (
     register_openhcs_window_handlers,
 )
 from pyqt_reactive.windows.config_window import (
-    ConfigEditSession,
     ConfigSaveParticipant,
     ConfigWindowTabSpec,
 )
@@ -68,7 +63,6 @@ class UIConfigHost:
 
 
 def teardown_function() -> None:
-    ObjectStateRegistry.clear()
     ScopeWindowRegistry.clear()
 
 
@@ -752,17 +746,17 @@ def test_config_window_save_button_starts_disabled_and_styles_disabled_state(
         assert window.save_button.isEnabled()
     finally:
         window.close()
-        ObjectStateRegistry.clear()
 
 
 def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
     qapp,
 ) -> None:
     """Lazy inherited streaming configs still receive enableable dimming."""
-    ObjectStateRegistry.clear()
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    ObjectStateRegistry.register(
+        ObjectState(GlobalPipelineConfig(), scope_id=""), _skip_snapshot=True
+    )
 
-    state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
+    state =ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
         state,
@@ -810,7 +804,6 @@ def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
             assert dimmed_widget.graphicsEffect() is not None
     finally:
         manager.deleteLater()
-        ObjectStateRegistry.clear()
 
 
 def test_global_config_window_registers_with_stable_window_id() -> None:

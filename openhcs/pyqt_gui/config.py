@@ -326,12 +326,11 @@ class PyQtGuiRuntimeContext:
 
     ui_config: UIConfig
     pipeline_runtime: GlobalPipelineConfig = field(default_factory=GlobalPipelineConfig)
+    """The global config the main window's session starts with.
 
-    def with_pipeline_runtime(
-        self,
-        pipeline_runtime: GlobalPipelineConfig,
-    ) -> "PyQtGuiRuntimeContext":
-        return replace(self, pipeline_runtime=pipeline_runtime)
+    Read once, when the session is constructed; afterwards the global config is
+    the registered state's (``objectstate.get_saved_global_config``).
+    """
 
     def with_ui_config(self, ui_config: UIConfig) -> "PyQtGuiRuntimeContext":
         return replace(self, ui_config=ui_config)

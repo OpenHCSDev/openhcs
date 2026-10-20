@@ -165,23 +165,11 @@ This flattens nested configs into a single dictionary keyed by type name.
 Global Config Context
 --------------------
 
-Global config uses thread-local storage for stability:
-
-.. code-block:: python
-
-   # Thread-local storage for global config
-   _global_config_storage: Dict[Type, threading.local] = {}
-
-   def ensure_global_config_context(config_type: Type, config_instance: Any):
-       """Establish global config as base context."""
-       # Store in thread-local
-       set_current_global_config(config_type, config_instance)
-
-       # Also inject into contextvars base
-       with config_context(config_instance):
-           # Global context now available
-
-This hybrid approach uses thread-local for the global base and contextvars for dynamic stacking.
+Since ObjectState 4.0.0 there is one global config per config type per process. While a
+state is registered at the global scope (``scope_id=""``) that state holds it; otherwise
+the object given to ``set_global_config(config_type, config)`` is both the live and the
+saved global config. See ObjectState ``docs/state_propagation.rst`` and ``CHANGELOG.md``
+(4.0.0).
 
 Resolution Integration
 ---------------------
@@ -216,7 +204,7 @@ From ``tests/integration/test_main.py``:
 
    # Establish global context
    global_config = GlobalPipelineConfig(num_workers=4)
-   ensure_global_config_context(GlobalPipelineConfig, global_config)
+   set_global_config(GlobalPipelineConfig, global_config)
 
    # Create pipeline config
    pipeline_config = PipelineConfig(
