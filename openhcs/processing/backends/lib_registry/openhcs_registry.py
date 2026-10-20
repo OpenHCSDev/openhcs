@@ -612,27 +612,17 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         return True
 
     def _get_openhcs_modules(self) -> List[str]:
-        """Get list of OpenHCS processing modules to scan using automatic discovery."""
-        import os
+        """List the modules this registry owns, without importing their implementations."""
         import pkgutil
 
-        modules = []
-
-        # Get the backends directory path
-        backends_path = os.path.dirname(__file__)  # lib_registry directory
-        backends_path = os.path.dirname(backends_path)  # backends directory
-
-        # Walk through all modules in openhcs.processing.backends recursively
-        for importer, module_name, ispkg in pkgutil.walk_packages(
-            [backends_path], "openhcs.processing.backends."
-        ):
-            # Skip lib_registry modules to avoid circular imports
-            if "lib_registry" in module_name:
-                continue
-
-            modules.append(module_name)
-
-        return modules
+        (backends_package,) = self.get_module_patterns()
+        return [
+            module_name
+            for _finder, module_name, _is_package in pkgutil.walk_packages(
+                [str(Path(__file__).parent.parent)], f"{backends_package}."
+            )
+            if self.owns_module(module_name)
+        ]
 
     def get_modules_to_scan(self) -> List[Tuple[str, Any]]:
         """Import every native declaration in this installation's catalog.
@@ -739,8 +729,19 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         return None
 
     def get_module_patterns(self) -> List[str]:
-        """Get module patterns for OpenHCS."""
-        return ["openhcs"]
+        """The backends package holds every native function module."""
+        return [__package__.rpartition(".")[0]]
+
+    def owns_module(self, module_name: str) -> bool:
+        """Native modules are those inside the backends package and outside this one.
+
+        This package holds the registries and the modules other registries
+        derive their functions in; the scanned inventory is the same set.
+        """
+        (backends_package,) = self.get_module_patterns()
+        return module_name.startswith(f"{backends_package}.") and not (
+            f"{module_name}.".startswith(f"{__package__}.")
+        )
 
     def discover_functions(self) -> Dict[str, FunctionMetadata]:
         """Discover OpenHCS functions with memory type decorators and assign default contracts."""
