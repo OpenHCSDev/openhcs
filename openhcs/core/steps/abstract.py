@@ -14,7 +14,7 @@ from dataclasses import dataclass, field, is_dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Iterable, get_type_hints
 
-from objectstate import get_base_type_for_lazy, semantic_values_equal
+from objectstate import semantic_values_equal
 
 
 # Import LazyStepMaterializationConfig for type hints
@@ -34,6 +34,7 @@ from openhcs.core.runtime_stores import (
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
+from python_introspect import resolve_declared_type
 
 # ExecutingContext is used in type hints
 if TYPE_CHECKING:
@@ -255,7 +256,7 @@ class AbstractStep(abc.ABC):
             if field_name != "self"
             and parameter.kind is inspect.Parameter.KEYWORD_ONLY
             and isinstance((declared_type := type_hints.get(field_name)), type)
-            and is_dataclass(get_base_type_for_lazy(declared_type) or declared_type)
+            and is_dataclass(resolve_declared_type(declared_type))
         }
 
     def declaration_parameters(self) -> dict[str, object]:

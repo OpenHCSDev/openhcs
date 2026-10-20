@@ -7,6 +7,7 @@ Configuration is intended to be immutable and provided as Python objects.
 """
 
 import hashlib
+from objectstate.ui_visibility import UIParameterVisibilityPolicy
 import json
 import logging
 import inspect
@@ -82,9 +83,8 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     NamedSourceBinding,
     SourceBindingDeclarationsMixin,
+    SourceFieldTransform,
     SourceFilterClause,
-    _SourceBindingPlanBase,
-    normalize_source_binding_values,
 )
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -384,7 +384,7 @@ class NapariDisplayConfig(AxisRoleModeDisplayConfig, NapariDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by NapariStreamingConfig, so hide it from UI
-NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(NapariDisplayConfig)
+NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_fields=False)(NapariDisplayConfig)
 
 
 FijiDimensionMode = FijiSlots.choice_enum("FijiDimensionMode", __name__)
@@ -413,7 +413,7 @@ class FijiDisplayConfig(AxisRoleModeDisplayConfig, FijiDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by FijiStreamingConfig, so hide it from UI
-FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(FijiDisplayConfig)
+FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_fields=False)(FijiDisplayConfig)
 
 
 @abbreviation("pfc")
@@ -463,18 +463,17 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
         if source_type is None:
             return True
 
-        from objectstate import get_base_type_for_lazy
 
-        config_type = get_base_type_for_lazy(cls) or cls
-        source_base = get_base_type_for_lazy(source_type) or source_type
+        config_type = resolve_declared_type(cls)
+        source_base = resolve_declared_type(source_type)
         branch_type = cls.partition_filter_inheritance_branch()
-        branch_base = get_base_type_for_lazy(branch_type) or branch_type
+        branch_base = resolve_declared_type(branch_type)
         return issubclass(source_base, config_type) or source_base in branch_base.mro()
 
 
 @abbreviation("zarr")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     field_abbreviations={
         "compressor": "compressor",
         "compression_level": "level",
@@ -492,7 +491,7 @@ class ZarrConfig(AnnotatedDataclassValidationMixin, _polystore_config.ZarrConfig
 
 @abbreviation("tiff")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     field_abbreviations={"compression": "codec", "compression_level": "level"},
 )
 @dataclass(frozen=True)
@@ -603,12 +602,12 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
 
 
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     preview_label="SRC",
     abbreviation="src",
 )
 @dataclass(frozen=True)
-class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBase):
+class SourceBindingsConfig(SourceBindingDeclarationsMixin):
     """Canonical pipeline declaration for selecting and naming plate sources.
 
     Normal plate initialization resolves these bindings over exact planes emitted
@@ -621,24 +620,15 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     source_filters: tuple[SourceFilterClause, ...] = ()
     """Filters limiting the source universe before named bindings are resolved."""
 
-    bindings: tuple[NamedSourceBinding, ...] = ()
-    """Named semantic source bindings available to pipelines and inherited by steps."""
-
     image_plane_sources: tuple[ImagePlaneSource, ...] = ()
     """Exact image-plane source records available for source-binding resolution."""
 
     imported_metadata_tables: tuple[ImportedMetadataTable, ...] = ()
     """External metadata tables joined to source records before matching."""
 
-    source_stack_components: tuple[type[Axis], ...] = ()
-    """Ordered plate components that form one logical source image stack."""
-
-    source_spatial_domain: SourceSpatialDomain = field(
-        default_factory=SourceSpatialDomain
-    )
-    """Declared intrinsic image dimensions, independent of stack transport."""
-
-    grouping_metadata_fields: tuple[str, ...] = ()
+    grouping_metadata_fields: tuple[str, ...] = field(default=(), metadata={
+        SourceFieldTransform: SourceFieldTransform(lambda owner, value: owner._normalize_grouping_fields(value)),
+    })
     """Metadata field names used to partition matched sources into execution groups."""
 
     source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
@@ -650,116 +640,32 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     but scalar physical-pixel-size functions require isotropic X/Y calibration.
     """
 
-    def __post_init__(self) -> None:
-        self._normalize_common_fields()
-        source_filters = object.__getattribute__(self, "source_filters")
-        if source_filters is not None:
-            source_filters = normalize_source_binding_values(
-                "SourceBindingsConfig.source_filters",
-                source_filters,
-                SourceFilterClause,
-            )
-        bindings = object.__getattribute__(self, "bindings")
-        if bindings is not None:
-            bindings = normalize_source_binding_values(
-                f"{type(self).__name__}.bindings",
-                bindings,
-                NamedSourceBinding,
-            )
-            bindings = tuple(
-                replace(
-                    binding,
-                    selector=replace(
-                        binding.selector,
-                        metadata=tuple(
-                            replace(
-                                selector,
-                                value=self.coerce_metadata_scalar(
-                                    selector.field,
-                                    selector.value,
-                                ),
-                            )
-                            for selector in binding.selector.metadata
-                        ),
+    def _normalize_bindings(self, values):
+        bindings = super()._normalize_bindings(values)
+        return tuple(
+            replace(
+                binding,
+                selector=replace(
+                    binding.selector,
+                    metadata=tuple(
+                        replace(
+                            selector,
+                            value=self.coerce_metadata_scalar(selector.field, selector.value),
+                        )
+                        for selector in binding.selector.metadata
                     ),
-                )
-                for binding in bindings
+                ),
             )
-        seen_aliases: set[str] = set()
-        if bindings is not None:
-            for binding in bindings:
-                if binding.alias in seen_aliases:
-                    raise ValueError(
-                        f"{type(self).__name__}.bindings contains duplicate alias "
-                        f"{binding.alias!r}."
-                    )
-                seen_aliases.add(binding.alias)
-        object.__setattr__(self, "source_filters", source_filters)
-        object.__setattr__(self, "bindings", bindings)
-        image_plane_sources = object.__getattribute__(self, "image_plane_sources")
-        if image_plane_sources is not None:
-            image_plane_sources = normalize_source_binding_values(
-                f"{type(self).__name__}.image_plane_sources",
-                image_plane_sources,
-                ImagePlaneSource,
-            )
-        object.__setattr__(self, "image_plane_sources", image_plane_sources)
-
-        imported_metadata_tables = object.__getattribute__(
-            self,
-            "imported_metadata_tables",
-        )
-        if imported_metadata_tables is not None:
-            imported_metadata_tables = normalize_source_binding_values(
-                f"{type(self).__name__}.imported_metadata_tables",
-                imported_metadata_tables,
-                ImportedMetadataTable,
-            )
-        object.__setattr__(
-            self,
-            "imported_metadata_tables",
-            imported_metadata_tables,
+            for binding in bindings
         )
 
-        source_stack_components = object.__getattribute__(
-            self,
-            "source_stack_components",
-        )
-        if source_stack_components is not None:
-            source_stack_components = ComponentSet.collect(
-                source_stack_components
-            ).as_tuple()
-        object.__setattr__(
-            self,
-            "source_stack_components",
-            source_stack_components,
-        )
-
-        grouping_metadata_fields = object.__getattribute__(
-            self,
-            "grouping_metadata_fields",
-        )
-        if grouping_metadata_fields is not None:
-            grouping_metadata_fields = tuple(
-                str(value).strip() for value in grouping_metadata_fields
+    def _normalize_grouping_fields(self, values):
+        names = tuple(str(value).strip() for value in values)
+        if any(not value for value in names):
+            raise ValueError(
+                f"{type(self).__name__}.grouping_metadata_fields cannot contain empty names."
             )
-            if any(not value for value in grouping_metadata_fields):
-                raise ValueError(
-                    f"{type(self).__name__}.grouping_metadata_fields cannot contain "
-                    "empty names."
-                )
-            grouping_metadata_fields = tuple(dict.fromkeys(grouping_metadata_fields))
-        object.__setattr__(self, "grouping_metadata_fields", grouping_metadata_fields)
-
-        source_voxel_spacing = object.__getattribute__(self, "source_voxel_spacing")
-        if source_voxel_spacing is not None and not isinstance(
-            source_voxel_spacing,
-            SourceVoxelSpacing,
-        ):
-            raise TypeError(
-                f"{type(self).__name__}.source_voxel_spacing must be "
-                "SourceVoxelSpacing."
-            )
+        return tuple(dict.fromkeys(names))
 
     @property
     def has_primary_content(self) -> bool:
@@ -1026,10 +932,9 @@ def source_bindings_defaults_to_base(
     defaults: SourceBindingsConfig,
 ) -> SourceBindingsConfig:
     """Return concrete source-binding defaults from eager or lazy config values."""
-    from objectstate import get_base_type_for_lazy
 
-    lazy_base_type = get_base_type_for_lazy(type(defaults))
-    if lazy_base_type is SourceBindingsConfig:
+    lazy_base_type = resolve_declared_type(type(defaults))
+    if lazy_base_type is SourceBindingsConfig and type(defaults) is not SourceBindingsConfig:
         concrete_defaults = SourceBindingsConfig()
         return SourceBindingsConfig(
             **{
@@ -1226,7 +1131,7 @@ class StreamingDefaults(Enableable, StepPartitionFilterConfig):
 
     scope_accent_color: Annotated[Optional[str], abbreviation("accent")] = field(
         default=None,
-        metadata={"ui_hidden": True},
+        metadata=UIParameterVisibilityPolicy.field_metadata(True),
     )
     """Exact owner-projected scope accent used to frame a managed viewer."""
 
@@ -1239,7 +1144,7 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
 
     Uses multiple inheritance from StepPartitionFilterConfig and StreamingDefaults.
     Inherited fields (persistent, host, port, transport_mode) are automatically set to None
-    by @global_pipeline_config(inherit_as_none=True), enabling polymorphic access without
+    by @global_pipeline_config(inherit_fields=True), enabling polymorphic access without
     type-specific attribute names.
     """
 
@@ -1389,7 +1294,7 @@ for _section in GlobalConfigSection.declared_sections():
 
 @abbreviation("compile_dbg")
 @global_pipeline_config(
-    inherit_as_none=False,
+    inherit_fields=False,
     always_viewable_fields=["enabled"],
 )
 @dataclass(frozen=True)
@@ -1471,6 +1376,7 @@ register_namespace_provider(
 
 from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
+from python_introspect import resolve_declared_type
 
 with config_context(PipelineConfig()):
     EMPTY_SOURCE_BINDINGS: StepSourceBindingsConfig = (
