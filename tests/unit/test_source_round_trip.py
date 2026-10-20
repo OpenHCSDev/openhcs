@@ -30,7 +30,7 @@ from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.vfs_protocol import OutputFileOf, PlateInputFile
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 from openhcs.processing.backends.cellprofiler.crop import CropModule, crop
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
@@ -274,6 +274,10 @@ PATTERNS = {
         template_function,
         {"template_path": ROOT / "templates" / "fiducial.png"},
     ),
+    "file_of_an_earlier_step_kwarg": (
+        template_function,
+        {"template_path": OutputFileOf(step="fit", parameter="model_file")},
+    ),
     "nested_enum_kwargs": (
         crop,
         {"crop_shape": CropModule.Shape.ELLIPSE, "removal_method": CropModule.RemovalMethod.ALL},
@@ -329,6 +333,8 @@ def test_pipeline_document_loads_back_every_pattern_shape(clean_mode):
     assert samples.unsampled == []
     assert "path_root = Path('/data/screen')" in source
     assert "CropModule.Shape.ELLIPSE" in source
+    assert "from openhcs.core.vfs_protocol import OutputFileOf" in source
+    assert "OutputFileOf(" in source
 
 
 @pytest.mark.usefixtures("declared_function_catalog")

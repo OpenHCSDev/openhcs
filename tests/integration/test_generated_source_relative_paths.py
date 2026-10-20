@@ -79,9 +79,12 @@ def _compiled_template_path(
     dataset_root: Path,
 ) -> Path:
     resolver = CompilationPathResolver(
-        dataset_scope=CompilationDatasetScope.from_path(dataset_root),
+        input_dataset=CompilationDatasetScope.from_path(dataset_root),
         filemanager=FilesystemFileManager(),
         backend="disk",
+        output_dataset=CompilationDatasetScope.from_path(
+            dataset_root.with_name(f"{dataset_root.name}_out")
+        ),
     )
     pattern = compile_function_pattern(
         admitted_graph(step.func),

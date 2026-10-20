@@ -1504,6 +1504,15 @@ class PatternGroupData(PatternGroupExecutionScope):
             ):
                 continue
 
+            plan = self.execution_plan
+            invocation.before_call(
+                self.context,
+                call=(
+                    f"step {plan.step_name!r} (index {plan.step_index}) callable "
+                    f"{invocation.key.function_name!r}, axis {plan.axis_id!r}, "
+                    f"group {executor.group_key!r}, inputs {self.matching_files[:1]}"
+                ),
+            )
             invocation_started_at = time.perf_counter()
             try:
                 # A function's main output enters the payload family here.

@@ -565,6 +565,13 @@ def execute_dataset_scoped_steps(
                         owner_context.source_image_set_identity_policy
                     ),
                 )
+                owner_invocation.before_call(
+                    owner_context,
+                    call=(
+                        f"step {owner_plan.step_name!r} (index {step_index}) "
+                        f"callable {contract.function_name!r}, once for the plate"
+                    ),
+                )
                 kwargs = owner_invocation.kwargs_dict
                 batch_parameter = RuntimeArtifactBatch.require_parameter_name()
                 runtime_kwargs: dict[str, object] = {batch_parameter: batch}
