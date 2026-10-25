@@ -68,7 +68,7 @@ Image review showed substantial shaft and branch recovery. Original pipelines, r
 
 ## Supplementary Figure 5, continued. Scientist-assisted analysis
 
-![Five additional well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=5in}
+![Five additional well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=5.7in}
 
 ::: {custom-style="ImageCaption"}
 (Q–R) Detected cells; (S–T) total outgrowth; (U–V) branches per cell; (W–X) mean cell process length; (Y–Z) mean cell median process length. Twenty matched wells were analysed after assisted repair. Each curve is normalized to its own DMSO mean; dots show two technical wells per dose and whiskers their sample SD. Mean outgrowth per detected cell is included in the linked six-endpoint sheet.

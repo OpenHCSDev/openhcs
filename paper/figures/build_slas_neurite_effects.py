@@ -143,16 +143,17 @@ class NeuriteEffectFigure(FigureSheet):
             lower, upper = min(extents), max(extents)
             padding = (upper - lower) * 0.08
             limits[metric] = (lower - padding, upper + padding)
+        figure_width, figure_height = sheet.figure.get_size_inches() * 72
+        column_gap = 6.5 * sheet.plot_font_size / figure_width
+        plot_width = (width * 0.79 - column_gap * (len(conditions) - 1)) / len(conditions)
+        row_stride = extent * 0.75 / len(metrics)
+        height = min(extent * 0.55 / len(metrics),
+                     row_stride - 3.2 * sheet.plot_font_size / figure_height)
         for column, condition in enumerate(conditions):
             for row, metric in enumerate(metrics):
-                left = x + width * (0.14 + column * (0.90 / len(conditions)))
-                bottom = y + extent * (
-                    0.12 + (len(metrics) - 1 - row) * (0.75 / len(metrics))
-                )
-                height = extent * 0.55 / len(metrics)
-                axis = sheet.plot_axes(
-                    (left, bottom, width * 0.68 / len(conditions), height)
-                )
+                left = x + width * 0.14 + column * (plot_width + column_gap)
+                bottom = y + extent * 0.12 + (len(metrics) - 1 - row) * row_stride
+                axis = sheet.plot_axes((left, bottom, plot_width, height))
                 letter = chr(ord(start_letter) + row * len(conditions) + column)
                 if row == 0:
                     sheet.panel(
@@ -265,23 +266,19 @@ class NeuriteEffectFigure(FigureSheet):
                 axis.spines[["top", "right"]].set_visible(False)
                 axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
                 axis.set_axisbelow(True)
-                if row == 0 and column == 0:
-                    if len(series) == 2:
-                        axis.legend(fontsize=sheet.plot_font_size, frameon=False)
-                    else:
-                        handles, labels = axis.get_legend_handles_labels()
-                        sheet.figure.legend(
-                            handles,
-                            labels,
-                            fontsize=sheet.plot_font_size,
-                            frameon=False,
-                            ncols=len(series),
-                            loc="upper center",
-                            bbox_to_anchor=(
-                                x + width / 2,
-                                y + extent * (0.94 if len(metrics) > 1 else 0.85),
-                            ),
-                        )
+        handles, labels = axis.get_legend_handles_labels()
+        sheet.figure.legend(
+            handles,
+            labels,
+            fontsize=sheet.plot_font_size,
+            frameon=False,
+            ncols=len(series),
+            loc="upper center",
+            bbox_to_anchor=(
+                x + width / 2,
+                y + extent * (0.94 if len(metrics) > 1 else 0.85),
+            ),
+        )
         return evidence["protocol_figure_label"]
 
 

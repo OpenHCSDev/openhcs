@@ -1,9 +1,9 @@
 {
-  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
+  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
   "source_sha256": {
     "paper/figures/build_slas_supplement.py": "41026cdc5e91fd72f8f626efaa1c904c8241efb4cbb35582c5414062067da33f",
     "paper/supplementary/personal_neurite_autonomous/cohort.json": "fcfb4cc955c1217a123a111f3005036b02ca520fd50e66445a7ef1e358ac3d34",
-    "paper/figures/build_slas_neurite_effects.py": "fa8b28bf3296af7ced516318da2f35993611f580316619e14289a1983df6ed4a",
+    "paper/figures/build_slas_neurite_effects.py": "21a4b1f22e71cf66d1e78033f38b50adae2933be371baa559d5922e8bf0dce03",
     "paper/figures/compare_personal_neurite.py": "5a3c7cc0749f0e0293f2982ab4dc5c8589f25624d962b3dc82df2ecb26a5494f",
     "paper/supplementary/personal_neurite_autonomous/author114/joined_wells.csv": "a84158436f767e6e2f7340b60ab9dba20f62dca6bc526c6d76a2fa0c4fe26dd9",
     "paper/supplementary/personal_neurite_autonomous/author114/treatment_effects.csv": "dce5a0b6189a4de72862365368b46645d6242b05ed5e3bfae90919e9745c48c5",
@@ -19,9 +19,9 @@
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "supp_neurite_autonomous_endpoints_continued.png": "a26f80e3911f99372638df0f7200fe11ba8fb7346afd0f23a34da52507fb0d2e",
-    "supp_neurite_autonomous_endpoints_continued.pdf": "8b6ff186d40d6a95939823428a81c1680798f4c501ce7bec2ca11773af2e9093",
-    "supp_neurite_autonomous_endpoints_continued.svg": "56c922d40352cdab0f0282f35989ebb28be80dad45976c095f7a52ba14f7c436"
+    "supp_neurite_autonomous_endpoints_continued.png": "1b030b88162d6cfd1c62ddd6eaa13c58fc74726d0b9567766d31a296e6ebe259",
+    "supp_neurite_autonomous_endpoints_continued.pdf": "e4284e5923f5dc3755ab7127448c81c1829bc0d89cefc075509ae8b183aa62a8",
+    "supp_neurite_autonomous_endpoints_continued.svg": "3be4dc07c9f2cf3b52c461d326311522e7a865ecfda670bb7ed4f5cf3cb503da"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
