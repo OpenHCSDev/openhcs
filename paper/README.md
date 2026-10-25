@@ -8,7 +8,9 @@ Working author-review draft for **SLAS Technology**:
 - [Manuscript source](manuscript.md): the sole complete working text.
 - [Supplementary material](supplementary/README.md): explanatory figures,
   historical timing and prospective validation plots, source tables and
-  evaluation records.
+  evaluation records. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
+  supplies the complete 20-record task summary as supplementary data rather than
+  repeating that inventory in the typeset supplement.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
   generated step sequences for public advanced-segmentation and 3D examples.
 - [OpenHCS 0.8.5 CI evidence](supplementary/ci_official30_085/README.md):
@@ -93,10 +95,11 @@ are tracked separately.
 
 ## Build a reading copy
 
-A successful paired build writes `current/openhcs_manuscript.pdf` and
-`current/openhcs_supplement.pdf`. Editable DOCX files, input/tool
-provenance (`build.json`) and complete command output (`build.log`) are beside them.
-`current` switches only when both documents build and validate successfully.
+A successful build writes `current/openhcs_manuscript.pdf`,
+`current/openhcs_supplement.pdf` and the combined reading copy
+`current/openhcs_review.pdf`. Editable DOCX files, input/tool provenance
+(`build.json`) and complete command output (`build.log`) are beside them.
+`current` switches only when all three documents build and validate successfully.
 PDF and DOCX filenames use the paper's declared `openhcs` prefix so they can be
 uploaded alongside other papers without renaming. Source filenames are unchanged.
 

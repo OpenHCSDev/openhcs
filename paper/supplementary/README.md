@@ -8,7 +8,7 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-Additional images, measurements and methods support the main results. The [earlier supplement](README_before_readability_20261015.md) preserves detailed run histories, source inventories and extra chart variants.
+Additional figures explain the analyses and their evaluation. Linked data files provide individual scores, measurements, pipelines and instructions; the [detailed trial records](README_before_readability_20261015.md) retain source inventories and additional chart variants.
 
 ## Supplementary Figure 1. Runtime composition and preparation
 
@@ -64,7 +64,7 @@ Three new gpt-6.1-sol agents received the same [task brief](personal_neurite_aut
 
 All three recovered increased mean and total outgrowth at every nonzero dose of both drugs. At 40 µM, mean-outgrowth-per-cell fold changes were 1.646, 1.323 and 1.601 for FC-A, and 1.694, 1.487 and 1.660 for Y27632. Assisted values were 1.766 and 1.765; MetaXpress values were 1.977 and 2.053. These are independent analyses of the same two technical wells per dose, not additional biological replicates.
 
-Image review showed substantial shaft and branch recovery, but did not establish complete tracing or anatomically correct branch counts. Analysis 3 explicitly noted that limitation. Its report also records execution starting before a resource check finished; treatment identities and reference measurements remained hidden. Original pipelines, reports and matched-well data are retained for [Analysis 1](personal_neurite_autonomous/author114/author-report.txt), [Analysis 2](personal_neurite_autonomous/author115/author-report.txt) and [Analysis 3](personal_neurite_autonomous/author116/author-report.txt), with full file links in the earlier supplement.
+Image review showed substantial shaft and branch recovery. Original pipelines, reports and matched-well data are retained for [Analysis 1](personal_neurite_autonomous/author114/author-report.txt), [Analysis 2](personal_neurite_autonomous/author115/author-report.txt) and [Analysis 3](personal_neurite_autonomous/author116/author-report.txt). The measurement definitions below explain how these outputs were compared.
 
 ## Supplementary Figure 5, continued. Scientist-assisted analysis
 
@@ -123,7 +123,7 @@ Additional serial CellProfiler comparisons and one-worker batch plots are linked
 | OMERO | Data-management system described in 2012. | Shared image storage, metadata management and access from analysis tools [@Allan2012]. |
 | BioImageIT | Described in 2022. | Links image-data management with analysis tools and packaged processing environments [@Prigent2022]. |
 
-Web inventories were inspected on 15 October 2026. Counts describe the named collections, not every resource available for a platform. A project-hosted resource can be community-contributed; hosting does not imply that every item is maintained or validated. Plugins, tutorial pages, script files and complete workflows are different units and should not be ranked as equivalent capabilities.
+Web inventories were inspected on 15 October 2026. Each entry counts the collection named by its link. Plugins, tutorial pages, script files and complete workflows are separate units; project-hosted collections include community contributions.
 
 | Platform | Extensions | Tutorials and training | Scripts and workflows |
 | --- | --- | --- | --- |
@@ -135,7 +135,7 @@ Web inventories were inspected on 15 October 2026. Counts describe the named col
 
 **Counting rules.** Tutorial counts exclude navigation links, translations of the same exercise, linked external courses, how-to sections and video playlists. The CellProfiler count runs from beginner segmentation through UnmixColors, excluding bonus material, profiling resources and older-version tutorials. ImageJ archive counts use unique top-level filenames ending in `.txt`, `.ijm` or `.js`, excluding `AA_ReadMe.txt`, subdirectories and ZIP bundles; a file can contain several macros. Napari examples are unique `gallery/*.html` destinations. Icy uses its catalogue totals and the six PDFs under “Our own course and tutorial,” not six equivalent tutorials. An unestablished count is not zero.
 
-**Community support.** Rueden et al. reported approximately 10,000 image.sc users and more than 15,000 posts per year in 2019 [@Rueden2019Forum]. Ouyang et al.'s 2023 sample found installation mentioned in 9.9% of opening posts and approximately 19% of roughly 500 threads [@Ouyang2023]. Napari's dashboard reported 1,460 tagged topics and 938 participating users on 15 October 2026 [@NapariDashboard]. Posts are individual messages; topics are discussion threads. The napari total does not distinguish bugs, usage questions, integration requests or announcements. Comparable per-platform bug/help counts were not established: direct image.sc access was unavailable, and neither the published sample nor project resource catalogues provide that breakdown. Missing counts must not be interpreted as absence of support requests, and raw forum volume is not a failure rate.
+**Community support.** Rueden et al. reported approximately 10,000 image.sc users and more than 15,000 posts per year in 2019 [@Rueden2019Forum]. Ouyang et al.'s 2023 sample found installation mentioned in 9.9% of opening posts and approximately 19% of roughly 500 threads [@Ouyang2023]. Napari's dashboard reported 1,460 tagged topics and 938 participating users on 15 October 2026 [@NapariDashboard]. Posts count individual messages; topics count discussion threads. These totals describe community activity across bugs, usage questions, integration requests and announcements; they do not supply comparable per-platform counts for each category.
 
 ## Supplementary Data 1. CellProfiler workflow comparison
 
@@ -237,44 +237,17 @@ Protein translocation analysis 1 used each well's mean cell-level nuclear/cytopl
 
 Names identify the task; numbers distinguish independently developed methods. Corrections remain part of the same analysis. **Held-out** means the method was fixed before those inputs were released. **Uninspected** means the agent did not open those fields during development, determined retrospectively. **Development** results may include images used to choose the method.
 
-| Assay | Model | Data partition | Endpoint | Result |
-|---|---|---|---|---|
-| Nuclear detection 1 (BBBC039) | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
-| Nuclear detection 2 (BBBC039) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
-| Nuclear detection 3 (BBBC039) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
-| Nuclear detection 4 (BBBC039) | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
-| Nuclear detection 2, repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
-| Cell-boundary analysis 1 (BBBC007) | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
-| Cell-boundary analysis 2 (BBBC007) | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
-| Cell-boundary analysis 3 (BBBC007) | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
-| Paired nuclear/cell detection (H003) | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
-| Protein translocation 1 (BBBC013) | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
-| Protein translocation 2 (BBBC013) | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
-| Bright-object detection 1 (H001) | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
-| Bright-object detection 2 (H001) | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
-| 3D nuclear localisation 1 (H002) | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
-| 3D nuclear localisation 2 (H002) | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
-| Retinal cell detection 1 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
-| Retinal cell detection 2 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
-| Public-image neurite tracing | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
-| Laboratory-image neurite tracing | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
-| Neurite drug-response analyses 1–3 | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
+The [analysis-results data table](task_only_analysis/analysis_results.csv) supplies all 20 task-level records, with model, evaluation partition, endpoint and result in separate columns. Main Table 1 summarizes the principal assay results; the data table also retains the earlier held-out analyses and the individual image-review demonstrations.
 
 Object scores use computational labels for H001 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; H002 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
 
-### Errors that remain
+### Reference coverage and detection errors
 
 Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 5H is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
 
-Across the 175 uninspected BBBC039 fields, missed nuclei made up 73–78% of the three agents' errors:
+Across the 175 uninspected BBBC039 fields, missed nuclei made up 73–78% of the three agents' errors. The [nuclear-error data table](task_only_analysis/nuclear_error_summary.csv) gives each analysis's score distribution, missed nuclei and false detections; the [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) identifies the images.
 
-| Agent | Fields with F1 ≥ 0.90 | Fields below 0.80 | Median field F1 | Missed nuclei | False detections | Fields with more misses than false detections |
-|---|---:|---:|---:|---:|---:|---:|
-| Nuclear detection 2 | 121 | 6 | 0.919 | 2,661 | 951 | 171 |
-| Nuclear detection 3 | 117 | 7 | 0.917 | 2,929 | 806 | 173 |
-| Nuclear detection 4 | 121 | 6 | 0.915 | 2,743 | 1,033 | 171 |
-
-The same six fields scored below 0.80 for all three agents. In the hardest field, all missed 57–59 of 69 nuclei. The [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) identifies those images. On three inspected fields, analysis 2's repair recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, but split reference nuclei increased from 28 to 43. That repair was not separately evaluated across all fields.
+The same six fields scored below 0.80 for all three agents. In the hardest field, all missed 57–59 of 69 nuclei. On three inspected fields, analysis 2's repair recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, but split reference nuclei increased from 28 to 43. That repair was not separately evaluated across all fields.
 
 A further [paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst) recovered three crowded nuclear omissions and removed two cells without actin-supported growth, leaving 56 nuclei and 54 cells. [Cell-boundary analysis 3](task_only_analysis/bbbc007-fresh26-final-candidate.rst) produced 1,428 nuclear and cell IDs across sixteen fields, with remaining merge/boundary uncertainty. Retinal source images were user-provided R0010 RBPMS images with unverified physical calibration; DNA/actin images were BBBC007v1 A02 from the Sabatini laboratory, Whitehead Institute (CC0).
 
@@ -302,4 +275,4 @@ The [nine-field neurite pipeline](task_only_analysis/pipelines/p001-fresh13.py) 
 
 Additional supplied dependencies are the BBBC039 [image metadata](task_only_analysis/pipelines/bbbc039/source_manifest.csv) and [source binding](task_only_analysis/pipelines/bbbc039/source_bindings.py), BBBC007 [paired-field metadata](task_only_analysis/pipelines/bbbc007/source_sets.csv), 3D [centre-detection function](task_only_analysis/pipelines/h002-fresh23/custom_function.py), and translocation [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py), [statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py) and [dose summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py). Register custom functions under their recorded names before validation and execution. The original records identify which trial each source supports; the retinal and 3D sources above are not the distinct trials shown in Supplementary Figure 4 and main Figure 5, respectively.
 
-Original attempts, unsuccessful revisions and complete source inventories remain in the [earlier supplement](README_before_readability_20261015.md) and its linked records. They are not additional experimental replicates.
+The [detailed trial records](README_before_readability_20261015.md) retain original reports, individual analysis versions and source inventories.

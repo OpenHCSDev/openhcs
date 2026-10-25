@@ -109,6 +109,7 @@ PAPER = PaperDefinition(
         ), layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
     ),
     preparation=SlasRetainedFigures(),
+    combined_review=True,
 )
 
 

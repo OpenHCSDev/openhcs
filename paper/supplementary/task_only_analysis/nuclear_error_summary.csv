@@ -1,0 +1,4 @@
+Agent,Fields with F1 ≥ 0.90,Fields below 0.80,Median field F1,Missed nuclei,False detections,Fields with more misses than false detections
+Nuclear detection 2,121,6,0.919,2661,951,171
+Nuclear detection 3,117,7,0.917,2929,806,173
+Nuclear detection 4,121,6,0.915,2743,1033,171
