@@ -1,12 +1,13 @@
 {
-  "generator_sha256": "2748740a1e27cb041d6abf85ce7401ec842876f83b79b0931fecb4b9a15d5df9",
+  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "b29a8d05b0842eab1bbd995e43ec8f0c493976d4937cdbcc6379604764ba206a",
-    "paper/figures/slas/translocation_fresh23_provenance.json": "67517ba57556fcb24dd0481f4cff9809f9bde9329736f9b455f473ac23362bf3",
-    "paper/figures/slas/translocation_fresh23.png": "3bda8db7aa8ed962f730d46ab491bb87b9fab5349a750990f03f51f8d00ed11a",
+    "paper/figures/build_slas_supplement.py": "41026cdc5e91fd72f8f626efaa1c904c8241efb4cbb35582c5414062067da33f",
+    "paper/figures/slas/translocation_fresh23_provenance.json": "0f721667102bbb272433915da026a442e131e66608b65d342c107b5eaa0b25f0",
+    "paper/figures/slas/translocation_fresh23.png": "0ea27e9b5c333726e5894edcc158bf23cec462931f8c044df118698b16a0e205",
     "paper/figures/slas/independent_agent_validation_provenance.json": "8a26e3dcd1589dc31b6f4713148acf4cdcc7f9ee8a041a728d1dc5bfb7757bc8",
     "paper/figures/slas/independent_agent_validation.png": "6fb1bc3fb340713f2ed1247feb13e4d72908c4fe5003e2f91620cf160d2d6a39"
   },
+  "input_root": "/",
   "ui_crops": [
     {
       "source": "paper/figures/slas/translocation_fresh23.png",
@@ -37,9 +38,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_translocation.png": "4cf04bb8c2ac2906c07abb7998e09a06efada937a6b80c0584735c3cedade9c1",
-    "supp_translocation.pdf": "a0be462e487da48c080ec1792476097e02b235c0da17f4831f9baef2da234ef6",
-    "supp_translocation.svg": "4977a8a550791771a18c985d20494cf9e225d11863b8d6d065d82d2088d80cc9"
+    "supp_translocation.png": "d831f2fc72dae2231be216315494c7327111725a15360267911ebec57d0c7ad5",
+    "supp_translocation.pdf": "b5476559754185eacaa844171323e977da8e10909d91c192c7ba506ce59d4938",
+    "supp_translocation.svg": "86ed4d03cff52dc0b941658da798885c2931ba689e44a885529a284b209ee8c9"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -1,15 +1,16 @@
 {
-  "generator_sha256": "898d6f8bab842daa54d89b29161fd4060f7cece35afc69aba416b02492bfc084",
+  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2",
     "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json": "e257a17d67662967ba9af16a9a94aa78756b47a889c3e093a0cf1abe640f828e"
   },
+  "input_root": "/",
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "bbbc039_independent_repeat.png": "8f02e637fce2eaba7bad607dc6f4ddfd5196a2fa87a5037e1042282ceef89ec3",
-    "bbbc039_independent_repeat.pdf": "17bf5ed1fed6b615d11a683045aefe8ac74411bd9ebd84eca69fec2ef8fb1a1e",
-    "bbbc039_independent_repeat.svg": "e1242d36a394c83609efab2af204f38622d9555e76d9af1612c97214e8facf2c"
+    "bbbc039_independent_repeat.png": "c2f5bb2a62a790310b2e93d2be04ee0f551f1d914da901fa76ca1b4877cd33f0",
+    "bbbc039_independent_repeat.pdf": "a9f6b9fee1c352abb412496b8fc55f8a4f4d4decdc4dd688461297a9475850d4",
+    "bbbc039_independent_repeat.svg": "1ef1ac061891a783a1abb2c12b27ea5877942e3ec7b9391185643641d1fbd79d"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

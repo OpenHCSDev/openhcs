@@ -167,6 +167,26 @@ reading copies without rerunning scientific analyses. Automatic
 `--refresh-figures` deliberately fails: no safe historical-input/live-UI refresh
 is declared. Figure generation remains a separate explicit workflow.
 
+Shared numerical-axis typography belongs to `FigureSheet`; its
+`BenchmarkFigure` subclass draws both the main benchmark and the standalone
+worker comparison. The latter reads all 120 speedups directly from the retained
+plot-data CSV instead of recomputing them. Scientific inputs and timing models
+are unchanged.
+Prepare this checkout's declared submodules before importing the source benchmark
+package; importing installed ROI readers first in the same process deliberately
+fails the source-dependency guard:
+
+```sh
+git submodule update --init
+PYTHONPATH=.:paper/figures python -c \
+  'import openhcs; from build_slas_benchmark_reference import submission_benchmark_summary, submission_benchmark_schedule; submission_benchmark_summary(); submission_benchmark_schedule()'
+```
+
+`FigureSheet` also accepts an explicit `input_root` for a hash-verified copy of
+external archived images. The H002 and neurite figure entrypoints pass this root
+to the shared reader; original archive paths, image windows and calibration stay
+in the source declarations. This is image presentation, not a scientific rerun.
+
 The overview and archived May benchmark figures can be regenerated independently
 from their declared source assets and CSV tables:
 

@@ -12,7 +12,6 @@ from build_slas_visual_story import (
     TEAL,
     ORANGE,
     PURPLE,
-    INK,
     MUTED,
     ROOT,
     FigureSheet,
@@ -151,7 +150,7 @@ class NeuriteEffectFigure(FigureSheet):
                     0.12 + (len(metrics) - 1 - row) * (0.75 / len(metrics))
                 )
                 height = extent * 0.55 / len(metrics)
-                axis = sheet.figure.add_axes(
+                axis = sheet.plot_axes(
                     (left, bottom, width * 0.68 / len(conditions), height)
                 )
                 letter = chr(ord(start_letter) + row * len(conditions) + column)
@@ -263,19 +262,18 @@ class NeuriteEffectFigure(FigureSheet):
                     xlabel="Concentration (µM)",
                 )
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])
-                axis.tick_params(labelsize=9, colors=INK)
                 axis.spines[["top", "right"]].set_visible(False)
                 axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
                 axis.set_axisbelow(True)
                 if row == 0 and column == 0:
                     if len(series) == 2:
-                        axis.legend(fontsize=9, frameon=False)
+                        axis.legend(fontsize=sheet.plot_font_size, frameon=False)
                     else:
                         handles, labels = axis.get_legend_handles_labels()
                         sheet.figure.legend(
                             handles,
                             labels,
-                            fontsize=9.5,
+                            fontsize=sheet.plot_font_size,
                             frameon=False,
                             ncols=len(series),
                             loc="upper center",

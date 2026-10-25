@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
+  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
   "source_sha256": {
     "paper/figures/slas/neuroncyto_published_reference/source.json": "d4c3babdb926fc91c7bde48182fcc4990634989a66275f6c371839904871f15c",
     "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
@@ -7,9 +7,9 @@
     "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst": "e9611782366b393c3c580a371b8f2928a19997e90e238c80045f75dfa6156d72",
     "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst": "80264382d71633044cde49a929e874a6b2c2586c22295b67dcc62202528d9978",
     "paper/figures/slas/frozen_neurite_views.json": "149320267461bbe4e6738dd2b45015ff6fbfc4a6ce29c193c8cfff33e1ee251e",
-    "paper/figures/build_slas_neurite_views.py": "6655c6c46a3a30b9437fe17624e93d96df45943eee18adf65730d29ffe4019e1",
+    "paper/figures/build_slas_neurite_views.py": "aede26add68b1ba7d00a75818840c05ba7f3667f0328da562ec553bd4e99cc2b",
     "paper/supplementary/personal_neurite_autonomous/cohort.json": "fcfb4cc955c1217a123a111f3005036b02ca520fd50e66445a7ef1e358ac3d34",
-    "paper/figures/build_slas_neurite_effects.py": "29cc5e52c67b03ce2a55ac49dc7c4667a34b30221f4b7df7fda257f5accae113",
+    "paper/figures/build_slas_neurite_effects.py": "fa8b28bf3296af7ced516318da2f35993611f580316619e14289a1983df6ed4a",
     "paper/figures/compare_personal_neurite.py": "5a3c7cc0749f0e0293f2982ab4dc5c8589f25624d962b3dc82df2ecb26a5494f",
     "paper/supplementary/personal_neurite_autonomous/author114/joined_wells.csv": "a84158436f767e6e2f7340b60ab9dba20f62dca6bc526c6d76a2fa0c4fe26dd9",
     "paper/supplementary/personal_neurite_autonomous/author114/treatment_effects.csv": "dce5a0b6189a4de72862365368b46645d6242b05ed5e3bfae90919e9745c48c5",
@@ -22,6 +22,7 @@
     "paper/supplementary/personal_neurite_autonomous/author116/source_evidence.json": "fa1b6de8a5216e72a6e78069c4c13cff0b5932f5ec96689b223ca4820a814789",
     "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg": "cebc8010f38e0d1e3c25a8de658e6a6b5f3ec60d90564ba6df1087b80630f687"
   },
+  "input_root": "/home/ts/.cache/agent-scratch/openhcs-paper/frozen-root",
   "ui_crops": [
     {
       "source": "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg",
@@ -72,9 +73,9 @@
     }
   ],
   "output_sha256": {
-    "submission_neurite_results.png": "ae84d3bb9d1a92b24c1dc48ec9e7d04102fa7a63c80fb699f036748ae590321a",
-    "submission_neurite_results.pdf": "40403537fee1a5701ee64d91fea9b1b7140bc9c356f26171a0bcbcc85ee6d20c",
-    "submission_neurite_results.svg": "f84a6bbc23d2b520d8d38758bf96115ea50d3898bf2ec5e8ad3afee80d14552c"
+    "submission_neurite_results.png": "660c9b713f9dbf68905e22a6ff4129365363ce48ca40ae17cd595b4cdddf6807",
+    "submission_neurite_results.pdf": "8f691cf209a57e51b889cf837c3f6417c21aa80b787b2a3c3a2af3e4cab8b89f",
+    "submission_neurite_results.svg": "3ae56ee4a625dc3e1e828caa92662b8e0715d79a61d72ad3ece218ad7828928c"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

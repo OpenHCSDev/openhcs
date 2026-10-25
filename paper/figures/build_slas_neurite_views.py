@@ -14,7 +14,7 @@ class FrozenNeuriteView:
     """One retained field, not a new segmentation or tracing method."""
 
     def __init__(self, sheet, declaration):
-        root = Path(declaration["root"])
+        root = sheet.input_path(Path(declaration["root"]))
         paths = {}
         for role, source in declaration["files"].items():
             path = root / source["path"]
