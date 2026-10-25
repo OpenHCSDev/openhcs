@@ -827,7 +827,7 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
         metrics=("mean_outgrowth",), bounds=(3, 63, 94, 35), start_letter="A",
     )
-    sheet.text(3, 62, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
+    sheet.text(3, 60, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
                size=9, color=MUTED)
     sheet.text(3, 58, "Public-field comparison: initial OpenHCS and published NeuronCyto II results", size=11, weight="bold")
     matched = reference["matched_wholefield_layout"]
@@ -838,6 +838,7 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
+        sheet.source(path)
         sheet.text(x, 54, title, size=10.5, weight="bold")
         public_view.draw((x, 30, 30, 22), raw=name == "first-full-raw",
                          result=name == "first-full-result")

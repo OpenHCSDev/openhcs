@@ -91,7 +91,7 @@ At 40 µM, assisted branches-per-cell fold changes were 1.65 versus 3.00 for FC-
 ![Measured OpenHCS execution scaling for all thirty workflows at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Measured OpenHCS execution scaling with twelve repeated samples held fixed and 1, 2, 3 or 4 workers. Each point is one workflow's one-worker time divided by its time at the indicated worker count; all thirty workflows appear in each configuration. Times are medians of three repetitions after warmup. Bars show arithmetic means, black lines medians and the dashed line equal runtime. These measurements require no CellProfiler projection.
+Measured OpenHCS execution scaling with twelve repeated samples held fixed and 1, 2, 3 or 4 workers. Each point is one workflow's one-worker time divided by its time at the indicated worker count; all thirty workflows appear in each configuration. Times are medians of three repetitions after warmup. Bars show arithmetic means, black lines medians and the dashed line equal runtime. Numbers below the distributions give their medians. These measurements require no CellProfiler projection.
 :::
 
 Additional serial CellProfiler comparisons and one-worker batch plots are linked in Supplementary Data 3. Main Figure 6 already shows measured single-worker comparisons and the matching-core estimates; those charts are not repeated here.

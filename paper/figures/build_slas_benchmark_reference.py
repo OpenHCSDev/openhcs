@@ -287,7 +287,7 @@ def submission_benchmark_summary() -> None:
               + f"{modes[key]['assignment_count']} samples\n"
               + f"({modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} per core)"
               for key in ordered]
-    axis = sheet.plot_axes((.09, .18, .88, .23))
+    axis = sheet.plot_axes((.12, .18, .85, .23))
     sheet.distributions(axis, groups, labels)
     axis.set_xlabel("Same workload and core count for both applications", labelpad=7)
     sheet.figure.legend(handles=[
