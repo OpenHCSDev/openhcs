@@ -877,6 +877,7 @@ def submission_repair_examples():
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
     sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
+    sheet.figure.set_size_inches(sheet.figure.get_size_inches() * .8)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -902,17 +903,17 @@ def submission_autonomous_loop():
     sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 96)
     stages = (
         (3, 69, "1  Biological brief", "clipboard-list",
-         "Biological question\nDesired measurements\nHow images were taken", BLUE),
+         "Question\nMeasurements\nImage acquisition", BLUE),
         (36, 69, "2  Inspect inputs", "microscope",
-         "Channels and scales\nBright / dim regions\nCentre and borders", BLUE),
+         "Channels and scale\nBright/dim regions\nCentres and borders", BLUE),
         (69, 69, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
         (69, 41, "4  Check the result", "scan-eye",
-         "Raw image and overlay\nSame region and scale\nDetections and values", TEAL),
+         "Raw and overlay\nMatched regions\nObjects and values", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
-         "Find the faulty step\nChange and rerun\nCheck other regions too", ORANGE),
+         "Find faulty step\nRevise and rerun\nCheck other regions", ORANGE),
         (3, 41, "6  Finalize and deliver", "files",
-         "Pipeline and settings\nImages and tables\nChecks and limitations", TEAL),
+         "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
@@ -951,12 +952,12 @@ def submission_autonomous_loop():
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
     for index, ((candidate, count), decision) in enumerate(zip(candidates, (
-        "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
+        "Split body", "Pair lost", "Pair still lost", "Pair recovered",
     ))):
         x = 3 + index * 24
-        sheet.box(x, 24, 22, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        sheet.box(x, 24, 20, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
-            sheet.arrow((x+22,27), (x+24,27))
+            sheet.arrow((x+20,27), (x+24,27))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
     sheet.source(OUTPUT / "h001_scored_native_provenance.json")
@@ -970,8 +971,6 @@ def submission_autonomous_loop():
                            (x, 5, 30, 16), crop=(620, 90, 980, 355))
     sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)
-    sheet.text(4, 1.4, "Counts and decisions: agent's report; whole task includes review, reporting and cleanup.",
-               size=8.5, color=MUTED)
     sheet.save()
 
 
