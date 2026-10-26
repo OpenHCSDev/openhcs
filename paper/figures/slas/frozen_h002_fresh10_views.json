@@ -1,0 +1,92 @@
+{
+  "author_run": "H002_FRESH10_89",
+  "attempt": "frozen final attempted pipeline; display only",
+  "root": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89",
+  "overlay_opacity": 0.7,
+  "files": {
+    "raw": {
+      "path": "staged-input/image.ome.tif",
+      "sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7"
+    },
+    "centres": {
+      "path": "attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_centres.csv",
+      "sha256": "ae89addf8e689cbd17f32a371f9ea346e1966a801f3bbda328934c988ef6655a"
+    }
+  },
+  "views": [
+    {
+      "fixed_axis": 0,
+      "index": 31,
+      "region_yyxx": [
+        155,
+        245,
+        130,
+        220
+      ],
+      "raw_window": [
+        901,
+        27267
+      ],
+      "centre_style": {
+        "s": 65,
+        "marker": "+",
+        "color": "#00cc66",
+        "linewidths": 1.8
+      }
+    },
+    {
+      "fixed_axis": 1,
+      "index": 157,
+      "region_yyxx": [
+        0,
+        60,
+        0,
+        256
+      ],
+      "raw_window": [
+        711,
+        27219
+      ],
+      "centre_style": {
+        "s": 65,
+        "marker": "+",
+        "color": "#00cc66",
+        "linewidths": 1.8
+      }
+    },
+    {
+      "fixed_axis": 2,
+      "index": 54,
+      "region_yyxx": [
+        0,
+        60,
+        15,
+        160
+      ],
+      "raw_window": [
+        901,
+        53727
+      ],
+      "centre_style": {
+        "s": 65,
+        "marker": "+",
+        "color": "#00cc66",
+        "linewidths": 1.8
+      }
+    }
+  ],
+  "interpretation": "Original immutable arrays and saved detections, not a new analysis. Native crop regions are editorial selections, not claims of pixel-for-pixel screenshot reconstruction. Physical calibration is unverified.",
+  "source_shape_zyx": [
+    60,
+    256,
+    256
+  ],
+  "centre_columns": [
+    "z",
+    "y",
+    "x"
+  ],
+  "centre_count": 22,
+  "centre_plane_tolerance_voxels": 0.5,
+  "display_source": "Original final-only XY Z31,XZ Y157,YZ X54 controls/windows. Uniform editorial markers replace native selection rings;point visibility is slice-local.22 is an algorithmic count,not a biological census."
+}

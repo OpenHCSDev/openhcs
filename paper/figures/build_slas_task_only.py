@@ -343,8 +343,8 @@ def submission_summary() -> None:
     from build_slas_supplement import SupplementFigure
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 
-    h001, bbbc039 = load_evaluations(ROOT)
-    sheet = SupplementFigure("submission_analysis_summary", 11.0)
+    h001, _ = load_evaluations(ROOT)
+    sheet = SupplementFigure("submission_analysis_summary", 8.5)
     sources = [H001_SOURCE, BBBC039_SOURCE,
                SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv",
                SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
@@ -355,18 +355,12 @@ def submission_summary() -> None:
     sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
     for path in sources:
         sheet.source(ROOT / path)
-    axes = [sheet.plot_axes((0.12 + col * 0.49, bottom, 0.34, 0.15))
+    axes = [sheet.plot_axes((0.12 + col * 0.49, bottom, 0.34, 0.17))
             for bottom in (0.79, 0.55) for col in (0, 1)]
-    titles = ("A  Detection repair", "B  Similar accuracy across agents",
-              "C  Cell-boundary accuracy", "D  3D centre localisation")
-    details = ("Same image · computational reference",
-               "F1: missed and false detections",
-               "Manual outlines · 16 fields per analysis",
-               "Partial centre annotations")
-    for axis, title, detail in zip(axes, titles, details, strict=True):
-        axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=28)
-        axis.text(0, 1.06, detail, transform=axis.transAxes,
-                  fontsize=sheet.plot_font_size, color=MUTED)
+    titles = ("A  Object detection", "B  Nuclear detection",
+              "C  Cell boundaries", "D  3D nuclear localisation")
+    for axis, title in zip(axes, titles, strict=True):
+        axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=8)
         axis.spines[["top", "right"]].set_visible(False)
         axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
         axis.set_axisbelow(True)
@@ -395,12 +389,6 @@ def submission_summary() -> None:
     axes[1].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
                 ylabel="Pooled F1", ylim=(0.87, 0.94))
     axes[1].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper left")
-    paired = bbbc039["first_vs_final_same_three"]
-    axes[1].text(0.02, 0.055,
-                 "Analysis 2: same 3 inspected fields\n"
-                 f"{paired['first']['micro_f1']:.3f} → {paired['final']['micro_f1']:.3f}",
-                 transform=axes[1].transAxes, fontsize=sheet.plot_font_size, color=MUTED)
-
     # Decode the two existing publication tables; their units and populations differ
     # from instance matching, so no common accuracy scale is introduced.
     text = (ROOT / sources[3]).read_text()
@@ -433,15 +421,12 @@ def submission_summary() -> None:
                          textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
     axes[3].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
     axes[3].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
-                ylim=(0, 6.1), xticks=thresholds,
-                xticklabels=[f"{t}\n(primary)" if t == primary_threshold else str(t) for t in thresholds])
+                ylim=(0, 6.1), xticks=thresholds)
 
-    sheet.text(3, 46, "E  Both drugs produce a translocation response", size=12, weight="bold")
-    sheet.text(3, 44, "96 wells (4 development) · mean ± SD of 4 wells per dose",
-               size=sheet.plot_font_size, color=MUTED)
+    sheet.text(3, 47, "E  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
     series = AssaySeries.load(SOURCE)
     for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-        axis = sheet.plot_axes((0.12 + column * 0.49, 0.305, 0.34, 0.105))
+        axis = sheet.plot_axes((0.12 + column * 0.49, 0.32, 0.34, 0.105))
         means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
         deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
         axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
@@ -457,11 +442,10 @@ def submission_summary() -> None:
         if column == 0:
             axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    sheet.text(3, 22, "F  An agent separates previously merged nuclear detections",
-               size=12, weight="bold")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
-    sheet.artwork("h003_native_repair", (2, 2, 96, 19), crop=(1, 4, 99, 42))
+    from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
+
+    sheet.text(3, 21, "F  Nuclear separation", size=sheet.plot_font_size, weight="bold")
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 2, 96, 16), 18.5)
     sheet.save()
 
 
@@ -553,14 +537,6 @@ def publish_briefs() -> None:
                       + ". Their published prospective protocol and partitions remain in Supplementary Data 7; author-written candidate plans are not relabelled as original prompts.", ""])
     appendix = "\n".join(lines)
     (directory / "original_task_briefs.md").write_text(appendix)
-    supplement = ROOT / "paper/supplementary/README.md"
-    current = supplement.read_text()
-    heading = ("### Scientific briefs and the limits of the domain-expert framing"
-               if "### Scientific briefs and the limits of the domain-expert framing" in current
-               else "### Original scientific briefs")
-    start = current.index(heading)
-    end = current.index("The current skill describes intended inspection", start)
-    supplement.write_text(current[:start] + appendix + "\n\n" + current[end:])
     print(f"Published {len(editions)} scientific brief editions and {sum(bool(row['documents']) for row in catalogue)} trial instruction mappings")
 
 

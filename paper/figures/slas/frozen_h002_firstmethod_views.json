@@ -1,0 +1,94 @@
+{
+  "author_run": "H002_FRESH15_89",
+  "attempt": "frozen final attempted pipeline; display only",
+  "root": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89",
+  "overlay_opacity": 0.7,
+  "files": {
+    "raw": {
+      "path": "plate/image.ome.tif",
+      "sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7"
+    },
+    "labels": {
+      "path": "attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_labels_step0.labels.tif",
+      "sha256": "dffdc99120aedf28863af31ae0efb097ad3cc23e85fb446856242a0e5e101b8a"
+    },
+    "centres": {
+      "path": "attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_details.csv",
+      "sha256": "19ad71607d72e86d28d35a2418ac48c74ac6985a38d69d6235e38ad6d7076c37"
+    },
+    "rois": {
+      "path": "attempt02/plate_v1t2/checkpoints_results/image.ome.tif_s001_w1_z035_t001_h002_labels_step0_rois.roi.zip",
+      "sha256": "9023fb405d653abe237f5bac0e079c41d15a208d215412f66757b4d6f7cafaf0"
+    }
+  },
+  "views": [
+    {
+      "fixed_axis": 0,
+      "index": 34,
+      "region_yyxx": [
+        0,
+        256,
+        0,
+        256
+      ],
+      "raw_window": [
+        2513.0,
+        31882.274999999863
+      ]
+    },
+    {
+      "fixed_axis": 1,
+      "index": 157,
+      "region_yyxx": [
+        0,
+        60,
+        0,
+        256
+      ],
+      "raw_window": [
+        2513.0,
+        31882.274999999863
+      ],
+      "centre_style": {
+        "s": 65,
+        "marker": "+",
+        "color": "#ff65da",
+        "linewidths": 1.8
+      }
+    },
+    {
+      "fixed_axis": 2,
+      "index": 80,
+      "region_yyxx": [
+        0,
+        60,
+        0,
+        256
+      ],
+      "raw_window": [
+        2513.0,
+        31882.274999999863
+      ],
+      "centre_style": {
+        "s": 65,
+        "marker": "+",
+        "color": "#ff65da",
+        "linewidths": 1.8
+      }
+    }
+  ],
+  "interpretation": "Original immutable arrays and saved detections, not a new analysis. Native crop regions are editorial selections, not claims of pixel-for-pixel screenshot reconstruction. Physical calibration is unverified.",
+  "source_shape_zyx": [
+    60,
+    256,
+    256
+  ],
+  "centre_columns": [
+    "center_z",
+    "center_y",
+    "center_x"
+  ],
+  "centre_count": 26,
+  "centre_plane_tolerance_voxels": 0.5,
+  "outline_colour": "#ffe36b"
+}

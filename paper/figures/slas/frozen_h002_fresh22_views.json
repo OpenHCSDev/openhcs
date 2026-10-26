@@ -1,0 +1,43 @@
+{
+  "author_run": "H002_FRESH22_89",
+  "attempt": "candidate01 versus candidate02_retry; local repair only",
+  "root": "/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89",
+  "overlay_opacity": 0.7,
+  "files": {
+    "raw": {
+      "path": "staged-input/image.ome.tif",
+      "sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7"
+    },
+    "first": {
+      "path": "candidate01/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif",
+      "sha256": "1a3dab73c672a6d8beb7474ac5588b7f59a3e43dc416fbfecb92fd2b468ad635"
+    },
+    "final": {
+      "path": "candidate02_retry/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif",
+      "sha256": "7e87eb19db78de259fe7476a3eedfee508de1dbb44ef92fdd7603aa8ff2e628a"
+    }
+  },
+  "views": [
+    {
+      "fixed_axis": 0,
+      "index": 36,
+      "region_yyxx": [
+        90,
+        200,
+        0,
+        90
+      ],
+      "raw_window": [
+        569.0,
+        27314.0
+      ]
+    }
+  ],
+  "interpretation": "Original immutable arrays and saved detections, not a new analysis. Native crop regions are editorial selections, not claims of pixel-for-pixel screenshot reconstruction. Physical calibration is unverified.",
+  "source_shape_zyx": [
+    60,
+    256,
+    256
+  ],
+  "display_source": "Original capture-time intensity receipts 199 and 264:569..27314 raw codes,gamma1. Camera centers139.8/40 and native Z36 identify the witness;new native crop is explicitly declared."
+}

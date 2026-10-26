@@ -130,8 +130,10 @@ class FigureSheet:
         self.sources[str(path.relative_to(ROOT))] = digest(path)
 
     def input_path(self, original: Path) -> Path:
-        """Resolve an original absolute input inside an explicit archive root."""
-        return self.input_root / original.relative_to(original.anchor)
+        """Resolve paper-relative inputs or an archived original absolute path."""
+        if original.is_absolute():
+            return self.input_root / original.relative_to(original.anchor)
+        return ROOT / original
 
     def asset(self, path, bounds):
         """Place an existing mark without altering its colors or aspect ratio."""
@@ -270,40 +272,19 @@ class FigureSheet:
 
 
 def h001_scored():
-    """Native witnesses from the exact fresh author evaluated in Figure 5B."""
-    sheet = FigureSheet("h001_scored_native", "", 6.4)
-    sheet.source(
-        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
-    )
-    evaluation_path = (
-        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
-    )
+    """Matched original pixels and saved detections from the scored author."""
+    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+    sheet = FigureSheet("h001_scored_native", "", 3.4)
+    evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
     sheet.source(evaluation_path)
     evaluation = json.loads(evaluation_path.read_text())
     first, final = evaluation["attempts"]
-    sheet.text(
-        3, 97, "H001: native views from the scored task-only run",
-        size=18, weight="bold", va="top",
-    )
-    for y, title, prefix, crop, bottom, height in (
-        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
-        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
-    ):
-        sheet.text(3, y, title, size=15, weight="bold")
-        for x, stage, label in (
-            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
-        ):
-            sheet.text(x, y - 5, label, size=14)
-            sheet.source_image(
-                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
-                (x, bottom, 29, height), crop=crop,
-            )
-    sheet.text(
-        3, 3,
-        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
-        f"{final['score']['false_negative_objects']} reference misses remain.",
-        size=14,
-    )
+    sheet.text(3, 98, "H001: an elongated-body split repaired",
+               size=16, weight="bold", va="top")
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 20, 94, 60), 86)
+    sheet.text(3, 4, f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+               f"{final['score']['false_negative_objects']} reference misses remain.", size=13)
     sheet.save()
 
 
@@ -318,20 +299,15 @@ def task_only_story():
                          "axes.spines.top": False, "axes.spines.right": False}):
         sheet = FigureSheet("task_only_visual", "", 9.8)
         for path in (H001_SOURCE, BBBC039_SOURCE,
-                     Path("paper/figures/build_slas_task_only.py"),
-                     Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
+                     Path("paper/figures/build_slas_task_only.py")):
             sheet.source(ROOT / path)
         sheet.text(3, 98, "Autonomous segmentation: repair and field coverage",
                    size=18, weight="bold", va="top")
         sheet.text(3, 93, "A  H001: an elongated-body split repaired",
                    size=15, weight="bold")
-        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First"),
-                                (67, "final", "Final")):
-            sheet.text(x, 89, label, size=14)
-            sheet.source_image(
-                OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
-                (x, 70, 30, 20), crop=(297, 28, 1037, 492),
-            )
+        from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 70, 94, 18), 89)
         sheet.text(50, 70, "Own image review; no reference feedback",
                    size=14, ha="center", color=MUTED)
         axes = (sheet.plot_axes((.09, .40, .35, .24)),
@@ -365,82 +341,43 @@ def task_only_story():
         sheet.save()
 
 
+class MeasurementFirstVolumeFigure(FigureSheet):
+    """One source-owned layout shared by the standalone and main-paper views."""
+
+    def draw_volume_views(self, bounds):
+        from build_slas_neurite_views import (
+            CentredVolumeOutline, VOLUME_FIRST_METHOD_SOURCE, VolumeROIView,
+        )
+
+        xy = VolumeROIView.read(self, VOLUME_FIRST_METHOD_SOURCE)
+        xz = CentredVolumeOutline.read(self, VOLUME_FIRST_METHOD_SOURCE, view_index=1)
+        yz = CentredVolumeOutline.read(self, VOLUME_FIRST_METHOD_SOURCE, view_index=2)
+        x, y, width, height = bounds
+        for view, heading, rectangle in (
+            (xy, "XY", (x, y, width*.50, height)),
+            (xz, f"XZ: Y = {xz.viewport['index']} voxels",
+             (x+width*.55, y+height*.60, width*.45, height*.35)),
+            (yz, f"YZ: X = {yz.viewport['index']} voxels",
+             (x+width*.55, y+height*.05, width*.45, height*.35)),
+        ):
+            self.text(rectangle[0], rectangle[1]+rectangle[3]+2, heading,
+                      size=self.plot_font_size, weight="bold")
+            view.draw_overlay(rectangle)
+
+
 def h002_measurement_first(*, input_root: Path = FigureSheet.default_input_root):
-    """Render hash-checked inputs, optionally from a rooted archive copy."""
-    import tifffile
-    source_root = OUTPUT / "h002_firstmethod_sources"
-    source_path = source_root / "source-receipt.json"
+    """Original XY ROI geometry and orthogonal saved masks/centres."""
     evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
-    sources = json.loads(source_path.read_text())
     evaluation = json.loads(evaluation_path.read_text())
-    if sources["author_run"] != evaluation["author_run"]:
-        raise ValueError("Native captures and evaluation name different authors")
-    sheet = FigureSheet("h002_measurement_first", "", 7.3, input_root=input_root)
-    volumes = {}
-    for role in ("raw", "labels", "measurements"):
-        record = sources["frozen_scientific_inputs"][role]
-        path = sheet.input_path(Path(record["path"]))
-        if digest(path) != record["sha256"]:
-            raise ValueError(f"Frozen scientific input changed: {role}")
-        if role == "measurements":
-            with path.open(newline="") as stream:
-                centres = np.array([
-                    [float(row[f"center_{axis}"]) for axis in "zyx"]
-                    for row in csv.DictReader(stream)
-                ])
-        else:
-            volumes[role] = tifffile.imread(path)
-    expected_shape = tuple(sources["scientific_scope"]["source_shape"])
-    if any(volume.shape != expected_shape for volume in volumes.values()):
-        raise ValueError("Frozen raw and label volumes do not share the declared ZYX shape")
-    presentation = sources["orthogonal_presentation"]
     with plt.rc_context({"font.size": 13, "axes.spines.top": False,
                          "axes.spines.right": False}):
-        sheet.source(source_path)
+        sheet = MeasurementFirstVolumeFigure("h002_measurement_first", "", 7.3, input_root=input_root)
         sheet.source(evaluation_path)
         sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
-        sheet.display_transforms.append({
-            "operation": "Plane identities replace nested panel letters; saved voxels, labels and centres unchanged",
-            "analysis_rerun": False,
-        })
         sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
                    size=17, weight="bold", va="top")
-        for name, bounds, heading_position in (
-            ("xy", (3, 42, 47, 49), (3, 93)),
-            ("xz", (55, 73, 42, 18), (55, 93)),
-            ("yz", (55, 45, 42, 18), (55, 65)),
-        ):
-            if name == "xy":
-                capture = sources["captures"][name]
-                path = source_root / capture["asset"]
-                if digest(path) != capture["sha256"]:
-                    raise ValueError(f"Frozen native capture changed: {name}")
-                sheet.text(*heading_position, name.upper(), size=13, weight="bold")
-                sheet.source_image(path, bounds, crop=tuple(capture["crop_xyxy"]))
-                continue
-            plane = presentation["planes"][name]
-            fixed_axis, index = plane["fixed_axis"], plane["index"]
-            raw = np.take(volumes["raw"], index, axis=fixed_axis)
-            labels = np.take(volumes["labels"], index, axis=fixed_axis)
-            sheet.text(*heading_position, name.upper(), size=13, weight="bold")
-            axis = sheet.figure.add_axes(tuple(value / 100 for value in bounds))
-            low, high = presentation["raw_contrast_limits"]
-            axis.imshow(raw, cmap="gray", vmin=low, vmax=high, interpolation="nearest")
-            for identity in np.unique(labels):
-                if identity:
-                    axis.contour(labels == identity, levels=[0.5],
-                                 colors=[presentation["outline_color"]], linewidths=0.9)
-            in_plane = centres[np.abs(centres[:, fixed_axis] - index) <=
-                               presentation["centre_plane_tolerance_voxels"]]
-            projected = np.delete(in_plane, fixed_axis, axis=1)
-            axis.scatter(projected[:, 1], projected[:, 0], s=65, marker="+",
-                         color=presentation["centre_color"], linewidths=1.8)
-            axis.set_xlim(-0.5, raw.shape[1] - 0.5)
-            axis.set_ylim(raw.shape[0] - 0.5, -0.5)
-            axis.set_axis_off()
-        sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
-        sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
-        sheet.text(3, 36, sources["presentation_note"],
+        sheet.draw_volume_views((3, 43, 94, 45))
+        sheet.text(3, 36, "XY: saved nuclear ROIs, not validated cell borders.\nXZ/YZ: saved-mask outlines and in-plane centres.",
                    size=11, color=MUTED)
         axis = sheet.plot_axes((.12, .14, .39, .18))
         thresholds = (10, evaluation["primary_threshold_voxels"])
@@ -464,27 +401,39 @@ def h002_measurement_first(*, input_root: Path = FigureSheet.default_input_root)
         sheet.save()
 
 
-def h002_fresh22_split_repair():
-    """Frozen same-coordinate categorical labels, not a new segmentation."""
-    sources = OUTPUT / "h002_fresh22_sources"
-    receipt_path = sources / "source-receipt.json"
-    receipt = json.loads(receipt_path.read_text())
-    sheet = FigureSheet("h002_fresh22_split_repair", "", 6.4)
-    sheet.source(receipt_path)
+def h002_independent_centres(*, input_root: Path = FigureSheet.default_input_root):
+    """Original final-only XY/XZ/YZ raw voxels and unchanged saved point tables."""
+    from build_slas_neurite_views import VOLUME_CENTRE_SOURCE, VolumeCentreView
+
+    sheet = FigureSheet("h002_fresh10_native", "", 7.6, input_root=input_root)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json")
+    sheet.text(3, 98, "Independent volume localisation: final-only witnesses",
+               size=16, weight="bold", va="top")
+    for index, plane in enumerate(("XY", "XZ", "YZ")):
+        view = VolumeCentreView.read(sheet, VOLUME_CENTRE_SOURCE, view_index=index)
+        y = 68-index*28
+        sheet.text(3, y+25, plane, size=13, weight="bold")
+        view.draw_columns((3, y, 94, 20), y+22,
+                          (("Raw", view.draw_raw), ("Saved centres", view.draw_overlay)))
+    sheet.text(3, 7, "22 algorithmic centres; visibility is slice-local, not a complete census.", size=12)
+    sheet.text(3, 3, "Voxel-index geometry; physical calibration and multi-lobed identity remain unverified.", size=11)
+    sheet.save()
+
+
+def h002_fresh22_split_repair(*, input_root: Path = FigureSheet.default_input_root):
+    """Same native volume plane from frozen first/final integer labels."""
+    from build_slas_neurite_views import VOLUME_REPAIR_SOURCE, VolumeComparison
+
+    sheet = FigureSheet("h002_fresh22_split_repair", "", 6.4, input_root=input_root)
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
+    view = VolumeComparison.read(sheet, VOLUME_REPAIR_SOURCE)
     sheet.text(3, 97, "Autonomous repair of a continuous-body split", size=17,
                weight="bold", va="top")
-    for name, x, y, heading in (
-        ("raw", 3, 53, "A  Unchanged raw image"),
-        ("first-labels", 52, 53, "B  First instance labels"),
-        ("final-labels", 3, 13, "C  Repaired instance labels"),
-        ("final-combined", 52, 13, "D  Repaired labels + raw"),
-    ):
-        path = sources / f"{name}.png"
-        if digest(path) != receipt["captures"][name]["sha256"]:
-            raise ValueError(f"Frozen H002 capture changed: {name}")
-        sheet.text(x, y + 35, heading, size=13, weight="bold")
-        sheet.source_image(path, (x, y, 45, 32), crop=(610, 28, 1250, 448))
+    for index, (heading, draw) in enumerate(view.label_panels):
+        row, column = divmod(index, 2)
+        x, y = 3+column*49, 53-row*40
+        sheet.text(x, y+35, f"{chr(65+index)}  {heading}", size=13, weight="bold")
+        draw((x, y, 45, 32))
     sheet.text(3, 7, "Same XY viewport, Z index 36; categorical colours are not shared IDs.",
                size=12, color=MUTED)
     sheet.text(3, 2, "Local partition repair, not proof of complete volume segmentation.",
@@ -492,29 +441,40 @@ def h002_fresh22_split_repair():
     sheet.save()
 
 
-def retina_matched_repair():
-    """Same raw presentation before and after a retained retinal repair."""
-    source_root = OUTPUT / "retina_fresh16_sources"
-    sheet = FigureSheet("retina_fresh16_repair", "", 5.4)
+def nuclear_matched_repair():
+    """Show retained local separation and the final faint-neighbour failure."""
+    from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
+
+    sheet = FigureSheet("h003_native_repair", "", 6.6)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
+    sheet.text(3, 97, "Nuclear separation and a remaining faint merge",
+               size=16, weight="bold", va="top")
+    sheet.text(3, 89, "A  Two interiors become separate detections", size=13, weight="bold")
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 54, 96, 28), 84)
+    sheet.text(3, 48, "B  The faint pair remains merged", size=13, weight="bold")
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE, view_index=1).draw_final_row(
+        (2, 12, 96, 28), 42)
+    sheet.text(3, 6, "The lower repaired detection retains diffuse bridge support.", size=12)
+    sheet.text(3, 2, "Native pixel units; colours are not identities across attempts.", size=12)
+    sheet.save()
+
+
+def retina_matched_repair(*, input_root: Path = FigureSheet.default_input_root):
+    """Same original RBPMS plane before and after a retained retinal repair."""
+    from build_slas_neurite_views import BioFormatsComparison, RETINAL_SOURCE
+
+    sheet = FigureSheet("retina_fresh16_repair", "", 5.4, input_root=input_root)
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
     sheet.text(3, 97, "Retinal body outlines: local repair and remaining ambiguity",
                size=16, weight="bold", va="top")
-    for row, (region, title) in enumerate((
-        ("nw", "Bright neighbouring bodies remain separate"),
-        ("edge", "Border outlines smooth; possible split remains"),
+    for row, title in enumerate((
+        "Bright neighbouring bodies remain separate",
+        "Border outlines smooth; possible split remains",
     )):
         y = 53 - row * 38
         sheet.text(3, y + 35, title, size=13, weight="bold")
-        for column, (view, label) in enumerate((
-            ("raw", "Raw RBPMS"),
-            ("first", "First candidate + raw"),
-            ("final", "Repaired candidate + raw"),
-        )):
-            x = 3 + column * 32
-            letter = chr(ord("A") + 3 * row + column)
-            sheet.text(x, y + 28, f"{letter}  {label}", size=11, weight="bold")
-            sheet.source_image(source_root / f"{region}-{view}.png",
-                               (x, y, 30, 26), crop=(297, 28, 1250, 470))
+        BioFormatsComparison.read(sheet, RETINAL_SOURCE, view_index=row).draw_row(
+            (3, y, 94, 26), y + 28)
     sheet.text(50, 5, "Matched pixels and display • self-directed retained-run repair",
                size=12, ha="center", color=MUTED)
     sheet.text(50, 1, "Local geometry improvement; no manual-count accuracy estimate",
@@ -817,65 +777,52 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
     views_path = OUTPUT / "frozen_neurite_views.json"
     sheet.source(views_path)
-    sheet.source(ROOT / "paper/figures/build_slas_neurite_views.py")
     views = json.loads(views_path.read_text())
     public_view = FrozenNeuriteView(sheet, views["public"])
     laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
-    sheet.text(3, 97, "Three independent blind analyses recover both drug responses", size=12, weight="bold")
     NeuriteEffectFigure.draw_panels(
         sheet, NeuriteEffectFigure.cohort_tables(
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
-        metrics=("mean_outgrowth",), bounds=(3, 63, 94, 35), start_letter="A",
+        metrics=("mean_outgrowth",), bounds=(3, 66, 94, 33), start_letter="A",
     )
-    sheet.text(3, 60, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
-               size=9, color=MUTED)
-    sheet.text(3, 58, "Public-field comparison: initial OpenHCS and published NeuronCyto II results", size=11, weight="bold")
     matched = reference["matched_wholefield_layout"]
-    for x, name, title, record in (
-        (3, "first-full-raw", "C  Raw field", matched["raw"]),
-        (35, "first-full-result", "D  Initial OpenHCS tracing", matched["openhcs_initial"]),
+    for x, name, title, record, draw in (
+        (3, "first-full-raw", "C  Raw", matched["raw"], public_view.draw_raw),
+        (35, "first-full-result", "D  Initial tracing", matched["openhcs_initial"], public_view.draw_result),
     ):
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.source(path)
-        sheet.text(x, 54, title, size=10.5, weight="bold")
-        public_view.draw((x, 30, 30, 22), raw=name == "first-full-raw",
-                         result=name == "first-full-result")
-    sheet.text(67, 54, "E  Published NeuronCyto II", size=10.5, weight="bold")
-    sheet.source_image(reference_image, (67, 30, 30, 22),
+        sheet.text(x, 61, title, size=sheet.plot_font_size, weight="bold")
+        draw((x, 33, 30, 26))
+    sheet.text(67, 61, "E  NeuronCyto II", size=sheet.plot_font_size, weight="bold")
+    sheet.source_image(reference_image, (67, 33, 30, 26),
                        crop=tuple(reference["crop_xyxy_pixels"]))
-    sheet.text(3, 28, "E: published algorithm output, not manual tracing. Ong et al., Fig. 2D; CC BY-NC 4.0.",
-               size=9, color=MUTED)
-    sheet.text(3, 24, "Separate laboratory tracing demonstration (not analyses 1–3 above)", size=11, weight="bold")
-    for x, name, title in (
-        (3, "raw", "F  Raw neurite channel"),
-        (35, "result", "G  Cell bodies and neurites"),
-        (67, "combined", "H  Overlay on raw image"),
+    for x, title, draw in (
+        (3, "F  Raw", laboratory_view.draw_raw),
+        (35, "G  Labels and paths", laboratory_view.draw_result),
+        (67, "H  Overlay", laboratory_view.draw_overlay),
     ):
-        sheet.text(x, 20, title, size=10, weight="bold")
-        laboratory_view.draw((x, 0, 30, 18.5), raw=name != "result", result=name != "raw")
+        sheet.text(x, 29, title, size=sheet.plot_font_size, weight="bold")
+        draw((x, 1, 30, 26))
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
 
 
-def submission_repair_examples():
+def submission_repair_examples(*, input_root: Path = FigureSheet.default_input_root):
     """Put same-input nuclear and retinal repair witnesses in one main figure."""
     from build_slas_supplement import SupplementFigure
 
-    sheet = SupplementFigure("submission_repair_examples", 7.4)
+    sheet = SupplementFigure("submission_repair_examples", 7.4, input_root=input_root)
     sheet.heading("A  A split elongated body is repaired", 97)
-    sheet.artwork("h001_scored_native", (2, 53, 96, 39), crop=(2, 61, 98, 91))
+    from build_slas_neurite_views import (
+        BRIGHT_OBJECT_SOURCE, CroppedComparison, BioFormatsComparison, RETINAL_SOURCE,
+    )
+
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 53, 94, 35), 92)
     sheet.heading("B  Retinal contours improve while two neighbours stay separate", 48)
-    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
-    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 42, label, size=11, weight="bold")
-        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 8, 30, 30), crop=(297, 28, 1250, 470))
+    BioFormatsComparison.read(sheet, RETINAL_SOURCE).draw_row((3, 8, 94, 30), 42)
     sheet.text(50, 1, "Matched raw pixels and display within each trial • colours are not cross-attempt identities",
                size=10, ha="center", color=MUTED)
     sheet.save()
@@ -884,6 +831,7 @@ def submission_repair_examples():
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
     sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
+    sheet.figure.set_size_inches(sheet.figure.get_size_inches() * .8)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -909,17 +857,17 @@ def submission_autonomous_loop():
     sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 96)
     stages = (
         (3, 69, "1  Biological brief", "clipboard-list",
-         "Biological question\nDesired measurements\nHow images were taken", BLUE),
+         "Question\nMeasurements\nImage acquisition", BLUE),
         (36, 69, "2  Inspect inputs", "microscope",
-         "Channels and scales\nBright / dim regions\nCentre and borders", BLUE),
+         "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
         (69, 69, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
         (69, 41, "4  Check the result", "scan-eye",
-         "Raw image and overlay\nSame region and scale\nDetections and values", TEAL),
+         "Raw and overlay\nMatched regions\nObjects and values", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
-         "Find the faulty step\nChange and rerun\nCheck other regions too", ORANGE),
+         "Find faulty step\nRevise and rerun\nInspect regions", ORANGE),
         (3, 41, "6  Finalize and deliver", "files",
-         "Pipeline and settings\nImages and tables\nChecks and limitations", TEAL),
+         "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
@@ -958,27 +906,19 @@ def submission_autonomous_loop():
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
     for index, ((candidate, count), decision) in enumerate(zip(candidates, (
-        "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
+        "Split body", "Pair lost", "Pair still lost", "Pair recovered",
     ))):
         x = 3 + index * 24
-        sheet.box(x, 24, 22, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        sheet.box(x, 24, 20, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
-            sheet.arrow((x+22,27), (x+24,27))
+            sheet.arrow((x+20,27), (x+24,27))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw image"), ("first", "First result • split object"),
-        ("final", "Final result • split corrected"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 22, label, size=11, weight="bold")
-        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{view}.png",
-                           (x, 5, 30, 16), crop=(620, 90, 980, 355))
+    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 5, 94, 14.8), 21)
     sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)
-    sheet.text(4, 1.4, "Counts and decisions: agent's report; whole task includes review, reporting and cleanup.",
-               size=8.5, color=MUTED)
     sheet.save()
 
 
@@ -1020,43 +960,12 @@ def submission_shared_workflow():
     sheet.save(dpi=600)
 
 
-def submission_quantitative_results():
-    """Combine retinal and volumetric repairs with the frozen volume evidence."""
-    from build_slas_supplement import SupplementFigure
+def submission_quantitative_results(*, input_root: Path = FigureSheet.default_input_root):
+    """Render the shared retinal/volume layout directly from original inputs."""
+    from build_slas_supplement import VolumeResultsFigure
 
-    sheet = SupplementFigure("submission_quantitative_results", 10.5)
-    sheet.heading("G  Correcting retinal cell detection preserves neighbouring cells", 98)
-    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
-    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 93, label, size=sheet.plot_font_size, weight="bold")
-        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 78, 30, 13), crop=(297, 28, 1250, 470))
-    sheet.heading("H  An independent agent corrects a split cell body in 3D", 75)
-    sources = OUTPUT / "h002_fresh22_sources"
-    receipt_path = sources / "source-receipt.json"
-    receipt = json.loads(receipt_path.read_text())
-    sheet.source(receipt_path)
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
-    for column, (name, label) in enumerate((
-        ("raw", "Raw XY"), ("first-labels", "First labels"),
-        ("final-labels", "Final labels"), ("final-combined", "Final + raw"),
-    )):
-        path = sources / f"{name}.png"
-        if digest(path) != receipt["captures"][name]["sha256"]:
-            raise ValueError(f"Frozen H002 capture changed: {name}")
-        x = 3 + column * 24
-        sheet.text(x, 70, label, size=sheet.plot_font_size, weight="bold")
-        sheet.source_image(path, (x, 55, 22, 13), crop=(610, 28, 1250, 448))
-    sheet.text(3, 51.5, "Same region at Z=36; this correction does not assess every cell in the 3D image.",
-               size=sheet.plot_font_size, color=MUTED)
-    sheet.heading("I  A separate finalized analysis locates nuclei in three dimensions", 47.5)
-    sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 42),
-                       crop=(50, 110, 2660, 1300))
+    sheet = VolumeResultsFigure("submission_quantitative_results", 9.0, input_root=input_root)
+    sheet.draw_panels()
     sheet.save()
 
 

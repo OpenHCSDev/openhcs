@@ -1,18 +1,158 @@
 {
-  "scope": "Final-only native XY/XZ/YZ witnesses from independent H002_FRESH10_89, with useful ordinary-body detection and unresolved cluster identity.",
-  "output_sha256": {
-    "h002_fresh10_native.svg": "f4fce393880749f233c8e25c2e4db600a2310be044972abed20469271bc25134",
-    "h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
-    "h002_fresh10_final_bright_yz_x54_combined.png": "4939179dbc271265aff52d28a0dd17ca57e1eb5624878fc21fa865a29bf28c6b",
-    "h002_fresh10_final_bright_yz_x54_raw.png": "d01795ac3cb575f70fbc2d8c709773f111f0f0430c0419d211f538bd39ce503f",
-    "h002_fresh10_final_circle_combined.png": "c12f7a9ebbdcc9c4ce84dc0a60c35ee186f8792392f34ce86319163edc0997a4",
-    "h002_fresh10_final_circle_raw.png": "57ff7714200d6e811eb11b73b06ab30df8b1acb20f05d6e3c62e17b1dbea2aca",
-    "h002_fresh10_final_xz_y157_combined.png": "0ad8616b07463281f28bbeb5ede920e8a7da09834ca715e955b491419d92bb06",
-    "h002_fresh10_final_xz_y157_raw.png": "2a85f5c9835bc322f1bef4ce06b70b4f788752de8d00da43e33a770fff762f87"
-  },
+  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
   "source_sha256": {
-    "paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json": "a5c4139c13177abeb32252586466652c7f039077b91030162cb2febea7ee68cb"
+    "paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json": "a5c4139c13177abeb32252586466652c7f039077b91030162cb2febea7ee68cb",
+    "paper/figures/slas/frozen_h002_fresh10_views.json": "dbfec290c46ddaf72adadfb0c2d3c5697375d7509761b28e12f11753484197de",
+    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/staged-input/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_centres.csv": "ae89addf8e689cbd17f32a371f9ea346e1966a801f3bbda328934c988ef6655a"
   },
-  "rendering": "Six byte-identical original screenshots clipped/scaled by native SVG/rsvg-convert; no scientific execution or pixel retouching. Selected points retain original yellow rings.",
-  "limits": "Final-only local body-centre support, not a longitudinal repair panel, biological count, held-out accuracy or calibrated physical geometry. Slice-local point visibility does not imply missed bodies on that section."
+  "input_root": "/home/ts/wt/openhcs-paper-review-feedback-20261026/frozen-root",
+  "ui_crops": [],
+  "display_transforms": [
+    {
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 0,
+        "index": 31,
+        "region_yyxx": [
+          155,
+          245,
+          130,
+          220
+        ],
+        "raw_window": [
+          901,
+          27267
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        256,
+        256
+      ],
+      "raw_window": [
+        901,
+        27267
+      ],
+      "region_yyxx": [
+        155,
+        245,
+        130,
+        220
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 1,
+        "index": 157,
+        "region_yyxx": [
+          0,
+          60,
+          0,
+          256
+        ],
+        "raw_window": [
+          711,
+          27219
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        60,
+        256
+      ],
+      "raw_window": [
+        711,
+        27219
+      ],
+      "region_yyxx": [
+        0,
+        60,
+        0,
+        256
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 2,
+        "index": 54,
+        "region_yyxx": [
+          0,
+          60,
+          15,
+          160
+        ],
+        "raw_window": [
+          901,
+          53727
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        60,
+        256
+      ],
+      "raw_window": [
+        901,
+        53727
+      ],
+      "region_yyxx": [
+        0,
+        60,
+        15,
+        160
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    }
+  ],
+  "output_sha256": {
+    "h002_fresh10_native.png": "16e62765cdc5cf2419c1e15a58f5194e950001ad805acd924858968c57f05078",
+    "h002_fresh10_native.pdf": "7eabd76d76521a22c5dd0d7054c4a68db2f9dee4906494ecc5f17f3bf9d9d318",
+    "h002_fresh10_native.svg": "254d6506d08abef128ea3c24e32feb29d671eb758766d7379f8c584e23893716"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -1,0 +1,100 @@
+# Paired DNA / actin analysis — frozen final attempt
+
+Candidate06 completed successfully and is retained as a qualified exploratory segmentation: **55 nuclear instances and 55 nucleus-associated actin territories**. Reject an exact biological cell census and validated whole-cell morphology. A visible faint-neighbour nuclear merge persists, some border objects are clipped or ambiguous, and several lower-right actin partitions lack clear raw boundary support. No accuracy, perfection, unseen validation, treatment effect or physical calibration is claimed.
+
+The final attempted pipeline is [final_pipeline.py](final_pipeline.py), a complete native pycodified OpenHCS PipelineDocument containing pipeline_config and all seven pipeline_steps. Its registered detector source is [final_custom_detector.py](final_custom_detector.py). These are exact copies of candidate06's executed sources, not a selected earlier candidate. Registration is part of reproducibility: use the retained persist=true registration receipt for `openhcs:h003_weighted_nuclear_response_v2` in this owned runtime, or register this exact source through OpenHCS CustomFunctionManager before running in another authorized process. Do not execute the detector as an external image-processing script.
+
+[FREEZE.json](FREEZE.json) records immutable paths, sizes and SHA-256 hashes, frozen at 2026-10-04 19:02:02 UTC, before any evaluation. Its SHA-256 is `85322769447c1bf254c8578ab93f9550ad4eff7f83121ff5ce8e1dc685ea1f7a`. Source originals, final artifacts, all retained QA captures and authored attempt sources are covered. Active MCP journals have explicitly bounded prefix hashes; cleanup and complete closed-journal seals are recorded separately. No evaluation or expected-result lookup was performed.
+
+## Inputs and pairing
+
+Only the exact scientific inputs authorized in BRIEF were used:
+
+- `/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w1_z001_t001.tif`: DNA, channel 1.
+- `/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w2_z001_t001.tif`: Actin, channel 2.
+
+Both are native 400 × 400 uint8 planes. Typed SourceBindingsConfig declares exact filenames, original physical source URIs, shared well A02 / site 1 / Z 1 / time 1, separate channel identities and monochrome loading. The initial default loose-file inventory incorrectly treated files as separate samples; it was observed before authorship and replaced by this explicit source contract. The compiled source workspace confirms one A02 set with both channels. HOME source-workspace contains metadata for virtual source-backed images, not duplicate raw TIFFs or symlinks.
+
+Spatial pairing is preserved without registration, resampling or image cropping. The display uses camera crops only. Spacing (1,1,1) is relative: coordinates, diameters and perimeters are pixels; areas are pixels², not µm². Source-embedded dark X marks remain present and are not reference labels.
+
+## Frozen outputs and measurements
+
+The canonical final artifact root is:
+
+`/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate06/input_candidate01`
+
+| Output relative to that root | Interpretation |
+| --- | --- |
+| labels/nuclei/A02_s001_w1_z001_t001_NucleiLabels.tif | 2D uint16 nuclear instances, zero background |
+| labels/cells/A02_s001_w2_z001_t001_CellsLabels.tif | 2D uint16 associated actin territories, zero background |
+| results/Nuclei.csv | 55 source-linked nuclear object rows and shape measurements |
+| results/Cells.csv | 55 territory rows, Parent_Nuclei and shape measurements |
+| results/Image.csv | image_number 1, Count_Cells 55, actin threshold measurements |
+| results/A02_site-1_z_index-1_timepoint-1_NuclearImageCounts_step0_details.csv | slice 0, nuclear count 55, nuclear foreground 19,985 pixels |
+| results/A02_s001_w1_z001_t001_WeightedNuclearRows_step0_details.csv | detector object labels and exact pixel counts |
+| images/*WeightedResponse.tif, *WeightedMarkers.tif, *WeightedSupport.tif | consumed detector response, seed and admission diagnostics |
+| results/*_rois.roi.zip and *_segmentation_summary.txt | native ROI materializations and label summaries |
+
+The output suffix `input_candidate01` is inherited naming inside candidate06's independent destination; it does not indicate that candidate01 was selected. There is one canonical final scientific tree. Native runtime observation is retained at candidate06/runtime-values.pkl on the HDD.
+
+Readback through OpenHCS confirms both saved labels have shape 400 × 400, dtype uint16, minimum 0 and maximum 55, with original DNA/Actin source paths and exact A02 identities embedded. Counts come from object rows and the image-level measurements, not from polygon count or maximum-label alone. Both tables contain unique sequential IDs 1–55, each cell's Parent_Nuclei matches its object_label, and every nucleus has Children_Cells_Count=1. This establishes table association; it is not a exhaustive per-pixel containment test.
+
+| Measurement | Nuclear labels | Actin territories |
+| --- | ---: | ---: |
+| Instance count | 55 | 55 |
+| Total labelled area (pixels²) | 19,985 | 51,411 |
+| Fraction of 160,000-pixel field | 12.49% | 32.13% |
+| Object area min / median / max (pixels²) | 77 / 370 / 736 | 190 / 907 / 2,133 |
+| Mean object area (pixels²) | 363.36 | 934.75 |
+| Objects meeting image edge by bounding box | 12 | 17 |
+
+Cell/nuclear area ratios range 1.00–5.48, median 2.48, mean 2.58. All 55 cells have area at least that of their corresponding nuclear mask; **ID 3 has no growth** (both 314 pixels², nucleus centre Y27.02 X339.16). The DNA-positive object lacks persuasive actin-body support: exclude its territory from whole-cell morphology interpretation. Area ordering and parent IDs alone do not prove geometric containment. ID 7, area 508 pixels² and centre Y74.73 X28.44, is the retained faint-neighbour merge. ID 35 includes substantial diffuse bridge support; its measured area is 736 pixels². Do not interpret this as a clean single-body shape.
+
+Native sample readback of the preselected negative rectangle Y110–130 / X80–145 (1,386 pixels) returned only zero labels for both saved outputs. This is a localized negative control, not an overall false-positive rate. [final_evidence.json](final_evidence.json) retains the inventory, measured table aggregates, edge IDs, saved-label readback, negative samples, execution receipt and QA paths/hashes.
+
+## Raw evidence, method and decision history
+
+Before the first candidate, whole-field and separated raw regions were inspected through the native viewer. DNA profile through an isolated textured body had about 20-pixel width with nuisance peaks about 4–6 pixels apart. A genuine nearby pair had separate broad interiors approximately 30 pixels apart and a valley 61–66 versus peaks approximately 134 and 185. The faint upper-left body peaked at 55. Actin background was 2–4 (mean 2.894); the weak body's interior was 15–25 with rim 71, and a bright body's interior was 29–40 with rim 141. These justified mild admission smoothing, moderate seed separation and a fixed actin support threshold above measured background and below weak interiors. They were hypotheses tested against actual consumed diagnostics, not proofs of separation.
+
+| Attempt | Outcome and retained decision |
+| --- | --- |
+| candidate01 technical01 | Typed viewer config rejected string transport_mode; corrected to TransportMode('tcp'), without scientific changes. |
+| candidate01 first execution | Compiled; execution failed after primary labels because channel-specific RuntimeValueStore scope could not resolve Nuclei for channel 2. Partial primary outputs/QA retained; no complete paired result claimed. |
+| candidate01_retry01 | Technical change SITE→CHANNEL variable component shares Nuclei across the paired channels. Complete 54/54 first scientific candidate. MCE admission, SHAPE markers and SHAPE watershed. Rejected clear C4 merge: label 41 spanned two raw interiors, area 1,268 pixels². |
+| candidate02 | Changed only marker family to INTENSITY with explicit filter size 10, suppression 7. Complete 52/52. Two markers existed in the merge control but one final basin collapsed before size filtering. Rejected. A proposed global threshold increase was withdrawn before execution because it would threaten faint-body admission. |
+| candidate03 | Changed only watershed SHAPE→INTENSITY. Complete 54/54. C4 separation improved; faint upper-left peak lost under the consumed filter-10 response. Rejected affected partition. |
+| candidate04 | Changed only filter size 10→4, keeping exclusion 7. Complete 60/60; faint neighbour still merged and count increased elsewhere. Count increase was not accepted as recovery or accuracy. |
+| candidate05 | Registered nominal custom weighted distance × smoothed intensity detector; same downstream cells/export. Complete 54/54. C4 separated but intensity dominance still lost faint-neighbour representation. |
+| candidate06 FINAL | Registered v2, changing only intensity exponent 1→0.5 within that detector family. Complete 55/55. Retain qualified outputs; reject exact census and validated whole-cell morphology. The faint-neighbour merge remains; no claim that the repair fully succeeded. |
+
+All executed sources and pre-run rationales are retained under [attempts](attempts). Earlier outputs remain in their independent HDD destinations; no failed history was overwritten. Known CLI argument/help rejections and catalog reflection ping failures are retained in original journals. Custom registration itself returned success; the first describe after each registration failed at a bounded 1,000 ms catalog ping. The existing same owned endpoint was subsequently observed/prepared and reflection succeeded. For v2, full reflection was recovered after composition/compile; this ordering limitation is disclosed. No UNKNOWN mutation was blindly replayed, endpoint restarted or foreign runtime adopted.
+
+Final detector: Gaussian support smoothing sigma 1.3488, fixed raw admission threshold 20.67394584417343, binary hole filling, 8-connected components; seed response distance-to-support-boundary × sqrt(Gaussian intensity sigma 1.5), local peak distance 7, borders eligible; watershed on negative smoothed intensity within support; retain areas 50–1,590 pixels², then sequential relabel. Declared diagnostics and object/measurement relations materialize through ordinary OpenHCS artifact contracts. Raw DNA is copied unchanged as the main-flow array inside the registered callable; no file I/O or GUI manipulation occurs inside it.
+
+Cells use the original Actin source and retained nuclear seeds: CellProfiler PROPAGATION, manual threshold 12/255, smoothing scale 1, regularization 0.05, hole filling, borders retained. Later steps measure both object sets, convert each to UINT16 labels and export tables. This is a support-constrained territory model; shared actin signal does not identify every physical cell membrane.
+
+## Native QA record and claim limits
+
+There are **54 final matched native captures**, personally inspected: whole field and C1/C2/C3 for both DNA and Actin, each at two raw display windows and raw-only / result-only / combined; plus two-window DNA-only C4 diagnostic captures. Every triplet preserves camera, source plane and window. DNA windows are [0,151] and [0,255]; Actin windows [0,68] and [0,116], gamma 1. Result-only captures keep the recorded corresponding raw-window context; label colours themselves are categorical and unchanged by that window. Combined ROIs use native opacity 0.7; independently reviewed raw-only images provide unobscured evidence. No screenshots were altered externally. Viewer routes are tied to candidate06 submission_7f890227fe80; predecessor producer identities were retired before final QA.
+
+| Position, native centre Y/X and zoom | Observed evidence and decision |
+| --- | --- |
+| Whole, 199.5/199.5, 1 | Broad occupied clusters and isolated objects represented; large empty areas excluded. Small isolated DNA puncta remain unassigned, biological status uncertain. Reject completeness as a cell census. |
+| C1, 235/260, 3.5 | Textured isolated nuclei generally remain single; clear nearby broad pair has separate labels. No obvious unsupported empty-area nucleus in this view. Actin outer rims broadly followed; weak shared regions give uncertain seams. Accept local representative detection; qualify territories. |
+| C2, 120/60, 3.5 | Faint neighbour merges into nuclear ID7 and associated actin territory. Small puncta excluded. Clipped left objects retained; thin border ID8 could be a split fragment and is not a reliable morphology object. Reject precise count and shape in this region. |
+| C3, 345/315, 3.5 | Distinct bright nuclei mostly represented; diffuse bridge included in ID35 and some actin territories broad. Several shared actin interfaces lack clear raw support. Reject validated body boundaries; retain exploratory occupancy. |
+| C4, 300/291, 5, DNA supplement | Previously merged interiors now have separate labels (35/36), but lower label35 retains bridge support; adjacent label38 remains separate. Accept local separation repair, reject clean single-body geometry claim. |
+
+Clear positives, a definite merge, excluded small signals, uncertain border split and unsupported/no-growth cell are explicitly retained. No exhaustive manual object annotation exists, so no recall/precision/IoU or error percentage is reported. One demonstrated merge among 55 exported objects is a known flag, not a total error estimate. Nuclear and cell edge-ID lists are in final_evidence.json; exclude these from unqualified shape summaries.
+
+Generic knowledge retrieval included first-use/workflow/viewer QA, segmentation diagnostics, marker-landscape and measurement lessons, plus custom function/artifact authoring contracts. The retrieved generic Official30 ExampleHuman source and recipe card were used only to understand paired primary/secondary/export contracts. They describe a three-channel reference; no new-assay parity, reference count, score or expected-output claim follows. All method choices and repairs above arose from this authorized field. This development repeat is not unseen validation.
+
+## Execution, resources and cleanup
+
+Final compile job13 completed (execution 65be9c06-287a-443a-a672-7f597972dc07). Final execution job14 / session-7 completed all seven steps: execution c2c7a3d2-1488-480a-ac71-777799de39bd, start 18:45:56 UTC, finish 18:46:02 UTC. Status was independently re-read after final QA. Direct execution does not add an output plate to a UI PlateManager; that warning is retained. It does not invalidate the native mounted routes or durable outputs.
+
+Two numerical workers were configured on assigned CPUs 4,5, with inherited numerical threads 1; the one A02 well was assigned to worker_0, so two simultaneous wells were not possible. Every MCP action used the retained recorded client and an explicit named ongoing/full resource guard. Full execution admissions passed; ongoing RAM/pressure warnings were retained and did not authorize extra allocations. Observed host headroom and HDD space governed decisions; no quota was invented. Scientific payloads and QA went directly to the HDD through declared materialization contracts. Authored source, histories and journals stayed in HOME.
+
+The 75-minute clock began at first recorded MCP startup 17:56:09 UTC, with deadline 19:11:09 UTC. Both owned processes were observed absent at 19:05:16 UTC. The original recorded client ended at 19:05:40 UTC (69 minutes 31 seconds after startup), with **numeric exit 2 on EOF**; this nonzero client exit is retained, without restart. Scientific job14 and both exact owned shutdowns had succeeded before EOF. [cleanup.json](cleanup.json) retains these results. [JOURNAL-SEAL.json](JOURNAL-SEAL.json) records complete closed MCP journal hashes. The harness separately terminal-seals outer author journals after writer exit. No inherited display/helper owner was stopped.
+
+[freeze-verification.json](freeze-verification.json) verifies all 148 frozen files and three bounded original journal prefixes with no mismatch. [QA-INDEX.html](QA-INDEX.html) links every final native capture at its original HDD location. The final scientific source, label outputs and QA remain frozen; later handoff/cleanup bookkeeping does not change them.

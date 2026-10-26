@@ -1,0 +1,40 @@
+{
+  "author_run": "H001_FRESH586_96",
+  "attempt": "a01 and a04",
+  "root": "paper/figures/slas/frozen_bright_objects",
+  "files": {
+    "raw": {
+      "path": "raw.tif",
+      "sha256": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
+      "original_path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/input_stage/image.tif",
+      "prior_hash_checked": false
+    },
+    "first": {
+      "path": "first.tif",
+      "sha256": "228c8a684ea6768dd864355defa900434a21ca66c407670d6a742a5b90dccdfb",
+      "original_path": "/run/media/ts/hdd/openhcs-cold-custody-20261003/inactive-programme-20261006/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/attempts/a01/input_stage_a01/results/image.tif_BrightObjects_step1.labels.tif",
+      "prior_hash_checked": true
+    },
+    "final": {
+      "path": "final.tif",
+      "sha256": "6131cc1566bec4330957aac6e234791c2279ef393312ef4a4c2ee44a9a308fed",
+      "original_path": "/run/media/ts/hdd/openhcs-cold-custody-20261003/inactive-programme-20261006/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/instance_labels.tif",
+      "prior_hash_checked": true
+    },
+    "report": {
+      "path": "original-author-report.txt",
+      "sha256": "caba4643b3b4a5ee3be0cfdae23bb1bb9e59a29714112ae9c7864f77539a787b",
+      "original_path": "/run/media/ts/hdd/openhcs-cold-custody-20261003/inactive-programme-20261006/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/REPORT.md",
+      "prior_hash_checked": false
+    }
+  },
+  "overlay_opacity": 0.7,
+  "views": [
+    {
+      "raw_window": [8, 248],
+      "region_yyxx": [29, 89, 155, 235],
+      "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections."
+    }
+  ],
+  "interpretation": "Original frozen pixels and saved labels, no segmentation rerun. Categorical colours are editorial; identities do not match across versions. Pixel units only."
+}

@@ -29,8 +29,10 @@ answered before submission; the manuscript does not invent the answers.
 
 - [Manuscript source](manuscript.md): the sole complete working text.
 - [Supplementary material](supplementary/README.md): explanatory figures,
-  historical timing and prospective validation plots, source tables and
-  evaluation records. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
+  timing methods, assay measurements and segmentation errors. The linked
+  [analysis protocols and source files](supplementary/analysis_records.md) and
+  [software-resource inventory](supplementary/software_resources.md) hold detailed
+  inventories without adding tables to the reading copy. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
   supplies the complete 20-record task summary as supplementary data rather than
   repeating that inventory in the typeset supplement.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
@@ -74,16 +76,17 @@ and total time, followed by measured fixed-workload worker scaling. Table 1 summ
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
-The reading supplement links additional benchmark chart variants and detailed
-run histories instead of repeating them. Its pre-condensation text is preserved
+Measurement definitions precede the neurite plots; nuclear-error observations
+follow the nuclear measurements. Additional benchmark charts, source inventories
+and the agent timing/resource table are linked files rather than typeset appendices. Its pre-condensation text is preserved
 in `supplementary/README_before_readability_20261015.md`, with the detailed
 resource tables beside their condensed version in `supplementary/task_only_analysis/`.
 
 `PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
 regenerates the heterogeneous results panels from the retained score and endpoint
 tables, without rerunning analysis. `--publish-briefs` exports the original
-instruction files and their trial mapping, and replaces the corresponding
-Supplementary Data 8 section. The archive preserves full operational TASK files;
+instruction files and their trial mapping to JSON and Markdown data files. It
+never rewrites the authored reading supplement. The archive preserves full operational TASK files;
 the typeset supplement consolidates scientific briefs and marks technical hints.
 The manuscript and [current supplementary source](supplementary/README.md)
 own the displayed numbering; older run reports retain their original numbering.
@@ -208,6 +211,18 @@ PYTHONPATH=.:paper/figures python -c \
 external archived images. The H002 and neurite figure entrypoints pass this root
 to the shared reader; original archive paths, image windows and calibration stay
 in the source declarations. This is image presentation, not a scientific rerun.
+
+`build_slas_neurite_views.py` owns native-array drawing. Its mask, volume,
+saved-centre and ROI capabilities share source checks, coordinates and scale
+bars; neurite paths retain their own drawing method. The `frozen_*_views.json`
+declarations identify original files, hashes, slices, windows and native crop
+regions. The 3D entrypoints are `h002_measurement_first`,
+`h002_fresh22_split_repair` and `h002_independent_centres` in
+`build_slas_visual_story.py`; `build_slas_h003_fresh19.main` draws the separate
+paired DNA/actin run. Main and supplementary panels use those original-data
+views directly, not crops of their composite figures. Volume bars use voxel
+indices because physical spacing is unverified; retinal bars use the original
+CZI calibration. Editorial colours and marker styles do not change detections.
 
 The overview and archived May benchmark figures can be regenerated independently
 from their declared source assets and CSV tables:

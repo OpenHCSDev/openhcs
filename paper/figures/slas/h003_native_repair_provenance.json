@@ -1,14 +1,101 @@
 {
-  "scope": "Matched native captures from H003_POSTPAUSE_88, a fresh-context uncoached author's within-run revision; local repair and retained failure, not a reference accuracy estimate.",
-  "output_sha256": {
-    "h003_native_repair.png": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47",
-    "h003_native_repair.svg": "40fa30d4eb8c8ddb68cccf1d2e8c6c8518dfe9b837486e77b8d6623875b83b2b"
-  },
+  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h003-native-source-proof.json": "a923abe4a26034dc430925d988a18dcf68de8ee97d90f8e72d3755e7a67bf0a2",
-    "paper/supplementary/task_only_analysis/h003-native-render-receipt.json": "684da97862f3c064780f3e635abf599d8cc8f4b0fa1a6e3f5d1e14c2d015844a"
+    "paper/figures/slas/frozen_nuclear_views.json": "212e71109bf41e45c8ddcacbd7cf556a91ba547c2010fec6c8caf8dc6547227f",
+    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "paper/figures/slas/frozen_nuclear_objects/raw.tif": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+    "paper/figures/slas/frozen_nuclear_objects/first.tif": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
+    "paper/figures/slas/frozen_nuclear_objects/final.tif": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
+    "paper/figures/slas/frozen_nuclear_objects/original-author-report.txt": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
+    "paper/figures/slas/frozen_nuclear_objects/raw-identity.json": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b"
   },
-  "rendering": "Six complete unchanged PNG embeddings; matched C4 crop with documented 11-pixel final vertical offset, identical final C2 crops. Existing SVG/rsvg workflow; no retouching, recolouring or new scientific execution. Minimum typeset label 8.727 points at six inches.",
-  "attribution": "BBBC007v1 A02 Drosophila Kc167 DNA/actin, Sabatini laboratory, Whitehead Institute; Jones 2005 and Ljosa 2012, CC0.",
-  "limits": "A shows local separation repair; B retains a faint merge. RGB alignment proves presentation only. Native colours are not cross-candidate identities; physical calibration and exhaustive biological accuracy are unverified."
+  "input_root": "/",
+  "ui_crops": [],
+  "display_transforms": [
+    {
+      "author_run": "H003_POSTPAUSE_88",
+      "attempt": "candidate01_retry01 \u2192 candidate06",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          260,
+          350,
+          245,
+          335
+        ],
+        "raw_window": [
+          0,
+          255
+        ],
+        "selection_note": "Recorded C4 native centre Y300/X291;include repaired labels35/36,adjacent38 and diffuse bridge support. New explicit native crop,not a screen-coordinate reconstruction."
+      },
+      "source_shape_yx": [
+        400,
+        400
+      ],
+      "raw_window": [
+        0,
+        255
+      ],
+      "region_yyxx": [
+        260,
+        350,
+        245,
+        335
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H003_POSTPAUSE_88",
+      "attempt": "candidate01_retry01 \u2192 candidate06",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          45,
+          125,
+          0,
+          80
+        ],
+        "raw_window": [
+          0,
+          151
+        ],
+        "selection_note": "Recorded C2 retained faint merge ID7,centre Y74.73/X28.44,bounding box Y60\u201390/X16\u201342. New explicit native crop within that witness region."
+      },
+      "source_shape_yx": [
+        400,
+        400
+      ],
+      "raw_window": [
+        0,
+        151
+      ],
+      "region_yyxx": [
+        45,
+        125,
+        0,
+        80
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    }
+  ],
+  "output_sha256": {
+    "h003_native_repair.png": "1e3a609100480ea57d401ea6165a7c4b004462cf4cb732a32d488eab884a2893",
+    "h003_native_repair.pdf": "721c49f57a46b948f9355a35bf67081a4b99a0758848d3e435ab8fc548ac984e",
+    "h003_native_repair.svg": "b5a9ca6e6324848ac2c5a5d9b1e1730421b07e39ef9da056a80df8e42ac7d727"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
