@@ -1,0 +1,62 @@
+{
+  "author_run": "H003_POSTPAUSE_88",
+  "attempt": "candidate01_retry01 \u2192 candidate06",
+  "root": "paper/figures/slas/frozen_nuclear_objects",
+  "files": {
+    "raw": {
+      "path": "raw.tif",
+      "sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+      "original_path": "/home/ts/wt/openhcs-paper-review-feedback-20261026/original-source-notes/h003-original-byte-identical.tif"
+    },
+    "first": {
+      "path": "first.tif",
+      "sha256": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
+      "original_path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate01_retry01/input_candidate01/labels/nuclei/A02_s001_w1_z001_t001_NucleiLabels.tif"
+    },
+    "final": {
+      "path": "final.tif",
+      "sha256": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
+      "original_path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate06/input_candidate01/labels/nuclei/A02_s001_w1_z001_t001_NucleiLabels.tif"
+    },
+    "report": {
+      "path": "original-author-report.txt",
+      "sha256": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
+      "original_path": "/home/ts/wt/openhcs-paper-review-feedback-20261026/original-source-notes/h003/REPORT.md"
+    },
+    "raw_identity": {
+      "path": "raw-identity.json",
+      "sha256": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b",
+      "original_path": "/home/ts/wt/openhcs-paper-review-feedback-20261026/original-source-notes/h003-retained-raw-check.json"
+    }
+  },
+  "overlay_opacity": 0.7,
+  "views": [
+    {
+      "region_yyxx": [
+        260,
+        350,
+        245,
+        335
+      ],
+      "raw_window": [
+        0,
+        255
+      ],
+      "selection_note": "Recorded C4 native centre Y300/X291;include repaired labels35/36,adjacent38 and diffuse bridge support. New explicit native crop,not a screen-coordinate reconstruction."
+    },
+    {
+      "region_yyxx": [
+        45,
+        125,
+        0,
+        80
+      ],
+      "raw_window": [
+        0,
+        151
+      ],
+      "selection_note": "Recorded C2 retained faint merge ID7,centre Y74.73/X28.44,bounding box Y60\u201390/X16\u201342. New explicit native crop within that witness region."
+    }
+  ],
+  "interpretation": "Categorical colours are editorial,not cross-attempt identities. Native pixel units only. Local separation repair does not validate body shape;faint merge remains. No detector or scoring execution."
+}

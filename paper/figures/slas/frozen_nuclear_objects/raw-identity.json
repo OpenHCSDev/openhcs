@@ -1,0 +1,9 @@
+{
+  "saved_array_path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate06/input_candidate01/images/A02_s001_w1_z001_t001_WeightedDNA.tif",
+  "saved_array_sha256": "b4209c558cc535c43a651195d63b56d02a1864fafae3240d93f2d078f44e6240",
+  "encoding": "tifffile.imwrite(array, metadata={axes: YX}); no pixel operations",
+  "encoded_bytes": 160272,
+  "encoded_sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+  "expected_original_sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+  "byte_identity_established": true
+}

@@ -14,8 +14,8 @@ from build_slas_visual_story import FigureSheet, OUTPUT, digest
 
 
 class SupplementFigure(FigureSheet):
-    def __init__(self, stem, height=10):
-        super().__init__(stem, "", height)
+    def __init__(self, stem, height=10, *, input_root=FigureSheet.default_input_root):
+        super().__init__(stem, "", height, input_root=input_root)
         self.source(Path(__file__))
 
     def artwork(self, stem, bounds, *, crop=None):
@@ -81,16 +81,22 @@ def nuclear_instances():
     sheet.save()
 
 
-def morphology_checks():
+def morphology_checks(*, input_root=FigureSheet.default_input_root):
     """Independent checks and residual failures, not repeated main overviews."""
-    sheet = SupplementFigure("supp_morphology_checks", 8.4)
+    from build_slas_neurite_views import (
+        BioFormatsComparison, CroppedComparison, NUCLEAR_SOURCE, RETINAL_SOURCE,
+    )
+
+    sheet = SupplementFigure("supp_morphology_checks", 8.4, input_root=input_root)
     sheet.heading("A–C  Independent volume analysis: centres in XY, XZ and YZ", 99)
     for column, crop in enumerate(((52, 10, 98, 42), (52, 47, 98, 70), (52, 75, 98, 99))):
         sheet.artwork("h002_fresh10_native", (2 + column*32, 76, 31, 20), crop=crop)
-    sheet.heading("D–F  Retinal acquisition border: raw, first and final", 74)
-    sheet.artwork("retina_fresh16_repair", (2, 52, 96, 19), crop=(1, 62, 99, 85))
-    sheet.heading("G–I  DNA: a faint pair remains merged", 50)
-    sheet.artwork("h003_native_repair", (2, 26, 96, 21), crop=(1, 50, 99, 85))
+    sheet.heading("D–F  Retinal acquisition border: raw, first and final", 75)
+    BioFormatsComparison.read(sheet, RETINAL_SOURCE, view_index=1).draw_row(
+        (2, 52, 96, 16), 70)
+    sheet.heading("G–I  DNA: a faint pair remains merged", 51)
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE, view_index=1).draw_final_row(
+        (2, 26, 96, 18), 46)
     sheet.heading("J–L  Actin: a seed without supported body growth", 24)
     sheet.artwork("h003_fresh19_matched", (2, 1, 96, 20), crop=(1, 70, 99, 89))
     sheet.save()

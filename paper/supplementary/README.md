@@ -43,7 +43,7 @@ Missed nuclei accounted for 73–78% of the three agents' errors on the 175 unin
 ![Orthogonal nuclear localisation, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** A faint DNA pair remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. These are separate analyses. Colours identify objects within each view. Supplementary Data 8 links the source images and reports.
+**(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** Raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars are 20 µm in D–F and 10 pixels in G–I. These are separate analyses. Colours identify objects within each view. Supplementary Data 8 links the source images and reports.
 :::
 
 ## Supplementary methods: neurite morphometry

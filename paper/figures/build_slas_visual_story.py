@@ -468,29 +468,40 @@ def h002_fresh22_split_repair():
     sheet.save()
 
 
-def retina_matched_repair():
-    """Same raw presentation before and after a retained retinal repair."""
-    source_root = OUTPUT / "retina_fresh16_sources"
-    sheet = FigureSheet("retina_fresh16_repair", "", 5.4)
+def nuclear_matched_repair():
+    """Show retained local separation and the final faint-neighbour failure."""
+    from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
+
+    sheet = FigureSheet("h003_native_repair", "", 6.6)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
+    sheet.text(3, 97, "Nuclear separation and a remaining faint merge",
+               size=16, weight="bold", va="top")
+    sheet.text(3, 89, "A  Two interiors become separate detections", size=13, weight="bold")
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 54, 96, 28), 84)
+    sheet.text(3, 48, "B  The faint pair remains merged", size=13, weight="bold")
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE, view_index=1).draw_final_row(
+        (2, 12, 96, 28), 42)
+    sheet.text(3, 6, "The lower repaired detection retains diffuse bridge support.", size=12)
+    sheet.text(3, 2, "Native pixel units; colours are not identities across attempts.", size=12)
+    sheet.save()
+
+
+def retina_matched_repair(*, input_root: Path = FigureSheet.default_input_root):
+    """Same original RBPMS plane before and after a retained retinal repair."""
+    from build_slas_neurite_views import BioFormatsComparison, RETINAL_SOURCE
+
+    sheet = FigureSheet("retina_fresh16_repair", "", 5.4, input_root=input_root)
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
     sheet.text(3, 97, "Retinal body outlines: local repair and remaining ambiguity",
                size=16, weight="bold", va="top")
-    for row, (region, title) in enumerate((
-        ("nw", "Bright neighbouring bodies remain separate"),
-        ("edge", "Border outlines smooth; possible split remains"),
+    for row, title in enumerate((
+        "Bright neighbouring bodies remain separate",
+        "Border outlines smooth; possible split remains",
     )):
         y = 53 - row * 38
         sheet.text(3, y + 35, title, size=13, weight="bold")
-        for column, (view, label) in enumerate((
-            ("raw", "Raw RBPMS"),
-            ("first", "First candidate + raw"),
-            ("final", "Repaired candidate + raw"),
-        )):
-            x = 3 + column * 32
-            letter = chr(ord("A") + 3 * row + column)
-            sheet.text(x, y + 28, f"{letter}  {label}", size=11, weight="bold")
-            sheet.source_image(source_root / f"{region}-{view}.png",
-                               (x, y, 30, 26), crop=(297, 28, 1250, 470))
+        BioFormatsComparison.read(sheet, RETINAL_SOURCE, view_index=row).draw_row(
+            (3, y, 94, 26), y + 28)
     sheet.text(50, 5, "Matched pixels and display • self-directed retained-run repair",
                size=12, ha="center", color=MUTED)
     sheet.text(50, 1, "Local geometry improvement; no manual-count accuracy estimate",
@@ -826,25 +837,19 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     sheet.save(dpi=600)
 
 
-def submission_repair_examples():
+def submission_repair_examples(*, input_root: Path = FigureSheet.default_input_root):
     """Put same-input nuclear and retinal repair witnesses in one main figure."""
     from build_slas_supplement import SupplementFigure
 
-    sheet = SupplementFigure("submission_repair_examples", 7.4)
+    sheet = SupplementFigure("submission_repair_examples", 7.4, input_root=input_root)
     sheet.heading("A  A split elongated body is repaired", 97)
-    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+    from build_slas_neurite_views import (
+        BRIGHT_OBJECT_SOURCE, CroppedComparison, BioFormatsComparison, RETINAL_SOURCE,
+    )
 
     CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 53, 94, 35), 92)
     sheet.heading("B  Retinal contours improve while two neighbours stay separate", 48)
-    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
-    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 42, label, size=11, weight="bold")
-        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 8, 30, 30), crop=(297, 28, 1250, 470))
+    BioFormatsComparison.read(sheet, RETINAL_SOURCE).draw_row((3, 8, 94, 30), 42)
     sheet.text(50, 1, "Matched raw pixels and display within each trial • colours are not cross-attempt identities",
                size=10, ha="center", color=MUTED)
     sheet.save()
@@ -982,21 +987,15 @@ def submission_shared_workflow():
     sheet.save(dpi=600)
 
 
-def submission_quantitative_results():
+def submission_quantitative_results(*, input_root: Path = FigureSheet.default_input_root):
     """Combine retinal and volumetric repairs with the frozen volume evidence."""
     from build_slas_supplement import SupplementFigure
 
-    sheet = SupplementFigure("submission_quantitative_results", 9.0)
-    sheet.heading("G  Retinal cell detection", 98)
-    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
-    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 93, label, size=sheet.plot_font_size, weight="bold")
-        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 77, 30, 14), crop=(297, 28, 1250, 470))
+    from build_slas_neurite_views import BioFormatsComparison, RETINAL_SOURCE
+
+    sheet = SupplementFigure("submission_quantitative_results", 9.0, input_root=input_root)
+    sheet.heading("G  RBPMS cell detection", 98)
+    BioFormatsComparison.read(sheet, RETINAL_SOURCE).draw_row((3, 77, 94, 14), 93)
     sheet.heading("H  Cell-body segmentation", 75)
     sources = OUTPUT / "h002_fresh22_sources"
     receipt_path = sources / "source-receipt.json"

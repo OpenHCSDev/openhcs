@@ -442,10 +442,10 @@ def submission_summary() -> None:
         if column == 0:
             axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
+    from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
+
     sheet.text(3, 21, "F  Nuclear separation", size=12, weight="bold")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
-    sheet.artwork("h003_native_repair", (2, 2, 96, 18), crop=(1, 4, 99, 42))
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 2, 96, 16), 18.5)
     sheet.save()
 
 

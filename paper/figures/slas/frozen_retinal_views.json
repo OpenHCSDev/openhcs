@@ -1,0 +1,51 @@
+{
+  "author_run": "R0010_FRESH16_88",
+  "attempt": "FIRST \u2192 REPAIR01-technical02",
+  "root": "/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88",
+  "files": {
+    "raw": {
+      "path": "acquisition/R0010.czi",
+      "sha256": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851"
+    },
+    "first": {
+      "path": "attempts/FIRST/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif",
+      "sha256": "3cadc3d836839defa2cb257c295d7017f53f718b0e2d68bb1b616b0c3a79b71f"
+    },
+    "final": {
+      "path": "attempts/REPAIR01-technical02/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif",
+      "sha256": "db0b3022bdba66a86c2b46be24e91ef4e43bd9041d77c5e2ea2039207fd4e988"
+    }
+  },
+  "series_index": 0,
+  "plane_index": 0,
+  "overlay_opacity": 0.7,
+  "views": [
+    {
+      "region_yyxx": [
+        379,
+        821,
+        124,
+        1077
+      ],
+      "raw_window": [
+        0,
+        42
+      ],
+      "selection_note": "Recorded native NW camera centre600/600;original953x442canvas with zoom8.095 and verified OME pixel scale corresponds to this native region,rounded to complete pixels."
+    },
+    {
+      "region_yyxx": [
+        0,
+        341,
+        816,
+        1769
+      ],
+      "raw_window": [
+        0,
+        42
+      ],
+      "selection_note": "Recorded native border camera centre120/1293,same original viewport;intersection with source pixels omits only the out-of-array black canvas above y0."
+    }
+  ],
+  "interpretation": "Original RBPMS plane and retained labels;categorical colours are not cross-attempt identities. Physical bars derive from original CZI metadata during decoding,not this declaration. Local geometry and residual split ambiguity,not manual-count accuracy. Original CZI remains private in the retained source/export,not added to Git."
+}

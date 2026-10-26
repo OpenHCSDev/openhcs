@@ -28,17 +28,13 @@
       "prior_hash_checked": false
     }
   },
-  "raw_window": [
-    8,
-    248
-  ],
   "overlay_opacity": 0.7,
-  "region_yyxx": [
-    29,
-    89,
-    155,
-    235
+  "views": [
+    {
+      "raw_window": [8, 248],
+      "region_yyxx": [29, 89, 155, 235],
+      "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections."
+    }
   ],
-  "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections.",
   "interpretation": "Original frozen pixels and saved labels, no segmentation rerun. Categorical colours are editorial; identities do not match across versions. Pixel units only."
 }

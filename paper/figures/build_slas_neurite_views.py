@@ -11,6 +11,8 @@ from matplotlib.patheffects import withStroke
 from build_slas_agent import digest, nonempty_label_plane
 
 BRIGHT_OBJECT_SOURCE = Path("paper/figures/slas/frozen_bright_object_views.json")
+NUCLEAR_SOURCE = Path("paper/figures/slas/frozen_nuclear_views.json")
+RETINAL_SOURCE = Path("paper/figures/slas/frozen_retinal_views.json")
 
 
 class FrozenImageView(ABC):
@@ -18,6 +20,9 @@ class FrozenImageView(ABC):
 
     raw_cmap = "gray"
     overlay_opacity = .75
+    units_per_pixel = 1
+    scale_unit = "px"
+    pixel_aspect = 1
 
     def __init__(self, sheet, declaration):
         self.sheet = sheet
@@ -33,15 +38,24 @@ class FrozenImageView(ABC):
         self.labels = self.read_labels(self.label_path)
         if self.raw.ndim != 2 or self.raw.shape != self.labels.shape:
             raise ValueError("Frozen raw field and label plane must match")
-        self.window = declaration["raw_window"]
         sheet.display_transforms.append({
             "author_run": declaration["author_run"], "attempt": declaration["attempt"],
             "operation": "Frozen arrays in native coordinates; categorical label colours",
             "source_shape_yx": list(self.raw.shape), "raw_window": self.window,
             "region_yyxx": list(self.region), "raw_cmap": self.raw_cmap,
             "overlay_opacity": self.overlay_opacity,
+            "units_per_pixel": self.units_per_pixel, "scale_unit": self.scale_unit,
+            "pixel_aspect": self.pixel_aspect,
             "gamma": 1, "analysis_rerun": False,
         })
+
+    @property
+    def viewport(self):
+        return self.declaration
+
+    @property
+    def window(self):
+        return self.viewport["raw_window"]
 
     @property
     @abstractmethod
@@ -78,29 +92,31 @@ class FrozenImageView(ABC):
         axis = self.sheet.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         top, bottom, left, right = self.region
         height_px, width_px = bottom - top, right - left
-        magnitude = 10 ** np.floor(np.log10(width_px / 5))
-        length_px = np.floor(width_px / 5 / magnitude) * magnitude
-        bar_right, bar_bottom = right - width_px * .05, bottom - height_px * .05
-        bar, = axis.plot((bar_right - length_px, bar_right), (bar_bottom, bar_bottom),
+        width_units = width_px * self.units_per_pixel
+        magnitude = 10 ** np.floor(np.log10(width_units / 5))
+        length_units = np.floor(width_units / 5 / magnitude) * magnitude
+        length_px = length_units / self.units_per_pixel
+        bar_left, bar_bottom = left + width_px * .05, bottom - height_px * .05
+        bar, = axis.plot((bar_left, bar_left + length_px), (bar_bottom, bar_bottom),
                          color="black", linewidth=2, zorder=10)
         bar.set_path_effects([withStroke(linewidth=4, foreground="white")])
-        axis.text(bar_right - length_px / 2, bar_bottom - height_px * .025,
-                  f"{length_px:g} pixels", ha="center", va="bottom",
+        axis.text(bar_left, bar_bottom - height_px * .025,
+                  f"{length_units:g} {self.scale_unit}", ha="left", va="bottom",
                   fontsize=self.sheet.plot_font_size, color="black", zorder=10,
                   bbox={"facecolor": "white", "edgecolor": "none", "alpha": .9, "pad": 1})
-        axis.set(xlim=(left-.5, right-.5), ylim=(bottom-.5, top-.5), aspect="equal")
+        axis.set(xlim=(left-.5, right-.5), ylim=(bottom-.5, top-.5))
         axis.set_axis_off()
         return axis
 
     def paint_raw(self, axis):
         axis.imshow(self.raw, cmap=self.raw_cmap, vmin=self.window[0],
-                    vmax=self.window[1], interpolation="nearest")
+                    vmax=self.window[1], interpolation="nearest", aspect=self.pixel_aspect)
 
     def paint_result(self, axis, labels, opacity):
-        rgba = np.zeros((*labels.shape, 4))
+        rgba = np.zeros((*labels.shape, 4), dtype=np.float32)
         rgba[..., :3] = self.colour(labels)
         rgba[..., 3] = (labels != 0) * opacity
-        axis.imshow(rgba, interpolation="nearest")
+        axis.imshow(rgba, interpolation="nearest", aspect=self.pixel_aspect)
 
     def draw_raw(self, bounds):
         self.paint_raw(self.axis(bounds))
@@ -108,10 +124,12 @@ class FrozenImageView(ABC):
     def draw_result(self, bounds):
         self.paint_result(self.axis(bounds), self.labels, 1)
 
-    def draw_overlay(self, bounds):
-        axis = self.axis(bounds)
+    def paint_overlay(self, axis, labels):
         self.paint_raw(axis)
-        self.paint_result(axis, self.labels, self.overlay_opacity)
+        self.paint_result(axis, labels, self.overlay_opacity)
+
+    def draw_overlay(self, bounds):
+        self.paint_overlay(self.axis(bounds), self.labels)
 
 
 class CroppedImageView(FrozenImageView):
@@ -119,7 +137,7 @@ class CroppedImageView(FrozenImageView):
 
     @property
     def region(self):
-        top, bottom, left, right = self.declaration["region_yyxx"]
+        top, bottom, left, right = self.viewport["region_yyxx"]
         height, width = self.raw.shape
         if not (0 <= top < bottom <= height and 0 <= left < right <= width):
             raise ValueError("Frozen image region lies outside its original array")
@@ -130,16 +148,21 @@ class FrozenComparison(FrozenImageView):
     """First and final saved detections share one raw image and native region."""
 
     @classmethod
-    def read(cls, sheet, receipt):
+    def read(cls, sheet, receipt, view_index=0):
         path = sheet.input_path(receipt)
         sheet.source(path)
-        return cls(sheet, json.loads(path.read_text()))
+        return cls(sheet, json.loads(path.read_text()), view_index)
 
-    def __init__(self, sheet, declaration):
+    def __init__(self, sheet, declaration, view_index=0):
+        self.view_index = view_index
         super().__init__(sheet, declaration)
         self.final_labels = self.read_labels(self.paths["final"])
         if self.raw.shape != self.final_labels.shape:
             raise ValueError("Final detections must match the comparison's raw image")
+
+    @property
+    def viewport(self):
+        return self.declaration["views"][self.view_index]
 
     @property
     def label_path(self):
@@ -150,18 +173,28 @@ class FrozenComparison(FrozenImageView):
         return self.declaration["overlay_opacity"]
 
     def draw_final(self, bounds):
-        axis = self.axis(bounds)
-        self.paint_raw(axis)
-        self.paint_result(axis, self.final_labels, self.overlay_opacity)
+        self.paint_overlay(self.axis(bounds), self.final_labels)
+
+    def draw_final_result(self, bounds):
+        self.paint_result(self.axis(bounds), self.final_labels, 1)
 
     def draw_row(self, bounds, heading_y):
-        x, y, width, height = bounds
-        gap = width * .02
-        column_width = (width - 2 * gap) / 3
-        for column, (heading, draw) in enumerate((
+        self.draw_columns(bounds, heading_y, (
             ("Raw", self.draw_raw), ("First result", self.draw_overlay),
             ("Final result", self.draw_final),
-        )):
+        ))
+
+    def draw_final_row(self, bounds, heading_y):
+        self.draw_columns(bounds, heading_y, (
+            ("Raw", self.draw_raw), ("Final labels", self.draw_final_result),
+            ("Overlay", self.draw_final),
+        ))
+
+    def draw_columns(self, bounds, heading_y, panels):
+        x, y, width, height = bounds
+        gap = width * .02
+        column_width = (width - (len(panels) - 1) * gap) / len(panels)
+        for column, (heading, draw) in enumerate(panels):
             left = x + column * (column_width + gap)
             self.sheet.text(left, heading_y, heading,
                             size=self.sheet.plot_font_size, weight="bold")
@@ -170,6 +203,35 @@ class FrozenComparison(FrozenImageView):
 
 class CroppedComparison(CroppedImageView, FrozenComparison):
     """Compose a matched first/final comparison with a recorded native region."""
+
+
+class BioFormatsImageView(FrozenImageView):
+    """Decode the raw plane and its physical scale through the existing owner."""
+
+    scale_unit = "µm"
+
+    def read_raw(self, path):
+        from polystore.bioformats_java import BioFormatsJavaContext, load_bioformats_plane
+
+        context = BioFormatsJavaContext.instance()
+        series = self.declaration["series_index"]
+        opened = context.open_reader(path)
+        try:
+            units = context.scyjava.jimport("ome.units.UNITS")
+            x = float(opened.metadata.getPixelsPhysicalSizeX(series).value(units.MICROMETER))
+            y = float(opened.metadata.getPixelsPhysicalSizeY(series).value(units.MICROMETER))
+            if not (x > 0 and y > 0):
+                raise ValueError("Original image must declare positive physical pixel sizes")
+            self.units_per_pixel = x
+            self.pixel_aspect = y / x
+        finally:
+            opened.close()
+        return load_bioformats_plane(source_path=path, series_index=series,
+                                     plane_index=self.declaration["plane_index"])
+
+
+class BioFormatsComparison(BioFormatsImageView, CroppedComparison):
+    """Compose physical raw-plane decoding with matched cropped detections."""
 
 
 class FrozenNeuriteView(FrozenImageView):

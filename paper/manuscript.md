@@ -220,7 +220,7 @@ For datasets without exhaustive spatial annotations, we compared analysis result
 **(C)** Cell-boundary analyses 2–3 on 16 BBBC007 fields each. Dots are the fraction of each field's predicted borders between touching cells within two pixels of manual outlines; horizontal lines pool border pixels. This directed measure does not count every missing manual border.
 **(D)** Mean centre-to-centre distance among matched 3D nuclei in H002. Labels report matches out of 15 manual annotations; the dashed line is the predeclared 30-voxel matching limit. Incomplete annotations prevent estimating a false-detection rate.
 **(E)** Protein translocation analysis 2 on 96 BBBC013 wells, including four development wells. Each dot is a well's median cell-level log2(nuclear/cytoplasmic GFP); horizontal marks and whiskers show the mean ± sample SD of four wells per dose. Drug panels share vertical limits. Z′ compares positive and negative controls, with four wells per control type; values above 0.5 indicate excellent separation.
-**(F)** The same BBBC007 DNA-stained region before analysis, with the first detections and after separating merged nuclear detections. Colours distinguish nuclei within each view, not identities across views.
+**(F)** The same BBBC007 DNA-stained region before analysis, with the first detections and after separating merged nuclear detections. Colours distinguish nuclei within each view, not identities across views. Scale bar, 10 pixels.
 :::
 
 ### Figure 5, continued. Correcting cell detection in two and three dimensions
@@ -228,7 +228,7 @@ For datasets without exhaustive spatial annotations, we compared analysis result
 ![Matched retinal and volumetric body repairs, with separate finalized three-dimensional localisation evidence.](figures/slas/submission_quantitative_results.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(G)** Matched retinal regions showing raw RNA-binding protein with multiple splicing (RBPMS) signal, which marks the cell bodies, and first and final detections over the raw image. The final analysis reduces fragmented outlines while preserving a neighbouring pair of cells.
+**(G)** Matched retinal regions showing raw RNA-binding protein with multiple splicing (RBPMS) signal, which marks the cell bodies, and first and final detections over the raw image. The final analysis reduces fragmented outlines while preserving a neighbouring pair of cells. Scale bar, 20 µm.
 **(H)** A cell body initially split into two detections in a 3D image. The same XY region at Z = 36 is shown as raw signal, first labels, final labels and final labels over raw signal. This local repair is from a separate analysis, not a before-and-after comparison of H002 localisation accuracy.
 **(I)** Finalized 3D nuclear localisation analysis 1 (H002), shown in XY, XZ and YZ. Label colours distinguish detected nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. All 15 manually annotated centres have a prediction within the predeclared 30-voxel radius. Eleven predictions have no matching annotation; the partial reference does not establish whether these are false detections. Distances are in voxels. Image panels are matched within each comparison; colours do not track object identities across versions.
 :::
