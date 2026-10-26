@@ -1,9 +1,9 @@
 {
-  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
+  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "41026cdc5e91fd72f8f626efaa1c904c8241efb4cbb35582c5414062067da33f",
-    "paper/figures/build_slas_task_only.py": "fe3aa6bf5317c8a159a025e640824cae21aa0bf241cfc36cdf5b0ff4c400f24f",
-    "paper/figures/build_slas_bbbc013_fresh23.py": "1d3f7ca4b0a27d9949285dae50c4da9c2ec670fc2372140d3cab4a1f5979475a",
+    "paper/figures/build_slas_supplement.py": "05d1adecff4beb6fdf217b976df375acf958aa9c4c29a906fde0b905035d46bb",
+    "paper/figures/build_slas_task_only.py": "3a8c9035c50717b9647f0ed16dee0d4b99ed24d9d3f317a83d0e8b44ae32b60b",
+    "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
     "paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2",
     "paper/supplementary/task_only_analysis/bbbc039-uninspected-fields.csv": "548749c6764453a7171f657a3ff07fcfa613fc943104da2fe1eb67d93f31e3f0",
@@ -34,9 +34,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_analysis_summary.png": "04fe921bfe4170b355c81c9a804da220f74c5274bab8e00b3c48e3fe6ed6560f",
-    "submission_analysis_summary.pdf": "abda020cd53eb71dcc10f48e85326279ea0d1376ae39cdda7ea80bd5aad4a1f2",
-    "submission_analysis_summary.svg": "3e38f501fd2d3c465775c33fa59f069da3db80eb2ae90c6934dd67f4867e56b6"
+    "submission_analysis_summary.png": "899062ab6e9b366311f2067dcf55617b74a42de00113dbdd183f1a6e5c4d7d26",
+    "submission_analysis_summary.pdf": "47540c8c3d963ad7c0742fc93e58712f848b83e93d2fa084d2f8a391fc823ca4",
+    "submission_analysis_summary.svg": "9e32917843c136e62bd770c37f2319d89fe0c005e1443d43a1bc33867563b64c"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
