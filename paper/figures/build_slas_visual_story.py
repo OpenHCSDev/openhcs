@@ -905,13 +905,13 @@ def submission_autonomous_loop():
         (3, 69, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
         (36, 69, "2  Inspect inputs", "microscope",
-         "Channels and scale\nBright/dim regions\nCentres and borders", BLUE),
+         "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
         (69, 69, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
         (69, 41, "4  Check the result", "scan-eye",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
-         "Find faulty step\nRevise and rerun\nCheck other regions", ORANGE),
+         "Find faulty step\nRevise and rerun\nCheck more regions", ORANGE),
         (3, 41, "6  Finalize and deliver", "files",
          "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
@@ -962,8 +962,8 @@ def submission_autonomous_loop():
     final = float(trial["final_elapsed_s"]) / 60
     sheet.source(OUTPUT / "h001_scored_native_provenance.json")
     for column, (view, label) in enumerate((
-        ("raw", "Raw image"), ("first", "First result • split object"),
-        ("final", "Final result • split corrected"),
+        ("raw", "Raw image"), ("first", "First result"),
+        ("final", "Final result"),
     )):
         x = 3 + column * 32
         sheet.text(x, 22, label, size=11, weight="bold")
