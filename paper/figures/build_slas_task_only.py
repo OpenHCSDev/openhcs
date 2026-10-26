@@ -457,7 +457,7 @@ def submission_summary() -> None:
         if column == 0:
             axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    sheet.text(3, 22, "F  An agent separates previously merged cell detections",
+    sheet.text(3, 22, "F  An agent separates previously merged nuclear detections",
                size=12, weight="bold")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")

@@ -14,10 +14,10 @@ established measurements and execution speed.
 
 The remaining author questions are factual, not unfinished prose:
 
-- Confirm the neuronal preparation and treatment identities/durations for the
-  laboratory neurite assay. The retained acquisition packet documents the image
-  channels, dimensions, spacing and field layout, but does not identify the
-  preparation or exposure duration.
+- Confirm the interval between drug addition and imaging for the laboratory
+  neurite assay, and supply the applicable animal-ethics approval/reference.
+  The latest desktop draft supplies the E18 rat cortical-neuron preparation,
+  medium change, compounds and doses; these details are retained in Methods.
 - Assign contributions to the final author list.
 - Supply funding and grant details, or confirm that there was no specific funding.
 - Confirm the competing-interest declaration.
