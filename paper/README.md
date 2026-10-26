@@ -29,8 +29,10 @@ answered before submission; the manuscript does not invent the answers.
 
 - [Manuscript source](manuscript.md): the sole complete working text.
 - [Supplementary material](supplementary/README.md): explanatory figures,
-  historical timing and prospective validation plots, source tables and
-  evaluation records. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
+  timing methods, assay measurements and segmentation errors. The linked
+  [analysis protocols and source files](supplementary/analysis_records.md) and
+  [software-resource inventory](supplementary/software_resources.md) hold detailed
+  inventories without adding tables to the reading copy. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
   supplies the complete 20-record task summary as supplementary data rather than
   repeating that inventory in the typeset supplement.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
@@ -74,16 +76,17 @@ and total time, followed by measured fixed-workload worker scaling. Table 1 summ
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
-The reading supplement links additional benchmark chart variants and detailed
-run histories instead of repeating them. Its pre-condensation text is preserved
+Measurement definitions precede the neurite plots; nuclear-error observations
+follow the nuclear measurements. Additional benchmark charts, source inventories
+and the agent timing/resource table are linked files rather than typeset appendices. Its pre-condensation text is preserved
 in `supplementary/README_before_readability_20261015.md`, with the detailed
 resource tables beside their condensed version in `supplementary/task_only_analysis/`.
 
 `PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
 regenerates the heterogeneous results panels from the retained score and endpoint
 tables, without rerunning analysis. `--publish-briefs` exports the original
-instruction files and their trial mapping, and replaces the corresponding
-Supplementary Data 8 section. The archive preserves full operational TASK files;
+instruction files and their trial mapping to JSON and Markdown data files. It
+never rewrites the authored reading supplement. The archive preserves full operational TASK files;
 the typeset supplement consolidates scientific briefs and marks technical hints.
 The manuscript and [current supplementary source](supplementary/README.md)
 own the displayed numbering; older run reports retain their original numbering.

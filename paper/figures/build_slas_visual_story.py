@@ -821,40 +821,33 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     views = json.loads(views_path.read_text())
     public_view = FrozenNeuriteView(sheet, views["public"])
     laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
-    sheet.text(3, 97, "Three independent blind analyses recover both drug responses", size=12, weight="bold")
     NeuriteEffectFigure.draw_panels(
         sheet, NeuriteEffectFigure.cohort_tables(
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
-        metrics=("mean_outgrowth",), bounds=(3, 63, 94, 35), start_letter="A",
+        metrics=("mean_outgrowth",), bounds=(3, 66, 94, 33), start_letter="A",
     )
-    sheet.text(3, 60, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
-               size=9, color=MUTED)
-    sheet.text(3, 58, "Public-field comparison: initial OpenHCS and published NeuronCyto II results", size=11, weight="bold")
     matched = reference["matched_wholefield_layout"]
     for x, name, title, record in (
-        (3, "first-full-raw", "C  Raw field", matched["raw"]),
-        (35, "first-full-result", "D  Initial OpenHCS tracing", matched["openhcs_initial"]),
+        (3, "first-full-raw", "C  Raw", matched["raw"]),
+        (35, "first-full-result", "D  Initial tracing", matched["openhcs_initial"]),
     ):
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.source(path)
-        sheet.text(x, 54, title, size=10.5, weight="bold")
-        public_view.draw((x, 30, 30, 22), raw=name == "first-full-raw",
+        sheet.text(x, 61, title, size=sheet.plot_font_size, weight="bold")
+        public_view.draw((x, 33, 30, 26), raw=name == "first-full-raw",
                          result=name == "first-full-result")
-    sheet.text(67, 54, "E  Published NeuronCyto II", size=10.5, weight="bold")
-    sheet.source_image(reference_image, (67, 30, 30, 22),
+    sheet.text(67, 61, "E  NeuronCyto II", size=sheet.plot_font_size, weight="bold")
+    sheet.source_image(reference_image, (67, 33, 30, 26),
                        crop=tuple(reference["crop_xyxy_pixels"]))
-    sheet.text(3, 28, "E: published algorithm output, not manual tracing. Ong et al., Fig. 2D; CC BY-NC 4.0.",
-               size=9, color=MUTED)
-    sheet.text(3, 24, "Separate laboratory tracing demonstration (not analyses 1–3 above)", size=11, weight="bold")
     for x, name, title in (
-        (3, "raw", "F  Raw neurite channel"),
-        (35, "result", "G  Cell bodies and neurites"),
-        (67, "combined", "H  Overlay on raw image"),
+        (3, "raw", "F  Raw"),
+        (35, "result", "G  Labels and paths"),
+        (67, "combined", "H  Overlay"),
     ):
-        sheet.text(x, 20, title, size=10, weight="bold")
-        laboratory_view.draw((x, 0, 30, 18.5), raw=name != "result", result=name != "raw")
+        sheet.text(x, 29, title, size=sheet.plot_font_size, weight="bold")
+        laboratory_view.draw((x, 1, 30, 26), raw=name != "result", result=name != "raw")
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
 
@@ -1024,8 +1017,8 @@ def submission_quantitative_results():
     """Combine retinal and volumetric repairs with the frozen volume evidence."""
     from build_slas_supplement import SupplementFigure
 
-    sheet = SupplementFigure("submission_quantitative_results", 10.5)
-    sheet.heading("G  Correcting retinal cell detection preserves neighbouring cells", 98)
+    sheet = SupplementFigure("submission_quantitative_results", 9.0)
+    sheet.heading("G  Retinal cell detection", 98)
     sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
     for column, (view, label) in enumerate((
@@ -1034,8 +1027,8 @@ def submission_quantitative_results():
         x = 3 + column * 32
         sheet.text(x, 93, label, size=sheet.plot_font_size, weight="bold")
         sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 78, 30, 13), crop=(297, 28, 1250, 470))
-    sheet.heading("H  An independent agent corrects a split cell body in 3D", 75)
+                           (x, 77, 30, 14), crop=(297, 28, 1250, 470))
+    sheet.heading("H  Cell-body segmentation", 75)
     sources = OUTPUT / "h002_fresh22_sources"
     receipt_path = sources / "source-receipt.json"
     receipt = json.loads(receipt_path.read_text())
@@ -1050,10 +1043,9 @@ def submission_quantitative_results():
             raise ValueError(f"Frozen H002 capture changed: {name}")
         x = 3 + column * 24
         sheet.text(x, 70, label, size=sheet.plot_font_size, weight="bold")
-        sheet.source_image(path, (x, 55, 22, 13), crop=(610, 28, 1250, 448))
-    sheet.text(3, 51.5, "Same region at Z=36; this correction does not assess every cell in the 3D image.",
-               size=sheet.plot_font_size, color=MUTED)
-    sheet.heading("I  A separate finalized analysis locates nuclei in three dimensions", 47.5)
+        sheet.source_image(path, (x, 53, 22, 15), crop=(610, 28, 1250, 448))
+    sheet.text(3, 50, "Z = 36", size=sheet.plot_font_size, color=MUTED)
+    sheet.heading("I  3D nuclear localisation", 47.5)
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
     sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 42),
                        crop=(50, 110, 2660, 1300))

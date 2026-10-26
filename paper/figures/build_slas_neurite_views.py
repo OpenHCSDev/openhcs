@@ -62,5 +62,16 @@ class FrozenNeuriteView:
                     axis.plot(coordinates[:, 1], coordinates[:, 0],
                               color=colour, linewidth=.55)
         height_px, width_px = self.raw.shape
+        # Native array coordinates support pixel units even when physical
+        # calibration of a public reference image is unavailable.
+        magnitude = 10 ** np.floor(np.log10(width_px / 5))
+        length_px = np.floor(width_px / 5 / magnitude) * magnitude
+        right, bottom = width_px * .95, height_px * .95
+        axis.plot((right - length_px, right), (bottom, bottom),
+                  color="black", linewidth=2, zorder=10)
+        axis.text(right - length_px / 2, bottom - height_px * .025,
+                  f"{length_px:g} pixels", ha="center", va="bottom",
+                  fontsize=self.sheet.plot_font_size, color="black", zorder=10,
+                  bbox={"facecolor": "white", "edgecolor": "none", "alpha": .9, "pad": 1})
         axis.set(xlim=(-.5, width_px-.5), ylim=(height_px-.5, -.5), aspect="equal")
         axis.set_axis_off()
