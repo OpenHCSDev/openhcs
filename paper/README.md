@@ -4,9 +4,9 @@ Author-review draft for **SLAS Technology**.
 
 ## Read the draft
 
-Start with [the main paper](current/openhcs_manuscript.pdf). The
-[combined reading copy](current/openhcs_review.pdf) includes the supplement and
-one bibliography; [editable Word files](current/) are beside the PDFs.
+Start with `current/openhcs_manuscript.pdf`. The combined reading copy,
+`current/openhcs_review.pdf`, includes the supplement and one bibliography.
+Editable Word files with the same names are beside the PDFs.
 The paper presents OpenHCS as an extensible platform in which scientists,
 Python code and agents work on the same inspectable analysis. The biological
 assays test that platform; the CellProfiler comparisons test preservation of
