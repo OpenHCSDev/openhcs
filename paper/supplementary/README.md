@@ -36,7 +36,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 
 ### Nuclear-detection errors
 
-Missed nuclei accounted for 73–78% of the three agents' errors on the 175 uninspected BBBC039 fields. All three scored below F1 0.80 on the same six fields; on the hardest field, they missed 57–59 of 69 nuclei. A correction in analysis 2 on three inspected fields recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, while increasing split reference nuclei from 28 to 43. That correction was not evaluated separately across all fields. The [error summary](task_only_analysis/nuclear_error_summary.csv) and [per-field measurements](task_only_analysis/bbbc039-uninspected-fields.csv) identify the affected images.
+Missed nuclei accounted for 73–78% of the three agents' errors on the 175 uninspected BBBC039 fields. For each agent, misses outnumbered false detections in 171–173 fields. All three scored below F1 0.80 on the same six fields; these were mostly less crowded than average, with a median of 59 nuclei against 126 across all 175 fields. On the hardest field, F1 was 0.23–0.27 and 57–59 of 69 nuclei were missed. Between analyses 2 and 3 on all 200 fields, per-field F1 mostly differed by less than 0.03. A correction in analysis 2 on three inspected fields recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, while increasing split reference nuclei from 28 to 43. That correction was not evaluated separately across all fields. The [error summary](task_only_analysis/nuclear_error_summary.csv) and [per-field measurements](task_only_analysis/bbbc039-uninspected-fields.csv) identify the affected images.
 
 ## Supplementary Figure 4. Segmentation errors in matched image regions
 
