@@ -33,7 +33,7 @@ Older [module](../../benchmark/results/labmeeting_20260513/official30_well_throu
 
 ### Measured times
 
-With one sample and one worker, median processing speedup was [pending]{.benchmark-claim key=execution_median}-fold (minimum [pending]{.benchmark-claim key=execution_min}); including pipeline setup, it was [pending]{.benchmark-claim key=total_median}-fold (minimum [pending]{.benchmark-claim key=total_min}). Main Figure 6B shows all 30 workflows.
+Main Figure 6B shows the one-sample, one-worker speedups for all 30 workflows, both for processing alone and with pipeline setup included. The [publication values](../figures/slas/benchmark-publication/benchmark_claims.json) give medians and minima; the individual workflow times are linked below.
 
 OpenHCS times are medians of three repetitions after warmup. Setup includes client compilation and submission/wait; nested worker time is counted once. Both CellProfiler timing measures include its internal initialization. External application/server startup, OpenHCS library loading and warmup are excluded. Batches repeat the same image sample to measure processing, not biological variation.
 
