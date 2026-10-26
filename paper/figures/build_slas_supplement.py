@@ -10,7 +10,7 @@ import json
 
 from PIL import Image
 
-from build_slas_visual_story import FigureSheet, OUTPUT, digest
+from build_slas_visual_story import FigureSheet, MeasurementFirstVolumeFigure, OUTPUT, digest
 
 
 class SupplementFigure(FigureSheet):
@@ -45,6 +45,26 @@ class SupplementFigure(FigureSheet):
         sheet = cls(stem, height)
         sheet.artwork(artwork, (1, 1, 98, 93))
         sheet.save(dpi=400)
+
+
+class VolumeResultsFigure(SupplementFigure, MeasurementFirstVolumeFigure):
+    """Main-paper retinal/volume panels share the standalone volume owner."""
+
+    def draw_panels(self):
+        from build_slas_neurite_views import (
+            BioFormatsComparison, RETINAL_SOURCE, VOLUME_REPAIR_SOURCE,
+            VolumeComparison,
+        )
+
+        self.heading("G  RBPMS cell detection", 98)
+        BioFormatsComparison.read(self, RETINAL_SOURCE).draw_row((3, 77, 94, 14), 93)
+        self.heading("H  3D body separation", 75)
+        self.source(self.input_path(Path("paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")))
+        repair = VolumeComparison.read(self, VOLUME_REPAIR_SOURCE)
+        repair.draw_columns((3, 53, 94, 15), 70, repair.label_panels)
+        self.text(3, 50, f"Z = {repair.viewport['index']} voxels", size=self.plot_font_size)
+        self.heading("I  3D nuclear localisation", 47.5)
+        self.draw_volume_views((3, 3, 94, 35))
 
 
 def infrastructure():
@@ -84,13 +104,15 @@ def nuclear_instances():
 def morphology_checks(*, input_root=FigureSheet.default_input_root):
     """Independent checks and residual failures, not repeated main overviews."""
     from build_slas_neurite_views import (
-        BioFormatsComparison, CroppedComparison, NUCLEAR_SOURCE, RETINAL_SOURCE,
+        BioFormatsComparison, CroppedComparison, CroppedLabelView, NUCLEAR_SOURCE,
+        PAIRED_ACTIN_SOURCE, RETINAL_SOURCE, VOLUME_CENTRE_SOURCE, VolumeCentreView,
     )
 
     sheet = SupplementFigure("supp_morphology_checks", 8.4, input_root=input_root)
     sheet.heading("A–C  Independent volume analysis: centres in XY, XZ and YZ", 99)
-    for column, crop in enumerate(((52, 10, 98, 42), (52, 47, 98, 70), (52, 75, 98, 99))):
-        sheet.artwork("h002_fresh10_native", (2 + column*32, 76, 31, 20), crop=crop)
+    for column in range(3):
+        VolumeCentreView.read(sheet, VOLUME_CENTRE_SOURCE, view_index=column).draw_overlay(
+            (2 + column*32, 76, 31, 20))
     sheet.heading("D–F  Retinal acquisition border: raw, first and final", 75)
     BioFormatsComparison.read(sheet, RETINAL_SOURCE, view_index=1).draw_row(
         (2, 52, 96, 16), 70)
@@ -98,7 +120,8 @@ def morphology_checks(*, input_root=FigureSheet.default_input_root):
     CroppedComparison.read(sheet, NUCLEAR_SOURCE, view_index=1).draw_final_row(
         (2, 26, 96, 18), 46)
     sheet.heading("J–L  Actin: a seed without supported body growth", 24)
-    sheet.artwork("h003_fresh19_matched", (2, 1, 96, 20), crop=(1, 70, 99, 89))
+    CroppedLabelView.read(sheet, PAIRED_ACTIN_SOURCE, view_index=1).draw_row(
+        (2, 1, 96, 16), 20)
     sheet.save()
 
 

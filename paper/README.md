@@ -212,6 +212,18 @@ external archived images. The H002 and neurite figure entrypoints pass this root
 to the shared reader; original archive paths, image windows and calibration stay
 in the source declarations. This is image presentation, not a scientific rerun.
 
+`build_slas_neurite_views.py` owns native-array drawing. Its mask, volume,
+saved-centre and ROI capabilities share source checks, coordinates and scale
+bars; neurite paths retain their own drawing method. The `frozen_*_views.json`
+declarations identify original files, hashes, slices, windows and native crop
+regions. The 3D entrypoints are `h002_measurement_first`,
+`h002_fresh22_split_repair` and `h002_independent_centres` in
+`build_slas_visual_story.py`; `build_slas_h003_fresh19.main` draws the separate
+paired DNA/actin run. Main and supplementary panels use those original-data
+views directly, not crops of their composite figures. Volume bars use voxel
+indices because physical spacing is unverified; retinal bars use the original
+CZI calibration. Editorial colours and marker styles do not change detections.
+
 The overview and archived May benchmark figures can be regenerated independently
 from their declared source assets and CSV tables:
 

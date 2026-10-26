@@ -1,5 +1,6 @@
 """Native-coordinate presentation of frozen images, labels and graph paths."""
 
+import csv
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -13,19 +14,31 @@ from build_slas_agent import digest, nonempty_label_plane
 BRIGHT_OBJECT_SOURCE = Path("paper/figures/slas/frozen_bright_object_views.json")
 NUCLEAR_SOURCE = Path("paper/figures/slas/frozen_nuclear_views.json")
 RETINAL_SOURCE = Path("paper/figures/slas/frozen_retinal_views.json")
+VOLUME_FIRST_METHOD_SOURCE = Path("paper/figures/slas/frozen_h002_firstmethod_views.json")
+VOLUME_REPAIR_SOURCE = Path("paper/figures/slas/frozen_h002_fresh22_views.json")
+VOLUME_CENTRE_SOURCE = Path("paper/figures/slas/frozen_h002_fresh10_views.json")
+PAIRED_DNA_SOURCE = Path("paper/figures/slas/frozen_h003_fresh19_dna_views.json")
+PAIRED_ACTIN_SOURCE = Path("paper/figures/slas/frozen_h003_fresh19_actin_views.json")
 
 
 class FrozenImageView(ABC):
     """Draw retained pixels and detections without executing an analysis."""
 
     raw_cmap = "gray"
-    overlay_opacity = .75
     units_per_pixel = 1
     scale_unit = "px"
     pixel_aspect = 1
+    labels = ()
 
-    def __init__(self, sheet, declaration):
+    @classmethod
+    def read(cls, sheet, receipt, view_index=0):
+        path = sheet.input_path(receipt)
+        sheet.source(path)
+        return cls(sheet, json.loads(path.read_text()), view_index)
+
+    def __init__(self, sheet, declaration, view_index=0):
         self.sheet = sheet
+        self.view_index = view_index
         sheet.source(Path(__file__).resolve())
         self.declaration = declaration
         root = sheet.input_path(Path(declaration["root"]))
@@ -35,12 +48,12 @@ class FrozenImageView(ABC):
             self.paths[role] = path
             sheet.source(path)
         self.raw = self.read_raw(self.paths["raw"])
-        self.labels = self.read_labels(self.label_path)
-        if self.raw.ndim != 2 or self.raw.shape != self.labels.shape:
-            raise ValueError("Frozen raw field and label plane must match")
+        if self.raw.ndim != 2:
+            raise ValueError("Frozen view requires a two-dimensional raw plane")
         sheet.display_transforms.append({
             "author_run": declaration["author_run"], "attempt": declaration["attempt"],
-            "operation": "Frozen arrays in native coordinates; categorical label colours",
+            "operation": "Frozen arrays and saved detections in native coordinates",
+            "viewport": self.viewport,
             "source_shape_yx": list(self.raw.shape), "raw_window": self.window,
             "region_yyxx": list(self.region), "raw_cmap": self.raw_cmap,
             "overlay_opacity": self.overlay_opacity,
@@ -51,23 +64,24 @@ class FrozenImageView(ABC):
 
     @property
     def viewport(self):
-        return self.declaration
+        return self.declaration["views"][self.view_index]
 
     @property
     def window(self):
         return self.viewport["raw_window"]
 
     @property
-    @abstractmethod
-    def label_path(self):
-        """The member's saved primary detections, already hash-checked."""
-        raise NotImplementedError
+    def overlay_opacity(self):
+        return self.declaration["overlay_opacity"]
+
+    def select_plane(self, array):
+        return array
+
+    def read_tiff(self, path):
+        return self.select_plane(tifffile.imread(path))
 
     def read_raw(self, path):
-        return tifffile.imread(path)
-
-    def read_labels(self, path):
-        return nonempty_label_plane(path)
+        return self.read_tiff(path)
 
     @staticmethod
     def checked_path(root, source):
@@ -113,10 +127,7 @@ class FrozenImageView(ABC):
                     vmax=self.window[1], interpolation="nearest", aspect=self.pixel_aspect)
 
     def paint_result(self, axis, labels, opacity):
-        rgba = np.zeros((*labels.shape, 4), dtype=np.float32)
-        rgba[..., :3] = self.colour(labels)
-        rgba[..., 3] = (labels != 0) * opacity
-        axis.imshow(rgba, interpolation="nearest", aspect=self.pixel_aspect)
+        """A raw view has no detections; capabilities add their own painting."""
 
     def draw_raw(self, bounds):
         self.paint_raw(self.axis(bounds))
@@ -131,6 +142,49 @@ class FrozenImageView(ABC):
     def draw_overlay(self, bounds):
         self.paint_overlay(self.axis(bounds), self.labels)
 
+    def draw_row(self, bounds, heading_y):
+        self.draw_columns(bounds, heading_y, (
+            ("Raw", self.draw_raw), ("Labels", self.draw_result),
+            ("Overlay", self.draw_overlay),
+        ))
+
+    def draw_columns(self, bounds, heading_y, panels):
+        x, y, width, height = bounds
+        gap = width * .02
+        column_width = (width - (len(panels) - 1) * gap) / len(panels)
+        for column, (heading, draw) in enumerate(panels):
+            left = x + column * (column_width + gap)
+            self.sheet.text(left, heading_y, heading,
+                            size=self.sheet.plot_font_size, weight="bold")
+            draw((left, y, column_width, height))
+
+
+class LabelImageView(FrozenImageView):
+    """A saved label plane, distinct from raw-only and point-only evidence."""
+
+    def __init__(self, sheet, declaration, view_index=0):
+        super().__init__(sheet, declaration, view_index)
+        self.labels = self.checked_labels(self.read_labels(self.label_path))
+
+    @property
+    @abstractmethod
+    def label_path(self):
+        raise NotImplementedError
+
+    def read_labels(self, path):
+        return self.read_tiff(path)
+
+    def checked_labels(self, labels):
+        if labels.ndim != 2 or labels.shape != self.raw.shape:
+            raise ValueError("Frozen raw field and label plane must match")
+        return labels
+
+    def paint_result(self, axis, labels, opacity):
+        rgba = np.zeros((*labels.shape, 4), dtype=np.float32)
+        rgba[..., :3] = self.colour(labels)
+        rgba[..., 3] = (labels != 0) * opacity
+        axis.imshow(rgba, interpolation="nearest", aspect=self.pixel_aspect)
+
 
 class CroppedImageView(FrozenImageView):
     """An explicitly recorded region of the original array, in pixel units."""
@@ -144,33 +198,23 @@ class CroppedImageView(FrozenImageView):
         return top, bottom, left, right
 
 
-class FrozenComparison(FrozenImageView):
+class FrozenComparison(LabelImageView):
     """First and final saved detections share one raw image and native region."""
 
-    @classmethod
-    def read(cls, sheet, receipt, view_index=0):
-        path = sheet.input_path(receipt)
-        sheet.source(path)
-        return cls(sheet, json.loads(path.read_text()), view_index)
-
     def __init__(self, sheet, declaration, view_index=0):
-        self.view_index = view_index
-        super().__init__(sheet, declaration)
-        self.final_labels = self.read_labels(self.paths["final"])
-        if self.raw.shape != self.final_labels.shape:
-            raise ValueError("Final detections must match the comparison's raw image")
-
-    @property
-    def viewport(self):
-        return self.declaration["views"][self.view_index]
+        super().__init__(sheet, declaration, view_index)
+        self.final_labels = self.checked_labels(self.read_labels(self.paths["final"]))
 
     @property
     def label_path(self):
         return self.paths["first"]
 
     @property
-    def overlay_opacity(self):
-        return self.declaration["overlay_opacity"]
+    def label_panels(self):
+        return (
+            ("Raw", self.draw_raw), ("First labels", self.draw_result),
+            ("Final labels", self.draw_final_result), ("Final + raw", self.draw_final),
+        )
 
     def draw_final(self, bounds):
         self.paint_overlay(self.axis(bounds), self.final_labels)
@@ -190,19 +234,109 @@ class FrozenComparison(FrozenImageView):
             ("Overlay", self.draw_final),
         ))
 
-    def draw_columns(self, bounds, heading_y, panels):
-        x, y, width, height = bounds
-        gap = width * .02
-        column_width = (width - (len(panels) - 1) * gap) / len(panels)
-        for column, (heading, draw) in enumerate(panels):
-            left = x + column * (column_width + gap)
-            self.sheet.text(left, heading_y, heading,
-                            size=self.sheet.plot_font_size, weight="bold")
-            draw((left, y, column_width, height))
-
 
 class CroppedComparison(CroppedImageView, FrozenComparison):
     """Compose a matched first/final comparison with a recorded native region."""
+
+
+class CroppedLabelView(CroppedImageView, LabelImageView):
+    """One retained label field in a declared native region."""
+
+    @property
+    def label_path(self):
+        return self.paths["labels"]
+
+
+class VolumeImageView(FrozenImageView):
+    """Select a declared plane from an unchanged ZYX volume."""
+
+    scale_unit = "voxels"
+
+    def select_plane(self, array):
+        if tuple(array.shape) != tuple(self.declaration["source_shape_zyx"]):
+            raise ValueError("Frozen volume differs from its declared ZYX shape")
+        return np.take(array, self.viewport["index"], axis=self.viewport["fixed_axis"])
+
+
+class VolumeComparison(VolumeImageView, CroppedComparison):
+    """Compose matched saved volume labels with a selected cropped plane."""
+
+
+class FrozenCentres(FrozenImageView):
+    """Saved fractional ZYX centres, painted only in their declared plane."""
+
+    def __init__(self, sheet, declaration, view_index=0):
+        super().__init__(sheet, declaration, view_index)
+        with self.paths["centres"].open(newline="") as stream:
+            self.centres = np.asarray([
+                [float(row[column]) for column in declaration["centre_columns"]]
+                for row in csv.DictReader(stream)
+            ])
+        if self.centres.shape != (declaration["centre_count"], 3) or not np.isfinite(self.centres).all():
+            raise ValueError("Frozen centre table must contain its declared finite ZYX points")
+
+    def paint_result(self, axis, labels, opacity):
+        super().paint_result(axis, labels, opacity)
+        fixed_axis, index = self.viewport["fixed_axis"], self.viewport["index"]
+        in_plane = self.centres[
+            np.abs(self.centres[:, fixed_axis] - index) <=
+            self.declaration["centre_plane_tolerance_voxels"]
+        ]
+        projected = np.delete(in_plane, fixed_axis, axis=1)
+        axis.scatter(projected[:, 1], projected[:, 0], **self.viewport["centre_style"])
+
+
+class VolumeCentreView(FrozenCentres, VolumeImageView, CroppedImageView):
+    """Compose saved point evidence and a native volume plane, without fake masks."""
+
+
+class OutlineImageView(LabelImageView):
+    """Render unchanged saved-mask intersections as outlines."""
+
+    def paint_result(self, axis, labels, opacity):
+        for identity in np.unique(labels[labels != 0]):
+            axis.contour(labels == identity, levels=[.5],
+                         colors=[self.declaration["outline_colour"]], linewidths=.9)
+
+
+class CentredVolumeOutline(FrozenCentres, VolumeImageView, CroppedImageView, OutlineImageView):
+    """Saved mask outlines and fractional centres share one native volume plane."""
+
+    @property
+    def label_path(self):
+        return self.paths["labels"]
+
+
+class ROIImageView(FrozenImageView):
+    """Load saved ROI geometry once; leaves own its actual drawing difference."""
+
+    def __init__(self, sheet, declaration, view_index=0):
+        from polystore.roi import load_rois_from_zip
+
+        super().__init__(sheet, declaration, view_index)
+        self.rois = load_rois_from_zip(self.roi_path)
+
+    @property
+    def roi_path(self):
+        return self.paths["rois"]
+
+    def paint_result(self, axis, labels, opacity):
+        super().paint_result(axis, labels, opacity)
+        self.paint_rois(axis, opacity)
+
+    def paint_rois(self, axis, opacity):
+        from matplotlib.patches import Polygon
+
+        for roi in self.rois:
+            colour = self.colour(int(roi.metadata["label"]))
+            for shape in roi.shapes:
+                axis.add_patch(Polygon(np.asarray(shape.coordinates)[:, ::-1],
+                                       closed=True, facecolor=colour, edgecolor=colour,
+                                       alpha=opacity, linewidth=.8))
+
+
+class VolumeROIView(ROIImageView, VolumeImageView, CroppedImageView):
+    """A saved XY polygon projection over its original raw volume plane."""
 
 
 class BioFormatsImageView(FrozenImageView):
@@ -234,16 +368,13 @@ class BioFormatsComparison(BioFormatsImageView, CroppedComparison):
     """Compose physical raw-plane decoding with matched cropped detections."""
 
 
-class FrozenNeuriteView(FrozenImageView):
+class FrozenNeuriteView(ROIImageView, LabelImageView):
     """Retained cell-body labels plus their authoritative graph paths."""
 
     raw_cmap = "gray_r"
 
-    def __init__(self, sheet, declaration):
-        from polystore.roi import load_rois_from_zip
-
-        super().__init__(sheet, declaration)
-        self.rois = load_rois_from_zip(self.paths["paths"])
+    def __init__(self, sheet, declaration, view_index=0):
+        super().__init__(sheet, declaration, view_index)
         sheet.display_transforms.append({
             "author_run": declaration["author_run"], "attempt": declaration["attempt"],
             "operation": "Vector strokes from frozen neurite graph paths",
@@ -254,8 +385,14 @@ class FrozenNeuriteView(FrozenImageView):
     def label_path(self):
         return self.paths["bodies"]
 
-    def paint_result(self, axis, labels, opacity):
-        super().paint_result(axis, labels, opacity)
+    def read_labels(self, path):
+        return nonempty_label_plane(path)
+
+    @property
+    def roi_path(self):
+        return self.paths["paths"]
+
+    def paint_rois(self, axis, opacity):
         for roi in self.rois:
             colour = self.colour(int(roi.metadata["neuron_label"]))
             for shape in roi.shapes:

@@ -1,0 +1,44 @@
+{
+  "author_run": "H003_FRESH19_96",
+  "attempt": "technical03 final;independent from H003_POSTPAUSE_88",
+  "root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96",
+  "overlay_opacity": 0.7,
+  "files": {
+    "raw": {
+      "path": "acquisition/A02_s001_w2_z001_t001.tif",
+      "sha256": "74753e8d820a6982f0871a91643ae1883552977ab5d341a24ab0f07abc7f00f1"
+    },
+    "labels": {
+      "path": "technical03/acquisition_openhcs/results/A02_channel-2_z_index-1_timepoint-1_Cells_step1.labels.tif",
+      "sha256": "1032f3d9632f0993590d74fb3d1c0a07a2765fa7bd7cf173f373d7504d7e3e9f"
+    }
+  },
+  "views": [
+    {
+      "region_yyxx": [
+        190,
+        285,
+        225,
+        350
+      ],
+      "raw_window": [
+        0,
+        104
+      ]
+    },
+    {
+      "region_yyxx": [
+        65,
+        145,
+        295,
+        375
+      ],
+      "raw_window": [
+        0,
+        104
+      ]
+    }
+  ],
+  "interpretation": "Original immutable arrays and saved detections, not a new analysis. Native crop regions are editorial selections, not claims of pixel-for-pixel screenshot reconstruction. Physical calibration is unverified.",
+  "display_source": "Original FINAL-REPORT:matched dense witness centered Y235/X280,unsupported body11 centered Y104/X335;DNA0..151,actin0..104,gamma1. Two body masks are seed-only;55 labels do not validate55 complete cells. Saved final result arrays equal checkpoint arrays value-for-value."
+}
