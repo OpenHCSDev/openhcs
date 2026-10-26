@@ -1,16 +1,20 @@
 {
-  "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
+  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "a47a15d0925fce72a9a8d7298b012f2d7e078783ba7bc839ae7d10f037e8f523",
+    "paper/figures/build_slas_benchmark_reference.py": "bf97204463e58a4ec719a2271ac86c2f585407a89ad561c3c9363ba7438fbebc",
+    "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
+    "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/figure2_provenance.json": "2684c68e06a4740100a9071f4c89a0a8a6dfe0af12b78722ea439fc88ab011ac",
-    "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png": "580f80d9a506cf760b2f1e8619c67965d12af21dede6924e0611666ddd59c028"
+    "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv": "f544031c1ac36883141eb9934851a7c0b9fb606ad7330106edfe3728aa398644",
+    "benchmark/reports/cppipe_figures.py": "e6698773fa549655bb29bef2e8c051ee1b41ec1f4712c8e435c5162fa526d790"
   },
+  "input_root": "/",
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "submission_benchmark_schedule.png": "ba64c51f4fc9590b58ed5d6a397e41fa785fd8be89383c1ca4f5ac52106e12aa",
-    "submission_benchmark_schedule.pdf": "b005aef84d56836dd785805e57e14db997631d34d08140a4bbd21753e3d0a72e",
-    "submission_benchmark_schedule.svg": "5c3901a12b8bfe4ec3cdab7762b77707cbf395519209ce27dae31cda9f2e37b1"
+    "submission_benchmark_schedule.png": "26ddb666ff0c65c46a4a239a041fb7356c8af10ee17b69e2f8e592ef1738478e",
+    "submission_benchmark_schedule.pdf": "99a21f86a63adbe2d464290d95780875b17911056fa408c1f69a2090a2db6bd2",
+    "submission_benchmark_schedule.svg": "5011e0bdc23702272ad6df64c2ec24021240248343fe3c4eb80f0028a29458d8"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -344,7 +344,7 @@ def submission_summary() -> None:
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 
     h001, bbbc039 = load_evaluations(ROOT)
-    sheet = SupplementFigure("submission_analysis_summary", 10.0)
+    sheet = SupplementFigure("submission_analysis_summary", 11.0)
     sources = [H001_SOURCE, BBBC039_SOURCE,
                SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv",
                SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
@@ -355,27 +355,27 @@ def submission_summary() -> None:
     sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
     for path in sources:
         sheet.source(ROOT / path)
-    axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.15))
+    axes = [sheet.plot_axes((0.12 + col * 0.49, bottom, 0.34, 0.15))
             for bottom in (0.79, 0.55) for col in (0, 1)]
-    titles = ("A  Repair improves detection", "B  Three agents reach similar accuracy",
-              "C  Cell borders match manual outlines", "D  All 15 annotated centres located")
+    titles = ("A  Detection repair", "B  Similar accuracy across agents",
+              "C  Cell-boundary accuracy", "D  3D centre localisation")
     details = ("Same image · computational reference",
-               "F1 balances missed and false detections",
-               "Within 2 pixels · 16 fields per analysis",
-               "Within 30 voxels · annotations are incomplete")
+               "F1: missed and false detections",
+               "Manual outlines · 16 fields per analysis",
+               "Partial centre annotations")
     for axis, title, detail in zip(axes, titles, details, strict=True):
-        axis.set_title(title, loc="left", fontsize=12, fontweight="bold", pad=28)
-        axis.text(0, 1.06, detail, transform=axis.transAxes, fontsize=9, color=MUTED)
+        axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=28)
+        axis.text(0, 1.06, detail, transform=axis.transAxes,
+                  fontsize=sheet.plot_font_size, color=MUTED)
         axis.spines[["top", "right"]].set_visible(False)
         axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
         axis.set_axisbelow(True)
-        axis.tick_params(labelsize=10)
-        axis.yaxis.label.set_size(11)
 
     values = [item["derived_f1"] for item in h001["attempts"]]
     bars = axes[0].bar((0, 1), values, color=(BLUE, TEAL), width=0.5)
-    axes[0].bar_label(bars, labels=[f"{v:.3f}" for v in values], padding=4, fontsize=11)
-    axes[0].set(xticks=(0, 1), xticklabels=("First", "Final"), ylabel="Detection F1 (1 is best)", ylim=(0, 1.08))
+    axes[0].bar_label(bars, labels=[f"{v:.3f}" for v in values],
+                       padding=4, fontsize=sheet.plot_font_size)
+    axes[0].set(xticks=(0, 1), xticklabels=("First", "Final"), ylabel="Object F1", ylim=(0, 1.08))
 
     fields = list(csv.DictReader((ROOT / sources[2]).open()))
     authors = ("fresh612", "fresh10", "fresh13")
@@ -393,12 +393,13 @@ def submission_summary() -> None:
         positions = np.arange(3) + (0.045 if subset else -0.045)
         axes[1].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
     axes[1].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
-                ylabel="Pooled F1 (1 is best)", ylim=(0.87, 0.94))
-    axes[1].legend(frameon=False, fontsize=9, loc="upper left")
+                ylabel="Pooled F1", ylim=(0.87, 0.94))
+    axes[1].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper left")
     paired = bbbc039["first_vs_final_same_three"]
     axes[1].text(0.02, 0.055,
-                 f"Analysis 2, same 3 fields: {paired['first']['micro_f1']:.3f} → {paired['final']['micro_f1']:.3f}",
-                 transform=axes[1].transAxes, fontsize=9, color=MUTED)
+                 "Analysis 2: same 3 inspected fields\n"
+                 f"{paired['first']['micro_f1']:.3f} → {paired['final']['micro_f1']:.3f}",
+                 transform=axes[1].transAxes, fontsize=sheet.plot_font_size, color=MUTED)
 
     # Decode the two existing publication tables; their units and populations differ
     # from instance matching, so no common accuracy scale is introduced.
@@ -417,50 +418,50 @@ def submission_summary() -> None:
         pooled = sum(int(row[4]) for row in rows) / sum(int(row[3]) for row in rows)
         axes[2].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
         axes[2].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
-        axes[2].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=10)
+        axes[2].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
     axes[2].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
-                ylabel="Predicted borders supported\nby manual outlines (fraction)")
+                ylabel="Border support\n(2-pixel fraction)")
 
-    scores = json.loads((ROOT / sources[5]).read_text())["scores"]
+    evaluation = json.loads((ROOT / sources[5]).read_text())
+    scores = evaluation["scores"]
+    primary_threshold = evaluation["primary_threshold_voxels"]
     thresholds = sorted(map(int, scores))
     errors = [scores[str(t)]["mean_localisation_error_voxels"] for t in thresholds]
     axes[3].plot(thresholds, errors, "o-", color=TEAL)
     for t, error in zip(thresholds, errors, strict=True):
         axes[3].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
-                         textcoords="offset points", ha="center", fontsize=10)
-    axes[3].axvline(30, color=MUTED, linestyle="--", linewidth=0.8)
-    axes[3].text(0.97, 0.04, "Predeclared limit: 30 voxels", transform=axes[3].transAxes,
-                 ha="right", fontsize=8, color=MUTED)
-    axes[3].set(xlabel="Allowed matching distance (voxels)", ylabel="Mean matched-centre error\n(voxels; lower is better)",
-                ylim=(0, 6.1), xticks=thresholds)
+                         textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
+    axes[3].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
+    axes[3].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
+                ylim=(0, 6.1), xticks=thresholds,
+                xticklabels=[f"{t}\n(primary)" if t == primary_threshold else str(t) for t in thresholds])
 
     sheet.text(3, 46, "E  Both drugs produce a translocation response", size=12, weight="bold")
-    sheet.text(3, 44, "96 wells, including 4 development wells · mean ± SD of 4 wells per dose", size=9, color=MUTED)
+    sheet.text(3, 44, "96 wells (4 development) · mean ± SD of 4 wells per dose",
+               size=sheet.plot_font_size, color=MUTED)
     series = AssaySeries.load(SOURCE)
     for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-        axis = sheet.figure.add_axes((0.09 + column * 0.49, 0.305, 0.37, 0.105))
+        axis = sheet.plot_axes((0.12 + column * 0.49, 0.305, 0.34, 0.105))
         means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
         deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
         axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
                       color=color, capsize=2)
-        axis.set_title(f"{assay.compound} · control separation Z′ = {assay.control_zprime:.3f}",
-                       loc="left", fontsize=10, color=color)
+        axis.set_title(f"{assay.compound} · Z′ = {assay.control_zprime:.3f}",
+                       loc="left", fontsize=sheet.plot_font_size, color=color)
         axis.set(xticks=range(9), xticklabels=[f"{dose.concentration:g}" for dose in assay.doses],
                  xlabel=f"Concentration ({assay.unit.replace('uM', 'µM')})", ylim=(-0.5, 2.7))
-        axis.tick_params(labelsize=8)
+        axis.tick_params(axis="x", labelrotation=45)
         axis.spines[["top", "right"]].set_visible(False)
         axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
         axis.set_axisbelow(True)
         if column == 0:
-            axis.set_ylabel("Nuclear / cytoplasmic GFP\n(log₂ ratio)", fontsize=9)
+            axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    sheet.text(3, 24, "F  An agent separates previously merged cell detections",
+    sheet.text(3, 22, "F  An agent separates previously merged cell detections",
                size=12, weight="bold")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
-    sheet.artwork("h003_native_repair", (2, 2, 96, 21), crop=(1, 4, 99, 42))
-    sheet.text(3, 0.5, "An independent agent separates merged cells in the same region; this is a local correction.",
-               size=8.5, color=MUTED)
+    sheet.artwork("h003_native_repair", (2, 2, 96, 19), crop=(1, 4, 99, 42))
     sheet.save()
 
 

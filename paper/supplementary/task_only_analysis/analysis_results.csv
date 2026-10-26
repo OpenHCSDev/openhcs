@@ -1,0 +1,21 @@
+Assay,Model,Data partition,Endpoint,Result
+Nuclear detection 1 (BBBC039),gpt-5.6-sol,50 held-out fields,Object F1; foreground Dice,0.746; 0.935
+Nuclear detection 2 (BBBC039),gpt-6.1-sol,175 uninspected; all 200 fields,"Pooled object F1, respectively",0.910; 0.906
+Nuclear detection 3 (BBBC039),gpt-6.1-sol,175 uninspected; all 200 fields,"Pooled object F1, respectively",0.906; 0.898
+Nuclear detection 4 (BBBC039),gpt-6.1-sol,175 uninspected; all 200 fields,"Pooled object F1, respectively",0.906; 0.904
+"Nuclear detection 2, repair",gpt-6.1-sol,Same three development fields,"Object F1, first to final",0.908 to 0.934
+Cell-boundary analysis 1 (BBBC007),gpt-5.6-sol,12 held-out fields,Directed boundary fraction,0.671
+Cell-boundary analysis 2 (BBBC007),gpt-6.1-sol,16 fields including development,Directed boundary fraction,0.743
+Cell-boundary analysis 3 (BBBC007),gpt-6.1-sol,16 fields including development,Directed boundary fraction,0.740
+Paired nuclear/cell detection (H003),gpt-6.1-sol,One development field,Nuclei; actin-supported cells,56; 54
+Protein translocation 1 (BBBC013),gpt-5.6-sol,92 held-out wells,"Control Z′, Wortmannin; LY294002",0.751; 0.554
+Protein translocation 2 (BBBC013),gpt-6.1-sol,96 wells including four development wells,"Control Z′, LY294002; Wortmannin",0.849; 0.726
+Bright-object detection 1 (H001),gpt-6.1-sol,One development image,"Computational-reference F1, first to final",0.929 to 0.944
+Bright-object detection 2 (H001),gpt-6.1-sol,One development image,Final labels; matched image review,62; no reference score
+3D nuclear localisation 1 (H002),gpt-6.1-sol,One development volume,Centres within 30 voxels; mean matched error,15 of 15; 4.80 voxels
+3D nuclear localisation 2 (H002),gpt-6.1-sol,One development volume,Centres within 30 voxels; mean matched error,15 of 15; 4.86 voxels
+Retinal cell detection 1,gpt-6.1-sol,One development field,Detected objects; image review,102
+Retinal cell detection 2,gpt-6.1-sol,One development field,Candidates; border candidates,136; 10
+Public-image neurite tracing,gpt-6.1-sol,One development field,Principal-shaft recovery,Matched image review
+Laboratory-image neurite tracing,gpt-6.1-sol,Nine development fields,Soma and path recovery,Matched image review
+Neurite drug-response analyses 1–3,gpt-6.1-sol,180 fields each; six/four/eight development fields,Control-normalized outgrowth response,Both drug responses recovered by all three; magnitudes varied

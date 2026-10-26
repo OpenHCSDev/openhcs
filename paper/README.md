@@ -8,7 +8,9 @@ Working author-review draft for **SLAS Technology**:
 - [Manuscript source](manuscript.md): the sole complete working text.
 - [Supplementary material](supplementary/README.md): explanatory figures,
   historical timing and prospective validation plots, source tables and
-  evaluation records.
+  evaluation records. Its [analysis-results CSV](supplementary/task_only_analysis/analysis_results.csv)
+  supplies the complete 20-record task summary as supplementary data rather than
+  repeating that inventory in the typeset supplement.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
   generated step sequences for public advanced-segmentation and 3D examples.
 - [OpenHCS 0.8.5 CI evidence](supplementary/ci_official30_085/README.md):
@@ -93,10 +95,11 @@ are tracked separately.
 
 ## Build a reading copy
 
-A successful paired build writes `current/openhcs_manuscript.pdf` and
-`current/openhcs_supplement.pdf`. Editable DOCX files, input/tool
-provenance (`build.json`) and complete command output (`build.log`) are beside them.
-`current` switches only when both documents build and validate successfully.
+A successful build writes `current/openhcs_manuscript.pdf`,
+`current/openhcs_supplement.pdf` and the combined reading copy
+`current/openhcs_review.pdf`. Editable DOCX files, input/tool provenance
+(`build.json`) and complete command output (`build.log`) are beside them.
+`current` switches only when all three documents build and validate successfully.
 PDF and DOCX filenames use the paper's declared `openhcs` prefix so they can be
 uploaded alongside other papers without renaming. Source filenames are unchanged.
 
@@ -163,6 +166,26 @@ an external input is unavailable. The checked-in figure outputs support building
 reading copies without rerunning scientific analyses. Automatic
 `--refresh-figures` deliberately fails: no safe historical-input/live-UI refresh
 is declared. Figure generation remains a separate explicit workflow.
+
+Shared numerical-axis typography belongs to `FigureSheet`; its
+`BenchmarkFigure` subclass draws both the main benchmark and the standalone
+worker comparison. The latter reads all 120 speedups directly from the retained
+plot-data CSV instead of recomputing them. Scientific inputs and timing models
+are unchanged.
+Prepare this checkout's declared submodules before importing the source benchmark
+package; importing installed ROI readers first in the same process deliberately
+fails the source-dependency guard:
+
+```sh
+git submodule update --init
+PYTHONPATH=.:paper/figures python -c \
+  'import openhcs; from build_slas_benchmark_reference import submission_benchmark_summary, submission_benchmark_schedule; submission_benchmark_summary(); submission_benchmark_schedule()'
+```
+
+`FigureSheet` also accepts an explicit `input_root` for a hash-verified copy of
+external archived images. The H002 and neurite figure entrypoints pass this root
+to the shared reader; original archive paths, image windows and calibration stay
+in the source declarations. This is image presentation, not a scientific rerun.
 
 The overview and archived May benchmark figures can be regenerated independently
 from their declared source assets and CSV tables:

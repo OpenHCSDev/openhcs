@@ -36,8 +36,13 @@ PALE = "#f3f6f9"
 class FigureSheet:
     """A single editable figure canvas with its actual source receipt."""
 
-    def __init__(self, stem: str, title: str, height: float = 7.7):
+    plot_font_size = 13
+    default_input_root = Path("/")
+
+    def __init__(self, stem: str, title: str, height: float = 7.7,
+                 *, input_root: Path = default_input_root):
         self.stem = stem
+        self.input_root = input_root
         self.figure = plt.figure(figsize=(9, height), facecolor="white")
         self.axis = self.figure.add_axes((0, 0, 1, 1))
         self.axis.set(xlim=(0, 100), ylim=(0, 100))
@@ -49,6 +54,14 @@ class FigureSheet:
 
     def text(self, x, y, value, *, size=11, color=INK, **kwargs):
         return self.axis.text(x, y, value, fontsize=size, color=color, **kwargs)
+
+    def plot_axes(self, bounds):
+        """Keep numeric plot labels readable on the shared publication canvas."""
+        axis = self.figure.add_axes(bounds)
+        axis.tick_params(labelsize=self.plot_font_size, colors=INK)
+        for label in (axis.xaxis.label, axis.yaxis.label):
+            label.set(fontsize=self.plot_font_size, color=INK)
+        return axis
 
     def panel(self, letter, title, x, y):
         self.text(x, y, letter, size=14, weight="bold", color=BLUE)
@@ -115,6 +128,10 @@ class FigureSheet:
 
     def source(self, path):
         self.sources[str(path.relative_to(ROOT))] = digest(path)
+
+    def input_path(self, original: Path) -> Path:
+        """Resolve an original absolute input inside an explicit archive root."""
+        return self.input_root / original.relative_to(original.anchor)
 
     def asset(self, path, bounds):
         """Place an existing mark without altering its colors or aspect ratio."""
@@ -240,6 +257,7 @@ class FigureSheet:
         receipt = {
             "generator_sha256": digest(Path(__file__)),
             "source_sha256": self.sources,
+            "input_root": str(self.input_root),
             "ui_crops": self.crops,
             "display_transforms": self.display_transforms,
             "output_sha256": {p.name: digest(p) for p in outputs},
@@ -316,18 +334,18 @@ def task_only_story():
             )
         sheet.text(50, 70, "Own image review; no reference feedback",
                    size=14, ha="center", color=MUTED)
-        axes = (sheet.figure.add_axes((.09, .40, .35, .24)),
-                sheet.figure.add_axes((.60, .40, .35, .24)),
-                sheet.figure.add_axes((.09, .10, .43, .20)),
-                sheet.figure.add_axes((.64, .10, .31, .20)))
+        axes = (sheet.plot_axes((.09, .40, .35, .24)),
+                sheet.plot_axes((.60, .40, .35, .24)),
+                sheet.plot_axes((.09, .10, .43, .20)),
+                sheet.plot_axes((.64, .10, .31, .20)))
         first, final = h001["attempts"]
         plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
                   "B  H001: same whole image", "Notebook-derived reference", font_size=14)
         paired = bbbc039["first_vs_final_same_three"]
         plot_pair(axes[1], paired["first"]["micro_f1"], paired["final"]["micro_f1"],
                   "C  BBBC039: same three fields", "Independent annotations", font_size=14)
-        plot_coverage(axes[2], bbbc039, font_size=10)
-        axes[2].set_title("D  Final F1 across 200 fields", fontsize=12)
+        plot_coverage(axes[2], bbbc039, font_size=sheet.plot_font_size)
+        axes[2].set_title("D  Final F1 across 200 fields", fontsize=sheet.plot_font_size)
         annotated = [field["reference_count"] for field in bbbc039["instance_metrics"]]
         predicted = [field["predicted_count"] for field in bbbc039["instance_metrics"]]
         count_limit = max(*annotated, *predicted) * 1.05
@@ -336,8 +354,8 @@ def task_only_story():
                      linewidth=1.2, label="Equal counts")
         axes[3].set(xlim=(0, count_limit), ylim=(0, count_limit),
                     xlabel="Annotated nuclei", ylabel="Predicted nuclei")
-        axes[3].set_title("E  BBBC039 counts", fontsize=12)
-        axes[3].legend(frameon=False, fontsize=10, loc="upper left")
+        axes[3].set_title("E  BBBC039 counts", fontsize=sheet.plot_font_size)
+        axes[3].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper left")
         for axis in axes:
             axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
@@ -347,8 +365,8 @@ def task_only_story():
         sheet.save()
 
 
-def h002_measurement_first():
-    """Retained native views and postfreeze centre agreement, without scoring."""
+def h002_measurement_first(*, input_root: Path = FigureSheet.default_input_root):
+    """Render hash-checked inputs, optionally from a rooted archive copy."""
     import tifffile
     source_root = OUTPUT / "h002_firstmethod_sources"
     source_path = source_root / "source-receipt.json"
@@ -357,10 +375,11 @@ def h002_measurement_first():
     evaluation = json.loads(evaluation_path.read_text())
     if sources["author_run"] != evaluation["author_run"]:
         raise ValueError("Native captures and evaluation name different authors")
+    sheet = FigureSheet("h002_measurement_first", "", 7.3, input_root=input_root)
     volumes = {}
     for role in ("raw", "labels", "measurements"):
         record = sources["frozen_scientific_inputs"][role]
-        path = Path(record["path"])
+        path = sheet.input_path(Path(record["path"]))
         if digest(path) != record["sha256"]:
             raise ValueError(f"Frozen scientific input changed: {role}")
         if role == "measurements":
@@ -377,10 +396,13 @@ def h002_measurement_first():
     presentation = sources["orthogonal_presentation"]
     with plt.rc_context({"font.size": 13, "axes.spines.top": False,
                          "axes.spines.right": False}):
-        sheet = FigureSheet("h002_measurement_first", "", 7.3)
         sheet.source(source_path)
         sheet.source(evaluation_path)
         sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
+        sheet.display_transforms.append({
+            "operation": "Plane identities replace nested panel letters; saved voxels, labels and centres unchanged",
+            "analysis_rerun": False,
+        })
         sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
                    size=17, weight="bold", va="top")
         for name, bounds, heading_position in (
@@ -393,14 +415,14 @@ def h002_measurement_first():
                 path = source_root / capture["asset"]
                 if digest(path) != capture["sha256"]:
                     raise ValueError(f"Frozen native capture changed: {name}")
-                sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
+                sheet.text(*heading_position, name.upper(), size=13, weight="bold")
                 sheet.source_image(path, bounds, crop=tuple(capture["crop_xyxy"]))
                 continue
             plane = presentation["planes"][name]
             fixed_axis, index = plane["fixed_axis"], plane["index"]
             raw = np.take(volumes["raw"], index, axis=fixed_axis)
             labels = np.take(volumes["labels"], index, axis=fixed_axis)
-            sheet.text(*heading_position, plane["panel_heading"], size=13, weight="bold")
+            sheet.text(*heading_position, name.upper(), size=13, weight="bold")
             axis = sheet.figure.add_axes(tuple(value / 100 for value in bounds))
             low, high = presentation["raw_contrast_limits"]
             axis.imshow(raw, cmap="gray", vmin=low, vmax=high, interpolation="nearest")
@@ -420,7 +442,7 @@ def h002_measurement_first():
         sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
         sheet.text(3, 36, sources["presentation_note"],
                    size=11, color=MUTED)
-        axis = sheet.figure.add_axes((.12, .14, .39, .18))
+        axis = sheet.plot_axes((.12, .14, .39, .18))
         thresholds = (10, evaluation["primary_threshold_voxels"])
         matches = [evaluation["scores"][str(value)]["true_positives"] for value in thresholds]
         total = evaluation["scores"][str(thresholds[-1])]["reference_points"]
@@ -528,7 +550,7 @@ def translocation_repeat():
                    or int(row["finite_wells"]) != 4 for row in rows):
                 raise ValueError("Dose plots require the declared treatment, units and four wells")
             left = .09 + .49 * index
-            dose_axis = sheet.figure.add_axes((left, .52, .36, .33))
+            dose_axis = sheet.plot_axes((left, .52, .36, .33))
             positions = list(range(len(rows)))
             dose_axis.errorbar(
                 positions, [float(row["mean_well_ratio"]) for row in rows],
@@ -543,10 +565,10 @@ def translocation_repeat():
                 xticks=positions,
                 xticklabels=[f"{float(row['concentration']):g}" for row in rows],
             )
-            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=12)
+            dose_axis.tick_params(axis="x", labelrotation=45)
             statistics, = (row for row in tables["assay_statistics"]["rows"]
                            if row["assay_block"] == block)
-            control_axis = sheet.figure.add_axes((left, .13, .36, .21))
+            control_axis = sheet.plot_axes((left, .13, .36, .21))
             control_axis.bar(
                 (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
                 yerr=(float(statistics["negative_replicate_sd"]),
@@ -597,8 +619,8 @@ def bbbc039_repeat():
         sheet.source(repeat_path)
         sheet.text(3, 98, "Nuclear detection 2 and 3: the same 200 fields",
                    size=18, weight="bold", va="top")
-        scatter = sheet.figure.add_axes((.09, .27, .35, .55))
-        pooled = sheet.figure.add_axes((.61, .27, .35, .55))
+        scatter = sheet.plot_axes((.09, .27, .35, .55))
+        pooled = sheet.plot_axes((.61, .27, .35, .55))
         for empty, color, label in (
             (False, BLUE, "Annotated fields"),
             (True, ORANGE, "Annotation-empty fields (n=3)"),
@@ -621,11 +643,11 @@ def bbbc039_repeat():
             bars = pooled.bar([index + offset for index in range(3)], values,
                               width=.34, color=color, label=label)
             pooled.bar_label(bars, labels=[f"{value:.3f}" for value in values],
-                             label_type="center", fontsize=12, rotation=90, color="white")
+                             label_type="center", fontsize=sheet.plot_font_size, rotation=90, color="white")
         pooled.set(title="B  Pooled detection scores", ylabel="Score (1 is best)",
                    xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
                    ylim=(0, 1.12), yticks=(0, .2, .4, .6, .8, 1))
-        pooled.legend(frameon=False, fontsize=11, loc="upper center",
+        pooled.legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper center",
                       bbox_to_anchor=(.5, -.24), ncol=2)
         for axis in (scatter, pooled):
             axis.grid(color="#d9e0e5", linewidth=.6)
@@ -774,12 +796,12 @@ def personal_stitched_development():
     sheet.save()
 
 
-def submission_neurite_results():
+def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
     from build_slas_neurite_effects import NeuriteEffectFigure
     from build_slas_neurite_views import FrozenNeuriteView
 
     """Show the retained shaft illustration without promoting an overextended repair."""
-    sheet = FigureSheet("submission_neurite_results", "", 10.4)
+    sheet = FigureSheet("submission_neurite_results", "", 10.4, input_root=input_root)
     public = OUTPUT / "h004_fresh20_sources"
     personal = OUTPUT / "p001_fresh13_sources"
     published = OUTPUT / "neuroncyto_published_reference"
@@ -805,7 +827,7 @@ def submission_neurite_results():
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
         metrics=("mean_outgrowth",), bounds=(3, 63, 94, 35), start_letter="A",
     )
-    sheet.text(3, 62, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
+    sheet.text(3, 60, "Each agent: 20 wells; two technical wells per dose. Curves use each drug's DMSO control.",
                size=9, color=MUTED)
     sheet.text(3, 58, "Public-field comparison: initial OpenHCS and published NeuronCyto II results", size=11, weight="bold")
     matched = reference["matched_wholefield_layout"]
@@ -816,6 +838,7 @@ def submission_neurite_results():
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
+        sheet.source(path)
         sheet.text(x, 54, title, size=10.5, weight="bold")
         public_view.draw((x, 30, 30, 22), raw=name == "first-full-raw",
                          result=name == "first-full-result")
@@ -1001,7 +1024,7 @@ def submission_quantitative_results():
     """Combine retinal and volumetric repairs with the frozen volume evidence."""
     from build_slas_supplement import SupplementFigure
 
-    sheet = SupplementFigure("submission_quantitative_results", 9.5)
+    sheet = SupplementFigure("submission_quantitative_results", 10.5)
     sheet.heading("G  Correcting retinal cell detection preserves neighbouring cells", 98)
     sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
@@ -1009,10 +1032,10 @@ def submission_quantitative_results():
         ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
     )):
         x = 3 + column * 32
-        sheet.text(x, 93, label, size=11, weight="bold")
+        sheet.text(x, 93, label, size=sheet.plot_font_size, weight="bold")
         sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
-                           (x, 73, 30, 18), crop=(297, 28, 1250, 470))
-    sheet.heading("H  An independent agent corrects a split cell body in 3D", 69)
+                           (x, 78, 30, 13), crop=(297, 28, 1250, 470))
+    sheet.heading("H  An independent agent corrects a split cell body in 3D", 75)
     sources = OUTPUT / "h002_fresh22_sources"
     receipt_path = sources / "source-receipt.json"
     receipt = json.loads(receipt_path.read_text())
@@ -1026,13 +1049,13 @@ def submission_quantitative_results():
         if digest(path) != receipt["captures"][name]["sha256"]:
             raise ValueError(f"Frozen H002 capture changed: {name}")
         x = 3 + column * 24
-        sheet.text(x, 63, label, size=10.5, weight="bold")
-        sheet.source_image(path, (x, 44, 22, 17), crop=(610, 28, 1250, 448))
-    sheet.text(3, 40, "Same region at Z=36; this correction does not assess every cell in the 3D image.",
-               size=9, color=MUTED)
-    sheet.heading("I  A separate finalized analysis locates nuclei in three dimensions", 36)
+        sheet.text(x, 70, label, size=sheet.plot_font_size, weight="bold")
+        sheet.source_image(path, (x, 55, 22, 13), crop=(610, 28, 1250, 448))
+    sheet.text(3, 51.5, "Same region at Z=36; this correction does not assess every cell in the 3D image.",
+               size=sheet.plot_font_size, color=MUTED)
+    sheet.heading("I  A separate finalized analysis locates nuclei in three dimensions", 47.5)
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 30),
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 42),
                        crop=(50, 110, 2660, 1300))
     sheet.save()
 

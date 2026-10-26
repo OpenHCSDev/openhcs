@@ -1,16 +1,17 @@
 {
-  "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
+  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "a47a15d0925fce72a9a8d7298b012f2d7e078783ba7bc839ae7d10f037e8f523",
+    "paper/figures/build_slas_supplement.py": "41026cdc5e91fd72f8f626efaa1c904c8241efb4cbb35582c5414062067da33f",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/measured_benchmark_publication_log.png": "1828d55619f8d7291074994c4aab4d3ebb438131c60be49dbaf6b8f1bc780c89"
   },
+  "input_root": "/",
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "submission_benchmark_speed.png": "536abc9fbf85f7a61e0ec48af93de0d603414ce51f2cf9e4e59f441821abaa56",
-    "submission_benchmark_speed.pdf": "59cb749273e787308c98f9ee1bf50547e522af0913c809afcf0e8415ebbf07db",
-    "submission_benchmark_speed.svg": "8e253d2baf9fad29fbb49cd755da01217750fb557e876ba325931366b0659073"
+    "submission_benchmark_speed.png": "8de971dd6db5fe9e797b61ee65370c9b475da2459b3d52e6cfc9ddbf8c231788",
+    "submission_benchmark_speed.pdf": "52a1f89d2cf875e55f602ceeb571892bb3a4371b43a0b4a0748cf11cc6ff5c9a",
+    "submission_benchmark_speed.svg": "3b28d7354089e0a0549fa2ade09d207f1ccb5309e9dcd6732f920ea824828bf3"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

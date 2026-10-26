@@ -16,6 +16,123 @@ from matplotlib.patches import Patch
 from matplotlib.ticker import FixedLocator, FuncFormatter, NullFormatter
 
 from build_slas_benchmark import ROOT, sha256, write_provenance
+from build_slas_visual_story import FigureSheet, OUTPUT
+
+
+class BenchmarkFigure(FigureSheet):
+    """Publication distributions share points, summaries and typography."""
+
+    scope_colors = ("#087e8b", "#c76828")
+    summary_color = "#152536"
+    mean_alpha = .20
+    publication = OUTPUT / "benchmark-publication"
+
+    @property
+    def summary_handles(self):
+        return (
+            Patch(facecolor=self.summary_color, alpha=self.mean_alpha, label="Mean bars"),
+            Line2D([], [], color=self.summary_color, lw=2.1, label="Median lines"),
+        )
+
+    def qualified_claims(self):
+        claims = json.loads(self.retained(self.publication / "benchmark_claims.json").read_text())
+        if claims["status"] != "qualified-first-use-sweep":
+            raise ValueError("Publication figures require the qualified sweep")
+        return claims
+
+    def __init__(self, stem: str, height: float, *,
+                 reference_label: str = "CellProfiler",
+                 limits: tuple[float, float] = (.8, 800)) -> None:
+        super().__init__(stem, "", height)
+        self.reference_label = reference_label
+        self.limits = limits
+        self.source(Path(__file__))
+
+    def retained(self, path, record_name="figure2_provenance.json"):
+        record_path = path.parent / record_name
+        record = json.loads(record_path.read_text())
+        if sha256(path) != record["output_sha256"][path.name]:
+            raise ValueError(f"Figure source differs from its retained output: {path}")
+        self.source(record_path)
+        self.source(path)
+        return path
+
+    def distributions(self, axis, groups, labels):
+        from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
+
+        self.source(Path(inspect.getfile(SpeedupSummaryStatistics)))
+        number_of_workflows = len(groups[0][0])
+        for group_index, pair in enumerate(groups):
+            for scope_index, numbers in enumerate(pair):
+                # Fixed workflow offsets reveal the distribution without adding data.
+                offset = (scope_index - (len(pair) - 1) / 2) * .44
+                jitter = np.linspace(-.14, .14, number_of_workflows)
+                if len(numbers) != number_of_workflows or not np.all(np.isfinite(numbers) & (numbers > 0)):
+                    raise ValueError("Each distribution requires the same positive workflow values")
+                axis.scatter(group_index + offset + jitter, numbers, s=33,
+                             color=self.scope_colors[scope_index], alpha=.78,
+                             edgecolors="white", linewidths=.35, zorder=3)
+                summary = SpeedupSummaryStatistics.from_series(
+                    SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
+                half_bar_width = .40 / len(pair)
+                axis.bar(group_index + offset, summary.mean - 1, bottom=1,
+                         width=2 * half_bar_width, color=self.scope_colors[scope_index], alpha=self.mean_alpha,
+                         edgecolor=self.scope_colors[scope_index], linewidth=.8, zorder=1)
+                axis.plot([group_index + offset - half_bar_width, group_index + offset + half_bar_width],
+                          [summary.median] * 2, color=self.summary_color, lw=2.1, zorder=4)
+                axis.text(group_index + offset, -.035, f"{summary.median:.1f}×",
+                          transform=axis.get_xaxis_transform(), ha="center", va="top",
+                          fontsize=self.plot_font_size, color=self.scope_colors[scope_index], clip_on=False)
+        axis.set_yscale("log")
+        axis.set_ylim(*self.limits)
+        axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, 10, 100)))
+        axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
+        axis.yaxis.set_minor_formatter(NullFormatter())
+        axis.axhline(1, color="#a64343", ls="--", lw=1)
+        axis.set_xticks(range(len(labels)), labels)
+        axis.set_xlim(-.46, len(labels) - .54)
+        axis.tick_params(axis="x", pad=18)
+        axis.grid(axis="y", alpha=.2)
+        axis.set_axisbelow(True)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.set_ylabel(f"Speedup over {self.reference_label}")
+
+
+def submission_benchmark_schedule() -> None:
+    """Replot the retained measured worker comparison through the shared sheet."""
+    sheet = BenchmarkFigure("submission_benchmark_schedule", 4.6,
+                            reference_label="one worker", limits=(.8, 5))
+    from textwrap import fill
+
+    claims = sheet.qualified_claims()
+    path = sheet.retained(sheet.publication / "fixed12/execution/scaling/derived_workflow_metrics.csv")
+    with path.open(newline="") as stream:
+        rows = tuple(csv.DictReader(stream))
+    values = {(row["method"], row["pipeline_name"]): float(row["speedup"]) for row in rows}
+    if len(values) != len(rows):
+        raise ValueError("Duplicate retained workflow speedups")
+    names = sorted({name for method, name in values})
+    if len(names) != int(claims["case_count"]):
+        raise ValueError("Worker plot differs from the qualified workflow cohort")
+    methods = tuple(dict.fromkeys(row["method"] for row in rows))
+    groups = tuple((np.array([values[method, name] for name in names]),) for method in methods)
+    axis = sheet.plot_axes((.12, .25, .83, .58))
+    labels = [fill(method, width=18) for method in methods]
+    sheet.distributions(axis, groups, labels)
+    sheet.text(3, 95, "Measured processing speedup with more workers", size=14, weight="bold")
+    sheet.text(3, 88, "Same twelve samples · all thirty workflows · medians of three runs",
+               size=sheet.plot_font_size, color="#59697b")
+    sheet.figure.legend(handles=[
+        Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Workflows"),
+        *sheet.summary_handles,
+    ], loc="lower center", bbox_to_anchor=(.53, .025), ncol=3,
+       frameon=False, fontsize=sheet.plot_font_size)
+    sheet.display_transform = {
+        "operation": "Replot retained fixed-workload speedups with shared publication typography and median annotations",
+        "analysis_rerun": False,
+        "retained_speedups_plotted": len(rows),
+    }
+    sheet.save()
 
 
 def balanced_cp_projection(anchor, assignments: int, workers: int):
@@ -41,28 +158,14 @@ def submission_benchmark_summary() -> None:
     """Dense main-paper view of the existing sweep and retained evidence grades."""
     from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
     from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
-    from build_slas_visual_story import FigureSheet, OUTPUT
 
-    publication = OUTPUT / "benchmark-publication"
-    sheet = FigureSheet("submission_benchmark_summary", "", 9.0)
-    sheet.source(Path(__file__))
-
-    def retained(path, record_name="figure2_provenance.json"):
-        record_path = path.parent / record_name
-        record = json.loads(record_path.read_text())
-        if sha256(path) != record["output_sha256"][path.name]:
-            raise ValueError(f"Figure source differs from its retained output: {path}")
-        sheet.source(record_path)
-        sheet.source(path)
-        return path
-
-    claims = json.loads(retained(publication / "benchmark_claims.json").read_text())
-    if claims["status"] != "qualified-first-use-sweep":
-        raise ValueError("The main figure requires the qualified sweep")
+    sheet = BenchmarkFigure("submission_benchmark_summary", 9.0)
+    publication = sheet.publication
+    claims = sheet.qualified_claims()
     tables = {}
     for schedule in ("may", "fixed12"):
         for scope in ("execution", "total"):
-            path = retained(publication / schedule / scope / "first_use_workflow_metrics.csv")
+            path = sheet.retained(publication / schedule / scope / "first_use_workflow_metrics.csv")
             with path.open(newline="") as stream:
                 rows = tuple(csv.DictReader(stream))
             table = {(row["method"], row["pipeline_name"]): row for row in rows}
@@ -70,8 +173,8 @@ def submission_benchmark_summary() -> None:
                 raise ValueError("Duplicate workflow rows in retained figure input")
             tables[schedule, scope] = table
     names = tuple(sorted({name for method, name in tables["may", "execution"]}))
-    if len(names) != 30:
-        raise ValueError("Expected all thirty workflows")
+    if len(names) != int(claims["case_count"]):
+        raise ValueError("Expected the qualified workflow cohort")
     modes = claims["mode_statistics"]
 
     # Read actual anchor reports through their existing model owner. Never turn
@@ -115,59 +218,9 @@ def submission_benchmark_summary() -> None:
             raise ValueError("Plotted ratios differ from the canonical claim")
         return result
 
-    colors = ("#087e8b", "#c76828")
-    def distributions(axis, groups, labels):
-        for group_index, pair in enumerate(groups):
-            for scope_index, numbers in enumerate(pair):
-                # Fixed workflow offsets reveal the distribution without adding data.
-                offset = -.22 if scope_index == 0 else .22
-                jitter = np.linspace(-.14, .14, len(names))
-                if len(numbers) != 30 or not np.all(np.isfinite(numbers) & (numbers > 0)):
-                    raise ValueError("Each distribution requires thirty positive workflow values")
-                axis.scatter(group_index + offset + jitter, numbers, s=33,
-                             color=colors[scope_index], alpha=.78,
-                             edgecolors="white", linewidths=.35, zorder=3)
-                summary = SpeedupSummaryStatistics.from_series(
-                    SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
-                axis.bar(group_index + offset, summary.mean - 1, bottom=1,
-                         width=.40, color=colors[scope_index], alpha=.20,
-                         edgecolor=colors[scope_index], linewidth=.8, zorder=1)
-                axis.plot([group_index + offset - .20, group_index + offset + .20],
-                          [summary.median] * 2, color="#152536", lw=2.1, zorder=4)
-                axis.text(group_index + offset, -.025, f"min {summary.minimum:.1f}×",
-                          transform=axis.get_xaxis_transform(), ha="center", va="top",
-                          fontsize=8, color=colors[scope_index], clip_on=False)
-                for label, value, shift, alignment in (
-                    ("max", summary.maximum, 6, "bottom"),
-                    ("mean", summary.mean, 5, "bottom"),
-                    ("med", summary.median, -7, "top"),
-                ):
-                    axis.annotate(
-                        f"{label} {value:.1f}×" if label == "med" else f"{label}\n{value:.1f}×",
-                        (group_index + offset, value), xytext=(0, shift),
-                        textcoords="offset points", ha="center", va=alignment,
-                        fontsize=8.5 if label == "med" else 9, color=colors[scope_index],
-                        weight="bold" if label == "mean" else "normal",
-                        bbox={"facecolor": "white", "edgecolor": "none",
-                              "alpha": .85, "pad": .5}, zorder=5,
-                    )
-        axis.set_yscale("log")
-        axis.set_ylim(.8, 2200)
-        axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, 10, 100)))
-        axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
-        axis.yaxis.set_minor_formatter(NullFormatter())
-        axis.axhline(1, color="#a64343", ls="--", lw=1)
-        axis.set_xticks(range(len(labels)), labels)
-        axis.set_xlim(-.46, len(labels) - .54)
-        axis.tick_params(labelsize=12)
-        axis.tick_params(axis="x", pad=18)
-        axis.grid(axis="y", alpha=.2)
-        axis.set_axisbelow(True)
-        axis.spines[["top", "right"]].set_visible(False)
-        axis.set_ylabel("Speedup over CellProfiler", fontsize=12)
 
     sheet.text(2, 96, "A  How modules were tested", size=14, weight="bold")
-    coverage = retained(publication / "reference-layout/reference_module_coverage.csv",
+    coverage = sheet.retained(publication / "reference-layout/reference_module_coverage.csv",
                         "retained_coverage_provenance.json")
     with coverage.open(newline="") as stream:
         coverage_rows = tuple(csv.DictReader(stream))
@@ -177,20 +230,20 @@ def submission_benchmark_summary() -> None:
     if sum(counts) != len(coverage_rows):
         raise ValueError("Unknown retained coverage grade")
     coverage_colors = ("#16877f", "#4682b4", "#e2a23b", "#969696", "#b2182b")
-    pie = sheet.figure.add_axes((.015, .65, .20, .25))
+    pie = sheet.plot_axes((.015, .65, .20, .25))
     present = [i for i, count in enumerate(counts) if count]
     pie.pie([counts[i] for i in present], colors=[coverage_colors[i] for i in present],
             startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
     pie.text(0, .09, str(len(coverage_rows)), ha="center", va="center", fontsize=23, weight="bold")
-    pie.text(0, -.22, "modules", ha="center", va="center", fontsize=11)
+    pie.text(0, -.22, "modules", ha="center", va="center", fontsize=sheet.plot_font_size)
     for i, label in enumerate(("In 30 workflows", "Individual tests", "Shared code only",
                                 "Import checks only", "No tests")):
         y = 87 - i * 5.2
         if counts[i]:
             sheet.axis.plot(23, y, marker="s", color=coverage_colors[i], markersize=8)
-        sheet.text(25, y, f"{label}: {counts[i]}", size=11.5, va="center")
+        sheet.text(25, y, f"{label}: {counts[i]}", size=sheet.plot_font_size, va="center")
     sheet.text(3, 58, "Each module counted once. Shared-code tests\ndo not test the module's own algorithm.",
-               size=11, color="#59697b", va="top")
+               size=sheet.plot_font_size, color="#59697b", va="top")
 
     sheet.text(54, 96, "B  One worker · measured times", size=14, weight="bold")
     single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
@@ -202,15 +255,14 @@ def submission_benchmark_summary() -> None:
         if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
             raise ValueError("Per-well ratios differ from the canonical amortized claim")
         amortized.append(numbers)
-    axis = sheet.figure.add_axes((.60, .62, .37, .28))
-    distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
-    axis.tick_params(axis="x", labelsize=10)
-    axis.set_ylim(.8, 800)
-    sheet.text(54, 52.5, "Each dot is one workflow (30 per distribution)", size=10, weight="bold")
-    sheet.text(54, 50.5, "Time per sample; OpenHCS median of three runs", size=9, color="#59697b")
+    axis = sheet.plot_axes((.60, .62, .37, .28))
+    sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
+    sheet.text(54, 52.5, "Dots: 30 workflows per distribution", size=sheet.plot_font_size, weight="bold")
+    sheet.text(54, 50.5, "Per sample; OpenHCS median of 3 runs", size=sheet.plot_font_size, color="#59697b")
 
     sheet.text(2, 47, "C  Same cores and samples", size=14, weight="bold")
-    sheet.text(2, 44.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution", size=10, color="#59697b")
+    sheet.text(2, 44.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution",
+               size=sheet.plot_font_size, color="#59697b")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
     groups = []
@@ -235,19 +287,17 @@ def submission_benchmark_summary() -> None:
               + f"{modes[key]['assignment_count']} samples\n"
               + f"({modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} per core)"
               for key in ordered]
-    axis = sheet.figure.add_axes((.09, .18, .88, .23))
-    distributions(axis, groups, labels)
-    axis.set_ylim(.8, 800)
-    axis.tick_params(axis="x", labelsize=10)
-    axis.set_xlabel("Same workload and core count for both applications", fontsize=11, labelpad=7)
+    axis = sheet.plot_axes((.12, .18, .85, .23))
+    sheet.distributions(axis, groups, labels)
+    axis.set_xlabel("Same workload and core count for both applications", labelpad=7)
     sheet.figure.legend(handles=[
-        Line2D([], [], marker="o", ls="", color=colors[0], label="Processing"),
-        Line2D([], [], marker="o", ls="", color=colors[1], label="Setup + processing"),
-        Patch(facecolor="#152536", alpha=.20, label="Mean bars"),
-        Line2D([], [], color="#152536", lw=2, label="Median"),
-    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False, fontsize=11)
+        Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Processing"),
+        Line2D([], [], marker="o", ls="", color=sheet.scope_colors[1], label="Setup + processing"),
+        *sheet.summary_handles,
+    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False,
+       fontsize=sheet.plot_font_size)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, mean/median/maximum labels and minimum labels below each bar; log axes",
+        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and median values below each distribution; log axes",
         "bar_statistic": "arithmetic mean",
         "bar_baseline": 1.0,
         "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},

@@ -39,6 +39,13 @@ class SupplementFigure(FigureSheet):
     def heading(self, text, y):
         self.text(3, y, text, size=14, weight="bold", va="top")
 
+    @classmethod
+    def render_artwork(cls, stem, artwork, *, height=4.6):
+        """A single retained chart needs no inherited multi-panel lettering."""
+        sheet = cls(stem, height)
+        sheet.artwork(artwork, (1, 1, 98, 93))
+        sheet.save(dpi=400)
+
 
 def infrastructure():
     sheet = SupplementFigure("supp_workflow_infrastructure", 10.3)
@@ -50,11 +57,12 @@ def infrastructure():
 
 
 def translocation():
+    from build_slas_bbbc013_fresh23 import AssaySeries, EligibilityFraction, SOURCE
+
     sheet = SupplementFigure("supp_translocation", 7.4)
     sheet.heading("A–B  Protein translocation 2: cells with measurable cytoplasm", 99)
-    sheet.text(13, 92, "A  LY294002", size=12, weight="bold")
-    sheet.text(61, 92, "B  Wortmannin", size=12, weight="bold")
-    sheet.artwork("translocation_fresh23", (2, 53, 96, 36), crop=(1, 59, 99, 88))
+    EligibilityFraction().draw_series(sheet, AssaySeries.load(SOURCE),
+                                     bottom=0.64, height=0.22, panel_y=92)
     sheet.heading("C–D  Protein translocation 1: held-out wells", 51.5)
     sheet.text(13, 45.5, "C  Wortmannin", size=12, weight="bold")
     sheet.text(61, 45.5, "D  LY294002", size=12, weight="bold")
@@ -132,30 +140,22 @@ def scaling():
 
 
 def benchmark_publication():
-    """Show measured speed and fixed-workload scaling in the main figures."""
-    pages = (
-        ("submission_benchmark_speed", (
-            ("A", "measured_benchmark_publication_log"),
-        )),
-        ("submission_benchmark_schedule", (
-            ("B", "fixed12/execution/scaling/fixed12_execution_scaling_log"),
-        )),
-        ("submission_benchmark_coverage", (
-            ("", "reference-layout/reference_module_coverage"),
-        )),
-        ("supp_benchmark_assignments", (
-            ("", "reference-layout/reference_assignments_summary_log"),
-        )),
+    """Rebuild retained publication charts without repeating the plotting code."""
+    from build_slas_benchmark_reference import submission_benchmark_schedule
+    SupplementFigure.render_artwork(
+        "submission_benchmark_speed",
+        "benchmark-publication/measured_benchmark_publication_log",
     )
-    for stem, panels in pages:
-        height_inches = 3.3 if stem == "supp_benchmark_assignments" else 4.6
-        sheet = SupplementFigure(stem, height_inches)
-        for letter, artwork in panels:
-            y, height = 1, 93
-            if letter:
-                sheet.text(1, y + height + 2, letter, size=14, weight="bold", va="top")
-            sheet.artwork(f"benchmark-publication/{artwork}", (1, y, 98, height))
-        sheet.save(dpi=400)
+    submission_benchmark_schedule()
+    SupplementFigure.render_artwork(
+        "submission_benchmark_coverage",
+        "benchmark-publication/reference-layout/reference_module_coverage",
+    )
+    SupplementFigure.render_artwork(
+        "supp_benchmark_assignments",
+        "benchmark-publication/reference-layout/reference_assignments_summary_log",
+        height=3.3,
+    )
 
 
 

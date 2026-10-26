@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "ef8896d6ea6e86f5c6ebbe866878ace2b21368970face535665edf584a78f3f9",
+  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "d1ad8bea8438e805d3d319432b08549b7622477bc78a632180a9370a19ce1ca7",
+    "paper/figures/build_slas_benchmark_reference.py": "bf97204463e58a4ec719a2271ac86c2f585407a89ad561c3c9363ba7438fbebc",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -47,12 +47,14 @@
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json": "3fc1d12731272138e54487d3cc06cafe04e89154e10e850c61769f0fe2d780a8",
     "paper/figures/slas/benchmark-publication/reference-layout/retained_coverage_provenance.json": "bc182d6684944f44744575a42500497b8d6c7670ba3a33539380781c6e626899",
     "paper/figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv": "1c31291e487212d9ee97667f10c0edb371bfd2f853c26f5e3541f3c6987c8643",
+    "benchmark/reports/cppipe_figures.py": "e6698773fa549655bb29bef2e8c051ee1b41ec1f4712c8e435c5162fa526d790",
     "paper/figures/slas/submission_benchmark_summary_projection.csv": "9183900f4e5c94df9d6413b9660032b25101bafe9f3892d126f8a8f39e4cf6bc"
   },
+  "input_root": "/",
   "ui_crops": [],
   "display_transforms": [
     {
-      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines, mean/median/maximum labels and minimum labels below each bar; log axes",
+      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and median values below each distribution; log axes",
       "bar_statistic": "arithmetic mean",
       "bar_baseline": 1.0,
       "reference_lines": {
@@ -77,9 +79,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "1a677f94b5dd5ac4ac2857c8ffe7ac01702084f4e6151ceff0121b5a8f15040a",
-    "submission_benchmark_summary.pdf": "c552fbf868974459eb22571e8c6db1d1211472f6a9f4a03136c3a595a8783b6f",
-    "submission_benchmark_summary.svg": "3c0057532d0358f24c9aa9a88290d081cf56294d0b46f4f9521fb91cd34df5ec"
+    "submission_benchmark_summary.png": "d89413f1628bb601671a24eb7e4793077f2f68f1e57062a2ff8863d99fb3cf59",
+    "submission_benchmark_summary.pdf": "5d3ba1716d40b30c7b3c9d8c1159fb97b8f90217461c5bb8b0bd6d20256a34bf",
+    "submission_benchmark_summary.svg": "a822edc08de8f7231996b6294dc19531b149a36e2bf304778a7adfe80b55f754"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
