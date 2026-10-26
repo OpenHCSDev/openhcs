@@ -15,7 +15,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 ![Array grouping, named results, scheduling and preparation.](../figures/slas/supp_workflow_infrastructure.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(I, A–D)** Image axes and processing groups determine which planes or volumes each function receives. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
+Pipeline preparation connects image groups and named detections to the functions that use them. **(I, A–D)** Image axes and processing groups determine which planes or volumes each function receives. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
 :::
 
 ## Supplementary Figure 2. Protein-translocation measurements and cytoplasmic segmentation
@@ -23,7 +23,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 5E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supplementary Data 7–8 contain the measurements and pipelines.
+Cytoplasmic segmentation was checked alongside the green fluorescent protein (GFP) readout used to distinguish assay controls. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 5E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supplementary Data 7–8 contain the measurements and pipelines.
 :::
 
 ## Supplementary Figure 3. Nuclear-detection and cell-boundary measurements
@@ -31,7 +31,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 ![Independent nuclear analyses and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
+Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary methods. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
 :::
 
 ### Nuclear-detection errors
@@ -43,7 +43,7 @@ Missed nuclei accounted for 73–78% of the three agents' errors on the 175 unin
 ![Orthogonal nuclear localisation, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** Raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supplementary Data 8 links the source images and reports.
+Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** Raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supplementary Data 8 links the source images and reports.
 :::
 
 ## Supplementary methods: neurite morphometry
@@ -61,7 +61,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Three agents independently analysed 180 fields in 20 wells with FC-A or Y27632 treatments. Each curve is normalized to its drug's own DMSO mean. Dots represent two technical wells per dose per analysis or method; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 4A–B shows mean outgrowth per cell.
+Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis or method; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 4A–B shows mean outgrowth per cell.
 :::
 
 ## Supplementary Figure 5, continued. Process length and branching
@@ -69,7 +69,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Median process length, branch and primary-process responses from all three blind agents.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Normalization, technical wells and whiskers are as in A–H. Total quantities are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on each method's tracing and branching definitions.
+Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Each drug curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD. Total quantities are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on each method's tracing and branching definitions.
 :::
 
 ## Supplementary Figure 5, continued. Scientist-assisted neurite analysis
@@ -77,7 +77,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Additional well-level morphology responses after scientist-assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length. Twenty matched wells were analysed after scientist-assisted repair. Each curve is normalized to its own DMSO mean. Dots represent two technical wells per dose; whiskers indicate sample SD. The linked [treatment measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) include mean outgrowth per cell and the [initial analysis](personal_neurite_baseline_morphometry/treatment_effects.csv).
+Scientist-assisted repair was evaluated in the same neurite treatment assay using 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length. Each fusicoccin-A or Y27632 curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose; whiskers indicate sample SD. The linked [treatment measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) include mean outgrowth per cell and the [initial analysis](personal_neurite_baseline_morphometry/treatment_effects.csv).
 :::
 
 At 40 µM, the three blind analyses gave fold changes in branches per cell of 1.24–1.63 for FC-A and 1.50–1.73 for Y27632, against 3.00 and 3.26 for MetaXpress. Their control wells started at 2.1–5.3 branches per cell, against 1.3–1.5 for MetaXpress. For analysis 3, the absolute increases from zero dose to 40 µM were 2.44 and 2.65 branches per cell for FC-A and Y27632, compared with MetaXpress's 2.94 and 2.90. Higher baselines compressed that analysis's fold changes; the cause of the baseline differences was not established.
