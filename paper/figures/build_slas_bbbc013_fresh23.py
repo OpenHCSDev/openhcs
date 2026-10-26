@@ -140,6 +140,21 @@ class WellMetric(ABC):
         axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
         axis.set_axisbelow(True)
 
+    def draw_series(self, sheet: FigureSheet, series: tuple[AssaySeries, ...], *,
+                    bottom: float, height: float, panel_y: float,
+                    start_letter: str = "A") -> None:
+        """Render complete retained endpoints, never a crop of another metric's axes."""
+        sheet.source(Path(__file__))
+        sheet.source(SOURCE)
+        for column, (assay, color) in enumerate(zip(series, (TEAL, BLUE), strict=True)):
+            left = 0.105 + column * 0.49
+            sheet.panel(chr(ord(start_letter) + column), assay.compound,
+                        left * 100, panel_y)
+            axis = sheet.plot_axes((left, bottom, 0.365, height))
+            self.draw(axis, assay, color)
+            axis.set_xlabel(f"Concentration ({assay.unit})")
+            axis.tick_params(axis="x", labelrotation=45)
+
 
 class MedianLog2Ratio(WellMetric):
     label = "Well median cell log₂(N/C GFP)"
@@ -160,19 +175,12 @@ class EligibilityFraction(WellMetric):
 class Fresh23TranslocationFigure(FigureSheet):
     def __init__(self, series: tuple[AssaySeries, ...]):
         super().__init__("translocation_fresh23", "Task-only analysis recovers a dose response", 7.5)
-        self.source(Path(__file__))
-        self.source(SOURCE)
         self.text(3, 91, "BBBC013 · final self-repaired blind method · 96 paired DNA/GFP wells",
                   size=11, color=MUTED)
-        for column, (assay, color) in enumerate(zip(series, (TEAL, BLUE))):
-            left = 0.105 + column * 0.49
-            self.panel(chr(65 + column), assay.compound, left * 100, 85)
-            for metric, bottom, height in ((MedianLog2Ratio(), 0.48, 0.31),
-                                           (EligibilityFraction(), 0.18, 0.21)):
-                axis = self.plot_axes((left, bottom, 0.365, height))
-                metric.draw(axis, assay, color)
-                axis.set_xlabel(f"Concentration ({assay.unit})")
-                axis.tick_params(axis="x", labelrotation=45)
+        MedianLog2Ratio().draw_series(self, series, bottom=0.54, height=0.25,
+                                     panel_y=85)
+        EligibilityFraction().draw_series(self, series, bottom=0.24, height=0.18,
+                                         panel_y=46, start_letter="C")
         self.text(3, 10, "Dots: four wells per dose. Horizontal marks and whiskers: mean ± between-well SD.", size=10)
         self.text(3, 6.5, "Dose positions are equally spaced; dots offset for visibility. Lower panels use the same wells.", size=10)
         self.text(3, 3, "Response is conditional on eligible compartments; not calibrated potency or mask accuracy.", size=10)

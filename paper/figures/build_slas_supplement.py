@@ -57,11 +57,12 @@ def infrastructure():
 
 
 def translocation():
+    from build_slas_bbbc013_fresh23 import AssaySeries, EligibilityFraction, SOURCE
+
     sheet = SupplementFigure("supp_translocation", 7.4)
     sheet.heading("A–B  Protein translocation 2: cells with measurable cytoplasm", 99)
-    sheet.text(13, 92, "A  LY294002", size=12, weight="bold")
-    sheet.text(61, 92, "B  Wortmannin", size=12, weight="bold")
-    sheet.artwork("translocation_fresh23", (2, 53, 96, 36), crop=(1, 59, 99, 88))
+    EligibilityFraction().draw_series(sheet, AssaySeries.load(SOURCE),
+                                     bottom=0.64, height=0.22, panel_y=92)
     sheet.heading("C–D  Protein translocation 1: held-out wells", 51.5)
     sheet.text(13, 45.5, "C  Wortmannin", size=12, weight="bold")
     sheet.text(61, 45.5, "D  LY294002", size=12, weight="bold")
