@@ -1,7 +1,29 @@
 # OpenHCS manuscript
 
-Working author-review draft for **SLAS Technology**:
-*OpenHCS: high-performance autonomous image analysis for the Python ecosystem*.
+Author-review draft for **SLAS Technology**.
+
+## Read the draft
+
+Start with [the main paper](current/openhcs_manuscript.pdf). The
+[combined reading copy](current/openhcs_review.pdf) includes the supplement and
+one bibliography; [editable Word files](current/) are beside the PDFs.
+The paper presents OpenHCS as an extensible platform in which scientists,
+Python code and agents work on the same inspectable analysis. The biological
+assays test that platform; the CellProfiler comparisons test preservation of
+established measurements and execution speed.
+
+The remaining author questions are factual, not unfinished prose:
+
+- Confirm the neuronal preparation and treatment identities/durations for the
+  laboratory neurite assay. The retained acquisition packet documents the image
+  channels, dimensions, spacing and field layout, but does not identify the
+  preparation or exposure duration.
+- Assign contributions to the final author list.
+- Supply funding and grant details, or confirm that there was no specific funding.
+- Confirm the competing-interest declaration.
+
+These questions do not change the recorded analysis results. They must be
+answered before submission; the manuscript does not invent the answers.
 
 ## Versioned sources
 
