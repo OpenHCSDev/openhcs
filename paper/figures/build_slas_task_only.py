@@ -344,7 +344,7 @@ def submission_summary() -> None:
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 
     h001, _ = load_evaluations(ROOT)
-    sheet = SupplementFigure("submission_analysis_summary", 10.0)
+    sheet = SupplementFigure("submission_analysis_summary", 8.5)
     sources = [H001_SOURCE, BBBC039_SOURCE,
                SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv",
                SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
@@ -423,7 +423,7 @@ def submission_summary() -> None:
     axes[3].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
                 ylim=(0, 6.1), xticks=thresholds)
 
-    sheet.text(3, 46, "E  Nuclear-to-cytoplasmic GFP", size=12, weight="bold")
+    sheet.text(3, 47, "E  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
     series = AssaySeries.load(SOURCE)
     for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
         axis = sheet.plot_axes((0.12 + column * 0.49, 0.32, 0.34, 0.105))
@@ -444,7 +444,7 @@ def submission_summary() -> None:
 
     from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
 
-    sheet.text(3, 21, "F  Nuclear separation", size=12, weight="bold")
+    sheet.text(3, 21, "F  Nuclear separation", size=sheet.plot_font_size, weight="bold")
     CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 2, 96, 16), 18.5)
     sheet.save()
 
