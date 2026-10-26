@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
+  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
     "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
@@ -17,57 +17,60 @@
     "paper/figures/assets/lucide/clipboard-check.svg": "e2bac86a6b24caa0d7d0dcc2719ec6b7870ec5eef2d21afae498d8cb5eefda96",
     "paper/figures/assets/lucide/wrench.svg": "b5f3bf792743edb9e81b543dd1b13ccc26d3afe1d33500a1cd8dee2e052d6197",
     "paper/figures/assets/lucide/circle-check-big.svg": "25f075fd621df48282ace8326680a4cd165965e61458d2fd0cc1303cefc179ac",
-    "paper/figures/slas/h001_scored_native_provenance.json": "4e5916a2ae5c51aae90ebb7061ec35b8bb669eb446401c67119624c728a7e787",
-    "paper/figures/slas/h001_scored_sources/detail_raw.png": "34958e4887af3e065de33bf2bf614b2a167c494fbcbe93e3028d7f4ad3185d3e",
-    "paper/figures/slas/h001_scored_sources/detail_first.png": "715f9fce1e6abfd1fbd2b96eb0b7485ce13f5efa1ae9538c5a56ad5296d63a93",
-    "paper/figures/slas/h001_scored_sources/detail_final.png": "492c079aafd4c7d157e59b9eb276e61ddfaa0610aae88c09a4b1a87e35eecea6"
+    "paper/figures/slas/frozen_bright_object_views.json": "2d09d361e32493c524b746c1d37e286a59f3ec030c4f83c4a73aeab486864c99",
+    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "paper/figures/slas/frozen_bright_objects/raw.tif": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
+    "paper/figures/slas/frozen_bright_objects/first.tif": "228c8a684ea6768dd864355defa900434a21ca66c407670d6a742a5b90dccdfb",
+    "paper/figures/slas/frozen_bright_objects/final.tif": "6131cc1566bec4330957aac6e234791c2279ef393312ef4a4c2ee44a9a308fed",
+    "paper/figures/slas/frozen_bright_objects/original-author-report.txt": "caba4643b3b4a5ee3be0cfdae23bb1bb9e59a29714112ae9c7864f77539a787b"
   },
-  "ui_crops": [
+  "input_root": "/",
+  "ui_crops": [],
+  "display_transforms": [
     {
-      "source": "paper/figures/slas/h001_scored_sources/detail_raw.png",
-      "xyxy_pixels": [
-        620,
-        90,
-        980,
-        355
+      "author_run": "H001_FRESH586_96",
+      "attempt": "a01 and a04",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "raw_window": [
+          8,
+          248
+        ],
+        "region_yyxx": [
+          29,
+          89,
+          155,
+          235
+        ],
+        "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections."
+      },
+      "source_shape_yx": [
+        254,
+        256
       ],
-      "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h001_scored_sources/detail_first.png",
-      "xyxy_pixels": [
-        620,
-        90,
-        980,
-        355
+      "raw_window": [
+        8,
+        248
       ],
-      "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h001_scored_sources/detail_final.png",
-      "xyxy_pixels": [
-        620,
-        90,
-        980,
-        355
+      "region_yyxx": [
+        29,
+        89,
+        155,
+        235
       ],
-      "source_size": [
-        1440,
-        944
-      ]
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
     }
   ],
-  "display_transforms": [],
   "output_sha256": {
-    "submission_autonomous_loop.png": "e82b75eb26b054a74de5cb6fff3a08324e76c93a64c1d369508a9c3d6102f949",
-    "submission_autonomous_loop.pdf": "424bcc21f7a710e13c9531d25c9ec91dd39d7fb6b349172fa383da0af47f467c",
-    "submission_autonomous_loop.svg": "4f1cf14d616ec750b2cd19a377938c3f2df00cd08ff87b1553b55fab5d31fbf6"
+    "submission_autonomous_loop.png": "4d8db65328f30f8cf5fb62556686330bda14ff7dfa2213ef68c07c20f9646da0",
+    "submission_autonomous_loop.pdf": "d3fbeee142753aa56255eaa245e4265fa68943ce49f0bea517892383866e7a09",
+    "submission_autonomous_loop.svg": "d847d6378895297f3f36a9214fc3f0db6d3f59752be3b23c013d2c3e6a6221ea"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

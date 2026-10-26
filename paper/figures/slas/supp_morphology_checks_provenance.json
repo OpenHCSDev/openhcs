@@ -1,101 +1,287 @@
 {
-  "generator_sha256": "a9857e0cee468af64117c7753e113c0a7ae313fb0a87b9c7910b53b55a5dbbb3",
+  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "f48c34b37dbfed78ddf259b3a4cd19ebeb57d95de1a815fe43302a379599fef0",
-    "paper/figures/slas/h002_fresh10_native_provenance.json": "1e1ff40b4289e03ba8acac85f09e144920389e9382d3acd5d3d4254fa7a27b7c",
-    "paper/figures/slas/h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
-    "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
-    "paper/figures/slas/retina_fresh16_repair.png": "582fc7f615372ba12c1fa2dbc009e2b8ed1d218e94d8b5363abcd2420dda5c74",
-    "paper/figures/slas/h003_native_repair_provenance.json": "9480c3cc31e520b9bbdd536c95492fa4460599e3feba6ef6140b87d68c450f48",
-    "paper/figures/slas/h003_native_repair.png": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47",
-    "paper/figures/slas/h003_fresh19_matched_provenance.json": "25af16164537fce5b7ccc137014941af191e42bd970137b92bcbbf4c0484f342",
-    "paper/figures/slas/h003_fresh19_matched.png": "af9234786b4103d75a57226ec5dab0e19000b5530a34eceb0285ebf7f7251a3f"
+    "paper/figures/build_slas_supplement.py": "4c8532108ce04f78a5505e1e4a866e18e9b2ea3e17e178eaeb6326c19c2a2132",
+    "paper/figures/slas/frozen_h002_fresh10_views.json": "dbfec290c46ddaf72adadfb0c2d3c5697375d7509761b28e12f11753484197de",
+    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/staged-input/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_centres.csv": "ae89addf8e689cbd17f32a371f9ea346e1966a801f3bbda328934c988ef6655a",
+    "paper/figures/slas/frozen_retinal_views.json": "7b726ebc73b80fbb07b3b8e706875f8346234fd3822d1562dfe7eb70f8d46d26",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/acquisition/R0010.czi": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/FIRST/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "3cadc3d836839defa2cb257c295d7017f53f718b0e2d68bb1b616b0c3a79b71f",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/REPAIR01-technical02/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "db0b3022bdba66a86c2b46be24e91ef4e43bd9041d77c5e2ea2039207fd4e988",
+    "paper/figures/slas/frozen_nuclear_views.json": "212e71109bf41e45c8ddcacbd7cf556a91ba547c2010fec6c8caf8dc6547227f",
+    "paper/figures/slas/frozen_nuclear_objects/raw.tif": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+    "paper/figures/slas/frozen_nuclear_objects/first.tif": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
+    "paper/figures/slas/frozen_nuclear_objects/final.tif": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
+    "paper/figures/slas/frozen_nuclear_objects/original-author-report.txt": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
+    "paper/figures/slas/frozen_nuclear_objects/raw-identity.json": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b",
+    "paper/figures/slas/frozen_h003_fresh19_actin_views.json": "e4f3deec2c1ba511a8bb6634a8dbcbbb2ee61dda1ccf29e1b3e52c75531153ae",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/acquisition/A02_s001_w2_z001_t001.tif": "74753e8d820a6982f0871a91643ae1883552977ab5d341a24ab0f07abc7f00f1",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/technical03/acquisition_openhcs/results/A02_channel-2_z_index-1_timepoint-1_Cells_step1.labels.tif": "1032f3d9632f0993590d74fb3d1c0a07a2765fa7bd7cf173f373d7504d7e3e9f"
   },
-  "ui_crops": [
+  "input_root": "/home/ts/wt/openhcs-paper-review-feedback-20261026/frozen-root",
+  "ui_crops": [],
+  "display_transforms": [
     {
-      "source": "paper/figures/slas/h002_fresh10_native.png",
-      "xyxy_pixels": [
-        728,
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 0,
+        "index": 31,
+        "region_yyxx": [
+          155,
+          245,
+          130,
+          220
+        ],
+        "raw_window": [
+          901,
+          27267
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        256,
+        256
+      ],
+      "raw_window": [
+        901,
+        27267
+      ],
+      "region_yyxx": [
+        155,
+        245,
+        130,
+        220
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 1,
+        "index": 157,
+        "region_yyxx": [
+          0,
+          60,
+          0,
+          256
+        ],
+        "raw_window": [
+          711,
+          27219
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        60,
+        256
+      ],
+      "raw_window": [
+        711,
+        27219
+      ],
+      "region_yyxx": [
+        0,
+        60,
+        0,
+        256
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH10_89",
+      "attempt": "frozen final attempted pipeline; display only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 2,
+        "index": 54,
+        "region_yyxx": [
+          0,
+          60,
+          15,
+          160
+        ],
+        "raw_window": [
+          901,
+          53727
+        ],
+        "centre_style": {
+          "s": 65,
+          "marker": "+",
+          "color": "#00cc66",
+          "linewidths": 1.8
+        }
+      },
+      "source_shape_yx": [
+        60,
+        256
+      ],
+      "raw_window": [
+        901,
+        53727
+      ],
+      "region_yyxx": [
+        0,
+        60,
+        15,
+        160
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "R0010_FRESH16_88",
+      "attempt": "FIRST \u2192 REPAIR01-technical02",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          0,
+          341,
+          816,
+          1769
+        ],
+        "raw_window": [
+          0,
+          42
+        ],
+        "selection_note": "Recorded native border camera centre120/1293,same original viewport;intersection with source pixels omits only the out-of-array black canvas above y0."
+      },
+      "source_shape_yx": [
+        2586,
+        2586
+      ],
+      "raw_window": [
+        0,
+        42
+      ],
+      "region_yyxx": [
+        0,
+        341,
+        816,
+        1769
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 0.12353054911059548,
+      "scale_unit": "\u00b5m",
+      "pixel_aspect": 1.0,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H003_POSTPAUSE_88",
+      "attempt": "candidate01_retry01 \u2192 candidate06",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          45,
+          125,
+          0,
+          80
+        ],
+        "raw_window": [
+          0,
+          151
+        ],
+        "selection_note": "Recorded C2 retained faint merge ID7,centre Y74.73/X28.44,bounding box Y60\u201390/X16\u201342. New explicit native crop within that witness region."
+      },
+      "source_shape_yx": [
+        400,
+        400
+      ],
+      "raw_window": [
+        0,
+        151
+      ],
+      "region_yyxx": [
+        45,
+        125,
+        0,
+        80
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H003_FRESH19_96",
+      "attempt": "technical03 final;independent from H003_POSTPAUSE_88",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          65,
+          145,
+          295,
+          375
+        ],
+        "raw_window": [
+          0,
+          104
+        ]
+      },
+      "source_shape_yx": [
+        400,
+        400
+      ],
+      "raw_window": [
+        0,
+        104
+      ],
+      "region_yyxx": [
+        65,
         145,
-        1372,
-        609
+        295,
+        375
       ],
-      "source_size": [
-        1400,
-        1450
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h002_fresh10_native.png",
-      "xyxy_pixels": [
-        728,
-        682,
-        1372,
-        1015
-      ],
-      "source_size": [
-        1400,
-        1450
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h002_fresh10_native.png",
-      "xyxy_pixels": [
-        728,
-        1088,
-        1372,
-        1436
-      ],
-      "source_size": [
-        1400,
-        1450
-      ]
-    },
-    {
-      "source": "paper/figures/slas/retina_fresh16_repair.png",
-      "xyxy_pixels": [
-        27,
-        1004,
-        2673,
-        1377
-      ],
-      "source_size": [
-        2700,
-        1620
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h003_native_repair.png",
-      "xyxy_pixels": [
-        16,
-        705,
-        1568,
-        1198
-      ],
-      "source_size": [
-        1584,
-        1410
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h003_fresh19_matched.png",
-      "xyxy_pixels": [
-        27,
-        1554,
-        2673,
-        1976
-      ],
-      "source_size": [
-        2700,
-        2220
-      ]
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
     }
   ],
-  "display_transforms": [],
   "output_sha256": {
-    "supp_morphology_checks.png": "6fd9d2deb686c6dbed37eb8e1cff30c389a2eb6bd4c52d48ce29e967aebb7595",
-    "supp_morphology_checks.pdf": "8cb77524cbbd0a24cfc1e13bdba343a6dd6b993e67c98496ad770a06df5bcd2f",
-    "supp_morphology_checks.svg": "539933ddad6266882601740096243e1116c357c2c44312b840cdf5b5f42f37e2"
+    "supp_morphology_checks.png": "903482a3afaf393cba7ce1cd53e818772cf6c90482af560c66e429ac8cefbcbb",
+    "supp_morphology_checks.pdf": "26fa6f2d6600dc2e430907934fdb314ca66c867d9989565f68979be98402b935",
+    "supp_morphology_checks.svg": "13d0e3fe2035eeb3b892d80e5908ee5a4426bdf9bb61558e27d1615425e63d6e"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
