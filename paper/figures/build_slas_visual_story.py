@@ -130,8 +130,10 @@ class FigureSheet:
         self.sources[str(path.relative_to(ROOT))] = digest(path)
 
     def input_path(self, original: Path) -> Path:
-        """Resolve an original absolute input inside an explicit archive root."""
-        return self.input_root / original.relative_to(original.anchor)
+        """Resolve paper-relative inputs or an archived original absolute path."""
+        if original.is_absolute():
+            return self.input_root / original.relative_to(original.anchor)
+        return ROOT / original
 
     def asset(self, path, bounds):
         """Place an existing mark without altering its colors or aspect ratio."""
@@ -270,40 +272,19 @@ class FigureSheet:
 
 
 def h001_scored():
-    """Native witnesses from the exact fresh author evaluated in Figure 5B."""
-    sheet = FigureSheet("h001_scored_native", "", 6.4)
-    sheet.source(
-        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
-    )
-    evaluation_path = (
-        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
-    )
+    """Matched original pixels and saved detections from the scored author."""
+    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+    sheet = FigureSheet("h001_scored_native", "", 3.4)
+    evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
     sheet.source(evaluation_path)
     evaluation = json.loads(evaluation_path.read_text())
     first, final = evaluation["attempts"]
-    sheet.text(
-        3, 97, "H001: native views from the scored task-only run",
-        size=18, weight="bold", va="top",
-    )
-    for y, title, prefix, crop, bottom, height in (
-        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
-        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
-    ):
-        sheet.text(3, y, title, size=15, weight="bold")
-        for x, stage, label in (
-            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
-        ):
-            sheet.text(x, y - 5, label, size=14)
-            sheet.source_image(
-                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
-                (x, bottom, 29, height), crop=crop,
-            )
-    sheet.text(
-        3, 3,
-        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
-        f"{final['score']['false_negative_objects']} reference misses remain.",
-        size=14,
-    )
+    sheet.text(3, 98, "H001: an elongated-body split repaired",
+               size=16, weight="bold", va="top")
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 20, 94, 60), 86)
+    sheet.text(3, 4, f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+               f"{final['score']['false_negative_objects']} reference misses remain.", size=13)
     sheet.save()
 
 
@@ -318,20 +299,15 @@ def task_only_story():
                          "axes.spines.top": False, "axes.spines.right": False}):
         sheet = FigureSheet("task_only_visual", "", 9.8)
         for path in (H001_SOURCE, BBBC039_SOURCE,
-                     Path("paper/figures/build_slas_task_only.py"),
-                     Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
+                     Path("paper/figures/build_slas_task_only.py")):
             sheet.source(ROOT / path)
         sheet.text(3, 98, "Autonomous segmentation: repair and field coverage",
                    size=18, weight="bold", va="top")
         sheet.text(3, 93, "A  H001: an elongated-body split repaired",
                    size=15, weight="bold")
-        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First"),
-                                (67, "final", "Final")):
-            sheet.text(x, 89, label, size=14)
-            sheet.source_image(
-                OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
-                (x, 70, 30, 20), crop=(297, 28, 1037, 492),
-            )
+        from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 70, 94, 18), 89)
         sheet.text(50, 70, "Own image review; no reference feedback",
                    size=14, ha="center", color=MUTED)
         axes = (sheet.plot_axes((.09, .40, .35, .24)),
@@ -817,7 +793,6 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
     views_path = OUTPUT / "frozen_neurite_views.json"
     sheet.source(views_path)
-    sheet.source(ROOT / "paper/figures/build_slas_neurite_views.py")
     views = json.loads(views_path.read_text())
     public_view = FrozenNeuriteView(sheet, views["public"])
     laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
@@ -827,27 +802,26 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
         metrics=("mean_outgrowth",), bounds=(3, 66, 94, 33), start_letter="A",
     )
     matched = reference["matched_wholefield_layout"]
-    for x, name, title, record in (
-        (3, "first-full-raw", "C  Raw", matched["raw"]),
-        (35, "first-full-result", "D  Initial tracing", matched["openhcs_initial"]),
+    for x, name, title, record, draw in (
+        (3, "first-full-raw", "C  Raw", matched["raw"], public_view.draw_raw),
+        (35, "first-full-result", "D  Initial tracing", matched["openhcs_initial"], public_view.draw_result),
     ):
         path = public / f"{name}.png"
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.source(path)
         sheet.text(x, 61, title, size=sheet.plot_font_size, weight="bold")
-        public_view.draw((x, 33, 30, 26), raw=name == "first-full-raw",
-                         result=name == "first-full-result")
+        draw((x, 33, 30, 26))
     sheet.text(67, 61, "E  NeuronCyto II", size=sheet.plot_font_size, weight="bold")
     sheet.source_image(reference_image, (67, 33, 30, 26),
                        crop=tuple(reference["crop_xyxy_pixels"]))
-    for x, name, title in (
-        (3, "raw", "F  Raw"),
-        (35, "result", "G  Labels and paths"),
-        (67, "combined", "H  Overlay"),
+    for x, title, draw in (
+        (3, "F  Raw", laboratory_view.draw_raw),
+        (35, "G  Labels and paths", laboratory_view.draw_result),
+        (67, "H  Overlay", laboratory_view.draw_overlay),
     ):
         sheet.text(x, 29, title, size=sheet.plot_font_size, weight="bold")
-        laboratory_view.draw((x, 1, 30, 26), raw=name != "result", result=name != "raw")
+        draw((x, 1, 30, 26))
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
 
@@ -858,7 +832,9 @@ def submission_repair_examples():
 
     sheet = SupplementFigure("submission_repair_examples", 7.4)
     sheet.heading("A  A split elongated body is repaired", 97)
-    sheet.artwork("h001_scored_native", (2, 53, 96, 39), crop=(2, 61, 98, 91))
+    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 53, 94, 35), 92)
     sheet.heading("B  Retinal contours improve while two neighbours stay separate", 48)
     sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
     sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
@@ -911,7 +887,7 @@ def submission_autonomous_loop():
         (69, 41, "4  Check the result", "scan-eye",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
-         "Find faulty step\nRevise and rerun\nCheck more regions", ORANGE),
+         "Find faulty step\nRevise and rerun\nInspect regions", ORANGE),
         (3, 41, "6  Finalize and deliver", "files",
          "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
@@ -960,15 +936,9 @@ def submission_autonomous_loop():
             sheet.arrow((x+20,27), (x+24,27))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
-    for column, (view, label) in enumerate((
-        ("raw", "Raw image"), ("first", "First result"),
-        ("final", "Final result"),
-    )):
-        x = 3 + column * 32
-        sheet.text(x, 22, label, size=11, weight="bold")
-        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{view}.png",
-                           (x, 5, 30, 16), crop=(620, 90, 980, 355))
+    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
+
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 5, 94, 14.8), 21)
     sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)
     sheet.save()
