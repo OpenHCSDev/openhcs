@@ -146,7 +146,7 @@ def treatment_endpoints():
         autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
         autonomous.save()
 
-    sheet = SupplementFigure("supp_neurite_treatment_endpoints", 11.4)
+    sheet = SupplementFigure("supp_neurite_treatment_endpoints", 10.4)
     sheet.heading("Additional morphology responses after assisted repair", 99)
     NeuriteEffectFigure.draw_panels(
         sheet, OUTPUT.parents[1] / "supplementary/personal_neurite_repaired_morphometry",

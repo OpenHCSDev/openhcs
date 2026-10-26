@@ -168,7 +168,7 @@ Graphical controls, Python and agents changed the same analysis settings. An age
 
 We evaluated neurite drug responses, nuclear detection and translocation controls using methods that agents developed without access to reference answers (Table 1).
 
-Table 1. Main results from the three neurite drug-response analyses, nuclear detection analyses 2–4 and protein translocation analysis 2, all using gpt-6.1-sol. Agent counts refer to independent agents within each assay. Agents could inspect development images while building their pipelines; the nuclear fields that none of them opened were identified afterwards. Supplementary Data 7–8 give individual results, including nuclear detection 1, cell-boundary 1 and protein translocation 1 on held-out images.
+Table: Table 1. Main results from the three neurite drug-response analyses, nuclear detection analyses 2–4 and protein translocation analysis 2, all using gpt-6.1-sol. Agent counts refer to independent agents within each assay. Agents could inspect development images while building their pipelines; the nuclear fields that none of them opened were identified afterwards. Supplementary Data 7–8 give individual results, including nuclear detection 1, cell-boundary 1 and protein translocation 1 on held-out images.
 
 | Assay | Agents | Evaluation inputs | Endpoint | Result |
 |---|---|---|---|---|

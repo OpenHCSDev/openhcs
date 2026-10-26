@@ -72,13 +72,15 @@ Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 
 Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Each drug curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD. Total quantities are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on each method's tracing and branching definitions.
 :::
 
-## Supplementary Figure 5, continued. Scientist-assisted neurite analysis
+## Supplementary Figure 5. Scientist-assisted neurite analysis
 
 ![Additional well-level morphology responses after scientist-assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Scientist-assisted repair was evaluated in the same neurite treatment assay using 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length. Each fusicoccin-A or Y27632 curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose; whiskers indicate sample SD. The linked [treatment measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) include mean outgrowth per cell and the [initial analysis](personal_neurite_baseline_morphometry/treatment_effects.csv).
+Scientist-assisted neurite measurements were compared with MetaXpress in 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length. Curves for fusicoccin-A (FC-A) and Y27632 are normalized to the mean of each drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose; whiskers show sample SD.
 :::
+
+The [post-repair measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) and [initial measurements](personal_neurite_baseline_morphometry/treatment_effects.csv) also include mean outgrowth per cell.
 
 At 40 µM, the three blind analyses gave fold changes in branches per cell of 1.24–1.63 for FC-A and 1.50–1.73 for Y27632, against 3.00 and 3.26 for MetaXpress. Their control wells started at 2.1–5.3 branches per cell, against 1.3–1.5 for MetaXpress. For analysis 3, the absolute increases from zero dose to 40 µM were 2.44 and 2.65 branches per cell for FC-A and Y27632, compared with MetaXpress's 2.94 and 2.90. Higher baselines compressed that analysis's fold changes; the cause of the baseline differences was not established.
 
