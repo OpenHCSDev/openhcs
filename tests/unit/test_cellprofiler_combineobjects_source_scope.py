@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import numpy as np
 import tifffile
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
@@ -143,7 +143,7 @@ def test_public_combineobjects_import_compiles_source_owned_scope(
     assert prepared.pipeline_steps is not None
     assert prepared.pipeline_config is not None
 
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator = PipelineOrchestrator(
         prepared.execution_dataset_root,
         pipeline_config=prepared.pipeline_config,

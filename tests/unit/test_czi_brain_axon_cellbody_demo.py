@@ -417,7 +417,7 @@ def test_czi_contributor_samples_only_declared_crop_planes(
     from multiprocessing import SimpleQueue
 
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -426,7 +426,7 @@ def test_czi_contributor_samples_only_declared_crop_planes(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1),
         )

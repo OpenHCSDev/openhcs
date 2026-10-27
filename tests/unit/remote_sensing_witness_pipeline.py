@@ -126,8 +126,7 @@ def pipeline_steps(napari_streaming_config=None) -> list:
 def run_direct(root: Path, output_root: Path) -> dict:
     from multiprocessing import SimpleQueue
 
-    from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
     from openhcs.core.config import (
         GlobalPipelineConfig,
@@ -138,11 +137,10 @@ def run_direct(root: Path, output_root: Path) -> dict:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
 
-    ObjectStateRegistry.clear()
     queue = SimpleQueue()
     set_progress_queue(queue)
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1, use_threading=True),
         )

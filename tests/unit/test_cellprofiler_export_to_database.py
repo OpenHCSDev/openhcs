@@ -12,7 +12,7 @@ from objectstate import config_context
 from pycodify import Assignment, generate_python_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import (
@@ -491,7 +491,7 @@ def test_quality_control_plate_invocation_is_context_independent(
     assert prepared.pipeline_steps is not None
     assert prepared.pipeline_config is not None
 
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator = PipelineOrchestrator(
         prepared.execution_dataset_root,
         pipeline_config=prepared.pipeline_config,

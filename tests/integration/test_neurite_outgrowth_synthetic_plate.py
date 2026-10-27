@@ -15,7 +15,6 @@ from contextlib import redirect_stderr, redirect_stdout
 import openhcs  # noqa: F401 - prefer repository submodules before direct imports
 import numpy as np
 import tifffile
-from objectstate import ObjectStateRegistry
 from polystore.roi import PolylineShape, load_rois_from_zip
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
@@ -38,7 +37,7 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -165,7 +164,6 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         ),
     )
 
-    ObjectStateRegistry.clear()
     progress_queue = queue.Queue()
     dense_outputs = {}
     original_with_components = Output.with_variable_components
@@ -178,7 +176,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
 
     monkeypatch.setattr(Output, "with_variable_components", observe_dense_output)
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         orchestrator = PipelineOrchestrator(
             plate_dir, pipeline_config=pipeline_config
         ).initialize()
@@ -491,4 +489,3 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         assert all("Spatial dimensions: 2D" in path.read_text() for path in summaries)
     finally:
         set_progress_queue(None)
-        ObjectStateRegistry.clear()

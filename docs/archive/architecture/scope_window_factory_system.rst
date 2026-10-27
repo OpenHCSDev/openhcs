@@ -101,17 +101,16 @@ Handler functions create and show windows for a given ``scope_id`` and optional 
         """Create GlobalPipelineConfig editor window."""
         from openhcs.pyqt_gui.windows.config_window import ConfigWindow
         from openhcs.core.config import GlobalPipelineConfig
-        from objectstate.global_config import (
-            get_current_global_config,
-            set_global_config_for_editing,
-        )
+        from objectstate import get_live_global_config
 
         current_config = (
-            get_current_global_config(GlobalPipelineConfig) or GlobalPipelineConfig()
+            get_live_global_config(GlobalPipelineConfig) or GlobalPipelineConfig()
         )
 
         def handle_save(new_config):
-            set_global_config_for_editing(GlobalPipelineConfig, new_config)
+            # The state registered at the global scope already holds new_config
+            # once the window saved it (ObjectState docs/state_propagation.rst).
+            ...
 
         window = ConfigWindow(
             config_class=GlobalPipelineConfig,

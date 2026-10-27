@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tifffile
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from polystore.bioformats_java import BioFormatsJavaContext
 
 from openhcs.core.config import (
@@ -99,7 +99,7 @@ def test_selected_container_opens_once_and_projects_both_planes(
         assert handler.initialize_workspace(tmp_path, filemanager) == tmp_path
         assert opened == [names[7]]
     else:
-        ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+        set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
         orchestrator = PipelineOrchestrator(
             tmp_path,
             storage_registry=filemanager.registry,
@@ -134,7 +134,7 @@ def test_real_tiff_orchestrator_only_decodes_selected_source(tmp_path, monkeypat
         return original_read(self, path)
 
     monkeypatch.setattr(TiffImageFileFormat, "read", counted_read)
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     filemanager = bioformats_filemanager()
     orchestrator = PipelineOrchestrator(
         tmp_path,

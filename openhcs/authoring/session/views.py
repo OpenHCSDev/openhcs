@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
+from objectstate import get_saved_global_config
 from objectstate.object_state import ObjectStateRegistry
 
 from openhcs.agent.dto.session import (
@@ -47,7 +48,7 @@ from openhcs.authoring.session.operations.pipelines import (
     LoadExamplePipeline,
     ShowPipelineCode,
 )
-from openhcs.core.config import PathPlanningConfig
+from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
@@ -249,7 +250,9 @@ class DatasetListView(SessionView):
     @classmethod
     def state_of(cls, session: "Session") -> DatasetListState:
         rows = tuple(session.dataset_rows())
-        relations = output_relations(rows, session.global_config.path_planning_config)
+        relations = output_relations(
+            rows, get_saved_global_config(GlobalPipelineConfig).path_planning_config
+        )
         selected = set(session.selected_scope_ids)
         return DatasetListState(
             rows=tuple(

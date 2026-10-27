@@ -4,8 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import tifffile
-from objectstate import ObjectStateRegistry
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
@@ -169,10 +168,9 @@ def test_compact_example_compiles_the_full_ordered_channel_stack(
         )
 
     pipeline_config, steps = build_loose_operaphenix_neurite_metaxpress_pipeline(inputs)
-    ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(num_workers=1),
         )

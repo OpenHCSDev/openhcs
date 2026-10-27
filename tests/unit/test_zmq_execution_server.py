@@ -1,12 +1,13 @@
 import json
 import sys
+import threading
 from pathlib import Path
 from dataclasses import replace
 from queue import SimpleQueue
 from types import ModuleType, SimpleNamespace
 
 import pytest
-from objectstate import get_current_global_config
+from objectstate import get_saved_global_config
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
     ExecuteRequest,
@@ -63,7 +64,7 @@ from tests.context_support import (
 )
 
 
-def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> None:
+def test_zmq_execution_context_carries_the_request_configs() -> None:
     global_config = GlobalPipelineConfig(
         processing_config=ProcessingConfig(group_by=Microscopy.Channel)
     )
@@ -93,14 +94,89 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     assert "pipeline_steps_boundary" not in dir(context)
     assert "config_carrier" not in dir(context)
 
-    ZMQExecutionServer._ensure_request_global_config_context(context)
 
-    saved_global_config = get_current_global_config(
-        GlobalPipelineConfig,
-        use_live=False,
+def test_jobs_submitted_together_each_compile_with_their_own_global_config(
+    tmp_path: Path,
+) -> None:
+    """The process holds one global config; the queue worker compiles one job at a time."""
+    from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
+
+    pipeline_code = (
+        "from openhcs.core.config import PipelineConfig\n"
+        "from openhcs.core.steps.function_step import FunctionStep\n"
+        "from openhcs.processing.backends.cellprofiler.smoothing import reducenoise\n"
+        "pipeline_config = PipelineConfig()\n"
+        "pipeline_steps = [FunctionStep(func=(reducenoise, {'patch_size': 3,"
+        " 'patch_distance': 3, 'cutoff_distance': 0.1}), name='DeclaredNlm')]\n"
     )
-    assert saved_global_config is global_config
-    assert saved_global_config.processing_config.group_by is Microscopy.Channel
+    jobs = []
+    for name, workers in (("first", 2), ("second", 5), ("third", 3), ("fourth", 7)):
+        plate = tmp_path / name
+        SyntheticMicroscopyGenerator(
+            output_dir=str(plate), grid_size=(1, 1), tile_size=(64, 64),
+            wavelengths=1, z_stack_levels=1, wells=["A01"], num_cells=3,
+            random_seed=123, include_all_components=True,
+        ).generate_dataset()
+        config_code = (
+            "from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig\n"
+            f"config = GlobalPipelineConfig(num_workers={workers}, path_planning_config="
+            f"PathPlanningConfig(output_dir_suffix='_{name}'))\n"
+        )
+        jobs.append((plate, workers, ExecuteRequest(
+            subject_id=str(plate), pipeline_code=pipeline_code,
+            config_code=config_code, compile_only=True,
+        ).to_dict()))
+
+    server = ZMQExecutionServer()
+    compiling: list[str] = []
+    most_at_once: list[int] = []
+    compile_one = server.execute_task
+
+    def counted(execution_id, request):
+        compiling.append(execution_id)
+        most_at_once.append(len(compiling))
+        try:
+            return compile_one(execution_id, request)
+        finally:
+            compiling.remove(execution_id)
+
+    server.execute_task = counted
+    together = threading.Barrier(len(jobs))
+    execution_ids: dict[str, str] = {}
+
+    def submit(plate: Path, message: dict) -> None:
+        together.wait()
+        execution_ids[plate.name] = server.handle_control_message(message)[
+            MessageFields.EXECUTION_ID
+        ]
+
+    clients = [
+        threading.Thread(target=submit, args=(plate, message))
+        for plate, _workers, message in jobs
+    ]
+    server._running = True
+    server._start_queue_worker()
+    try:
+        for client in clients:
+            client.start()
+        for client in clients:
+            client.join()
+        server.execution_queue.join()
+    finally:
+        server._running = False
+        server.queue_worker_thread.join()
+
+    assert max(most_at_once) == 1 and len(most_at_once) == len(jobs)
+    for plate, workers, _message in jobs:
+        execution_id = execution_ids[plate.name]
+        record = server.active_executions[execution_id]
+        assert record.status == ExecutionStatus.COMPLETE.value, record.error
+        artifact = server._compiled_artifacts[execution_id]
+        bundle = artifact.compilation.execution_bundle
+        assert bundle.runtime_environment.configured_num_workers == workers
+        (step_plan,) = bundle.runtime_contexts["A01"].step_plans.values()
+        assert Path(step_plan.output_dir).parts[-2] == f"{plate.name}_{plate.name}"
+        assert artifact.configs.global_pipeline.num_workers == workers
 
 
 @pytest.mark.parametrize("failed", [False, True])
@@ -836,4 +912,4 @@ def test_compiled_request_keeps_config_scope_without_resolving_configuration(mon
     assert initialized[0]["resolved_config"] is None
     assert compilations[0]["resolved_config"] is None
     assert compilations[0]["partition_values"] == ["A01"]
-    assert get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config
+    assert get_saved_global_config(GlobalPipelineConfig) is global_config

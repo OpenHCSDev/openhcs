@@ -15,7 +15,7 @@ from zmqruntime.execution.responses import (
     ExecutionWaitResult,
 )
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -250,7 +250,7 @@ def persisted_special_output_probe(image):
     )
 
     observation_path = tmp_path / "dual_channel_runtime_observation.pkl"
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     submission = OpenHCSExecutionSubmission(
         subject_id=plate_dir,
         pipeline_document=PipelineDocumentCodec.from_values(

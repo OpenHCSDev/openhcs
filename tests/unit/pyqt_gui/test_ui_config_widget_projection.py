@@ -20,7 +20,6 @@ def _wait_until(qapp, predicate, *, attempts: int = 400) -> None:
 def test_nested_ui_config_projects_color_enums_and_shortcut_capture(qapp) -> None:
     from objectstate import (
         ObjectState,
-        ObjectStateRegistry,
         get_base_config_type,
         set_base_config_type,
     )
@@ -40,7 +39,6 @@ def test_nested_ui_config_projects_color_enums_and_shortcut_capture(qapp) -> Non
 
     previous_base_type = get_base_config_type()
     set_base_config_type(UIConfig)
-    ObjectStateRegistry.clear()
     state = ObjectState(UIConfig(), scope_id="typed-ui-config-widget-projection")
     manager = ParameterFormManager(
         state,
@@ -101,5 +99,4 @@ def test_nested_ui_config_projects_color_enums_and_shortcut_capture(qapp) -> Non
         manager.close()
         manager.deleteLater()
         qapp.processEvents()
-        ObjectStateRegistry.clear()
         set_base_config_type(previous_base_type)

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
@@ -3551,7 +3550,6 @@ class BridgeSessions:
     @classmethod
     def get(cls) -> Session:
         if cls.current is None:
-            ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
             cls.current = Session(
                 transport_config=OpenHCSZMQConfig(
                     default_port=session_port(), persistent=False

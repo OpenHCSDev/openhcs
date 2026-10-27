@@ -133,9 +133,9 @@ def _fsync_directory(directory: Path) -> None:
 
 
 def _establish_global_pipeline_config(config: GlobalPipelineConfig) -> None:
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
-    ensure_global_config_context(GlobalPipelineConfig, config)
+    set_global_config(GlobalPipelineConfig, config)
 
 
 def global_pipeline_config_cache_spec() -> ConfigCacheSpec[GlobalPipelineConfig]:

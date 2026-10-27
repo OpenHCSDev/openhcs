@@ -263,7 +263,7 @@ When an optional lazy dataclass parameter is detected, the system automatically 
             return inner_type()  # Fallback to standard config
 
         # Get pipeline field as defaults source
-        pipeline_config = get_current_global_config(GlobalPipelineConfig)
+        pipeline_config = get_live_global_config(GlobalPipelineConfig)
         if pipeline_config and hasattr(pipeline_config, pipeline_field_name):
             pipeline_field_value = getattr(pipeline_config, pipeline_field_name)
 

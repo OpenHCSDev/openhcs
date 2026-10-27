@@ -72,7 +72,7 @@ from tests.integration.helpers.fixture_utils import (
     zmq_execution_mode,
 )
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
@@ -493,7 +493,7 @@ def _initialize_orchestrator(
     global_config = _create_pipeline_config(test_config)
 
     # Set up global context for orchestrator - legitimate test setup
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
 
     # For OMERO: Register OMERO backend with connection
     omero_manager = None

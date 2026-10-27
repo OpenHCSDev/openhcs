@@ -1,5 +1,6 @@
 """Global pytest configuration for OpenHCS integration tests."""
 
+import copy
 import os
 import signal
 import tempfile
@@ -186,25 +187,38 @@ def restored_family_registries(module_family_members) -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def restored_global_configs() -> Iterator[None]:
-    """The saved and live global config of every config type is, after a test, what it was before it."""
-    from objectstate import global_config
+def restored_active_axis_family() -> Iterator[None]:
+    """The axis family active after a test is the one that was active before it."""
+    from openhcs.core.axes import AxisFamily
 
-    def config_types() -> set[type]:
-        return {
-            *global_config._saved_global_config_contexts,
-            *global_config._live_global_config_contexts,
-        }
+    with AxisFamily.active().activated():
+        yield
 
-    before = {
-        config_type: global_config.GlobalContextValues.capture(config_type)
-        for config_type in config_types()
-    }
+
+@pytest.fixture(autouse=True)
+def restored_object_states() -> Iterator[None]:
+    """After a test, ObjectState holds what it held before it.
+
+    That is everything ``ObjectStateRegistry`` declares as class data (the
+    registered states, among them the one at the global scope that holds the
+    global config; the callbacks; the history) and the global configs stored
+    while no state holds them. The token is not put back: it only ever counts
+    up, and it is advanced once so nothing cached during the test is trusted.
+
+    ObjectState 4.0.0 has no public way to do this, so the fixture reads the
+    registry's annotated class attributes and ``global_config._stored_global_configs``.
+    """
+    from objectstate import ObjectStateRegistry, global_config
+
+    restored = ObjectStateRegistry.__annotations__.keys() - {"_token"}
+    held = {name: copy.copy(getattr(ObjectStateRegistry, name)) for name in restored}
+    stored = dict(global_config._stored_global_configs)
     yield
-    for config_type in config_types():
-        before.get(
-            config_type, global_config.GlobalContextValues(config_type, None, None)
-        ).apply()
+    for name, value in held.items():
+        setattr(ObjectStateRegistry, name, value)
+    global_config._stored_global_configs.clear()
+    global_config._stored_global_configs.update(stored)
+    ObjectStateRegistry.increment_token(notify=False)
 
 
 @pytest.fixture

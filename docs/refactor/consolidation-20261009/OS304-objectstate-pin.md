@@ -85,11 +85,11 @@ added afterwards read `UINT16`. Two steps of one pipeline disagreed.
 `test_headless_session_global_config_reaches_existing_step_states` checks live value,
 saved value and source for states built before and after the replacement.
 
-## Claim (b): `session.py:468` calls `ensure_global_config_context` on every global config save while states exist
+## Claim (b): `session.py:468` calls the 3.x global config setter on every global config save while states exist
 
 **True.** `adopt_global_config` calls it; callers are `apply_global_config` and
 `pyqt_gui/services/main_window_workflows.py:220` (the config window's save participant).
-`ensure_global_config_context` is `set_global_config_for_editing`: it replaces the saved
+That setter (removed in ObjectState 4.0.0, see ObjectState `CHANGELOG.md`) replaces the saved
 and live thread-local configs and tells no state.
 
 That call alone does not produce the wrong value when the global state was edited first
@@ -99,7 +99,7 @@ That call alone does not produce the wrong value when the global state was edite
 **A wrong value does exist on the GUI save path, from the same kind of unannounced
 replacement.** `pyqt_reactive/windows/config_window.py:844` calls `mark_saved()` on the
 global state, which resolves the descendants' saved values while the saved thread-local
-config is still the old one; `:848` (`publish_saved_global_config`) and then
+config is still the old one; `:848` (the window's publish of the saved config, removed in pyqt-reactive 0.8.0) and then
 `session.py:468` replace it afterwards. Observed through a real `OpenHCSConfigWindow`
 save: step and function states read live `UINT16`, saved `UINT8`, and stay dirty. Same
 result on 3.0.1, so it is not a regression of this bump. With the thread-local replaced
@@ -147,7 +147,7 @@ pyqt-reactive, pycodify, zmqruntime):
 | `openhcs/pyqt_gui/windows/dual_editor_tabs.py:52` `with config_context(pipeline_config), config_context(edit.step)` around `StepParameterEditorWidget(...)` | the plate's `PipelineConfig` and the step being edited, both entered without a scope id | No state is built: the widget takes the registered step state (`step_parameter_editor.py:168`). The form build reads resolved values, which re-resolves the step state only if it has no snapshot yet or has invalid fields. Not observed in the traced runs. | Also in the registered hierarchy: the plate config is the dataset state's delegate at the plate scope, and the step is the state at `edit.scope_id` (staged steps are registered by `stage_step`). By reading, nothing changes; not confirmed by a run. |
 | `openhcs/interop/cellprofiler/pipeline_import.py:324` `with config_context(pipeline_config)` | the imported pipeline's `PipelineConfig` | None. It resolves a `LazyStepSourceBindingsConfig` object, not an ObjectState. | Not affected. |
 | `openhcs/core/config.py:1470` `with config_context(PipelineConfig())` at import | a default `PipelineConfig` | None. Resolves `EMPTY_SOURCE_BINDINGS`, a lazy config object. | Not affected. |
-| Headless MCP session (`openhcs/mcp/context.py:269`) | No `config_context` is entered. Global values came only from the thread-local config set by `ensure_global_config_context` (`session.py:1035`, `:1060`, `:475`); no scope `""` was registered. | Dataset, step and function states | Before this PR: context (thread-local) only. With this PR the global state is registered by `Session.__init__`, so the value is also in the registered hierarchy. |
+| Headless MCP session (`openhcs/mcp/context.py:269`) | No `config_context` is entered. Global values came only from the thread-local config set by the 3.x global config setter (`session.py:1035`, `:1060`, `:475`); no scope `""` was registered. | Dataset, step and function states | Before this PR: context (thread-local) only. With this PR the global state is registered by `Session.__init__`, so the value is also in the registered hierarchy. |
 
 No site was found where a value comes only from an entered `config_context`.
 

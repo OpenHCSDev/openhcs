@@ -10,8 +10,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from objectstate.lazy_factory import ensure_global_config_context
-from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.authoring.session.datasets import write_dataset_scope_ids
@@ -27,7 +25,6 @@ class GuiServiceStub:
     errors: list[str] = field(default_factory=list)
     directory_choices: list[str] = field(default_factory=list)
     main_window: object | None = None
-    global_config: object | None = None
     file_manager: object | None = None
 
     def get_file_manager(self):
@@ -41,9 +38,6 @@ class GuiServiceStub:
 
     def show_cached_directory_dialog(self, **_kwargs) -> list[str]:
         return list(self.directory_choices)
-
-    def set_global_config(self, config) -> None:
-        self.global_config = config
 
     def execute_async_operation(self, async_func, *args, **kwargs) -> None:
         """Run widget-started work to completion on the calling thread."""
@@ -67,9 +61,7 @@ def caller_session(**kwargs) -> Iterator[Session]:
     restored from a saved workspace.
     """
 
-    ObjectStateRegistry.clear()
     global_config = kwargs.pop("global_config", GlobalPipelineConfig())
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     persisted = kwargs.pop("persisted_scope_ids", None)
     if persisted is not None:
         write_dataset_scope_ids(list(persisted))
@@ -85,7 +77,6 @@ def caller_session(**kwargs) -> Iterator[Session]:
     finally:
         session.close()
         _forget_progress(session)
-        ObjectStateRegistry.clear()
 
 
 def _forget_progress(session: Session) -> None:

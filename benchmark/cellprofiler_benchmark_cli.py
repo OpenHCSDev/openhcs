@@ -301,8 +301,8 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             **({} if args.port is None else {"default_port": args.port}),
         )
         session = Session(
-            transport_config=transport,
             global_config=GlobalPipelineConfig(),
+            transport_config=transport,
             main_thread=CallerThread(),
             dataset_access=AgentPathDatasetAccess(policy),
             workspace_root=workspace_parent,

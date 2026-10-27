@@ -21,7 +21,7 @@ from openhcs.core.config import (
     PathPlanningConfig,
     PipelineConfig,
 )
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
@@ -307,20 +307,17 @@ def test_compilation_debug_enabled_field_is_inherited_from_enableable() -> None:
     assert enabled_field.default is True
     assert CompilationDebugConfig().enabled is True
 
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
             compilation_debug_config=CompilationDebugConfig(enabled=False),
         ),
     )
-    try:
-        pipeline_config = PipelineConfig()
-        state = ObjectState(pipeline_config, scope_id="compilation-debug")
-        ObjectStateRegistry.register(state, _skip_snapshot=True)
-        assert state.parameters["compilation_debug_config.enabled"] is None
-        assert state.get_resolved_value("compilation_debug_config.enabled") is False
-    finally:
-        ObjectStateRegistry.clear()
+    pipeline_config = PipelineConfig()
+    state = ObjectState(pipeline_config, scope_id="compilation-debug")
+    ObjectStateRegistry.register(state, _skip_snapshot=True)
+    assert state.parameters["compilation_debug_config.enabled"] is None
+    assert state.get_resolved_value("compilation_debug_config.enabled") is False
 
 
 def test_compilation_debug_is_last_in_generated_pipeline_config_order() -> None:
