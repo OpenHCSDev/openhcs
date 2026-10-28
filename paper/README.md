@@ -7,10 +7,11 @@ Author-review draft for **SLAS Technology**.
 Start with `current/openhcs_manuscript.pdf`. The combined reading copy,
 `current/openhcs_review.pdf`, includes the supplement and one bibliography.
 Editable Word files with the same names are beside the PDFs.
-The paper presents OpenHCS as an extensible platform in which scientists,
-Python code and agents work on the same inspectable analysis. The biological
-assays test that platform; the CellProfiler comparisons test preservation of
-established measurements and execution speed.
+The paper presents OpenHCS as a native Python integration layer connecting
+existing processing tools, storage systems and viewers. Scientists and agents
+use the same editable analysis, with changes carried between graphical controls
+and Python. The biological assays evaluate delivered analyses; the CellProfiler
+comparisons test preservation of established outputs and execution speed.
 
 The remaining author questions are factual, not unfinished prose:
 

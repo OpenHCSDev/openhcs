@@ -1,20 +1,25 @@
 {
-  "generator_sha256": "457f4d7860a790df009c7a2b46f4e0719de5dee761f83552fa289adb4750da51",
+  "generator_sha256": "877cbd24356328f4454272bf5def0f3d2388395970deb1a5d733f5fee50219e7",
   "source_sha256": {
-    "openhcs/core/config.py": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
-    "openhcs/core/callable_contract.py": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
-    "openhcs/core/runtime_stores.py": "5f323ec8edd4221ee30e34ed0c9c09e0f4e45ef502749c1a2d331b7a5452af99",
-    "openhcs/core/artifacts.py": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
-    "docs/source/concepts/function_patterns.rst": "2e60a937bc001bdcc961f378c5fb29d1829580351cbf87db4eec9eda02d77411",
+    "openhcs/core/config.py": "e98b1ba63084b6be5d153f6334fc456a2c2f6f6c957c8f1c39f0a1194338655b",
+    "openhcs/core/callable_contract.py": "3d056d2810e479e81d8c024c45b6d724253626b568e31657ac0e21eec6f99b2b",
+    "openhcs/core/runtime_stores.py": "ad8d2b1f6bf60f71b2fb6320ced87a2e4656d548b37a218782f3cd94917527da",
+    "openhcs/core/artifacts/kinds.py": "7f8ec60cf64ce66af70fd06917f03b4a061377d5e533462c453146d9e2e3aada",
+    "openhcs/core/dataset_sources/source.py": "b3758a878fdf8ec28b6d9818ebfd96c5c470895575f7a79500c85f1490679281",
+    "openhcs/formats/pattern/pattern_discovery.py": "4e21c7ef32440859bfe375ca6b7c46397d886ca1a3cf9cf6b9ecf8bac07569e4",
+    "openhcs/processing/backends/assemblers/assemble_stack_cpu.py": "c33d23f52f15a5cb778efad2759732ec9ed896e095b538dc78a2c4097efd19eb",
+    "docs/source/concepts/function_patterns.rst": "9a4c63ac2aa16b437b1954ab0ecb70242c24fc53c84a0882893c2c9584361d3a",
     "docs/source/architecture/processing_semantics.rst": "9d1a0203f2a4236ea102cacd8e48735a24d93d55d3d5c807ed69a2f30d451278",
-    "docs/source/architecture/artifact_contract_system.rst": "eb9380b348a7fccfb4385956bc1997b4dc4bf23aaf1f45abe2fd2fd8c1342d83",
-    "paper/figures/build_slas_visual_story.py": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc"
+    "docs/source/architecture/artifact_contract_system.rst": "309f280e5b5df5f8e7299f29e2b14a682f61be0fade411ebec5de86666d6443b",
+    "paper/figures/build_slas_visual_story.py": "85f6e85ec2c409b69f95fb44b8e4c8292c08b2dec6f21d4f50649dd03c8568dd"
   },
+  "input_root": "/",
   "ui_crops": [],
+  "display_transforms": [],
   "output_sha256": {
-    "runtime_composition.png": "11abab9bbcccbf1cf83a7ec699815367c95f2c1ed39ec9b75411e43c2f6bbdc7",
-    "runtime_composition.pdf": "3eea90ecb49518a12c302f62d63985f8ecccbcba537288b5bd50d2d9a29856b9",
-    "runtime_composition.svg": "5356f083ddf6c9f15f57a326c862b7fe83762fb4041a702a0312b1048efc856e"
+    "runtime_composition.png": "ecb0602f92191b23bccdaf5c191e0467e964818dbf0629467163b8d61352ae37",
+    "runtime_composition.pdf": "8750b3364f7eda3d9aa781c34411df6f2604f2bfa973b29518ad68ca9dbf37ad",
+    "runtime_composition.svg": "02746fef331beb09e4a4e5c0a3498f81fa8e39bb09ee2217074165bdcf8f1974"
   },
-  "interpretation": "Illustrative configuration and callable roles, not an executed biological workflow. Panels B and C show separate composition examples: group-specific chains and an artifact routed between steps within a compatible execution group. Sequential timepoints run the entire pipeline; wells can execute in parallel and Z remains the variable component. Backend compatibility belongs to each callable contract."
+  "interpretation": "Illustrative configuration and callable roles, not an executed biological workflow. Panel A contrasts a site stack supplied with tile positions for stitching and a Z stack forming a volume. Other acquisition coordinates stay fixed within each stack; processing groups do not define its stack axis. Panels B and C show separate composition examples: group-specific chains and an artifact routed between steps within a compatible execution group. Sequential timepoints run the entire pipeline; wells can execute in parallel. Backend compatibility belongs to each callable contract."
 }

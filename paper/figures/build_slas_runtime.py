@@ -24,44 +24,37 @@ def runtime():
         "openhcs/core/config.py",
         "openhcs/core/callable_contract.py",
         "openhcs/core/runtime_stores.py",
-        "openhcs/core/artifacts.py",
+        "openhcs/core/artifacts/kinds.py",
+        "openhcs/core/dataset_sources/source.py",
+        "openhcs/formats/pattern/pattern_discovery.py",
+        "openhcs/processing/backends/assemblers/assemble_stack_cpu.py",
         "docs/source/concepts/function_patterns.rst",
         "docs/source/architecture/processing_semantics.rst",
         "docs/source/architecture/artifact_contract_system.rst",
     ):
         sheet.source(ROOT / source)
 
-    sheet.panel("A", "Choose array axes and processing groups", 3, 91)
+    sheet.panel("A", "Collect images along a chosen stack axis", 3, 91)
     sheet.text(
-        5, 87, "Example acquisition: wells × time × channels × Z × Y × X", size=10
+        5, 87,
+        "Stack axis: site, Z, channel or time; each image has Y × X pixels.",
+        size=11,
     )
-    sheet.stack(6, 77, 9, 6)
-    sheet.text(12, 74, "Source images", size=10, ha="center")
-    sheet.arrow((20, 80), (28, 80), color=BLUE)
-    sheet.stack(31, 81, 7, 3)
-    sheet.stack(31, 73, 7, 3)
-    sheet.text(43, 83, "Channel 1: Z stack", size=10, va="center")
-    sheet.text(43, 75, "Channel 2: Z stack", size=10, va="center")
+    sheet.stack(6, 77, 12, 5)
+    sheet.text(13, 74.5, "Site × Y × X", size=11, ha="center", color=BLUE)
+    sheet.arrow((23, 80.5), (33, 80.5), color=BLUE)
+    sheet.box(33, 77, 24, 7, "Stitch", color=BLUE)
+    sheet.text(45, 74.5, "+ tile positions", size=11, ha="center", color=BLUE)
+    sheet.arrow((57, 80.5), (70, 80.5), color=BLUE)
+    sheet.box(70, 77, 23, 7, "Mosaic", color=BLUE)
     sheet.text(
-        5,
-        69,
-        "variable_components = [Z_INDEX]",
-        size=10,
-        color=BLUE,
-        family="monospace",
+        5, 71.5, "For each stack, other acquisition coordinates stay fixed.",
+        size=11, color=MUTED,
     )
-    sheet.text(5, 66, "Z varies within each array.", size=10, color=MUTED)
-    sheet.text(55, 69, "group_by = CHANNEL", size=10, color=TEAL, family="monospace")
-    sheet.text(55, 66, "Channel identity selects a group.", size=10, color=MUTED)
-    sheet.text(
-        73,
-        80,
-        "Function behavior:\nper-plane, whole-stack\nor stack reduction",
-        size=10,
-        color=PURPLE,
-        va="center",
-        linespacing=1.5,
-    )
+    sheet.text(5, 66, "Choose Z instead:", size=11, va="center")
+    sheet.arrow((26, 66), (34, 66), color=BLUE)
+    sheet.stack(35, 64.5, 8, 3)
+    sheet.text(49, 66, "Z × Y × X volume", size=11, va="center", color=BLUE)
 
     sheet.panel("B", "Assign function chains to groups", 3, 61)
     for y, label, color in ((52, "Channel 1", BLUE), (44, "Channel 2", TEAL)):
@@ -132,10 +125,12 @@ def runtime():
     )
     receipt["interpretation"] = (
         "Illustrative configuration and callable roles, not an executed biological workflow. "
-        "Panels B and C show separate composition examples: group-specific chains and "
-        "an artifact routed between steps within a compatible execution group. Sequential "
-        "timepoints run the entire pipeline; wells can execute in parallel and Z remains "
-        "the variable component. Backend "
+        "Panel A contrasts a site stack supplied with tile positions for stitching and "
+        "a Z stack forming a volume. Other acquisition coordinates stay fixed within "
+        "each stack; processing groups do not define its stack axis. Panels B and C "
+        "show separate composition examples: group-specific chains and an artifact "
+        "routed between steps within a compatible execution group. Sequential "
+        "timepoints run the entire pipeline; wells can execute in parallel. Backend "
         "compatibility belongs to each callable contract."
     )
     path.write_text(json.dumps(receipt, indent=2) + "\n")

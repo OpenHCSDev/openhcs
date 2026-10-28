@@ -15,7 +15,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 ![Array grouping, named results, scheduling and preparation.](../figures/slas/supp_workflow_infrastructure.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Pipeline preparation connects image groups and named detections to the functions that use them. **(I, A–D)** Image axes and processing groups determine which planes or volumes each function receives. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
+Pipeline preparation connects image groups and named detections to the functions that use them. **(I, A)** Collecting overlapping sites supplies tiles for a stitching function, which also needs tile positions. Well, channel, Z plane and timepoint are held fixed in this example. Selecting Z planes instead forms a volume. Processing groups remain independent of the stack-axis choice. **(B–D)** Groups can receive different function chains. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
 :::
 
 ## Supp. Figure 2. Protein-translocation measurements and cytoplasmic segmentation {#supplementary-figure-2.-protein-translocation-measurements-and-cytoplasmic-segmentation}
@@ -148,6 +148,17 @@ The automated checks connect software changes to expected user outcomes. The tab
 | [Save and reload analysis settings as Python](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_pycodify_formatters.py) | Reconstruct selected settings from generated Python and compare their values, including defaults and local changes. | Configured: component round-trip checks with substituted definition metadata; Linux, Python 3.12. Recorded separately: [passed Python-generation tests at revision 7a7d21f](analysis_records.md#supplementary-data-6-workflow-regression-tests). |
 | [Connect compatible processing steps](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_funcstep_contract_validator.py#L432-L472) | Reject incompatible image-stack inputs before execution. | Configured: component validation checks; Linux, Python 3.12. Recorded separately: [passed function-validation tests at revision 7a7d21f](analysis_records.md#supplementary-data-6-workflow-regression-tests). |
 | [Select processing functions from current descriptions](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_function_catalog_zmq.py#L720-L740) | Reject a request based on an outdated function catalogue. | Configured: component request-routing check with a substituted catalogue service; Linux, Python 3.12. Recorded separately: [passed catalogue-revision tests at revision 7a7d21f](analysis_records.md#supplementary-data-6-workflow-regression-tests). |
+
+## Supp. Table 3. AI assistance and evaluation resources {#supplementary-table-3.-ai-assistance-and-evaluation-resources}
+
+These resources address different parts of AI-assisted analysis. The table distinguishes systems that help develop analyses from a benchmark that evaluates agent-produced outputs.
+
+| Resource | Role | Mechanism or evaluation scope |
+| --- | --- | --- |
+| BioImage.IO Chatbot [@Lei2024] | Community-linked assistance | Conversational access to community bioimaging information, resources and analysis extensions. |
+| Omega [@Royer2024] | Code-driven interactive analysis | Generates and executes Python analysis code and creates napari controls for inspection and adjustment. |
+| Agentic-J [@Johanns2026] | Fiji-script development and auditing | Uses bioimage knowledge, plugin instructions and specialized agents; calls external tools through the Model Context Protocol (MCP). |
+| BIABench [@Pan2026BIABench] | Analysis-evaluation benchmark | Evaluates agent-produced analyses against reference answers and expert assessments. Performance was stronger on routine 2D tasks; repeated runs were unreliable on more complex data. |
 
 ## Supp. Data {#supplementary-data}
 
