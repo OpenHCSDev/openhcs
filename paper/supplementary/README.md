@@ -31,7 +31,7 @@ Cytoplasmic segmentation was checked alongside the green fluorescent protein (GF
 ![Independent nuclear analyses and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary methods. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
+Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
 :::
 
 ### Nuclear-detection errors
@@ -61,7 +61,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis or method; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 4A–B shows mean outgrowth per cell.
+Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 4A–B shows mean outgrowth per cell.
 :::
 
 ## Supplementary Figure 5, continued. Process length and branching
@@ -69,7 +69,7 @@ Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 
 ![Median process length, branch and primary-process responses from all three blind agents.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Each drug curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD. Total quantities are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on each method's tracing and branching definitions.
+Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Each drug curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers show sample SD. Total quantities are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on the tracing and branching definitions of each analysis.
 :::
 
 ## Supplementary Figure 5, continued. Scientist-assisted neurite analysis
@@ -108,7 +108,9 @@ Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS wo
 
 ## Supplementary Table 1. Reusable software libraries
 
-| Library | Function |
+We built these eight libraries to connect analysis editing, processing, storage and inspection. Each performs a shared job so that developers can add compatible components without rebuilding the surrounding analysis tools. Main Figures 1–2 show how these jobs connect within OpenHCS.
+
+| Library | Role in the analysis |
 | --- | --- |
 | [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface. |
 | [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads function parameters, types, defaults and documentation. |
@@ -119,6 +121,20 @@ Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS wo
 | [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads and writes local files, memory, Zarr and OMERO. |
 | [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates process communication, startup, shutdown and progress. |
 
+## Supplementary Table 2. User tasks covered by automated software checks
+
+The automated checks connect software changes to expected user outcomes. The table distinguishes complete analysis or service runs from focused component checks and lists their configured environments. [Supplementary Data 1](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison) records completed output comparisons; [Data 6](analysis_records.md#supplementary-data-6-workflow-regression-tests) links a passed, revision-pinned component-test run. The [test-workflow definition](https://github.com/OpenHCSDev/openhcs/blob/3fea2bb30142aa76ef25fb60120579b2db58d65e/.github/workflows/integration-tests.yml) specifies the configured coverage below, rather than a result for every environment.
+
+| User task | Expected outcome checked | Check and configured environment |
+| --- | --- | --- |
+| [Reuse a CellProfiler pipeline](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L525-L535) | Execute 30 imported pipelines and compare their outputs with retained native image and measurement references. | Complete pipeline runs: Linux, Windows and macOS, each with Python 3.12 and 3.14. |
+| [Inspect processing results in Fiji and napari](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L720-L815) | Check that a fresh Fiji process contains images and that napari reports the expected live state after processing. | Real viewer processes: one colocalization workflow with Fiji alone and with Fiji plus napari; Linux, Python 3.12. |
+| [Process images from files or Zarr](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_main.py#L822-L901) | Read generated microscope inputs, execute processing and check output directories and structured metadata. | Synthetic-image integration: disk and Zarr with ImageXpress and Opera Phenix layouts; Linux, Windows and macOS, Python 3.12. |
+| [Process images held in OMERO](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/helpers/fixture_utils.py#L363-L431) | Upload generated images to an OMERO service and execute the analysis on its plate. | Real service integration: Linux, Python 3.11 and 3.12. This checks server-backed execution, not filesystem-export equivalence. |
+| [Save and reload analysis settings as Python](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_pycodify_formatters.py) | Reconstruct selected settings from generated Python and compare their values, including defaults and local changes. | Component round-trip checks with substituted declaration metadata; Linux, Python 3.12. |
+| [Connect compatible processing steps](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_funcstep_contract_validator.py#L432-L472) | Reject incompatible image-stack inputs before execution. | Component validation checks; Linux, Python 3.12. |
+| [Request current function descriptions](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_function_catalog_zmq.py#L720-L740) | Reject a request based on an outdated function catalogue. | Component request-routing check with a substituted catalogue service; Linux, Python 3.12. |
+
 ## Supplementary Data
 
 1. **CellProfiler workflow comparison.** [Protocol and source files](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison), including exported-file counts, eight added image exports, comparison rules, software versions and database outputs [@Jones2008].
@@ -127,7 +143,7 @@ Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS wo
 4. **Public NeuronCyto analysis.** [Input images, analysis outputs and reference definitions](analysis_records.md#supplementary-data-4-public-neuroncyto-demonstration-and-references). The published NeuronCyto II output is an algorithm comparison [@NeuronCytoII]; its manual trace coordinates were unavailable, so absolute tracing accuracy could not be scored.
 5. **Editable analyses.** [Advanced-segmentation and 3D-monolayer CellProfiler imports](complex_cellprofiler_workflows.md), plus [graphical/Python/agent editing records](analysis_records.md#figure-assembly-and-interface-records).
 6. **Software checks.** [Configuration, generated-Python and compiler-validation tests](analysis_records.md#supplementary-data-6-workflow-regression-tests), with source versions and execution records.
-7. **Held-out analyses.** [Final pipelines and scores](independent_validation/README.md) for nuclear detection 1, cell-boundary 1 and protein translocation 1. Each method was fixed after four development inputs and before its held-out images were released.
+7. **Held-out analyses.** [Final pipelines and scores](independent_validation/README.md) for nuclear detection 1, cell-boundary 1 and protein translocation 1. Each analysis was fixed after four development inputs and before its held-out images were released.
 8. **Agent-developed analyses.** [Twenty task-level results](task_only_analysis/analysis_results.csv), [instructions](task_only_analysis/original_task_briefs.json), [pipelines and supporting functions](analysis_records.md#instructions-and-reproducibility), and [analysis time and computing resources](task_only_analysis/trial_resource_tables.md). Held-out inputs were withheld prospectively; uninspected inputs were identified retrospectively from image-delivery records. Different model and guide versions are identified in the source records.
 
 The [software-resource inventory](software_resources.md) supplies the extension and training-resource tables, with source links and counting rules. [Detailed analysis records](analysis_records.md) provide additional per-analysis measurements and image sources.
