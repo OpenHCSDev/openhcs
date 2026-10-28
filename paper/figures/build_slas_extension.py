@@ -199,11 +199,11 @@ def extension(*, main_panel=False):
             raise ValueError("Current function source differs from the native authoring record")
         sheet.source(live_evidence_path)
         sheet.text(3, 96, "B", size=14, weight="bold", color=BLUE)
-        sheet.text(11, 96, "Add a laboratory method; edit its settings in a form or Python", size=12, weight="bold")
+        sheet.text(11, 96, "Add a laboratory function; edit its settings in a form or Python", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
         sheet.axis.add_patch(Rectangle((3, 24), 44, 65, color=PALE))
-        sheet.text(5, 90, "Define the method in Python", size=12, weight="bold")
+        sheet.text(5, 90, "Define the function in Python", size=12, weight="bold")
         python_excerpt(sheet, 5, 85, excerpt)
         sheet.text(5, 26, "Documentation from the function definition", size=8.5, color=MUTED)
         sheet.arrow((48, 70), (52, 70), color=BLUE)
