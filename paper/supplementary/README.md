@@ -149,6 +149,17 @@ The automated checks connect software changes to expected user outcomes. The tab
 | [Connect compatible processing steps](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_funcstep_contract_validator.py#L432-L472) | Reject incompatible image-stack inputs before execution. | Configured: component validation checks; Linux, Python 3.12. Recorded separately: [passed function-validation tests at revision 7a7d21f](analysis_records.md#supplementary-data-6-workflow-regression-tests). |
 | [Select processing functions from current descriptions](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_function_catalog_zmq.py#L720-L740) | Reject a request based on an outdated function catalogue. | Configured: component request-routing check with a substituted catalogue service; Linux, Python 3.12. Recorded separately: [passed catalogue-revision tests at revision 7a7d21f](analysis_records.md#supplementary-data-6-workflow-regression-tests). |
 
+## Supp. Table 3. AI assistance and evaluation resources {#supplementary-table-3.-ai-assistance-and-evaluation-resources}
+
+These resources address different parts of AI-assisted analysis. The table distinguishes systems that help develop analyses from a benchmark that evaluates agent-produced outputs.
+
+| Resource | Role | Mechanism or evaluation scope |
+| --- | --- | --- |
+| BioImage.IO Chatbot [@Lei2024] | Community-linked assistance | Conversational access to community bioimaging information, resources and analysis extensions. |
+| Omega [@Royer2024] | Code-driven interactive analysis | Generates and executes Python analysis code and creates napari controls for inspection and adjustment. |
+| Agentic-J [@Johanns2026] | Fiji-script development and auditing | Uses bioimage knowledge, plugin instructions and specialized agents; calls external tools through the Model Context Protocol (MCP). |
+| BIABench [@Pan2026BIABench] | Analysis-evaluation benchmark | Evaluates agent-produced analyses against reference answers and expert assessments. Performance was stronger on routine 2D tasks; repeated runs were unreliable on more complex data. |
+
 ## Supp. Data {#supplementary-data}
 
 1. **CellProfiler workflow comparison.** [Protocol and source files](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison), including exported-file counts, eight added image exports, comparison rules, software versions and database outputs [@Jones2008].
