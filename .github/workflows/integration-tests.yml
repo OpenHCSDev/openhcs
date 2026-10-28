@@ -48,8 +48,8 @@
 #   - Python 3.12 on Linux
 #   - Full integration test suite against wheel installation
 #
-# Group 7: Official30 headless parity (4 jobs)
-#   - Python 3.12 on Linux and Python 3.14 on Linux, Windows, macOS
+# Group 7: Official30 headless parity
+#   - Uses the full OS/Python product declared in the job matrix below
 #   - Acquires the manifest-pinned inputs and compares all 30 cases against the
 #     committed native CellProfiler references over the real ZMQ execution path
 #
