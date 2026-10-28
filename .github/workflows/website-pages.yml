@@ -95,7 +95,7 @@ jobs:
       - name: Test, build, and validate landing page
         run: |
           python -m scripts.gallery_catalog --check
-          python -m pytest -q --confcutdir=tests/unit tests/unit/test_build_website.py
+          python -m pytest -q -o addopts='' --confcutdir=tests/unit tests/unit/test_build_website.py
           python -m scripts.build_website --output _site
 
   deploy:
