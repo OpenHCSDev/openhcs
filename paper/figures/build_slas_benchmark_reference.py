@@ -119,22 +119,28 @@ def submission_benchmark_schedule() -> None:
     """Replot the retained measured worker comparison through the shared sheet."""
     sheet = BenchmarkFigure("submission_benchmark_schedule", 5.6,
                             reference_label="one worker", limits=(.8, 5))
-    from textwrap import fill
-
     claims = sheet.qualified_claims()
-    path = sheet.retained(sheet.publication / "fixed12/execution/scaling/derived_workflow_metrics.csv")
+    path = sheet.retained(sheet.publication / "fixed12/execution/first_use_workflow_metrics.csv")
     with path.open(newline="") as stream:
         rows = tuple(csv.DictReader(stream))
-    values = {(row["method"], row["pipeline_name"]): float(row["speedup"]) for row in rows}
+    values = {(row["method"], row["pipeline_name"]): float(row["raw_seconds"]) for row in rows}
     if len(values) != len(rows):
-        raise ValueError("Duplicate retained workflow speedups")
+        raise ValueError("Duplicate retained workflow times")
     names = sorted({name for method, name in values})
     if len(names) != int(claims["case_count"]):
         raise ValueError("Worker plot differs from the qualified workflow cohort")
-    methods = tuple(dict.fromkeys(row["method"] for row in rows))
-    groups = tuple((np.array([values[method, name] for name in names]),) for method in methods)
+    reference_mode = claims["mode_statistics"]["12assignments-1worker"]
+    modes = sorted((mode for mode in claims["mode_statistics"].values()
+                    if mode["assignment_count"] == reference_mode["assignment_count"]),
+                   key=lambda mode: mode["openhcs_worker_count"])
+    reference_label = reference_mode["scope_statistics"]["execution"]["label"]
+    reference = np.array([values[reference_label, name] for name in names])
+    groups = tuple((reference / np.array([
+        values[mode["scope_statistics"]["execution"]["label"], name] for name in names]),)
+        for mode in modes)
     axis = sheet.plot_axes((.12, .39, .83, .44))
-    labels = [fill(method, width=18) for method in methods]
+    labels = [f"{mode['openhcs_worker_count']} worker{'s' if mode['openhcs_worker_count'] != 1 else ''}"
+              for mode in modes]
     sheet.distributions(axis, groups, labels)
     sheet.text(3, 95, "Measured processing speedup with more workers", size=14, weight="bold")
     sheet.text(3, 88, "Same twelve samples · all thirty workflows · medians of three runs",
@@ -147,7 +153,7 @@ def submission_benchmark_schedule() -> None:
     sheet.display_transforms.append({
         "operation": "Replot retained fixed-workload speedups with shared publication typography and minimum, arithmetic mean, median and maximum annotations in × units",
         "analysis_rerun": False,
-        "retained_speedups_plotted": len(rows),
+        "retained_speedups_plotted": len(names) * len(modes),
     })
     sheet.save()
 
