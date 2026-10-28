@@ -1997,22 +1997,15 @@ jobs:
 
   # Compare all 30 workflows against committed native CellProfiler outputs.
   # Saved references do not require the optional Centrosome oracle on Python 3.14.
-  # Keep the established 3.12 Linux lane and require 3.14 parity on every OS.
+  # Check the full OS/Python product rather than maintaining selected pairs.
   official30-headless-parity:
     name: official30-headless-parity (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: "3.12"
-          - os: ubuntu-latest
-            python-version: "3.14"
-          - os: windows-latest
-            python-version: "3.14"
-          - os: macos-latest
-            python-version: "3.14"
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12", "3.14"]
     defaults:
       run:
         shell: bash
