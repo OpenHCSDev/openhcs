@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
+  "generator_sha256": "85f6e85ec2c409b69f95fb44b8e4c8292c08b2dec6f21d4f50649dd03c8568dd",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
     "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
@@ -10,7 +10,7 @@
     "paper/figures/assets/lucide/user-round.svg": "84870f26f3faf8da45da84174517519e81b9e8f00319c78954fcbb74f50038a1",
     "paper/figures/assets/lucide/circle-question-mark.svg": "975db087da041530dbf59ba1e61a7b99c3519fad43dae6375e42ccc74ba63924",
     "paper/figures/assets/lucide/clipboard-list.svg": "2b91abc2e8ee8ba4c2e0f77d506a47a7a9774b0d4de3fa4b27e822a6376ab892",
-    "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
+    "website/assets/logos/README.md": "b86c8373cf38552b6140e36af8db18859548ed8e5f25578df5936897ba5804df",
     "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea",
     "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
     "paper/figures/assets/lucide/list-tree.svg": "f816da37682467b872d18ef239b9f107b91dbee3212629c7b756ba881ae385f1",
@@ -68,9 +68,9 @@
     }
   ],
   "output_sha256": {
-    "submission_autonomous_loop.png": "4d8db65328f30f8cf5fb62556686330bda14ff7dfa2213ef68c07c20f9646da0",
-    "submission_autonomous_loop.pdf": "d3fbeee142753aa56255eaa245e4265fa68943ce49f0bea517892383866e7a09",
-    "submission_autonomous_loop.svg": "d847d6378895297f3f36a9214fc3f0db6d3f59752be3b23c013d2c3e6a6221ea"
+    "submission_autonomous_loop.png": "e8302ff4f2efdd48c0aa98a767f54a536b242c6b4c4738ad738fba543733682a",
+    "submission_autonomous_loop.pdf": "d2f7ac45c47e2eb6d9815fb1f24e64e21cdf2a32a0f8806c909e44fd853a2dfe",
+    "submission_autonomous_loop.svg": "4287126d3fb04d28289d7758ecee726f4b5199a22cde34979e4c0ceb24e8d0c0"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

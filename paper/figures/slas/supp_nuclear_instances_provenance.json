@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "9504b207f1ac2e2ee9f852cf92aeb93cf80efd60aa58ef35eb688d529be54b08",
+  "generator_sha256": "85f6e85ec2c409b69f95fb44b8e4c8292c08b2dec6f21d4f50649dd03c8568dd",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "41026cdc5e91fd72f8f626efaa1c904c8241efb4cbb35582c5414062067da33f",
+    "paper/figures/build_slas_supplement.py": "1ff8092b4e80ca9aa76ef6169734fb2ca3a3381a00283c1a2e8b270b8ce91c5f",
     "paper/figures/slas/bbbc039_independent_repeat_provenance.json": "bdcbb2a92c0a0d9fbe26e0dd896c71abb3079d83eff8e566a6d0c4cc6277aa65",
     "paper/figures/slas/bbbc039_independent_repeat.png": "c2f5bb2a62a790310b2e93d2be04ee0f551f1d914da901fa76ca1b4877cd33f0",
     "paper/figures/slas/independent_agent_validation_provenance.json": "8a26e3dcd1589dc31b6f4713148acf4cdcc7f9ee8a041a728d1dc5bfb7757bc8",
@@ -15,7 +15,7 @@
         0,
         147,
         2700,
-        1352
+        1470
       ],
       "source_size": [
         2700,
@@ -38,9 +38,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_nuclear_instances.png": "b54fa3b880ff7b2c9c5bc80820c0d3236bcfdc74fc6078b83cf5817917fd9a98",
-    "supp_nuclear_instances.pdf": "2ac2025707b803947cd97e65bad09443e6b7a74f60be0e194ad8ee860dcff200",
-    "supp_nuclear_instances.svg": "ce3056aab6723051fc5fcb1b9eeae7c933805f155d39c96d6b0e875c9fbc2d2f"
+    "supp_nuclear_instances.png": "f68d6830f59c8de8725cea8be82d936863880ad8ba5984e6f901133f4386d72e",
+    "supp_nuclear_instances.pdf": "1815ae4fbd02ce246a0b44f06eb92a1fab1c585298b144b79b83a6093bcd45b3",
+    "supp_nuclear_instances.svg": "1429fbf53ebd50883f907acbac2df3b7e26150b4d552ae08feabbc2c80a2b651"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

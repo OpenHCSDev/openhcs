@@ -91,9 +91,9 @@ def translocation():
 
 
 def nuclear_instances():
-    sheet = SupplementFigure("supp_nuclear_instances", 7.4)
+    sheet = SupplementFigure("supp_nuclear_instances", 8.0)
     sheet.heading("Nuclear detection 2 and 3: the same 200 fields", 99)
-    sheet.artwork("bbbc039_independent_repeat", (2, 51, 96, 45), crop=(0, 10, 100, 92))
+    sheet.artwork("bbbc039_independent_repeat", (2, 50, 96, 46), crop=(0, 10, 100, 100))
     sheet.heading("Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 49)
     sheet.text(13, 44, "C  Nuclear detections", size=12, weight="bold")
     sheet.text(60, 44, "D  Cell boundaries", size=12, weight="bold")

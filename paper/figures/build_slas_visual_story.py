@@ -135,8 +135,8 @@ class FigureSheet:
             return self.input_root / original.relative_to(original.anchor)
         return ROOT / original
 
-    def asset(self, path, bounds):
-        """Place an existing mark without altering its colors or aspect ratio."""
+    def asset(self, path, bounds, *, trim=False):
+        """Place a mark unchanged; optionally remove transparent outer padding."""
         self.source(path)
         if path.suffix == ".svg":
             raw = subprocess.run(
@@ -147,6 +147,14 @@ class FigureSheet:
             pixels = Image.open(BytesIO(raw)).convert("RGBA")
         else:
             pixels = Image.open(path).convert("RGBA")
+        if trim:
+            crop = pixels.getbbox()
+            self.display_transforms.append({
+                "source": str(path.relative_to(ROOT)),
+                "operation": "Trim transparent outer padding; artwork unchanged",
+                "crop_xyxy_pixels": crop,
+            })
+            pixels = pixels.crop(crop)
         x, y, width, height = bounds
         axis = self.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         axis.imshow(pixels)
@@ -854,13 +862,13 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 96)
+    sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 84)
     stages = (
-        (3, 69, "1  Biological brief", "clipboard-list",
+        (3, 63, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
-        (36, 69, "2  Inspect inputs", "microscope",
+        (36, 63, "2  Inspect inputs", "microscope",
          "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
-        (69, 69, "3  Build and run", "workflow",
+        (69, 63, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
         (69, 41, "4  Check the result", "scan-eye",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
@@ -871,34 +879,35 @@ def submission_autonomous_loop():
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
-            (x, y), 28, 23, boxstyle="round,pad=0.2,rounding_size=0.65",
+            (x, y), 28, 17, boxstyle="round,pad=0.2,rounding_size=0.65",
             facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
         ))
-        sheet.text(x + 14, y + 20.5, title, size=11, weight="bold",
+        sheet.text(x + 14, y + 14.5, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
         if icon == "clipboard-list":
-            sheet.asset(icons / "user-round.svg", (x+1, y+8, 6, 9))
-            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+13, 3, 4))
-            sheet.asset(icons / "clipboard-list.svg", (x+7, y+6, 3, 5))
+            sheet.asset(icons / "user-round.svg", (x+1, y+3, 6, 9))
+            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+8, 3, 4))
+            sheet.asset(icons / "clipboard-list.svg", (x+7, y+1, 3, 5))
         elif icon == "microscope":
             sheet.source(ROOT / "website/assets/logos/README.md")
-            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+11, 9, 6))
-            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+4, 9, 6))
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+7, 9, 6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+1, 9, 6))
         elif icon == "workflow":
-            sheet.asset(icons / "list-tree.svg", (x+1.8, y+7, 8, 10))
+            sheet.asset(icons / "list-tree.svg", (x+1.8, y+2, 8, 10))
         elif icon == "scan-eye":
-            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+7, 8, 10))
+            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+2, 8, 10))
         elif icon == "files":
-            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+7, 8, 10))
+            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+2, 8, 10))
         else:
-            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 7, 8, 10))
-        sheet.text(x + 11, y + 12, detail, size=9, va="center",
+            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 2, 8, 10))
+        sheet.text(x + 11, y + 7.5, detail, size=9, va="center",
                    linespacing=1.5, zorder=4)
-    for start, end in (((31,80),(36,80)), ((64,80),(69,80)),
-                       ((83,69),(83,64)), ((69,52),(64,52)), ((36,52),(31,52))):
+    for start, end in (((31,71.5),(36,71.5)), ((64,71.5),(69,71.5)),
+                       ((83,63),(83,58)), ((69,49.5),(64,49.5)),
+                       ((36,49.5),(31,49.5))):
         sheet.arrow(start, end)
-    sheet.route(((50,64),(50,66),(83,66),(83,69)), color=ORANGE, dashed=True)
-    sheet.text(50, 67, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
+    sheet.route(((50,58),(50,60),(83,60),(83,63)), color=ORANGE, dashed=True)
+    sheet.text(50, 61, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
     sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
     sheet.panel("B", "The agent corrects an object detected as two", 3, 32)
@@ -919,6 +928,14 @@ def submission_autonomous_loop():
     CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 5, 94, 14.8), 21)
     sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)
+    # Remove the space released above A without rescaling text or panel B.
+    visible_fraction = .875
+    positions = [(axis, axis.get_position().bounds) for axis in sheet.figure.axes]
+    width, height = sheet.figure.get_size_inches()
+    sheet.figure.set_size_inches(width, height * visible_fraction)
+    for axis, (left, bottom, width, height) in positions:
+        axis.set_position((left, bottom / visible_fraction,
+                           width, height / visible_fraction))
     sheet.save()
 
 
