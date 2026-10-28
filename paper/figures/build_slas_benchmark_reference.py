@@ -62,6 +62,7 @@ class BenchmarkFigure(FigureSheet):
 
         self.source(Path(inspect.getfile(SpeedupSummaryStatistics)))
         number_of_workflows = len(groups[0][0])
+        summary_bars = {}
         for group_index, pair in enumerate(groups):
             for scope_index, numbers in enumerate(pair):
                 # Fixed workflow offsets reveal the distribution without adding data.
@@ -75,14 +76,30 @@ class BenchmarkFigure(FigureSheet):
                 summary = SpeedupSummaryStatistics.from_series(
                     SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
                 half_bar_width = .40 / len(pair)
-                axis.bar(group_index + offset, summary.mean - 1, bottom=1,
-                         width=2 * half_bar_width, color=self.scope_colors[scope_index], alpha=self.mean_alpha,
-                         edgecolor=self.scope_colors[scope_index], linewidth=.8, zorder=1)
+                bar = axis.bar(group_index + offset, summary.mean - 1, bottom=1,
+                               width=2 * half_bar_width, color=self.scope_colors[scope_index], alpha=self.mean_alpha,
+                               edgecolor=self.scope_colors[scope_index], linewidth=.8, zorder=1)[0]
+                summary_bars[bar] = summary
                 axis.plot([group_index + offset - half_bar_width, group_index + offset + half_bar_width],
                           [summary.median] * 2, color=self.summary_color, lw=2.1, zorder=4)
-                axis.text(group_index + offset, -.035, f"{summary.median:.1f}×",
-                          transform=axis.get_xaxis_transform(), ha="center", va="top",
-                          fontsize=self.plot_font_size, color=self.scope_colors[scope_index], clip_on=False)
+        for row_index, (label, values) in enumerate((
+            ("Min (×)", (summary.minimum for summary in summary_bars.values())),
+            ("Mean (×)", (summary.mean for summary in summary_bars.values())),
+            ("Median (×)", (summary.median for summary in summary_bars.values())),
+            ("Max (×)", (summary.maximum for summary in summary_bars.values())),
+        )):
+            y_offset = -5 - row_index * self.plot_font_size * 1.35
+            axis.annotate(label, (0, 0), xycoords="axes fraction",
+                          xytext=(0, y_offset), textcoords="offset points",
+                          ha="right", va="top", fontsize=self.plot_font_size,
+                          color=self.summary_color, annotation_clip=False)
+            for bar, value in zip(summary_bars, values):
+                axis.annotate(f"{value:.1f}",
+                              (bar.get_x() + bar.get_width() / 2, 0),
+                              xycoords=axis.get_xaxis_transform(),
+                              xytext=(0, y_offset), textcoords="offset points",
+                              ha="center", va="top", fontsize=self.plot_font_size,
+                              color=bar.get_facecolor()[:3], annotation_clip=False)
         axis.set_yscale("log")
         axis.set_ylim(*self.limits)
         axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, 10, 100)))
@@ -91,33 +108,39 @@ class BenchmarkFigure(FigureSheet):
         axis.axhline(1, color="#a64343", ls="--", lw=1)
         axis.set_xticks(range(len(labels)), labels)
         axis.set_xlim(-.46, len(labels) - .54)
-        axis.tick_params(axis="x", pad=18)
+        axis.tick_params(axis="x", pad=77)
         axis.grid(axis="y", alpha=.2)
         axis.set_axisbelow(True)
         axis.spines[["top", "right"]].set_visible(False)
-        axis.set_ylabel(f"Speedup over {self.reference_label}")
+        axis.set_ylabel(f"Speedup over\n{self.reference_label}")
 
 
 def submission_benchmark_schedule() -> None:
     """Replot the retained measured worker comparison through the shared sheet."""
-    sheet = BenchmarkFigure("submission_benchmark_schedule", 4.6,
+    sheet = BenchmarkFigure("submission_benchmark_schedule", 5.6,
                             reference_label="one worker", limits=(.8, 5))
-    from textwrap import fill
-
     claims = sheet.qualified_claims()
-    path = sheet.retained(sheet.publication / "fixed12/execution/scaling/derived_workflow_metrics.csv")
+    path = sheet.retained(sheet.publication / "fixed12/execution/first_use_workflow_metrics.csv")
     with path.open(newline="") as stream:
         rows = tuple(csv.DictReader(stream))
-    values = {(row["method"], row["pipeline_name"]): float(row["speedup"]) for row in rows}
+    values = {(row["method"], row["pipeline_name"]): float(row["raw_seconds"]) for row in rows}
     if len(values) != len(rows):
-        raise ValueError("Duplicate retained workflow speedups")
+        raise ValueError("Duplicate retained workflow times")
     names = sorted({name for method, name in values})
     if len(names) != int(claims["case_count"]):
         raise ValueError("Worker plot differs from the qualified workflow cohort")
-    methods = tuple(dict.fromkeys(row["method"] for row in rows))
-    groups = tuple((np.array([values[method, name] for name in names]),) for method in methods)
-    axis = sheet.plot_axes((.12, .25, .83, .58))
-    labels = [fill(method, width=18) for method in methods]
+    reference_mode = claims["mode_statistics"]["12assignments-1worker"]
+    modes = sorted((mode for mode in claims["mode_statistics"].values()
+                    if mode["assignment_count"] == reference_mode["assignment_count"]),
+                   key=lambda mode: mode["openhcs_worker_count"])
+    reference_label = reference_mode["scope_statistics"]["execution"]["label"]
+    reference = np.array([values[reference_label, name] for name in names])
+    groups = tuple((reference / np.array([
+        values[mode["scope_statistics"]["execution"]["label"], name] for name in names]),)
+        for mode in modes)
+    axis = sheet.plot_axes((.12, .39, .83, .44))
+    labels = [f"{mode['openhcs_worker_count']} worker{'s' if mode['openhcs_worker_count'] != 1 else ''}"
+              for mode in modes]
     sheet.distributions(axis, groups, labels)
     sheet.text(3, 95, "Measured processing speedup with more workers", size=14, weight="bold")
     sheet.text(3, 88, "Same twelve samples · all thirty workflows · medians of three runs",
@@ -127,11 +150,11 @@ def submission_benchmark_schedule() -> None:
         *sheet.summary_handles,
     ], loc="lower center", bbox_to_anchor=(.53, .025), ncol=3,
        frameon=False, fontsize=sheet.plot_font_size)
-    sheet.display_transform = {
-        "operation": "Replot retained fixed-workload speedups with shared publication typography and median annotations",
+    sheet.display_transforms.append({
+        "operation": "Replot retained fixed-workload speedups with shared publication typography and minimum, arithmetic mean, median and maximum annotations in × units",
         "analysis_rerun": False,
-        "retained_speedups_plotted": len(rows),
-    }
+        "retained_speedups_plotted": len(names) * len(modes),
+    })
     sheet.save()
 
 
@@ -159,7 +182,7 @@ def submission_benchmark_summary() -> None:
     from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
     from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
 
-    sheet = BenchmarkFigure("submission_benchmark_summary", 9.0)
+    sheet = BenchmarkFigure("submission_benchmark_summary", 10.2)
     publication = sheet.publication
     claims = sheet.qualified_claims()
     tables = {}
@@ -255,13 +278,11 @@ def submission_benchmark_summary() -> None:
         if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
             raise ValueError("Per-well ratios differ from the canonical amortized claim")
         amortized.append(numbers)
-    axis = sheet.plot_axes((.60, .62, .37, .28))
+    axis = sheet.plot_axes((.60, .65, .37, .24))
     sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
-    sheet.text(54, 52.5, "Dots: 30 workflows per distribution", size=sheet.plot_font_size, weight="bold")
-    sheet.text(54, 50.5, "Per sample; OpenHCS median of 3 runs", size=sheet.plot_font_size, color="#59697b")
 
-    sheet.text(2, 47, "C  Same cores and samples", size=14, weight="bold")
-    sheet.text(2, 44.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution",
+    sheet.text(2, 46, "C  Same cores and samples", size=14, weight="bold")
+    sheet.text(2, 43.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution",
                size=sheet.plot_font_size, color="#59697b")
     ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
     ordered = [key for key in ordered if key != "singlewell"]
@@ -287,17 +308,19 @@ def submission_benchmark_summary() -> None:
               + f"{modes[key]['assignment_count']} samples\n"
               + f"({modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} per core)"
               for key in ordered]
-    axis = sheet.plot_axes((.12, .18, .85, .23))
+    axis = sheet.plot_axes((.12, .23, .85, .18))
     sheet.distributions(axis, groups, labels)
     axis.set_xlabel("Same workload and core count for both applications", labelpad=7)
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Processing"),
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[1], label="Setup + processing"),
         *sheet.summary_handles,
-    ], loc="lower center", bbox_to_anchor=(.5, .005), ncol=4, frameon=False,
-       fontsize=sheet.plot_font_size)
+    ], loc="lower center", bbox_to_anchor=(.5, .907), ncol=4, frameon=False,
+       fontsize=sheet.plot_font_size, borderpad=0, labelspacing=.2,
+       title=f"{len(names)} workflows per distribution · OpenHCS medians of 3 runs",
+       title_fontsize=sheet.plot_font_size)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and median values below each distribution; log axes",
+        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and minimum, arithmetic mean, median and maximum values below each distribution; summary row headers give × units; log axes",
         "bar_statistic": "arithmetic mean",
         "bar_baseline": 1.0,
         "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},
