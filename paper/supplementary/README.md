@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Cytoplasmic segmentation was checked alongside the green fluorescent protein (GFP) readout used to distinguish assay controls. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 5E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supplementary Data 7–8 contain the measurements and pipelines.
+In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 5E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supplementary Data 7–8 contain the measurements and pipelines.
 :::
 
 ## Supplementary Figure 3. Nuclear-detection and cell-boundary measurements
@@ -31,7 +31,7 @@ Cytoplasmic segmentation was checked alongside the green fluorescent protein (GF
 ![Independent nuclear analyses and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
+Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 held-out fields and cell-boundary analysis 1 on 12 held-out fields; each used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels between touching cells within two pixels of a manual outline and does not measure recovery of every manual border. Supplementary Data 7–8 provide per-field scores and counts.
 :::
 
 ### Nuclear-detection errors
@@ -46,7 +46,19 @@ Missed nuclei accounted for 73–78% of the three agents' errors on the 175 unin
 Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** Raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supplementary Data 8 links the source images and reports.
 :::
 
+## Supplementary methods: analysis scoring
+
+Precision was the fraction of detections matched to reference nuclei; recall was the fraction of reference nuclei detected. F1 was their harmonic mean, ranging from 0 to 1. Pooled F1 combined object counts across fields before scoring; mean per-image F1 gave each field equal weight. Dice measured overlap of detected and reference areas, from 0 to 1; splitting and merging were evaluated separately. Signed count error was the detected count minus the reference count. Split and merge checks identified reference nuclei detected as several objects, or several nuclei detected as one.
+
+Protein translocation analysis 2 used each well's median log2 nuclear-to-cytoplasmic GFP ratio across cells with measurable cytoplasm. On this log2 scale, 0 means equal nuclear and cytoplasmic intensity, and 1 means twice the intensity in the nucleus.
+
+Control separation was quantified by Z′ (Z-prime): 1 minus three times the sum of the positive and negative control groups' sample standard deviations, divided by the absolute difference between their means. Each drug had four positive and four negative control wells. Z′ of 1 indicates ideal separation with no within-group variation; values above 0.5 indicate an excellent screening assay. Standard deviation (SD) describes variation among wells.
+
+For drug responses, fold change is the measurement divided by its DMSO control mean: 1 means no change, 2 means double and 0.5 means half. Pearson's correlation coefficient, r, describes whether two methods' measurements rise and fall together across wells. It ranges from −1 to 1; values near 1 indicate a strong positive linear relationship, but do not mean that the methods give identical values or effect sizes.
+
 ## Supplementary methods: neurite morphometry
+
+We used images from primary cortical-neuron cultures to test whether independent analyses recovered drug-induced changes in neurite growth. The cultures contained neurons from embryonic day 18 (E18) rats, imaged two days after plating. Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Each compound was tested at 0, 5, 10, 20 and 40 µM, with two technical wells per dose; zero-dose wells contained dimethyl sulfoxide (DMSO) vehicle. Paired nuclear-stain and neuronal-signal images were acquired at nine fields per well, with a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; neuronal signal was recorded in the FITC channel.
 
 To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census. Three agents independently analysed the same 20 coded wells; their analyses do not add biological replicates.
 
@@ -109,6 +121,8 @@ Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS wo
 ## Supplementary Table 1. Reusable software libraries
 
 We built these eight libraries to connect analysis editing, processing, storage and inspection. Each performs a shared job so that developers can add compatible components without rebuilding the surrounding analysis tools. Main Figures 1–2 show how these jobs connect within OpenHCS.
+
+ArrayBridge supports NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Processing functions available in OpenHCS include illumination correction through a version of BaSiCPy maintained by OpenHCS and N2V2 denoising in PyTorch with CUDA, NVIDIA's GPU-computing platform.
 
 | Library | Role in the analysis |
 | --- | --- |

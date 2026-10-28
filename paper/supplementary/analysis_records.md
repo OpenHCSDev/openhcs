@@ -95,7 +95,7 @@ Each fresh gpt-5.6-sol author used four development fields or wells, then fixed 
 
 Precision is the fraction of detections matched to references; recall is the fraction of references found. F1 balances both, and Dice measures area overlap; 1 is best for each. Nuclear matching required intersection over union ≥ 0.5. The nuclear analysis predicted 6,964 objects and often split reference nuclei, despite high area overlap.
 
-Boundary agreement checks predicted borders only; it does not show that every manual border was recovered or that cells match one-to-one. The cell-boundary analysis predicted 1,274 nuclei and 1,273 cells; every nucleus overlapped a cell. Manual outlines enclosed 1,082 closed nuclear interiors, excluding 12 open/frame-connected regions.
+Boundary agreement checks only predicted borders between touching cells; it does not show that every manual border was recovered or that cells match one-to-one. The cell-boundary analysis predicted 1,274 nuclei and 1,273 cells; every nucleus overlapped a cell. Manual outlines enclosed 1,082 closed nuclear interiors, excluding 12 open/frame-connected regions.
 
 Protein translocation analysis 1 used each well's mean cell-level nuclear/cytoplasmic GFP ratio. Positive/negative control means were 7.235/0.915 for Wortmannin and 7.219/1.127 for LY294002. Z′ measures their separation relative to well variation; both exceeded 0.5. BBBC013 has no manual masks for segmentation scoring. Analysis 2 used median log2 ratios on 96 wells including development. These are separate evaluations using different well summaries and evaluation sets, not a controlled before–after comparison.
 
