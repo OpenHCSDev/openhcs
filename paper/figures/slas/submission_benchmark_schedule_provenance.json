@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
+  "generator_sha256": "85f6e85ec2c409b69f95fb44b8e4c8292c08b2dec6f21d4f50649dd03c8568dd",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "bf97204463e58a4ec719a2271ac86c2f585407a89ad561c3c9363ba7438fbebc",
+    "paper/figures/build_slas_benchmark_reference.py": "7ba2ed78dbde94059cec3dc82955c0bc0fc206082571d8d06dc5f8e0090e15d7",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/fixed12/execution/scaling/figure2_provenance.json": "2684c68e06a4740100a9071f4c89a0a8a6dfe0af12b78722ea439fc88ab011ac",
@@ -10,11 +10,17 @@
   },
   "input_root": "/",
   "ui_crops": [],
-  "display_transforms": [],
+  "display_transforms": [
+    {
+      "operation": "Replot retained fixed-workload speedups with shared publication typography and minimum, arithmetic mean, median and maximum annotations in \u00d7 units",
+      "analysis_rerun": false,
+      "retained_speedups_plotted": 120
+    }
+  ],
   "output_sha256": {
-    "submission_benchmark_schedule.png": "26ddb666ff0c65c46a4a239a041fb7356c8af10ee17b69e2f8e592ef1738478e",
-    "submission_benchmark_schedule.pdf": "99a21f86a63adbe2d464290d95780875b17911056fa408c1f69a2090a2db6bd2",
-    "submission_benchmark_schedule.svg": "5011e0bdc23702272ad6df64c2ec24021240248343fe3c4eb80f0028a29458d8"
+    "submission_benchmark_schedule.png": "44dc27c1720f0daec8cb256038bd56cb90b7dced3a52e79ff55ec851fff2a738",
+    "submission_benchmark_schedule.pdf": "633b3e3b74d8524d951ec092b978461ba7e45f238e434f562ab0bf609ba780ea",
+    "submission_benchmark_schedule.svg": "23a0c5ffa2208d4ef9eb00fde9a9a41285e28cd427416f2c51862e1301f65ea2"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
