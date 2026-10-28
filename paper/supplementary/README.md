@@ -15,7 +15,7 @@ Additional methods and figures describe assay measurements, segmentation errors 
 ![Array grouping, named results, scheduling and preparation.](../figures/slas/supp_workflow_infrastructure.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Pipeline preparation connects image groups and named detections to the functions that use them. **(I, A–D)** Image axes and processing groups determine which planes or volumes each function receives. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
+Pipeline preparation connects image groups and named detections to the functions that use them. **(I, A)** Collecting overlapping sites supplies tiles for a stitching function, which also needs tile positions. Well, channel, Z plane and timepoint are held fixed in this example. Selecting Z planes instead forms a volume. Processing groups remain independent of the stack-axis choice. **(B–D)** Groups can receive different function chains. Named labels connect detections to subsequent measurements. Timepoints are processed sequentially; wells can run in parallel. **(II)** Pipeline compilation prepares the functions and assigns work to processes. Main Figures 1–2 show the editing interface and process connections.
 :::
 
 ## Supp. Figure 2. Protein-translocation measurements and cytoplasmic segmentation {#supplementary-figure-2.-protein-translocation-measurements-and-cytoplasmic-segmentation}
