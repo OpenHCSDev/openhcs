@@ -141,10 +141,8 @@ from openhcs.core.progress.debug_projection import (
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
-)
+from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.debug import PersistentPausedWorkerReplay
 from openhcs.core.debug import (

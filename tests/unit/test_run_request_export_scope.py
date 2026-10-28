@@ -13,7 +13,7 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.authoring.session.operations.datasets import RunDatasets
 from openhcs.authoring.session.session import Session
-from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
 
 SCOPE_NAMES = tuple(ZMQRuntimeObservationExportScope.__registry__)
 

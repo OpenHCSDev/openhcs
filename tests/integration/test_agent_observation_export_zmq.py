@@ -49,10 +49,8 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQAuxiliaryExecutionParams,
-    ExportRuntimeOutcomes,
-)
+from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("A01",)):

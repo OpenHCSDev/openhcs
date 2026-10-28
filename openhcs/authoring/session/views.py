@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
+from formbridge.bridge.identities import UiStableWidgetIdentityDeclaration
 from objectstate.object_state import ObjectStateRegistry
 
 from openhcs.agent.dto.session import (
@@ -24,7 +25,6 @@ from openhcs.agent.dto.session import (
 from openhcs.agent.ui_bridge_identities import (
     PipelineEditorWidgetIdentity,
     DatasetListWidgetIdentity,
-    UiSessionViewWidgetIdentityDeclaration,
 )
 from openhcs.authoring.session.dataset_status import PlateStatusPresenter
 from openhcs.authoring.session.datasets import DatasetRow
@@ -64,18 +64,10 @@ class SessionView(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     view_id: ClassVar[str | None] = None
-    title: ClassVar[str]
-    window: ClassVar[type[UiSessionViewWidgetIdentityDeclaration]]
+    window: ClassVar[type[UiStableWidgetIdentityDeclaration]]
     """The stable UI window that renders this view."""
     state: ClassVar[type]
     operations: ClassVar[tuple[type[SessionOperation], ...]]
-
-    @classmethod
-    def rendered_in(
-        cls, window: type[UiSessionViewWidgetIdentityDeclaration]
-    ) -> type["SessionView"]:
-        (view,) = (view for view in cls.__registry__.values() if view.window is window)
-        return view
 
     @classmethod
     @abstractmethod
@@ -231,7 +223,6 @@ class DatasetActivity:
 
 class DatasetListView(SessionView):
     view_id = "dataset_list"
-    title = "Datasets"
     window = DatasetListWidgetIdentity
     state = DatasetListState
     operations = (
@@ -354,7 +345,6 @@ def _function_id(function) -> str | None:
 
 class PipelineStepsView(SessionView):
     view_id = "pipeline_steps"
-    title = "Pipeline Editor"
     window = PipelineEditorWidgetIdentity
     state = PipelineStepsState
     operations = (

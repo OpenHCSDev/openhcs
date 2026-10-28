@@ -117,10 +117,8 @@ from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQAuxiliaryExecutionParams,
-    ExportRuntimeOutcomes,
-)
+from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (

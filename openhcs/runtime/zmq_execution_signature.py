@@ -5,23 +5,16 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
-
-from metaclass_registry import AutoRegisterMeta
+from typing import TYPE_CHECKING, Any
 
 from zmqruntime.messages import ExecuteRequest, MessageFields
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
-from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.runtime.zmq_execution_observation import (
-    ZMQRuntimeExecutionObservationExport,
-    ZMQRuntimeExecutionOutcomeExport,
-)
+from openhcs.runtime import observation_export_scope
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
@@ -47,90 +40,6 @@ class ZMQAuxiliaryParamField(Enum):
     RUNTIME_OBSERVATION_EXPORT_SCOPE = "runtime_observation_export_scope"
 
 
-class ZMQRuntimeObservationExportScope(ABC, metaclass=AutoRegisterMeta):
-    """Amount of runtime evidence requested from an ordinary execution.
-
-    ``name`` is the scope's spelling on the wire and in agent requests.
-    """
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-
-    name: ClassVar[str | None] = None
-    retains_runtime_values: ClassVar[bool]
-    """Workers return their full runtime values for the export."""
-
-    @classmethod
-    def check_export_path(cls, export_path: object) -> None:
-        """Reject a request that lacks the export path this scope needs."""
-
-    @staticmethod
-    def named(value: str) -> type[ZMQRuntimeObservationExportScope]:
-        scope = ZMQRuntimeObservationExportScope.__registry__.get(value)
-        if scope is None:
-            raise ValueError(f"Unknown runtime observation export scope: {value!r}.")
-        return scope
-
-    @staticmethod
-    @abstractmethod
-    def export(
-        *,
-        execution_bundle: CompiledExecutionBundle,
-        execution_results,
-        output_roots,
-        server_environment,
-        execution_id: str,
-    ):
-        """Build this scope's runtime export from one finished execution."""
-
-
-class ExportRuntimeValues(ZMQRuntimeObservationExportScope):
-    """Export the full runtime values."""
-
-    name = "values"
-    retains_runtime_values = True
-
-    @staticmethod
-    def export(
-        *, execution_bundle, execution_results, output_roots, server_environment, execution_id
-    ):
-        return ZMQRuntimeExecutionObservationExport.from_execution(
-            executed_contexts=execution_results.executed_contexts,
-            execution_results=execution_results,
-            runtime_observations=execution_results.runtime_observations,
-            output_roots=output_roots,
-            server_environment=server_environment,
-            execution_id=execution_id,
-        )
-
-
-class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
-    """Export per-axis outcomes and exports, without array values."""
-
-    name = "outcomes"
-    retains_runtime_values = False
-
-    @classmethod
-    def check_export_path(cls, export_path: object) -> None:
-        if export_path is None:
-            raise ValueError("Outcome observation requires an export path.")
-
-    @staticmethod
-    def export(
-        *, execution_bundle, execution_results, output_roots, server_environment, execution_id
-    ):
-        return ZMQRuntimeExecutionOutcomeExport.from_execution(
-            compiled_axis_ids=execution_bundle.runtime_contexts,
-            execution_results=execution_results,
-            output_roots=output_roots,
-            server_environment=server_environment,
-            execution_id=execution_id,
-            exports=RuntimeExportObservation.from_runtime_observations(
-                execution_results.runtime_observations
-            ),
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class ZMQAuxiliaryExecutionParams:
     """Auxiliary execution options shared by the ordinary client and server."""
@@ -138,9 +47,9 @@ class ZMQAuxiliaryExecutionParams:
     partition_values: tuple[str, ...] | None = None
     debug_execution_config: DebugExecutionConfig | None = None
     runtime_observation_export_path: Path | None = None
-    runtime_observation_export_scope: type[ZMQRuntimeObservationExportScope] = (
-        ExportRuntimeValues
-    )
+    runtime_observation_export_scope: type[
+        observation_export_scope.ZMQRuntimeObservationExportScope
+    ] = observation_export_scope.ExportRuntimeValues
 
     def __post_init__(self) -> None:
         self.runtime_observation_export_scope.check_export_path(
@@ -233,10 +142,10 @@ class ZMQAuxiliaryExecutionParams:
     @staticmethod
     def _scope_from_transport(
         value: str | None,
-    ) -> type[ZMQRuntimeObservationExportScope]:
+    ) -> type[observation_export_scope.ZMQRuntimeObservationExportScope]:
         if value is None:
-            return ExportRuntimeValues
-        return ZMQRuntimeObservationExportScope.named(value)
+            return observation_export_scope.ExportRuntimeValues
+        return observation_export_scope.ZMQRuntimeObservationExportScope.named(value)
 
     @staticmethod
     def _partition_values_from_transport(

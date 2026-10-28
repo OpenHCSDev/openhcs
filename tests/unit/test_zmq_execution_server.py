@@ -44,13 +44,13 @@ from openhcs.runtime.zmq_execution_server import (
     ZMQExecutionContext,
     ZMQExecutionServer,
 )
+from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
 from openhcs.runtime.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
     ZMQExecutionCompileControl,
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
     ZMQExecutionRequestPayload,
-    ExportRuntimeOutcomes,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
