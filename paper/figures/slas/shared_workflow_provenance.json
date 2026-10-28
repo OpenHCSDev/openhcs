@@ -1,33 +1,49 @@
 {
-  "generator_sha256": "0ecf72fcf9fd43dd345b234c33b96aa553f64eecd751d64c8f6170884c67d0f7",
+  "generator_sha256": "3732a079ff9d83869b40128e598d50a76806da4344a5bbc358514c16cff37b1f",
   "source_sha256": {
-    "openhcs/runtime/zmq_execution_client.py": "df72db877fc54e236860b1c260238b542aa79cdaf3a5a0ef4582084b11181101",
-    "openhcs/runtime/zmq_execution_server.py": "44c308838a66fb4085abbbcb4f3af8b154140205a886f940b4589df5ef43e5e7",
-    "openhcs/runtime/zmq_worker_execution.py": "000a65d1619b75d802b3b38001e3e3787524e3859c9430b5d74813f197b29dcb",
-    "openhcs/core/orchestrator/worker_execution.py": "3c47a156ad65a42b0beb345b9144a3a5e1fa3b7c61e8ec6d7717b6f8c8bcb232",
-    "openhcs/core/steps/function_artifact_materialization.py": "d00c22bc884065c5b36b7f16fe006f2181a53553b7d2df9b60c93745969598a8",
-    "openhcs/runtime/napari_viewer_server.py": "a558fc8187e65bd80aa970bad386b06b0ad2c72b19fa132338c63bdd81befac9",
-    "openhcs/runtime/fiji_viewer_server.py": "56d9e929384a28dd7f5546d0533616fd533c2e8b533743891bb3f675726080b1",
+    "openhcs/runtime/zmq_execution_client.py": "627c25f3e066e85809354a5e4d5b3a0dda13234c9850c44099b1f99f7d475311",
+    "openhcs/runtime/zmq_execution_server.py": "11ba69c3e3b091b3976c29b681ae717e5a7f2d2ff809ecbabf2983b724a7047b",
+    "openhcs/runtime/zmq_worker_execution.py": "3d334c5b0fc2cd50cd515369508d6bd66c5cfb8e68b93c2ae5d773af4f583d8c",
+    "openhcs/core/orchestrator/worker_execution.py": "823eaf64b948171c81a952be37d0b755707824de6d054c19ebff3778e000d3c3",
+    "openhcs/core/steps/function_artifact_materialization.py": "d415321ebcc6163cccf4155e7d5e42a7b4176f7be49e63912b6a75863039010d",
+    "openhcs/runtime/napari_viewer_server.py": "e3a2c266b7ec7025bb96e3e72da5a4eaa62276f56a37b22771384e602a59d6bc",
+    "openhcs/runtime/fiji_viewer_server.py": "ad3540de4ceca9f78e29ff4b488cec40b26c776ee717f17737ac7b83a0a1c2a4",
     "docs/source/architecture/zmq_execution_service_extracted.rst": "dcaf4e63eb604312edadcb3442479ac6e369842231bb5caeb3e5404ecf693155",
-    "docs/source/architecture/streaming_boundary_and_wrappers.rst": "b4943eeac6a59501b60ebfa16b0b093bc415b5bf8e4124409371b0d3641cbbfd",
-    "paper/figures/build_slas_processes.py": "42e176fcbbf52b7444b1fbc06aef787b833202e4858cc5ca5990ae5b3d912b1e",
-    "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
+    "docs/source/architecture/streaming_boundary_and_wrappers.rst": "d71fe34d7bfcc7e74ffbd04b5c1f84a10636a9369f4f6857d7b19020ea1df7b1",
+    "paper/figures/build_slas_processes.py": "79f144836a550b0c38acccae78383c9ad89681648d984507e5608bb8a5168814",
+    "website/assets/logos/README.md": "b86c8373cf38552b6140e36af8db18859548ed8e5f25578df5936897ba5804df",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
     "website/assets/logos/mcp.svg": "05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0",
     "website/assets/logos/cellprofiler.png": "820dc710604ae6bfa5605b7a6c17817c484d91e289c15d5953e2769b083333b3",
-    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
-    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea",
+    "website/assets/logos/numpy.svg": "ddbd7d92ab879ceba54f5428f49a703ba8d05d54b93808b7178f5e0afc8373a3",
     "website/assets/logos/cupy.svg": "30100286bd74ae633d2196b2d8ea175e405c258c22441582e6bb1715866d1756",
     "website/assets/logos/pytorch.svg": "fa653a3e79a36d6c8738c9c05e10c0265e466db23fc4b2d7ef65d32ff84cc839",
+    "website/assets/logos/tensorflow.svg": "5ce40657105dc138823732bc446fe8e0bee666e9348fe80b7ef1b03bd873b953",
     "website/assets/logos/jax.png": "b336e0959efcf4835f1c4ab717398b4a8fe11dccac6790f2dcff504820d9b095",
+    "website/assets/logos/pyclesperanto.png": "b551c7e270028cfc29b5d8997a49ed83c3c49029e41124c2e0ec339b533157db",
+    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
+    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea",
     "website/assets/logos/bioformats.svg": "19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a",
     "website/assets/logos/zarr.svg": "4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6"
   },
+  "input_root": "/",
   "ui_crops": [],
+  "display_transforms": [
+    {
+      "source": "website/assets/logos/zarr.svg",
+      "operation": "Trim transparent outer padding; artwork unchanged",
+      "crop_xyxy_pixels": [
+        54,
+        203,
+        544,
+        397
+      ]
+    }
+  ],
   "output_sha256": {
-    "shared_workflow.png": "f86fc29ebdf139cd6dbcef714d2cb9965a4e8e9ff141b7ed74e9d33a7b3bb61e",
-    "shared_workflow.pdf": "4e40bfe28b062c710aef57f84fbe1eaf4f6280e7603519c5f5272d61387593b8",
-    "shared_workflow.svg": "fa770dbeb0389d209eb229bd46e6d8a426754806f91fe3811b7b49f4b685049e"
+    "shared_workflow.png": "3a7791ad4847ea364cfb5e133db55ed30734c4edafefc901abaf072a2ebdb8c3",
+    "shared_workflow.pdf": "990ecd80d8ea83b3350243d12322ab3fd3e3c05508e8e563b220400ad64d98fa",
+    "shared_workflow.svg": "b0cf5d46b1997f88205fe2f9a64d17c001696337d6445a96fcaee87eacd46af7"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

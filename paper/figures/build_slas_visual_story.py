@@ -135,8 +135,8 @@ class FigureSheet:
             return self.input_root / original.relative_to(original.anchor)
         return ROOT / original
 
-    def asset(self, path, bounds):
-        """Place an existing mark without altering its colors or aspect ratio."""
+    def asset(self, path, bounds, *, trim=False):
+        """Place a mark unchanged; optionally remove transparent outer padding."""
         self.source(path)
         if path.suffix == ".svg":
             raw = subprocess.run(
@@ -147,6 +147,14 @@ class FigureSheet:
             pixels = Image.open(BytesIO(raw)).convert("RGBA")
         else:
             pixels = Image.open(path).convert("RGBA")
+        if trim:
+            crop = pixels.getbbox()
+            self.display_transforms.append({
+                "source": str(path.relative_to(ROOT)),
+                "operation": "Trim transparent outer padding; artwork unchanged",
+                "crop_xyxy_pixels": crop,
+            })
+            pixels = pixels.crop(crop)
         x, y, width, height = bounds
         axis = self.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         axis.imshow(pixels)
