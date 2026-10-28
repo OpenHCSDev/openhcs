@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "27263b33679d77cda44e5c98368aa56fa46b3b72bb14bb3fa2797d6fbb018994",
+  "generator_sha256": "85f6e85ec2c409b69f95fb44b8e4c8292c08b2dec6f21d4f50649dd03c8568dd",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "bf97204463e58a4ec719a2271ac86c2f585407a89ad561c3c9363ba7438fbebc",
+    "paper/figures/build_slas_benchmark_reference.py": "7ba2ed78dbde94059cec3dc82955c0bc0fc206082571d8d06dc5f8e0090e15d7",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "dc3f4fe3dedda2e7767108eb8bf19e54e1caffb8324d8038ff492b05875bc3a0",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "10f9e47947f96079317f5440b8bca19fd0cf0761c167a565437db1c822f9c110",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -54,7 +54,7 @@
   "ui_crops": [],
   "display_transforms": [
     {
-      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and median values below each distribution; log axes",
+      "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and minimum, arithmetic mean, median and maximum values below each distribution; summary row headers give \u00d7 units; log axes",
       "bar_statistic": "arithmetic mean",
       "bar_baseline": 1.0,
       "reference_lines": {
@@ -79,9 +79,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "d89413f1628bb601671a24eb7e4793077f2f68f1e57062a2ff8863d99fb3cf59",
-    "submission_benchmark_summary.pdf": "5d3ba1716d40b30c7b3c9d8c1159fb97b8f90217461c5bb8b0bd6d20256a34bf",
-    "submission_benchmark_summary.svg": "a822edc08de8f7231996b6294dc19531b149a36e2bf304778a7adfe80b55f754"
+    "submission_benchmark_summary.png": "548f9bf88fe61db913f918ffe132066987bca2a517dad2a770c8e5a9c76e3149",
+    "submission_benchmark_summary.pdf": "00b74f886fe09a49d097fbc9fa01540139c882fb62908ba001085e7b32c4dd37",
+    "submission_benchmark_summary.svg": "ba92208abc67f9f90ef8eec9974c8f83dd3c895349e8fe27017e8f69da3601a5"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
