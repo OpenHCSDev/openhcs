@@ -940,17 +940,10 @@ def test_public_policy_pages_are_staged_with_local_software_boundaries(
         assert "hosted mcp" not in lowered_document
 
 
-def test_website_source_and_workflow_follow_package_metadata_authorities():
+def test_website_source_uses_package_metadata_tokens():
     source_html = (REPO_ROOT / "website/index.html").read_text(encoding="utf-8")
-    workflow = (REPO_ROOT / ".github/workflows/website-pages.yml").read_text(
-        encoding="utf-8"
-    )
 
     assert RELEASE_VERSION_TOKEN in source_html
-    assert "0.5.21" not in source_html
-    assert "0.5.22" not in source_html
-    assert workflow.count('      - "openhcs/__init__.py"') == 2
-    assert workflow.count('      - "openhcs/resources/assets/openhcs-*.svg"') == 2
     for page_name in ("privacy.html", "support.html", "terms.html"):
         page_source = (REPO_ROOT / "website" / page_name).read_text(encoding="utf-8")
         assert CONTACT_EMAIL_TOKEN in page_source

@@ -173,7 +173,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         subparsers: argparse._SubParsersAction,
     ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
-        from openhcs.runtime.zmq_execution_signature import (
+        from openhcs.runtime.observation_export_scope import (
             ExportRuntimeValues,
             ZMQRuntimeObservationExportScope,
         )

@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 
 from openhcs.core.debug import DebugExecutionConfig
+from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQExecutionCompileControl,
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
     ZMQExecutionRequestPayload,
-    ZMQRuntimeObservationExportScope,
 )
 
 

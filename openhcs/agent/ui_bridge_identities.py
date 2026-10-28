@@ -11,26 +11,14 @@ from formbridge.bridge.identities import (
 )
 
 
-class UiSessionViewWidgetIdentityDeclaration(UiStableWidgetIdentityDeclaration):
-    """Stable window rendering one session view; the view owns its title."""
-
-    @classmethod
-    def require_title(cls) -> str:
-        from openhcs.authoring.session.views import SessionView
-
-        return SessionView.rendered_in(cls).title
-
-    @classmethod
-    def has_title(cls) -> bool:
-        return True
-
-
-class DatasetListWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
+class DatasetListWidgetIdentity(UiStableWidgetIdentityDeclaration):
     value = "datasets"
+    title = "Datasets"
 
 
-class PipelineEditorWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
+class PipelineEditorWidgetIdentity(UiStableWidgetIdentityDeclaration):
     value = "pipeline_editor"
+    title = "Pipeline Editor"
 
 
 class PipelineDebugToolbarWidgetIdentity(UiWidgetIdentityDeclaration):

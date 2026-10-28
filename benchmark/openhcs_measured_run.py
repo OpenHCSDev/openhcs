@@ -45,10 +45,8 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQAuxiliaryExecutionParams,
-    ExportRuntimeOutcomes,
-)
+from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 from .timing import (
     BenchmarkPhase,

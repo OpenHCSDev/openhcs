@@ -11,7 +11,7 @@ from enum import Enum
 from python_introspect import validate_annotated_dataclass
 from zmqruntime.config import PositiveInteger
 
-from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
 
 RuntimeObservationExportScopeName = Enum(
     "ZMQRuntimeObservationExportScope",

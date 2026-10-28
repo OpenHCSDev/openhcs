@@ -64,10 +64,8 @@ from openhcs.runtime.environment_provenance import (
     RuntimeEnvironmentSnapshot,
 )
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
-)
+from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None:
