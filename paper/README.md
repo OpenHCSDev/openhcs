@@ -52,9 +52,13 @@ infrastructure. The manuscript describes the analysis component, not an
 implemented experiment-design or instrument-control loop.
 
 The [SLAS article guidance](https://www.slas.org/publications/article-types/)
-recommends fewer than 7,000 words and no more than seven figures and tables
-combined for original research. Count the current rendered manuscript after
-resolving generated claim spans; a source count is only an editing checkpoint.
+recommends ideally fewer than 7,000 words, seven or fewer figures and tables
+combined and fewer than 50 references, with editorial discretion. It gives no
+separate Methods limit and does not define word-count inclusions or whether
+supplementary figures and tables enter the combined limit. State the counting
+basis rather than claiming compliance from a body-only count. Count the current
+rendered manuscript after resolving generated claim spans; source counts remain
+editing checkpoints.
 
 Use the canonical paper-writing style guide in the sibling `papers` repository:
 `docs/papers/writing_style_guide.md`. Keep that guide as the substantive source
@@ -171,12 +175,15 @@ For layout-only changes, pass `rebuild_coverage=False` to
 against `reference-layout/retained_coverage_provenance.json`, keeping the original
 coverage evidence intact rather than regrading the current registry. The final
 command alone rebuilds compact Figure 6 from retained inputs: graded module
-coverage, measured one-worker comparisons and matched-core CP projections.
-The projection retains initialization in every independent CP process and
-assumes balanced work without contention; it is not a measured multicore run.
-Its CSV and figure provenance retain individual values and assumptions.
-Measured fixed-twelve OpenHCS scaling and serial-CP comparisons remain in
-Supplementary Figure 6.
+coverage, measured one-worker comparisons and a fixed serial CellProfiler
+estimate versus measured OpenHCS with one, two, three and four workers on the
+same twelve samples. The serial estimate comes from the qualified fixed12
+metric tables, which derive from measured eight-sample first/warm batches
+through `RepeatedSourceNativeBatchReport.projected_fresh_batch`; the painter
+contains no timing model. Its CSV distinguishes estimated serial CellProfiler
+seconds, measured OpenHCS seconds and their ratio. The CellProfiler estimate
+stays identical across worker counts; workers are not matched core allocations.
+Supplementary Figure 6 separately shows measured OpenHCS-only worker scaling.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.

@@ -1,5 +1,29 @@
 [
   {
+    "id": "Goldberg2005",
+    "type": "article-journal",
+    "title": "The Open Microscopy Environment (OME) Data Model and XML file: open tools for informatics and quantitative analysis in biological imaging",
+    "author": [
+      {"given": "Ilya G", "family": "Goldberg"},
+      {"given": "Chris", "family": "Allan"},
+      {"given": "Jean-Marie", "family": "Burel"},
+      {"given": "Doug", "family": "Creager"},
+      {"given": "Andrea", "family": "Falconi"},
+      {"given": "Harry", "family": "Hochheiser"},
+      {"given": "Josiah", "family": "Johnston"},
+      {"given": "Jeff", "family": "Mellen"},
+      {"given": "Peter K", "family": "Sorger"},
+      {"given": "Jason R", "family": "Swedlow"}
+    ],
+    "container-title": "Genome Biology",
+    "issued": {"date-parts": [[2005, 5, 3]]},
+    "DOI": "10.1186/gb-2005-6-5-r47",
+    "URL": "https://doi.org/10.1186/gb-2005-6-5-r47",
+    "volume": "6",
+    "issue": "5",
+    "page": "R47"
+  },
+  {
     "id": "NapariMagicgui",
     "type": "webpage",
     "title": "Creating widgets",

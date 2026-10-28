@@ -100,15 +100,15 @@ Smaller branching responses than MetaXpress persisted in total branches and bran
 
 ## Supp. methods: execution-time estimates {#supplementary-methods-execution-time-estimates}
 
-To compare execution times for additional sample and process counts, we estimated CellProfiler times from measured serial batches and used OpenHCS medians from three repetitions after warmup. Both CellProfiler timing intervals include internal initialization. Setup-plus-processing includes OpenHCS compilation and submission/wait; external application/server startup and OpenHCS library loading are excluded. Repeated samples measure processing speed rather than biological variation.
+Figure 6C compares measured OpenHCS times on twelve samples with a fixed serial CellProfiler estimate for the same workload. OpenHCS times are medians of three repetitions after warmup. Both CellProfiler timing intervals include internal initialization. Setup-plus-processing includes OpenHCS compilation and submission/wait; external application/server startup and OpenHCS library loading are excluded. Repeated samples measure processing speed rather than biological variation.
 
-CellProfiler times for N samples divided across C independent processes were estimated as:
+For N samples processed serially, CellProfiler time was estimated as:
 
-`Estimated time = T8_first + (N/C − 8) × median(T8_warm)/8`
+`Estimated time = T8_first + (N − 8) × median(T8_warm)/8`
 
-`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Total time adds pre-pipeline overhead once per process. This assumes evenly divided work and no slowdown from concurrent processes. The measured eight-sample batch used one numerical thread with access to four cores; the estimate assumes that rate on one core per process. Matching multicore CellProfiler runs and combined process memory were not measured.
+`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Setup-plus-processing adds the measured first-batch pre-pipeline overhead once. Figure 6C uses N = 12 and holds this estimate fixed for all four OpenHCS worker counts. The measured CellProfiler batch used one numerical thread with access to CPUs 2–5. OpenHCS batch workers could use the same four CPUs, with one numerical-library thread per worker; worker counts do not imply individually pinned cores. Combined process memory was not measured.
 
-[Calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) covered three workflows with 8, 12 and 16 samples. Maximum absolute prediction error was 7.06% for the same-session eight-sample model, compared with 5.21% for a two-sample model; an earlier-session eight-sample model underpredicted by up to 14.03%. These calibration errors do not quantify multicore uncertainty. Per-process batches of 3, 4 and 6 samples fall below the validated range.
+[Calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) covered three workflows with 8, 12 and 16 samples. Maximum absolute prediction error was 7.06% for the same-session eight-sample model, compared with 5.21% for a two-sample model; an earlier-session eight-sample model underpredicted by up to 14.03%. Twelve samples lie within the examined batch-size range, but validation covered only three workflows, not the full corpus.
 
 ## Supp. Figure 6. Processing speed with additional workers {#supplementary-figure-6.-processing-speed-with-additional-workers}
 
