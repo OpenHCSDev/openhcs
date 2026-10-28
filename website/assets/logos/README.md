@@ -27,6 +27,9 @@ upstream source bytes.
   repository at commit `4666a0b8412e4a10dfb838f5e5adee02b5547f4e`;
   SHA-256 `4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6`.
   Preserve its colors and aspect ratio.
+- `numpy.svg`: `icons/numpy.svg` from the CC0-1.0-licensed Simple Icons
+  project at commit `34c22501f9ac9f22b12f825677ccbab1fb22e14b`; SHA-256
+  `ddbd7d92ab879ceba54f5428f49a703ba8d05d54b93808b7178f5e0afc8373a3`.
 - `cupy.svg`: `docs/image/cupy_logo.svg` from CuPy commit
   `9771347977f79ca08ebf0fb7fb6250268eaa35f5`; SHA-256
   `30100286bd74ae633d2196b2d8ea175e405c258c22441582e6bb1715866d1756`.
