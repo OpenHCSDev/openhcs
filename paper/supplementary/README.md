@@ -115,7 +115,7 @@ CellProfiler times for N samples divided across C independent processes were est
 ![Measured OpenHCS execution scaling at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Times are medians of three repetitions after warmup. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Numbers below the distributions give their medians. All times in this figure were measured.
+Execution times for twelve repeated samples processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Times are medians of three repetitions after warmup. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. All times in this figure were measured.
 :::
 
 ## Supp. Table 1. Reusable software libraries {#supplementary-table-1.-reusable-software-libraries}
