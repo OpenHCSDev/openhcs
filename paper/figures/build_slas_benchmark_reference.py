@@ -101,8 +101,11 @@ class BenchmarkFigure(FigureSheet):
                               ha="center", va="top", fontsize=self.plot_font_size,
                               color=bar.get_facecolor()[:3], annotation_clip=False)
         axis.set_yscale("log")
-        axis.set_ylim(*self.limits)
-        axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, 10, 100)))
+        upper = max(self.limits[1], max(summary.maximum for summary in summary_bars.values()) * 1.15)
+        axis.set_ylim(self.limits[0], upper)
+        axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, *(
+            10 ** power for power in range(1, int(np.ceil(np.log10(upper))) + 1)
+        ))))
         axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
         axis.yaxis.set_minor_formatter(NullFormatter())
         axis.axhline(1, color="#a64343", ls="--", lw=1)
@@ -158,29 +161,9 @@ def submission_benchmark_schedule() -> None:
     sheet.save()
 
 
-def balanced_cp_projection(anchor, assignments: int, workers: int):
-    """Apply the retained affine batch model to equal independent CP processes.
-
-    This is an ideal parallel projection, not measured multicore performance.
-    Each process pays initialization; only assignments are partitioned. Below
-    eight assignments/process this extrapolates beyond the validation domain.
-    """
-    if workers < 1 or assignments < workers or assignments % workers:
-        raise ValueError("CP projection requires equal positive process workloads")
-    per_worker = assignments // workers
-    execution = (anchor["observed_source_fresh_execution_seconds"]
-                 + (per_worker - anchor["source_assignment_count"])
-                 * anchor["derived_warm_assignment_execution_seconds"])
-    total = execution + anchor["observed_source_fresh_pre_pipeline_seconds"]
-    if not np.isfinite(execution) or execution <= 0 or total < execution:
-        raise ValueError("Retained affine model cannot predict this workload")
-    return execution, total
-
-
 def submission_benchmark_summary() -> None:
     """Dense main-paper view of the existing sweep and retained evidence grades."""
     from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
-    from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
 
     sheet = BenchmarkFigure("submission_benchmark_summary", 10.2)
     publication = sheet.publication
@@ -199,29 +182,6 @@ def submission_benchmark_summary() -> None:
     if len(names) != int(claims["case_count"]):
         raise ValueError("Expected the qualified workflow cohort")
     modes = claims["mode_statistics"]
-
-    # Read actual anchor reports through their existing model owner. Never turn
-    # these derived times into observations or change the qualified sweep.
-    record = ROOT / "benchmark/results/matched_worker_sweep_20261008_latestproduction"
-    source_path = record / "data/first_use/8assignments-2workers/summary_custody.json"
-    source = json.loads(source_path.read_text())
-    if source["status"] != "PASS":
-        raise ValueError("The CP anchors must come from a qualified comparison")
-    sheet.source(source_path)
-    anchors = {}
-    for case in source["cases"]:
-        path = record / "reports/8assignments-2workers" / case["case"] / "native_report.json"
-        digest = sha256(path)
-        if digest != case["native_headline_reference"]["source_report_sha256"]:
-            raise ValueError(f"Changed CP anchor: {path}")
-        report = RepeatedSourceNativeBatchReport.from_payload(json.loads(path.read_text()))
-        anchors[case["case"]] = report.projected_fresh_batch(
-            8, source_report_path=path, source_report_sha256=digest)
-        sheet.source(path)
-    if set(anchors) != set(names):
-        raise ValueError("CP projection must cover the exact measured workflow cohort")
-    sheet.source(Path(inspect.getfile(RepeatedSourceNativeBatchReport)))
-    sheet.source(record / "calibration/cold_first/cold-first-model-validation.json")
 
     def values(mode_name, scope, *, native=False):
         mode = modes[mode_name]
@@ -281,36 +241,35 @@ def submission_benchmark_summary() -> None:
     axis = sheet.plot_axes((.60, .65, .37, .24))
     sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
 
-    sheet.text(2, 46, "C  Same cores and samples", size=14, weight="bold")
-    sheet.text(2, 43.5, "OpenHCS measured · CellProfiler estimated, assuming ideal parallel execution",
+    sheet.text(2, 46, "C  Same twelve samples · more OpenHCS workers", size=14, weight="bold")
+    sheet.text(2, 43.5, "Fixed serial CellProfiler estimate · measured OpenHCS",
                size=sheet.plot_font_size, color="#59697b")
-    ordered = sorted(modes, key=lambda key: (modes[key]["openhcs_worker_count"], modes[key]["assignment_count"]))
-    ordered = [key for key in ordered if key != "singlewell"]
+    reference_key = "12assignments-1worker"
+    ordered = sorted((key for key, mode in modes.items()
+                      if mode["assignment_count"] == modes[reference_key]["assignment_count"]),
+                     key=lambda key: modes[key]["openhcs_worker_count"])
     groups = []
     projected_rows = []
     for key in ordered:
         mode = modes[key]
-        predicted = np.array([balanced_cp_projection(
-            anchors[name], mode["assignment_count"], mode["openhcs_worker_count"])
-            for name in names])
-        groups.append(tuple(predicted[:, i] / values(key, scope)
-                            for i, scope in enumerate(("execution", "total"))))
-        for i, name in enumerate(names):
-            for j, scope in enumerate(("execution", "total")):
+        groups.append(tuple(ratios(key, scope) for scope in ("execution", "total")))
+        for j, scope in enumerate(("execution", "total")):
+            serial = values(reference_key, scope, native=True)
+            if not np.array_equal(values(key, scope, native=True), serial):
+                raise ValueError("The serial CellProfiler baseline must stay fixed across worker counts")
+            measured = values(key, scope)
+            for i, name in enumerate(names):
                 projected_rows.append({"workflow": name, "scope": scope,
-                    "workers_each": mode["openhcs_worker_count"],
-                    "wells_each": mode["assignment_count"],
-                    "wells_per_worker": mode["assignment_count"] // mode["openhcs_worker_count"],
-                    "cp_projected_seconds": predicted[i, j],
-                    "openhcs_measured_seconds": values(key, scope)[i],
-                    "speedup": groups[-1][j][i]})
-    labels = [f"{modes[key]['openhcs_worker_count']} {'core' if modes[key]['openhcs_worker_count'] == 1 else 'cores'}\n"
-              + f"{modes[key]['assignment_count']} samples\n"
-              + f"({modes[key]['assignment_count'] // modes[key]['openhcs_worker_count']} per core)"
+                    "openhcs_workers": mode["openhcs_worker_count"],
+                    "samples": mode["assignment_count"],
+                    "cp_serial_estimated_seconds": serial[i],
+                    "openhcs_measured_seconds": measured[i],
+                    "speedup_over_serial_cp": groups[-1][j][i]})
+    labels = [f"{modes[key]['openhcs_worker_count']} worker{'s' if modes[key]['openhcs_worker_count'] != 1 else ''}"
               for key in ordered]
-    axis = sheet.plot_axes((.12, .23, .85, .18))
+    axis = sheet.plot_axes((.16, .23, .81, .18))
     sheet.distributions(axis, groups, labels)
-    axis.set_xlabel("Same workload and core count for both applications", labelpad=7)
+    axis.set_xlabel("OpenHCS workers · twelve samples for both applications", labelpad=7)
     sheet.figure.legend(handles=[
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Processing"),
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[1], label="Setup + processing"),
@@ -327,18 +286,21 @@ def submission_benchmark_summary() -> None:
         "workflow_count_per_distribution": len(names),
         "single_worker_batch_policy": claims["amortized_policy"],
         "native_policy": claims["native_policy"],
-        "matched_core_projection": {
-            "formula": "T_CP(N,C) = T_CP(8,first) + (N/C - 8) * median(T_CP(8,warm))/8",
-            "total": "Add first-batch pre-pipeline overhead once per concurrent process",
-            "assumptions": "Balanced independent one-thread processes; no contention or coordination overhead; external startup excluded",
-            "validation_scope": "Serial batches at 8,12,16 samples on three workflows; does not validate parallel scaling or 3-6 samples per process",
+        "serial_baseline_comparison": {
+            "inputs": "Hash-verified retained fixed12 first_use_workflow_metrics.csv rows, not a new timing model",
+            "reference_mode": reference_key,
+            "sample_count": modes[reference_key]["assignment_count"],
+            "openhcs_worker_counts": [modes[key]["openhcs_worker_count"] for key in ordered],
+            "comparison": "The same estimated serial CellProfiler time divided by each measured OpenHCS worker time",
+            "companion_figure": "submission_benchmark_schedule retains the measured OpenHCS-only scaling comparison",
+            "cpu_scope": "Workers are not matched core counts; retained affinity and numerical-thread policies apply",
             "target_native_observation_count": 0,
         },
         "analysis_rerun": False,
     })
     table_path = OUTPUT / "submission_benchmark_summary_projection.csv"
     with table_path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=tuple(projected_rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=tuple(projected_rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(projected_rows)
     sheet.source(table_path)
