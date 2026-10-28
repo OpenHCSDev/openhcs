@@ -72,12 +72,13 @@ to understand the scientific findings in the main text.
 ## Figures and validation
 
 The current main layout has six figures and Table 1: native editing and custom
-function authoring; process architecture with integration logos; an intended
-autonomous loop alongside a recorded repair trajectory; treatment responses
-from three independent blind agents with separate public/laboratory neurite
-demonstrations; task-specific results with matched nuclear, retinal and volume corrections;
-and matched CellProfiler execution
-and total time, followed by measured fixed-workload worker scaling. Table 1 summarizes the later autonomous assay results; full
+function authoring (Figure 1); process architecture with integration logos
+(Figure 2); CellProfiler output coverage and measured execution/total times,
+with a fixed serial estimate compared with measured workers (Figure 3); an
+intended autonomous loop alongside a recorded repair trajectory (Figure 4);
+treatment responses from three independent blind agents with separate
+public/laboratory neurite demonstrations (Figure 5); and task-specific results
+with matched nuclear, retinal and volume corrections (Figure 6). Table 1 summarizes the later autonomous assay results; full
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
@@ -105,7 +106,7 @@ PYTHONPATH=paper/figures python -c \
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output
-receipts. Figure 5 uses post-freeze evaluation records through
+receipts. Figure 6 uses post-freeze evaluation records through
 `build_slas_task_only.py`; its wider assay views remain in the supplement.
 `PYTHONPATH=paper/figures python paper/figures/build_slas_supplement.py`
 regenerates the consolidated supplement from retained artwork without rerunning
@@ -154,7 +155,7 @@ previous paired package available, with diagnostics under `build/run-*`.
 Snapshots copy one resolved successful package and its linked local support.
 They are frozen reading copies, not another manuscript source.
 
-Figure 6 reuses the qualified sweep measurements; rebuilding its chart forms
+Figure 3 reuses the qualified sweep measurements; rebuilding its chart forms
 does not run benchmarks. Its module coverage grades come from the canonical
 compatibility report and the named behavior tests in
 `figures/cellprofiler_coverage_evidence.json`. Run those selected tests with
@@ -174,7 +175,7 @@ For layout-only changes, pass `rebuild_coverage=False` to
 `build_reference_figures`. This checks the retained coverage artwork and table
 against `reference-layout/retained_coverage_provenance.json`, keeping the original
 coverage evidence intact rather than regrading the current registry. The final
-command alone rebuilds compact Figure 6 from retained inputs: graded module
+command alone rebuilds compact Figure 3 from retained inputs: graded module
 coverage, measured one-worker comparisons and a fixed serial CellProfiler
 estimate versus measured OpenHCS with one, two, three and four workers on the
 same twelve samples. The serial estimate comes from the qualified fixed12

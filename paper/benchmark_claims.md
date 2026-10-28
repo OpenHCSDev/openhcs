@@ -5,7 +5,7 @@ This projection does not run benchmarks, change records, warm kernels or
 compile a function catalog. A qualified dated checkpoint is not automatically
 the final publication freeze.
 
-## Regenerate Figure 6 and the claim include
+## Regenerate Figure 3 and the claim include
 
 The current benchmark owner is the frozen seven-mode protocol in
 `benchmark/results/matched_worker_sweep_20261008_latestproduction`. Its controller

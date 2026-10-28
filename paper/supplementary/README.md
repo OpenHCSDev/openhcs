@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 5E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supp. Data 7–8 contain the measurements and pipelines.
+In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 6E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on held-out wells, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supp. Data 7–8 contain the measurements and pipelines.
 :::
 
 ## Supp. Figure 3. Nuclear-detection and cell-boundary measurements {#supplementary-figure-3.-nuclear-detection-and-cell-boundary-measurements}
@@ -48,13 +48,15 @@ Image review checks whether detections follow visible structures across image pl
 
 ## Supp. methods: analysis scoring {#supplementary-methods-analysis-scoring}
 
-Precision was the fraction of detections matched to reference nuclei; recall was the fraction of reference nuclei detected. F1 was their harmonic mean, ranging from 0 to 1. Pooled F1 combined object counts across fields before scoring; mean per-image F1 gave each field equal weight. Dice measured overlap of detected and reference areas, from 0 to 1; splitting and merging were evaluated separately. Signed count error was the detected count minus the reference count. Split and merge checks identified reference nuclei detected as several objects, or several nuclei detected as one.
+Precision was the fraction of detections matched to reference nuclei; recall was the fraction of reference nuclei detected. F1 was their harmonic mean, ranging from 0 to 1. One-to-one BBBC039 nuclear matches required intersection over union (IoU) ≥ 0.5: overlapping area had to cover at least half the combined area of the two outlines. Pooled F1 combined object counts across fields before scoring; mean per-image F1 gave each field equal weight. Dice measured overlap of detected and reference areas, from 0 to 1; splitting and merging were evaluated separately. Signed count error was the detected count minus the reference count. Split and merge checks identified reference nuclei detected as several objects, or several nuclei detected as one.
 
 Protein translocation analysis 2 used each well's median log2 nuclear-to-cytoplasmic GFP ratio across cells with measurable cytoplasm. On this log2 scale, 0 means equal nuclear and cytoplasmic intensity, and 1 means twice the intensity in the nucleus.
 
 Control separation was quantified by Z′ (Z-prime): 1 minus three times the sum of the positive and negative control groups' sample standard deviations, divided by the absolute difference between their means. Each drug had four positive and four negative control wells. Z′ of 1 indicates ideal separation with no within-group variation; values above 0.5 indicate an excellent screening assay. Standard deviation (SD) describes variation among wells.
 
 For drug responses, fold change is the measurement divided by its DMSO control mean: 1 means no change, 2 means double and 0.5 means half. Pearson's correlation coefficient, r, describes whether two methods' measurements rise and fall together across wells. It ranges from −1 to 1; values near 1 indicate a strong positive linear relationship, but do not mean that the methods give identical values or effect sizes.
+
+Bright-object detection 1 (H001) matched first and final detections one-to-one to computational reference labels from a notebook-derived image. Three-dimensional nuclear localisation (H002) matched centres one-to-one to partial manual annotations within a predeclared 30-voxel radius. A voxel is a three-dimensional image pixel; lower centre-to-centre distances indicate more accurate localisation.
 
 ## Supp. methods: neurite morphometry {#supplementary-methods-neurite-morphometry}
 
@@ -73,7 +75,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 4A–B shows mean outgrowth per cell.
+Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 5A–B shows mean outgrowth per cell.
 :::
 
 ## Supp. Figure 5, continued. Process length and branching {#supplementary-figure-5-continued.-process-length-and-branching}
@@ -100,13 +102,13 @@ Smaller branching responses than MetaXpress persisted in total branches and bran
 
 ## Supp. methods: execution-time estimates {#supplementary-methods-execution-time-estimates}
 
-Figure 6C compares measured OpenHCS times on twelve samples with a fixed serial CellProfiler estimate for the same workload. OpenHCS times are medians of three repetitions after warmup. Both CellProfiler timing intervals include internal initialization. Setup-plus-processing includes OpenHCS compilation and submission/wait; external application/server startup and OpenHCS library loading are excluded. Repeated samples measure processing speed rather than biological variation.
+Figure 3C compares measured OpenHCS times on twelve samples with a fixed serial CellProfiler estimate for the same workload. OpenHCS times are medians of three repetitions after warmup. Both CellProfiler timing intervals include internal initialization. Setup-plus-processing includes OpenHCS compilation and submission/wait; external application/server startup and OpenHCS library loading are excluded. Repeated samples measure processing speed rather than biological variation.
 
 For N samples processed serially, CellProfiler time was estimated as:
 
 `Estimated time = T8_first + (N − 8) × median(T8_warm)/8`
 
-`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Setup-plus-processing adds the measured first-batch pre-pipeline overhead once. Figure 6C uses N = 12 and holds this estimate fixed for all four OpenHCS worker counts. The measured CellProfiler batch used one numerical thread with access to CPUs 2–5. OpenHCS batch workers could use the same four CPUs, with one numerical-library thread per worker; worker counts do not imply individually pinned cores. Combined process memory was not measured.
+`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Setup-plus-processing adds the measured first-batch pre-pipeline overhead once. Figure 3C uses N = 12 and holds this estimate fixed for all four OpenHCS worker counts. The measured CellProfiler batch used one numerical thread with access to CPUs 2–5. OpenHCS batch workers could use the same four CPUs, with one numerical-library thread per worker; worker counts do not imply individually pinned cores. Combined process memory was not measured.
 
 [Calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) covered three workflows with 8, 12 and 16 samples. Maximum absolute prediction error was 7.06% for the same-session eight-sample model, compared with 5.21% for a two-sample model; an earlier-session eight-sample model underpredicted by up to 14.03%. Twelve samples lie within the examined batch-size range, but validation covered only three workflows, not the full corpus.
 
@@ -164,7 +166,7 @@ These resources address different parts of AI-assisted analysis. The table disti
 
 1. **CellProfiler workflow comparison.** [Protocol and source files](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison), including exported-file counts, eight added image exports, comparison rules, software versions and database outputs [@Jones2008].
 2. **Module coverage.** [Per-module evidence](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv) for the 85 modules: 54 tested in complete workflows, 29 individually and two through shared code only.
-3. **Execution times.** [Measured and estimated values for Figure 6](../figures/slas/submission_benchmark_summary_projection.csv), [all workflow timings and charts](analysis_records.md#supplementary-data-3-timing-methods-and-additional-charts) and [benchmark protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md).
+3. **Execution times.** [Measured and estimated values for Figure 3](../figures/slas/submission_benchmark_summary_projection.csv), [all workflow timings and charts](analysis_records.md#supplementary-data-3-timing-methods-and-additional-charts) and [benchmark protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md).
 4. **Public NeuronCyto analysis.** [Input images, analysis outputs and reference definitions](analysis_records.md#supplementary-data-4-public-neuroncyto-demonstration-and-references). The published NeuronCyto II output is an algorithm comparison [@NeuronCytoII]; its manual trace coordinates were unavailable, so absolute tracing accuracy could not be scored.
 5. **Editable analyses.** [Advanced-segmentation and 3D-monolayer CellProfiler imports](complex_cellprofiler_workflows.md), plus [graphical/Python/agent editing records](analysis_records.md#figure-assembly-and-interface-records).
 6. **Software checks.** [Configuration, generated-Python and compiler-validation tests](analysis_records.md#supplementary-data-6-workflow-regression-tests), with source versions and execution records.
