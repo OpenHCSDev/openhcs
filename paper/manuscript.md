@@ -88,7 +88,7 @@ Saving and live inspection can be configured independently: image results can be
 
 ### Agent access through MCP
 
-An agent working from a biological request needs to discover available processing functions, configure an analysis and inspect its results. We expose function discovery, pipeline editing and validation, execution and result inspection through MCP [@MCP]. Each operation's definition specifies its input and result types, implementation, permitted changes, data access and security requirements; these definitions generate the interface and govern execution. Agents can edit an analysis open in the desktop application or run one without opening a window.
+Scientists need to inspect and continue an agent's analysis without reconstructing a separate workflow. We expose function discovery, pipeline editing and validation, execution and result inspection through MCP [@MCP]. Each operation's definition specifies its input and result types, implementation, permitted changes, data access and security requirements; these definitions generate the interface and govern execution. Agents can edit an analysis open in the desktop application or run one without opening a window.
 
 To protect analyses from unintended access and conflicting edits, desktop connections require authentication and revision checks prevent an agent from overwriting intervening edits. MCP file operations check permitted directories. Processing functions run as Python code with the worker's permissions; these path checks are not an operating-system sandbox. Local clients communicate through standard input/output. The hosted HTTP interface offers selected read-only operations.
 
