@@ -71,15 +71,16 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The current main layout has six figures and Table 1: native editing and custom
+The current main layout has six figures and two tables: native editing and custom
 function authoring (Figure 1); process architecture with integration logos
 (Figure 2); CellProfiler output coverage and measured execution/total times,
 with a fixed serial estimate compared with measured workers (Figure 3); an
 intended autonomous loop alongside a recorded repair trajectory (Figure 4);
 treatment responses from three independent blind agents with separate
 public/laboratory neurite demonstrations (Figure 5); and task-specific results
-with matched nuclear, retinal and volume corrections (Figure 6). Table 1 summarizes the later autonomous assay results; full
-trial results and reference types are retained in Supplementary Data 8.
+with matched nuclear, retinal and volume corrections (Figure 6). Table 1 defines
+the timing boundaries; Table 2 summarizes the later autonomous assay results.
+Full trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
 Measurement definitions precede the neurite plots; nuclear-error observations
