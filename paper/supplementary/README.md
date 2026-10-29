@@ -74,7 +74,7 @@ Doses are equally spaced for display; no concentration–response model was fitt
 
 OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root. Branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, without specifying crossing resolution. These differences in segmentation and measurement definitions limit comparisons of absolute values; neither method supplies manual tracing ground truth.
 
-The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel, with neurite response 30 and candidate threshold 0.03. Image review prompted corrections to soma-edge branches and missing paths; MetaXpress fold changes were not a tuning target. Cell counts were unchanged in all 180 fields. [Settings and source measurements](personal_neurite_repaired_morphometry/source_evidence.json), [matched wells](personal_neurite_repaired_morphometry/joined_wells.csv) and [branch diagnostics](personal_neurite_branch_diagnostics/treatment_effects.csv) document the corrections.
+The scientist-assisted analysis used DAPI and calcein images, with neurite response 30 and candidate threshold 0.03. Image review prompted corrections to soma-edge branches and missing paths; MetaXpress fold changes were not a tuning target. Cell counts were unchanged in all 180 fields. [Settings and source measurements](personal_neurite_repaired_morphometry/source_evidence.json), [matched wells](personal_neurite_repaired_morphometry/joined_wells.csv) and [branch diagnostics](personal_neurite_branch_diagnostics/treatment_effects.csv) document the corrections.
 
 ## Supp. Figure 5. Neurite measurements from three blind analyses {#supplementary-figure-5.-neurite-measurements-from-three-blind-analyses}
 
@@ -108,7 +108,7 @@ Smaller branching responses than MetaXpress persisted in total branches and bran
 
 ## Supp. methods: execution-time estimates {#supplementary-methods-execution-time-estimates}
 
-Figure 3C compares measured OpenHCS times on twelve copies of one source sample with a fixed serial CellProfiler estimate for the same workload. Main Table 1 defines the timing protocol, intervals and exclusions.
+Figure 3C compares measured OpenHCS times on twelve copies of one source sample with a fixed serial CellProfiler estimate for the same workload. Methods: Performance measurement defines the timing protocol, intervals and exclusions.
 
 For N samples processed serially, CellProfiler time was estimated as:
 
@@ -123,7 +123,7 @@ For N samples processed serially, CellProfiler time was estimated as:
 ![Measured OpenHCS execution scaling at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Timing protocol as in Main Table 1. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. All times in this figure were measured.
+Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Timing protocol as in Methods: Performance measurement. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. All times in this figure were measured.
 :::
 
 ## Supp. Table 1. Reusable software libraries {#supplementary-table-1.-reusable-software-libraries}
