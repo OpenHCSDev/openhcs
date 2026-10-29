@@ -37,7 +37,7 @@ Older [module](../../benchmark/results/labmeeting_20260513/official30_well_throu
 
 Main Figure 3B shows the one-sample, one-worker speedups for all 30 workflows, both for processing alone and with pipeline setup included. The [publication values](../figures/slas/benchmark-publication/benchmark_claims.json) give medians and minima; the individual workflow times are linked below.
 
-OpenHCS times are medians of three repetitions after warmup. Setup includes client compilation and submission/wait; nested worker time is counted once. Both CellProfiler timing measures include its internal initialization. External application/server startup, OpenHCS library loading and warmup are excluded. Batches repeat the same image sample to measure processing, not biological variation.
+OpenHCS times are medians of three repetitions after its warmup. Main Table 1 gives the start and end points of both timing intervals and their exclusions, including the four client intervals summed for OpenHCS setup plus processing. Both CellProfiler intervals retain internal first-use initialization. Nested server and worker times were not added to the OpenHCS client total. Batches repeat the same image sample to measure processing, not biological variation.
 
 With twelve samples held fixed, every workflow ran faster with two, three and four OpenHCS workers than with one, for processing alone and with setup included. These are measured times throughout (Supplementary Figure 6).
 
@@ -102,9 +102,9 @@ Protein translocation analysis 1 used each well's mean cell-level nuclear/cytopl
 
 ### Results and reference types
 
-Names identify the task; numbers distinguish independently developed methods. Corrections remain part of the same analysis. **Held-out** means the method was fixed before those inputs were released. **Uninspected** means the agent did not open those fields during development, determined retrospectively. **Development** results may include images used to choose the method.
+Names identify the task; numbers distinguish independently developed methods. Corrections remain part of the same analysis. **Held-out** inputs were withheld before development and released only after the method was fixed. **Uninspected** fields were not viewed by the agent during development, as determined retrospectively from image-delivery records. For nuclear detection analyses 2–4, the 175-field subset excludes every field viewed by any of the three agents. **Development** results may include images used to choose the method.
 
-The [analysis-results data table](task_only_analysis/analysis_results.csv) supplies all 20 task-level records, with model, evaluation partition, endpoint and result in separate columns. Main Table 1 summarizes the principal assay results; the data table also retains the earlier held-out analyses and the individual image-review demonstrations.
+The [analysis-results data table](task_only_analysis/analysis_results.csv) supplies all 20 task-level records, with model, evaluation partition, endpoint and result in separate columns. Main Table 2 summarizes the principal assay results; the data table also retains the earlier held-out analyses and the individual image-review demonstrations.
 
 Object scores use computational labels for H001 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; H002 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
 
@@ -112,7 +112,7 @@ Object scores use computational labels for H001 and independent nuclear annotati
 
 Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 6H is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
 
-The [nuclear-error data table](task_only_analysis/nuclear_error_summary.csv) and [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) provide the three agents' scores, missed nuclei and false detections on the 175 uninspected BBBC039 fields. The [nuclear-detection error analysis](README.md#nuclear-detection-errors) describes their shared difficult fields and the three-field repair, including increased splitting and the absence of a separate evaluation across all fields.
+The [nuclear-error data table](task_only_analysis/nuclear_error_summary.csv) and [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) provide the three agents' scores, missed nuclei and false detections on the 175 BBBC039 fields not viewed by any of them. The [nuclear-detection error analysis](README.md#nuclear-detection-errors) describes their shared difficult fields and the three-field repair, including increased splitting and the absence of a separate evaluation across all fields.
 
 A further [paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst) recovered three crowded nuclear omissions and removed two cells without actin-supported growth, leaving 56 nuclei and 54 cells. [Cell-boundary analysis 3](task_only_analysis/bbbc007-fresh26-final-candidate.rst) produced 1,428 nuclear and cell IDs across sixteen fields, with remaining merge/boundary uncertainty. Retinal source images were user-provided R0010 images stained for RNA-binding protein with multiple splicing (RBPMS), with retinal repair-panel scale bars derived from original CZI metadata; DNA/actin images were BBBC007v1 A02 from the Sabatini laboratory, Whitehead Institute (CC0).
 
