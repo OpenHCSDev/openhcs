@@ -283,10 +283,11 @@ def h001_scored():
     """Matched original pixels and saved detections from the scored author."""
     from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
 
+    from build_slas_task_only import H001_SOURCE, load_bright_object_evaluation
+
     sheet = FigureSheet("h001_scored_native", "", 3.4)
-    evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
-    sheet.source(evaluation_path)
-    evaluation = json.loads(evaluation_path.read_text())
+    sheet.source(ROOT / H001_SOURCE)
+    evaluation = load_bright_object_evaluation(ROOT)
     first, final = evaluation["attempts"]
     sheet.text(3, 98, "H001: an elongated-body split repaired",
                size=16, weight="bold", va="top")
@@ -767,14 +768,14 @@ def personal_stitched_development():
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
     """Keep the principal drug-response results and separate laboratory tracing."""
     from build_slas_neurite_effects import NeuriteEffectFigure
-    from build_slas_neurite_views import FrozenNeuriteView
+    from build_slas_neurite_views import AcquisitionNeuriteView
 
     sheet = FigureSheet("submission_neurite_results", "", 7.1, input_root=input_root)
     sheet.source(OUTPUT / "p001_fresh13_sources/source-record.rst")
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
     views_path = OUTPUT / "frozen_neurite_views.json"
     sheet.source(views_path)
-    laboratory_view = FrozenNeuriteView(sheet, json.loads(views_path.read_text())["laboratory"])
+    laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["laboratory"])
     NeuriteEffectFigure.draw_panels(
         sheet, NeuriteEffectFigure.cohort_tables(
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
@@ -923,6 +924,13 @@ def submission_autonomous_loop():
     final = float(trial["final_elapsed_s"]) / 60
     from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
 
+    from build_slas_task_only import H001_SOURCE, load_bright_object_evaluation
+
+    sheet.source(ROOT / H001_SOURCE)
+    evaluation = load_bright_object_evaluation(ROOT)
+    first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
+    sheet.text(50, .7, f"Whole-image F1: first {first_f1:.3f} → final {final_f1:.3f}",
+               size=10, color=TEAL, ha="center", weight="bold")
     CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 5, 94, 14.8), 21)
     sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
                size=10, color=TEAL)

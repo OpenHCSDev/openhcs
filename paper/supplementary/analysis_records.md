@@ -90,7 +90,7 @@ The [Python-generation](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee7269
 
 ## Supplementary Data 7. Earlier held-out analyses
 
-Each fresh gpt-5.6-sol author used four development fields or wells, then fixed its method before receiving the held-out inputs. [Final pipelines and scores](independent_validation/README.md) and the [validation report](independent_agent_validation.md) preserve that prospective design.
+Each fresh gpt-5.6-sol agent used four development fields or wells, then fixed its method before receiving the held-out inputs. [Final pipelines and scores](independent_validation/README.md) and the [validation report](independent_agent_validation.md) preserve that prospective design.
 
 | Analysis | Held-out data | Result |
 | --- | --- | --- |
@@ -102,7 +102,7 @@ Precision is the fraction of detections matched to references; recall is the fra
 
 Boundary agreement checks only predicted borders between touching cells; it does not show that every manual border was recovered or that cells match one-to-one. The cell-boundary analysis predicted 1,274 nuclei and 1,273 cells; every nucleus overlapped a cell. Manual outlines enclosed 1,082 closed nuclear interiors, excluding 12 open/frame-connected regions.
 
-Protein translocation analysis 1 used each well's mean cell-level nuclear/cytoplasmic GFP ratio. Positive/negative control means were 7.235/0.915 for Wortmannin and 7.219/1.127 for LY294002. Z′ measures their separation relative to well variation; both exceeded 0.5. BBBC013 has no manual masks for segmentation scoring. Analysis 2 used median log2 ratios on 96 wells including development. These are separate evaluations using different well summaries and evaluation sets, not a controlled before–after comparison.
+Protein translocation analysis 1 used each well's mean cell-level nuclear/cytoplasmic GFP ratio. Positive/negative control means were 7.235/0.915 for Wortmannin and 7.219/1.127 for LY294002. Z′ measures their separation relative to well variation; both exceeded 0.5. BBBC013 has no manual masks for segmentation scoring. Analysis 2 used median log2 ratios on 96 wells including development. The analyses used different well summaries and evaluation sets.
 
 ## Supplementary Data 8. Agent-developed analyses
 
@@ -117,13 +117,13 @@ Use the following linked records to match each named analysis to its result, ins
 
 ### Results and reference types
 
-**Held-out** inputs were withheld before development and released only after the method was fixed. **Uninspected** in the retained BBBC039 records uses an all-time image-delivery definition: no field image or crop was successfully delivered in any of the three audited original author journals, including post-method-freeze QA. The shared 175-field subset and supplementary 44-field official-test robustness check use that definition. Pre-freeze test exposure is instead per analysis: two analyses had none and the third viewed one field. **Development** results may include images used to choose the method.
+**Held-out** inputs were withheld before development and released only after the method was fixed. The **retrospective image-unviewed subset** comprises BBBC039 fields for which none of the three agents was shown a field image or crop during development or result review after their methods were fixed. The shared 175-field subset and supplementary 44-field official-test robustness check use this definition. Before their methods were finalized, two analyses viewed no official test field and the third viewed one. **Development** results may include images used to choose the method.
 
-Object scores use computational labels for H001 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; H002 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
+Object scores use computational labels for bright-object detection analysis 1 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; nuclear localisation analysis 1 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
 
 ### Reference coverage and detection errors
 
-Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 6H is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
+Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 6G is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
 
 The [nuclear-error data table](task_only_analysis/nuclear_error_summary.csv) and [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) provide the three agents' scores, missed nuclei and false detections on the 175 BBBC039 fields not viewed by any of them. The [nuclear-detection error analysis](README.md#nuclear-detection-errors) describes their shared difficult fields and the three-field repair, including increased splitting and the absence of a separate evaluation across all fields.
 
