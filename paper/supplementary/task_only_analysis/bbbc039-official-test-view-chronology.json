@@ -1,0 +1,260 @@
+{
+  "status": "SEVEN_PAIRS_CLASSIFIED__IMAGE_RETURN_OMISSIONS_RECONCILED",
+  "scope": "Read-only original author journals and frozen records; no new scientific execution, no replay, no manuscript mutation. Timing refers to selected scientific method, not final administrative inventory.",
+  "counts": {
+    "pairs": 7,
+    "unique_test_fields": 6,
+    "pre_freeze_pairs": 1,
+    "post_freeze_pairs": 6,
+    "unknown_pairs": 0,
+    "canonical_image_return_events": 118,
+    "delivered_images": 389,
+    "omitted_image_return_events": 12,
+    "omitted_delivered_images": 21,
+    "new_fields_from_omissions": 0,
+    "all_time_viewed_union": 25,
+    "all_time_unviewed_official_test_subset": 44
+  },
+  "rows": [
+    {
+      "author": "fresh612",
+      "field": "20585_F14_7",
+      "first_successful_image_delivery_utc": "2026-10-04T12:35:33.282Z",
+      "call_line": 391,
+      "output_line": 407,
+      "call_id": "call_UP29cq1tvNwtEGS0gBQcXHMn",
+      "selected_scientific_freeze_utc": "2026-10-04T12:54:43.907504+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "pre_freeze",
+      "binding": "raw field0, well0; matched payload identifies test plate20585/F14/site7"
+    },
+    {
+      "author": "fresh612",
+      "field": "20596_I12_1",
+      "first_successful_image_delivery_utc": "2026-10-04T13:23:52.661Z",
+      "call_line": 1442,
+      "output_line": 1456,
+      "call_id": "call_poDXcdmpjuDOx9XHist5zuBB",
+      "selected_scientific_freeze_utc": "2026-10-04T12:54:43.907504+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "post_freeze",
+      "binding": "extraCapture(1); raw axes site0/well1; state binds site1/plate20596-I12, matched ROI I12"
+    },
+    {
+      "author": "fresh612",
+      "field": "20625_F12_8",
+      "first_successful_image_delivery_utc": "2026-10-04T13:24:16.014Z",
+      "call_line": 1458,
+      "output_line": 1471,
+      "call_id": "call_23Ro2ryYUcIfdy9OaJbCrpyK",
+      "selected_scientific_freeze_utc": "2026-10-04T12:54:43.907504+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "post_freeze",
+      "binding": "extraCapture(2); raw axes site3/well2; state binds site8/plate20625-F12, matched ROI F12"
+    },
+    {
+      "author": "fresh10",
+      "field": "20630_A09_1",
+      "first_successful_image_delivery_utc": "2026-10-05T12:52:41.746Z",
+      "call_line": 1198,
+      "output_line": 1203,
+      "call_id": "call_YCtpRX9eTzjE4iyrkvp5dz3O",
+      "selected_scientific_freeze_utc": "2026-10-05T12:48:52.240Z",
+      "freeze_timestamp_kind": "selection_completed_by_journal_timestamp",
+      "classification": "post_freeze",
+      "binding": "A09rawcapture, bound by lines1189/1196 to test plate20630/A09/site1"
+    },
+    {
+      "author": "fresh13",
+      "field": "20585_F14_7",
+      "first_successful_image_delivery_utc": "2026-10-05T18:21:42.756Z",
+      "call_line": 3177,
+      "output_line": 3182,
+      "call_id": "call_MakhTUnHaci1BQLR7Ea27erv",
+      "selected_scientific_freeze_utc": "2026-10-05T17:31:10.031717+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "post_freeze",
+      "binding": "wholeimages[9:12]; ids[3] F14; raw/result/combined triplet"
+    },
+    {
+      "author": "fresh13",
+      "field": "20625_K01_3",
+      "first_successful_image_delivery_utc": "2026-10-05T18:21:46.100Z",
+      "call_line": 3184,
+      "output_line": 3189,
+      "call_id": "call_sCDi1YDa4yp3EEb7SidiKlbp",
+      "selected_scientific_freeze_utc": "2026-10-05T17:31:10.031717+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "post_freeze",
+      "binding": "wholeimages[12:15]; ids[4] K01; raw/result/combined triplet"
+    },
+    {
+      "author": "fresh13",
+      "field": "20646_N21_1",
+      "first_successful_image_delivery_utc": "2026-10-05T18:21:57.309Z",
+      "call_line": 3191,
+      "output_line": 3196,
+      "call_id": "call_elrWxOZbGcrMHWw1IrnoaeHM",
+      "selected_scientific_freeze_utc": "2026-10-05T17:31:10.031717+00:00",
+      "freeze_timestamp_kind": "explicit_parameter_or_method_freeze_record",
+      "classification": "post_freeze",
+      "binding": "wholeimages[15:18]; ids[5] N21; raw/result/combined triplet"
+    }
+  ],
+  "additional_image_returns": [
+    {
+      "author": "fresh612",
+      "output_line": 754,
+      "call_id": "call_eeK2tm1xRahgnmT0vir3HEVH",
+      "timestamp": "2026-10-04T12:50:34.921Z",
+      "fields": [
+        "20586_A06_6",
+        "20630_A02_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh612",
+      "output_line": 760,
+      "call_id": "call_OYtkSJIsU1nELIYCdes13Pj8",
+      "timestamp": "2026-10-04T12:50:39.212Z",
+      "fields": [
+        "20630_A02_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh612",
+      "output_line": 865,
+      "call_id": "call_YPUegYhtLZ4LWsn1zU3mmMMt",
+      "timestamp": "2026-10-04T12:54:16.404Z",
+      "fields": [
+        "20630_A02_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh612",
+      "output_line": 1188,
+      "call_id": "call_zM3IncGfY5tI8MbFa11HlyEo",
+      "timestamp": "2026-10-04T13:09:37.241Z",
+      "fields": [
+        "20586_A06_6"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh612",
+      "output_line": 1198,
+      "call_id": "call_1v6BIeYGs11XycbekfZ5SqB6",
+      "timestamp": "2026-10-04T13:09:43.959Z",
+      "fields": [
+        "20630_A02_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh612",
+      "output_line": 1210,
+      "call_id": "call_LuNDPt4IqhpYDPFbo4csPuut",
+      "timestamp": "2026-10-04T13:09:53.879Z",
+      "fields": [
+        "20630_A02_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 391,
+      "call_id": "call_BmudjGwhnHeroj6mnf7mplse",
+      "timestamp": "2026-10-05T12:07:38.954Z",
+      "fields": [
+        "20641_L17_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 834,
+      "call_id": "call_xxmCcLaZo0xIQkRf7IisNPcU",
+      "timestamp": "2026-10-05T12:31:27.659Z",
+      "fields": [
+        "20592_A21_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 840,
+      "call_id": "call_Arc8m8iL3pbESuFKYrOmkjuu",
+      "timestamp": "2026-10-05T12:31:32.058Z",
+      "fields": [
+        "20592_A21_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 893,
+      "call_id": "call_AN7IjuUVCnDeFm8YBU5qi35J",
+      "timestamp": "2026-10-05T12:34:08.252Z",
+      "fields": [
+        "20592_A21_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 910,
+      "call_id": "call_6tX1tVUdhAO7NXlstZbnlDoI",
+      "timestamp": "2026-10-05T12:34:36.234Z",
+      "fields": [
+        "20641_L17_1"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    },
+    {
+      "author": "fresh10",
+      "output_line": 926,
+      "call_id": "call_norPNNhMKlW94FFGMaQyVuGb",
+      "timestamp": "2026-10-05T12:35:02.611Z",
+      "fields": [
+        "20639_H06_4"
+      ],
+      "earlier_audit_omitted": true,
+      "new_field": false
+    }
+  ],
+  "freeze_basis": {
+    "fresh612": "final/parameter_freeze.json scientific freeze, then final_full200/parameter_freeze.json at12:56:16.861039UTC with scientific_delta:null, only plate join repair. Both JSON and final pipeline hash match retained freeze_manifest entries. Later13:32 administrative freeze is not science freeze.",
+    "fresh10": "Original FIRST proposal before execution; final FULL200 selection at journal1112 was completed by1116 12:48:52.240UTC, preceding A09 delivery. Exact instant within call is not separately recorded. Source hash0824f478 matches retained freeze.json. Later13:12 administrative freeze is not science freeze.",
+    "fresh13": "Explicit final-method-freeze17:31:10.031717UTC selects repair05, not latest repair15. Later technical materialisation preserves scientific settings; payload-manifest18:27 is not science freeze."
+  },
+  "limits": [
+    "No claim of universally unseen data: numerical exposure, other viewers, humans, pretraining and prospective task independence are not decided by this image-timestamp audit.",
+    "One test field was development-viewed by fresh612; full50 primary remains a scoped result, not wholly heldout.",
+    "Post-freeze image inspection does not itself establish absence of every possible bias.",
+    "The earlier retained audit call list is incomplete, even though its25-field membership and44 arithmetic are unchanged after all12 omitted waits are reconciled.",
+    "Image payload bytes omitted from local text excerpts; complete hashed original journals remain on desktop. Original inventory truncations remain visible, not silently reconstructed."
+  ],
+  "evidence_sha256": {
+    "original-path-hashes-4998.json": "220b1365b94c7e16924c6c2a2935a893f906f67f4a391284e1e8e2be56fdc2ae",
+    "chronology-delivery-census-5015.json": "ac32cb7e531fa4dcbdbda5219ad4c8a41ff8f990a5e1c6e3b769916f0e2a8c92",
+    "additional-image-calls-5015.json": "d9d8e6ebaedc9f2b5be5a6d01d4cad84d3580ca9a51b04ee6a7795123bbf93c2",
+    "scientific-freeze-records-5015.json": "f0549fea544992c584f55cd6de9d3c98e51136d686130bb30b6179ec3c056afe",
+    "chronology-binding-selected-5015.json": "426c845018ea39707aa6b64f2c5cd870438e1e7962621614fed91b4c696d4168",
+    "chronology-image-call-inputs-5015.txt": "81ae847f9bd5e424ba09d2196675ab439e3dc2fda2ef04e4d8c177ed9004b2aa",
+    "seven-pair-delivery-outputs-5015.txt": "8ad0855d34682cfdefc0e6568321d30d577adb6bc651c84a97d594d7dbb6cdce"
+  }
+}

@@ -76,8 +76,8 @@ function authoring (Figure 1); process architecture with integration logos
 (Figure 2); CellProfiler output coverage and measured execution/total times,
 with a fixed serial estimate compared with measured workers (Figure 3); an
 intended autonomous loop alongside a recorded repair trajectory (Figure 4);
-treatment responses from three independent blind agents with separate
-public/laboratory neurite demonstrations (Figure 5); and task-specific results
+treatment responses from three independent blind agents with a separate
+laboratory neurite demonstration (Figure 5); and task-specific results
 with matched nuclear, retinal and volume corrections (Figure 6). Table 1 defines
 the timing boundaries; Table 2 summarizes the later autonomous assay results.
 Full trial results and reference types are retained in Supplementary Data 8.
@@ -118,7 +118,12 @@ the source of the current supplementary PDF.
 Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
 and the retained public NeuronCyto II demonstration. Figure receipts distinguish
-historical analysis from later authoring and viewer checks.
+historical analysis from later authoring and viewer checks. The initial public
+NeuronCyto comparison is retained in [Supplementary Data 4](supplementary/analysis_records.md#supplementary-data-4-public-neuroncyto-demonstration-and-references),
+not in the main drug-response figure. Regenerate only those two relocated
+composites with `submission_neurite_results` and `public_neurite_initial_comparison`
+in `build_slas_visual_story.py`, using the same hash-verified archived input root.
+This changes presentation, not any scientific analysis.
 
 Earlier split drafts and planning notes remain as working history. Historical
 links to `openhcs_nature_methods_draft.md` now reach a pointer to the sole source.

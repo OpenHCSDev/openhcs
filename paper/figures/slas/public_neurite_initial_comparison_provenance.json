@@ -1,0 +1,77 @@
+{
+  "generator_sha256": "b940b62b202d55f4ea4e4c3d5e6cf0a70e83fb46a04a96afe35458c20d541e4e",
+  "source_sha256": {
+    "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
+    "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst": "e9611782366b393c3c580a371b8f2928a19997e90e238c80045f75dfa6156d72",
+    "paper/figures/slas/frozen_neurite_views.json": "8afaae999777667c083a9feee168252d99bb1f8be35bc963323e1e2ccbe61a42",
+    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/paired_input/field_w1.tif": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/first/paired_input_openhcs/results/paired_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "88b531a3c40428e1e8fb4c4f2c5343ce1e846e0ddf7278261361c11c7d7e5f83",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/first/paired_input_openhcs/results/paired_s001_w1_z001_t001_neurite_morphology_step0.graph.roi.zip": "504187b118797febeff738bdc6731c685db7a16dd5798312bb759a85fc71e189",
+    "paper/figures/slas/neuroncyto_published_reference/source.json": "d4c3babdb926fc91c7bde48182fcc4990634989a66275f6c371839904871f15c",
+    "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg": "cebc8010f38e0d1e3c25a8de658e6a6b5f3ec60d90564ba6df1087b80630f687"
+  },
+  "input_root": "/home/ts/wt/openhcs-paper--33d31b1422624632878dd772f27ed5f1--OpenHCS/frozen-root",
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg",
+      "xyxy_pixels": [
+        550,
+        496,
+        1000,
+        946
+      ],
+      "source_size": [
+        1004,
+        950
+      ]
+    }
+  ],
+  "display_transforms": [
+    {
+      "author_run": "H004_FRESH20_95",
+      "attempt": "first",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "raw_window": [
+          0,
+          100
+        ]
+      },
+      "source_shape_yx": [
+        800,
+        800
+      ],
+      "raw_window": [
+        0,
+        100
+      ],
+      "region_yyxx": [
+        0,
+        800,
+        0,
+        800
+      ],
+      "raw_cmap": "gray_r",
+      "overlay_opacity": 0.75,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H004_FRESH20_95",
+      "attempt": "first",
+      "operation": "Vector strokes from frozen neurite graph paths",
+      "path_stroke_points": 0.55,
+      "analysis_rerun": false
+    }
+  ],
+  "output_sha256": {
+    "public_neurite_initial_comparison.png": "e983810336514bf246cff7ec18ca0af3a2bf742122c1c4d8c52e98d8c4280132",
+    "public_neurite_initial_comparison.pdf": "201fbf02a34054203599cde99e45ea948d85c1d9b234854b8809121f55e67072",
+    "public_neurite_initial_comparison.svg": "3b7221cead5b48a725d00351b6ab8944fb3742046efd2ebbad9d90e7016daf1d"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
