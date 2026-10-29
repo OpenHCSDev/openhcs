@@ -302,11 +302,17 @@ def test_staging_keeps_source_identity_and_removes_deleted_members(
     snapshot = tmp_path / "source"
     StagedSourceRevision(repository, base).materialize(snapshot, ("openhcs",))
     model = snapshot / "openhcs/model.py"
+    # Reading unchanged source may update access time; make that case deliberate.
+    os.utime(model, ns=(1, model.stat().st_mtime_ns))
     identity = model.stat()
     git(repository, "rm", "openhcs/old.py")
     head = commit(repository, "openhcs/new.py", RAW)
     members = StagedSourceRevision(repository, head).materialize(snapshot, ("openhcs",))
-    assert model.stat() == identity
+    current = model.stat()
+    assert os.path.samestat(current, identity)
+    assert current.st_mtime_ns == identity.st_mtime_ns
+    assert current.st_ctime_ns == identity.st_ctime_ns
+    assert model.read_text() == SCHEMA
     assert not (snapshot / "openhcs/old.py").exists()
     assert (snapshot / "openhcs/new.py").read_text() == RAW
     assert set(members) == set(snapshot.rglob("*.py"))
