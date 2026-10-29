@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 6E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on wells withheld before development, with four wells per control condition. Z′ describes control separation relative to variation among wells; values above 0.5 indicate an excellent assay. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supp. Data 7–8 contain the measurements and pipelines.
+In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 6E shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on wells withheld before development, with four wells per control condition. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supp. Data 7–8 contain the measurements and pipelines.
 :::
 
 ## Supp. Figure 3. Nuclear-detection and cell-boundary measurements {#supplementary-figure-3.-nuclear-detection-and-cell-boundary-measurements}
@@ -66,13 +66,13 @@ Bright-object detection 1 (H001) matched first and final detections one-to-one t
 
 ## Supp. methods: neurite morphometry {#supplementary-methods-neurite-morphometry}
 
-We used images from primary cortical-neuron cultures to test whether independent analyses recovered drug-induced changes in neurite growth. The cultures contained neurons from embryonic day 18 (E18) rats, imaged two days after plating. Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Each compound was tested at 0, 5, 10, 20 and 40 µM, with two technical wells per dose; zero-dose wells contained dimethyl sulfoxide (DMSO) vehicle. Paired nuclear-stain and neuronal-signal images were acquired at nine fields per well, with a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; neuronal signal was recorded in the FITC channel.
+Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Images had a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; neuronal signal was recorded in the FITC channel.
 
-To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census. Three agents independently analysed the same 20 coded wells; their analyses do not add biological replicates.
+To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census.
 
-Each drug curve was normalized to the mean of its two zero-dose DMSO wells. Dots represent two technical wells per dose; whiskers show their sample SD after normalization and do not include uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted.
+Doses are equally spaced for display; no concentration–response model was fitted.
 
-OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root. Branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, without specifying crossing resolution. Its site weighting and analysis settings were unavailable. These differences in segmentation and measurement definitions limit comparisons of absolute values; neither method supplies manual tracing ground truth.
+OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root. Branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, without specifying crossing resolution. These differences in segmentation and measurement definitions limit comparisons of absolute values; neither method supplies manual tracing ground truth.
 
 The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel, with neurite response 30 and candidate threshold 0.03. Image review prompted corrections to soma-edge branches and missing paths; MetaXpress fold changes were not a tuning target. Cell counts were unchanged in all 180 fields. [Settings and source measurements](personal_neurite_repaired_morphometry/source_evidence.json), [matched wells](personal_neurite_repaired_morphometry/joined_wells.csv) and [branch diagnostics](personal_neurite_branch_diagnostics/treatment_effects.csv) document the corrections.
 
@@ -81,7 +81,7 @@ The scientist-assisted analysis used DAPI and calcein images at 1.3556 µm/pixel
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers indicate sample SD. Drug panels share vertical limits. Main Figure 5A–B shows mean outgrowth per cell.
+For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 5A–B shows mean outgrowth per cell.
 :::
 
 ## Supp. Figure 5, continued. Process length and branching {#supplementary-figure-5-continued.-process-length-and-branching}
@@ -89,7 +89,7 @@ Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 
 ![Median process length, branch and primary-process responses from all three blind agents.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. Each drug curve is normalized to the mean of its two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per analysis; whiskers show sample SD. OpenHCS totals are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on the tracing and branching definitions of each analysis.
+Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from three independent blind analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. OpenHCS totals are mean field totals. OpenHCS branch/process values average field ratios; MetaXpress values divide exported well totals. The endpoints depend on the tracing and branching definitions of each analysis.
 :::
 
 ## Supp. Figure 5, continued. Scientist-assisted neurite analysis {#supplementary-figure-5-continued.-scientist-assisted-neurite-analysis}
@@ -97,7 +97,7 @@ Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from th
 ![Additional well-level morphology responses after scientist-assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Scientist-assisted neurite measurements were compared with MetaXpress in 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length. Curves for fusicoccin-A (FC-A) and Y27632 are normalized to the mean of each drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose; whiskers show sample SD.
+Scientist-assisted neurite measurements were compared with MetaXpress in 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length.
 :::
 
 The [post-repair measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) and [initial measurements](personal_neurite_baseline_morphometry/treatment_effects.csv) also include mean outgrowth per cell.
@@ -108,13 +108,13 @@ Smaller branching responses than MetaXpress persisted in total branches and bran
 
 ## Supp. methods: execution-time estimates {#supplementary-methods-execution-time-estimates}
 
-Figure 3C compares measured OpenHCS times on twelve copies of one source sample with a fixed serial CellProfiler estimate for the same workload. OpenHCS times are medians of three repetitions after its warmup. Both CellProfiler timing intervals retain internal first-use initialization. Main Table 1 defines the intervals and exclusions, including the four client intervals summed for OpenHCS setup plus processing.
+Figure 3C compares measured OpenHCS times on twelve copies of one source sample with a fixed serial CellProfiler estimate for the same workload. Main Table 1 defines the timing protocol, intervals and exclusions.
 
 For N samples processed serially, CellProfiler time was estimated as:
 
 `Estimated time = T8_first + (N − 8) × median(T8_warm)/8`
 
-`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Setup-plus-processing adds the measured first-batch pre-pipeline overhead once. Figure 3C uses N = 12 and holds this estimate fixed for all four OpenHCS worker counts. The measured CellProfiler batch used one numerical thread with access to CPUs 2–5. OpenHCS batch workers could use the same four CPUs, with one numerical-library thread per worker; worker counts do not imply individually pinned cores. Combined process memory was not measured.
+`T8_first` is the measured first eight-sample batch; `T8_warm` is a later batch after initialization. Setup-plus-processing adds the measured first-batch pre-pipeline overhead once. Figure 3C uses N = 12 and holds this estimate fixed for all four OpenHCS worker counts.
 
 [Calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json) covered three workflows with 8, 12 and 16 samples. Maximum absolute prediction error was 7.06% for the same-session eight-sample model, compared with 5.21% for a two-sample model; an earlier-session eight-sample model underpredicted by up to 14.03%. Twelve samples lie within the examined batch-size range, but validation covered only three workflows, not the full corpus.
 
@@ -123,7 +123,7 @@ For N samples processed serially, CellProfiler time was estimated as:
 ![Measured OpenHCS execution scaling at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Times are medians of three repetitions after warmup. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. All times in this figure were measured.
+Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Timing protocol as in Main Table 1. Bars indicate arithmetic means; black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. All times in this figure were measured.
 :::
 
 ## Supp. Table 1. Reusable software libraries {#supplementary-table-1.-reusable-software-libraries}

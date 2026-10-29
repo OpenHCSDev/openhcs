@@ -3084,5 +3084,29 @@
     "volume": "95",
     "issue": "9",
     "page": "952-965"
+  },
+  {
+    "id": "ScikitImage0183Files",
+    "type": "webpage",
+    "title": "Release files for scikit-image 0.18.3",
+    "container-title": "Python Package Index",
+    "URL": "https://pypi.org/project/scikit-image/0.18.3/#files",
+    "accessed": {"date-parts": [[2026, 10, 29]]}
+  },
+  {
+    "id": "Python38Release",
+    "type": "webpage",
+    "author": [{"given": "Łukasz", "family": "Langa"}],
+    "title": "PEP 569 – Python 3.8 Release Schedule",
+    "URL": "https://peps.python.org/pep-0569/#lifespan",
+    "accessed": {"date-parts": [[2026, 10, 29]]}
+  },
+  {
+    "id": "Python39Release",
+    "type": "webpage",
+    "author": [{"given": "Łukasz", "family": "Langa"}],
+    "title": "PEP 596 – Python 3.9 Release Schedule",
+    "URL": "https://peps.python.org/pep-0596/#lifespan",
+    "accessed": {"date-parts": [[2026, 10, 29]]}
   }
 ]
