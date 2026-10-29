@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "f1e44a61fa7270fb807d44d38e9c52092b12bdd71f639e30a0f88774edb9ec62",
+  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
   "source_sha256": {
     "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
     "paper/figures/build_slas_task_only.py": "3525ce59d3f60005777281e057b3663ea3ffb351ff482cdb0c7b168a36873971",
@@ -62,8 +62,8 @@
   ],
   "output_sha256": {
     "submission_analysis_summary.png": "4b7432367a5dd1e4470919dffba725e796e0693b17774e280576205522707575",
-    "submission_analysis_summary.pdf": "d0eb2ba41bf8e7e5d26d4b2f7ba37be67ebfd6744e3d7ba5ba1b13bdf1b2c919",
-    "submission_analysis_summary.svg": "90154e4e37b81dcda74b74009b5d2533beee05f3eedac18d54d751bc6a3f3546"
+    "submission_analysis_summary.pdf": "46e65d01d7b91ecf33a2285bdf0afdebf1bbde82619f94766a341c946552a1fc",
+    "submission_analysis_summary.svg": "e22c230ae9806333b1c0ea2c9b70a778f9b81c3a00ed140a4eb6c8706d2f54a4"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

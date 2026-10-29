@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "f1e44a61fa7270fb807d44d38e9c52092b12bdd71f639e30a0f88774edb9ec62",
+  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
   "source_sha256": {
     "paper/figures/slas/p001_fresh13_sources/source-record.rst": "d01fb0758a57f9971f17c80c82db3d2dd2ccd487df83164a5fd57381882830a3",
     "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst": "80264382d71633044cde49a929e874a6b2c2586c22295b67dcc62202528d9978",
@@ -67,8 +67,8 @@
   ],
   "output_sha256": {
     "submission_neurite_results.png": "40483614c6a4dfde316776763bd85e4a48390606a3781364df7c81284bcb1a1e",
-    "submission_neurite_results.pdf": "f3137576a141cb3491bf748b3ca29823321b539db9a42d99b38f490cad8d7e56",
-    "submission_neurite_results.svg": "7325bd18f0b014a192662f1f51431be24e8ad0d49d3ae9200cd651f3b74e70f9"
+    "submission_neurite_results.pdf": "4aa4e4996f922244f3a7be4a005879ab4359b27f1faabca7bf4a90e2134455fd",
+    "submission_neurite_results.svg": "a29f7162f4c56fa6298365852d7275583ffcd9cc2c2e93e4a27233063a2bbe21"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

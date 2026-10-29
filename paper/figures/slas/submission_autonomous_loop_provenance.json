@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "f1e44a61fa7270fb807d44d38e9c52092b12bdd71f639e30a0f88774edb9ec62",
+  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
     "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
@@ -70,8 +70,8 @@
   ],
   "output_sha256": {
     "submission_autonomous_loop.png": "62b88a5cd8dc6b3fe713be26ae3db1e8b0f3b141b2e5ccf0e04be21892c17445",
-    "submission_autonomous_loop.pdf": "783aed91b8bc55b50adaafa96fe0ab41588e6229508b768dfd2ed212178d7524",
-    "submission_autonomous_loop.svg": "541684ac7611a64cf613db793e7a387268e59014e1e067dfb382438eb6cb80f3"
+    "submission_autonomous_loop.pdf": "88393ce9a04674c06e98846ed48c7501d6928911b512ca73c839657ff8152243",
+    "submission_autonomous_loop.svg": "06d2b11adc3ce2ff6a5596c33e4e95527555729f0a85eee897180a6f0350af18"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

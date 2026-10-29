@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "f1e44a61fa7270fb807d44d38e9c52092b12bdd71f639e30a0f88774edb9ec62",
+  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
   "source_sha256": {
     "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
     "paper/figures/slas/frozen_retinal_views.json": "7b726ebc73b80fbb07b3b8e706875f8346234fd3822d1562dfe7eb70f8d46d26",
@@ -235,8 +235,8 @@
   ],
   "output_sha256": {
     "submission_quantitative_results.png": "ed10d231db7ebe531f62d42f6c1ceef6b90f4f047186272a11d83e509fc4f511",
-    "submission_quantitative_results.pdf": "3dacca87b9bde8ae759ff3a85aa8ab2aecda06d13336ae90d9ff32794c7ee62a",
-    "submission_quantitative_results.svg": "3932dad29a11e487ba97ea9b00f1b87b39505332b7784d826580f4579869702b"
+    "submission_quantitative_results.pdf": "4a20dcb2fb68f7597be649103932d493ffe05b6235a4f119454f9486118c5ada",
+    "submission_quantitative_results.svg": "0bdb1d1074e49917a76d2e5aba4651316114232ab82cb26db6ee21c77e13bd49"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

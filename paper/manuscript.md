@@ -296,7 +296,7 @@ OpenHCS source code: <https://github.com/OpenHCSDev/OpenHCS>.
 
 OpenHCS documentation: <https://openhcs.readthedocs.io/>.
 
-Supp. files contain figure inputs and generation scripts, final pipelines, scores and benchmark measurements. Repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/main/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/main/benchmark/results>.
+Supp. files contain figure inputs and generation scripts, final pipelines, scores and benchmark measurements. Versioned repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/192500f312c25d7d8f406516e1b7f1cec908334f/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/192500f312c25d7d8f406516e1b7f1cec908334f/benchmark/results>.
 
 The benchmark uses biological images and pipelines distributed by the CellProfiler project. Original sources:
 
