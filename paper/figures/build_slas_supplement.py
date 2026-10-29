@@ -56,14 +56,14 @@ class VolumeResultsFigure(SupplementFigure, MeasurementFirstVolumeFigure):
             VolumeComparison,
         )
 
-        self.heading("G  RBPMS cell detection", 98)
+        self.heading("F  RBPMS cell detection", 98)
         BioFormatsComparison.read(self, RETINAL_SOURCE).draw_row((3, 77, 94, 14), 93)
-        self.heading("H  3D body separation", 75)
+        self.heading("G  3D body separation", 75)
         self.source(self.input_path(Path("paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")))
         repair = VolumeComparison.read(self, VOLUME_REPAIR_SOURCE)
         repair.draw_columns((3, 53, 94, 15), 70, repair.label_panels)
         self.text(3, 50, f"Z = {repair.viewport['index']} voxels", size=self.plot_font_size)
-        self.heading("I  3D nuclear localisation", 47.5)
+        self.heading("H  3D nuclear localisation", 47.5)
         self.draw_volume_views((3, 3, 94, 35))
 
 

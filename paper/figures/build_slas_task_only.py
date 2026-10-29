@@ -34,10 +34,9 @@ def sha256(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def load_evaluations(root: Path) -> tuple[dict, dict]:
-    """Read the original score receipts; do not open their prediction/reference paths."""
+def load_bright_object_evaluation(root: Path) -> dict:
+    """Decode the original same-image first/final scores without rescoring."""
     h001 = json.loads((root / H001_SOURCE).read_text(encoding="utf-8"))
-    bbbc039 = json.loads((root / BBBC039_SOURCE).read_text(encoding="utf-8"))
     if h001["author_run"] != "H001_FRESH586_96":
         raise ValueError("Expected the retained H001586 evaluation")
     attempts = h001["attempts"]
@@ -50,7 +49,13 @@ def load_evaluations(root: Path) -> tuple[dict, dict]:
         != attempts[1]["score"]["reference_objects"]
     ):
         raise ValueError("H001 reference populations differ")
+    return h001
 
+
+def load_evaluations(root: Path) -> tuple[dict, dict]:
+    """Read the original score receipts; do not open their prediction/reference paths."""
+    h001 = load_bright_object_evaluation(root)
+    bbbc039 = json.loads((root / BBBC039_SOURCE).read_text(encoding="utf-8"))
     fields = bbbc039["instance_metrics"]
     keys = [(item["source_set_id"], item["channel"]) for item in fields]
     if (
@@ -343,38 +348,31 @@ def submission_summary() -> None:
     from build_slas_supplement import SupplementFigure
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 
-    h001, _ = load_evaluations(ROOT)
     sheet = SupplementFigure("submission_analysis_summary", 8.5)
-    sources = [H001_SOURCE, BBBC039_SOURCE,
-               SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv",
-               SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
-               SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst",
-               SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json",
-               SOURCE.relative_to(ROOT)]
+    fields_path = SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv"
+    boundary_paths = (SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
+                      SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst")
+    evaluation_path = SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
+    sources = (fields_path, *boundary_paths, evaluation_path, SOURCE.relative_to(ROOT))
     sheet.source(Path(__file__))
     sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
     for path in sources:
         sheet.source(ROOT / path)
-    axes = [sheet.plot_axes((0.12 + col * 0.49, bottom, 0.34, 0.17))
-            for bottom in (0.79, 0.55) for col in (0, 1)]
-    titles = ("A  Object detection", "B  Nuclear detection",
-              "C  Cell boundaries", "D  3D nuclear localisation")
+    axes = [sheet.plot_axes(bounds) for bounds in (
+        (0.12, 0.79, 0.83, 0.17),
+        (0.12, 0.55, 0.34, 0.17), (0.61, 0.55, 0.34, 0.17),
+    )]
+    titles = ("A  Nuclear detection", "B  Cell boundaries", "C  3D nuclear localisation")
     for axis, title in zip(axes, titles, strict=True):
         axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=8)
         axis.spines[["top", "right"]].set_visible(False)
         axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
         axis.set_axisbelow(True)
 
-    values = [item["derived_f1"] for item in h001["attempts"]]
-    bars = axes[0].bar((0, 1), values, color=(BLUE, TEAL), width=0.5)
-    axes[0].bar_label(bars, labels=[f"{v:.3f}" for v in values],
-                       padding=4, fontsize=sheet.plot_font_size)
-    axes[0].set(xticks=(0, 1), xticklabels=("First", "Final"), ylabel="Object F1", ylim=(0, 1.08))
-
-    fields = list(csv.DictReader((ROOT / sources[2]).open()))
+    fields = list(csv.DictReader((ROOT / fields_path).open()))
     authors = ("fresh612", "fresh10", "fresh13")
     for subset, marker, color, label in ((False, "o", BLUE, "All 200 fields"),
-                                        (True, "s", TEAL, "175 uninspected fields")):
+                                        (True, "s", TEAL, "175 image-unviewed fields (retrospective)")):
         scores = []
         for author in authors:
             rows = [row for row in fields if row["author"] == author
@@ -385,17 +383,17 @@ def submission_summary() -> None:
                           ("true_positive_count", "false_positive_count", "false_negative_count"))
             scores.append(2 * tp / (2 * tp + fp + fn))
         positions = np.arange(3) + (0.045 if subset else -0.045)
-        axes[1].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
-    axes[1].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
+        axes[0].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
+    axes[0].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
                 ylabel="Pooled F1", ylim=(0.87, 0.94))
-    axes[1].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper left")
+    axes[0].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper right")
     # Decode the two existing publication tables; their units and populations differ
     # from instance matching, so no common accuracy scale is introduced.
-    text = (ROOT / sources[3]).read_text()
+    text = (ROOT / boundary_paths[0]).read_text()
     block = text.split(".. list-table:: Frozen field-level outline comparison", 1)[1]
     cells = re.findall(r"^\s+(?:\* )?- (.+)$", block, flags=re.MULTILINE)
     rows19 = [cells[i:i + 5] for i in range(5, len(cells), 5)]
-    text26 = (ROOT / sources[4]).read_text()
+    text26 = (ROOT / boundary_paths[1]).read_text()
     block26 = text26.split(".. csv-table:: Final frozen candidate, all fields", 1)[1]
     rows26 = list(csv.reader(line.strip() for line in block26.splitlines()
                              if re.match(r"\s+A\d\d_\d+,", line)))
@@ -404,26 +402,26 @@ def submission_summary() -> None:
             raise ValueError("Expected sixteen original BBBC007 rows")
         fractions = [int(row[4]) / int(row[3]) for row in rows]
         pooled = sum(int(row[4]) for row in rows) / sum(int(row[3]) for row in rows)
-        axes[2].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
-        axes[2].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
-        axes[2].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
-    axes[2].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
+        axes[1].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
+        axes[1].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
+        axes[1].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
+    axes[1].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
                 ylabel="Border support\n(2-pixel fraction)")
 
-    evaluation = json.loads((ROOT / sources[5]).read_text())
+    evaluation = json.loads((ROOT / evaluation_path).read_text())
     scores = evaluation["scores"]
     primary_threshold = evaluation["primary_threshold_voxels"]
     thresholds = sorted(map(int, scores))
     errors = [scores[str(t)]["mean_localisation_error_voxels"] for t in thresholds]
-    axes[3].plot(thresholds, errors, "o-", color=TEAL)
+    axes[2].plot(thresholds, errors, "o-", color=TEAL)
     for t, error in zip(thresholds, errors, strict=True):
-        axes[3].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
+        axes[2].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
                          textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
-    axes[3].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
-    axes[3].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
+    axes[2].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
+    axes[2].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
                 ylim=(0, 6.1), xticks=thresholds)
 
-    sheet.text(3, 47, "E  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
+    sheet.text(3, 47, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
     series = AssaySeries.load(SOURCE)
     for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
         axis = sheet.plot_axes((0.12 + column * 0.49, 0.32, 0.34, 0.105))
@@ -444,7 +442,7 @@ def submission_summary() -> None:
 
     from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
 
-    sheet.text(3, 21, "F  Nuclear separation", size=sheet.plot_font_size, weight="bold")
+    sheet.text(3, 21, "E  Nuclear separation", size=sheet.plot_font_size, weight="bold")
     CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 2, 96, 16), 18.5)
     sheet.save()
 

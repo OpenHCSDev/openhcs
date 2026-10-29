@@ -101,21 +101,27 @@ class FrozenImageView(ABC):
         return hsv_to_rgb(np.stack((hues, np.full_like(hues, .75),
                                    np.full_like(hues, .65)), axis=-1))
 
+    @staticmethod
+    def rounded_bar_length(width):
+        magnitude = 10 ** np.floor(np.log10(width / 5))
+        return np.floor(width / 5 / magnitude) * magnitude
+
+    def scale_bar_length(self, width_px):
+        return self.rounded_bar_length(width_px * self.units_per_pixel)
+
     def axis(self, bounds):
         x, y, width, height = bounds
         axis = self.sheet.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         top, bottom, left, right = self.region
         height_px, width_px = bottom - top, right - left
-        width_units = width_px * self.units_per_pixel
-        magnitude = 10 ** np.floor(np.log10(width_units / 5))
-        length_units = np.floor(width_units / 5 / magnitude) * magnitude
+        length_units = self.scale_bar_length(width_px)
         length_px = length_units / self.units_per_pixel
         bar_left, bar_bottom = left + width_px * .05, bottom - height_px * .05
         bar, = axis.plot((bar_left, bar_left + length_px), (bar_bottom, bar_bottom),
                          color="black", linewidth=2, zorder=10)
         bar.set_path_effects([withStroke(linewidth=4, foreground="white")])
         axis.text(bar_left, bar_bottom - height_px * .025,
-                  f"{length_units:g} {self.scale_unit}", ha="left", va="bottom",
+                  f"{length_units:.3g} {self.scale_unit}", ha="left", va="bottom",
                   fontsize=self.sheet.plot_font_size, color="black", zorder=10,
                   bbox={"facecolor": "white", "edgecolor": "none", "alpha": .9, "pad": 1})
         axis.set(xlim=(left-.5, right-.5), ylim=(bottom-.5, top-.5))
@@ -368,6 +374,26 @@ class BioFormatsComparison(BioFormatsImageView, CroppedComparison):
     """Compose physical raw-plane decoding with matched cropped detections."""
 
 
+class AcquisitionImageView(FrozenImageView):
+    """Use the applicable retained acquisition declaration for physical scale."""
+
+    scale_unit = "µm"
+
+    def __init__(self, sheet, declaration, view_index=0):
+        path = self.checked_path(sheet.input_path(Path(".")), declaration["calibration"])
+        sheet.source(path)
+        x, y = json.loads(path.read_text())["xy_spacing_um"]
+        if not (np.isfinite((x, y)).all() and x > 0 and y > 0):
+            raise ValueError("Acquisition must declare finite positive XY pixel sizes")
+        self.units_per_pixel = x
+        self.pixel_aspect = y / x
+        super().__init__(sheet, declaration, view_index)
+
+    def scale_bar_length(self, width_px):
+        """Keep the native-pixel bar geometry; label its physical length."""
+        return self.rounded_bar_length(width_px) * self.units_per_pixel
+
+
 class FrozenNeuriteView(ROIImageView, LabelImageView):
     """Retained cell-body labels plus their authoritative graph paths."""
 
@@ -401,3 +427,7 @@ class FrozenNeuriteView(ROIImageView, LabelImageView):
                     raise ValueError("Figure requires the frozen 2-D graph projection")
                 axis.plot(coordinates[:, 1], coordinates[:, 0],
                           color=colour, linewidth=.55)
+
+
+class AcquisitionNeuriteView(AcquisitionImageView, FrozenNeuriteView):
+    """Compose acquisition calibration with the existing labels and graph paths."""

@@ -16,9 +16,14 @@ comparisons test preservation of established outputs and execution speed.
 The remaining author questions are factual, not unfinished prose:
 
 - Confirm the interval between drug addition and imaging for the laboratory
-  neurite assay, and supply the applicable animal-ethics approval/reference.
-  The latest desktop draft supplies the E18 rat cortical-neuron preparation,
-  medium change, compounds and doses; these details are retained in Methods.
+  neurite assay, and supply the applicable animal-ethics committee and
+  approval/reference or justified exemption, microscope/model and objective,
+  and neuronal stain. FITC identifies a channel, not the reagent. The latest
+  desktop draft supplies the E18 rat cortical-neuron preparation, medium change,
+  compounds and doses; these details are retained in Methods.
+- Supply the authorized Zenodo account/deposit route and confirm creators and
+  rights for the selected archive. The existing procedure is in
+  `supplementary/archive_publication.rst`; no issued OpenHCS DOI is yet verified.
 - Assign contributions to the final author list.
 - Supply funding and grant details, or confirm that there was no specific funding.
 - Confirm the competing-interest declaration.
@@ -237,7 +242,11 @@ regions. The 3D entrypoints are `h002_measurement_first`,
 paired DNA/actin run. Main and supplementary panels use those original-data
 views directly, not crops of their composite figures. Volume bars use voxel
 indices because physical spacing is unverified; retinal bars use the original
-CZI calibration. Editorial colours and marker styles do not change detections.
+CZI calibration. Laboratory neurite bars retain their 200-pixel geometry and
+show 271 µm, derived from the hash-checked acquisition declaration; the public
+NeuronCyto view retains pixel units because its physical calibration is unverified.
+Figure 4B owns the bright-object first/final scores beside the matched crops;
+Figure 6A–H now begins with nuclear detection and contains no duplicate chart. Editorial colours and marker styles do not change detections.
 
 The overview and archived May benchmark figures can be regenerated independently
 from their declared source assets and CSV tables:

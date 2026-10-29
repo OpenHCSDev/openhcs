@@ -1,9 +1,9 @@
 {
-  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
+  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "4c8532108ce04f78a5505e1e4a866e18e9b2ea3e17e178eaeb6326c19c2a2132",
+    "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
     "paper/figures/slas/frozen_retinal_views.json": "7b726ebc73b80fbb07b3b8e706875f8346234fd3822d1562dfe7eb70f8d46d26",
-    "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
+    "paper/figures/build_slas_neurite_views.py": "ec30d1006ac9aaf08ea1191b0fe8febb4918968bcfc978289fdba6c9b51145e0",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/acquisition/R0010.czi": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/FIRST/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "3cadc3d836839defa2cb257c295d7017f53f718b0e2d68bb1b616b0c3a79b71f",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/REPAIR01-technical02/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "db0b3022bdba66a86c2b46be24e91ef4e43bd9041d77c5e2ea2039207fd4e988",
@@ -18,7 +18,7 @@
     "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_details.csv": "19ad71607d72e86d28d35a2418ac48c74ac6985a38d69d6235e38ad6d7076c37",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_s001_w1_z035_t001_h002_labels_step0_rois.roi.zip": "9023fb405d653abe237f5bac0e079c41d15a208d215412f66757b4d6f7cafaf0"
   },
-  "input_root": "/home/ts/wt/openhcs-paper-review-feedback-20261026/frozen-root",
+  "input_root": "/home/ts/wt/openhcs-paper-revision-5308-render/frozen-root",
   "ui_crops": [],
   "display_transforms": [
     {
@@ -234,9 +234,9 @@
     }
   ],
   "output_sha256": {
-    "submission_quantitative_results.png": "66b47b7317095c96d5a6d00ef4f4165576a71585c667b13e6d710bf9841a0bb7",
-    "submission_quantitative_results.pdf": "c7fca76520598939238dfcb16d5108e3bf79956ae65edd3f212bfa1a06074d23",
-    "submission_quantitative_results.svg": "1f81af0172781371b9ad835df9e89a96872d74ab443f01a4590ab67c274c04fc"
+    "submission_quantitative_results.png": "ed10d231db7ebe531f62d42f6c1ceef6b90f4f047186272a11d83e509fc4f511",
+    "submission_quantitative_results.pdf": "4a20dcb2fb68f7597be649103932d493ffe05b6235a4f119454f9486118c5ada",
+    "submission_quantitative_results.svg": "0bdb1d1074e49917a76d2e5aba4651316114232ab82cb26db6ee21c77e13bd49"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

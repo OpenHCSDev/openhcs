@@ -1,10 +1,11 @@
 Submission archive for autonomous OpenHCS analysis
 =================================================
 
-Publication status: local preparation only. On 6 October 2026 the corresponding
-author deferred the author declarations and instructed that nothing be uploaded
-to Zenodo yet. No DOI has been issued or claimed by this draft. Resume the
-deposit only on a subsequent instruction from the corresponding author.
+Publication status: not deposited. The corresponding author's 29 October 2026
+request to archive the paper supersedes the 6 October deferral. No issued
+OpenHCS DOI has been verified. The authorized account/deposit route,
+author-confirmed metadata and rights for the selected contents remain unresolved;
+independent manuscript corrections can proceed while those facts are supplied.
 
 Record title
 ------------

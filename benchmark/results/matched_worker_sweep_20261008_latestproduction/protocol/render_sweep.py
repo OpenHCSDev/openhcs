@@ -15,6 +15,8 @@ import sys
 from dataclasses import asdict, replace
 from pathlib import Path
 
+PUBLICATION_RATIO_FORMAT = ".3g"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -295,10 +297,10 @@ def main() -> None:
         "source_revision": declaration["source_revision"],
         "status": "qualified-first-use-sweep",
         "case_count": "30",
-        **{f"{scope}_{claim}": f"{single_stats[scope][field]:.3f}"
+        **{f"{scope}_{claim}": format(single_stats[scope][field], PUBLICATION_RATIO_FORMAT)
            for scope in ("execution", "total")
            for claim, field in (("min", "minimum"), ("median", "median"))},
-        **{f"amortized_{scope}_{claim}": f"{amortized_stats[scope][field]:.3f}"
+        **{f"amortized_{scope}_{claim}": format(amortized_stats[scope][field], PUBLICATION_RATIO_FORMAT)
            for scope in ("execution", "total")
            for claim, field in (("min", "minimum"), ("median", "median"), ("max", "maximum"))},
         "native_policy": interpretation["native_policy"],

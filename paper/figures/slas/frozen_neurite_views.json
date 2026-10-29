@@ -15,6 +15,7 @@
   "laboratory": {
     "author_run": "P001_FRESH13_96",
     "attempt": "final-attempt, site 1",
+    "calibration": {"path": "paper/supplementary/personal_neurite_autonomous/ACQUISITION.json", "sha256": "43d0fb9d7cf3de362bac3ddd23d354e57b30c9c1484d8201338eca45897f22c2"},
     "root": "/run/media/ts/hdd/openhcs-science/next-bbbc01388-p00196-fresh13-20261005/P001_FRESH13_96",
     "overlay_opacity": 0.75,
     "views": [{"raw_window": [144, 3500]}],
