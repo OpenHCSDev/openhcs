@@ -765,13 +765,41 @@ def personal_stitched_development():
 
 
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
+    """Keep the principal drug-response results and separate laboratory tracing."""
     from build_slas_neurite_effects import NeuriteEffectFigure
     from build_slas_neurite_views import FrozenNeuriteView
 
-    """Show the retained shaft illustration without promoting an overextended repair."""
-    sheet = FigureSheet("submission_neurite_results", "", 10.4, input_root=input_root)
-    public = OUTPUT / "h004_fresh20_sources"
-    personal = OUTPUT / "p001_fresh13_sources"
+    sheet = FigureSheet("submission_neurite_results", "", 7.1, input_root=input_root)
+    sheet.source(OUTPUT / "p001_fresh13_sources/source-record.rst")
+    sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
+    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet.source(views_path)
+    laboratory_view = FrozenNeuriteView(sheet, json.loads(views_path.read_text())["laboratory"])
+    NeuriteEffectFigure.draw_panels(
+        sheet, NeuriteEffectFigure.cohort_tables(
+            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
+        metrics=("mean_outgrowth",), bounds=(3, 48, 94, 49), start_letter="A",
+    )
+    laboratory_view.draw_columns((3, 1, 94, 36), 41, (
+        ("C  Raw", laboratory_view.draw_raw),
+        ("D  Labels and paths", laboratory_view.draw_result),
+        ("E  Overlay", laboratory_view.draw_overlay),
+    ))
+    # Preserve the 1024-pixel field in the manuscript's raster embedding too.
+    sheet.save(dpi=600)
+
+
+def public_neurite_initial_comparison(*, input_root: Path = FigureSheet.default_input_root):
+    """Retain the original public-field comparison in Supplementary Data 4."""
+    from functools import partial
+    from build_slas_neurite_views import FrozenNeuriteView
+
+    sheet = FigureSheet("public_neurite_initial_comparison", "", 3.2, input_root=input_root)
+    sheet.source(OUTPUT / "h004_fresh20_sources/QA-INDEX.json")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
+    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet.source(views_path)
+    public_view = FrozenNeuriteView(sheet, json.loads(views_path.read_text())["public"])
     published = OUTPUT / "neuroncyto_published_reference"
     reference_path = published / "source.json"
     reference = json.loads(reference_path.read_text())
@@ -779,42 +807,12 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     if digest(reference_image) != reference["sha256"]:
         raise ValueError("Published NeuronCyto II figure source hash mismatch")
     sheet.source(reference_path)
-    sheet.source(public / "QA-INDEX.json")
-    sheet.source(personal / "source-record.rst")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
-    sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
-    views_path = OUTPUT / "frozen_neurite_views.json"
-    sheet.source(views_path)
-    views = json.loads(views_path.read_text())
-    public_view = FrozenNeuriteView(sheet, views["public"])
-    laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
-    NeuriteEffectFigure.draw_panels(
-        sheet, NeuriteEffectFigure.cohort_tables(
-            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
-        metrics=("mean_outgrowth",), bounds=(3, 66, 94, 33), start_letter="A",
-    )
-    matched = reference["matched_wholefield_layout"]
-    for x, name, title, record, draw in (
-        (3, "first-full-raw", "C  Raw", matched["raw"], public_view.draw_raw),
-        (35, "first-full-result", "D  Initial tracing", matched["openhcs_initial"], public_view.draw_result),
-    ):
-        path = public / f"{name}.png"
-        if digest(path) != record["sha256"]:
-            raise ValueError(f"Whole-field native capture hash mismatch: {name}")
-        sheet.source(path)
-        sheet.text(x, 61, title, size=sheet.plot_font_size, weight="bold")
-        draw((x, 33, 30, 26))
-    sheet.text(67, 61, "E  NeuronCyto II", size=sheet.plot_font_size, weight="bold")
-    sheet.source_image(reference_image, (67, 33, 30, 26),
-                       crop=tuple(reference["crop_xyxy_pixels"]))
-    for x, title, draw in (
-        (3, "F  Raw", laboratory_view.draw_raw),
-        (35, "G  Labels and paths", laboratory_view.draw_result),
-        (67, "H  Overlay", laboratory_view.draw_overlay),
-    ):
-        sheet.text(x, 29, title, size=sheet.plot_font_size, weight="bold")
-        draw((x, 1, 30, 26))
-    # Preserve the 1024-pixel field in the manuscript's raster embedding too.
+    public_view.draw_columns((3, 1, 94, 85), 94, (
+        ("A  Raw", public_view.draw_raw),
+        ("B  Initial tracing", public_view.draw_result),
+        ("C  NeuronCyto II", partial(sheet.source_image, reference_image,
+                                     crop=tuple(reference["crop_xyxy_pixels"]))),
+    ))
     sheet.save(dpi=600)
 
 

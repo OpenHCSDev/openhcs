@@ -1,16 +1,10 @@
 {
-  "generator_sha256": "54fbc5b00eb537f82ff353b587e16d7626876f70439e08206391bed3762e8217",
+  "generator_sha256": "b940b62b202d55f4ea4e4c3d5e6cf0a70e83fb46a04a96afe35458c20d541e4e",
   "source_sha256": {
-    "paper/figures/slas/neuroncyto_published_reference/source.json": "d4c3babdb926fc91c7bde48182fcc4990634989a66275f6c371839904871f15c",
-    "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
     "paper/figures/slas/p001_fresh13_sources/source-record.rst": "d01fb0758a57f9971f17c80c82db3d2dd2ccd487df83164a5fd57381882830a3",
-    "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst": "e9611782366b393c3c580a371b8f2928a19997e90e238c80045f75dfa6156d72",
     "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst": "80264382d71633044cde49a929e874a6b2c2586c22295b67dcc62202528d9978",
     "paper/figures/slas/frozen_neurite_views.json": "8afaae999777667c083a9feee168252d99bb1f8be35bc963323e1e2ccbe61a42",
     "paper/figures/build_slas_neurite_views.py": "080a3318d63efd2518662d1cbd83aab3e261d610c7667debd48249ca5804baa6",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/paired_input/field_w1.tif": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/first/paired_input_openhcs/results/paired_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "88b531a3c40428e1e8fb4c4f2c5343ce1e846e0ddf7278261361c11c7d7e5f83",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/first/paired_input_openhcs/results/paired_s001_w1_z001_t001_neurite_morphology_step0.graph.roi.zip": "504187b118797febeff738bdc6731c685db7a16dd5798312bb759a85fc71e189",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-bbbc01388-p00196-fresh13-20261005/P001_FRESH13_96/staged/P001/A01_s001_w2_z001_t001.tif": "210fd15c0fdd3385b599b6efa604f121506c7b62071b88483082dc3f8b7e82f9",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-bbbc01388-p00196-fresh13-20261005/P001_FRESH13_96/analysis/final-attempt/P001_openhcs/results/A01_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "bf42c2323a850339d42b579b795a836722cedb9e23f5c4c73df00f986f9e81e2",
     "frozen-root/run/media/ts/hdd/openhcs-science/next-bbbc01388-p00196-fresh13-20261005/P001_FRESH13_96/analysis/final-attempt/P001_openhcs/results/A01_s001_w2_z001_t001_neurite_morphology_step0.graph.roi.zip": "736fd6818b93ff349f20323fd85ea7f767ec573d0e51a0ffc7d2b3bcf8e648b2",
@@ -25,67 +19,11 @@
     "paper/supplementary/personal_neurite_autonomous/author115/source_evidence.json": "975fbf9dac40efd9ebc875c29b56741f69b00f109607654eb463d978e640081f",
     "paper/supplementary/personal_neurite_autonomous/author116/joined_wells.csv": "7b579c4b25b5582e8524a427bab30935058f5ef44ef0b1421bf2c872b1342c55",
     "paper/supplementary/personal_neurite_autonomous/author116/treatment_effects.csv": "685eda6d313cac2a672992a83df4383a65ba76b40b6abb3d58527504926be46f",
-    "paper/supplementary/personal_neurite_autonomous/author116/source_evidence.json": "fa1b6de8a5216e72a6e78069c4c13cff0b5932f5ec96689b223ca4820a814789",
-    "paper/figures/slas/h004_fresh20_sources/first-full-raw.png": "a5ff357b010c1869732c54890aa611b6ed9f6ab674086a911c2bbb8c11a3a3e2",
-    "paper/figures/slas/h004_fresh20_sources/first-full-result.png": "8526d5be0e23deff03407e8b78a18d4b5f5e4f9cc1b7ce3f35a148b5b8c45ba2",
-    "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg": "cebc8010f38e0d1e3c25a8de658e6a6b5f3ec60d90564ba6df1087b80630f687"
+    "paper/supplementary/personal_neurite_autonomous/author116/source_evidence.json": "fa1b6de8a5216e72a6e78069c4c13cff0b5932f5ec96689b223ca4820a814789"
   },
-  "input_root": "/home/ts/wt/openhcs-paper-review-feedback-20261026/frozen-root",
-  "ui_crops": [
-    {
-      "source": "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg",
-      "xyxy_pixels": [
-        550,
-        496,
-        1000,
-        946
-      ],
-      "source_size": [
-        1004,
-        950
-      ]
-    }
-  ],
+  "input_root": "/home/ts/wt/openhcs-paper--33d31b1422624632878dd772f27ed5f1--OpenHCS/frozen-root",
+  "ui_crops": [],
   "display_transforms": [
-    {
-      "author_run": "H004_FRESH20_95",
-      "attempt": "first",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "raw_window": [
-          0,
-          100
-        ]
-      },
-      "source_shape_yx": [
-        800,
-        800
-      ],
-      "raw_window": [
-        0,
-        100
-      ],
-      "region_yyxx": [
-        0,
-        800,
-        0,
-        800
-      ],
-      "raw_cmap": "gray_r",
-      "overlay_opacity": 0.75,
-      "units_per_pixel": 1,
-      "scale_unit": "px",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
-    },
-    {
-      "author_run": "H004_FRESH20_95",
-      "attempt": "first",
-      "operation": "Vector strokes from frozen neurite graph paths",
-      "path_stroke_points": 0.55,
-      "analysis_rerun": false
-    },
     {
       "author_run": "P001_FRESH13_96",
       "attempt": "final-attempt, site 1",
@@ -127,9 +65,9 @@
     }
   ],
   "output_sha256": {
-    "submission_neurite_results.png": "a74b22addb71dc938416b28ae7df5d798456c6673ae71b7bae38adb765e03a6b",
-    "submission_neurite_results.pdf": "a311582218238299afd694f77d4949d1e73258206032db405e10a14575c332ce",
-    "submission_neurite_results.svg": "a81bf14262aa882fd65fe90f7ed3ed25caf51f66e5e6dbce02c2ad6a36d7f316"
+    "submission_neurite_results.png": "8265c78e2567f9d9bb3d622a0d2dbf263264b3350eea95cc59b783b554e837a4",
+    "submission_neurite_results.pdf": "b977e393ee6666d2b88871cc16d8345b0c48a6243b8aa94d403f2058c8b2a349",
+    "submission_neurite_results.svg": "5e4e42f3e2ef9350eecd5fe1c58d50032cdbe99d9b88505c7b94a0d0159c3c24"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

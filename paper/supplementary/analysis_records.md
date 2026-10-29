@@ -37,7 +37,7 @@ Older [module](../../benchmark/results/labmeeting_20260513/official30_well_throu
 
 Main Figure 3B shows the one-sample, one-worker speedups for all 30 workflows, both for processing alone and with pipeline setup included. The [publication values](../figures/slas/benchmark-publication/benchmark_claims.json) give medians and minima; the individual workflow times are linked below.
 
-OpenHCS times are medians of three repetitions after its warmup. Main Table 1 gives the start and end points of both timing intervals and their exclusions, including the four client intervals summed for OpenHCS setup plus processing. Both CellProfiler intervals retain internal first-use initialization. Nested server and worker times were not added to the OpenHCS client total. Batches repeat the same image sample to measure processing, not biological variation.
+OpenHCS times are medians of three repetitions after its warmup. Main Table 1 gives the start and end points of both timing intervals and their exclusions, including the four client intervals summed for OpenHCS setup plus processing. Both CellProfiler intervals retain internal first-use initialization. Nested server and worker times were not added to the OpenHCS client total.
 
 With twelve samples held fixed, every workflow ran faster with two, three and four OpenHCS workers than with one, for processing alone and with setup included. These are measured times throughout (Supplementary Figure 6).
 
@@ -70,9 +70,15 @@ The [original gpt-5.6-sol demonstration](../../website/assets/agent/cold-start-w
 
 The NeuronCyto II publication [@NeuronCytoII] provides eight manually traced cell entries for image 1, aggregate length 3,832.601 in unspecified units, and three crossovers, of which its algorithm resolved two. Our two input TIFFs match the public image files byte-for-byte. Manual trace coordinates were not located; cell correspondence, length definitions and units remain unaligned.
 
-A separate [image-1 comparison](neuroncyto_length_evaluation/conclusion.rst) found 4,085.1925 pixels of rooted outgrowth in the first H004 prediction. This is not an accuracy ratio against the published total. The [reference audit](neuroncyto_reference_audit.md) and [unit checks](neuroncyto_length_evaluation/unit_followthrough.rst) retain the evidence. The final attempted repair extended beyond the intended main-shaft target, which was clarified only after that run. Main Figure 5C–E shows the initial result, not the later revision.
+A separate [image-1 comparison](neuroncyto_length_evaluation/conclusion.rst) found 4,085.1925 pixels of rooted outgrowth in the first H004 prediction. This is not an accuracy ratio against the published total. The [reference audit](neuroncyto_reference_audit.md) and [unit checks](neuroncyto_length_evaluation/unit_followthrough.rst) retain the evidence. The final attempted repair extended beyond the intended main-shaft target, which was clarified only after that run. The comparison below shows the initial result, not the later revision.
 
-Main Figure 5C–D and F–H use full-resolution raw arrays and saved paths identified by the [source manifest](../figures/slas/frozen_neurite_views.json). Figure 5E is the published algorithm's output, not manual ground truth: an unmodified embedded JPEG from the article, cropped to 450 pixels and attributed in the [source record](../figures/slas/neuroncyto_published_reference/source.json).
+The public comparison below and laboratory tracing in main Figure 5C–E use full-resolution raw arrays and saved paths identified by the [source manifest](../figures/slas/frozen_neurite_views.json). The published algorithm reference is an unmodified embedded JPEG from the article, cropped to 450 pixels and attributed in the [source record](../figures/slas/neuroncyto_published_reference/source.json).
+
+![Matched public field, initial OpenHCS prediction and published algorithm comparison.](../figures/slas/public_neurite_initial_comparison.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(A–C)** Public NeuronCyto II field: raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), shown at the same field scale. The published output, including its red circles and arrow, is an algorithm comparison, not manual ground truth. Scale bars in A–B are in image pixels. The final attempted repair extended beyond principal shafts; the shaft-only target was clarified after that run. These images retain the original initial-result comparison and do not represent a new trial.
+:::
 
 ## Supplementary Data 5. Complex workflow imports
 
@@ -100,11 +106,18 @@ Protein translocation analysis 1 used each well's mean cell-level nuclear/cytopl
 
 ## Supplementary Data 8. Agent-developed analyses
 
+### Analysis index
+
+Use the following linked records to match each named analysis to its result, instructions, selected pipeline and available resources. The 20 task-level result rows include a repair and a grouped three-agent cohort; they are not 20 independent trials. H001 and H002 retain their original task aliases, and repairs remain part of the same analysis rather than receiving a new quality rank.
+
+- [Results](task_only_analysis/analysis_results.csv): analysis name/dataset, model, evaluation inputs, endpoint and result. Main Table 2 selects the principal assays; the CSV also retains earlier held-out analyses and image-review demonstrations.
+- [Instructions and available pipeline sources](#instructions-and-reproducibility): original briefs, guide/software provenance, selected source files and supporting functions, including the [original brief archive](task_only_analysis/original_task_briefs.json).
+- [Trial resources](task_only_analysis/trial_resources.csv) and their [timing/usage definitions](task_only_analysis/trial_resource_tables.md): recorded task durations and computational use, distinct from final-pipeline runtime. These records do not supply missing values for unrelated analyses.
+- [Principal neurite cohort](personal_neurite_autonomous/cohort.json): the three blind drug-response analyses, distinct from the separate nine-field laboratory tracing and scientist-assisted continuation.
+
 ### Results and reference types
 
-Names identify the task; numbers distinguish independently developed methods. Corrections remain part of the same analysis. **Held-out** inputs were withheld before development and released only after the method was fixed. **Uninspected** fields were not viewed by the agent during development, as determined retrospectively from image-delivery records. For nuclear detection analyses 2–4, the 175-field subset excludes every field viewed by any of the three agents. **Development** results may include images used to choose the method.
-
-The [analysis-results data table](task_only_analysis/analysis_results.csv) supplies all 20 task-level records, with model, evaluation partition, endpoint and result in separate columns. Main Table 2 summarizes the principal assay results; the data table also retains the earlier held-out analyses and the individual image-review demonstrations.
+**Held-out** inputs were withheld before development and released only after the method was fixed. **Uninspected** in the retained BBBC039 records uses an all-time image-delivery definition: no field image or crop was successfully delivered in any of the three audited original author journals, including post-method-freeze QA. The shared 175-field subset and supplementary 44-field official-test robustness check use that definition. Pre-freeze test exposure is instead per analysis: two analyses had none and the third viewed one field. **Development** results may include images used to choose the method.
 
 Object scores use computational labels for H001 and independent nuclear annotations for BBBC039. BBBC007 uses manual outlines; H002 has partial manual centre annotations. Retinal and neurite demonstrations without spatial ground truth are evaluated by paired raw/result review, not an accuracy percentage.
 
