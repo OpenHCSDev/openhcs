@@ -1,0 +1,1373 @@
+{
+  "dataset": "BBBC013",
+  "partition": "held_out",
+  "corpus_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/manifest.json",
+    "sha256": "2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d",
+    "bytes": 248641
+  },
+  "prediction_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/freeze/predictions.sha256",
+    "sha256": "62e86100ce3f99a7261b309184854d2a3d04139302900c7578d34a50cd8dfc6d",
+    "bytes": 194488
+  },
+  "nuclear_object_name": "FilteredNuclei",
+  "cytoplasmic_object_name": "Cytoplasm",
+  "source_image_name": "GFP",
+  "wells": [
+    {
+      "well": "A01",
+      "cells": 270,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.8925113248489305,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "85edd4367fdc2f997bb15de2a3aa6d29229b70f2e8b9bc6674496c70876bc1b2",
+        "bytes": 202894
+      }
+    },
+    {
+      "well": "A02",
+      "cells": 220,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9413186809401907,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "b44650ae7429a6d595ae56f90e938dcbcc6bf1bb4f6f4accbbc9842c1649bef4",
+        "bytes": 165085
+      }
+    },
+    {
+      "well": "A03",
+      "cells": 201,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1352592558920256,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "87fbeebf21097ad7dec778155a6ac6726c0c568f0b0ffbaeedf2c27a4a8f2ab9",
+        "bytes": 150798
+      }
+    },
+    {
+      "well": "A05",
+      "cells": 175,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.4266886593392174,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "068ea9cfff55b2b49a42e97a95feb5949282945a363ff35b6b96a9b856977ce8",
+        "bytes": 131113
+      }
+    },
+    {
+      "well": "A06",
+      "cells": 187,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.9347386259952866,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "54b333679b2706b6cb684e9adb404ddfa632ea126dfabc4e94d42a4146982d36",
+        "bytes": 140714
+      }
+    },
+    {
+      "well": "A07",
+      "cells": 161,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 4.59124786052852,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "1f49154fea2084dad9ea9ed98d41d2a53b6f871de878f8ae249618bad968f02e",
+        "bytes": 121142
+      }
+    },
+    {
+      "well": "A08",
+      "cells": 175,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.115780224032062,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "141f141264e9dd7b0cb6cc6cdc9981b57b70b4e7cc3381e0775f341a37698c25",
+        "bytes": 131219
+      }
+    },
+    {
+      "well": "A09",
+      "cells": 173,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.908686927586584,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "4343ac2b8714fde7e489caa690f0d10cc9943fc4df769a3b414454566d2aef2b",
+        "bytes": 129716
+      }
+    },
+    {
+      "well": "A10",
+      "cells": 136,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.405555656489863,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "0e70f80ab90e643ce50567f6a9ff6efb5dea5dc9fb2204d70c810a1eec6190f9",
+        "bytes": 102004
+      }
+    },
+    {
+      "well": "A11",
+      "cells": 146,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.482217175547725,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "0ea2024d3c5c16b9bbcedfe8239837b11f1fc57fba55648dec7cd9db4b02ef00",
+        "bytes": 109617
+      }
+    },
+    {
+      "well": "A12",
+      "cells": 156,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.156736762751716,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/A12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "43421acfd28dbf43ac5f182a6718165e509c19fe64c9681be13bddd3727273e1",
+        "bytes": 116839
+      }
+    },
+    {
+      "well": "B01",
+      "cells": 136,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.8732202495702255,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "5e8d64ec758c6bf6eafc5cf1999b9bc7e9e00cda950aa465eecc660f2e4008b2",
+        "bytes": 102297
+      }
+    },
+    {
+      "well": "B02",
+      "cells": 173,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.970255219003275,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "426f399df43ce6500848e35343ad52052dad600436d564a2648c3d58345b7503",
+        "bytes": 129776
+      }
+    },
+    {
+      "well": "B03",
+      "cells": 219,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9817010210912502,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "54e79f1f7da297159912d056ddc44523d5060eef7ce6fc087a14f2726e61f6db",
+        "bytes": 164028
+      }
+    },
+    {
+      "well": "B04",
+      "cells": 185,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1425132964852214,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "8af834b7ea3a8618b37a7a7c0837451b353bd747edef9baa56a4e34ebde436aa",
+        "bytes": 138737
+      }
+    },
+    {
+      "well": "B05",
+      "cells": 190,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.3711810547744683,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "2d0d99b13f5ebaedad28171e8b9bff4c49583fcaf14acd518b63fda50e29f9e9",
+        "bytes": 142392
+      }
+    },
+    {
+      "well": "B06",
+      "cells": 170,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.311470736827126,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "27ff06116e795ec5d24686928ae8e8036afb9eb61cb1f9156a07aa5e470103be",
+        "bytes": 127706
+      }
+    },
+    {
+      "well": "B07",
+      "cells": 169,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 4.933237260449554,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "981feaa7fca6410f77255795344f9dbfe01e5916bf0a55a9d50bc9173858e154",
+        "bytes": 126927
+      }
+    },
+    {
+      "well": "B09",
+      "cells": 142,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.59531282339734,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "ed0730cd765387d4db6b889a998f6832ff324185a837b1f4dd71ebea76e68e65",
+        "bytes": 106570
+      }
+    },
+    {
+      "well": "B10",
+      "cells": 155,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.618617416877392,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "6d36bd81a9902354c7f94ce80c2427166f4b03fd11c97c5b9de8d5ee7f2e309d",
+        "bytes": 113341
+      }
+    },
+    {
+      "well": "B11",
+      "cells": 152,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.783422990783226,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "335fc4a47f14aeb6b460258750e34b3fcef719a382f231cbda03bc31d09bde03",
+        "bytes": 114080
+      }
+    },
+    {
+      "well": "B12",
+      "cells": 121,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.729405621764318,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/B12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "50f8e26c27d6909968cfbf6a79170f89e4491675054886b4d2eda511d2ab3ad8",
+        "bytes": 90350
+      }
+    },
+    {
+      "well": "C01",
+      "cells": 125,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9534583108641258,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "3a6b8f73d4781093bd9d2deb8afdf9bcf6e85ecd93b2b9268098cae6ceefe87f",
+        "bytes": 93913
+      }
+    },
+    {
+      "well": "C02",
+      "cells": 170,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9630145959998406,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "d364f65f4b119826434ae3f0e0007a0baf13908596ada138a7ad509a840dc35b",
+        "bytes": 127803
+      }
+    },
+    {
+      "well": "C03",
+      "cells": 181,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.150933387345388,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "c22c737268bc2644be1563f875480a509d2f5d2aef2a2d140f1f9acac2457e8c",
+        "bytes": 135822
+      }
+    },
+    {
+      "well": "C04",
+      "cells": 172,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0681969259944588,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "70796622ec57552e683cb602ca6b5fbd9c196e10fe327cb6aa62b689c2e11149",
+        "bytes": 129075
+      }
+    },
+    {
+      "well": "C05",
+      "cells": 164,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.7946443436739472,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "7a9d1ca1573684fc32eada9d437b6b661fca14e5f7f6d6534cdf769ed6e5906f",
+        "bytes": 123106
+      }
+    },
+    {
+      "well": "C06",
+      "cells": 149,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.6130774372052468,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "8f769b8522afdf45cbeabd9eebd5553d6542bab4992d4f16f1d83c4b269c507f",
+        "bytes": 112227
+      }
+    },
+    {
+      "well": "C07",
+      "cells": 125,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.113660098712357,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "dc267cb42390898bda96d664daa60c87ebba1ef3f720c7b7f8db9c6879dad7c0",
+        "bytes": 93850
+      }
+    },
+    {
+      "well": "C08",
+      "cells": 158,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.4309972148604935,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "8b8cc5c13f0622e4797d2a57d7489072b909046f00ab75ed924d9ec89dd89b18",
+        "bytes": 118624
+      }
+    },
+    {
+      "well": "C09",
+      "cells": 108,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 8.025737409101835,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "6bd1a649cb185ed615ca1daa6d3d506f13e6ac3537b975df9381f6e9c9d18316",
+        "bytes": 78231
+      }
+    },
+    {
+      "well": "C10",
+      "cells": 162,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.451402088906274,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "34305edbe7fd0571eed97cf1d3bce0e5aaada7df35c6d3aa73f01a39c79ee04d",
+        "bytes": 121427
+      }
+    },
+    {
+      "well": "C11",
+      "cells": 116,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.746802284112675,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "f20b35d59efd3dbbdfe9b9e2cad688d61fcd1e29249bf58cce00006abcf53bd3",
+        "bytes": 86576
+      }
+    },
+    {
+      "well": "C12",
+      "cells": 148,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.461354255157182,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/C12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "0e676c8dbee197ce76b03869a417f1e1c7d55bf3d13a85090eae3e15cb69037b",
+        "bytes": 111110
+      }
+    },
+    {
+      "well": "D01",
+      "cells": 145,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9399265023380916,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "0a155027d841cde0cdfd19e673c04ac8ebfd9fe6d3a59217c76de013c3c60d18",
+        "bytes": 108802
+      }
+    },
+    {
+      "well": "D02",
+      "cells": 161,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0003182511890827,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "cbdae7c7c34899a66d0500b4815b2a94fba26420fdbf4b4affbee8662bda6eb8",
+        "bytes": 120888
+      }
+    },
+    {
+      "well": "D03",
+      "cells": 173,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1882197646756654,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "4f5de922a885f3a1cef2794065dd168b832c8e8a5e8501983904ca9cc9bcd68a",
+        "bytes": 130072
+      }
+    },
+    {
+      "well": "D04",
+      "cells": 169,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.2365016696128055,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "5e02d2a230157940fcf3aae8bc3ef53da974482e850825def7d8e6ca671822d7",
+        "bytes": 126798
+      }
+    },
+    {
+      "well": "D05",
+      "cells": 181,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.336171278916295,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "ca93609da7cc83b4a0f297eaa29e5c9fedcf3002a8102aab35372b9417bec95f",
+        "bytes": 135724
+      }
+    },
+    {
+      "well": "D06",
+      "cells": 162,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.8211700498363115,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "752e4ce0031009bd30b9d9e35fb954324f68c8ed095fe9bb119356505db77c97",
+        "bytes": 121821
+      }
+    },
+    {
+      "well": "D07",
+      "cells": 154,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 5.741026412634529,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "9aca619b4644f66115c9e6e9924a9a9f201ce8ff09475bf928771e135c87286f",
+        "bytes": 115568
+      }
+    },
+    {
+      "well": "D08",
+      "cells": 128,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.2785644814339605,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "a5c2d29fbf1bca5b42680d418ccc270cc0a657b90afaa50f39c380f13ba7202f",
+        "bytes": 96053
+      }
+    },
+    {
+      "well": "D09",
+      "cells": 137,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.504792996016752,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "5ad1054e46bff813d841b1d336ffd1284bd4da48306900cf36652ef9186f0c4c",
+        "bytes": 102986
+      }
+    },
+    {
+      "well": "D10",
+      "cells": 127,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.863223720561773,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "f471d2559994f2e838621ad56b947ea89559f1124090d9d6da84750b3a45c32f",
+        "bytes": 94710
+      }
+    },
+    {
+      "well": "D11",
+      "cells": 133,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.688495763962612,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "51784a478a367c0023c1d531ba29817d52b49d9249a2d6ea058b8dd004f8fa03",
+        "bytes": 99971
+      }
+    },
+    {
+      "well": "D12",
+      "cells": 134,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.593935687181334,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/D12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "663f4fe85a864182119f001b547d6455e634deeb9bc00d88397c0e7c461adbe0",
+        "bytes": 100626
+      }
+    },
+    {
+      "well": "E01",
+      "cells": 167,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.885464976872249,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "1b69777e5b0382ed977e0a8e141be1a16934a9bd57518f4f738a5dc7c4c537ed",
+        "bytes": 120804
+      }
+    },
+    {
+      "well": "E02",
+      "cells": 178,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0908747614130048,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "7883a3e0d8409a5b0d462c18ee19786148a659d1ccec040bf5d4397b2a509a66",
+        "bytes": 133562
+      }
+    },
+    {
+      "well": "E03",
+      "cells": 188,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1889029283426824,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "1490a0ca8953351eba632ca5c1a3f432b9bfbe3ae671ca44cf41cc32a1d0c385",
+        "bytes": 141091
+      }
+    },
+    {
+      "well": "E05",
+      "cells": 149,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.6629144472783823,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "841e4edd3f0aab318986aab71140869fb970aba2b3f5d2e2d5f99a04ef75adf1",
+        "bytes": 111904
+      }
+    },
+    {
+      "well": "E06",
+      "cells": 132,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.6048960127517553,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "29cab724fb2b5ee07f0336c68e8ab774cb10ed22e6053db42adde7bac5f72fac",
+        "bytes": 99101
+      }
+    },
+    {
+      "well": "E07",
+      "cells": 140,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 4.7579410426375555,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "cbf9f6047a827b72257170542440421cf4c6c3fbea6a0f30499c5bedbc9d56e4",
+        "bytes": 104035
+      }
+    },
+    {
+      "well": "E08",
+      "cells": 149,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.186993523527352,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "fb8b7e15f180e8b565133be5da027bb644853979f2a2fcb3e6bff4351ac7cb96",
+        "bytes": 111743
+      }
+    },
+    {
+      "well": "E09",
+      "cells": 143,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.89427186309902,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "6453dafcfe98467ffc79b13865fa7613fb9d6c4dede1cdc8b5b2dce83057fe1f",
+        "bytes": 104905
+      }
+    },
+    {
+      "well": "E10",
+      "cells": 111,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.217716982503549,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "1b9139790cff1dbabe2fe5f950602b5bc0ed8ceed056865e105f1808e26b2855",
+        "bytes": 83129
+      }
+    },
+    {
+      "well": "E11",
+      "cells": 123,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.918239690789623,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "f4a91ec3749395baddb6bb9aed376f7e8aa0229663aa2cfc75436f9d80b862c3",
+        "bytes": 91523
+      }
+    },
+    {
+      "well": "E12",
+      "cells": 154,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1651847888355824,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/E12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "4c6f8816bf01c35205597f204c48510e32a679f2af03abb09c8eef0db05cdbc9",
+        "bytes": 115933
+      }
+    },
+    {
+      "well": "F01",
+      "cells": 171,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.4495024102254295,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "5a10138c4b4ae1f695844affc234a16f8863eda2ded552c62fe249a2caa0b147",
+        "bytes": 128282
+      }
+    },
+    {
+      "well": "F02",
+      "cells": 159,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 0.9982714596527399,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "332c952a0a23e388df6d53668b2314ba88887f854bb1d44b60e69ab0e861955d",
+        "bytes": 119330
+      }
+    },
+    {
+      "well": "F03",
+      "cells": 100,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1060403048259164,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "15419f8206f58278fa2ded45e7d79971d4be27b4be7046a7f4ac033160ab3206",
+        "bytes": 75201
+      }
+    },
+    {
+      "well": "F04",
+      "cells": 149,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1128511688116687,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "c9eab04ab94e511598d3f837a1192559326e3dc305065c3cb44d69c140f19338",
+        "bytes": 111998
+      }
+    },
+    {
+      "well": "F05",
+      "cells": 147,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.3160196707675735,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "b364d4d7241847932554c001ce462b980c19b8b97c3f95494df17e75a930210a",
+        "bytes": 110303
+      }
+    },
+    {
+      "well": "F06",
+      "cells": 161,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.4397575560395675,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "69a788fa5e58953f8c03c15db5290d0bf2ae88062855aaa7c1602a68ee442624",
+        "bytes": 121285
+      }
+    },
+    {
+      "well": "F07",
+      "cells": 161,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 4.433827875448927,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "4b0e975b2c426ad6e8bd8a56b13acd763d00ada1764d64597337bb200ca9beb9",
+        "bytes": 120898
+      }
+    },
+    {
+      "well": "F09",
+      "cells": 144,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.57106594422164,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "aa29713a9ecd81b6ef0635d330fabab0b578fcd597cebaa60725c53879755600",
+        "bytes": 107983
+      }
+    },
+    {
+      "well": "F10",
+      "cells": 114,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.361965859647959,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "251b3533225b3312d80aec23ed676c3945ad09264ad6d4a07c1cc9e058cf2621",
+        "bytes": 84049
+      }
+    },
+    {
+      "well": "F11",
+      "cells": 167,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.853352714782863,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "2b815c7d557429fa718d142cbd4af05c8cb336a55ff48dbdf7b6707b5c7c2b29",
+        "bytes": 125135
+      }
+    },
+    {
+      "well": "F12",
+      "cells": 150,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0896079649106232,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/F12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "7c256a2089801d2d0f414cad3834f32a8d140edad144c61709549ffe4c577051",
+        "bytes": 112684
+      }
+    },
+    {
+      "well": "G01",
+      "cells": 249,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.592767354674951,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "72593eba013f03b682ed06f666ba461af2946fba52b981a40398dfe8046e8f3e",
+        "bytes": 183811
+      }
+    },
+    {
+      "well": "G02",
+      "cells": 119,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0486534824920934,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "595bdf6f0b84e5e758ac5823c6c3fd508f87b10dbdd5777c97df4a7c2851196f",
+        "bytes": 89409
+      }
+    },
+    {
+      "well": "G03",
+      "cells": 164,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0642415154379175,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "fce09a5f7bcfc87ff37d5783fbe4c04b28d758b2e961d6dc7056205e1955d2fe",
+        "bytes": 122876
+      }
+    },
+    {
+      "well": "G04",
+      "cells": 124,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.1823479839296689,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "58b8035bdb3abc7305eb1330d53008301995e42d0ecebdf25d9ad57a9862678a",
+        "bytes": 93137
+      }
+    },
+    {
+      "well": "G05",
+      "cells": 158,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.3881160774383385,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "18c02afd900fee0e9a8bf78b0ba8a9893bba92af24626296a3285da58faece7f",
+        "bytes": 118830
+      }
+    },
+    {
+      "well": "G06",
+      "cells": 170,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 2.055166289032819,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "d973d105d8a379c8551e18e2e916f15fbe7cfddb476b0ac3af880498537876b4",
+        "bytes": 127833
+      }
+    },
+    {
+      "well": "G07",
+      "cells": 133,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 4.487531342534988,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "1859b77faecd6e742468b1c0ba37d4738028979f5f8c7b426d276439770cd38b",
+        "bytes": 99654
+      }
+    },
+    {
+      "well": "G08",
+      "cells": 109,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.735627745063616,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "4d79c95b342b721126998d548b3fc9f7e224ca65a23843c6bc86fe8b38988c5d",
+        "bytes": 81673
+      }
+    },
+    {
+      "well": "G09",
+      "cells": 140,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.355573580797397,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "fa537a544a05d20e250d1f78b90e0a7f0bd8fa2d6ff82d98e0ac85244fc23d3c",
+        "bytes": 104904
+      }
+    },
+    {
+      "well": "G10",
+      "cells": 120,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.674510212821872,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "57fd2267d37a82aaa1145654e94ca3b56a94062365eaefe91b0d13f1ddcecdd7",
+        "bytes": 88692
+      }
+    },
+    {
+      "well": "G11",
+      "cells": 99,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.599696512724031,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "3011c3d79ca7e5536921751399b7befaa358d314618b1b61f727312c408340f6",
+        "bytes": 73902
+      }
+    },
+    {
+      "well": "G12",
+      "cells": 129,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.2398121626970162,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/G12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "e891609f7094344b4069af72db0c7119d2df69e2d4a89108e9d1d6f365768a2d",
+        "bytes": 96906
+      }
+    },
+    {
+      "well": "H01",
+      "cells": 223,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.948869668970449,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H01_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "aa1fb7bb06b0c2f7df47ec183fcdf4825a0ebd53af4f80da5957bdc30a307247",
+        "bytes": 167275
+      }
+    },
+    {
+      "well": "H02",
+      "cells": 147,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.06244034711629,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H02_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "6b33bc4459afee91932277f637af5b9796b882010a603cf5d83ed4943a795a40",
+        "bytes": 110237
+      }
+    },
+    {
+      "well": "H03",
+      "cells": 152,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.3249614848832507,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H03_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "f0afcf6d6e4f588d1b593ba4366f8209b6370fb16c9723fc5231c998061d6456",
+        "bytes": 114089
+      }
+    },
+    {
+      "well": "H04",
+      "cells": 152,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.0768653163880415,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H04_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "d89eb45995e07c6a4beb60bd310869b51cddc48edf66c11c69cb3bca3a2ae22b",
+        "bytes": 114037
+      }
+    },
+    {
+      "well": "H05",
+      "cells": 214,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.2315455285226826,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H05_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "a948aa03ac15eb9f53b487a59e5db2385e4bde426d74fe258addb0c078940b07",
+        "bytes": 160425
+      }
+    },
+    {
+      "well": "H06",
+      "cells": 126,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.5512051521438168,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H06_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "64e503373a361634d7b943eadc04f123161e0ba4576389596169e7399b5850c2",
+        "bytes": 94808
+      }
+    },
+    {
+      "well": "H07",
+      "cells": 149,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 3.8672734248540053,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H07_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "56a8574a2dc1cd68b6a66608c806f197d8ace7de6fbe8674b7f6494fa96d2cf3",
+        "bytes": 111943
+      }
+    },
+    {
+      "well": "H08",
+      "cells": 130,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.411774388917761,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H08_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "90654edea939f3b6fa2a021da7113cb5e0c635941915d8ecb16ec32cf1be107e",
+        "bytes": 97408
+      }
+    },
+    {
+      "well": "H09",
+      "cells": 166,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 6.694489228019478,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H09_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "f17324a644a08833fad8919fdb2f8c962efc93114078e68f8d54146496957175",
+        "bytes": 122798
+      }
+    },
+    {
+      "well": "H10",
+      "cells": 97,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.691475963422388,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H10_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "8d7e33e892c4e9193f7e74ebea91bb210be3e3d4ebd6f5a391acebe2612f506f",
+        "bytes": 72942
+      }
+    },
+    {
+      "well": "H11",
+      "cells": 164,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 7.275070500718637,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H11_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "d9b71d47486d85da9f84a5cdec082ca042cfec4139ef51dc0f5b1bb4e0531112",
+        "bytes": 122797
+      }
+    },
+    {
+      "well": "H12",
+      "cells": 177,
+      "mean_nuclear_cytoplasmic_gfp_ratio": 1.011511303804395,
+      "measurement": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC013/sol-independent-01/held_out/outputs/H12_w1_Measure GFP intensity in matched nuclei and cytoplasm_4_measurements_step3_details.csv",
+        "sha256": "ddedfddc83a62800028e6c6bc40e37317ab22b037bcc79350047ef7e84b9881a",
+        "bytes": 132783
+      }
+    }
+  ],
+  "metrics": {
+    "treatments": [
+      {
+        "treatment": "Wortmannin",
+        "positive_n": 4,
+        "negative_n": 4,
+        "dose_response": [
+          {
+            "well": "A03",
+            "dose": 0.98,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1352592558920256
+          },
+          {
+            "well": "A05",
+            "dose": 3.91,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.4266886593392174
+          },
+          {
+            "well": "A06",
+            "dose": 7.81,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.9347386259952866
+          },
+          {
+            "well": "A07",
+            "dose": 15.63,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 4.59124786052852
+          },
+          {
+            "well": "A08",
+            "dose": 31.25,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.115780224032062
+          },
+          {
+            "well": "A09",
+            "dose": 62.5,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.908686927586584
+          },
+          {
+            "well": "A10",
+            "dose": 125.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.405555656489863
+          },
+          {
+            "well": "A11",
+            "dose": 250.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.482217175547725
+          },
+          {
+            "well": "B03",
+            "dose": 0.98,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 0.9817010210912502
+          },
+          {
+            "well": "B04",
+            "dose": 1.95,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1425132964852214
+          },
+          {
+            "well": "B05",
+            "dose": 3.91,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.3711810547744683
+          },
+          {
+            "well": "B06",
+            "dose": 7.81,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.311470736827126
+          },
+          {
+            "well": "B07",
+            "dose": 15.63,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 4.933237260449554
+          },
+          {
+            "well": "B09",
+            "dose": 62.5,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.59531282339734
+          },
+          {
+            "well": "B10",
+            "dose": 125.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.618617416877392
+          },
+          {
+            "well": "B11",
+            "dose": 250.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.783422990783226
+          },
+          {
+            "well": "C03",
+            "dose": 0.98,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.150933387345388
+          },
+          {
+            "well": "C04",
+            "dose": 1.95,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.0681969259944588
+          },
+          {
+            "well": "C05",
+            "dose": 3.91,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.7946443436739472
+          },
+          {
+            "well": "C06",
+            "dose": 7.81,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.6130774372052468
+          },
+          {
+            "well": "C07",
+            "dose": 15.63,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.113660098712357
+          },
+          {
+            "well": "C08",
+            "dose": 31.25,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.4309972148604935
+          },
+          {
+            "well": "C09",
+            "dose": 62.5,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 8.025737409101835
+          },
+          {
+            "well": "C10",
+            "dose": 125.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.451402088906274
+          },
+          {
+            "well": "C11",
+            "dose": 250.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.746802284112675
+          },
+          {
+            "well": "D03",
+            "dose": 0.98,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1882197646756654
+          },
+          {
+            "well": "D04",
+            "dose": 1.95,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.2365016696128055
+          },
+          {
+            "well": "D05",
+            "dose": 3.91,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.336171278916295
+          },
+          {
+            "well": "D06",
+            "dose": 7.81,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.8211700498363115
+          },
+          {
+            "well": "D07",
+            "dose": 15.63,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 5.741026412634529
+          },
+          {
+            "well": "D08",
+            "dose": 31.25,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.2785644814339605
+          },
+          {
+            "well": "D09",
+            "dose": 62.5,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.504792996016752
+          },
+          {
+            "well": "D10",
+            "dose": 125.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.863223720561773
+          },
+          {
+            "well": "D11",
+            "dose": 250.0,
+            "unit": "nM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.688495763962612
+          }
+        ],
+        "z_prime": 0.7505698462216228,
+        "positive_mean": 7.235358081713638,
+        "negative_mean": 0.9147790969053433
+      },
+      {
+        "treatment": "LY294002",
+        "positive_n": 4,
+        "negative_n": 4,
+        "dose_response": [
+          {
+            "well": "E03",
+            "dose": 0.31,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1889029283426824
+          },
+          {
+            "well": "E05",
+            "dose": 1.25,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.6629144472783823
+          },
+          {
+            "well": "E06",
+            "dose": 2.5,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.6048960127517553
+          },
+          {
+            "well": "E07",
+            "dose": 5.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 4.7579410426375555
+          },
+          {
+            "well": "E08",
+            "dose": 10.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.186993523527352
+          },
+          {
+            "well": "E09",
+            "dose": 20.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.89427186309902
+          },
+          {
+            "well": "E10",
+            "dose": 40.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.217716982503549
+          },
+          {
+            "well": "E11",
+            "dose": 80.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.918239690789623
+          },
+          {
+            "well": "F03",
+            "dose": 0.31,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1060403048259164
+          },
+          {
+            "well": "F04",
+            "dose": 0.63,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1128511688116687
+          },
+          {
+            "well": "F05",
+            "dose": 1.25,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.3160196707675735
+          },
+          {
+            "well": "F06",
+            "dose": 2.5,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.4397575560395675
+          },
+          {
+            "well": "F07",
+            "dose": 5.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 4.433827875448927
+          },
+          {
+            "well": "F09",
+            "dose": 20.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.57106594422164
+          },
+          {
+            "well": "F10",
+            "dose": 40.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.361965859647959
+          },
+          {
+            "well": "F11",
+            "dose": 80.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.853352714782863
+          },
+          {
+            "well": "G03",
+            "dose": 0.31,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.0642415154379175
+          },
+          {
+            "well": "G04",
+            "dose": 0.63,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.1823479839296689
+          },
+          {
+            "well": "G05",
+            "dose": 1.25,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.3881160774383385
+          },
+          {
+            "well": "G06",
+            "dose": 2.5,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 2.055166289032819
+          },
+          {
+            "well": "G07",
+            "dose": 5.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 4.487531342534988
+          },
+          {
+            "well": "G08",
+            "dose": 10.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.735627745063616
+          },
+          {
+            "well": "G09",
+            "dose": 20.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.355573580797397
+          },
+          {
+            "well": "G10",
+            "dose": 40.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.674510212821872
+          },
+          {
+            "well": "G11",
+            "dose": 80.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.599696512724031
+          },
+          {
+            "well": "H03",
+            "dose": 0.31,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.3249614848832507
+          },
+          {
+            "well": "H04",
+            "dose": 0.63,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.0768653163880415
+          },
+          {
+            "well": "H05",
+            "dose": 1.25,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.2315455285226826
+          },
+          {
+            "well": "H06",
+            "dose": 2.5,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 1.5512051521438168
+          },
+          {
+            "well": "H07",
+            "dose": 5.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 3.8672734248540053
+          },
+          {
+            "well": "H08",
+            "dose": 10.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.411774388917761
+          },
+          {
+            "well": "H09",
+            "dose": 20.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 6.694489228019478
+          },
+          {
+            "well": "H10",
+            "dose": 40.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.691475963422388
+          },
+          {
+            "well": "H11",
+            "dose": 80.0,
+            "unit": "uM",
+            "mean_nuclear_cytoplasmic_gfp_ratio": 7.275070500718637
+          }
+        ],
+        "z_prime": 0.5535339760115459,
+        "positive_mean": 7.219151102685769,
+        "negative_mean": 1.126529055061904
+      }
+    ],
+    "measurement_definition": "per-well mean of cell-level mean nuclear GFP / mean cytoplasmic GFP; sampleSD across wells; distinct treatment groups",
+    "segmentation_truth": false
+  }
+}

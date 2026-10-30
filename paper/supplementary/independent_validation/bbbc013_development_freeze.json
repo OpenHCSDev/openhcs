@@ -1,0 +1,59 @@
+{
+  "schema_version": "openhcs.independent_validation.freeze.v1",
+  "frozen_at_utc": "2026-09-16T13:35:49Z",
+  "dataset": "BBBC013",
+  "trial": "sol-independent-01",
+  "partition": "development",
+  "held_out_accessed_before_freeze": false,
+  "development_wells": [
+    "A04",
+    "B08",
+    "E04",
+    "F08"
+  ],
+  "pipeline": {
+    "applied_source_path": "../pipeline.py",
+    "applied_source_sha256": "fadb9028edb5e93cdc8e001a7d5c6335a07949d04d76612b07ed2f2b9ba5c3af",
+    "running_ui_code_document_path": "ui_code_document.json",
+    "running_ui_source_sha256": "8f0a258ff946f2a8784dcffd5d65fb8ab15f53c56e223a80140a6fc6a73b4486",
+    "running_ui_revision_token": "5c95a94cdd73c2ea536e7a46210aeea1de393b52f597ffb76faed85641af3169",
+    "running_ui_snapshot_id": "8ccfdf1c-0fb0-4f18-b418-11d479c85bc1"
+  },
+  "corpus_manifest": {
+    "path": "../../../../../manifest.json",
+    "sha256": "2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d"
+  },
+  "runtime": {
+    "openhcs_git_head": "b2f3cf83b70238856193d669c0893d32ad958362",
+    "tracked_worktree_diff_sha256": "9db12898c78ac60e019bb4290e824387792c2348c22c0770697af1279b3f0ef6",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "scipy": "1.18.0",
+    "secondary_module_sha256": "c49aca73a51d903b808e195a5104a76905f88e6e8b677a9702d409436b93e05b",
+    "runtime_artifact_queries_sha256": "d396d189b039c3ab3cb0eb5a8a1221426025ef3a5af4ccda97bd7217743fdfc4"
+  },
+  "development_proof": {
+    "output_manifest_path": "predictions.sha256",
+    "output_manifest_sha256": "70b9c3e7546a5149430448ceecd367cfa1843f6e15e7146102417fffdeb5a75f",
+    "matching_object_counts": {
+      "A04": 168,
+      "B08": 132,
+      "E04": 181,
+      "F08": 135
+    },
+    "object_domains": [
+      "FilteredNuclei",
+      "Cells",
+      "Cytoplasm"
+    ],
+    "measurement_subjects": [
+      "FilteredNuclei",
+      "Cytoplasm"
+    ],
+    "matching_label_domains": true,
+    "matching_measurement_object_ids": true,
+    "viewer_snapshot_path": "../../qc/development-matched-primary/20260916T133434116927Z_napari_5643_OpenHCS_Napari_Visualization.png",
+    "viewer_snapshot_sha256": "502542fefaafb8eb6848164ca4436b1aed674d3f24814adcd6b72bb3ae904ed8",
+    "focused_regression_tests": "65 passed"
+  }
+}
