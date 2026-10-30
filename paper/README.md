@@ -76,14 +76,15 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The current main layout has six figures and two tables: native editing and custom
+The current main layout has six figures and three tables: native editing and custom
 function authoring (Figure 1); process architecture with integration logos
 (Figure 2); CellProfiler output coverage and measured execution/total times,
-with a fixed serial estimate compared with measured workers (Figure 3); an
-intended autonomous loop alongside a recorded repair trajectory (Figure 4);
+with a fixed serial estimate compared with measured workers (Figure 3); the
+intended autonomous analysis procedure (Figure 4);
 treatment responses from three independent blind agents with a separate
-laboratory neurite demonstration (Figure 5); and task-specific results
-with matched nuclear, retinal and volume corrections (Figure 6). Table 1 defines
+laboratory neurite demonstration (Figure 5); and quantitative endpoints followed
+by bright-object, nuclear, retinal and three-dimensional body repairs (Figure 6).
+Table 1 defines
 the timing boundaries; Table 2 maps tasks, models and protocols, and Table 3
 summarizes the principal autonomous assay results.
 Full trial results and reference types are retained in Supplementary Data 8.
@@ -109,7 +110,7 @@ environment, without rerunning scientific analyses:
 
 ```sh
 PYTHONPATH=paper/figures python -c \
-  'from build_slas_visual_story import architecture, submission_shared_workflow, submission_quantitative_results, submission_neurite_results; architecture(); submission_shared_workflow(); submission_quantitative_results(); submission_neurite_results()'
+  'from build_slas_visual_story import architecture, submission_shared_workflow, submission_autonomous_loop, submission_repair_examples, submission_quantitative_results, submission_neurite_results; architecture(); submission_shared_workflow(); submission_autonomous_loop(); submission_repair_examples(); submission_quantitative_results(); submission_neurite_results()'
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output

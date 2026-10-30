@@ -440,7 +440,7 @@ def submission_summary() -> None:
         if column == 0:
             axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    sheet.crop_vertical(.24, 1)
+    sheet.crop_vertical(.20, 1)
     sheet.save()
 
 

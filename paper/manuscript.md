@@ -133,11 +133,11 @@ Graphical forms, Python and agents using MCP edit the same analysis, including i
 
 To test whether independent analyses recovered drug responses, we used images of primary cortical neurons from embryonic day 18 rats, imaged two days after plating. Fusicoccin-A (FC-A) and Y27632 were each tested at 0, 5, 10, 20 and 40 µM, with two technical wells per dose and dimethyl sulfoxide (DMSO) vehicle controls. Nine paired nuclear/neuronal fields were acquired per well. Medium changes, recorded channels, image dimensions and pixel size are given in Supp. methods: neurite morphometry.
 
-The nuclear, cell-boundary and protein-translocation datasets came from the Broad Bioimage Benchmark Collection (BBBC): BBBC039 nuclear images, BBBC007 paired DNA/actin fields and the BBBC013 GFP/DNA assay.
+The nuclear, cell-boundary and protein-translocation datasets came from the Broad Bioimage Benchmark Collection (BBBC): BBBC039 nuclear images, BBBC007 paired DNA/actin fields and the BBBC013 green fluorescent protein (GFP)/DNA assay.
 
 Bright-object detection used the two-dimensional H001 image distributed as `blobs.tif` in the pinned Haase notebook collection; its comparison labels were computational, not manual biological annotations. Three-dimensional nuclear localisation used the collection's H002 nuclei volume, 60 × 256 × 256 voxels, with 15 manually marked centres covering only part of the volume. Body-separation repair used the same volume in a separate development analysis. Original specimen and acquisition details were not established for these distributed fixtures; H002 physical spacing was unverified.
 
-Retinal cell-body detection used the user-provided R0010 whole-mount acquisition, with RBPMS and Hoechst channel information. The retinal repair scale comes from the original CZI metadata. Public neurite tracing used paired TIFFs from NeuronCyto II image 1; coordinate-level manual traces and verified physical calibration were unavailable. Separate laboratory tracing used nine DAPI/calcein fields from one coded well, distinct from the 20-well drug-response cohort.
+Retinal cell-body detection used the user-provided R0010 whole-mount acquisition, with RNA-binding protein with multiple splicing (RBPMS) and Hoechst channel information. The retinal repair scale comes from the original CZI metadata. Public neurite tracing used paired TIFFs from NeuronCyto II image 1; coordinate-level manual traces and verified physical calibration were unavailable. Separate laboratory tracing used nine DAPI/calcein fields from one coded well, distinct from the 20-well drug-response cohort.
 
 ### Autonomous analysis design
 
@@ -150,7 +150,7 @@ Table 2 identifies the task, model and evaluation design for each named analysis
 Table: Table 2. Tasks, models and protocols. Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities are paper-reported; their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
 
 | Analysis and task/source | Model | Development and evaluation protocol |
-|:----------------------------------------|:---------------|:----------------------------------------------------------|
+|:----------------------------------------|:-------------------|:----------------------------------------------------------|
 | Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
 | Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
 | Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
@@ -165,9 +165,11 @@ Table: Table 2. Tasks, models and protocols. Development images could inform met
 | Bright-object detection 2, H001 | gpt-6.1-sol | Independent same-image development; matched image review, no reference score. |
 | 3D nuclear localisation 1–2, H002 | gpt-6.1-sol | Separate independent analyses of one development volume; partial manual-centre reference after freeze. |
 | 3D body-separation repair, H002_FRESH22_89 | gpt-6.1-sol | Independent development; candidate01 → candidate02_retry sampled split repair before reference evaluation, not a withheld volume. |
+| 3D final-view analysis, H002_FRESH10_89 | gpt-6.1-sol | Independent task-only development on the released volume; final-only XY/XZ/YZ witnesses. The 22 centres are algorithmic, not a biological census or held-out score. |
 | Retinal cell detection 1–2, R0010 | gpt-6.1-sol | Separate fresh development analyses; matched image review, no manual-reference accuracy. |
 | Retinal repair, R0010_FRESH16_88 | Not recorded for this continuation | Retained continuation after interrupted CLI; self-directed FIRST → REPAIR01-technical02 image-review repair, without reference masks, manual counts or dataset-specific parameter coaching; not a fresh repeat. |
 | Nuclear-separation repair, H003_POSTPAUSE_88 | Not recorded in panel provenance | Retained same-field DNA-image repair; distinct from the tabulated Fresh26 paired-channel analysis. |
+| Paired nuclear/cell inspection, H003_FRESH19_96 | Not recorded in checked sources | Separate DNA/actin development; final matched image review, not manual-reference accuracy. Two body masks are seed-only; 55 labels do not establish 55 complete cells. |
 | Public NeuronCyto demonstration, original | gpt-5.6-sol | Method-directed normalization, segmentation and assignment; authoring demonstration, not autonomous method selection. |
 | Public-image neurite tracing, H004 | gpt-6.1-sol | Fresh development; displayed initial prediction. Main-shaft target clarified only after the run. |
 | Laboratory-image neurite tracing, P001 | gpt-6.1-sol | Fresh nine-field development and image review; not the drug-response cohort. |

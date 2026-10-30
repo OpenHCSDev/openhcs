@@ -2,7 +2,7 @@
   "generator_sha256": "fb12a079961b04187b790d716bb667e86fae32b3065e08c7652775a14407d79b",
   "source_sha256": {
     "paper/figures/build_slas_supplement.py": "ca200de0a64896a9da8554109a036d3bace1405f25ce6bfa4868cf9fb03c96e7",
-    "paper/figures/build_slas_task_only.py": "fa28d43820b46fa69538aeda0a8510d1beb7f976f83a4e9ef6f846fb84031e5c",
+    "paper/figures/build_slas_task_only.py": "1200c15ef54e4713e3439801c1ca444fd6559c8538361380b202ac337fc30f94",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc039-uninspected-fields.csv": "548749c6764453a7171f657a3ff07fcfa613fc943104da2fe1eb67d93f31e3f0",
     "paper/supplementary/task_only_analysis/bbbc007-fresh19-qualified-completion.rst": "53c9a2da8bf5718a792149d99007e773154d9712d02bf1eeb7e2cfc6761b4ef0",
@@ -16,15 +16,15 @@
     {
       "operation": "Vertical canvas crop; axis sizes and type unchanged",
       "bottom_top_fractions": [
-        0.24,
+        0.2,
         1
       ]
     }
   ],
   "output_sha256": {
-    "submission_analysis_summary.png": "6cc146527d2feeb86c1673713af139ff40e07e4933f6afe36263bf2b5e3caaab",
-    "submission_analysis_summary.pdf": "968db7b1b2f499c0dd8c8d6682219b7cb755e679b73a187f6051e46640ba2214",
-    "submission_analysis_summary.svg": "8e831f579286202b312359207c1ae5fcbb9b3f5aba67ede3b50aee6ad0aedb8f"
+    "submission_analysis_summary.png": "fedff37c086909e0c74f25a776871bbc8f85d1ae5aad7d930352891dbc154533",
+    "submission_analysis_summary.pdf": "4339107c4e153c1a831b11c473bbc784a28b734eaf4d6bc0279472ada7aa38c0",
+    "submission_analysis_summary.svg": "dd1ffccba4adb0227f86a8b9241cb175eadbf51ffaec4ff8406e0e07632492df"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
