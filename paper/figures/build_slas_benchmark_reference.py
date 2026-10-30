@@ -213,7 +213,7 @@ def submission_benchmark_summary() -> None:
     if sum(counts) != len(coverage_rows):
         raise ValueError("Unknown retained coverage grade")
     coverage_colors = ("#16877f", "#4682b4", "#e2a23b", "#969696", "#b2182b")
-    pie = sheet.plot_axes((.015, .65, .20, .25))
+    pie = sheet.plot_axes((.035, .72, .25, .19))
     present = [i for i, count in enumerate(counts) if count]
     pie.pie([counts[i] for i in present], colors=[coverage_colors[i] for i in present],
             startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
@@ -221,11 +221,11 @@ def submission_benchmark_summary() -> None:
     pie.text(0, -.22, "modules", ha="center", va="center", fontsize=sheet.plot_font_size)
     for i, label in enumerate(("In 30 workflows", "Individual tests", "Shared code only",
                                 "Import checks only", "No tests")):
-        y = 83 - i * 3.2
+        y = 68.5 - i * 4.1
         if counts[i]:
-            sheet.axis.plot(23, y, marker="s", color=coverage_colors[i], markersize=8)
-        sheet.text(25, y, f"{label}: {counts[i]}", size=sheet.plot_font_size, va="center")
-    sheet.text(54, 91, "B", size=14, weight="bold")
+            sheet.axis.plot(4, y, marker="s", color=coverage_colors[i], markersize=8)
+        sheet.text(6, y, f"{label}: {counts[i]}", size=sheet.plot_font_size, va="center")
+    sheet.text(35, 91, "B", size=14, weight="bold")
     single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
     amortized = []
     for scope in ("execution", "total"):
@@ -235,7 +235,7 @@ def submission_benchmark_summary() -> None:
         if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
             raise ValueError("Per-well ratios differ from the canonical amortized claim")
         amortized.append(numbers)
-    axis = sheet.plot_axes((.60, .65, .37, .24))
+    axis = sheet.plot_axes((.44, .65, .53, .24))
     sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
 
     sheet.text(2, 46, "C", size=14, weight="bold")
