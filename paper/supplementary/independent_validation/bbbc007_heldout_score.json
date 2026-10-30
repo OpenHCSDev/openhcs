@@ -1,0 +1,354 @@
+{
+  "dataset": "BBBC007",
+  "partition": "held_out",
+  "corpus_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/manifest.json",
+    "sha256": "2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d",
+    "bytes": 248641
+  },
+  "prediction_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout-outputs-path-qualified.sha256",
+    "sha256": "379e103d80a2ca3155a5809114974f8e55b6c710bea74f0686552627f20a7289",
+    "bytes": 14712
+  },
+  "fields": [
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A05_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "bc6fcbc760e0f2f9071018249d38f9081dac49f44bdcf67e02edb8d4df709a9c",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A05_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "2bfdde45da4d22276460c0abdfa8025a32c55c76be515c1efbc7e1cab932b76c",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 108,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 11,
+      "predicted_cell_count": 119,
+      "predicted_nucleus_count": 119,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 4958,
+        "within_2px": 3574,
+        "adjacent_boundary_within_2px_fraction": 0.7208551835417507,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A06_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "32d9cb804e4ab96ab029d5f52245aafe76eddff325f5769ce09b84da0e4b3914",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A06_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "8fd69401bb7db024cc64e5e88082b027d18469be960e7bd373aa0ffa2a2d0989",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 101,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 2,
+      "predicted_cell_count": 103,
+      "predicted_nucleus_count": 103,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 4445,
+        "within_2px": 3242,
+        "adjacent_boundary_within_2px_fraction": 0.7293588301462317,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A07_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "a9169aa6417079ddf049466e7100f586a02cf645732af1864321ef258a5b368d",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A07_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "274f19f42cbc9253efac20f1cb3f643bda66823eac46c6410d5d682aff9eda79",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 146,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 19,
+      "predicted_cell_count": 165,
+      "predicted_nucleus_count": 165,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 4834,
+        "within_2px": 3259,
+        "adjacent_boundary_within_2px_fraction": 0.6741828713280926,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A08_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "3e042d578fba259f12b62fa701df4c3165548441497c78ae08579b22a57e56e9",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A08_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "a5768f149bb1efebca2513df34de8ec35a6a71cbfd4561f951a6a9c099829d35",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 78,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 16,
+      "predicted_cell_count": 94,
+      "predicted_nucleus_count": 94,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 2545,
+        "within_2px": 1371,
+        "adjacent_boundary_within_2px_fraction": 0.5387033398821218,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A09_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "ec556aa5942c3d95ceff7705c262248feac646e198c9d754a66ed74a7bce880e",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A09_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "a234277836675098e3402d5d4786348165570684816f1ea360c7100e06c35f44",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 79,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 10,
+      "predicted_cell_count": 89,
+      "predicted_nucleus_count": 89,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 3428,
+        "within_2px": 2338,
+        "adjacent_boundary_within_2px_fraction": 0.6820303383897316,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A10_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "07809fb76444a1ad3c9faa6f5505bc5727e1d5fad4ded48b421491c9c63afd61",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A10_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "6608290f0c48d81061c4463a6357303d910ff41c3b0ed96b1c3f0e3085e16073",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 126,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 43,
+      "predicted_cell_count": 169,
+      "predicted_nucleus_count": 169,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 5499,
+        "within_2px": 3408,
+        "adjacent_boundary_within_2px_fraction": 0.6197490452809602,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A11_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "541d0fd80eb854b94b1dc31bbdee254d102db0513f3079feee6790c20ff61346",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A11_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "19166470e6ab685278e9a67687ef9d52ef832a8d343abe305a459b4c1bcb20a3",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 77,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 11,
+      "predicted_cell_count": 87,
+      "predicted_nucleus_count": 88,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 1,
+      "boundary": {
+        "relevant_boundary_pixels": 3299,
+        "within_2px": 2367,
+        "adjacent_boundary_within_2px_fraction": 0.7174901485298575,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A12_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "2668c5a7ac088a7b3ba83b6a422c43faa3a095dc143de19921ad57c3ce7a86cc",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A12_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "43dcc60b81be376d1235c02e53d7605dbcbd2043c7ad5117e92444b422c682df",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 49,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 9,
+      "predicted_cell_count": 58,
+      "predicted_nucleus_count": 58,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 2470,
+        "within_2px": 1841,
+        "adjacent_boundary_within_2px_fraction": 0.7453441295546559,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A13_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "30bcd7927d9af0b2ac66a27ca35bcb6840ef29d50e11c5c99b4b8bf6ac78b454",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A13_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "7c78fd697956bf2f00f5dfd5b4fe0903d9de753a2019eea5ee0633ef37f869fb",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 87,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 25,
+      "predicted_cell_count": 112,
+      "predicted_nucleus_count": 112,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 3351,
+        "within_2px": 2202,
+        "adjacent_boundary_within_2px_fraction": 0.657117278424351,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A14_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "77491f17a3bff08f9b4fb07c63d25f921244304d801fa6ebc2a30195bef424f0",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A14_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "6398a960f627a6fad0050821142dc953ada26aae0e9ff509525950db39bd86d2",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 61,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 12,
+      "predicted_cell_count": 73,
+      "predicted_nucleus_count": 73,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 1830,
+        "within_2px": 1097,
+        "adjacent_boundary_within_2px_fraction": 0.5994535519125683,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A15_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "8329667c06302331fc8fe8471a503dd734a82d2533eced8caf7a64f12afd694e",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A15_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "19c7377068c8e63de0006e523f6bb6474793ff82f53bf84f938afad9e8692b46",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 80,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 6,
+      "predicted_cell_count": 86,
+      "predicted_nucleus_count": 86,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 3694,
+        "within_2px": 2345,
+        "adjacent_boundary_within_2px_fraction": 0.634813210611803,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    },
+    {
+      "nuclei_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A16_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "644ed63b3abeaa2f20d275ffee2957abd15f62ca7a78e4e48bae2682ca6a3b71",
+        "bytes": null
+      },
+      "cells_prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC007/sol-independent-01/heldout_outputs/A16_w2_IdentifySecondaryObjects_2_object_labels_1_step1.labels.tif",
+        "sha256": "dc865d7a818c0384c55b7c6e6fff6895e66029c5e2a6bc37feed204b98bd8256",
+        "bytes": null
+      },
+      "manual_nucleus_closed_interiors": 90,
+      "manual_nucleus_frame_or_open_regions_excluded": 1,
+      "nuclear_count_error_vs_closed_interiors": 28,
+      "predicted_cell_count": 118,
+      "predicted_nucleus_count": 118,
+      "nuclei_without_cell_overlap": 0,
+      "extra_nuclei_sharing_a_predicted_cell": 0,
+      "boundary": {
+        "relevant_boundary_pixels": 3522,
+        "within_2px": 2406,
+        "adjacent_boundary_within_2px_fraction": 0.6831345826235093,
+        "correspondence": "nearest_union_of_monochrome_manual_outlines",
+        "limitation": "Directed precision can reward incomplete segmentation; end-to-end raw-image trial differs from published manual-seed/foreground baseline. No manual object correspondence is inferred."
+      },
+      "nuclear_count_limitation": "Incomplete frame/open contours excluded; interior areas omit outline strokes. Not exhaustive spatial instance truth."
+    }
+  ],
+  "metrics": {
+    "fields": 12,
+    "manual_nucleus_closed_interiors": 1082,
+    "manual_nucleus_frame_or_open_regions_excluded": 12,
+    "predicted_nucleus_count": 1274,
+    "nuclear_count_error_vs_closed_interiors": 192,
+    "predicted_cell_count": 1273,
+    "nuclei_without_cell_overlap": 0,
+    "extra_nuclei_sharing_a_predicted_cell": 1,
+    "relevant_boundary_pixels": 43875,
+    "boundary_pixels_within_2px": 29450,
+    "pooled_adjacent_boundary_within_2px_fraction": 0.6712250712250712,
+    "mean_field_adjacent_boundary_within_2px_fraction": 0.6668527091854695
+  }
+}

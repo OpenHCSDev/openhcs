@@ -1,0 +1,1382 @@
+{
+  "dataset": "BBBC039",
+  "partition": "held_out",
+  "corpus_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/manifest.json",
+    "sha256": "2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d",
+    "bytes": 248641
+  },
+  "prediction_manifest": {
+    "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/heldout-output-hashes.sha256",
+    "sha256": "1e20a75889b562eb1e3ab8333f7a350b7c1a60f65dbc1ce3f3e8b6120c144fc3",
+    "bytes": 44700
+  },
+  "fields": [
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A01%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "a51ecfe0481e5715bc03305435e8aebe6aeb612e5ba7ffa354f0851f0c5b8450",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A01/nuclei.png",
+        "sha256": "bf9897059aa3c4de8ce94b583eee7285dc9f9f90fc7848cf9a4b5f74ba4e2471",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 156,
+        "predicted_instances": 193,
+        "matched": 138,
+        "false_positive": 55,
+        "false_negative": 18,
+        "precision": 0.7150259067357513,
+        "recall": 0.8846153846153846,
+        "object_f1": 0.7908309455587392,
+        "pixel_dice": 0.9481488712629652,
+        "split_truth_instances_overlap_ge_10pct": 40,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 37
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A02%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "bea9c2bcb02cd89dde515f6a0cf56f5d501a4bdad8b024c8ae41cd3dee8c1295",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A02/nuclei.png",
+        "sha256": "471aa3c33f45be0ca829d7de49acebcc0fa4bcbf2d4dbadc2d6de0665d45c9c9",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 69,
+        "predicted_instances": 34,
+        "matched": 10,
+        "false_positive": 24,
+        "false_negative": 59,
+        "precision": 0.29411764705882354,
+        "recall": 0.14492753623188406,
+        "object_f1": 0.1941747572815534,
+        "pixel_dice": 0.9379667025016707,
+        "split_truth_instances_overlap_ge_10pct": 14,
+        "merged_predicted_instances_overlap_ge_10pct": 15,
+        "count_error": -35
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A03%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "48827de330ffd5a845b2db8fc2c6e6a241d95e3b444a5a2e003b7b4f66330cfb",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A03/nuclei.png",
+        "sha256": "d5075a936788df5ebc48880685681949e74c33a26c3bdf6023e682a102830ad3",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 93,
+        "predicted_instances": 121,
+        "matched": 78,
+        "false_positive": 43,
+        "false_negative": 15,
+        "precision": 0.6446280991735537,
+        "recall": 0.8387096774193549,
+        "object_f1": 0.7289719626168224,
+        "pixel_dice": 0.9350932939776817,
+        "split_truth_instances_overlap_ge_10pct": 33,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 28
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A04%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "5728e9a2189f52afbbf88d3978e1c964028e90b2b35a00c12b906ed320949ea7",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A04/nuclei.png",
+        "sha256": "a4ae99ca8c53fbe14bcd8ed769a5216317f69cbf8eff570062b9022cf3ce08e0",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 95,
+        "predicted_instances": 122,
+        "matched": 76,
+        "false_positive": 46,
+        "false_negative": 19,
+        "precision": 0.6229508196721312,
+        "recall": 0.8,
+        "object_f1": 0.7004608294930875,
+        "pixel_dice": 0.9151903843566399,
+        "split_truth_instances_overlap_ge_10pct": 30,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 27
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A05%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "83df8771e40b70ab78ce91d0734b9031af86047d7512cdcb4f6deab516960ab8",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A05/nuclei.png",
+        "sha256": "371e8efd02fa55ebee8d0fe34433bd36a402d52c496f5f230aebc39445b86db5",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 66,
+        "predicted_instances": 93,
+        "matched": 54,
+        "false_positive": 39,
+        "false_negative": 12,
+        "precision": 0.5806451612903226,
+        "recall": 0.8181818181818182,
+        "object_f1": 0.6792452830188679,
+        "pixel_dice": 0.9389549534093224,
+        "split_truth_instances_overlap_ge_10pct": 24,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 27
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A06%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "cc69168292f13a43b46d3d64900f784090d6b6b607a60df8fef97b1ea46c3158",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A06/nuclei.png",
+        "sha256": "1babc76856de7ae38481982c4ba1b85c98ac4f91c5ed06152b0fe6d5a233f6a2",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 122,
+        "predicted_instances": 141,
+        "matched": 101,
+        "false_positive": 40,
+        "false_negative": 21,
+        "precision": 0.7163120567375887,
+        "recall": 0.8278688524590164,
+        "object_f1": 0.7680608365019012,
+        "pixel_dice": 0.9264623106925985,
+        "split_truth_instances_overlap_ge_10pct": 30,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 19
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A07%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "f15d3965e1f91bc5f434edb6606235984f21343ab1caaec093b7521441f9bbcc",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A07/nuclei.png",
+        "sha256": "eb777726e6b482b72e5b55d3d39d7ab3495bd1e3e23b4ca577ebccc2ef90eb5e",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 115,
+        "predicted_instances": 134,
+        "matched": 103,
+        "false_positive": 31,
+        "false_negative": 12,
+        "precision": 0.7686567164179104,
+        "recall": 0.8956521739130435,
+        "object_f1": 0.8273092369477911,
+        "pixel_dice": 0.9274622449115605,
+        "split_truth_instances_overlap_ge_10pct": 27,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 19
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A08%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "a64585c959645899299ea8f86376c4a8021e11c1c64f7a063557c91934d5c8d4",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A08/nuclei.png",
+        "sha256": "572ce9c3a7a1b2102cc808e3f03aae2598448be94adef34bb34d85315900f2e3",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 156,
+        "predicted_instances": 196,
+        "matched": 133,
+        "false_positive": 63,
+        "false_negative": 23,
+        "precision": 0.6785714285714286,
+        "recall": 0.8525641025641025,
+        "object_f1": 0.7556818181818182,
+        "pixel_dice": 0.9574345825305539,
+        "split_truth_instances_overlap_ge_10pct": 49,
+        "merged_predicted_instances_overlap_ge_10pct": 6,
+        "count_error": 40
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A09%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "ca3205630adc0b965322d653db487960223fb15ae9563b5b9c63c0d929ac6a94",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A09/nuclei.png",
+        "sha256": "db86dea80951f5d9c2c014408dfcb8fd98e3bebdf5420d258aa013ebe3568e6e",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 137,
+        "predicted_instances": 166,
+        "matched": 119,
+        "false_positive": 47,
+        "false_negative": 18,
+        "precision": 0.7168674698795181,
+        "recall": 0.8686131386861314,
+        "object_f1": 0.7854785478547854,
+        "pixel_dice": 0.9500458956580976,
+        "split_truth_instances_overlap_ge_10pct": 40,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 29
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A10%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "5cef4a9ff1d8705e9d81f108e34d56eab25cf715f5469084cbfd922fb40fbe6e",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A10/nuclei.png",
+        "sha256": "a7b0aa3d0aa53f2e7b2e7b8613a50024392479b9f838b1e3ddf3bbd6ca966839",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 119,
+        "predicted_instances": 143,
+        "matched": 103,
+        "false_positive": 40,
+        "false_negative": 16,
+        "precision": 0.7202797202797203,
+        "recall": 0.865546218487395,
+        "object_f1": 0.7862595419847328,
+        "pixel_dice": 0.943679295204588,
+        "split_truth_instances_overlap_ge_10pct": 33,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 24
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A11%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "a6a712e6d6885870dfcfe92977fabdf3a6f1d3eed5a32bfaf3c02af45cfca6dc",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A11/nuclei.png",
+        "sha256": "524944ee40fe3ac8ecb280b2fc11b5651f340548c48ff45c798091dcb7d86bce",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 100,
+        "predicted_instances": 131,
+        "matched": 88,
+        "false_positive": 43,
+        "false_negative": 12,
+        "precision": 0.6717557251908397,
+        "recall": 0.88,
+        "object_f1": 0.7619047619047619,
+        "pixel_dice": 0.949347287789617,
+        "split_truth_instances_overlap_ge_10pct": 29,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 31
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A12%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "c6ff8c1364bd4f0615f866fb31411e15501e30baada6cb3b0aaa9b3284c6d86b",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A12/nuclei.png",
+        "sha256": "a55519794dfda6a4202da48523386467930a8a375100cf5086a19caab7dc1c29",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 167,
+        "predicted_instances": 201,
+        "matched": 144,
+        "false_positive": 57,
+        "false_negative": 23,
+        "precision": 0.7164179104477612,
+        "recall": 0.8622754491017964,
+        "object_f1": 0.782608695652174,
+        "pixel_dice": 0.9412530645046439,
+        "split_truth_instances_overlap_ge_10pct": 46,
+        "merged_predicted_instances_overlap_ge_10pct": 6,
+        "count_error": 34
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A13%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "d6bb1d065df5901e441c42232c52740e4aa7ffbc32e07a1a7063c96fdd2fb790",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A13/nuclei.png",
+        "sha256": "f68f129f94f37b3f3b663d233e74785a6dc333efc6f98f750e61e5f39b145b8a",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 49,
+        "predicted_instances": 47,
+        "matched": 30,
+        "false_positive": 17,
+        "false_negative": 19,
+        "precision": 0.6382978723404256,
+        "recall": 0.6122448979591837,
+        "object_f1": 0.625,
+        "pixel_dice": 0.9149123750134394,
+        "split_truth_instances_overlap_ge_10pct": 10,
+        "merged_predicted_instances_overlap_ge_10pct": 5,
+        "count_error": -2
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A14%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "5bb55db2fd65ab305a86d5a39d22f5b5dd3d66dfb4a77598c458aac9b67769a9",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A14/nuclei.png",
+        "sha256": "d24aef6ae45a1ee25882dc7f0c1488ed33ae769a0e9bd2c0f49a1390e4416749",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 141,
+        "predicted_instances": 168,
+        "matched": 130,
+        "false_positive": 38,
+        "false_negative": 11,
+        "precision": 0.7738095238095238,
+        "recall": 0.9219858156028369,
+        "object_f1": 0.8414239482200647,
+        "pixel_dice": 0.9461174058786048,
+        "split_truth_instances_overlap_ge_10pct": 34,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 27
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A15%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "8b0a1d37b70d6e65ee366b4171015f337abb1eafe2694202a2448fd9d7937875",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A15/nuclei.png",
+        "sha256": "95e93c97dea04349d139826dab776581d6c4aa22104fd2989d113a8f2a6fc3fd",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 169,
+        "predicted_instances": 224,
+        "matched": 139,
+        "false_positive": 85,
+        "false_negative": 30,
+        "precision": 0.6205357142857143,
+        "recall": 0.8224852071005917,
+        "object_f1": 0.7073791348600509,
+        "pixel_dice": 0.942130086257913,
+        "split_truth_instances_overlap_ge_10pct": 59,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 55
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A16%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "57dec26bc0aa42b96f1d4e58da55a02707b5b2d64e25c4e0441f37c490de8026",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A16/nuclei.png",
+        "sha256": "cbc3f872a06c3b06910c974a025fb4b5e4c7c2148d1e18f67755b44cb72988df",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 170,
+        "predicted_instances": 205,
+        "matched": 135,
+        "false_positive": 70,
+        "false_negative": 35,
+        "precision": 0.6585365853658537,
+        "recall": 0.7941176470588235,
+        "object_f1": 0.72,
+        "pixel_dice": 0.9397046401211733,
+        "split_truth_instances_overlap_ge_10pct": 50,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 35
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A17%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "d29e118a49b4fa1a3a596217ccb45ea0f646c7875f1e57adc598b24933c81112",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A17/nuclei.png",
+        "sha256": "12daadb21e04e0894e9aa7f83af9c442340a34e659402a9850eaeb1f46f4e567",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 152,
+        "predicted_instances": 176,
+        "matched": 116,
+        "false_positive": 60,
+        "false_negative": 36,
+        "precision": 0.6590909090909091,
+        "recall": 0.7631578947368421,
+        "object_f1": 0.7073170731707317,
+        "pixel_dice": 0.9335930037570843,
+        "split_truth_instances_overlap_ge_10pct": 40,
+        "merged_predicted_instances_overlap_ge_10pct": 7,
+        "count_error": 24
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A18%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "02d664d1c6ce3d954d458817712e4b92df1002192b0f454f9c036b4935c6f285",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A18/nuclei.png",
+        "sha256": "303bd79a9851e150e679762ec202e6c95a76c57e4b4db50bf25834a88def921f",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 116,
+        "predicted_instances": 142,
+        "matched": 90,
+        "false_positive": 52,
+        "false_negative": 26,
+        "precision": 0.6338028169014085,
+        "recall": 0.7758620689655172,
+        "object_f1": 0.6976744186046512,
+        "pixel_dice": 0.9354820580549077,
+        "split_truth_instances_overlap_ge_10pct": 37,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 26
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A19%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "bb0ebe3839df68c0fbc095bd4dc6dda680309c2cfeb7b684deb8908130723501",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A19/nuclei.png",
+        "sha256": "b16a4ffb7bf92593404a1f77cce400543e6181cdfbc1e6f7917913da49e53a52",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 65,
+        "predicted_instances": 83,
+        "matched": 48,
+        "false_positive": 35,
+        "false_negative": 17,
+        "precision": 0.5783132530120482,
+        "recall": 0.7384615384615385,
+        "object_f1": 0.6486486486486487,
+        "pixel_dice": 0.9137931034482759,
+        "split_truth_instances_overlap_ge_10pct": 20,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 18
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A20%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "096b0ba1ebd71c39381e527dc3aaa6e8d64013b27bf1f0dc50f4cf453f0a6a49",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A20/nuclei.png",
+        "sha256": "a303f63bc80b3618028b41ad19129a2db353ac1b3fc174a18df36aed58b88825",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 7,
+        "predicted_instances": 11,
+        "matched": 6,
+        "false_positive": 5,
+        "false_negative": 1,
+        "precision": 0.5454545454545454,
+        "recall": 0.8571428571428571,
+        "object_f1": 0.6666666666666666,
+        "pixel_dice": 0.941151566469094,
+        "split_truth_instances_overlap_ge_10pct": 3,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 4
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A21%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "f56adbdecb4c1ed7004da216e866a2f269a925447b0ab7ffa8d462ee5958caab",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A21/nuclei.png",
+        "sha256": "b25e8e8bf4c1c2ce6c9f3db3bb026107d629e3872ec12d262ef76b0d2d19e881",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 118,
+        "predicted_instances": 139,
+        "matched": 101,
+        "false_positive": 38,
+        "false_negative": 17,
+        "precision": 0.7266187050359713,
+        "recall": 0.8559322033898306,
+        "object_f1": 0.7859922178988327,
+        "pixel_dice": 0.9104460497649353,
+        "split_truth_instances_overlap_ge_10pct": 28,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 21
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A22%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "a41371af9fed12348b64976441e4503f53c399e90280f1aeb7ce4e60e685d972",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A22/nuclei.png",
+        "sha256": "229f3a005116eeb8a88a80c0cf5b089854e94b02e9a504c094e8fb04fe79a2bf",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 92,
+        "predicted_instances": 118,
+        "matched": 79,
+        "false_positive": 39,
+        "false_negative": 13,
+        "precision": 0.6694915254237288,
+        "recall": 0.8586956521739131,
+        "object_f1": 0.7523809523809524,
+        "pixel_dice": 0.9501689969155754,
+        "split_truth_instances_overlap_ge_10pct": 29,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 26
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A23%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "31167b293164fadf6ad5d48bbad1c249cb183279e8ad4af8d40902d253c9c442",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A23/nuclei.png",
+        "sha256": "f9fcc1e87cd6526775014d817a8c3037bd73d48398faaffa4577d24c71643b61",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 126,
+        "predicted_instances": 164,
+        "matched": 107,
+        "false_positive": 57,
+        "false_negative": 19,
+        "precision": 0.6524390243902439,
+        "recall": 0.8492063492063492,
+        "object_f1": 0.7379310344827587,
+        "pixel_dice": 0.9458780111307599,
+        "split_truth_instances_overlap_ge_10pct": 39,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 38
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A24%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "00d2e20d8dba89714f4f98d85bf8e9e7ce99b497621003c2f4edd74c34f6aac1",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A24/nuclei.png",
+        "sha256": "9c5d5858891067de807024461aab24813d55eaf25b48700c3f6c42216a2499a6",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 130,
+        "predicted_instances": 165,
+        "matched": 108,
+        "false_positive": 57,
+        "false_negative": 22,
+        "precision": 0.6545454545454545,
+        "recall": 0.8307692307692308,
+        "object_f1": 0.7322033898305085,
+        "pixel_dice": 0.9312989546632502,
+        "split_truth_instances_overlap_ge_10pct": 36,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 35
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A25%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "fc9e11f86aa7472a7e211c0c76aa43ad36cfd5e2a9fdfd0ef8e95b9b8cf984ef",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A25/nuclei.png",
+        "sha256": "c5d3f7d6ae66e059f4aa1f6d8bbd8a25dd61ef83841ec67c0f6d23abb3860f85",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 202,
+        "predicted_instances": 257,
+        "matched": 179,
+        "false_positive": 78,
+        "false_negative": 23,
+        "precision": 0.6964980544747081,
+        "recall": 0.8861386138613861,
+        "object_f1": 0.7799564270152506,
+        "pixel_dice": 0.9337076315242254,
+        "split_truth_instances_overlap_ge_10pct": 63,
+        "merged_predicted_instances_overlap_ge_10pct": 10,
+        "count_error": 55
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A26%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "f7233d452fd661e936ffbf2753e75297d75f297abcd70494df3144c4ac661b57",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A26/nuclei.png",
+        "sha256": "f366d3421e9b02be551b694847ac1781f4a5f8c4dcb2996776d67a3ad079425e",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 154,
+        "predicted_instances": 172,
+        "matched": 127,
+        "false_positive": 45,
+        "false_negative": 27,
+        "precision": 0.7383720930232558,
+        "recall": 0.8246753246753247,
+        "object_f1": 0.7791411042944786,
+        "pixel_dice": 0.9320850701447716,
+        "split_truth_instances_overlap_ge_10pct": 29,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 18
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A27%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "b4be69d0c67c1880697f10e18d86419b11a6d7a88d6c5407dd2922689e9fbf69",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A27/nuclei.png",
+        "sha256": "288ea76fc5ce627df3dbb2817773f6a3f926692a950a99f5ab0721d27b05cc90",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 131,
+        "predicted_instances": 154,
+        "matched": 113,
+        "false_positive": 41,
+        "false_negative": 18,
+        "precision": 0.7337662337662337,
+        "recall": 0.8625954198473282,
+        "object_f1": 0.7929824561403509,
+        "pixel_dice": 0.9237150390695547,
+        "split_truth_instances_overlap_ge_10pct": 32,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 23
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A28%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "63a83d3bbed77304651194738f7b08f4019577d82375050a4c21cc13fed139eb",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A28/nuclei.png",
+        "sha256": "1aed3ca53079ba5ae8bebe9930f842b07fb287130242e635a3785d5d10dbd2be",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 36,
+        "predicted_instances": 51,
+        "matched": 33,
+        "false_positive": 18,
+        "false_negative": 3,
+        "precision": 0.6470588235294118,
+        "recall": 0.9166666666666666,
+        "object_f1": 0.7586206896551724,
+        "pixel_dice": 0.9539466568604122,
+        "split_truth_instances_overlap_ge_10pct": 17,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 15
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A29%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "9a6fb005724401d4ac403414388493c8bd32050b5f0f802bf25e2dd1f6622bf4",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A29/nuclei.png",
+        "sha256": "d20e4a154af5a4726960a4d07a806dd3f76ee82abc3443e34737200fbcd913a1",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 145,
+        "predicted_instances": 180,
+        "matched": 120,
+        "false_positive": 60,
+        "false_negative": 25,
+        "precision": 0.6666666666666666,
+        "recall": 0.8275862068965517,
+        "object_f1": 0.7384615384615385,
+        "pixel_dice": 0.9414362768631216,
+        "split_truth_instances_overlap_ge_10pct": 38,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 35
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A30%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "84cc66dd0821df4d6624118eed67bce5de04ba18b9998a9cafbce0887e7e524a",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A30/nuclei.png",
+        "sha256": "4b0c9f8cccf14c466b011bba58f1390fa89ae5da21f184f3ac4f35359fdde0c6",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 82,
+        "predicted_instances": 95,
+        "matched": 69,
+        "false_positive": 26,
+        "false_negative": 13,
+        "precision": 0.7263157894736842,
+        "recall": 0.8414634146341463,
+        "object_f1": 0.7796610169491526,
+        "pixel_dice": 0.9219461096293167,
+        "split_truth_instances_overlap_ge_10pct": 19,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 13
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A31%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "27ad0da82d29bd7146220b33f0a2798b7b34724ffd763df3d9b6e5c7c09be60b",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A31/nuclei.png",
+        "sha256": "3fa5506d23434a7291e6bb7d7a27f0c65dbec9bff965d3774d60450ace315dc5",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 102,
+        "predicted_instances": 143,
+        "matched": 84,
+        "false_positive": 59,
+        "false_negative": 18,
+        "precision": 0.5874125874125874,
+        "recall": 0.8235294117647058,
+        "object_f1": 0.6857142857142857,
+        "pixel_dice": 0.9448823374721924,
+        "split_truth_instances_overlap_ge_10pct": 39,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 41
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A32%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "16220af0e65c199213f222ba838517e7a284a9ac6fa964c274ac469673b6ab99",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A32/nuclei.png",
+        "sha256": "6a3e0c8d7d4ab77b553299eee43655e6393eef76001a1f00aa05d6c694423b64",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 119,
+        "predicted_instances": 143,
+        "matched": 87,
+        "false_positive": 56,
+        "false_negative": 32,
+        "precision": 0.6083916083916084,
+        "recall": 0.7310924369747899,
+        "object_f1": 0.6641221374045801,
+        "pixel_dice": 0.9270542364990689,
+        "split_truth_instances_overlap_ge_10pct": 39,
+        "merged_predicted_instances_overlap_ge_10pct": 8,
+        "count_error": 24
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A33%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "9da1cc9fda49448ceaa466c91e2f390b86c6e6ef191f9d1936c92e3dfdb46e87",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A33/nuclei.png",
+        "sha256": "a1e8ad14f133360c29f287f3aa75dfb4d1e26d1904c435dd66d771fe9df762c5",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 139,
+        "predicted_instances": 171,
+        "matched": 114,
+        "false_positive": 57,
+        "false_negative": 25,
+        "precision": 0.6666666666666666,
+        "recall": 0.8201438848920863,
+        "object_f1": 0.7354838709677419,
+        "pixel_dice": 0.9246335102077525,
+        "split_truth_instances_overlap_ge_10pct": 46,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 32
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A34%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "1bacca5784df6b00928699bde26a16fa8742a36dbbabc5c03e4c2ed5a3002307",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A34/nuclei.png",
+        "sha256": "fc2b3205e16cc14930779e5784572174b48ec463dc864dd7d9c0322f2e4ac843",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 142,
+        "predicted_instances": 168,
+        "matched": 119,
+        "false_positive": 49,
+        "false_negative": 23,
+        "precision": 0.7083333333333334,
+        "recall": 0.8380281690140845,
+        "object_f1": 0.7677419354838709,
+        "pixel_dice": 0.9330291358249461,
+        "split_truth_instances_overlap_ge_10pct": 33,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 26
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A35%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "b9d63a591c5520fa24f800ef5257efd2306edeccb3bc5f7123dc0c265480903c",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A35/nuclei.png",
+        "sha256": "908f866c814f275a7397a6136cd4f4c85031ff9bc07b0871fce5f9fe29d51d43",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 149,
+        "predicted_instances": 176,
+        "matched": 134,
+        "false_positive": 42,
+        "false_negative": 15,
+        "precision": 0.7613636363636364,
+        "recall": 0.8993288590604027,
+        "object_f1": 0.8246153846153846,
+        "pixel_dice": 0.9296331227508153,
+        "split_truth_instances_overlap_ge_10pct": 32,
+        "merged_predicted_instances_overlap_ge_10pct": 2,
+        "count_error": 27
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A36%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "4ce9e00732edad5ee3377c249e1510b0fdd3814d55a74302a8892c0507c4df37",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A36/nuclei.png",
+        "sha256": "d4958ddafd5702b9bb0ae9eb2482ca5fa43ddf7adf3be883938da4f1d9c31b58",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 198,
+        "predicted_instances": 237,
+        "matched": 157,
+        "false_positive": 80,
+        "false_negative": 41,
+        "precision": 0.6624472573839663,
+        "recall": 0.7929292929292929,
+        "object_f1": 0.7218390804597701,
+        "pixel_dice": 0.9362921125286464,
+        "split_truth_instances_overlap_ge_10pct": 57,
+        "merged_predicted_instances_overlap_ge_10pct": 10,
+        "count_error": 39
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A37%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "1a74de6e1a82254b9f4e6dd2fa28c8807ea3edaad8987a370de473cbe8003139",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A37/nuclei.png",
+        "sha256": "4a8e3431626e209eb1d8301968648c690e86e9c2163bda36c0aad6a31cdd81ae",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 197,
+        "predicted_instances": 245,
+        "matched": 161,
+        "false_positive": 84,
+        "false_negative": 36,
+        "precision": 0.6571428571428571,
+        "recall": 0.817258883248731,
+        "object_f1": 0.7285067873303167,
+        "pixel_dice": 0.9456812261773742,
+        "split_truth_instances_overlap_ge_10pct": 62,
+        "merged_predicted_instances_overlap_ge_10pct": 8,
+        "count_error": 48
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A38%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "6b719d014f7e411a28ebc41f299382e1b058379ab0d0bec5130e663c8a4cf3c7",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A38/nuclei.png",
+        "sha256": "07e31f425d3fe20bd5ae7f9add0dd5b336035751c85751d5e09d8d654da9af41",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 152,
+        "predicted_instances": 184,
+        "matched": 133,
+        "false_positive": 51,
+        "false_negative": 19,
+        "precision": 0.7228260869565217,
+        "recall": 0.875,
+        "object_f1": 0.7916666666666666,
+        "pixel_dice": 0.944914660312463,
+        "split_truth_instances_overlap_ge_10pct": 39,
+        "merged_predicted_instances_overlap_ge_10pct": 5,
+        "count_error": 32
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A39%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "39d07b05e3f8e4ac6f441ca962d7f39e2bf7afa83e9d812b0fdb7c403618282e",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A39/nuclei.png",
+        "sha256": "3543372547d73fc99e0158de55717a1e258c5dd80efa23a6aae6bc7bb4de9249",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 127,
+        "predicted_instances": 144,
+        "matched": 106,
+        "false_positive": 38,
+        "false_negative": 21,
+        "precision": 0.7361111111111112,
+        "recall": 0.8346456692913385,
+        "object_f1": 0.7822878228782287,
+        "pixel_dice": 0.9432228807412586,
+        "split_truth_instances_overlap_ge_10pct": 25,
+        "merged_predicted_instances_overlap_ge_10pct": 3,
+        "count_error": 17
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A40%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "9867f535d2d7e02999055a55ac58090a4a815001414d0d83d33fcb6832cd6a0b",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A40/nuclei.png",
+        "sha256": "a43691b4cf6f30943cc91c2195a37efc364ca600bfd5466a7a1dec6e9627b3f0",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 93,
+        "predicted_instances": 116,
+        "matched": 76,
+        "false_positive": 40,
+        "false_negative": 17,
+        "precision": 0.6551724137931034,
+        "recall": 0.8172043010752689,
+        "object_f1": 0.7272727272727273,
+        "pixel_dice": 0.9508104485392068,
+        "split_truth_instances_overlap_ge_10pct": 25,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 23
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A41%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "5dfa51bf844905e9516068f03992e133af2b62948f0816558d03e454aa7b246d",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A41/nuclei.png",
+        "sha256": "afb542eef9527a98f06be9030a9f0ef2c59dfc9a9aa8e93f192fe31bae0f90a5",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 155,
+        "predicted_instances": 200,
+        "matched": 128,
+        "false_positive": 72,
+        "false_negative": 27,
+        "precision": 0.64,
+        "recall": 0.8258064516129032,
+        "object_f1": 0.7211267605633803,
+        "pixel_dice": 0.9345002853958848,
+        "split_truth_instances_overlap_ge_10pct": 48,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 45
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A42%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "7dfd8680b34071dd7b4bb631addddc8e32f23dda180b6f2f478a0bad247abad4",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A42/nuclei.png",
+        "sha256": "db873c0caf17482804824b0aa8d27fbafe86e1027f4e63884d208ff3bce42153",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 26,
+        "predicted_instances": 30,
+        "matched": 26,
+        "false_positive": 4,
+        "false_negative": 0,
+        "precision": 0.8666666666666667,
+        "recall": 1.0,
+        "object_f1": 0.9285714285714286,
+        "pixel_dice": 0.8986937590711176,
+        "split_truth_instances_overlap_ge_10pct": 4,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 4
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A43%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "83479254e2579d2dcd93ba7d93ae897df94b15fdcd468a44289e3e8147dc49b5",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A43/nuclei.png",
+        "sha256": "94c0685267f2a384fc55931f5b4524440b4af754b64fa9c2ad7202a5f0af013c",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 82,
+        "predicted_instances": 103,
+        "matched": 66,
+        "false_positive": 37,
+        "false_negative": 16,
+        "precision": 0.6407766990291263,
+        "recall": 0.8048780487804879,
+        "object_f1": 0.7135135135135136,
+        "pixel_dice": 0.9364395340698896,
+        "split_truth_instances_overlap_ge_10pct": 22,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 21
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A44%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "8fbf092f3f2c7a3f91461488f85e69035db1915923f7a963edcd7a3c44a1b678",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A44/nuclei.png",
+        "sha256": "75335e71a4750bdf72d5e560cff8b43e3be369cda22f2aa8f07b69ca1fa6f33b",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 74,
+        "predicted_instances": 95,
+        "matched": 60,
+        "false_positive": 35,
+        "false_negative": 14,
+        "precision": 0.631578947368421,
+        "recall": 0.8108108108108109,
+        "object_f1": 0.7100591715976331,
+        "pixel_dice": 0.9203926486147577,
+        "split_truth_instances_overlap_ge_10pct": 25,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 21
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A45%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "94677b5d8f1633e0c715061891d8e661d1265d9d4598dbad48ca95499fb47c74",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A45/nuclei.png",
+        "sha256": "19950b19caa8bc013997ad8ef37dd51ee797858e8b3ba743a956b817afc06e61",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 89,
+        "predicted_instances": 118,
+        "matched": 80,
+        "false_positive": 38,
+        "false_negative": 9,
+        "precision": 0.6779661016949152,
+        "recall": 0.898876404494382,
+        "object_f1": 0.7729468599033816,
+        "pixel_dice": 0.9487514096987273,
+        "split_truth_instances_overlap_ge_10pct": 27,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 29
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A46%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "936f90eba4eb3bad904316b3ba13b6df810ed3570a53af4238dca5e8b5565fb8",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A46/nuclei.png",
+        "sha256": "759ca14a423430ce9c23761ccc8411d1317d491a5ad2b88386437c32d3150f1a",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 113,
+        "predicted_instances": 121,
+        "matched": 89,
+        "false_positive": 32,
+        "false_negative": 24,
+        "precision": 0.7355371900826446,
+        "recall": 0.7876106194690266,
+        "object_f1": 0.7606837606837606,
+        "pixel_dice": 0.911705611775529,
+        "split_truth_instances_overlap_ge_10pct": 25,
+        "merged_predicted_instances_overlap_ge_10pct": 4,
+        "count_error": 8
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A47%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "5c43292434414db9ce20a32f119fbaa1c2f5668a2ae70ffb1839bcf1de0e86db",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A47/nuclei.png",
+        "sha256": "9e918e6d16052d507f985bca26152e2b4308e90a8861096658236fefe826f93e",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 50,
+        "predicted_instances": 66,
+        "matched": 34,
+        "false_positive": 32,
+        "false_negative": 16,
+        "precision": 0.5151515151515151,
+        "recall": 0.68,
+        "object_f1": 0.5862068965517241,
+        "pixel_dice": 0.9160847402693068,
+        "split_truth_instances_overlap_ge_10pct": 15,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 16
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A48%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "0b482c51b606a85e307e7a5945e9654712cfa24b4fb29580a97afa4c7ed5e8b2",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A48/nuclei.png",
+        "sha256": "c5bb69a457b64479152e1bc0d00d70d79c823f024b9e0d2c837ebc5e87b8de23",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 82,
+        "predicted_instances": 96,
+        "matched": 70,
+        "false_positive": 26,
+        "false_negative": 12,
+        "precision": 0.7291666666666666,
+        "recall": 0.8536585365853658,
+        "object_f1": 0.7865168539325843,
+        "pixel_dice": 0.9163469364027439,
+        "split_truth_instances_overlap_ge_10pct": 19,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 14
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A49%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "547d764bac139b27c00c8a07ab40466fa00c96d8327aaa79954f7ea93da3b068",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A49/nuclei.png",
+        "sha256": "11635b8dd06924b08a63c9289fe88d070f1f5cee6258db0c7dc6ee73f02f2c12",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 89,
+        "predicted_instances": 117,
+        "matched": 83,
+        "false_positive": 34,
+        "false_negative": 6,
+        "precision": 0.7094017094017094,
+        "recall": 0.9325842696629213,
+        "object_f1": 0.8058252427184466,
+        "pixel_dice": 0.9474479262827507,
+        "split_truth_instances_overlap_ge_10pct": 28,
+        "merged_predicted_instances_overlap_ge_10pct": 1,
+        "count_error": 28
+      }
+    },
+    {
+      "prediction": {
+        "filename": "mcp_outputs/slas-validation-20260915/trials/BBBC039/sol-independent-03/native_outputs/A50%5Fs001%5Fw1%5Fz001%5Ft001.tif_w1_IdentifyPrimaryObjects_1_object_labels_1_step0.labels.tif",
+        "sha256": "d8b7fbac2ede4768ad65cfd3687a2bb827859cafb84456a7156a79fdcf300020",
+        "bytes": null
+      },
+      "truth": {
+        "filename": "mcp_outputs/slas-validation-20260915/evaluation/BBBC039/held_out_A50/nuclei.png",
+        "sha256": "d414d0bce132c66b084519c0f9e24129a71920214994777502dca0f7cecd5439",
+        "bytes": null
+      },
+      "metrics": {
+        "iou_threshold": 0.5,
+        "true_instances": 62,
+        "predicted_instances": 65,
+        "matched": 49,
+        "false_positive": 16,
+        "false_negative": 13,
+        "precision": 0.7538461538461538,
+        "recall": 0.7903225806451613,
+        "object_f1": 0.7716535433070866,
+        "pixel_dice": 0.9487719490181062,
+        "split_truth_instances_overlap_ge_10pct": 10,
+        "merged_predicted_instances_overlap_ge_10pct": 0,
+        "count_error": 3
+      }
+    }
+  ],
+  "metrics": {
+    "fields": 50,
+    "true_instances": 5720,
+    "predicted_instances": 6964,
+    "matched": 4733,
+    "false_positive": 2231,
+    "false_negative": 987,
+    "precision": 0.6796381390005743,
+    "recall": 0.8274475524475524,
+    "object_f1": 0.7462945443077893,
+    "mean_field_object_f1": 0.7359756532882672,
+    "mean_field_pixel_dice": 0.9348368078803779,
+    "split_truth_instances_overlap_ge_10pct": 1598,
+    "merged_predicted_instances_overlap_ge_10pct": 155,
+    "count_error": 1244
+  }
+}

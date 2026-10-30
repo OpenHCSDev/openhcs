@@ -14,6 +14,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from build_slas_agent import normalize_generated_svg
+
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "paper/supplementary/independent_validation"
 OUTPUT = Path(__file__).resolve().parent / "slas"
@@ -186,7 +188,14 @@ def plot_translocation(
         ylabel="Mean nuclear / cytoplasmic GFP",
         ylim=(0, None),
     )
-    axis.legend(frameon=False, fontsize=8, loc="lower right")
+    axis.legend(
+        frameon=True,
+        facecolor="white",
+        edgecolor="none",
+        framealpha=1,
+        fontsize=8,
+        loc="lower right",
+    )
 
 
 def write_plot_data(
@@ -276,6 +285,7 @@ def build() -> None:
         destination = OUTPUT / f"independent_agent_validation.{suffix}"
         figure.savefig(destination, dpi=300)
         outputs.append(destination)
+    normalize_generated_svg(OUTPUT / "independent_agent_validation.svg")
     plt.close(figure)
 
     plot_data = OUTPUT / "independent_agent_validation_plot_data.csv"

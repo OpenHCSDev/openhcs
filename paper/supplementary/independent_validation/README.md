@@ -1,12 +1,19 @@
 # Prospective agent-authored assay evidence
 
-This directory retains the exact frozen scientific pipelines and held-out score
-receipts used by Supplementary Figure 7. The three trials shared corpus manifest
+This directory retains the scientific pipelines and original held-out score
+receipts underlying the prospective validation panels. The three trials shared corpus manifest
 SHA-256
 `2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d`.
 Reference annotations, treatment metadata, held-out inputs, evaluation code and
 earlier trial pipelines were unavailable to the authoring agent before the
 development pipeline was frozen.
+
+The pipeline copies were subsequently reformatted in commit `107058c46`.
+Their syntax trees are unchanged; the pipeline hashes below identify the exact
+pre-formatting originals retained in the
+[frozen-source commit](https://github.com/OpenHCSDev/openhcs/tree/9012b66726674fa77a6664918bc4fe38d4a8dd85/paper/supplementary/independent_validation),
+not the current formatted file bytes. The score and freeze receipts retain their
+original bytes and hashes.
 
 | Assay | Development / held out | Frozen pipeline SHA-256 | Held-out score SHA-256 |
 | --- | ---: | --- | --- |

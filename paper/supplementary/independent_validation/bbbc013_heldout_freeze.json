@@ -1,0 +1,50 @@
+{
+  "schema_version": "openhcs.independent_validation.held_out.v1",
+  "dataset": "BBBC013",
+  "trial": "sol-independent-01",
+  "partition": "held_out",
+  "execution_id": "80666b5c-027d-4a4b-9683-d02ced947518",
+  "scientific_pipeline": {
+    "development_running_ui_source_sha256": "8f0a258ff946f2a8784dcffd5d65fb8ab15f53c56e223a80140a6fc6a73b4486",
+    "held_out_root_substitution_source_sha256": "584bb3939aa6226185d3bb839ec08e2c17a80f6370c967755448b089328686ed",
+    "scientific_function_or_parameter_changes_after_freeze": false
+  },
+  "terminal_ui_state": {
+    "recorded_at_utc": "2026-09-16T14:05:00Z",
+    "selected_plate": "/home/ts/code/projects/openhcs/mcp_outputs/slas-validation-20260915/inputs/BBBC013/held_out",
+    "manager_execution_state": "idle",
+    "orchestrator_state": "completed",
+    "execution_active": false,
+    "terminal_status": "complete",
+    "status_prefix": "Complete",
+    "viewer_updates_settled": 11,
+    "viewer_updates_total": 11,
+    "execution_cleanup_completed_at_local": "2026-09-16T10:02:20-04:00"
+  },
+  "prediction_freeze": {
+    "artifact_count": 1472,
+    "total_bytes": 671953765,
+    "prediction_manifest": "predictions.sha256",
+    "prediction_manifest_sha256": "62e86100ce3f99a7261b309184854d2a3d04139302900c7578d34a50cd8dfc6d",
+    "last_prediction_write_local": "2026-09-16T09:51:45.629773038-04:00"
+  },
+  "score": {
+    "receipt": "score_receipt.json",
+    "receipt_sha256": "d18ef5636ce3b55965e80771db815063f3d4f212507dddd3e47c22f49c976504",
+    "wells": 92,
+    "matched_cells": 14262,
+    "wortmannin_z_prime": 0.7505698462216228,
+    "ly294002_z_prime": 0.5535339760115459,
+    "segmentation_truth": false
+  },
+  "qc_capture": {
+    "capture_transport": "OpenHCS MCP TCP viewer connection",
+    "visible_layers": [
+      "GFP image",
+      "FilteredNuclei ROIs",
+      "Cytoplasm ROIs"
+    ],
+    "path": "../../qc/heldout-isolated/20260916T141647268531Z_napari_5643_OpenHCS_Napari_Visualization.png",
+    "sha256": "62a57f0b5b3f833169a9aab4e73435048c475bf27c144887c54c6bc2c80b9e30"
+  }
+}
