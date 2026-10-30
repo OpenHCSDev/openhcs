@@ -432,7 +432,7 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         sheet.text(3, 75, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
         series = AssaySeries.load(SOURCE)
         for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-            axis = sheet.plot_axes((0.12 + column * 0.49, 0.615, 0.34, 0.10))
+            axis = sheet.plot_axes((0.12 + column * 0.49, 0.635, 0.34, 0.08))
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
