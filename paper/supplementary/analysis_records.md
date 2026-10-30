@@ -37,7 +37,9 @@ Older [module](../../benchmark/results/labmeeting_20260513/official30_well_throu
 
 Main Figure 3B shows the one-sample, one-worker speedups for all 30 workflows, both for processing alone and with pipeline setup included. The [publication values](../figures/slas/benchmark-publication/benchmark_claims.json) give medians and minima; the individual workflow times are linked below.
 
-OpenHCS times are medians of three repetitions after its warmup. Main Table 1 gives the start and end points of both timing intervals and their exclusions, including the four client intervals summed for OpenHCS setup plus processing. Both CellProfiler intervals retain internal first-use initialization. Nested server and worker times were not added to the OpenHCS client total.
+Main Table 1 defines the timing intervals; Methods: Performance measurement gives the repetitions, exclusions, CPU allocation and batching protocol.
+
+A separate measured eight-sample comparison also favoured OpenHCS for every workflow, both for processing alone and with pipeline setup included, using two workers against one serial CellProfiler process. The variable-batch records below retain this comparison separately from the fixed twelve-sample worker experiment.
 
 With twelve samples held fixed, every workflow ran faster with two, three and four OpenHCS workers than with one, for processing alone and with setup included. These are measured times throughout (Supplementary Figure 6).
 
@@ -50,7 +52,7 @@ The CellProfiler estimate includes initialization; setup-plus-processing adds th
 ### Data and chart links
 
 - [Benchmark protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md), [measured one- and eight-sample CellProfiler calibration](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [Figure 3 measured/estimated values](../figures/slas/submission_benchmark_summary_projection.csv).
-- Every processing time and ratio: [variable batches](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
+- Individual workflow timings and ratios, including the measured eight-sample/two-worker comparison: [processing](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
 - Fixed serial CellProfiler twelve-sample comparison and measured OpenHCS times: [processing](../figures/slas/benchmark-publication/fixed12/execution/first_use_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/fixed12/total/first_use_workflow_metrics.csv). The Figure 3 CSV contains 240 workflow/scope/worker rows; its columns distinguish estimated serial CellProfiler seconds, measured OpenHCS seconds and their ratio.
 - Twelve-sample OpenHCS scaling: [processing](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv) and [setup plus processing](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv).
 - Additional serial CellProfiler comparisons: [all retained batch configurations](../figures/slas/supp_benchmark_assignments.png). These varying workloads are separate from the fixed twelve-sample worker comparison in main Figure 3C.
@@ -110,7 +112,7 @@ Protein translocation analysis 1 used each well's mean cell-level nuclear/cytopl
 
 Use the following linked records to match each named analysis to its result, instructions, selected pipeline and available resources. The 20 task-level result rows include a repair and a grouped three-agent cohort; they are not 20 independent trials. H001 and H002 retain their original task aliases, and repairs remain part of the same analysis rather than receiving a new quality rank.
 
-- [Results](task_only_analysis/analysis_results.csv): analysis name/dataset, model, evaluation inputs, endpoint and result. Main Table 2 selects the principal assays; the CSV also retains earlier held-out analyses and image-review demonstrations.
+- [Results](task_only_analysis/analysis_results.csv): analysis name/dataset, model, evaluation inputs, endpoint and result. Main Table 2 maps tasks, models and protocols; Table 3 selects the principal assay results. The CSV also retains earlier held-out analyses and image-review demonstrations.
 - [Instructions and available pipeline sources](#instructions-and-reproducibility): original briefs, guide/software provenance, selected source files and supporting functions, including the [original brief archive](task_only_analysis/original_task_briefs.json).
 - [Trial resources](task_only_analysis/trial_resources.csv) and their [timing/usage definitions](task_only_analysis/trial_resource_tables.md): recorded task durations and computational use, distinct from final-pipeline runtime. These records do not supply missing values for unrelated analyses.
 - [Principal neurite cohort](personal_neurite_autonomous/cohort.json): the three blind drug-response analyses, distinct from the separate nine-field laboratory tracing and scientist-assisted continuation.
@@ -123,7 +125,9 @@ Object scores use computational labels for bright-object detection analysis 1 an
 
 ### Reference coverage and detection errors
 
-Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 6G is a separate analysis. Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
+Eleven predictions in 3D nuclear localisation analysis 1 had no matching annotation. Because the annotations cover only some centres, these cannot be classified as false detections from this reference alone. The 3D split-cell repair in main Figure 6H is a separate analysis (H002_FRESH22_89), not nuclear localisation analysis 1 (H002_FRESH15_89). Retinal examples include uncertain borders, and paired DNA/actin examples include a faint merged pair and a nuclear seed without supported cell-body growth (Supplementary Figure 4).
+
+The [3D repair report](task_only_analysis/h002-fresh22-postfreeze-localisation.rst) binds candidate01 → candidate02_retry. The [retinal repair provenance](../figures/slas/retina_fresh16_repair_provenance.json) binds R0010_FRESH16_88, a retained continuation after an interrupted CLI, not fresh retinal analyses 1–2; its model is not recorded for this continuation. The [nuclear repair source proof](task_only_analysis/h003-native-source-proof.json) binds H003_POSTPAUSE_88, distinct from the Fresh26 paired-channel result below. Supplementary Figure 4 identifies the exact runs behind its additional image checks. The separate scientist-assisted drug-response [comparison record](personal_neurite_repaired_morphometry/source_evidence.json) does not specify an agent model; it does not inherit the blind cohort's model.
 
 The [nuclear-error data table](task_only_analysis/nuclear_error_summary.csv) and [per-field table](task_only_analysis/bbbc039-uninspected-fields.csv) provide the three agents' scores, missed nuclei and false detections on the 175 BBBC039 fields not viewed by any of them. The [nuclear-detection error analysis](README.md#nuclear-detection-errors) describes their shared difficult fields and the three-field repair, including increased splitting and the absence of a separate evaluation across all fields.
 

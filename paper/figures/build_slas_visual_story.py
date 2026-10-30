@@ -67,7 +67,7 @@ class FigureSheet:
         self.text(x, y, letter, size=14, weight="bold", color=BLUE)
         self.text(x + 3.1, y, title, size=12, weight="bold")
 
-    def box(self, x, y, width, height, title, detail="", *, color=BLUE):
+    def box(self, x, y, width, height, title, detail="", *, color=BLUE, size=11):
         self.axis.add_patch(
             FancyBboxPatch(
                 (x, y),
@@ -84,7 +84,7 @@ class FigureSheet:
             x + width / 2,
             y + height * (0.65 if detail else 0.5),
             title,
-            size=11,
+            size=size,
             weight="bold",
             ha="center",
             va="center",
@@ -95,7 +95,7 @@ class FigureSheet:
                 x + width / 2,
                 y + height * 0.28,
                 detail,
-                size=9,
+                size=size - 2,
                 ha="center",
                 va="center",
             )
@@ -253,6 +253,19 @@ class FigureSheet:
         axis = self.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         axis.imshow(pixels, interpolation="nearest")
         axis.set_axis_off()
+
+    def crop_vertical(self, bottom, top):
+        """Trim the canvas without shrinking any text or retained image axes."""
+        fraction = top - bottom
+        positions = [(axis, axis.get_position().bounds) for axis in self.figure.axes]
+        width, height = self.figure.get_size_inches()
+        self.figure.set_size_inches(width, height * fraction)
+        for axis, (left, y, width, height) in positions:
+            axis.set_position((left, (y - bottom) / fraction, width, height / fraction))
+        self.display_transforms.append({
+            "operation": "Vertical canvas crop; axis sizes and type unchanged",
+            "bottom_top_fractions": [bottom, top],
+        })
 
     def save(self, *, dpi=300):
         OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -818,27 +831,14 @@ def public_neurite_initial_comparison(*, input_root: Path = FigureSheet.default_
 
 
 def submission_repair_examples(*, input_root: Path = FigureSheet.default_input_root):
-    """Put same-input nuclear and retinal repair witnesses in one main figure."""
+    """Keep the recorded bright-object trajectory beside matched nuclear repair."""
     from build_slas_supplement import SupplementFigure
-
-    sheet = SupplementFigure("submission_repair_examples", 7.4, input_root=input_root)
-    sheet.heading("A  A split elongated body is repaired", 97)
     from build_slas_neurite_views import (
-        BRIGHT_OBJECT_SOURCE, CroppedComparison, BioFormatsComparison, RETINAL_SOURCE,
+        BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE,
     )
+    from build_slas_task_only import H001_SOURCE, load_bright_object_evaluation
 
-    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 53, 94, 35), 92)
-    sheet.heading("B  Retinal contours improve while two neighbours stay separate", 48)
-    BioFormatsComparison.read(sheet, RETINAL_SOURCE).draw_row((3, 8, 94, 30), 42)
-    sheet.text(50, 1, "Matched raw pixels and display within each trial • colours are not cross-attempt identities",
-               size=10, ha="center", color=MUTED)
-    sheet.save()
-
-
-def submission_autonomous_loop():
-    """Separate intended skill workflow from the retained H001 trajectory."""
-    sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
-    sheet.figure.set_size_inches(sheet.figure.get_size_inches() * .8)
+    sheet = SupplementFigure("submission_repair_examples", 8.4, input_root=input_root)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -847,12 +847,42 @@ def submission_autonomous_loop():
         raise ValueError("Expected the original plotted H001 resource record")
     trial = rows[0]
     report = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md"
-    # Reuse the retained author's original report, not a later skill's promise.
     report_text = report.read_text()
     if "All four compile/run pairs completed" not in report_text:
         raise ValueError("H001's four-candidate trajectory is not established")
     sheet.source(report)
     sheet.source(resources)
+    sheet.source(ROOT / H001_SOURCE)
+    sheet.heading("E  The agent corrects an object detected as two", 98)
+    candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
+    if len(candidates) != 4:
+        raise ValueError("Expected the four original reported H001 candidates")
+    for index, ((candidate, count), decision) in enumerate(zip(candidates, (
+        "Split body", "Pair lost", "Pair still lost", "Pair recovered",
+    ))):
+        x = 3 + index * 24
+        sheet.box(x, 84, 20, 9, f"{int(candidate)} • {count} objects", decision,
+                  color=TEAL, size=14)
+        if index < 3:
+            sheet.arrow((x + 20, 88.5), (x + 24, 88.5))
+    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 48, 94, 27), 79)
+    first = float(trial["first_elapsed_s"]) / 60
+    final = float(trial["final_elapsed_s"]) / 60
+    sheet.text(3, 44, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
+               size=13, color=TEAL)
+    evaluation = load_bright_object_evaluation(ROOT)
+    first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
+    sheet.text(3, 40, f"Whole-image F1: first {first_f1:.3f} → final {final_f1:.3f}",
+               size=13, color=TEAL, weight="bold")
+    sheet.heading("F  Nuclear separation", 36)
+    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((3, 2, 94, 27), 31)
+    sheet.save()
+
+
+def submission_autonomous_loop():
+    """Explain the guide's procedure; observed repairs belong to Figure 6."""
+    sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
+    sheet.figure.set_size_inches(sheet.figure.get_size_inches() * .8)
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
 
@@ -861,7 +891,8 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.panel("A", "Instructions guide the agent from question to analysis", 3, 84)
+    sheet.text(3, 84, "Instructions guide the agent from question to analysis",
+               size=12, weight="bold")
     stages = (
         (3, 63, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
@@ -909,39 +940,7 @@ def submission_autonomous_loop():
     sheet.text(50, 61, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
     sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
-    sheet.panel("B", "The agent corrects an object detected as two", 3, 32)
-    candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
-    if len(candidates) != 4:
-        raise ValueError("Expected the four original reported H001 candidates")
-    for index, ((candidate, count), decision) in enumerate(zip(candidates, (
-        "Split body", "Pair lost", "Pair still lost", "Pair recovered",
-    ))):
-        x = 3 + index * 24
-        sheet.box(x, 24, 20, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
-        if index < 3:
-            sheet.arrow((x+20,27), (x+24,27))
-    first = float(trial["first_elapsed_s"]) / 60
-    final = float(trial["final_elapsed_s"]) / 60
-    from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison
-
-    from build_slas_task_only import H001_SOURCE, load_bright_object_evaluation
-
-    sheet.source(ROOT / H001_SOURCE)
-    evaluation = load_bright_object_evaluation(ROOT)
-    first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-    sheet.text(50, .7, f"Whole-image F1: first {first_f1:.3f} → final {final_f1:.3f}",
-               size=10, color=TEAL, ha="center", weight="bold")
-    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 5, 94, 14.8), 21)
-    sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
-               size=10, color=TEAL)
-    # Remove the space released above A without rescaling text or panel B.
-    visible_fraction = .875
-    positions = [(axis, axis.get_position().bounds) for axis in sheet.figure.axes]
-    width, height = sheet.figure.get_size_inches()
-    sheet.figure.set_size_inches(width, height * visible_fraction)
-    for axis, (left, bottom, width, height) in positions:
-        axis.set_position((left, bottom / visible_fraction,
-                           width, height / visible_fraction))
+    sheet.crop_vertical(.34, .875)
     sheet.save()
 
 
@@ -987,7 +986,7 @@ def submission_quantitative_results(*, input_root: Path = FigureSheet.default_in
     """Render the shared retinal/volume layout directly from original inputs."""
     from build_slas_supplement import VolumeResultsFigure
 
-    sheet = VolumeResultsFigure("submission_quantitative_results", 9.0, input_root=input_root)
+    sheet = VolumeResultsFigure("submission_quantitative_results", 7.0, input_root=input_root)
     sheet.draw_panels()
     sheet.save()
 

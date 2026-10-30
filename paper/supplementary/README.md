@@ -43,7 +43,15 @@ Missed nuclei accounted for 73–78% of the three agents' errors on the 175 BBBC
 ![Orthogonal nuclear localisation, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from an independent volume analysis in XY, XZ and YZ. **(D–F)** Retinal region before analysis and with the first and final outlines; a possible split remains. **(G–I)** Raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supp. Data 8 links the source images and reports.
+Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from the independent H002_FRESH10_89 volume analysis in XY, XZ and YZ. **(D–F)** Retinal region from the R0010_FRESH16_88 continuation before analysis and with first and final outlines; a possible split remains. **(G–I)** H003_POSTPAUSE_88 raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth in the separate H003_FRESH19_96 analysis, not the Fresh26 paired-channel result. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supp. Data 8 links the source images and reports.
+:::
+
+## Supp. Figure 4, continued. Final nuclear localisation views {#supplementary-figure-4-continued.-final-nuclear-localisation-views}
+
+![Final nuclear localisation analysis 1 in XY, XZ and YZ, separate from the sampled body-separation repair.](../figures/slas/supp_nuclear_localisation.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(M–O)** Final 3D nuclear localisation analysis 1 (H002_FRESH15_89), shown in XY, XZ and YZ. Label colours distinguish detected nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. These are final-only views, not a repair sequence. All 15 manually annotated centres have a prediction within the predeclared 30-voxel radius (main Figure 6C). Eleven predictions have no matching annotation; partial coverage prevents classifying them as false detections. Distances and scale bars are in voxel-index units, not calibrated physical lengths. Main Figure 6H shows the distinct H002_FRESH22_89 body repair.
 :::
 
 ## Supp. methods: analysis scoring {#supplementary-methods-analysis-scoring}

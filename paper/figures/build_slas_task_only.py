@@ -343,7 +343,7 @@ def build(root: Path, output: Path) -> None:
 
 
 def submission_summary() -> None:
-    """Combine distinct frozen endpoints with an independent local repair witness."""
+    """Combine frozen quantitative endpoints; matched repairs have their own sheet."""
     from build_slas_visual_story import MUTED
     from build_slas_supplement import SupplementFigure
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
@@ -440,10 +440,7 @@ def submission_summary() -> None:
         if column == 0:
             axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    from build_slas_neurite_views import CroppedComparison, NUCLEAR_SOURCE
-
-    sheet.text(3, 21, "E  Nuclear separation", size=sheet.plot_font_size, weight="bold")
-    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((2, 2, 96, 16), 18.5)
+    sheet.crop_vertical(.24, 1)
     sheet.save()
 
 

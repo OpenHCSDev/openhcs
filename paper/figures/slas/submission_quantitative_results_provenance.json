@@ -1,242 +1,85 @@
 {
-  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
+  "generator_sha256": "fb12a079961b04187b790d716bb667e86fae32b3065e08c7652775a14407d79b",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
-    "paper/figures/slas/frozen_retinal_views.json": "7b726ebc73b80fbb07b3b8e706875f8346234fd3822d1562dfe7eb70f8d46d26",
-    "paper/figures/build_slas_neurite_views.py": "ec30d1006ac9aaf08ea1191b0fe8febb4918968bcfc978289fdba6c9b51145e0",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/acquisition/R0010.czi": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/FIRST/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "3cadc3d836839defa2cb257c295d7017f53f718b0e2d68bb1b616b0c3a79b71f",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/attempts/REPAIR01-technical02/acquisition_openhcs/checkpoints/R0010.czi_s001_w1_z001_t001_SomaLabelIDs.tif": "db0b3022bdba66a86c2b46be24e91ef4e43bd9041d77c5e2ea2039207fd4e988",
-    "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst": "4c5b7a81deea6da32eb2f20423b0e975ca3e778dee5cd813060db13a1749e001",
-    "paper/figures/slas/frozen_h002_fresh22_views.json": "1221b5967b249f2f756daa6fba75fb744392089e9ce971e0be7bfeaf9b9e7292",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/staged-input/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate01/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "1a3dab73c672a6d8beb7474ac5588b7f59a3e43dc416fbfecb92fd2b468ad635",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate02_retry/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "7e87eb19db78de259fe7476a3eedfee508de1dbb44ef92fdd7603aa8ff2e628a",
-    "paper/figures/slas/frozen_h002_firstmethod_views.json": "fabdd50c0b9cc17c28e7ad40b9ab1188e5fc6edeb1e213a4681025c2f155c739",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/plate/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_labels_step0.labels.tif": "dffdc99120aedf28863af31ae0efb097ad3cc23e85fb446856242a0e5e101b8a",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_details.csv": "19ad71607d72e86d28d35a2418ac48c74ac6985a38d69d6235e38ad6d7076c37",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_s001_w1_z035_t001_h002_labels_step0_rois.roi.zip": "9023fb405d653abe237f5bac0e079c41d15a208d215412f66757b4d6f7cafaf0"
+    "paper/figures/build_slas_supplement.py": "ca200de0a64896a9da8554109a036d3bace1405f25ce6bfa4868cf9fb03c96e7",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "1af8b66e24d67342ea87ca93d6104abf4070ddf61b697d35082b0f0a75496d93",
+    "paper/figures/slas/retina_fresh16_repair.png": "31708c61976f48ac0cc2a3c660b5ef04d163fa3dfe1516290befcd01ef4a73c8",
+    "paper/figures/slas/h002_fresh22_split_repair_provenance.json": "04bdfe804bac8b997621bdc68932e305c84e07486a1aa9284e988e6df3ae74a5",
+    "paper/figures/slas/h002_fresh22_split_repair.png": "311d99c51099a72e21962f6a2fd554c6a760c6f706082f960b8bf01c2a75530b"
   },
-  "input_root": "/home/ts/wt/openhcs-paper-revision-5308-render/frozen-root",
-  "ui_crops": [],
-  "display_transforms": [
+  "input_root": "/",
+  "ui_crops": [
     {
-      "author_run": "R0010_FRESH16_88",
-      "attempt": "FIRST \u2192 REPAIR01-technical02",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "region_yyxx": [
-          379,
-          821,
-          124,
-          1077
-        ],
-        "raw_window": [
-          0,
-          42
-        ],
-        "selection_note": "Recorded native NW camera centre600/600;original953x442canvas with zoom8.095 and verified OME pixel scale corresponds to this native region,rounded to complete pixels."
-      },
-      "source_shape_yx": [
-        2586,
-        2586
-      ],
-      "raw_window": [
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
         0,
-        42
+        243,
+        2700,
+        745
       ],
-      "region_yyxx": [
-        379,
-        821,
-        124,
-        1077
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 0.12353054911059548,
-      "scale_unit": "\u00b5m",
-      "pixel_aspect": 1.0,
-      "gamma": 1,
-      "analysis_rerun": false
+      "source_size": [
+        2700,
+        1620
+      ]
     },
     {
-      "author_run": "H002_FRESH22_89",
-      "attempt": "candidate01 versus candidate02_retry; local repair only",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "fixed_axis": 0,
-        "index": 36,
-        "region_yyxx": [
-          90,
-          200,
-          0,
-          90
-        ],
-        "raw_window": [
-          569.0,
-          27314.0
-        ]
-      },
-      "source_shape_yx": [
-        256,
-        256
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        432,
+        284,
+        945,
+        906
       ],
-      "raw_window": [
-        569.0,
-        27314.0
-      ],
-      "region_yyxx": [
-        90,
-        200,
-        0,
-        90
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "voxels",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
+      "source_size": [
+        2700,
+        1920
+      ]
     },
     {
-      "author_run": "H002_FRESH15_89",
-      "attempt": "frozen final attempted pipeline; display only",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "fixed_axis": 0,
-        "index": 34,
-        "region_yyxx": [
-          0,
-          256,
-          0,
-          256
-        ],
-        "raw_window": [
-          2513.0,
-          31882.274999999863
-        ]
-      },
-      "source_shape_yx": [
-        256,
-        256
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        1755,
+        284,
+        2268,
+        906
       ],
-      "raw_window": [
-        2513.0,
-        31882.274999999863
-      ],
-      "region_yyxx": [
-        0,
-        256,
-        0,
-        256
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "voxels",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
+      "source_size": [
+        2700,
+        1920
+      ]
     },
     {
-      "author_run": "H002_FRESH15_89",
-      "attempt": "frozen final attempted pipeline; display only",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "fixed_axis": 1,
-        "index": 157,
-        "region_yyxx": [
-          0,
-          60,
-          0,
-          256
-        ],
-        "raw_window": [
-          2513.0,
-          31882.274999999863
-        ],
-        "centre_style": {
-          "s": 65,
-          "marker": "+",
-          "color": "#ff65da",
-          "linewidths": 1.8
-        }
-      },
-      "source_shape_yx": [
-        60,
-        256
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        432,
+        1052,
+        945,
+        1674
       ],
-      "raw_window": [
-        2513.0,
-        31882.274999999863
-      ],
-      "region_yyxx": [
-        0,
-        60,
-        0,
-        256
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "voxels",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
+      "source_size": [
+        2700,
+        1920
+      ]
     },
     {
-      "author_run": "H002_FRESH15_89",
-      "attempt": "frozen final attempted pipeline; display only",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "fixed_axis": 2,
-        "index": 80,
-        "region_yyxx": [
-          0,
-          60,
-          0,
-          256
-        ],
-        "raw_window": [
-          2513.0,
-          31882.274999999863
-        ],
-        "centre_style": {
-          "s": 65,
-          "marker": "+",
-          "color": "#ff65da",
-          "linewidths": 1.8
-        }
-      },
-      "source_shape_yx": [
-        60,
-        256
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        1755,
+        1052,
+        2268,
+        1674
       ],
-      "raw_window": [
-        2513.0,
-        31882.274999999863
-      ],
-      "region_yyxx": [
-        0,
-        60,
-        0,
-        256
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "voxels",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
+      "source_size": [
+        2700,
+        1920
+      ]
     }
   ],
+  "display_transforms": [],
   "output_sha256": {
-    "submission_quantitative_results.png": "ed10d231db7ebe531f62d42f6c1ceef6b90f4f047186272a11d83e509fc4f511",
-    "submission_quantitative_results.pdf": "4a20dcb2fb68f7597be649103932d493ffe05b6235a4f119454f9486118c5ada",
-    "submission_quantitative_results.svg": "0bdb1d1074e49917a76d2e5aba4651316114232ab82cb26db6ee21c77e13bd49"
+    "submission_quantitative_results.png": "a71bfd3309b5feb0a87e17b76b05dfb7a09200f871914ad67cd6ad7aeaceea8c",
+    "submission_quantitative_results.pdf": "9d7412db6eee2880df6ce7c2e0022f66df1d0d2d567bfd574f9086e11b5147c3",
+    "submission_quantitative_results.svg": "d9c584eb0c0ed961e96e476683d8359f00640f6ea2c2b529bd2ce3d59572f1e1"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
