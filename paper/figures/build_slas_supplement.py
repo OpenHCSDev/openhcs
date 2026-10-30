@@ -51,19 +51,25 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.text(3, 27.5, "G  Retinal repair", size=14, weight="bold")
-        self.artwork("retina_fresh16_repair", (3, 16.8, 94, 10.2),
-                     crop=(0, 15, 100, 46))
-        self.text(3, 15.5, "H  3D body separation · Z = 36 voxels", size=14, weight="bold")
+        self.text(3, 30.5, "G  Retinal repair", size=14, weight="bold")
+        for row, (heading, left) in enumerate((
+            ("Raw", 3), ("First result", 34.96), ("Final result", 66.92),
+        )):
+            y = 20.4 - row * 10
+            self.text(3, y + 8.1, heading, size=self.plot_font_size, weight="bold")
+            self.artwork("retina_fresh16_repair", (3, y, 18, 7.7),
+                         crop=(left, 22.2, left + 30.08, 45.8))
+        self.text(60, 30.5, "H  3D body separation · Z = 36 voxels", size=14,
+                  weight="bold", ha="center")
         for column, (heading, crop) in enumerate((
             ("Raw", (16, 14.8, 35, 47.2)),
             ("First labels", (65, 14.8, 84, 47.2)),
             ("Final labels", (16, 54.8, 35, 87.2)),
             ("Final + raw", (65, 54.8, 84, 87.2)),
         )):
-            x = 3 + column * 24
-            self.text(x, 13, heading, size=self.plot_font_size, weight="bold")
-            self.artwork("h002_fresh22_split_repair", (x, .2, 22, 11.8), crop=crop)
+            x = 23 + column * 18.7
+            self.text(x, 28.5, heading, size=self.plot_font_size, weight="bold")
+            self.artwork("h002_fresh22_split_repair", (x, 6.8, 18, 20.9), crop=crop)
 
 
 def infrastructure():
