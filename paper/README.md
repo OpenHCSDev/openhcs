@@ -76,7 +76,7 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The current main layout has six figures and three tables: native editing and custom
+The current main layout has six figures and one table: native editing and custom
 function authoring (Figure 1); process architecture with integration logos
 (Figure 2); CellProfiler output coverage and measured execution/total times,
 with a fixed serial estimate compared with measured workers (Figure 3); the
@@ -84,9 +84,7 @@ intended autonomous analysis procedure (Figure 4);
 treatment responses from three independent blind agents with a separate
 laboratory neurite demonstration (Figure 5); and quantitative endpoints followed
 by bright-object, nuclear, retinal and three-dimensional body repairs (Figure 6).
-Table 1 defines
-the timing boundaries; Table 2 maps tasks, models and protocols, and Table 3
-summarizes the principal autonomous assay results.
+Table 1 defines the timing boundaries. Supp. Table 4 retains the complete 27-row task/model/protocol mapping; principal assay findings remain in their Results subsections and figures.
 Full trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
@@ -110,7 +108,7 @@ environment, without rerunning scientific analyses:
 
 ```sh
 PYTHONPATH=paper/figures python -c \
-  'from build_slas_visual_story import architecture, submission_shared_workflow, submission_autonomous_loop, submission_repair_examples, submission_quantitative_results, submission_neurite_results; architecture(); submission_shared_workflow(); submission_autonomous_loop(); submission_repair_examples(); submission_quantitative_results(); submission_neurite_results()'
+  'from build_slas_visual_story import architecture, submission_shared_workflow, submission_autonomous_loop, submission_neurite_results; architecture(); submission_shared_workflow(); submission_autonomous_loop(); submission_neurite_results()'
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output
@@ -249,10 +247,7 @@ indices because physical spacing is unverified; retinal bars use the original
 CZI calibration. Laboratory neurite bars retain their 200-pixel geometry and
 show 271 µm, derived from the hash-checked acquisition declaration; the public
 NeuronCyto view retains pixel units because its physical calibration is unverified.
-Figure 4 shows only the guide's procedure. Figure 6A–D contains quantitative
-endpoints; `submission_repair_examples` owns E–F, the original bright-object
-trajectory/scores/crops and separate nuclear repair. `VolumeResultsFigure`
-draws G–H, retinal and sampled 3D-body repairs. Final-only localisation views
+Figure 4 shows only the guide's procedure. `AnalysisResultsFigure` in `build_slas_task_only.py` draws the single integrated Figure 6: quantitative endpoints A–D and bright-object/nuclear repairs E–F, inheriting retinal/body drawing G–H from `VolumeResultsFigure`. The old two continued-sheet entrypoints are removed. Final-only localisation views
 come from the retained `MeasurementFirstVolumeFigure` artwork in Supp. Figure
 4M–O (`build_slas_supplement.final_volume_views`), not a repair panel. FigureSheet's
 vertical canvas crop removes unused space without shrinking the retained axes

@@ -1,4 +1,4 @@
-"""Render Figure 7 from retained postfreeze evaluations, without rescoring images.
+"""Render Figure 6 from retained postfreeze evaluations, without rescoring images.
 
 Run from any directory. Defaults use the existing SLAS paper tree; --root and
 --output permit the same generator to render a separate handoff packet.
@@ -18,6 +18,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+
+from build_slas_supplement import VolumeResultsFigure
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIRECTORY = Path("paper/supplementary/task_only_analysis")
@@ -342,106 +344,156 @@ def build(root: Path, output: Path) -> None:
     print(f"Rendered Figure 7 to {output}")
 
 
+class AnalysisResultsFigure(VolumeResultsFigure):
+    """One canvas owns quantitative endpoints and all matched repair panels."""
+
+    def draw_panels(self):
+        self.draw_quantitative()
+        self.draw_repairs()
+        super().draw_panels()
+
+    def draw_quantitative(self):
+        from build_slas_visual_story import MUTED
+        from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
+
+        sheet = self
+        fields_path = SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv"
+        boundary_paths = (SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
+                          SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst")
+        evaluation_path = SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
+        sources = (fields_path, *boundary_paths, evaluation_path, SOURCE.relative_to(ROOT))
+        sheet.source(Path(__file__))
+        sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
+        for path in sources:
+            sheet.source(ROOT / path)
+        axes = [sheet.plot_axes(bounds) for bounds in (
+            (0.12, 0.84, 0.19, 0.12),
+            (0.43, 0.84, 0.20, 0.12), (0.77, 0.84, 0.20, 0.12),
+        )]
+        titles = ("A  Nuclear detection", "B  Cell boundaries", "C  3D localisation")
+        for axis, title in zip(axes, titles, strict=True):
+            axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=8)
+            axis.spines[["top", "right"]].set_visible(False)
+            axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
+            axis.set_axisbelow(True)
+
+        fields = list(csv.DictReader((ROOT / fields_path).open()))
+        authors = ("fresh612", "fresh10", "fresh13")
+        for subset, marker, color, label in ((False, "o", BLUE, "All 200"),
+                                            (True, "s", TEAL, "175 unviewed")):
+            scores = []
+            for author in authors:
+                rows = [row for row in fields if row["author"] == author
+                        and (not subset or row["opened_by_any_of_three_authors"] == "False")]
+                if len(rows) != (175 if subset else 200):
+                    raise ValueError("Wrong BBBC039 comparison population")
+                tp, fp, fn = (sum(int(row[key]) for row in rows) for key in
+                              ("true_positive_count", "false_positive_count", "false_negative_count"))
+                scores.append(2 * tp / (2 * tp + fp + fn))
+            positions = np.arange(3) + (0.045 if subset else -0.045)
+            axes[0].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
+        axes[0].set(xticks=range(3), xticklabels=("2", "3", "4"), xlabel="Analysis",
+                    ylabel="Pooled F1", ylim=(0.87, 0.94))
+        axes[0].legend(frameon=False, fontsize=10, loc="upper right", labelspacing=.15, handletextpad=.3)
+        # Decode the two existing publication tables; their units and populations differ
+        # from instance matching, so no common accuracy scale is introduced.
+        text = (ROOT / boundary_paths[0]).read_text()
+        block = text.split(".. list-table:: Frozen field-level outline comparison", 1)[1]
+        cells = re.findall(r"^\s+(?:\* )?- (.+)$", block, flags=re.MULTILINE)
+        rows19 = [cells[i:i + 5] for i in range(5, len(cells), 5)]
+        text26 = (ROOT / boundary_paths[1]).read_text()
+        block26 = text26.split(".. csv-table:: Final frozen candidate, all fields", 1)[1]
+        rows26 = list(csv.reader(line.strip() for line in block26.splitlines()
+                                 if re.match(r"\s+A\d\d_\d+,", line)))
+        for index, rows in enumerate((rows19, rows26)):
+            if len(rows) != 16 or any(len(row) != 5 for row in rows):
+                raise ValueError("Expected sixteen original BBBC007 rows")
+            fractions = [int(row[4]) / int(row[3]) for row in rows]
+            pooled = sum(int(row[4]) for row in rows) / sum(int(row[3]) for row in rows)
+            axes[1].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
+            axes[1].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
+            axes[1].text(index, 0.86, f"{pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
+        axes[1].set(xticks=(0, 1), xticklabels=("2", "3"), xlabel="Analysis", ylim=(0.55, 0.90),
+                    ylabel="Border support\n(2-pixel fraction)")
+
+        evaluation = json.loads((ROOT / evaluation_path).read_text())
+        scores = evaluation["scores"]
+        primary_threshold = evaluation["primary_threshold_voxels"]
+        thresholds = sorted(map(int, scores))
+        errors = [scores[str(t)]["mean_localisation_error_voxels"] for t in thresholds]
+        axes[2].plot(thresholds, errors, "o-", color=TEAL)
+        for t, error in zip(thresholds, errors, strict=True):
+            axes[2].annotate(f"{scores[str(t)]['true_positives']}", (t, error), xytext=(0, 10),
+                             textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
+        axes[2].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
+        axes[2].set(xlabel="Matching distance\n(voxels)", ylabel="Mean centre error\n(voxels)",
+                    ylim=(0, 6.1), xticks=thresholds)
+
+        sheet.text(3, 75, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
+        series = AssaySeries.load(SOURCE)
+        for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
+            axis = sheet.plot_axes((0.12 + column * 0.49, 0.635, 0.34, 0.08))
+            means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
+            deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
+            axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
+                          color=color, capsize=2)
+            axis.set_title(f"{assay.compound} · Z′ = {assay.control_zprime:.3f}",
+                           loc="left", fontsize=sheet.plot_font_size, color=color)
+            axis.set(xticks=range(9), xticklabels=[f"{dose.concentration:g}" for dose in assay.doses],
+                     xlabel=f"Concentration ({assay.unit.replace('uM', 'µM')})", ylim=(-0.5, 2.7))
+            axis.tick_params(axis="x", labelrotation=45)
+            axis.spines[["top", "right"]].set_visible(False)
+            axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
+            axis.set_axisbelow(True)
+            if column == 0:
+                axis.set_ylabel("GFP N/C\n(log₂ ratio)")
+
+    def draw_repairs(self):
+        from build_slas_visual_story import TEAL
+        from build_slas_neurite_views import (
+            BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE,
+        )
+
+        sheet = self
+        resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
+        with resources.open(newline="") as stream:
+            rows = [row for row in csv.DictReader(stream)
+                    if row["trial_id"] == "H001_FRESH586_96"]
+        if len(rows) != 1:
+            raise ValueError("Expected the original plotted H001 resource record")
+        report = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md"
+        report_text = report.read_text()
+        if "All four compile/run pairs completed" not in report_text:
+            raise ValueError("H001's four-candidate trajectory is not established")
+        sheet.source(report)
+        sheet.source(resources)
+        sheet.source(ROOT / H001_SOURCE)
+        sheet.text(3, 52, "E  Bright-object repair", size=14, weight="bold")
+        candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
+        if len(candidates) != 4:
+            raise ValueError("Expected the four original reported H001 candidates")
+        for index, ((candidate, count), decision) in enumerate(zip(candidates, (
+            "Split body", "Pair lost", "Pair still lost", "Pair recovered",
+        ))):
+            x = 3 + index * 11.2
+            sheet.box(x, 44.5, 10.2, 5.1, f"{int(candidate)}: {count}", decision,
+                      color=TEAL, size=10)
+            if index < 3:
+                sheet.arrow((x + 10.2, 47), (x + 11.2, 47))
+        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 31, 44, 10.5), 42)
+        evaluation = load_bright_object_evaluation(ROOT)
+        first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
+        sheet.text(3, 29.5, f"F1: {first_f1:.3f} → {final_f1:.3f}",
+                   size=13, color=TEAL, weight="bold")
+        sheet.text(53, 52, "F  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 31, 44, 13), 46)
+
+
 def submission_summary() -> None:
-    """Combine frozen quantitative endpoints; matched repairs have their own sheet."""
-    from build_slas_visual_story import MUTED
-    from build_slas_supplement import SupplementFigure
-    from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
-
-    sheet = SupplementFigure("submission_analysis_summary", 8.5)
-    fields_path = SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv"
-    boundary_paths = (SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
-                      SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst")
-    evaluation_path = SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
-    sources = (fields_path, *boundary_paths, evaluation_path, SOURCE.relative_to(ROOT))
-    sheet.source(Path(__file__))
-    sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
-    for path in sources:
-        sheet.source(ROOT / path)
-    axes = [sheet.plot_axes(bounds) for bounds in (
-        (0.12, 0.79, 0.83, 0.17),
-        (0.12, 0.55, 0.34, 0.17), (0.61, 0.55, 0.34, 0.17),
-    )]
-    titles = ("A  Nuclear detection", "B  Cell boundaries", "C  3D nuclear localisation")
-    for axis, title in zip(axes, titles, strict=True):
-        axis.set_title(title, loc="left", fontsize=sheet.plot_font_size, fontweight="bold", pad=8)
-        axis.spines[["top", "right"]].set_visible(False)
-        axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
-        axis.set_axisbelow(True)
-
-    fields = list(csv.DictReader((ROOT / fields_path).open()))
-    authors = ("fresh612", "fresh10", "fresh13")
-    for subset, marker, color, label in ((False, "o", BLUE, "All 200 fields"),
-                                        (True, "s", TEAL, "175 image-unviewed fields (retrospective)")):
-        scores = []
-        for author in authors:
-            rows = [row for row in fields if row["author"] == author
-                    and (not subset or row["opened_by_any_of_three_authors"] == "False")]
-            if len(rows) != (175 if subset else 200):
-                raise ValueError("Wrong BBBC039 comparison population")
-            tp, fp, fn = (sum(int(row[key]) for row in rows) for key in
-                          ("true_positive_count", "false_positive_count", "false_negative_count"))
-            scores.append(2 * tp / (2 * tp + fp + fn))
-        positions = np.arange(3) + (0.045 if subset else -0.045)
-        axes[0].scatter(positions, scores, marker=marker, color=color, label=label, s=36)
-    axes[0].set(xticks=range(3), xticklabels=("Analysis 2", "Analysis 3", "Analysis 4"),
-                ylabel="Pooled F1", ylim=(0.87, 0.94))
-    axes[0].legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper right")
-    # Decode the two existing publication tables; their units and populations differ
-    # from instance matching, so no common accuracy scale is introduced.
-    text = (ROOT / boundary_paths[0]).read_text()
-    block = text.split(".. list-table:: Frozen field-level outline comparison", 1)[1]
-    cells = re.findall(r"^\s+(?:\* )?- (.+)$", block, flags=re.MULTILINE)
-    rows19 = [cells[i:i + 5] for i in range(5, len(cells), 5)]
-    text26 = (ROOT / boundary_paths[1]).read_text()
-    block26 = text26.split(".. csv-table:: Final frozen candidate, all fields", 1)[1]
-    rows26 = list(csv.reader(line.strip() for line in block26.splitlines()
-                             if re.match(r"\s+A\d\d_\d+,", line)))
-    for index, rows in enumerate((rows19, rows26)):
-        if len(rows) != 16 or any(len(row) != 5 for row in rows):
-            raise ValueError("Expected sixteen original BBBC007 rows")
-        fractions = [int(row[4]) / int(row[3]) for row in rows]
-        pooled = sum(int(row[4]) for row in rows) / sum(int(row[3]) for row in rows)
-        axes[1].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
-        axes[1].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
-        axes[1].text(index, 0.86, f"Pooled {pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
-    axes[1].set(xticks=(0, 1), xticklabels=("Analysis 2", "Analysis 3"), ylim=(0.55, 0.90),
-                ylabel="Border support\n(2-pixel fraction)")
-
-    evaluation = json.loads((ROOT / evaluation_path).read_text())
-    scores = evaluation["scores"]
-    primary_threshold = evaluation["primary_threshold_voxels"]
-    thresholds = sorted(map(int, scores))
-    errors = [scores[str(t)]["mean_localisation_error_voxels"] for t in thresholds]
-    axes[2].plot(thresholds, errors, "o-", color=TEAL)
-    for t, error in zip(thresholds, errors, strict=True):
-        axes[2].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
-                         textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
-    axes[2].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
-    axes[2].set(xlabel="Matching distance (voxels)", ylabel="Mean centre error\n(voxels)",
-                ylim=(0, 6.1), xticks=thresholds)
-
-    sheet.text(3, 47, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
-    series = AssaySeries.load(SOURCE)
-    for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-        axis = sheet.plot_axes((0.12 + column * 0.49, 0.32, 0.34, 0.105))
-        means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
-        deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
-        axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
-                      color=color, capsize=2)
-        axis.set_title(f"{assay.compound} · Z′ = {assay.control_zprime:.3f}",
-                       loc="left", fontsize=sheet.plot_font_size, color=color)
-        axis.set(xticks=range(9), xticklabels=[f"{dose.concentration:g}" for dose in assay.doses],
-                 xlabel=f"Concentration ({assay.unit.replace('uM', 'µM')})", ylim=(-0.5, 2.7))
-        axis.tick_params(axis="x", labelrotation=45)
-        axis.spines[["top", "right"]].set_visible(False)
-        axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
-        axis.set_axisbelow(True)
-        if column == 0:
-            axis.set_ylabel("GFP N/C\n(log₂ ratio)")
-
-    sheet.crop_vertical(.20, 1)
-    sheet.save()
+    """Render the single integrated A–H figure from retained inputs."""
+    sheet = AnalysisResultsFigure("submission_analysis_summary", 9.4)
+    sheet.draw_panels()
+    sheet.save(dpi=400)
 
 
 def publish_briefs() -> None:

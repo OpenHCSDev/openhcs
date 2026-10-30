@@ -36,7 +36,7 @@ Reference annotations were used to evaluate independently developed nuclear-dete
 
 ### Nuclear-detection errors
 
-Missed nuclei accounted for 73–78% of the three agents' errors on the 175 BBBC039 fields not viewed by any of them. For each agent, misses outnumbered false detections in 171–173 fields. All three scored below F1 0.80 on the same six fields; these were mostly less crowded than average, with a median of 59 nuclei against 126 across all 175 fields. On the hardest field, F1 was 0.23–0.27 and 57–59 of 69 nuclei were missed. Between analyses 2 and 3 on all 200 fields, per-field F1 mostly differed by less than 0.03. A correction in analysis 2 on three inspected fields recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, while increasing split reference nuclei from 28 to 43. That correction was not evaluated separately across all fields. The [error summary](task_only_analysis/nuclear_error_summary.csv) and [per-field measurements](task_only_analysis/bbbc039-uninspected-fields.csv) identify the affected images.
+Across all 200 fields, nuclear detection analyses 2–4 gave pooled F1 of 0.898–0.906. In the retrospective 175-field image-unviewed subset, 117–121 fields per analysis reached F1 of at least 0.90. Missed nuclei accounted for 73–78% of the three agents' errors on the 175 BBBC039 fields not viewed by any of them. For each agent, misses outnumbered false detections in 171–173 fields. All three scored below F1 0.80 on the same six fields; these were mostly less crowded than average, with a median of 59 nuclei against 126 across all 175 fields. On the hardest field, F1 was 0.23–0.27 and 57–59 of 69 nuclei were missed. Between analyses 2 and 3 on all 200 fields, per-field F1 mostly differed by less than 0.03. A correction in analysis 2 on three inspected fields recovered 14 missed nuclei and raised F1 from 0.908 to 0.934, while increasing split reference nuclei from 28 to 43. That correction was not evaluated separately across all fields. The [error summary](task_only_analysis/nuclear_error_summary.csv) and [per-field measurements](task_only_analysis/bbbc039-uninspected-fields.csv) identify the affected images.
 
 ## Supp. Figure 4. Segmentation errors in matched image regions {#supplementary-figure-4.-segmentation-errors-in-matched-image-regions}
 
@@ -63,6 +63,8 @@ For comparison with Caicedo et al. [@Caicedo2019], we applied their released `co
 The [viewing chronology](task_only_analysis/bbbc039-official-test-view-chronology.json) records when each agent first viewed an official test image relative to when its method was fixed. Analysis 2 viewed one official test field (`20585_F14_7`) before fixing its method; analyses 3 and 4 viewed none. On six other occasions, an agent first viewed a test image after fixing its method, during result review. As a supplementary robustness check, removing all six distinct test fields viewed by any of the three agents during development or later review left 44 fields and 5,109 reference nuclei. Original per-image mean F1 at IoU ≥ 0.5 was 0.898, 0.892 and 0.895 for analyses 2–4, respectively. This 44-field subset was identified retrospectively; it does not replace the full-50 comparison. The [subset calculation](task_only_analysis/bbbc039-official50-secondary44.json) retains its exact IDs and scores.
 
 Excluding the one official-test field viewed by nuclear detection analysis 2 before its method was frozen left 49 fields containing 5,602 reference nuclei. Mean per-image F1 was 0.9023 at IoU ≥ 0.5 and 0.8037 with Caicedo et al.'s released nine-threshold evaluator, compared with 0.9026 and 0.8036, respectively, for all 50 fields. These summaries use the same retained predictions; the [49-field record](task_only_analysis/bbbc039-fresh612-test49-summary.json) retains exact image IDs, scores and aggregation.
+
+Protein translocation analysis 2 measured cytoplasm around 14,631 of 17,320 nuclei (84.5%); this fraction varied with treatment. The earlier analysis 1 obtained Z′ of 0.554 for LY294002 and 0.751 for Wortmannin on 92 wells withheld before development (Supp. Data 7). The analyses used different well summaries and evaluation sets.
 
 Protein translocation analysis 2 used each well's median log2 nuclear-to-cytoplasmic GFP ratio across cells with measurable cytoplasm. On this log2 scale, 0 means equal nuclear and cytoplasmic intensity, and 1 means twice the intensity in the nucleus.
 
@@ -109,6 +111,8 @@ Scientist-assisted neurite measurements were compared with MetaXpress in 20 matc
 :::
 
 The [post-repair measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) and [initial measurements](personal_neurite_baseline_morphometry/treatment_effects.csv) also include mean outgrowth per cell.
+
+At 40 µM, cell-count fold changes from the three blind analyses were 0.94–0.99 for FC-A and 0.92–0.94 for Y27632, against 0.95 and 0.91 for MetaXpress. The scientist-assisted mean-outgrowth responses were 1.77- and 1.76-fold, respectively; two agents were close to those values and the third estimated smaller effects.
 
 At 40 µM, the three blind analyses gave fold changes in branches per cell of 1.24–1.63 for FC-A and 1.50–1.73 for Y27632, against 3.00 and 3.26 for MetaXpress. Their control wells started at 2.1–5.3 branches per cell, against 1.3–1.5 for MetaXpress. For analysis 3, the absolute increases from zero dose to 40 µM were 2.44 and 2.65 branches per cell for FC-A and Y27632, compared with MetaXpress's 2.94 and 2.90. Higher baselines compressed that analysis's fold changes; the cause of the baseline differences was not established.
 
@@ -175,6 +179,41 @@ These resources address different parts of AI-assisted analysis. The table disti
 | Omega [@Royer2024] | Code-driven interactive analysis | Generates and executes Python analysis code and creates napari controls for inspection and adjustment. |
 | Agentic-J [@Johanns2026] | Fiji-script development and auditing | Uses bioimage knowledge, plugin instructions and specialized agents; calls external tools through the Model Context Protocol (MCP). The cited version plans repeatability assessment across independent agent sessions. |
 | BIABench [@Pan2026BIABench] | Analysis-evaluation benchmark | Evaluates agent-produced analyses against reference answers and expert assessments. Performance was stronger on routine 2D tasks; repeated runs were unreliable on more complex data. |
+
+## Supp. Table 4. Tasks, models and evaluation protocols {#supplementary-table-4.-tasks-models-and-evaluation-protocols}
+
+Table: Supp. Table 4. Tasks, models and protocols. Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities are paper-reported; their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
+
+| Analysis and task/source | Model | Development and evaluation protocol |
+|:----------------------------------------|:-------------------|:----------------------------------------------------------|
+| Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
+| Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
+| Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
+| Protein translocation 2, BBBC013 | gpt-6.1-sol | Independent task-only development on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Postfreeze control comparison, not manual segmentation accuracy. |
+| Nuclear detection 2, BBBC039 | gpt-6.1-sol | Independent development; 200 fields and retrospective 175-field subset. One official-test field viewed before freeze. |
+| Nuclear detection 3–4, BBBC039 | gpt-6.1-sol | Independent development by each author; same populations; no official-test image viewed before freeze. Distinct guide revisions. |
+| Nuclear detection 2, repair | gpt-6.1-sol | Same three inspected fields; illustrative repair, not another author or a full-collection validation. |
+| Cell-boundary analysis 2, BBBC007 | gpt-6.1-sol | Twelve development and four author-reserved fields; reported support includes all 16. |
+| Cell-boundary analysis 3, BBBC007 | gpt-6.1-sol | All 16 fields supplied for development; manual-outline comparison after freeze. |
+| Paired nuclear/cell detection, H003 | gpt-6.1-sol | Fresh26 DNA/actin development; image review and label/table consistency, not a validated census. |
+| Bright-object detection 1, H001 | gpt-6.1-sol | Same-image self-directed repair; computational-reference scoring after freeze. |
+| Bright-object detection 2, H001 | gpt-6.1-sol | Independent same-image development; matched image review, no reference score. |
+| 3D nuclear localisation 1–2, H002 | gpt-6.1-sol | Separate independent analyses of one development volume; partial manual-centre reference after freeze. |
+| 3D body-separation repair, H002_FRESH22_89 | gpt-6.1-sol | Independent development; candidate01 → candidate02_retry sampled split repair before reference evaluation, not a withheld volume. |
+| 3D final-view analysis, H002_FRESH10_89 | gpt-6.1-sol | Independent task-only development on the released volume; final-only XY/XZ/YZ witnesses. The 22 centres are algorithmic, not a biological census or held-out score. |
+| Retinal cell detection 1–2, R0010 | gpt-6.1-sol | Separate fresh development analyses; matched image review, no manual-reference accuracy. |
+| Retinal repair, R0010_FRESH16_88 | Not recorded for this continuation | Retained continuation after interrupted CLI; self-directed FIRST → REPAIR01-technical02 image-review repair, without reference masks, manual counts or dataset-specific parameter coaching; not a fresh repeat. |
+| Nuclear-separation repair, H003_POSTPAUSE_88 | Not recorded in panel provenance | Retained same-field DNA-image repair; distinct from the tabulated Fresh26 paired-channel analysis. |
+| Paired nuclear/cell inspection, H003_FRESH19_96 | Not recorded in checked sources | Separate DNA/actin development; final matched image review, not manual-reference accuracy. Two body masks are seed-only; 55 labels do not establish 55 complete cells. |
+| Public NeuronCyto demonstration, original | gpt-5.6-sol | Method-directed normalization, segmentation and assignment; authoring demonstration, not autonomous method selection. |
+| Public-image neurite tracing, H004 | gpt-6.1-sol | Fresh development; displayed initial prediction. Main-shaft target clarified only after the run. |
+| Laboratory-image neurite tracing, P001 | gpt-6.1-sol | Fresh nine-field development and image review; not the drug-response cohort. |
+| Assisted nine-field neurite mosaic | gpt-6.1-sol | Assisted development and retained all-channel continuation; not another autonomous repeat. |
+| Neurite drug-response analysis 1 | gpt-6.1-sol | Six development fields; all 180 fields analysed before treatment/reference evaluation. |
+| Neurite drug-response analysis 2 | gpt-6.1-sol | Four development fields; same 180-field cohort and evaluation design. |
+| Neurite drug-response analysis 3 | gpt-6.1-sol | Eight development fields; same cohort; qualified exploratory disposition retained in Data 8. |
+| Scientist-assisted neurite drug-response comparison | Not specified in retained comparison record | Scientist-prompted morphological corrections on the same 180 fields; not another blind author. |
+
 
 ## Supp. Data {#supplementary-data}
 
