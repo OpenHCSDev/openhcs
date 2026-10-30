@@ -468,7 +468,7 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         sheet.source(report)
         sheet.source(resources)
         sheet.source(ROOT / H001_SOURCE)
-        sheet.text(3, 52, "E  Bright-object repair", size=14, weight="bold")
+        sheet.text(3, 53, "E  Bright-object repair", size=14, weight="bold")
         candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
         if len(candidates) != 4:
             raise ValueError("Expected the four original reported H001 candidates")
@@ -476,17 +476,17 @@ class AnalysisResultsFigure(VolumeResultsFigure):
             "Split body", "Pair lost", "Pair still lost", "Pair recovered",
         ))):
             x = 3 + index * 11.2
-            sheet.box(x, 44.5, 10.2, 5.1, f"{int(candidate)}: {count}", decision,
+            sheet.box(x, 46.5, 10.2, 5.1, f"{int(candidate)}: {count}", decision,
                       color=TEAL, size=10)
             if index < 3:
-                sheet.arrow((x + 10.2, 47), (x + 11.2, 47))
-        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 31, 44, 10.5), 42)
+                sheet.arrow((x + 10.2, 49), (x + 11.2, 49))
+        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 32.5, 44, 10.5), 44.3)
         evaluation = load_bright_object_evaluation(ROOT)
         first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        sheet.text(3, 29.5, f"F1: {first_f1:.3f} → {final_f1:.3f}",
-                   size=13, color=TEAL, weight="bold")
-        sheet.text(53, 52, "F  Nuclear separation", size=14, weight="bold")
-        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 31, 44, 13), 46)
+        sheet.text(47, 53, f"F1 {first_f1:.3f}→{final_f1:.3f}".replace("0.", "."),
+                   size=13, color=TEAL, weight="bold", ha="right")
+        sheet.text(53, 53, "F  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 32.5, 44, 13), 47.5)
 
 
 def submission_summary() -> None:

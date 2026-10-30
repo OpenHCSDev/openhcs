@@ -238,7 +238,7 @@ def submission_benchmark_summary() -> None:
     axis = sheet.plot_axes((.44, .65, .53, .24))
     sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
 
-    sheet.text(2, 46, "C", size=14, weight="bold")
+    sheet.text(2, 48.5, "C", size=14, weight="bold")
     reference_key = "12assignments-1worker"
     ordered = sorted((key for key, mode in modes.items()
                       if mode["assignment_count"] == modes[reference_key]["assignment_count"]),
@@ -262,7 +262,7 @@ def submission_benchmark_summary() -> None:
                     "speedup_over_serial_cp": groups[-1][j][i]})
     labels = [f"{modes[key]['openhcs_worker_count']} worker{'s' if modes[key]['openhcs_worker_count'] != 1 else ''}"
               for key in ordered]
-    axis = sheet.plot_axes((.16, .23, .81, .18))
+    axis = sheet.plot_axes((.16, .23, .81, .23))
     sheet.distributions(axis, groups, labels)
     axis.set_xlabel("OpenHCS workers · twelve samples for both applications", labelpad=7)
     sheet.figure.legend(handles=[

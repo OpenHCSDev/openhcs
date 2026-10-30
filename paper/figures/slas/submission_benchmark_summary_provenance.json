@@ -1,7 +1,7 @@
 {
   "generator_sha256": "71c79c358a93507c11c78259d84cda9b4d287d62f6aaef2f4bae248a7ad81aa3",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "121edef7bc5ee9f364654e09d29199be36200f7d946b3cca47a17aba6072aeb2",
+    "paper/figures/build_slas_benchmark_reference.py": "c590e7f84bbc526ed79c8a1106be36084e84a4f42dbfc409ca3541dffd55a63f",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "2072cf27f902791289bf794a49b3ac6cd28b7c3698cb6a2b91732731be89ccde",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "9e4ee716dcd28fe620a553c80a6ac42bdb3c3362831fb95e87595ba191903270",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -54,9 +54,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "abf0510ca58b8aa2111d10fee95f6c59c0adc11616a6b3497e0a9e0e6b68f2ae",
-    "submission_benchmark_summary.pdf": "f0ac7e79e4057283808a47ceb9bb9b716b2bd3d1cb5cf9caec5759cd2dc9b7d2",
-    "submission_benchmark_summary.svg": "7239cb0f53fc8838119a924e0de3634699cb19fd9d2fa586de469b45f9052dc9"
+    "submission_benchmark_summary.png": "597068f3e1bb93bb8021b7217eeb3707f120333c8272135dd0d4817ea7a36fdd",
+    "submission_benchmark_summary.pdf": "c78cad2c8922ab0a11f4fbad52ddbd0e6ec0c6fb65f6031a1524b6f6d1bee125",
+    "submission_benchmark_summary.svg": "ab6e42bbb21a2e701f4469b2b9976024837381d8f36ecaaa34fcdcd542b25866"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
