@@ -1,4 +1,4 @@
-"""Render Figure 7 from retained postfreeze evaluations, without rescoring images.
+"""Render Figure 6 from retained postfreeze evaluations, without rescoring images.
 
 Run from any directory. Defaults use the existing SLAS paper tree; --root and
 --output permit the same generator to render a separate handoff packet.
@@ -423,7 +423,7 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         errors = [scores[str(t)]["mean_localisation_error_voxels"] for t in thresholds]
         axes[2].plot(thresholds, errors, "o-", color=TEAL)
         for t, error in zip(thresholds, errors, strict=True):
-            axes[2].annotate(f"{scores[str(t)]['true_positives']}/15", (t, error), xytext=(0, 10),
+            axes[2].annotate(f"{scores[str(t)]['true_positives']}", (t, error), xytext=(0, 10),
                              textcoords="offset points", ha="center", fontsize=sheet.plot_font_size)
         axes[2].axvline(primary_threshold, color=MUTED, linestyle="--", linewidth=0.8)
         axes[2].set(xlabel="Matching distance\n(voxels)", ylabel="Mean centre error\n(voxels)",
@@ -461,7 +461,6 @@ class AnalysisResultsFigure(VolumeResultsFigure):
                     if row["trial_id"] == "H001_FRESH586_96"]
         if len(rows) != 1:
             raise ValueError("Expected the original plotted H001 resource record")
-        trial = rows[0]
         report = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md"
         report_text = report.read_text()
         if "All four compile/run pairs completed" not in report_text:
@@ -492,7 +491,7 @@ class AnalysisResultsFigure(VolumeResultsFigure):
 
 def submission_summary() -> None:
     """Render the single integrated A–H figure from retained inputs."""
-    sheet = AnalysisResultsFigure("submission_analysis_summary", 11.2)
+    sheet = AnalysisResultsFigure("submission_analysis_summary", 9.4)
     sheet.draw_panels()
     sheet.save(dpi=400)
 
