@@ -1,69 +1,30 @@
 {
-  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
+  "generator_sha256": "fb12a079961b04187b790d716bb667e86fae32b3065e08c7652775a14407d79b",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
-    "paper/figures/build_slas_task_only.py": "3525ce59d3f60005777281e057b3663ea3ffb351ff482cdb0c7b168a36873971",
+    "paper/figures/build_slas_supplement.py": "ca200de0a64896a9da8554109a036d3bace1405f25ce6bfa4868cf9fb03c96e7",
+    "paper/figures/build_slas_task_only.py": "1200c15ef54e4713e3439801c1ca444fd6559c8538361380b202ac337fc30f94",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc039-uninspected-fields.csv": "548749c6764453a7171f657a3ff07fcfa613fc943104da2fe1eb67d93f31e3f0",
     "paper/supplementary/task_only_analysis/bbbc007-fresh19-qualified-completion.rst": "53c9a2da8bf5718a792149d99007e773154d9712d02bf1eeb7e2cfc6761b4ef0",
     "paper/supplementary/task_only_analysis/bbbc007-fresh26-final-candidate.rst": "e3ef1a694642a100b3c65565c1d5d67092caf58dfdf46b99c510704a5166e3c6",
     "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
-    "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7",
-    "paper/figures/slas/frozen_nuclear_views.json": "212e71109bf41e45c8ddcacbd7cf556a91ba547c2010fec6c8caf8dc6547227f",
-    "paper/figures/build_slas_neurite_views.py": "ec30d1006ac9aaf08ea1191b0fe8febb4918968bcfc978289fdba6c9b51145e0",
-    "paper/figures/slas/frozen_nuclear_objects/raw.tif": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
-    "paper/figures/slas/frozen_nuclear_objects/first.tif": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
-    "paper/figures/slas/frozen_nuclear_objects/final.tif": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
-    "paper/figures/slas/frozen_nuclear_objects/original-author-report.txt": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
-    "paper/figures/slas/frozen_nuclear_objects/raw-identity.json": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b"
+    "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7"
   },
   "input_root": "/",
   "ui_crops": [],
   "display_transforms": [
     {
-      "author_run": "H003_POSTPAUSE_88",
-      "attempt": "candidate01_retry01 \u2192 candidate06",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "region_yyxx": [
-          260,
-          350,
-          245,
-          335
-        ],
-        "raw_window": [
-          0,
-          255
-        ],
-        "selection_note": "Recorded C4 native centre Y300/X291;include repaired labels35/36,adjacent38 and diffuse bridge support. New explicit native crop,not a screen-coordinate reconstruction."
-      },
-      "source_shape_yx": [
-        400,
-        400
-      ],
-      "raw_window": [
-        0,
-        255
-      ],
-      "region_yyxx": [
-        260,
-        350,
-        245,
-        335
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "px",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
+      "operation": "Vertical canvas crop; axis sizes and type unchanged",
+      "bottom_top_fractions": [
+        0.2,
+        1
+      ]
     }
   ],
   "output_sha256": {
-    "submission_analysis_summary.png": "4b7432367a5dd1e4470919dffba725e796e0693b17774e280576205522707575",
-    "submission_analysis_summary.pdf": "46e65d01d7b91ecf33a2285bdf0afdebf1bbde82619f94766a341c946552a1fc",
-    "submission_analysis_summary.svg": "e22c230ae9806333b1c0ea2c9b70a778f9b81c3a00ed140a4eb6c8706d2f54a4"
+    "submission_analysis_summary.png": "fedff37c086909e0c74f25a776871bbc8f85d1ae5aad7d930352891dbc154533",
+    "submission_analysis_summary.pdf": "4339107c4e153c1a831b11c473bbc784a28b734eaf4d6bc0279472ada7aa38c0",
+    "submission_analysis_summary.svg": "dd1ffccba4adb0227f86a8b9241cb175eadbf51ffaec4ff8406e0e07632492df"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

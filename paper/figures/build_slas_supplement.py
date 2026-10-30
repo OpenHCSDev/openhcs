@@ -10,7 +10,7 @@ import json
 
 from PIL import Image
 
-from build_slas_visual_story import FigureSheet, MeasurementFirstVolumeFigure, OUTPUT, digest
+from build_slas_visual_story import FigureSheet, OUTPUT, digest
 
 
 class SupplementFigure(FigureSheet):
@@ -47,24 +47,24 @@ class SupplementFigure(FigureSheet):
         sheet.save(dpi=400)
 
 
-class VolumeResultsFigure(SupplementFigure, MeasurementFirstVolumeFigure):
-    """Main-paper retinal/volume panels share the standalone volume owner."""
+class VolumeResultsFigure(SupplementFigure):
+    """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        from build_slas_neurite_views import (
-            BioFormatsComparison, RETINAL_SOURCE, VOLUME_REPAIR_SOURCE,
-            VolumeComparison,
-        )
-
-        self.heading("F  RBPMS cell detection", 98)
-        BioFormatsComparison.read(self, RETINAL_SOURCE).draw_row((3, 77, 94, 14), 93)
-        self.heading("G  3D body separation", 75)
-        self.source(self.input_path(Path("paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")))
-        repair = VolumeComparison.read(self, VOLUME_REPAIR_SOURCE)
-        repair.draw_columns((3, 53, 94, 15), 70, repair.label_panels)
-        self.text(3, 50, f"Z = {repair.viewport['index']} voxels", size=self.plot_font_size)
-        self.heading("H  3D nuclear localisation", 47.5)
-        self.draw_volume_views((3, 3, 94, 35))
+        self.heading("G  RBPMS cell detection", 98)
+        self.artwork("retina_fresh16_repair", (3, 57, 94, 36),
+                     crop=(0, 15, 100, 46))
+        self.heading("H  3D body separation", 49)
+        for column, (heading, crop) in enumerate((
+            ("Raw", (16, 14.8, 35, 47.2)),
+            ("First labels", (65, 14.8, 84, 47.2)),
+            ("Final labels", (16, 54.8, 35, 87.2)),
+            ("Final + raw", (65, 54.8, 84, 87.2)),
+        )):
+            x = 3 + column * 24
+            self.text(x, 43, heading, size=self.plot_font_size, weight="bold")
+            self.artwork("h002_fresh22_split_repair", (x, 5, 22, 34), crop=crop)
+        self.text(3, 1.5, "Z = 36 voxels", size=self.plot_font_size)
 
 
 def infrastructure():
@@ -122,6 +122,15 @@ def morphology_checks(*, input_root=FigureSheet.default_input_root):
     sheet.heading("J–L  Actin: a seed without supported body growth", 24)
     CroppedLabelView.read(sheet, PAIRED_ACTIN_SOURCE, view_index=1).draw_row(
         (2, 1, 96, 16), 20)
+    sheet.save()
+
+
+def final_volume_views(*, input_root=FigureSheet.default_input_root):
+    """Retain the final-only localisation views beside supplementary checks."""
+    sheet = SupplementFigure("supp_nuclear_localisation", 4.2, input_root=input_root)
+    sheet.heading("M–O  Nuclear localisation 1: final XY, XZ and YZ views", 98)
+    sheet.artwork("h002_measurement_first", (1, 2, 98, 89),
+                  crop=(1, 7.5, 99, 58))
     sheet.save()
 
 
@@ -193,5 +202,6 @@ if __name__ == "__main__":
     translocation()
     nuclear_instances()
     morphology_checks()
+    final_volume_views()
     treatment_endpoints()
     scaling()
