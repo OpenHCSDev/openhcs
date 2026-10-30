@@ -830,54 +830,6 @@ def public_neurite_initial_comparison(*, input_root: Path = FigureSheet.default_
     sheet.save(dpi=600)
 
 
-def submission_repair_examples(*, input_root: Path = FigureSheet.default_input_root):
-    """Keep the recorded bright-object trajectory beside matched nuclear repair."""
-    from build_slas_supplement import SupplementFigure
-    from build_slas_neurite_views import (
-        BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE,
-    )
-    from build_slas_task_only import H001_SOURCE, load_bright_object_evaluation
-
-    sheet = SupplementFigure("submission_repair_examples", 8.4, input_root=input_root)
-    resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
-    with resources.open(newline="") as stream:
-        rows = [row for row in csv.DictReader(stream)
-                if row["trial_id"] == "H001_FRESH586_96"]
-    if len(rows) != 1:
-        raise ValueError("Expected the original plotted H001 resource record")
-    trial = rows[0]
-    report = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md"
-    report_text = report.read_text()
-    if "All four compile/run pairs completed" not in report_text:
-        raise ValueError("H001's four-candidate trajectory is not established")
-    sheet.source(report)
-    sheet.source(resources)
-    sheet.source(ROOT / H001_SOURCE)
-    sheet.heading("E  The agent corrects an object detected as two", 98)
-    candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
-    if len(candidates) != 4:
-        raise ValueError("Expected the four original reported H001 candidates")
-    for index, ((candidate, count), decision) in enumerate(zip(candidates, (
-        "Split body", "Pair lost", "Pair still lost", "Pair recovered",
-    ))):
-        x = 3 + index * 24
-        sheet.box(x, 84, 20, 9, f"{int(candidate)} • {count} objects", decision,
-                  color=TEAL, size=14)
-        if index < 3:
-            sheet.arrow((x + 20, 88.5), (x + 24, 88.5))
-    CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 48, 94, 27), 79)
-    first = float(trial["first_elapsed_s"]) / 60
-    final = float(trial["final_elapsed_s"]) / 60
-    sheet.text(3, 44, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four analysis versions",
-               size=13, color=TEAL)
-    evaluation = load_bright_object_evaluation(ROOT)
-    first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-    sheet.text(3, 40, f"Whole-image F1: first {first_f1:.3f} → final {final_f1:.3f}",
-               size=13, color=TEAL, weight="bold")
-    sheet.heading("F  Nuclear separation", 36)
-    CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((3, 2, 94, 27), 31)
-    sheet.save()
-
 
 def submission_autonomous_loop():
     """Explain the guide's procedure; observed repairs belong to Figure 6."""
@@ -981,14 +933,6 @@ def submission_shared_workflow():
                     bbox={"facecolor": "white", "edgecolor": BLUE, "pad": 3})
     sheet.save(dpi=600)
 
-
-def submission_quantitative_results(*, input_root: Path = FigureSheet.default_input_root):
-    """Render the shared retinal/volume layout directly from original inputs."""
-    from build_slas_supplement import VolumeResultsFigure
-
-    sheet = VolumeResultsFigure("submission_quantitative_results", 7.0, input_root=input_root)
-    sheet.draw_panels()
-    sheet.save()
 
 
 def architecture():

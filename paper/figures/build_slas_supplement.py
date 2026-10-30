@@ -51,10 +51,10 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.heading("G  RBPMS cell detection", 98)
-        self.artwork("retina_fresh16_repair", (3, 57, 94, 36),
+        self.text(3, 27.5, "G  Retinal repair", size=14, weight="bold")
+        self.artwork("retina_fresh16_repair", (3, 16.8, 94, 10.2),
                      crop=(0, 15, 100, 46))
-        self.heading("H  3D body separation", 49)
+        self.text(3, 15.5, "H  3D body separation · Z = 36 voxels", size=14, weight="bold")
         for column, (heading, crop) in enumerate((
             ("Raw", (16, 14.8, 35, 47.2)),
             ("First labels", (65, 14.8, 84, 47.2)),
@@ -62,9 +62,8 @@ class VolumeResultsFigure(SupplementFigure):
             ("Final + raw", (65, 54.8, 84, 87.2)),
         )):
             x = 3 + column * 24
-            self.text(x, 43, heading, size=self.plot_font_size, weight="bold")
-            self.artwork("h002_fresh22_split_repair", (x, 5, 22, 34), crop=crop)
-        self.text(3, 1.5, "Z = 36 voxels", size=self.plot_font_size)
+            self.text(x, 13, heading, size=self.plot_font_size, weight="bold")
+            self.artwork("h002_fresh22_split_repair", (x, .2, 22, 11.8), crop=crop)
 
 
 def infrastructure():

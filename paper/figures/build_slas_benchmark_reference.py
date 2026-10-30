@@ -202,7 +202,7 @@ def submission_benchmark_summary() -> None:
         return result
 
 
-    sheet.text(2, 96, "A  How modules were tested", size=14, weight="bold")
+    sheet.text(2, 91, "A", size=14, weight="bold")
     coverage = sheet.retained(publication / "reference-layout/reference_module_coverage.csv",
                         "retained_coverage_provenance.json")
     with coverage.open(newline="") as stream:
@@ -221,14 +221,11 @@ def submission_benchmark_summary() -> None:
     pie.text(0, -.22, "modules", ha="center", va="center", fontsize=sheet.plot_font_size)
     for i, label in enumerate(("In 30 workflows", "Individual tests", "Shared code only",
                                 "Import checks only", "No tests")):
-        y = 87 - i * 5.2
+        y = 83 - i * 3.2
         if counts[i]:
             sheet.axis.plot(23, y, marker="s", color=coverage_colors[i], markersize=8)
         sheet.text(25, y, f"{label}: {counts[i]}", size=sheet.plot_font_size, va="center")
-    sheet.text(3, 58, "Each module counted once. Shared-code tests\ndo not test the module's own algorithm.",
-               size=sheet.plot_font_size, color="#59697b", va="top")
-
-    sheet.text(54, 96, "B  One worker · measured times", size=14, weight="bold")
+    sheet.text(54, 91, "B", size=14, weight="bold")
     single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
     amortized = []
     for scope in ("execution", "total"):
@@ -241,9 +238,7 @@ def submission_benchmark_summary() -> None:
     axis = sheet.plot_axes((.60, .65, .37, .24))
     sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
 
-    sheet.text(2, 46, "C  Same twelve samples · more OpenHCS workers", size=14, weight="bold")
-    sheet.text(2, 43.5, "Fixed serial CellProfiler estimate · measured OpenHCS",
-               size=sheet.plot_font_size, color="#59697b")
+    sheet.text(2, 46, "C", size=14, weight="bold")
     reference_key = "12assignments-1worker"
     ordered = sorted((key for key, mode in modes.items()
                       if mode["assignment_count"] == modes[reference_key]["assignment_count"]),
@@ -274,7 +269,7 @@ def submission_benchmark_summary() -> None:
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Processing"),
         Line2D([], [], marker="o", ls="", color=sheet.scope_colors[1], label="Setup + processing"),
         *sheet.summary_handles,
-    ], loc="lower center", bbox_to_anchor=(.5, .907), ncol=4, frameon=False,
+    ], loc="lower center", bbox_to_anchor=(.5, .94), ncol=4, frameon=False,
        fontsize=sheet.plot_font_size, borderpad=0, labelspacing=.2,
        title=f"{len(names)} workflows per distribution · OpenHCS medians of 3 runs",
        title_fontsize=sheet.plot_font_size)
