@@ -66,7 +66,7 @@ Bright-object detection analysis 1 matched first and final detections one-to-one
 
 ## Supp. methods: neurite morphometry {#supplementary-methods-neurite-morphometry}
 
-Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Images had a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; calcein-labelled neurons were recorded in the FITC channel.
+Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Images were acquired on an ImageXpress Micro Confocal using a 10× Plan Apo Lambda objective (0.45 NA) and 2 × 2 camera binning, giving a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; calcein-labelled neurons were recorded in the FITC channel.
 
 To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census.
 

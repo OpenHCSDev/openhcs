@@ -17,10 +17,10 @@ The remaining author questions are factual, not unfinished prose:
 
 - Confirm the interval between drug addition and imaging for the laboratory
   neurite assay, and supply the applicable animal-ethics committee and
-  approval/reference or justified exemption, microscope/model and objective,
-  and neuronal stain. FITC identifies a channel, not the reagent. The latest
-  desktop draft supplies the E18 rat cortical-neuron preparation, medium change,
-  compounds and doses; these details are retained in Methods.
+  approval/reference or justified exemption. The latest desktop draft supplies
+  the E18 rat cortical-neuron preparation, medium change, compounds and doses;
+  these details are retained in Methods. The acquisition description now names
+  calcein and the instrument/objective verified from the retained TIFF headers.
 - Supply the authorized Zenodo account/deposit route and confirm creators and
   rights for the selected archive. The existing procedure is in
   `supplementary/archive_publication.rst`; no issued OpenHCS DOI is yet verified.
