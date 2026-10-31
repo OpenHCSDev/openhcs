@@ -42,6 +42,7 @@ from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.core.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.vfs_protocol import DeclaredFileWrites
 
 _RuntimeStepValue = TypeVar("_RuntimeStepValue")
 
@@ -191,6 +192,7 @@ class ExecutingContext(CompiledContext):
         self.runtime_image_stack_cache = RuntimeImageStackCache()
         self.runtime_function_output_identity_cache = FunctionOutputIdentityCache()
         self.runtime_pattern_discovery_cache = RuntimePatternDiscoveryCache()
+        self.declared_file_writes = DeclaredFileWrites()
         self.runtime_source_binding_context_cache = RuntimeSourceBindingContextCache()
         self.completed_step_outputs = StepExecutionObservation.empty()
         self.debug_event_sink = NO_OP_DEBUG_EVENT_SINK

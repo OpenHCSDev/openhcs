@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
-    from openhcs.core.vfs_protocol import DatasetPathDeclaration
+    from openhcs.core.vfs_protocol import DatasetPathDeclaration, DeclaredFile
     from openhcs.core.processing_contracts import (
         ProcessingContract,
     )
@@ -1274,29 +1274,26 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
                 values[parameter_name] = (declaration, value)
         return MappingProxyType(values)
 
-    def resolve_declared_paths(
+    def declared_files(
         self,
         kwargs: Mapping[str, object],
         resolver: "CompilationPathResolver",
-    ) -> dict[str, object]:
-        """Resolve only explicitly declared public path arguments."""
+        *,
+        owner: str,
+    ) -> tuple["DeclaredFile", ...]:
+        """Resolve the authored or default argument of every declared path."""
 
-        resolved = dict(kwargs)
-        for parameter_name, (declaration, value) in self.declared_path_values(
-            kwargs
-        ).items():
-            if not isinstance(value, (str, Path)):
-                raise TypeError(
-                    f"Callable {self.function_name!r} path parameter "
-                    f"{parameter_name!r} requires str or Path, got "
-                    f"{type(value).__name__}."
-                )
-            resolved[parameter_name] = resolver.resolve(
+        return tuple(
+            resolver.declared_file(
+                parameter_name,
                 value,
                 declaration,
-                owner=f"callable {self.function_name}.{parameter_name}",
+                owner=f"{owner}.{parameter_name}",
             )
-        return resolved
+            for parameter_name, (declaration, value) in self.declared_path_values(
+                kwargs
+            ).items()
+        )
 
     def require_processing_contract(self) -> "type[ProcessingContract]":
         """Return the declared processing contract or fail at the contract boundary."""

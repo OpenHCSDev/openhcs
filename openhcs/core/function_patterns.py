@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
+    from openhcs.core.context.processing_context import ExecutingContext
 
 from arraybridge import MemoryType
 from formbridge.pattern_metadata import PatternScopeToken
@@ -53,6 +54,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.vfs_protocol import DeclaredFile
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict
@@ -499,6 +501,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     runtime_parameter_bindings: tuple[RuntimeParameterBinding, ...] = ()
     input_device_id: int | None = None
     execution_device_id: int | None = None
+    declared_files: tuple[DeclaredFile, ...] = ()
     runtime_callable: Callable = field(
         init=False,
         repr=False,
@@ -630,6 +633,15 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             if declared.init
         }
         return partial(type(self), **constructor_values), ()
+
+    def before_call(self, context: "ExecutingContext", *, call: str) -> None:
+        """Check this invocation's declared files just before one call runs."""
+        for declared in self.declared_files:
+            declared.before_call(
+                filemanager=context.filemanager,
+                writes=context.declared_file_writes,
+                call=call,
+            )
 
     def with_device_assignment(
         self,
@@ -922,23 +934,29 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             ),
         )
         public_kwargs = dict(user_kwargs)
+        declared_files: tuple[DeclaredFile, ...] = ()
         if path_resolver is not None:
-            public_kwargs = item.contract.resolve_declared_paths(
+            declared_files = item.contract.declared_files(
                 public_kwargs,
                 path_resolver,
+                owner=f"callable {item.contract.function_name}",
+            )
+            public_kwargs.update(
+                (declared.parameter, declared.path) for declared in declared_files
             )
         else:
-            relative_parameters = tuple(
+            unresolved_parameters = tuple(
                 parameter_name
                 for parameter_name, (_declaration, value) in (
                     item.contract.declared_path_values(public_kwargs).items()
                 )
-                if isinstance(value, (str, Path)) and not Path(value).is_absolute()
+                if not (isinstance(value, (str, Path)) and Path(value).is_absolute())
             )
-            if relative_parameters:
+            if unresolved_parameters:
                 raise ValueError(
-                    f"Callable {item.contract.function_name!r} has relative declared "
-                    f"paths {relative_parameters!r} but compilation supplied no "
+                    f"Callable {item.contract.function_name!r} has declared paths "
+                    f"{unresolved_parameters!r} that are relative or name another "
+                    "step's file, but compilation supplied no "
                     "CompilationPathResolver."
                 )
         runtime_loaded_input_refs = frozenset(plan.ref() for plan in artifact_input_plans)
@@ -955,6 +973,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             key=item.key,
             contract=item.contract,
             kwargs=validated_kwargs,
+            declared_files=declared_files,
             artifact_output_plans=artifact_selector.select_plans(
                 ArtifactOutputPlan,
                 output_plans,
