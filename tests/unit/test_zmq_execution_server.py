@@ -61,6 +61,7 @@ from tests.context_support import (
     executing_context,
     with_facts,
 )
+from tests.run_records import minimal_run_declaration
 
 
 def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> None:
@@ -416,6 +417,7 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
             compiled_contexts={},
             server_mode=True,
         ),
+        run_declaration=minimal_run_declaration(),
     )
     server._compiled_artifacts["compile-1"] = ZMQCompileArtifactRecord(
         execution_id="compile-1",
@@ -700,6 +702,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
             compiled_contexts={"A01": context},
             server_mode=True,
         ),
+        run_declaration=minimal_run_declaration(),
     )
     compiled_zarr = context.filemanager.registry[Backend.ZARR.value]
     interleaved = PipelineOrchestrator(

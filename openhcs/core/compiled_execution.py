@@ -10,6 +10,7 @@ from objectstate.lazy_factory import (
 )
 from openhcs.core.config import GlobalPipelineConfig, MultiprocessingStartMethod
 from openhcs.core.context.processing_context import CompiledContext
+from openhcs.core.run_record import RunDeclaration
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.worker_start_policy import (
     WorkerStartDecision,
@@ -132,6 +133,8 @@ class CompiledExecutionBundle:
     transport_contexts: Mapping[str, CompiledContext]
     worker_assignments: Mapping[str, list[str]]
     runtime_environment: CompiledRuntimeEnvironmentPlan
+    run_declaration: RunDeclaration
+    """The documents and resolved configuration this bundle was compiled from."""
 
     @property
     def axis_ids(self) -> tuple[str, ...]:
@@ -157,6 +160,29 @@ class CompiledExecutionBundle:
         )
 
     @classmethod
+    def with_nothing_to_run(
+        cls,
+        pipeline_definition: Sequence[AbstractStep],
+        effective_config: GlobalPipelineConfig,
+        *,
+        server_mode: bool,
+        run_declaration: RunDeclaration,
+    ) -> "CompiledExecutionBundle":
+        """The bundle of a compilation that selected no axis value or no enabled step."""
+
+        return cls.from_runtime_contexts(
+            pipeline_definition=pipeline_definition,
+            runtime_contexts={},
+            worker_assignments={},
+            runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+                effective_config,
+                compiled_contexts={},
+                server_mode=server_mode,
+            ),
+            run_declaration=run_declaration,
+        )
+
+    @classmethod
     def from_runtime_contexts(
         cls,
         *,
@@ -164,6 +190,7 @@ class CompiledExecutionBundle:
         runtime_contexts: Mapping[str, CompiledContext],
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
+        run_declaration: RunDeclaration,
     ) -> "CompiledExecutionBundle":
         from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 
@@ -178,6 +205,7 @@ class CompiledExecutionBundle:
                 key: list(value) for key, value in worker_assignments.items()
             },
             runtime_environment=runtime_environment,
+            run_declaration=run_declaration,
         )
 
     @classmethod
@@ -187,6 +215,7 @@ class CompiledExecutionBundle:
         pipeline_definition: Sequence[AbstractStep],
         runtime_contexts: Mapping[str, CompiledContext],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
+        run_declaration: RunDeclaration,
     ) -> "CompiledExecutionBundle":
         """Create a bundle before worker ownership has been assigned."""
 
@@ -195,6 +224,7 @@ class CompiledExecutionBundle:
             runtime_contexts=runtime_contexts,
             worker_assignments={},
             runtime_environment=runtime_environment,
+            run_declaration=run_declaration,
         )
 
     def for_transport_serialization(

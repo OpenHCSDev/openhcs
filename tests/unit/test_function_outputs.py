@@ -74,6 +74,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )
 from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
+from openhcs.core.run_record import ProducedFiles
 from openhcs.core.steps.function_outputs import (
     MaterializedImageOutputWriter,
     MemoryOutputWriter,
@@ -169,12 +170,14 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
             "runtime_artifacts",
         ),
         (OpenHCSMetadataTarget, "observe_for_step", "metadata"),
+        (ProducedFiles, "stated_by_step", "producers"),
     ):
         monkeypatch.setattr(
             authority,
             method_name,
             lambda _context, _plan, event=event, **_kwargs: (
-                events.append(event), {} if event == "metadata" else ()
+                events.append(event),
+                {} if event in ("metadata", "producers") else (),
             )[1],
         )
 
@@ -186,6 +189,7 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
         "stream",
         "runtime_artifacts",
         "metadata",
+        "producers",
     ]
 
 

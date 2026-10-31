@@ -14,6 +14,7 @@ from traceback import TracebackException
 from typing import TYPE_CHECKING
 
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.function_identity import CustomFunctionIdentity
 from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 from openhcs.processing.custom_functions.source_namespace import (
     CustomFunctionSource,
@@ -59,6 +60,18 @@ class CustomFunctionMetadata(FunctionMetadata):
     def require_current_declaration(self) -> None:
         super().require_current_declaration()
         CustomFunctionRuntimeRegistry.require_current_metadata(self)
+
+    def identity(self) -> CustomFunctionIdentity:
+        """The source text that defines this function, by hash, and what it imports."""
+        namespace = CustomFunctionSourceNamespace.bound_to(self.func)
+        import_identity = self.import_identity
+        return CustomFunctionIdentity.of_source(
+            key=self.composite_key,
+            module=import_identity.module_name,
+            name=import_identity.function_name,
+            source_sha256=namespace.source.content_sha256,
+            source_text=namespace.code,
+        )
 
 
 class CustomFunctionCanonicalLookup:

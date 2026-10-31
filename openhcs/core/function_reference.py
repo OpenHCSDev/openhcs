@@ -21,6 +21,7 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.function_identity import FunctionIdentity
 
 if TYPE_CHECKING:
     from openhcs.core.steps.abstract import AbstractStep
@@ -86,6 +87,10 @@ class FunctionReference(PythonSourceLiteral, ABC):
     def resolve(self) -> Callable:
         """Resolve this reference through its nominal transport authority."""
 
+    @abstractmethod
+    def identity(self) -> FunctionIdentity:
+        """Where the referenced function comes from and at which version."""
+
     def require_current_declaration(self, resolved: Callable) -> Callable:
         """Return ``resolved`` only when its source proof matches compilation."""
 
@@ -120,6 +125,13 @@ class ImportableFunctionReference(ModuleExportFunctionSource, FunctionReference)
         raise RuntimeError(
             f"Python function {self.original_module}.{self.function_name} "
             "is not importable in this process."
+        )
+
+    def identity(self) -> FunctionIdentity:
+        return FunctionIdentity.of_module_export(
+            key=self.composite_key,
+            module=self.original_module,
+            name=self.function_name,
         )
 
 
@@ -160,6 +172,14 @@ class RegistryFunctionReference(FunctionReference):
         )
 
         return RegistryService.resolve_function_reference(self)
+
+    def identity(self) -> FunctionIdentity:
+        """The registry entry answers: a custom entry is identified by its source."""
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
+
+        return RegistryService.metadata_for_canonical_key(self.composite_key).identity()
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from objectstate import config_context
+from polystore.file_content import FileContent, HashedFileContent
 
 from openhcs.constants import Backend
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
@@ -117,6 +119,11 @@ class _MemoryFileManager(FileManagerLike):
     def is_dir(self, path: str | Path, backend: str) -> bool:
         del backend
         return Path(path) == Path("pipelines")
+
+    def file_content(self, file_path: str | Path, backend: str) -> FileContent:
+        del backend
+        stored = self.files[Path(file_path)].encode("utf-8")
+        return HashedFileContent(hashlib.sha256(stored).hexdigest(), len(stored))
 
     def load(self, file_path: str | Path, backend: str, **kwargs: object) -> object:
         del backend, kwargs

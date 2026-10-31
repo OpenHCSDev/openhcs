@@ -397,6 +397,7 @@
    "openhcs_load_pipeline_file",
    "openhcs_observe_owned_runtime",
    "openhcs_query_plate_files",
+   "openhcs_read_run_record",
    "openhcs_register_custom_function",
    "openhcs_render_config_source",
    "openhcs_render_pipeline_source",
@@ -455,6 +456,7 @@
    "openhcs_observe_owned_runtime",
    "openhcs_probe_viewer_window",
    "openhcs_query_plate_files",
+   "openhcs_read_run_record",
    "openhcs_register_custom_function",
    "openhcs_render_config_source",
    "openhcs_render_pipeline_source",
@@ -560,6 +562,7 @@
    "openhcs_observe_owned_runtime",
    "openhcs_probe_viewer_window",
    "openhcs_query_plate_files",
+   "openhcs_read_run_record",
    "openhcs_register_custom_function",
    "openhcs_render_config_source",
    "openhcs_render_pipeline_source",
@@ -4447,6 +4450,47 @@
     "type": "object"
    },
    "title": "Query plate files"
+  },
+  "openhcs_read_run_record": {
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true,
+    "title": "Read run record"
+   },
+   "description": "Read-only: what produced an output dataset. Pass an output dataset root (the directory holding openhcs_metadata.json) to get every run record by record id, or one output file inside a dataset to get the producer identity stored for that file, the producing step and the record of that run. A file the dataset does not list is an error, never a guess from its name. Each record lists what every step ran: each function with its identity (registry key, defining and imported library versions, sha256 of a custom function's source), every parameter with its value and source (pipeline, function_default, run_time), declared files with content hashes, and devices. Pass include_full_record=true to add the complete stored record: pipeline and global config documents, resolved configuration with the owner of every value, custom source texts and all installed distributions.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "include_full_record": {
+      "default": false,
+      "title": "Include Full Record",
+      "type": "boolean"
+     },
+     "path": {
+      "title": "Path",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "openhcs_read_run_recordArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "RunRecordReadResult"
+   },
+   "name": "openhcs_read_run_record",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_read_run_recordDictOutput",
+    "type": "object"
+   },
+   "title": "Read run record"
   },
   "openhcs_register_custom_function": {
    "annotations": {
