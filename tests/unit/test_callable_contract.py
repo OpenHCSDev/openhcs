@@ -3,7 +3,9 @@ import sys
 from dataclasses import field, make_dataclass, replace
 from enum import Enum
 from inspect import Parameter, signature
+from pathlib import Path
 from types import MappingProxyType, ModuleType
+from typing import Optional
 
 import pytest
 from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
@@ -277,6 +279,67 @@ def test_callable_contract_validates_nominal_enum_values_from_resolved_annotatio
         contract.decode_public_kwargs({"method": None})
     with pytest.raises(ValueError, match="not a valid"):
         contract.decode_public_kwargs({"method": "missing"})
+
+
+class _Mode(Enum):
+    FAST = "fast"
+
+
+_Window = make_dataclass(
+    "_Window", [("size", int, 3), ("mode", _Mode, _Mode.FAST)], frozen=True
+)
+_Options = make_dataclass(
+    "_Options",
+    [
+        ("percentile", Optional[tuple[float, float]], None),
+        ("window", _Window, _Window()),
+        ("sharpen", float, 0.0),
+    ],
+    frozen=True,
+)
+
+
+def test_authoring_values_are_decoded_to_the_types_the_signature_declares() -> None:
+    def process(
+        image,
+        untyped=None,
+        options: _Options = _Options(),
+        channels: tuple[int, int] = (0, 0),
+        weights: Optional[Path] = None,
+        scales: Optional[tuple[float, ...]] = None,
+        gain: float = 1.0,
+    ):
+        return image
+
+    decode = CallableContract.from_callable(process).decode_public_kwargs
+    assert decode(
+        {
+            "options": {
+                "percentile": [2, 98.0],
+                "window": {"size": 5, "mode": "fast"},
+            },
+            "channels": [1, 2],
+            "weights": "/models/nuclei",
+            "scales": [1, 2.5],
+            "gain": 2,
+            "untyped": {"left": [1]},
+        }
+    ) == {
+        "options": _Options(percentile=(2.0, 98.0), window=_Window(5, _Mode.FAST)),
+        "channels": (1, 2),
+        "weights": Path("/models/nuclei"),
+        "scales": (1.0, 2.5),
+        "gain": 2.0,
+        "untyped": {"left": [1]},
+    }
+    typed = {"options": _Options(sharpen=1.0), "channels": (1, 2), "weights": None}
+    assert decode(typed) == typed
+    with pytest.raises(ValueError, match="undeclared field.*blur"):
+        decode({"options": {"blur": 1}})
+    with pytest.raises(TypeError, match=r"process\.channels\[1\] must be int"):
+        decode({"channels": [1, "two"]})
+    with pytest.raises(ValueError, match="process.channels must contain 2"):
+        decode({"channels": [1]})
 
 
 @pytest.mark.parametrize("slice_by_slice", [False, True])
