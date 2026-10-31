@@ -4,6 +4,8 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 
 from __future__ import annotations
+
+from objectstate.declarations import ConfigurationRebuild
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
@@ -4693,7 +4695,7 @@ _TIFF_STACK_SLICE_METADATA = TiffStackSliceMetadataAuthority()
 
 
 @dataclass(init=False)
-class MaterializationSpec(ArtifactMaterializationPayload):
+class MaterializationSpec(ArtifactMaterializationPayload, ConfigurationRebuild):
     """Declarative materialization spec.
 
     The spec is a list of *writer options* objects. Writer dispatch is inferred
@@ -4744,7 +4746,7 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         self.write_mode = write_mode
 
     @classmethod
-    def __objectstate_rebuild__(
+    def from_fields(
         cls,
         *,
         outputs: tuple[FileOutputOptions, ...],

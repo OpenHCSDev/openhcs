@@ -1,3 +1,5 @@
+from objectstate.declarations import ValueDeclaration
+from python_introspect import resolve_optional, resolve_annotated
 """
 Step Parameter Editor Widget for PyQt6 GUI.
 
@@ -179,7 +181,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
 
         # Get current parameter values from ObjectState, the editor model.
         parameter_types = {}
-        self._step_level_configs = {}
 
         for name, info in param_info.items():
             # All AbstractStep parameters are relevant for editing
@@ -189,18 +190,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
                     f"ObjectState for scope_id={self.scope_id} is missing "
                     f"step parameter {name!r}"
                 )
-            current_value = state_values[name]
-
-            # CRITICAL FIX: For lazy dataclass parameters, leave current_value as None
-            # This allows the UI to show placeholders and use lazy resolution properly
-            if current_value is None and self._is_optional_lazy_dataclass_in_pipeline(
-                info.param_type, name
-            ):
-                # Don't create concrete instances - leave as None for placeholder resolution
-                # The UI will handle lazy resolution and show appropriate placeholders
-                # Mark this as a step-level config for special handling
-                self._step_level_configs[name] = True
-
             parameter_types[name] = info.param_type
 
         # Track dataclass-backed parameters for the hierarchy tree
@@ -298,85 +287,15 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
                 inventory=inventory,
             )
 
-    def _is_optional_lazy_dataclass_in_pipeline(self, param_type, param_name):
-        """
-        Check if parameter is an optional lazy dataclass that exists in PipelineConfig.
 
-        This enables automatic step-level config creation for any parameter that:
-        1. Is Optional[SomeDataclass]
-        2. SomeDataclass exists as a field type in PipelineConfig (type-based matching)
-        3. The dataclass has lazy resolution capabilities
-
-        No manual mappings needed - uses type-based discovery.
-        """
-
-        # Check if parameter is Optional[dataclass]
-        if not ParameterTypeUtils.is_optional_dataclass(param_type):
-            return False
-
-        # Get the inner dataclass type
-        inner_type = ParameterTypeUtils.get_optional_inner_type(param_type)
-
-        # Find if this type exists as a field in PipelineConfig (type-based matching)
-        pipeline_field_name = self._find_pipeline_field_by_type(inner_type)
-        if not pipeline_field_name:
-            return False
-
-        # Check if the dataclass has lazy resolution capabilities
-        try:
-            test_instance = inner_type()
-        except Exception:
-            return False
-
-        instance_members = set(dir(test_instance))
-        return {
-            "_resolve_field_value",
-            "_lazy_resolution_config",
-        }.issubset(instance_members)
-
-    def _find_pipeline_field_by_type(self, target_type):
-        """
-        Find the field in PipelineConfig that matches the target type.
-
-        This is type-based discovery - no manual mappings needed.
-        """
-        for field in dataclasses.fields(PipelineConfig):
-            # Use string comparison to handle type identity issues
-            if str(field.type) == str(target_type):
-                return field.name
-        return None
 
     def _collect_dataclass_parameters(self, parameter_types):
-        """Return dataclass-based parameters for building the hierarchy tree."""
-        dataclass_params = {}
-        for field_name, param_type in parameter_types.items():
-            obj_type = self._extract_dataclass_from_param_type(param_type)
-            if obj_type is not None:
-                dataclass_params[field_name] = obj_type
+        declarations = {}
+        for name, annotation in parameter_types.items():
+            for owner in ValueDeclaration.of(resolve_optional(resolve_annotated(annotation))).configuration_owners():
+                declarations[name] = owner.declaring_type
+        return declarations
 
-        return dataclass_params
-
-    def _extract_dataclass_from_param_type(self, param_type):
-        """Resolve the concrete dataclass type from the annotated parameter."""
-        resolved_type = param_type
-
-        try:
-            origin = get_origin(param_type)
-        except Exception:
-            origin = None
-
-        if origin is Union:
-            args = [arg for arg in get_args(param_type) if arg is not type(None)]
-            if len(args) == 1:
-                resolved_type = args[0]
-
-        if resolved_type is None or isinstance(resolved_type, str):
-            return None
-
-        if dataclasses.is_dataclass(resolved_type):
-            return resolved_type
-
-        return None
 
     def _create_configuration_tree(self) -> Optional[QTreeWidget]:
         """Create and populate the configuration hierarchy tree."""

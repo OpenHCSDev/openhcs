@@ -23,7 +23,8 @@ from typing import (
 )
 
 from metaclass_registry import AutoRegisterMeta
-from objectstate import get_base_type_for_lazy
+from objectstate.declarations import InheritedDefault
+from objectstate.ui_visibility import UIParameterVisibilityPolicy
 from formbridge.services.parameter_help_service import (
     class_docstring_text,
     dataclass_parameter_descriptions,
@@ -64,6 +65,7 @@ from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import AxisFamily, GroupingDeclaration
+from python_introspect import resolve_declared_type
 
 AgentConfig: TypeAlias = GlobalPipelineConfig | PipelineConfig
 
@@ -811,8 +813,8 @@ def _schema_for_field(
     source_type = lazy_base or field_type
     nested_types = _nested_dataclass_types(field_type)
     ui_hidden = False
-    if "ui_hidden" in field.metadata:
-        ui_hidden = bool(field.metadata["ui_hidden"])
+    if UIParameterVisibilityPolicy in field.metadata:
+        ui_hidden = UIParameterVisibilityPolicy.field_hidden(field)
     default_repr, default_origin = _default_schema(field)
     return ConfigFieldSchema(
         path=field.name if field_path is None else field_path,
@@ -832,8 +834,7 @@ def _schema_for_field(
         lazy=lazy_base is not None,
         inheritable=(
             inheritable
-            or "_inherited_default" in field.metadata
-            or "_inherited_default_factory" in field.metadata
+            or InheritedDefault in field.metadata
         ),
         declaring_type=_type_repr(_field_declaring_type(declaring_cls, field.name)),
         default_origin=default_origin,
@@ -948,7 +949,8 @@ def _selected_config_type_schemas(
 def _lazy_base_type(field_type) -> type | None:
     if not isinstance(field_type, type):
         return None
-    return get_base_type_for_lazy(field_type)
+    base_type = resolve_declared_type(field_type)
+    return base_type if base_type is not field_type else None
 
 
 def _type_repr(field_type) -> str:
@@ -958,12 +960,9 @@ def _type_repr(field_type) -> str:
 
 
 def _default_schema(field) -> tuple[str | None, str | None]:
-    inherited_default = field.metadata.get("_inherited_default", MISSING)
-    inherited_factory = field.metadata.get("_inherited_default_factory", MISSING)
-    if inherited_default is not MISSING:
-        return _default_value_repr(inherited_default), "inherited_default"
-    if inherited_factory is not MISSING:
-        return _factory_default_repr(inherited_factory), "inherited_factory"
+    if InheritedDefault in field.metadata:
+        inherited = field.metadata[InheritedDefault]
+        return _default_value_repr(inherited.value()), inherited.schema_origin
     if field.default is not MISSING:
         return _default_value_repr(field.default), "field_default"
     if field.default_factory is not MISSING:
@@ -998,7 +997,6 @@ def _parameter_default_repr(parameter: inspect.Parameter) -> str | None:
 
 def _field_declaring_type(cls: type, field_name: str) -> type:
     source_cls = _lazy_base_type(cls) or cls
-    inherited_metadata = frozenset(("_inherited_default", "_inherited_default_factory"))
     fallback = source_cls
     for candidate in source_cls.__mro__:
         if field_name not in candidate.__dict__.get("__annotations__", {}):
@@ -1012,7 +1010,7 @@ def _field_declaring_type(cls: type, field_name: str) -> type:
         )
         if candidate_field is None:
             continue
-        if not inherited_metadata.intersection(candidate_field.metadata):
+        if InheritedDefault not in candidate_field.metadata:
             return candidate
     return fallback
 
