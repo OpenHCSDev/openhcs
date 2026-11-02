@@ -367,8 +367,8 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         for path in sources:
             sheet.source(ROOT / path)
         axes = [sheet.plot_axes(bounds) for bounds in (
-            (0.12, 0.84, 0.19, 0.12),
-            (0.43, 0.84, 0.20, 0.12), (0.77, 0.84, 0.20, 0.12),
+            (0.12, 0.845, 0.19, 0.115),
+            (0.43, 0.845, 0.20, 0.115), (0.77, 0.845, 0.20, 0.115),
         )]
         titles = ("A  Nuclear detection", "B  Cell boundaries", "C  3D localisation")
         for axis, title in zip(axes, titles, strict=True):
