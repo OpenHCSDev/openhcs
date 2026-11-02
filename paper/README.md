@@ -94,7 +94,7 @@ treatment responses from three independent blind agents with a separate
 laboratory neurite demonstration (Figure 5); and quantitative endpoints followed
 by bright-object, nuclear, retinal and three-dimensional body repairs (Figure 6).
 Table 1 distinguishes development access, comparison populations, references and metrics for the main agent results. Supp. Table 5 retains the timing boundaries moved out of the main text. Supp. Table 4 retains the complete 27-row task/model/protocol mapping; principal assay findings remain in their Results subsections and figures.
-Full trial results and reference types are retained in Supplementary Data 8, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 6G places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
+Full trial results and reference types are retained in Supplementary Data 8, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 6F places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
 Measurement definitions precede the neurite plots; nuclear-error observations
