@@ -389,10 +389,6 @@ class AcquisitionImageView(FrozenImageView):
         self.pixel_aspect = y / x
         super().__init__(sheet, declaration, view_index)
 
-    def scale_bar_length(self, width_px):
-        """Keep the native-pixel bar geometry; label its physical length."""
-        return self.rounded_bar_length(width_px) * self.units_per_pixel
-
 
 class FrozenNeuriteView(ROIImageView, LabelImageView):
     """Retained cell-body labels plus their authoritative graph paths."""

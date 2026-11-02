@@ -208,7 +208,7 @@ class FigureSheet:
         self.source_image(path, bounds, crop=crop)
 
     def native_image(self, name, bounds, *, crop=None, response_path=("response",),
-                     provenance_path=None):
+                     provenance_path=None, invert=False):
         """Use an unmodified screenshot checked against its native MCP receipt."""
         path = OUTPUT / f"{name}.png"
         record_path = provenance_path or OUTPUT / f"{name}_provenance.json"
@@ -221,7 +221,7 @@ class FigureSheet:
         if not record["captured"] or digest(path) != record["resource"]["sha256"]:
             raise ValueError(f"Native screenshot hash mismatch: {name}")
         self.source(record_path)
-        self.source_image(path, bounds, crop=crop)
+        self.source_image(path, bounds, crop=crop, invert=invert)
 
     def source_image(self, path, bounds, *, crop=None, invert=False):
         """Place retained pixels and record any editorial detail crop."""
@@ -779,21 +779,22 @@ def personal_stitched_development():
 
 
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
-    """Keep the principal drug-response results and separate laboratory tracing."""
+    """Pair drug-response curves with a frozen field from the same blind cohort."""
     from build_slas_neurite_effects import NeuriteEffectFigure
     from build_slas_neurite_views import AcquisitionNeuriteView
 
     sheet = FigureSheet("submission_neurite_results", "", 7.1, input_root=input_root)
-    sheet.source(OUTPUT / "p001_fresh13_sources/source-record.rst")
-    sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
+    sheet.source(OUTPUT / "blind_neurite_sources/source-receipt.json")
+    sheet.source(OUTPUT / "blind_neurite_sources/final-freeze.json")
     views_path = OUTPUT / "frozen_neurite_views.json"
     sheet.source(views_path)
-    laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["laboratory"])
+    laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
     NeuriteEffectFigure.draw_panels(
         sheet, NeuriteEffectFigure.cohort_tables(
             sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
         metrics=("mean_outgrowth",), bounds=(3, 48, 94, 49), start_letter="A",
     )
+    sheet.text(3, 44.5, "Analysis 1 · A02, site 2", size=11, weight="bold")
     laboratory_view.draw_columns((3, 1, 94, 36), 41, (
         ("C  Raw", laboratory_view.draw_raw),
         ("D  Labels and paths", laboratory_view.draw_result),
@@ -897,8 +898,8 @@ def submission_autonomous_loop():
 
 
 def submission_shared_workflow():
-    """Show the full-width native application once, with region outlines."""
-    folder = OUTPUT / "figure1_two_plate_native_20261007"
+    """Show three readable detail crops from one genuine native workspace."""
+    folder = OUTPUT / "figure1_three_region_native_20261102"
     evidence_path = folder / "capture_evidence.json"
     evidence = json.loads(evidence_path.read_text())
     capture = folder / Path(evidence["selected_png"]).name
@@ -906,31 +907,25 @@ def submission_shared_workflow():
         width_px, height_px = pixels.size
     _, _, logical_width, logical_height = evidence["logical_window_xywh"]
     sx, sy = width_px / logical_width, height_px / logical_height
-    workspace_top = min(evidence["boxes_xywh"][region][1]
-                        for region in ("plate_manager", "pipeline_editor"))
-    crop = (0, round(workspace_top * sy), width_px, height_px)
-    sheet = FigureSheet("submission_shared_workflow", "",
-                        9 * (crop[3] - crop[1]) / width_px / .94)
-    sheet.panel("A", "Select images, edit the analysis and follow its progress", 1, 97)
+    sheet = FigureSheet("submission_shared_workflow", "", 3.4)
+    sheet.panel("A", "Select images, edit the analysis and follow its progress", 1, 93)
     sheet.source(evidence_path)
-    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
-                       (0, 0, 100, 94), response_path=(), crop=crop,
-                       provenance_path=folder / evidence["selected_capture"])
-    window = sheet.figure.axes[-1]
-    # Derive native-pixel outlines from the recorded Qt logical rectangles.
-    for region in ("plate_manager", "pipeline_editor", "zmq_servers"):
+    details = (
+        ("plate_manager", "Input collections", (0, 50, 58, 30), 650, 130, (0, 85)),
+        ("pipeline_editor", "Analysis steps", (61, 5, 39, 75), 526, 340, (61, 85)),
+        ("zmq_servers", "Execution connections", (0, 5, 58, 30), 800, 140, (0, 38)),
+    )
+    for region, label, bounds, detail_width, detail_height, heading in details:
         x, y, width, height = evidence["boxes_xywh"][region]
-        x, width, y, height = x * sx, width * sx, y * sy - crop[1], height * sy
-        window.add_patch(Rectangle((x, y), width, height, fill=False,
-                                   edgecolor=BLUE, linewidth=2))
-        label = {"plate_manager": "Select a plate",
-                 "pipeline_editor": "Edit analysis steps and settings",
-                 "zmq_servers": "Check execution status"}[region]
-        window.text(x + width - 12 if region == "zmq_servers" else x + 10,
-                    y + height - 100, label, fontsize=11,
-                    color=BLUE, weight="bold", va="bottom",
-                    ha="right" if region == "zmq_servers" else "left",
-                    bbox={"facecolor": "white", "edgecolor": BLUE, "pad": 3})
+        crop = (round(x * sx), round(y * sy), round((x + min(width, detail_width)) * sx),
+                round((y + min(height, detail_height)) * sy))
+        sheet.text(*heading, label, size=11, weight="bold", color=BLUE)
+        sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
+                           bounds, response_path=(), crop=crop,
+                           provenance_path=folder / evidence["selected_capture"])
+        sheet.figure.axes[-1].add_patch(Rectangle(
+            (0, 0), crop[2] - crop[0] - 1, crop[3] - crop[1] - 1,
+            fill=False, edgecolor=BLUE, linewidth=2))
     sheet.save(dpi=600)
 
 

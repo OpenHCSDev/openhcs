@@ -56,10 +56,10 @@ Laboratories can extend an analysis without maintaining a separate plugin packag
 
 ### Figure 1. Graphical controls and Python edit the same analysis
 
-![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
+![Three detail crops from one native workspace show two public example datasets, nine analysis steps and execution connections.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** OpenHCS brings input selection, analysis editing and execution status into one workspace, shown here with the ExampleHuman and ExampleFly image folders and a nine-step ExampleHuman analysis. The Plate Manager at left lists input collections and their analyses. The Pipeline Editor at right lists object-detection, measurement and export steps in execution order, with their settings available for editing. The lower-left server panel reports execution-server and desktop-connection status. Blue outlines identify these three regions; annotations indicate their roles. Scientists can prepare and follow the analysis from this window.
+**(A)** Three detail crops from the same native workspace show input selection, analysis editing and execution connections. The Plate Manager at left lists the public ExampleHuman and ExampleFly image collections. The Pipeline Editor at right shows the nine-step ExampleHuman analysis, imported through the native CellProfiler reader, with object-detection, measurement and export steps in execution order. The lower-left panel reports server and desktop-connection status. Blue outlines mark the three crops; the native green borders mark configuration scopes, not image-analysis results. This authoring-only capture used a larger interface font with full paths and configuration previews hidden; no image analysis was executed.
 :::
 
 ### Execution and viewers
@@ -81,7 +81,7 @@ These shared interfaces let saved and displayed results retain their source coor
 ![Real Python definition and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(B)** A laboratory-specific Python function is available through graphical controls, editable code and the agent interface. The function definition specifies its parameters; the docstring describes their meaning. OpenHCS uses this information to generate the parameter controls and descriptions available to an agent. The graphical form and Python views both show gain 1.2 and offset 0.0 for the same function. Parameter changes between the graphical and Python views are documented separately in Supp. Data 5. Scientists can therefore use either view while agents work with the same analysis, rather than maintaining separate graphical and scripted interfaces.
+**(B)** A laboratory-specific Python function is available through graphical controls, editable code and the agent interface. The function definition specifies its parameters; the docstring describes their meaning. OpenHCS uses this information to generate the parameter controls and descriptions available to an agent. The graphical form and Python views both show gain 1.2 and offset 0.0 for the same function. The Python view uses enlarged type and a two-line import; screenshot colours are inverted for print readability. Parameter changes between the graphical and Python views are documented separately in Supp. Data 5. Scientists can therefore use either view while agents work with the same analysis, rather than maintaining separate graphical and scripted interfaces.
 :::
 
 ### Agent access through MCP
@@ -205,10 +205,10 @@ All three analyses found increased mean outgrowth per cell and total outgrowth a
 
 ### Figure 5. Three independent agents recover both neurite outgrowth responses
 
-![Drug responses from three independent blind agents, followed by a separate laboratory neurite tracing demonstration.](figures/slas/submission_neurite_results.png){width=6.5in}
+![Drug responses from three independent blind agents and a matched raw, detection and overlay field from analysis 1.](figures/slas/submission_neurite_results.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A–B)** Mean neurite outgrowth per cell after treatment with fusicoccin-A (FC-A) or Y27632. Three independent blind agents and MetaXpress analysed the same 180 fields from 20 wells; analyses 1–3 identify independent agent runs. OpenHCS well values are unweighted means of nine fields. Each drug curve is normalized to the mean of its two zero-dose DMSO wells; 1 denotes no change from vehicle. Dots are two technical wells per dose for each method; whiskers show sample standard deviation (SD) among those wells, excluding uncertainty in the control mean. **(C⁠–⁠E)** A laboratory field shown as a raw image, detected cell bodies and neurites, and an overlay on the raw image. This separate nine-field autonomous analysis is not one of the three drug-response analyses in A–B. Scale bars in C–E are 271 µm (200 pixels at the recorded acquisition scale). Supp. Figure 5 shows additional measurements and the scientist-assisted comparison; Supp. Data 4 contains the separate public-image comparison.
+**(A–B)** Mean neurite outgrowth per cell after treatment with fusicoccin-A (FC-A) or Y27632. Three independent blind agents and MetaXpress analysed the same 180 fields from 20 wells; analyses 1–3 identify independent agent runs. OpenHCS well values are unweighted means of nine fields. Each drug curve is normalized to the mean of its two zero-dose DMSO wells; 1 denotes no change from vehicle. Dots are two technical wells per dose for each method; whiskers show sample standard deviation (SD) among those wells, excluding uncertainty in the control mean. **(C⁠–⁠E)** Coded well A02, site 2, from drug-response analysis 1 in A–B: calcein/FITC raw image, saved cell-body detections and neurite paths, and their overlay. Colours identify algorithm-assigned cells and arbors. Scale bars, 200 µm, using the recorded 1.3556 µm/pixel acquisition scale. Supp. Figure 5 shows additional measurements and the scientist-assisted comparison; Supp. Data 4 contains the separate public-image comparison.
 :::
 
 #### An agent-developed translocation analysis separates assay controls

@@ -1,7 +1,7 @@
 """Show one actual custom declaration reaching the selector, form and MCP.
 
-Requires native captures and registration/detail receipts from the same isolated
-authoring session. This illustration does not execute an image-analysis job.
+Uses native captures and registration/detail receipts tied to the same function
+and settings. This illustration does not execute an image-analysis job.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from pathlib import Path
 import textwrap
 import tokenize
 
+from PIL import Image
 from matplotlib.patches import Rectangle
 from matplotlib.font_manager import FontProperties
 from matplotlib.textpath import TextPath
@@ -141,8 +142,10 @@ def extension(*, main_panel=False):
         descriptions = [line.strip() for line in doc
                         if line.strip().startswith(("gain:", "offset:"))]
         quoted = [doc[0], "", *descriptions]
-        doc_excerpt = "\n".join(textwrap.fill(line, width=34) if line else "" for line in quoted)
-        excerpt = ("\n".join(ast.unparse(node) for node in imports) + "\n\n" + decorator + "\n"
+        doc_excerpt = "\n".join(textwrap.fill(line, width=28) if line else "" for line in quoted)
+        display_imports = "\n".join(ast.unparse(node).replace(" import ", " \\\n    import ", 1)
+                                    for node in imports)
+        excerpt = (display_imports + "\n\n" + decorator + "\n"
                    + signature + '\n    """' + doc_excerpt.replace("\n", "\n    ")
                    + '\n    """\n    ' + ast.unparse(function.body[-1]))
     for path in (
@@ -202,29 +205,41 @@ def extension(*, main_panel=False):
         sheet.text(11, 96, "Add a laboratory function; edit its settings in a form or Python", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
-        sheet.axis.add_patch(Rectangle((3, 24), 44, 65, color=PALE))
+        sheet.axis.add_patch(Rectangle((3, 5), 44, 84, color=PALE))
         sheet.text(5, 90, "Define the function in Python", size=12, weight="bold")
-        python_excerpt(sheet, 5, 85, excerpt)
-        sheet.text(5, 26, "Documentation from the function definition", size=8.5, color=MUTED)
+        python_excerpt(sheet, 5, 85, excerpt, size=12.5)
+        sheet.text(5, 8, "Documentation from the function definition", size=8.5, color=MUTED)
         sheet.arrow((48, 70), (52, 70), color=BLUE)
         sheet.text(50, 78, "Register", size=8, ha="center", rotation=90)
         sheet.text(53, 87, "Adjust settings in a generated form", size=11, weight="bold")
         sheet.native_image("custom_extension_live_parameters_capture",
                            (53, 57, 44, 26), crop=(20, 113, 310, 224), response_path=())
-        sheet.text(53, 54, "The same function and parameters", size=10, color=MUTED)
-        sheet.text(53, 49, "Or edit the same settings in Python", size=11, weight="bold")
-        sheet.native_image("custom_extension_live_code_capture", (53, 25, 44, 23.3),
-                           crop=(70, 38, 530, 194), response_path=())
-        sheet.text(53, 23, "Native form and code • OpenHCS 0.8.7", size=9, color=PURPLE)
-        sheet.text(3, 20, "Agents receive the same parameter descriptions", size=11, weight="bold")
-        for index, name in enumerate(parameter_names):
-            parameter = parameters[name]
-            x = 3 + index * 48
-            sheet.text(x, 14, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
-                       size=10, family="DejaVu Sans Mono", color=TEAL)
-            sheet.text(x, 10, parameter["description"], size=10, color=MUTED)
-        sheet.text(50, 4, "One function definition supplies the controls, editable Python and agent descriptions",
-                   size=11, ha="center", color=MUTED)
+        sheet.text(53, 53, "Or edit the same settings in Python", size=11, weight="bold")
+        code_folder = OUTPUT / "figure1_large_code_native_20261102"
+        code_evidence_path = code_folder / "capture_evidence.json"
+        code_evidence = json.loads(code_evidence_path.read_text())
+        if code_evidence["function_source"] != source_path.read_text():
+            raise ValueError("Recaptured code uses a different function declaration")
+        visible_tree = ast.parse(code_evidence["code_source"])
+        visible_pattern = next(node.value for node in visible_tree.body
+                               if isinstance(node, ast.Assign)
+                               and any(isinstance(target, ast.Name) and target.id == "pattern"
+                                       for target in node.targets))
+        visible_parameters = ast.literal_eval(visible_pattern.elts[0].elts[1])
+        if any(visible_parameters[name] != value for name, value in source_defaults.items()):
+            raise ValueError("Recaptured code parameters differ from the shown declaration")
+        code_capture = code_folder / Path(code_evidence["selected_png"]).name
+        with Image.open(code_capture) as pixels:
+            native_width, native_height = pixels.size
+        _, _, logical_width, logical_height = code_evidence["logical_window_xywh"]
+        x, y, width, height = code_evidence["code_editor_xywh"]
+        crop = (round(x * native_width / logical_width), round(y * native_height / logical_height),
+                round((x + width) * native_width / logical_width),
+                round((y + height) * native_height / logical_height))
+        sheet.source(code_evidence_path)
+        sheet.native_image(str(code_capture.relative_to(OUTPUT).with_suffix("")),
+                           (53, 5, 44, 46), crop=crop, response_path=(), invert=True,
+                           provenance_path=code_folder / code_evidence["selected_capture"])
         sheet.save()
         return
 

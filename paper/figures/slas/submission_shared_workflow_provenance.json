@@ -1,30 +1,57 @@
 {
-  "generator_sha256": "ef8896d6ea6e86f5c6ebbe866878ace2b21368970face535665edf584a78f3f9",
+  "generator_sha256": "26e3929425ef29d5562fc06f8a016a3185d6c785d15ca70f0c17090c29ac15aa",
   "source_sha256": {
-    "paper/figures/slas/figure1_two_plate_native_20261007/capture_evidence.json": "9f54c25f8ee8b4b1edea8692d03d79d3e91ce10b4c5def6601c6ba8915cec225",
-    "paper/figures/slas/figure1_two_plate_native_20261007/main_window_nine_steps_capture_provenance.json": "0af4a4ecf703e3178ed684039305ef25e0113e62097bfdf55ac96f5325af112c",
-    "paper/figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png": "2fbe702f80835fcc10649759cb28a26f96a728440279890bfc5cacee95c8df10"
+    "paper/figures/slas/figure1_three_region_native_20261102/capture_evidence.json": "63eaaf7fdd72ff0f93b805097e33297300fba0e54370f5fea4661820179c570d",
+    "paper/figures/slas/figure1_three_region_native_20261102/main_window_capture_provenance.json": "96b7ba76c353f8e66cd36597efb3d67b3fb283bcce8d8ff30dc1d06d87b98f79",
+    "paper/figures/slas/figure1_three_region_native_20261102/20261102T215510182216Z_main_window_OpenHCS.png": "9de203166cd82b63be7c393825995f9750e3bbbf9d73a4c94431b652933a2958"
   },
+  "input_root": "/",
   "ui_crops": [
     {
-      "source": "paper/figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png",
+      "source": "paper/figures/slas/figure1_three_region_native_20261102/20261102T215510182216Z_main_window_OpenHCS.png",
       "xyxy_pixels": [
         0,
-        398,
-        2048,
-        1536
+        554,
+        1300,
+        814
       ],
       "source_size": [
-        2048,
-        1536
+        3200,
+        2300
+      ]
+    },
+    {
+      "source": "paper/figures/slas/figure1_three_region_native_20261102/20261102T215510182216Z_main_window_OpenHCS.png",
+      "xyxy_pixels": [
+        2148,
+        554,
+        3200,
+        1234
+      ],
+      "source_size": [
+        3200,
+        2300
+      ]
+    },
+    {
+      "source": "paper/figures/slas/figure1_three_region_native_20261102/20261102T215510182216Z_main_window_OpenHCS.png",
+      "xyxy_pixels": [
+        0,
+        1702,
+        1600,
+        1982
+      ],
+      "source_size": [
+        3200,
+        2300
       ]
     }
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_shared_workflow.png": "57ec336524f62d9ffa3a937ac41084974aff865a76652649fd32bd392df7e164",
-    "submission_shared_workflow.pdf": "b9f46b1f8dfdc0c6f80f29fa24317993cff085f507c4054ab9cb5940261cbeb5",
-    "submission_shared_workflow.svg": "0a5f8c403b4e8b575562400c8b1c0a7c259800b944464e1c16a2ff82dde0bdca"
+    "submission_shared_workflow.png": "867816ee3e1ec6254bfec4afb281d561069761fc27a0c4ddd114b0858ddddb81",
+    "submission_shared_workflow.pdf": "8f61a9d587eb8d9145aec0cc720ecefb688dd3684ba339a4c87205d74fe8113a",
+    "submission_shared_workflow.svg": "e9a577aec83da324986a3c529bae3e05efe2bce1d671ebe354e80f6201149374"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

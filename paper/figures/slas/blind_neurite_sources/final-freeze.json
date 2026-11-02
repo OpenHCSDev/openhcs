@@ -1,0 +1,17 @@
+{
+  "manifest_path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/payload-manifest.json",
+  "manifest_sha256": "3768f5566ccddc8080aa610038d2fb14c6f21581e6180c0211f67d6489243bd5",
+  "payload_files": 6329,
+  "payload_bytes": 2768193850,
+  "author_records": 322,
+  "final_attempted_source": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/sources/candidate03.py",
+  "final_attempted_source_sha256": "a4ab6b8b5504a7d7dd0c3f3cd8461b4a8b9a443132997dab0439e5047a8e83a4",
+  "journal_prefix": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/runtime/mcp.stdout",
+    "prefix_bytes": 5147181,
+    "sha256": "b5e3ca422651d98b710fe64c6bf5ae903e8062a2a575da19c0564ca5b543091e"
+  },
+  "evaluator_access": false,
+  "frozen_at_utc": "2026-10-09T03:19:44.135777+00:00",
+  "disposition": "Conditional acceptance for descriptive detected-soma, owned-arbor and qualified branch estimates; abstention from exhaustive census, complete biological arbors and unique crossing ownership."
+}

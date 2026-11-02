@@ -1,0 +1,56 @@
+{
+  "author_run": "P001_GRAPHICAL_114",
+  "analysis_label": "Blind 1",
+  "field": {
+    "well": "A02",
+    "site": 2,
+    "channel": 2,
+    "z": 1,
+    "time": 1
+  },
+  "selection": "An already reviewed validation field, explicitly discussed with remaining omissions in the original report; no image selection by treatment effect.",
+  "final_freeze_sha256": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
+  "original_payload_manifest": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/payload-manifest.json",
+    "sha256": "3768f5566ccddc8080aa610038d2fb14c6f21581e6180c0211f67d6489243bd5"
+  },
+  "selected_source_sha256": "a4ab6b8b5504a7d7dd0c3f3cd8461b4a8b9a443132997dab0439e5047a8e83a4",
+  "original_files": {
+    "raw": {
+      "path": "/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/validation-input/A02_s002_w2_z001_t001.tif",
+      "size_bytes": 2104064,
+      "sha256": "4018eb5cbccb8565c4e09fc732626fb4a332bf8d1d00e9f05f7b38cd79a9bd45"
+    },
+    "bodies": {
+      "path": "/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/candidate03/validation-input_openhcs/results/A02_site-2_z_index-1_timepoint-1_cell_bodies_step0.labels.tif",
+      "size_bytes": 35692,
+      "sha256": "c2ae3e215f2354747e34449cdddf4817fe97941228e8e4ec3c78d922d475b2dd"
+    },
+    "paths": {
+      "path": "/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/candidate03/validation-input_openhcs/results/A02_s002_w2_z001_t001_neurite_morphology_step0.graph.roi.zip",
+      "size_bytes": 1281937,
+      "sha256": "190c29fde4233a5e28eb34751912f39a0d7d92f864c699649292ad32053a1ab5"
+    }
+  },
+  "original_review": {
+    "path": "/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/qa/validation-whole/A02/20261009T023134703491Z_napari_6071_OpenHCS_Napari_Visualization.png",
+    "sha256": "89dd6a8ff300dbf2127972e04faaa309234edcecfd8d0f483a5f5a109b84d2b2",
+    "snapshot_event": 196,
+    "evidence_index": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/validation-complete-qa-index.json",
+    "view": "FITC raw p0-95",
+    "review": "opened personally",
+    "control_evidence": "Original intervening applied controls and snapshot receipts in retained journals; historical state alone is not capture visibility proof."
+  },
+  "display": {
+    "raw_window": [
+      72.0,
+      2140.0
+    ],
+    "window_basis": "Original FITC raw p0-95 review setting, applied to the unchanged plane",
+    "raw_cmap": "gray_r",
+    "gamma": 1,
+    "overlay_opacity": 0.75,
+    "scale_bar": "Round physical length from the existing calibrated FrozenImageView owner"
+  },
+  "analysis_rerun": false
+}
