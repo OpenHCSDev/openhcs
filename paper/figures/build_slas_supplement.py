@@ -51,7 +51,7 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.text(3, 33.3, "G  Retinal repair", size=14, weight="bold")
+        self.text(3, 33.3, "F  Retinal repair", size=14, weight="bold")
         for column, (heading, left) in enumerate((
             ("Raw", 3), ("First result", 34.96), ("Final result", 66.92),
         )):
@@ -59,7 +59,7 @@ class VolumeResultsFigure(SupplementFigure):
             self.text(x, 31, heading, size=self.plot_font_size, weight="bold")
             self.artwork("retina_fresh16_repair", (x, 17.3, 30.7, 13.2),
                          crop=(left, 22.2, left + 30.08, 45.8))
-        self.text(3, 12, "H  3D body separation", size=14, weight="bold")
+        self.text(3, 12, "G  3D body separation", size=14, weight="bold")
         self.text(3, 9.5, "Z = 36 voxels", size=self.plot_font_size)
         for column, (heading, crop) in enumerate((
             ("Raw", (16, 14.8, 35, 47.2)),
@@ -139,6 +139,33 @@ def final_volume_views(*, input_root=FigureSheet.default_input_root):
     sheet.save()
 
 
+def localisation_diagnostic():
+    """Move the original partial-reference curve out of the main comparison."""
+    from build_slas_visual_story import MUTED, TEAL
+
+    sheet = SupplementFigure("supp_localisation_diagnostic", 3.3)
+    source = OUTPUT.parents[1] / "supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
+    sheet.source(source)
+    evaluation = json.loads(source.read_text())
+    scores = evaluation["scores"]
+    thresholds = sorted(map(int, scores))
+    errors = [scores[str(threshold)]["mean_localisation_error_voxels"] for threshold in thresholds]
+    sheet.heading("P  Nuclear localisation: a partial-reference diagnostic", 98)
+    axis = sheet.plot_axes((0.17, 0.23, 0.73, 0.55))
+    axis.plot(thresholds, errors, "o-", color=TEAL)
+    for threshold, error in zip(thresholds, errors, strict=True):
+        axis.annotate(f"{scores[str(threshold)]['true_positives']} matches", (threshold, error),
+                      xytext=(0, 10), textcoords="offset points", ha="center",
+                      fontsize=sheet.plot_font_size)
+    axis.axvline(evaluation["primary_threshold_voxels"], color=MUTED, linestyle="--", linewidth=0.8)
+    axis.set(xlabel="Matching distance (voxels)", ylabel="Mean centre error (voxels)",
+             ylim=(0, 6.1), xticks=thresholds)
+    axis.spines[["top", "right"]].set_visible(False)
+    axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
+    axis.set_axisbelow(True)
+    sheet.save(dpi=400)
+
+
 def treatment_endpoints():
     """Additional endpoints from the existing well tables, not new analysis."""
     from build_slas_neurite_effects import NeuriteEffectFigure
@@ -208,5 +235,6 @@ if __name__ == "__main__":
     nuclear_instances()
     morphology_checks()
     final_volume_views()
+    localisation_diagnostic()
     treatment_endpoints()
     scaling()

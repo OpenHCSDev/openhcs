@@ -24,13 +24,11 @@ class BenchmarkFigure(FigureSheet):
 
     scope_colors = ("#087e8b", "#c76828")
     summary_color = "#152536"
-    mean_alpha = .20
     publication = OUTPUT / "benchmark-publication"
 
     @property
     def summary_handles(self):
         return (
-            Patch(facecolor=self.summary_color, alpha=self.mean_alpha, label="Mean bars"),
             Line2D([], [], color=self.summary_color, lw=2.1, label="Median lines"),
         )
 
@@ -62,7 +60,7 @@ class BenchmarkFigure(FigureSheet):
 
         self.source(Path(inspect.getfile(SpeedupSummaryStatistics)))
         number_of_workflows = len(groups[0][0])
-        summary_bars = {}
+        summary_lines = {}
         for group_index, pair in enumerate(groups):
             for scope_index, numbers in enumerate(pair):
                 # Fixed workflow offsets reveal the distribution without adding data.
@@ -75,33 +73,29 @@ class BenchmarkFigure(FigureSheet):
                              edgecolors="white", linewidths=.35, zorder=3)
                 summary = SpeedupSummaryStatistics.from_series(
                     SpeedupDistributionSeries(labels[group_index], tuple(numbers)))
-                half_bar_width = .40 / len(pair)
-                bar = axis.bar(group_index + offset, summary.mean - 1, bottom=1,
-                               width=2 * half_bar_width, color=self.scope_colors[scope_index], alpha=self.mean_alpha,
-                               edgecolor=self.scope_colors[scope_index], linewidth=.8, zorder=1)[0]
-                summary_bars[bar] = summary
-                axis.plot([group_index + offset - half_bar_width, group_index + offset + half_bar_width],
-                          [summary.median] * 2, color=self.summary_color, lw=2.1, zorder=4)
+                half_width = .40 / len(pair)
+                line, = axis.plot([group_index + offset - half_width, group_index + offset + half_width],
+                                  [summary.median] * 2, color=self.summary_color, lw=2.1, zorder=4)
+                summary_lines[line] = summary
         for row_index, (label, values) in enumerate((
-            ("Min (×)", (summary.minimum for summary in summary_bars.values())),
-            ("Mean (×)", (summary.mean for summary in summary_bars.values())),
-            ("Median (×)", (summary.median for summary in summary_bars.values())),
-            ("Max (×)", (summary.maximum for summary in summary_bars.values())),
+            ("Min (×)", (summary.minimum for summary in summary_lines.values())),
+            ("Median (×)", (summary.median for summary in summary_lines.values())),
+            ("Max (×)", (summary.maximum for summary in summary_lines.values())),
         )):
             y_offset = -5 - row_index * self.plot_font_size * 1.35
             axis.annotate(label, (0, 0), xycoords="axes fraction",
                           xytext=(0, y_offset), textcoords="offset points",
                           ha="right", va="top", fontsize=self.plot_font_size,
                           color=self.summary_color, annotation_clip=False)
-            for bar, value in zip(summary_bars, values):
+            for line, value in zip(summary_lines, values):
                 axis.annotate(f"{value:.1f}",
-                              (bar.get_x() + bar.get_width() / 2, 0),
+                              (float(np.mean(line.get_xdata())), 0),
                               xycoords=axis.get_xaxis_transform(),
                               xytext=(0, y_offset), textcoords="offset points",
                               ha="center", va="top", fontsize=self.plot_font_size,
-                              color=bar.get_facecolor()[:3], annotation_clip=False)
+                              color=line.get_color(), annotation_clip=False)
         axis.set_yscale("log")
-        upper = max(self.limits[1], max(summary.maximum for summary in summary_bars.values()) * 1.15)
+        upper = max(self.limits[1], max(summary.maximum for summary in summary_lines.values()) * 1.15)
         axis.set_ylim(self.limits[0], upper)
         axis.yaxis.set_major_locator(FixedLocator((1, 2, 4, *(
             10 ** power for power in range(1, int(np.ceil(np.log10(upper))) + 1)
@@ -111,7 +105,7 @@ class BenchmarkFigure(FigureSheet):
         axis.axhline(1, color="#a64343", ls="--", lw=1)
         axis.set_xticks(range(len(labels)), labels)
         axis.set_xlim(-.46, len(labels) - .54)
-        axis.tick_params(axis="x", pad=77)
+        axis.tick_params(axis="x", pad=60)
         axis.grid(axis="y", alpha=.2)
         axis.set_axisbelow(True)
         axis.spines[["top", "right"]].set_visible(False)
@@ -154,7 +148,7 @@ def submission_benchmark_schedule() -> None:
     ], loc="lower center", bbox_to_anchor=(.53, .025), ncol=3,
        frameon=False, fontsize=sheet.plot_font_size)
     sheet.display_transforms.append({
-        "operation": "Replot retained fixed-workload speedups with shared publication typography and minimum, arithmetic mean, median and maximum annotations in × units",
+        "operation": "Replot retained fixed-workload speedups with workflow dots, median lines and minimum, median and maximum annotations in × units",
         "analysis_rerun": False,
         "retained_speedups_plotted": len(names) * len(modes),
     })
@@ -219,12 +213,12 @@ def submission_benchmark_summary() -> None:
             startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
     pie.text(0, .09, str(len(coverage_rows)), ha="center", va="center", fontsize=23, weight="bold")
     pie.text(0, -.22, "modules", ha="center", va="center", fontsize=sheet.plot_font_size)
-    for i, label in enumerate(("In 30 workflows", "Individual tests", "Shared code only",
-                                "Import checks only", "No tests")):
-        y = 68.5 - i * 4.1
-        if counts[i]:
-            sheet.axis.plot(4, y, marker="s", color=coverage_colors[i], markersize=8)
-        sheet.text(6, y, f"{label}: {counts[i]}", size=sheet.plot_font_size, va="center")
+    coverage_labels = ("In 30 workflows", "Individual tests", "Shared code only",
+                       "Import checks only", "No tests")
+    for row, i in enumerate(present):
+        y = 68.5 - row * 4.1
+        sheet.axis.plot(4, y, marker="s", color=coverage_colors[i], markersize=8)
+        sheet.text(6, y, f"{coverage_labels[i]}: {counts[i]}", size=sheet.plot_font_size, va="center")
     sheet.text(35, 91, "B", size=14, weight="bold")
     single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
     amortized = []
@@ -274,9 +268,8 @@ def submission_benchmark_summary() -> None:
        title=f"{len(names)} workflows per distribution · OpenHCS medians of 3 runs",
        title_fontsize=sheet.plot_font_size)
     sheet.display_transforms.append({
-        "operation": "Paired workflow dots, translucent bars from 1x to the arithmetic mean, median lines and minimum, arithmetic mean, median and maximum values below each distribution; summary row headers give × units; log axes",
-        "bar_statistic": "arithmetic mean",
-        "bar_baseline": 1.0,
+        "operation": "Paired workflow dots, median lines and minimum, median and maximum values below each distribution; summary row headers give × units; log axes",
+        "summary_statistic": "median",
         "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},
         "workflow_count_per_distribution": len(names),
         "single_worker_batch_policy": claims["amortized_policy"],

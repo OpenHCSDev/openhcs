@@ -843,7 +843,7 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.text(3, 84, "Instructions guide the agent from question to analysis",
+    sheet.text(3, 84, "The agent guide’s procedure: from biological brief to editable analysis",
                size=12, weight="bold")
     stages = (
         (3, 63, "1  Biological brief", "clipboard-list",
@@ -888,8 +888,8 @@ def submission_autonomous_loop():
                        ((83,63),(83,58)), ((69,49.5),(64,49.5)),
                        ((36,49.5),(31,49.5))):
         sheet.arrow(start, end)
-    sheet.route(((50,58),(50,60),(83,60),(83,63)), color=ORANGE, dashed=True)
-    sheet.text(50, 61, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
+    sheet.route(((50,58),(50,60),(67,60),(67,82),(83,82),(83,80)), color=ORANGE, dashed=True)
+    sheet.text(50, 61, "Return to 3: build and run", size=9, ha="center", color=ORANGE)
     sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
     sheet.crop_vertical(.34, .875)

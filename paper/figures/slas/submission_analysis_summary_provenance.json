@@ -1,16 +1,14 @@
 {
-  "generator_sha256": "71c79c358a93507c11c78259d84cda9b4d287d62f6aaef2f4bae248a7ad81aa3",
+  "generator_sha256": "c7a24720afb914b204ba3ef8d30bd9f25f1a74f2e732489944582a6bfba4538a",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "699d4e0e476167dd0d3637db9bffe3a23b610b040cf4022962c182ddbfbac186",
-    "paper/figures/build_slas_task_only.py": "8ad08da03f1f3b7bd3214a3c299a095c0355f60a79e0ebec19403688da3f086a",
+    "paper/figures/build_slas_supplement.py": "5299f29bf70b05fa0aaf5125e0f837f71cdae55f19a6ff157e5eaf4f32caa898",
+    "paper/figures/build_slas_task_only.py": "c69df6bc7b401b332e0587e02eb54321ca40d89b8fc765b0c067b7db7be6b23f",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
-    "paper/supplementary/task_only_analysis/bbbc039-uninspected-fields.csv": "548749c6764453a7171f657a3ff07fcfa613fc943104da2fe1eb67d93f31e3f0",
+    "paper/supplementary/task_only_analysis/bbbc039-caicedo-retained-results.json": "6556d68e6c65f7a2b97b4bb495635853e38e48d8add755b10e30aa2bea7d206c",
+    "paper/supplementary/task_only_analysis/bbbc039-caicedo-published-test50.csv": "a8b8f7dda5dc99e3406332b125ea9a23ede4766c33abd8856d6fd3a3a9e69f3f",
     "paper/supplementary/task_only_analysis/bbbc007-fresh19-qualified-completion.rst": "53c9a2da8bf5718a792149d99007e773154d9712d02bf1eeb7e2cfc6761b4ef0",
     "paper/supplementary/task_only_analysis/bbbc007-fresh26-final-candidate.rst": "e3ef1a694642a100b3c65565c1d5d67092caf58dfdf46b99c510704a5166e3c6",
-    "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
     "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7",
-    "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
-    "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
     "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
     "paper/figures/slas/frozen_bright_object_views.json": "2d09d361e32493c524b746c1d37e286a59f3ec030c4f83c4a73aeab486864c99",
     "paper/figures/build_slas_neurite_views.py": "ec30d1006ac9aaf08ea1191b0fe8febb4918968bcfc978289fdba6c9b51145e0",
@@ -204,9 +202,9 @@
     }
   ],
   "output_sha256": {
-    "submission_analysis_summary.png": "ff78373c33bb0dbe3b113220c6fe13b41c21427b5145798f360dc22ecd474ad8",
-    "submission_analysis_summary.pdf": "306957dcb24e58076f3357df608968747fdebd47d28098eb55db59e2121629c1",
-    "submission_analysis_summary.svg": "6029f36ddb2fe2ac9d6bf51aac256380ec31bed3c5c2bc9d5b588e19470fbf1f"
+    "submission_analysis_summary.png": "04e5e0b6362bfca2a7192d8d9527fa50bb71dfcb0900b240948e6948c211d59b",
+    "submission_analysis_summary.pdf": "66a4ce78f0334ab4b9b3bb27004dc346b1323ba6da22f4b189704c4905fd96bf",
+    "submission_analysis_summary.svg": "71be9da1c56ac61cbd7e0b7d843bd0a64719d246da1304f5f00baebf98010f2d"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

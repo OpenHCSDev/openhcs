@@ -1,0 +1,6 @@
+method,mean_f1,reference,comparison_population,metric
+CellProfiler basic,0.790,10.1002/cyto.a.23863,BBBC039 official 50-image test set,Mean per-image F1 across nine strict IoU thresholds 0.50-0.90
+CellProfiler advanced,0.811,10.1002/cyto.a.23863,BBBC039 official 50-image test set,Mean per-image F1 across nine strict IoU thresholds 0.50-0.90
+Random Forest,0.840,10.1002/cyto.a.23863,BBBC039 official 50-image test set,Mean per-image F1 across nine strict IoU thresholds 0.50-0.90
+DeepCell,0.858,10.1002/cyto.a.23863,BBBC039 official 50-image test set,Mean per-image F1 across nine strict IoU thresholds 0.50-0.90
+U-Net,0.898,10.1002/cyto.a.23863,BBBC039 official 50-image test set,Mean per-image F1 across nine strict IoU thresholds 0.50-0.90

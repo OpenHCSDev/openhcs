@@ -8,7 +8,7 @@ from build_slas_visual_story import BLUE, INK, MUTED, ORANGE, PURPLE, TEAL, Figu
 
 
 def processes(*, stem="process_architecture", with_logos=False):
-    sheet = FigureSheet(stem, "Separate editing, execution and inspection", 5.1)
+    sheet = FigureSheet(stem, "One editable analysis, separate processes", 5.1)
     # The manuscript places this at 6.5 inches: a narrower native canvas keeps
     # the existing type hierarchy readable without enlarging every label by hand.
     sheet.figure.set_size_inches(7, 5.1)

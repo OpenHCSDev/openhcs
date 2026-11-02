@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "fb12a079961b04187b790d716bb667e86fae32b3065e08c7652775a14407d79b",
+  "generator_sha256": "c7a24720afb914b204ba3ef8d30bd9f25f1a74f2e732489944582a6bfba4538a",
   "source_sha256": {
     "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md": "cb14d533fb87b91f80d6f8c647bb833b0444f2239357af6732b93485eae8cfd9",
     "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md": "6aff1f00a2cfb11a658850831c511298010339acba99c080cabed437c544e28b",
@@ -28,9 +28,9 @@
     }
   ],
   "output_sha256": {
-    "submission_autonomous_loop.png": "7eb540eb5ce2219ba9127a6718f5ff3ae4f73659e314574fab3fa084396554d2",
-    "submission_autonomous_loop.pdf": "c820a4834c20739460ae1dac22b0e76faf9a3a9ab8633d2490a941641c4f5a4c",
-    "submission_autonomous_loop.svg": "f5211c8feceb9749ebb8db57fa52b2a26476380878e12a52a6c0bf156e57274c"
+    "submission_autonomous_loop.png": "24634f69c68d8507133334af8e93037aaaf6b87dd4dd0f4d6c21849157dc5989",
+    "submission_autonomous_loop.pdf": "cd4f79558fc422364c30a1903ba6c5acf11f671d5eb5d413b8b95b54a197ef64",
+    "submission_autonomous_loop.svg": "7997c229c35fcd336e33f06927d30fd4272dfbcb90a39d9ff7b6098e7d1f890d"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
