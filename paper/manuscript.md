@@ -42,9 +42,11 @@ Connecting individual pairs of tools still leaves scientists to assemble those c
 
 ## Materials and Methods
 
-OpenHCS must coordinate images across microscope formats, processing functions, storage systems, viewers and parallel processes. We built eight domain-agnostic libraries for editing, settings, data handling and communication and composed them into OpenHCS (Figures 1–2; Supp. Table 1). The Open Microscopy Environment (OME) data model describes images using spatial dimensions X, Y and Z, channels and time [@Goldberg2005]. For plate imaging, well and site identify acquisition locations rather than additional pixel axes.
+The first three subsections describe the shared analysis: building and editing pipelines, execution and viewers, and agent access. The next three describe the tests of existing analyses: CellProfiler import and output comparison, performance measurements and software reliability checks. The last two describe the data and autonomous-trial design used to test analyses built from written briefs (Table 1). OpenHCS combines eight domain-agnostic libraries for editing, settings, data handling and communication (Figures 1–2; Supp. Table 1).
 
 ### Building and editing pipelines
+
+The Open Microscopy Environment (OME) data model describes images using spatial dimensions X, Y and Z, channels and time [@Goldberg2005]. For plate imaging, well and site identify acquisition locations rather than additional pixel axes.
 
 A pipeline combines image-processing functions into a reusable, ordered sequence of configurable steps. Each step specifies one or more compatible Python functions, their settings and inputs from source images or earlier results. Functions specify their array library and whether they accept image planes or volumes.
 
@@ -100,14 +102,7 @@ We checked that imported workflows retained their outputs by comparing numerical
 
 For the single-sample comparison, both applications used one physical CPU core, one worker and one numerical thread, so neither received extra CPU resources. Each workflow used one selected source well or sample, unchanged settings and defined comparison outputs. OpenHCS supports Python 3.11–3.14, but the reported timing runs used Python 3.12, against native CellProfiler 4.2.8.1 on Python 3.9.
 
-**Timing intervals.** Table 1 defines the two reported intervals. Speedup was CellProfiler's first-batch time divided by the median OpenHCS time; we summarize speedups across workflows using their minimum, arithmetic mean, median and maximum.
-
-Table: Table 1. Timing boundaries used for the execution comparisons.
-
-| Application | Processing | Setup plus processing |
-|---|---|---|
-| CellProfiler | Immediately before the pipeline first runs → batch completion, including internal initialization, image-group preparation, processing, output steps and measurement-file closure. | Before initial output-directory and measurement setup → the same batch completion. |
-| OpenHCS | Server execution-job start → job completion, including saving results and plate-level exports. | Sum of four client intervals: submit compilation, wait for compilation, submit execution and wait for execution. |
+**Timing intervals.** Supp. Table 5 defines the processing and setup-plus-processing intervals. Speedup was CellProfiler's first-batch time divided by the median OpenHCS time; we summarize speedups across workflows using their minimum, arithmetic mean, median and maximum.
 
 OpenHCS times are medians of three measured repetitions after warmup. Application/server startup, CellProfiler pipeline-file loading, initial OpenHCS library loading, OpenHCS warmup runs and subsequent output-agreement checks were excluded. OpenHCS server time is already inside the client intervals and was not added again.
 
@@ -143,13 +138,13 @@ Agents finalized their pipelines before any comparison with reference data, and 
 
 To test whether agents could turn biological requests into useful measurements, we asked fresh agents to develop and inspect analyses of cells, nuclei, neurites and protein redistribution. We compared their final results with references after analysis development had finished. Separate runs let us compare independently developed analyses of the same task.
 
-Table 2 identifies the main comparisons, image access and reference measures. Analysis numbers are local identifiers rather than model generations. Supp. Table 4 retains the complete task/model/protocol mapping, including earlier prospectively withheld evaluations; Supp. Data 8 links the original runs, guides and pipelines.
+Table 1 identifies the main comparisons, image access and reference measures. Analysis numbers are local identifiers rather than model generations. Supp. Table 4 retains the complete task/model/protocol mapping, including earlier prospectively withheld evaluations; Supp. Data 8 links the original runs, guides and pipelines.
 
 Each fresh agent received a task brief, acquisition information and MCP access. The recorded gpt-6.1-sol independent trials also received the packaged OpenHCS skill, a written guide to using OpenHCS; briefs could include channel hints, requested outputs and review instructions. The skill asks agents to inspect images, read function documentation and compare results with matched raw images and overlays (Figure 4). It directs repairs to the earliest faulty step and requires rechecking previously successful examples. Earlier held-out trials used OpenHCS 0.8.5; later independent trials used 0.8.7. For the prospective evaluations, images and treatment metadata were released after finalization; only input and output folders changed.
 
 Three fresh gpt-6.1-sol agents independently analysed the same 20 coded neurite-assay wells, with nine fields each, using the same brief, acquisition information, MCP access, guide revision and OpenHCS 0.8.7 installation. Each analysed all 180 fields and finalized its outputs before treatment identities, MetaXpress measurements and scientist-assisted results were used for evaluation. Development and subsequent review fields are listed in the cohort record (Supp. Data 8; Supp. Figure 5).
 
-Table: Table 2. Evaluation design. Pipelines were finalized before reference comparisons, without reference labels or score feedback during development. The quantitative rows used gpt-6.1-sol; repair-continuation model identities are retained in Supp. Table 4. IoU is intersection over union; F1 combines precision and recall. Caicedo F1 averages per-image F1 over nine thresholds from 0.50 to 0.90, requiring IoU strictly greater than each; pooled F1 combines object counts across fields. Original instructions, freeze records and scores: Supp. Data 7–8.
+Table: Table 1. Evaluation design. Pipelines were finalized before reference comparisons, without reference labels or score feedback during development. The quantitative rows used gpt-6.1-sol; repair-continuation model identities are retained in Supp. Table 4. IoU is intersection over union; F1 combines precision and recall. Caicedo F1 averages per-image F1 over nine thresholds from 0.50 to 0.90, requiring IoU strictly greater than each; pooled F1 combines object counts across fields. Original instructions, freeze records and scores: Supp. Data 7–8.
 
 | Analysis and images | Development access | Comparison population | Reference | Measure and scope |
 |:---|:---|:---|:---|:---|
@@ -174,11 +169,9 @@ All 30 imported workflows reproduced native CellProfiler 4.2.8.1 outputs across 
 
 Output parity was retained on Python 3.12 and 3.14. The timing comparison used OpenHCS on Python 3.12 with NumPy 2 and native CellProfiler on Python 3.9 (Supp. Data 1). CellProfiler 4.2.8.1 pins SciPy 1.9.0 and scikit-image 0.18.3 [@CellProfiler4281Dependencies]. Prebuilt PyPI packages for that scikit-image release cover Python 3.8 and 3.9 among the versions admitted by CellProfiler; both Python versions are now end of life [@ScikitImage0183Files; @Python38Release; @Python39Release]. Availability of source code does not establish support for newer Python versions or native Apple Silicon.
 
-Every one of the 30 workflows was faster than CellProfiler on one core, both for processing alone and with pipeline setup included (Figure 3B). When CellProfiler's internal initialization was spread over a measured eight-sample serial batch, the median per-sample processing speedup across workflows was [pending]{.benchmark-claim key=amortized_execution_median}-fold, with a minimum of [pending]{.benchmark-claim key=amortized_execution_min}-fold. This comparison divides each application's time by the number of samples: eight for CellProfiler and twelve for OpenHCS, using one worker. Including pipeline setup, speedup was a median [pending]{.benchmark-claim key=amortized_total_median}-fold, with minimum [pending]{.benchmark-claim key=amortized_total_min}-fold. Supp. Data 3 provides individual workflow timings, batch summaries, CellProfiler estimates, calibration checks and a separate measured eight-sample, two-worker comparison.
+Every one of the 30 workflows ran faster than CellProfiler on one core, both for processing alone and with pipeline setup included (Figure 3B). Across the measured batches, median per-sample speedup was [pending]{.benchmark-claim key=amortized_execution_median}-fold for processing (minimum [pending]{.benchmark-claim key=amortized_execution_min}-fold) and [pending]{.benchmark-claim key=amortized_total_median}-fold with setup included (minimum [pending]{.benchmark-claim key=amortized_total_min}-fold), with CellProfiler's initialization spread over a measured eight-sample batch. Supp. Data 3 retains individual timings, estimates, calibration and the separate measured eight-sample, two-worker comparison.
 
-Figure 3C holds the workload at twelve samples and compares measured OpenHCS times with a fixed serial CellProfiler estimate derived from measured eight-sample batches. Increasing the OpenHCS worker count from one to four increased the median speedup relative to this unchanged baseline. Every workflow was faster than the serial estimate at each worker count, for processing alone and with setup included. This comparison measures the benefit of OpenHCS parallel execution relative to a serial reference, not equal CPU allocations.
-
-Measured OpenHCS-only scaling confirms the separate parallel-execution benefit: on the same twelve samples, every workflow ran faster with two, three and four workers than with one, for both timing intervals (Supp. Figure 6).
+Adding OpenHCS workers shortened execution further. Against a fixed serial CellProfiler estimate for twelve samples, the median speedup rose from one to four workers, and every workflow stayed faster at each worker count (Figure 3C). This measures parallel execution against a serial reference, not equal CPU allocations. Measured OpenHCS-only scaling confirms the benefit: every workflow ran faster with two, three and four workers than with one, for processing alone and with setup included (Supp. Figure 6).
 
 ### Figure 3. CellProfiler compatibility and execution speed
 
@@ -188,7 +181,9 @@ Measured OpenHCS-only scaling confirms the separate parallel-execution benefit: 
 Imported CellProfiler workflows were checked for output agreement before their execution times were compared. **(A)** Each module is counted once under its strongest test; zero-count categories have no slice. Shared-code tests do not test each module's own algorithm. **(B)** Measured one-worker comparisons: one sample each on the same CPU core, then per-sample time for batches of eight (CellProfiler) or twelve (OpenHCS). Batch CPU affinities differ from the single-sample comparison (Methods: Performance measurement). **(C)** Twelve copies of one source sample: a fixed serial CellProfiler estimate derived from measured eight-sample batches, divided by measured OpenHCS time at each worker count. The serial estimate retains initialization and is identical across all four worker counts. **(B, C)** Speedup is CellProfiler time divided by OpenHCS time; values above 1 mean faster OpenHCS execution. Each dot is one of 30 workflows; translucent bars are arithmetic means and black lines medians. Each distribution is labelled with its minimum, arithmetic mean, median and maximum speedup. Logarithmic axes; the red dashed line marks equal speed. Intervals and exclusions as in Methods: Performance measurement.
 :::
 
-### Figure 4. Delegated specialist work leaves an analysis the scientist can inspect
+### Agents built working analyses from written briefs
+
+#### Figure 4. Delegated specialist work leaves an analysis the scientist can inspect
 
 ![Guide-directed procedure from biological brief through image inspection, analysis revision and editable delivery.](figures/slas/submission_autonomous_loop.png){width=6.5in}
 
@@ -196,13 +191,11 @@ Imported CellProfiler workflows were checked for output agreement before their e
 Analysis procedure described by the agent guide. The biological brief specifies the question, requested measurements and acquisition information. Image inspection establishes channels, feature scales and representative regions before the agent selects processing functions and runs the pipeline. Results are compared with raw images from the same region; errors lead to revised settings and further inspection before delivery. The scientist receives the analysis settings, images and measurements and can continue editing the analysis. Figure 6E–H shows recorded repair examples, rather than guarantees of the procedure.
 :::
 
-### Agents built working analyses from written briefs
-
 #### Without labels or training, agents matched expert-built pipelines
 
-Each agent built a classical pipeline from a written brief without annotated examples, using intensity thresholding, shape-based separation of touching nuclei and size filtering; no learned segmentation model was used or trained. On BBBC039’s official 50-image test partition (5,720 nuclei), the agents’ per-image mean F1 at IoU ≥ 0.5 was 0.898 to 0.903. Using Caicedo et al.'s released evaluator, the frozen agent pipelines scored 0.792–0.823 (F1 averaged over IoU 0.50–0.90), spanning the expert-configured CellProfiler 3.0 pipelines (0.790 and 0.811) and below the learned methods (0.840–0.898) [@Caicedo2019]. The image-access and freeze design is given in Table 2; excluding the one official-test field viewed before freeze changed that agent's scores by less than 0.001. Supp. methods: analysis scoring retains the evaluator, the 49-field check and the supplementary 44-field robustness check.
+Each agent built a classical nuclear-detection pipeline from a written brief, using intensity thresholding, shape-based separation of touching nuclei and size filtering; no annotated examples were provided and no learned model was used or trained (Table 1). On BBBC039's official test split (50 fields, 5,720 nuclei), the pipelines reached per-image mean F1 of 0.898 to 0.903 at IoU ≥ 0.5. Scored with Caicedo et al.'s released evaluator, they reached 0.792 to 0.823, spanning the expert-configured CellProfiler 3.0 pipelines (0.790 and 0.811) and below the learned methods (0.840 to 0.898) [@Caicedo2019]. Excluding the one official-test field viewed before freeze changed that agent's scores by less than 0.001. Supp. methods: analysis scoring retains the evaluator, the 49-field check and the supplementary 44-field robustness check.
 
-Across the 175 image-unviewed fields, nuclear detection analyses 2–4 reached pooled F1 of 0.906–0.910 (Figure 6A; Table 2). Unlike the per-image benchmark mean, this score combines object counts across fields. Most errors were missed nuclei, and all three analyses scored below 0.80 on the same six fields. Their similar overall accuracy therefore coexisted with shared local failures. Supp. Figure 3 and Data 7–8 retain per-field errors, all-field and earlier withheld-evaluation results, and the repair that recovered nuclei while increasing splitting.
+Across the 175 image-unviewed fields, nuclear detection analyses 2–4 reached pooled F1 of 0.906–0.910 (Figure 6A; Table 1). Unlike the per-image benchmark mean, this score combines object counts across fields. Most errors were missed nuclei, and all three analyses scored below 0.80 on the same six fields. Their similar overall accuracy therefore coexisted with shared local failures. Supp. Figure 3 and Data 7–8 retain per-field errors, all-field and earlier withheld-evaluation results, and the repair that recovered nuclei while increasing splitting.
 
 #### Three blind agents recover drug responses in a laboratory neurite assay
 
@@ -220,11 +213,13 @@ All three analyses found increased mean outgrowth per cell and total outgrowth a
 
 Protein translocation analysis 2 separated controls across 96 BBBC013 wells, including four development wells, with Z′ of 0.849 for LY294002 and 0.726 for Wortmannin (Figure 6D). Z′ compares the separation of control means with variation between wells; both values exceed 0.5, the conventional threshold for an excellent screening assay [@Zhang1999]. The agent chose each well's median log2 nuclear-to-cytoplasmic GFP ratio, using cells with measurable cytoplasm and four wells per treatment group. Supp. Figure 2 and Data 7–8 retain eligibility counts and the earlier analysis on 92 wells withheld before development, which used a different well summary.
 
+Further comparisons checked cell borders and three-dimensional nuclear positions. On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2–3 placed 0.743 and 0.740 of their predicted borders between touching cells within two pixels of a manual outline (Figure 6B). Nuclear localisation analysis 1 recovered all 15 manually marked centres within 30 voxels; 11 predictions lacked a matching annotation, but the partial reference cannot establish their false-detection rate (Figure 6C).
+
 ### Image review identifies repairs and remaining errors
 
-Matched image inspection exposed errors that overall scores could hide. Agents corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 6E–H). Bright-object reference F1 rose from 0.929 to 0.944 on one development image; the remaining examples show local image-supported corrections rather than measured whole-dataset accuracy. On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2–3 placed 0.743 and 0.740 of their predicted borders between touching cells within two pixels of a manual outline (Figure 6B).
+Matched image inspection exposed errors that overall scores could hide. Agents corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 6E–H). Bright-object reference F1 rose from 0.929 to 0.944 on one development image; the remaining examples show local image-supported corrections rather than measured whole-dataset accuracy.
 
-Orthogonal views let scientists check three-dimensional detections across planes. Nuclear localisation analysis 1 recovered all 15 manually marked centres within 30 voxels; 11 predictions lacked a matching annotation, but the partial reference cannot establish their false-detection rate (Figure 6C; Supp. Figure 4M–O). Wider matched views retain residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 4; Figure 5C–E). Captions and Supp. Data 4, 7–8 identify the separate analyses, references and repair trajectories.
+Orthogonal views let scientists check three-dimensional detections across planes (Supp. Figure 4M–O). Wider matched views retain residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 4; Figure 5C–E). Captions and Supp. Data 4, 7–8 identify the separate analyses, references and repair trajectories.
 
 ### Figure 6. Analysis measurements and matched image repairs
 
@@ -238,17 +233,15 @@ Orthogonal views let scientists check three-dimensional detections across planes
 
 The nuclear benchmark shows that agents given written briefs can reach the accuracy of expert-configured pipelines without labelled examples or model training. Their analyses are ordinary, editable processing steps rather than trained weights. Where annotations exist, learned methods remain more accurate on this benchmark; where they do not, an agent working inside a shared, inspectable analysis is an alternative that required none here.
 
-Preserving the outputs of established workflows lets laboratories extend analyses without discarding their existing processing choices. The 30 CellProfiler workflows retained their outputs on OpenHCS's newer Python environment (Figure 3). Scientists can extend these pipelines with compatible CPU, GPU and deep-learning functions from existing libraries or laboratory code as biological questions change.
+Preserving the outputs of established workflows lets laboratories extend analyses without discarding their existing processing choices. The 30 CellProfiler workflows retained their outputs on OpenHCS's newer Python environment (Figure 3). Because imported pipelines enter the same editable analysis as any other, a laboratory can replace a CellProfiler module with a compatible GPU or deep-learning function without rebuilding the surrounding workflow. The changed method still needs validation for the assay.
 
 The execution results distinguish two ways to shorten the revision cycle. Faster single-core completion means the observed advantage did not require extra CPU resources; its persistence after CellProfiler initialization was spread over eight samples shows that it was not confined to first-sample costs (Figure 3B). Measured OpenHCS worker scaling adds a separate parallel-execution benefit. Both reduce the cost of inspecting a result, changing the pipeline and checking the revised analysis across an experiment.
-
-Separating general computing tasks from microscope-specific definitions also makes the components reusable outside microscopy (Supp. Table 1). Pipelines organize data by dimensions and processing groups without requiring microscope-specific fields; source tests include remote-sensing and telemetry examples. Work is underway to release preparation and execution separately as ArrayPipe [@ArrayPipe], so other data-science and machine-learning applications could combine array libraries, run processing steps in parallel and inspect intermediate results.
 
 All three neurite analyses recovered both drug responses but estimated smaller effects than MetaXpress (Figure 5A–B). The commercial reference's site weighting and analysis settings were unavailable for comparison; the OpenHCS measurements remain traceable to their detections, settings and source images. All three nuclear analyses also missed nuclei in the same six difficult fields. Scientists therefore need access to the detections behind a measurement even when independent analyses agree.
 
 Repeated agent runs have been unreliable on complex data [@Pan2026BIABench], and Agentic-J describes independent-session repeatability as future work [@Johanns2026]. Here, three independently developed nuclear analyses agreed within about 0.004 pooled F1 across three guide revisions, and all three neurite analyses recovered both drug responses with the same model, guide and runtime. These are independent analyses of the same experimental material, not biological replicates. Their agreement motivates checking repeatability, but the shared nuclear failures show why repeated scores cannot replace inspection of detections.
 
-The shared analysis infrastructure can also benefit from stronger agents and vision models. They can use the existing authoring, execution and image-inspection tools to choose methods and revise results, while new machine-learning functions join the same editable Python pipelines. Multicore execution distributes samples among workers, and GPU-capable functions use their declared array frameworks. Methods that distribute work over multiple GPUs must retain that coordination within their underlying library; OpenHCS's current compiler assigns a device to each required framework. This separates the platform's useful interfaces from the particular agent models and processing methods evaluated here.
+The shared analysis can support stronger agents and vision models through the existing authoring, execution and image-inspection tools, while new processing functions join the editable Python pipeline. Multicore execution distributes samples among workers; multi-GPU methods must coordinate their devices within the underlying library because OpenHCS currently assigns one device to each required framework. The general-purpose libraries are also reusable outside microscopy (Supp. Table 1), with source tests using remote-sensing and telemetry examples. Preparation and execution are being released separately as ArrayPipe [@ArrayPipe] for other data-science and machine-learning applications.
 
 OpenHCS addresses analysis development and execution within laboratory automation, with external agents driving OpenHCS over MCP in our trials. Systems using SiLA, a standard for laboratory automation, connect instrument control and laboratory data [@Hinkel2023; @Lange2026; @Courtney2025; @Thieme2024; @Rihm2024]. In either a conventional or automated laboratory, the aim is to delegate technical analysis work while keeping scientists able to judge, change and extend it.
 
@@ -286,7 +279,7 @@ We thank the CellProfiler project, its contributors, and the authors of the unde
 
 [To be confirmed by the authors: list applicable funding bodies, grants and fellowships, or confirm that no specific funding supported this work.]
 
-## Declaration of Competing Interests
+## Declaration of Conflicting Interests
 
 [To be confirmed by the authors: disclose relevant financial or personal relationships, or confirm that there are no competing interests to declare.]
 

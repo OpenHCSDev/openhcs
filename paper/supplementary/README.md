@@ -215,6 +215,15 @@ Table: Supp. Table 4. Tasks, models and protocols. Development images could info
 | Scientist-assisted neurite drug-response comparison | Not specified in retained comparison record | Scientist-prompted morphological corrections on the same 180 fields; not another blind author. |
 
 
+## Supp. Table 5. Timing boundaries {#supplementary-table-5.-timing-boundaries}
+
+Table: Supp. Table 5. Timing boundaries used for the execution comparisons. Main Methods: Performance measurement defines repetitions, exclusions and batch sizes.
+
+| Application | Processing | Setup plus processing |
+|---|---|---|
+| CellProfiler | Immediately before the pipeline first runs → batch completion, including internal initialization, image-group preparation, processing, output steps and measurement-file closure. | Before initial output-directory and measurement setup → the same batch completion. |
+| OpenHCS | Server execution-job start → job completion, including saving results and plate-level exports. | Sum of four client intervals: submit compilation, wait for compilation, submit execution and wait for execution. |
+
 ## Supp. Data {#supplementary-data}
 
 1. **CellProfiler workflow comparison.** [Protocol and source files](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison), including exported-file counts, eight added image exports, comparison rules, software versions and database outputs [@Jones2008].
