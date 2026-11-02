@@ -16,17 +16,26 @@ comparisons test preservation of established outputs and execution speed.
 The remaining author questions are factual, not unfinished prose:
 
 - Confirm the interval between drug addition and imaging for the laboratory
-  neurite assay, and supply the applicable animal-ethics committee and
-  approval/reference or justified exemption. The latest desktop draft supplies
-  the E18 rat cortical-neuron preparation, medium change, compounds and doses;
-  these details are retained in Methods. The acquisition description now names
-  calcein and the instrument/objective verified from the retained TIFF headers.
+  neurite assay. The supplied animal-ethics statement names the Montreal
+  Neurological Institute Animal Care and Use Committee and Canadian Council on
+  Animal Care guidelines. Confirm that the approval covers both the E18 rat
+  cortical cultures and retinal tissue; add the protocol number if required.
+- Confirm the retinal species and exact microscope model. Original CZI metadata
+  confirms the 20× Plan-Apochromat objective (numerical aperture 0.8), but its
+  microscope system says LSM 800 while a detector is labelled LSM 900. The
+  retained acquisition record in Supp. Data 8 preserves both fields; neither
+  the model nor mouse species is inferred.
 - Supply the authorized Zenodo account/deposit route and confirm creators and
   rights for the selected archive. The existing procedure is in
   `supplementary/archive_publication.rst`; no issued OpenHCS DOI is yet verified.
-- Assign contributions to the final author list.
-- Supply funding and grant details, or confirm that there was no specific funding.
-- Confirm the competing-interest declaration.
+- Confirm whether A.E.F. also contributed to conceptualization. The supplied
+  CRediT roles are recorded; J.P.'s confirmed contribution is development
+  testing and quality assurance (Validation), not assumed neuron culture,
+  drug treatment or imaging.
+- Supply A.E.F.'s current CIHR grant numbers and any other current funding
+  sources, and identify any T.S./J.P. studentships or awards (or state none).
+  Historical MS Society of Canada support is not asserted as current funding.
+  The supplied no-conflicting-interests declaration is now recorded.
 
 These questions do not change the recorded analysis results. They must be
 answered before submission; the manuscript does not invent the answers.

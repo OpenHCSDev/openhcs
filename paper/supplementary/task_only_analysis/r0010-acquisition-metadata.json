@@ -1,0 +1,31 @@
+{
+  "source": "/run/media/ts/hdd/openhcs-science/next-p00189-retina88-fresh16-20261005/R0010_FRESH16_88/acquisition/R0010.czi",
+  "source_sha256": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
+  "read_method": "Existing PolyStore BioFormatsJavaContext.open_reader; OME-XML and original vendor metadata only. Source SHA256 verified before and after. No image planes read or analysis rerun.",
+  "series_index": 0,
+  "acquisition_date": "2026-03-26T19:15:17.866",
+  "objective": {
+    "image_objective_reference": "Objective:1",
+    "model": "Plan-Apochromat 20x/0.8 M27",
+    "nominal_magnification": 20.0,
+    "numerical_aperture": 0.8,
+    "immersion": "Air"
+  },
+  "microscope_vendor_fields": {
+    "Information|Image|MicroscopeRef|Id": "Microscope:1",
+    "Information|Instrument|Microscope|Id": "Microscope:1",
+    "Information|Instrument|Microscope|Name": "Axio Observer.Z1 / 7",
+    "Information|Instrument|Microscope|System": "LSM 800",
+    "Information|Instrument|Detector|Name #3": "LSM 900"
+  },
+  "acquisition_mode": "LaserScanningConfocalMicroscopy",
+  "physical_pixel_sizes_um": {
+    "X": 0.12353054911059548,
+    "Y": 0.12353054911059548
+  },
+  "species": null,
+  "unresolved": [
+    "Species was not established by the observed OME-XML or selected original vendor metadata. Mouse is not inferred.",
+    "Microscope system and detector labels differ (LSM 800 versus LSM 900). The exact microscope model requires author confirmation."
+  ]
+}
