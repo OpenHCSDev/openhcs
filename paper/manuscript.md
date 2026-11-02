@@ -196,7 +196,13 @@ Imported CellProfiler workflows were checked for output agreement before their e
 Analysis procedure described by the agent guide. The biological brief specifies the question, requested measurements and acquisition information. Image inspection establishes channels, feature scales and representative regions before the agent selects processing functions and runs the pipeline. Results are compared with raw images from the same region; errors lead to revised settings and further inspection before delivery. The scientist receives the analysis settings, images and measurements and can continue editing the analysis. Figure 6E–H shows recorded repair examples, rather than guarantees of the procedure.
 :::
 
-### Agent-developed analyses produce useful assay measurements
+### Agents built working analyses from written briefs
+
+#### Without labels or training, agents matched expert-built pipelines
+
+Each agent built a classical pipeline from a written brief without annotated examples, using intensity thresholding, shape-based separation of touching nuclei and size filtering; no learned segmentation model was used or trained. On BBBC039’s official 50-image test partition (5,720 nuclei), the agents’ per-image mean F1 at IoU ≥ 0.5 was 0.898 to 0.903. Using Caicedo et al.'s released evaluator, the frozen agent pipelines scored 0.792–0.823 (F1 averaged over IoU 0.50–0.90), spanning the expert-configured CellProfiler 3.0 pipelines (0.790 and 0.811) and below the learned methods (0.840–0.898) [@Caicedo2019]. The image-access and freeze design is given in Table 2; excluding the one official-test field viewed before freeze changed that agent's scores by less than 0.001. Supp. methods: analysis scoring retains the evaluator, the 49-field check and the supplementary 44-field robustness check.
+
+Across the 175 image-unviewed fields, nuclear detection analyses 2–4 reached pooled F1 of 0.906–0.910 (Figure 6A; Table 2). Unlike the per-image benchmark mean, this score combines object counts across fields. Most errors were missed nuclei, and all three analyses scored below 0.80 on the same six fields. Their similar overall accuracy therefore coexisted with shared local failures. Supp. Figure 3 and Data 7–8 retain per-field errors, all-field and earlier withheld-evaluation results, and the repair that recovered nuclei while increasing splitting.
 
 #### Three blind agents recover drug responses in a laboratory neurite assay
 
@@ -209,12 +215,6 @@ All three analyses found increased mean outgrowth per cell and total outgrowth a
 ::: {custom-style="ImageCaption"}
 **(A–B)** Mean neurite outgrowth per cell after treatment with fusicoccin-A (FC-A) or Y27632. Three independent blind agents and MetaXpress analysed the same 180 fields from 20 wells; analyses 1–3 identify independent agent runs. OpenHCS well values are unweighted means of nine fields. Each drug curve is normalized to the mean of its two zero-dose DMSO wells; 1 denotes no change from vehicle. Dots are two technical wells per dose for each method; whiskers show sample standard deviation (SD) among those wells, excluding uncertainty in the control mean. All three analyses recover increased outgrowth for both drugs, with smaller response magnitudes than MetaXpress. **(C⁠–⁠E)** A laboratory field shown as a raw image, detected cell bodies and neurites, and an overlay on the raw image. This separate nine-field autonomous analysis is not one of the three drug-response analyses in A–B. Scale bars in C–E are 271 µm (200 pixels at the recorded acquisition scale). Supp. Figure 5 shows additional measurements and the scientist-assisted comparison; Supp. Data 4 retains the separate public-image comparison.
 :::
-
-#### Without labels or training, agents matched expert-built pipelines
-
-On BBBC039’s official 50-image test partition (5,720 nuclei), the agents’ per-image mean F1 at IoU ≥ 0.5 was 0.898 to 0.903; F1 balances recovery of reference nuclei against false detections. Each agent built a classical pipeline from a written brief without annotated examples, using intensity thresholding, shape-based separation of touching nuclei and size filtering; no learned segmentation model was used or trained. Using Caicedo et al.'s released evaluator, the frozen agent pipelines scored 0.792–0.823 (F1 averaged over IoU 0.50–0.90), spanning the expert-configured CellProfiler 3.0 pipelines (0.790 and 0.811) and below the learned methods (0.840–0.898) [@Caicedo2019]. No reference labels or score feedback guided pipeline development. The image-access and freeze design is given in Table 2; excluding the one official-test field viewed before freeze changed that agent's scores by less than 0.001. Supp. methods: analysis scoring retains the evaluator, the 49-field check and the supplementary 44-field robustness check.
-
-Across the 175 image-unviewed fields, nuclear detection analyses 2–4 reached pooled F1 of 0.906–0.910 (Figure 6A; Table 2). Unlike the per-image benchmark mean, this score combines object counts across fields. Most errors were missed nuclei, and all three analyses scored below 0.80 on the same six fields. Their similar overall accuracy therefore coexisted with shared local failures. Supp. Figure 3 and Data 7–8 retain per-field errors, all-field and earlier withheld-evaluation results, and the repair that recovered nuclei while increasing splitting.
 
 #### An agent-developed translocation analysis separates assay controls
 
