@@ -153,7 +153,10 @@ The evaluation used biological briefs supplemented, in some trials, with technic
 | Protein translocation 2 | [Source](task_only_analysis/pipelines/bbbc013-fresh23.py) |
 | Nuclear detection 2 | [Source](task_only_analysis/pipelines/bbbc039-fresh612.py) |
 | Nuclear detection 3 | [Source](task_only_analysis/pipelines/bbbc039-fresh10.py) |
+| Nuclear detection 4 | [Original final source recovered byte-for-byte](task_only_analysis/pipelines/bbbc039-fresh13.py) |
 | Cell-boundary analysis 3 | [Source](task_only_analysis/pipelines/bbbc007-fresh26.py) |
+
+All three final nuclear pipelines use classical minimum-cross-entropy thresholding, shape-based seed/watershed separation and size filtering, with no learned-model or training step. Analysis 4's [source-recovery record](task_only_analysis/bbbc039-fresh13-source-recovery.json) retains the complete original pipeline readback, its closing SHA256 check and the recorded equality of candidate05/final/QA scientific declarations. The recovered 6,687-byte source has SHA256 `1e3cf2fb760dd04a44d0fa9ebb902440236d67a6064d73619019e2f8813446bd`; only the originally recorded technical changes to output destination and viewer emission distinguish it from the selected scientific candidate. No analysis or scoring was rerun to recover it.
 
 The [nine-field neurite pipeline](task_only_analysis/pipelines/p001-fresh13.py) is also supplied. These are the agents' selected sources, unchanged by reference scoring. Reproduction requires the recorded software and inputs; relocate file destinations and viewer endpoints without changing scientific settings.
 

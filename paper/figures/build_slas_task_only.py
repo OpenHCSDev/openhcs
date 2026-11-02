@@ -367,8 +367,8 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         for path in sources:
             sheet.source(ROOT / path)
         axes = [sheet.plot_axes(bounds) for bounds in (
-            (0.12, 0.84, 0.19, 0.12),
-            (0.43, 0.84, 0.20, 0.12), (0.77, 0.84, 0.20, 0.12),
+            (0.12, 0.845, 0.19, 0.115),
+            (0.43, 0.845, 0.20, 0.115), (0.77, 0.845, 0.20, 0.115),
         )]
         titles = ("A  Nuclear detection", "B  Cell boundaries", "C  3D localisation")
         for axis, title in zip(axes, titles, strict=True):
@@ -429,10 +429,10 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         axes[2].set(xlabel="Matching distance\n(voxels)", ylabel="Mean centre error\n(voxels)",
                     ylim=(0, 6.1), xticks=thresholds)
 
-        sheet.text(3, 75, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
+        sheet.text(3, 77.5, "D  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
         series = AssaySeries.load(SOURCE)
         for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-            axis = sheet.plot_axes((0.12 + column * 0.49, 0.635, 0.34, 0.08))
+            axis = sheet.plot_axes((0.12 + column * 0.49, 0.66, 0.34, 0.08))
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
@@ -468,7 +468,7 @@ class AnalysisResultsFigure(VolumeResultsFigure):
         sheet.source(report)
         sheet.source(resources)
         sheet.source(ROOT / H001_SOURCE)
-        sheet.text(3, 53, "E  Bright-object repair", size=14, weight="bold")
+        sheet.text(3, 55.5, "E  Bright-object repair", size=14, weight="bold")
         candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
         if len(candidates) != 4:
             raise ValueError("Expected the four original reported H001 candidates")
@@ -476,17 +476,17 @@ class AnalysisResultsFigure(VolumeResultsFigure):
             "Split body", "Pair lost", "Pair still lost", "Pair recovered",
         ))):
             x = 3 + index * 11.2
-            sheet.box(x, 46.5, 10.2, 5.1, f"{int(candidate)}: {count}", decision,
+            sheet.box(x, 49, 10.2, 5.1, f"{int(candidate)}: {count}", decision,
                       color=TEAL, size=10)
             if index < 3:
-                sheet.arrow((x + 10.2, 49), (x + 11.2, 49))
-        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 32.5, 44, 10.5), 44.3)
+                sheet.arrow((x + 10.2, 51.5), (x + 11.2, 51.5))
+        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 35, 44, 10.5), 46.8)
         evaluation = load_bright_object_evaluation(ROOT)
         first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        sheet.text(47, 53, f"F1 {first_f1:.3f}→{final_f1:.3f}".replace("0.", "."),
+        sheet.text(47, 55.5, f"F1 {first_f1:.3f}→{final_f1:.3f}".replace("0.", "."),
                    size=13, color=TEAL, weight="bold", ha="right")
-        sheet.text(53, 53, "F  Nuclear separation", size=14, weight="bold")
-        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 32.5, 44, 13), 47.5)
+        sheet.text(53, 55.5, "F  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 35, 44, 13), 50)
 
 
 def submission_summary() -> None:
