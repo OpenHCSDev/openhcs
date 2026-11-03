@@ -1,0 +1,42 @@
+{
+  "source_head": "ff31dda5b7425432d8d8eb6400bd5e151e46142f",
+  "display": ":0",
+  "qt_scale_factor": "2",
+  "gui_pid": 1010471,
+  "window_id": "code_editor:formbridge.services.function_pattern_code_document.FunctionPatternValue:139980220041968",
+  "native_editor_zoom": 10,
+  "code_source": "# Edit this function pattern and save to apply changes\n\nfrom openhcs.processing.custom_functions \\\n    import paper_rescale_signal\n\npattern = [\n    (paper_rescale_signal, {\n            'gain': 1.2,\n            'offset': 0.0,\n            'enabled': True\n        })\n]",
+  "native_font_family": "DejaVu Sans Mono",
+  "python_presentation_palette": {
+    "default": "#203044",
+    "keyword": "#216da5",
+    "number": "#7960a5",
+    "string": "#16877f",
+    "comment": "#59697b",
+    "background": "#f3f6f9"
+  },
+  "import_wrapping_ast_unchanged": true,
+  "function_source": "\"\"\"Small image-processing extension used for the manuscript interface example.\"\"\"\n\nfrom openhcs.core.memory import numpy\n\n\n@numpy\ndef paper_rescale_signal(image, gain: float = 1.2, offset: float = 0.0):\n    \"\"\"Rescale image intensities with a gain and offset.\n\n    Args:\n        image: Input image array supplied by the pipeline.\n        gain: Multiplicative intensity scale.\n        offset: Constant added after scaling.\n\n    Returns:\n        Image array with the same shape as the input.\n    \"\"\"\n    return image * gain + offset\n",
+  "gain": 1.2,
+  "offset": 0.0,
+  "initialized_compiled_or_executed": false,
+  "code_editor_xywh": [
+    11,
+    42,
+    750,
+    463
+  ],
+  "logical_window_xywh": [
+    0,
+    0,
+    772,
+    560
+  ],
+  "native_pixels": [
+    1544,
+    1120
+  ],
+  "selected_png": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/code4/home/.local/share/openhcs/mcp_outputs/capture/20261103T005207689451Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png",
+  "selected_capture": "main_window_capture_provenance.json",
+  "capture_sha256": "7b43e2b65952e92d078ea6fae3254fe7fe88d9e12ee05cec28d6e849b8716a85"
+}

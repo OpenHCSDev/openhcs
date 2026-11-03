@@ -1,0 +1,59 @@
+{
+  "source_head": "ff31dda5b7425432d8d8eb6400bd5e151e46142f",
+  "display": ":0",
+  "qt_scale_factor": "2",
+  "gui_pid": 1008843,
+  "font_point_size": 18.0,
+  "list_preview_presentation": {
+    "show_detail_line": false,
+    "show_active_configs": true,
+    "show_modified_fields": true,
+    "show_group_labels": true
+  },
+  "runtime_data_port": 7777,
+  "pipeline_source": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/ExampleHuman.cppipe",
+  "pipeline_steps": 9,
+  "dataset_scopes": [
+    "/home/ts/wt/openhcs-paper-ui-a3bbb63f/expanded2/Examples/ExampleHuman",
+    "/home/ts/wt/openhcs-paper-ui-a3bbb63f/expanded2/Examples/ExampleFly"
+  ],
+  "initialized_compiled_or_executed": false,
+  "private_home": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/expanded2/home",
+  "expanded_rows": {
+    "plate_manager": 2,
+    "pipeline_editor": 9
+  },
+  "boxes_xywh": {
+    "plate_manager": [
+      0,
+      277,
+      1269,
+      597
+    ],
+    "pipeline_editor": [
+      1275,
+      277,
+      625,
+      917
+    ],
+    "zmq_servers": [
+      0,
+      918,
+      1269,
+      276
+    ]
+  },
+  "logical_window_xywh": [
+    0,
+    0,
+    1900,
+    1250
+  ],
+  "native_pixels": [
+    3800,
+    2500
+  ],
+  "selected_png": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/expanded2/home/.local/share/openhcs/mcp_outputs/capture/20261103T004443592457Z_main_window_OpenHCS.png",
+  "selected_capture": "main_window_capture_provenance.json",
+  "capture_sha256": "db8365f89deaee55703f8a5c67b9ec4abeb17a806e47fcc40f79683bdd5cb1cd"
+}
