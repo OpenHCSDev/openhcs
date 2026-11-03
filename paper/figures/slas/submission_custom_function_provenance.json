@@ -1,10 +1,10 @@
 {
-  "generator_sha256": "26e3929425ef29d5562fc06f8a016a3185d6c785d15ca70f0c17090c29ac15aa",
+  "generator_sha256": "3645bfad43859a8797b1c5c83e38da064249f4b0b8730ec4829c1817b6e79c80",
   "source_sha256": {
     "paper/figures/slas/custom_signal_example.py": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
     "paper/figures/slas/custom_extension_fixed_openhcs_register_custom_function.json": "04d98eeb7559fdcbd9710810f72aebdea14eaa6d219d09db0bef3d0f8af87d25",
     "paper/figures/slas/custom_extension_live_function_detail.json": "538d863131beb12f3dc0c3c24310cad350147d1209e40dcbf5c12c4d7c3a48a5",
-    "paper/figures/build_slas_extension.py": "5cb9441493f0b310fb55f2f9a973391d6121a0a8f2bf8c779776125bc6e30ed6",
+    "paper/figures/build_slas_extension.py": "78456465e527702dae0e00e5550f88e412475377e89c3c189a010b8116f7dbd0",
     "paper/figures/slas/custom_extension_evidence.json": "dd72dc4c73be803c61ac6864ec611b6f2a37048caa2a0b8f7176a67a345d98bc",
     "paper/figures/slas/custom_extension_code_before.json": "0643feb3e37b62fab001619e68e6ff993a35cc9919e96aabe696c4ad47d99f0f",
     "paper/figures/slas/custom_extension_load_authoring.json": "178c109f95ed1793d616c319cceecca7d353a5292223e8e0d501cd14fc24ceec",
@@ -26,9 +26,9 @@
     "paper/figures/slas/custom_extension_live_evidence.json": "dbde62764c5050a4d33f61d2734659892d45ab6b782d309aad0af2ebebba2bac",
     "paper/figures/slas/custom_extension_live_parameters_capture_provenance.json": "b733220db62aba8ec0838318b784678b844546f817516f394e9083d3f4e43230",
     "paper/figures/slas/custom_extension_live_parameters_capture.png": "b0b01254363ecf87c321a6ed734be099cdda914668a57a7e01038b429787447d",
-    "paper/figures/slas/figure1_large_code_native_20261102/capture_evidence.json": "8755863c3aba5d23736f9ed80ada54bcb027f5237cb832b9681493f9f1cc47bd",
-    "paper/figures/slas/figure1_large_code_native_20261102/main_window_capture_provenance.json": "d418ba429017676740dcd26f59e7fb4c66d5bdbe00383a55635fbf03d0d9c71d",
-    "paper/figures/slas/figure1_large_code_native_20261102/20261102T220207134941Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png": "9bc09669d16b86218736ee422a9c218139359889743be358b0f7ab11bd2631d9"
+    "paper/figures/slas/figure1_matched_code_native_20261102/capture_evidence.json": "11a019ec48fdea86c27bf9098698324d22c54a935931fb876eeea084a3b0abe2",
+    "paper/figures/slas/figure1_matched_code_native_20261102/main_window_capture_provenance.json": "faab02dba1354900609e721080c6ec74d3211c18219dcc0ef1e15ae1afa20ab2",
+    "paper/figures/slas/figure1_matched_code_native_20261102/20261103T005207689451Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png": "7b43e2b65952e92d078ea6fae3254fe7fe88d9e12ee05cec28d6e849b8716a85"
   },
   "input_root": "/",
   "ui_crops": [
@@ -46,35 +46,24 @@
       ]
     },
     {
-      "source": "paper/figures/slas/figure1_large_code_native_20261102/20261102T220207134941Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png",
+      "source": "paper/figures/slas/figure1_matched_code_native_20261102/20261103T005207689451Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png",
       "xyxy_pixels": [
         22,
         84,
-        1378,
+        1522,
         1010
       ],
       "source_size": [
-        1400,
+        1544,
         1120
       ]
     }
   ],
-  "display_transforms": [
-    {
-      "source": "paper/figures/slas/figure1_large_code_native_20261102/20261102T220207134941Z_code_editor_formbridge.services.function_pattern_code_document.FunctionPatternVa_Edit_Function_Pattern.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        22,
-        84,
-        1378,
-        1010
-      ]
-    }
-  ],
+  "display_transforms": [],
   "output_sha256": {
-    "submission_custom_function.png": "38fdab75d7863de47ba11796ec21b990faa3a153095e5f26dceafbd4fcf9dd15",
-    "submission_custom_function.pdf": "966988eef3065d67d10e54f5aa2fa4d9b8617a62a7b281540427dd728d556012",
-    "submission_custom_function.svg": "72bce64e4635ecb58efd112b09a6890c3064369a9d94ddada10e532c9b54aec7"
+    "submission_custom_function.png": "37901e93d0f1237fa0827fff8c9d35852da4b2eaf4efa43de30fdd05a20d96a6",
+    "submission_custom_function.pdf": "806c2b1c573464d7d36fe18abdf4982e711730071cd0c9a5da7a9212d2f5c74b",
+    "submission_custom_function.svg": "c915c0b27d1a78c36ecdd9ff54136c13cd5d440601cb3b3b363e7cb59eb87fe9"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

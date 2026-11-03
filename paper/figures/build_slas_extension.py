@@ -21,6 +21,7 @@ from matplotlib.textpath import TextPath
 
 from build_slas_visual_story import (
     BLUE,
+    INK,
     MUTED,
     PALE,
     PURPLE,
@@ -32,10 +33,13 @@ from build_slas_visual_story import (
 )
 
 
+PYTHON_FONT_FAMILY = "DejaVu Sans Mono"
+
+
 def python_excerpt(sheet, x, y, source, *, size=10.5):
     """Draw actual Python tokens as editable vector text, not a raster."""
     lines = source.splitlines()
-    colors = [["#253346"] * len(line) for line in lines]
+    colors = [[INK] * len(line) for line in lines]
     for token in tokenize.generate_tokens(io.StringIO(source).readline):
         color = (
             BLUE if token.type == tokenize.NAME and keyword.iskeyword(token.string)
@@ -50,7 +54,7 @@ def python_excerpt(sheet, x, y, source, *, size=10.5):
             start = token.start[1] if row == token.start[0] - 1 else 0
             end = token.end[1] if row == token.end[0] - 1 else len(lines[row])
             colors[row][start:end] = [color] * (end - start)
-    font = FontProperties(family="DejaVu Sans Mono", size=size)
+    font = FontProperties(family=PYTHON_FONT_FAMILY, size=size)
     # Include the advance, rather than glyph ink width, to retain indentation.
     advance = (TextPath((0, 0), "MM", prop=font).get_extents().width
                - TextPath((0, 0), "M", prop=font).get_extents().width)
@@ -63,7 +67,7 @@ def python_excerpt(sheet, x, y, source, *, size=10.5):
             while end < len(line) and colors[row][end] == colors[row][start]:
                 end += 1
             sheet.text(x + start * dx, y - row * dy, line[start:end],
-                       size=size, color=colors[row][start], family="DejaVu Sans Mono",
+                       size=size, color=colors[row][start], family=PYTHON_FONT_FAMILY,
                        va="top", parse_math=False)
             start = end
 
@@ -215,9 +219,16 @@ def extension(*, main_panel=False):
         sheet.native_image("custom_extension_live_parameters_capture",
                            (53, 57, 44, 26), crop=(20, 113, 310, 224), response_path=())
         sheet.text(53, 53, "Or edit the same settings in Python", size=11, weight="bold")
-        code_folder = OUTPUT / "figure1_large_code_native_20261102"
+        code_folder = OUTPUT / "figure1_matched_code_native_20261102"
         code_evidence_path = code_folder / "capture_evidence.json"
         code_evidence = json.loads(code_evidence_path.read_text())
+        if code_evidence["native_font_family"] != PYTHON_FONT_FAMILY:
+            raise ValueError("Native and definition code fonts differ")
+        if code_evidence["python_presentation_palette"] != {
+            "default": INK, "keyword": BLUE, "number": PURPLE,
+            "string": TEAL, "comment": MUTED, "background": PALE,
+        }:
+            raise ValueError("Native and definition code palettes differ")
         if code_evidence["function_source"] != source_path.read_text():
             raise ValueError("Recaptured code uses a different function declaration")
         visible_tree = ast.parse(code_evidence["code_source"])
@@ -238,7 +249,7 @@ def extension(*, main_panel=False):
                 round((y + height) * native_height / logical_height))
         sheet.source(code_evidence_path)
         sheet.native_image(str(code_capture.relative_to(OUTPUT).with_suffix("")),
-                           (53, 5, 44, 46), crop=crop, response_path=(), invert=True,
+                           (53, 5, 44, 46), crop=crop, response_path=(),
                            provenance_path=code_folder / code_evidence["selected_capture"])
         sheet.save()
         return
@@ -246,7 +257,7 @@ def extension(*, main_panel=False):
     sheet.panel("A", "Register a function with typed parameters", 3, 90)
     sheet.axis.add_patch(Rectangle((3, 67), 94, 20, color=PALE))
     sheet.text(
-        5, 84.5, excerpt, size=11, family="DejaVu Sans Mono", va="top", linespacing=1.5
+        5, 84.5, excerpt, size=11, family=PYTHON_FONT_FAMILY, va="top", linespacing=1.5
     )
     sheet.text(
         5,
@@ -276,7 +287,7 @@ def extension(*, main_panel=False):
     )
     sheet.panel("D", "The same parameters through MCP", 54, 35)
     sheet.text(
-        56, 30, entry["function_id"], size=8.5, family="DejaVu Sans Mono", color=PURPLE
+        56, 30, entry["function_id"], size=8.5, family=PYTHON_FONT_FAMILY, color=PURPLE
     )
     for index, name in enumerate(parameter_names):
         parameter = parameters[name]
@@ -287,7 +298,7 @@ def extension(*, main_panel=False):
             f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
             size=10,
             color=TEAL,
-            family="DejaVu Sans Mono",
+            family=PYTHON_FONT_FAMILY,
         )
         sheet.text(56, y - 3, parameter["description"], size=8.5, color=MUTED)
     sheet.text(

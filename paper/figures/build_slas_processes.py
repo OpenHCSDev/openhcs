@@ -78,15 +78,20 @@ def processes(*, stem="process_architecture", with_logos=False):
     sheet.arrow((71, 66), (60, 57), both=True, color=BLUE)
     sheet.text(49, 62, "Work / results", size=9, ha="center", color=BLUE)
 
-    sheet.text(75, 60, "Viewer processes", size=11, weight="bold", color=TEAL)
-    sheet.box(74, 44, 22, 13, "napari", "Layers · ROIs", color=TEAL)
-    sheet.box(74, 27, 22, 13, "Fiji", "Images · ROIs", color=TEAL)
+    sheet.text(74, 60, "Viewer processes", size=10, weight="bold", color=TEAL)
+    sheet.axis.add_patch(Rectangle((74, 27), 22, 30, linewidth=1.15,
+                                  edgecolor=TEAL, facecolor="white", zorder=2))
+    sheet.text(82, 51.5, "napari", size=12, weight="bold", color=TEAL, va="center")
+    sheet.text(82, 42, "Fiji", size=12, weight="bold", color=TEAL, va="center")
+    sheet.text(85, 32.5, "Images · layers\nROIs", size=9, ha="center", va="center")
     if with_logos:
-        sheet.asset(logos / "napari.svg", (75, 50, 4.5, 5.5))
-        sheet.asset(logos / "fiji.svg", (75, 33, 4.5, 5.5))
-    sheet.route(((60, 44), (69, 44), (69, 50.5), (74, 50.5)), color=TEAL)
-    sheet.route(((69, 44), (69, 33.5), (74, 33.5)), color=TEAL)
-    sheet.text(66.5, 52, "Images\nROIs", size=9, ha="center", color=TEAL)
+        sheet.asset(logos / "napari.svg", (75.5, 49, 4.5, 5.5))
+        sheet.asset(logos / "fiji.svg", (75.5, 39.5, 4.5, 5.5))
+    sheet.arrow((94, 66), (94, 57), both=True, color=BLUE)
+    sheet.arrow((60, 44), (74, 44), color=TEAL)
+    sheet.text(66.5, 48, "Images\nROIs", size=9, ha="center", color=TEAL)
+    sheet.arrow((58, 14), (80, 27), both=True, color=TEAL)
+    sheet.text(75, 13, "Open / save", size=9, ha="center", color=TEAL)
 
     sheet.axis.add_patch(Rectangle((4, 3), 54, 21, linewidth=1.15,
                                   edgecolor=MUTED, facecolor="white", zorder=2))

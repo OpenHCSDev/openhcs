@@ -898,34 +898,58 @@ def submission_autonomous_loop():
 
 
 def submission_shared_workflow():
-    """Show three readable detail crops from one genuine native workspace."""
-    folder = OUTPUT / "figure1_three_region_native_20261102"
+    """Keep the full native desktop, expanded details and code in one figure."""
+    from build_slas_extension import extension
+
+    extension(main_panel=True)
+    folder = OUTPUT / "figure1_expanded_ui_native_20261102"
     evidence_path = folder / "capture_evidence.json"
     evidence = json.loads(evidence_path.read_text())
+    if evidence["expanded_rows"] != {"plate_manager": 2, "pipeline_editor": 9}:
+        raise ValueError("Figure1 requires the native dataset and step rows expanded")
     capture = folder / Path(evidence["selected_png"]).name
     with Image.open(capture) as pixels:
         width_px, height_px = pixels.size
     _, _, logical_width, logical_height = evidence["logical_window_xywh"]
     sx, sy = width_px / logical_width, height_px / logical_height
-    sheet = FigureSheet("submission_shared_workflow", "", 3.4)
-    sheet.panel("A", "Select images, edit the analysis and follow its progress", 1, 93)
+    sheet = FigureSheet("submission_shared_workflow", "", 7.5)
+    sheet.figure.set_size_inches(7, 7.5)
     sheet.source(evidence_path)
+    sheet.panel("A", "Desktop workspace", 2, 98)
+    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
+                       (2, 74, 34, 21), response_path=(),
+                       provenance_path=folder / evidence["selected_capture"])
+    overview = sheet.figure.axes[-1]
     details = (
-        ("plate_manager", "Input collections", (0, 50, 58, 30), 650, 130, (0, 85)),
-        ("pipeline_editor", "Analysis steps", (61, 5, 39, 75), 526, 340, (61, 85)),
-        ("zmq_servers", "Execution connections", (0, 5, 58, 30), 800, 140, (0, 38)),
+        ("pipeline_editor", "B", "Expanded analysis steps", (39, 59, 59, 36),
+         815, 345, (39, 98), BLUE),
+        ("plate_manager", "C", "Dataset settings", (2, 59, 34, 11),
+         320, 65, (2, 72), TEAL),
     )
-    for region, label, bounds, detail_width, detail_height, heading in details:
+    for region, label, title, bounds, detail_width, detail_height, heading, color in details:
         x, y, width, height = evidence["boxes_xywh"][region]
         crop = (round(x * sx), round(y * sy), round((x + min(width, detail_width)) * sx),
                 round((y + min(height, detail_height)) * sy))
-        sheet.text(*heading, label, size=11, weight="bold", color=BLUE)
+        overview.add_patch(Rectangle((crop[0], crop[1]), crop[2] - crop[0],
+                                     crop[3] - crop[1], fill=False,
+                                     edgecolor=color, linewidth=1.5))
+        sheet.panel(label, title, *heading)
         sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
                            bounds, response_path=(), crop=crop,
                            provenance_path=folder / evidence["selected_capture"])
         sheet.figure.axes[-1].add_patch(Rectangle(
             (0, 0), crop[2] - crop[0] - 1, crop[3] - crop[1] - 1,
-            fill=False, edgecolor=BLUE, linewidth=2))
+            fill=False, edgecolor=color, linewidth=1.5))
+    sheet.arrow((36, 85), (39, 85), color=BLUE)
+    sheet.route(((2, 89.3), (.5, 89.3), (.5, 65), (2, 65)), color=TEAL)
+    sheet.panel("D", "Add a function; edit the same settings in a form or Python", 2, 55)
+    function_panel = OUTPUT / "submission_custom_function.png"
+    with Image.open(function_panel) as pixels:
+        width, height = pixels.size
+    sheet.source(OUTPUT / "submission_custom_function_provenance.json")
+    sheet.source_image(function_panel, (0, 0, 100, 53),
+                       crop=(round(width * .02), round(height * .08),
+                             round(width * .98), round(height * .98)))
     sheet.save(dpi=600)
 
 
