@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "3645bfad43859a8797b1c5c83e38da064249f4b0b8730ec4829c1817b6e79c80",
+  "generator_sha256": "e3b2c5b69cbf5c2a640d58d597d832a0997eacdbd05e677fa4d5037d7e60b6ce",
   "source_sha256": {
     "paper/figures/slas/custom_signal_example.py": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
     "paper/figures/slas/custom_extension_fixed_openhcs_register_custom_function.json": "04d98eeb7559fdcbd9710810f72aebdea14eaa6d219d09db0bef3d0f8af87d25",
@@ -62,8 +62,8 @@
   "display_transforms": [],
   "output_sha256": {
     "submission_custom_function.png": "37901e93d0f1237fa0827fff8c9d35852da4b2eaf4efa43de30fdd05a20d96a6",
-    "submission_custom_function.pdf": "806c2b1c573464d7d36fe18abdf4982e711730071cd0c9a5da7a9212d2f5c74b",
-    "submission_custom_function.svg": "c915c0b27d1a78c36ecdd9ff54136c13cd5d440601cb3b3b363e7cb59eb87fe9"
+    "submission_custom_function.pdf": "9f885c8419d8ed03615c0e601657d705a48f17a217d751cf99f37d9c839bfa1b",
+    "submission_custom_function.svg": "8ee7e718dfcd418c531819723a701e9f5e720ba26ef44f9536a9b60ad90f580a"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

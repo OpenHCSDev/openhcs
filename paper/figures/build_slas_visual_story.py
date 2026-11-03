@@ -902,34 +902,40 @@ def submission_shared_workflow():
     from build_slas_extension import extension
 
     extension(main_panel=True)
-    folder = OUTPUT / "figure1_expanded_ui_native_20261102"
+    folder = OUTPUT / "figure1_dark_whole_cell_native_20261103"
     evidence_path = folder / "capture_evidence.json"
     evidence = json.loads(evidence_path.read_text())
     if evidence["expanded_rows"] != {"plate_manager": 2, "pipeline_editor": 9}:
         raise ValueError("Figure1 requires the native dataset and step rows expanded")
+    if evidence["native_theme"] != "dark":
+        raise ValueError("Figure1 requires a genuine dark-theme native capture")
     capture = folder / Path(evidence["selected_png"]).name
     with Image.open(capture) as pixels:
         width_px, height_px = pixels.size
     _, _, logical_width, logical_height = evidence["logical_window_xywh"]
     sx, sy = width_px / logical_width, height_px / logical_height
-    sheet = FigureSheet("submission_shared_workflow", "", 7.5)
-    sheet.figure.set_size_inches(7, 7.5)
+    sheet = FigureSheet("submission_shared_workflow", "", 8)
+    sheet.figure.set_size_inches(7, 8)
     sheet.source(evidence_path)
     sheet.panel("A", "Desktop workspace", 2, 98)
     sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
-                       (2, 74, 34, 21), response_path=(),
+                       (2, 67, 52, 28), response_path=(),
                        provenance_path=folder / evidence["selected_capture"])
     overview = sheet.figure.axes[-1]
+    overview.apply_aspect()
     details = (
-        ("pipeline_editor", "B", "Expanded analysis steps", (39, 59, 59, 36),
-         815, 345, (39, 98), BLUE),
-        ("plate_manager", "C", "Dataset settings", (2, 59, 34, 11),
-         320, 65, (2, 72), TEAL),
+        ("analysis_cells", "B", "Expanded analysis steps", (58, 67, 40, 28),
+         (58, 98), BLUE, 1, 56),
+        ("dataset_cell", "C", "Complete dataset cell", (2, 53, 96, 10),
+         (2, 65), TEAL, 0, .5),
     )
-    for region, label, title, bounds, detail_width, detail_height, heading, color in details:
-        x, y, width, height = evidence["boxes_xywh"][region]
-        crop = (round(x * sx), round(y * sy), round((x + min(width, detail_width)) * sx),
-                round((y + min(height, detail_height)) * sy))
+    for region, label, title, bounds, heading, color, edge_fraction, corridor in details:
+        x, y, width, height = evidence["row_boxes_xywh"][region]
+        if not (0 <= x < x + width <= logical_width and
+                0 <= y < y + height <= logical_height):
+            raise ValueError(f"Native complete-cell bounds leave the captured window: {region}")
+        crop = (round(x * sx), round(y * sy), round((x + width) * sx),
+                round((y + height) * sy))
         overview.add_patch(Rectangle((crop[0], crop[1]), crop[2] - crop[0],
                                      crop[3] - crop[1], fill=False,
                                      edgecolor=color, linewidth=1.5))
@@ -937,17 +943,23 @@ def submission_shared_workflow():
         sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
                            bounds, response_path=(), crop=crop,
                            provenance_path=folder / evidence["selected_capture"])
-        sheet.figure.axes[-1].add_patch(Rectangle(
+        detail = sheet.figure.axes[-1]
+        detail.apply_aspect()
+        detail.add_patch(Rectangle(
             (0, 0), crop[2] - crop[0] - 1, crop[3] - crop[1] - 1,
             fill=False, edgecolor=color, linewidth=1.5))
-    sheet.arrow((36, 85), (39, 85), color=BLUE)
-    sheet.route(((2, 89.3), (.5, 89.3), (.5, 65), (2, 65)), color=TEAL)
-    sheet.panel("D", "Add a function; edit the same settings in a form or Python", 2, 55)
+        source_edge = crop[0] + edge_fraction * (crop[2] - crop[0])
+        start = sheet.axis.transData.inverted().transform(overview.transData.transform(
+            (source_edge, (crop[1] + crop[3]) / 2)))
+        end = sheet.axis.transData.inverted().transform(detail.transData.transform(
+            (0, (crop[3] - crop[1]) / 2)))
+        sheet.route((start, (corridor, start[1]), (corridor, end[1]), end), color=color)
+    sheet.panel("D", "Add a function; edit the same settings in a form or Python", 2, 50.5)
     function_panel = OUTPUT / "submission_custom_function.png"
     with Image.open(function_panel) as pixels:
         width, height = pixels.size
     sheet.source(OUTPUT / "submission_custom_function_provenance.json")
-    sheet.source_image(function_panel, (0, 0, 100, 53),
+    sheet.source_image(function_panel, (0, 0, 100, 48),
                        crop=(round(width * .02), round(height * .08),
                              round(width * .98), round(height * .98)))
     sheet.save(dpi=600)

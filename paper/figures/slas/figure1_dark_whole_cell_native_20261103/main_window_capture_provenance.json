@@ -1,0 +1,57 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_snapshot_window",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "main_window",
+          "schema_version": "formbridge.v1",
+          "errors": [],
+          "warnings": [],
+          "output_dir_path": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/home/.local/share/openhcs/mcp_outputs/capture",
+          "capture_scope": "window",
+          "frame_condition": "immediate",
+          "observation_timeout_s": 5.0,
+          "captured": true,
+          "resource": {
+            "uri": "file:///home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/home/.local/share/openhcs/mcp_outputs/capture/20261103T020050339756Z_main_window_OpenHCS.png",
+            "title": "OpenHCS",
+            "mime_type": "image/png",
+            "path": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/home/.local/share/openhcs/mcp_outputs/capture/20261103T020050339756Z_main_window_OpenHCS.png",
+            "size_bytes": 907178,
+            "sha256": "bde074f43cf377b81266a955621e873267d360d306662eb5597248027a477e4a"
+          },
+          "summary": {
+            "object_state_scope_id": null,
+            "dirty": false,
+            "signature_diff": false,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 0,
+            "semantic_markers": [],
+            "managed_action_ids": [],
+            "schema_version": "formbridge.v1",
+            "identity": {
+              "window_id": "main_window"
+            },
+            "title": "OpenHCS",
+            "window_kind": "qt_top_level",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": null,
+            "error_dialog": false
+          },
+          "width": 3800,
+          "height": 2500,
+          "operation_id": null,
+          "observation": null
+        }
+      ]
+    }
+  ]
+}

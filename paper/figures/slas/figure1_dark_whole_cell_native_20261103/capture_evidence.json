@@ -1,0 +1,75 @@
+{
+  "source_head": "ff31dda5b7425432d8d8eb6400bd5e151e46142f",
+  "display": ":0",
+  "qt_scale_factor": "2",
+  "gui_pid": 1021875,
+  "font_point_size": 18.0,
+  "native_theme": "dark",
+  "theme_operation": "ThemeManager.switch_to_dark_theme",
+  "list_preview_presentation": {
+    "show_detail_line": false,
+    "show_active_configs": true,
+    "show_modified_fields": true,
+    "show_group_labels": true
+  },
+  "runtime_data_port": 7777,
+  "pipeline_source": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/ExampleHuman.cppipe",
+  "pipeline_steps": 9,
+  "dataset_scopes": [
+    "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/Examples/ExampleHuman",
+    "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/Examples/ExampleFly"
+  ],
+  "initialized_compiled_or_executed": false,
+  "private_home": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/home",
+  "expanded_rows": {
+    "plate_manager": 2,
+    "pipeline_editor": 9
+  },
+  "boxes_xywh": {
+    "plate_manager": [
+      0,
+      277,
+      1269,
+      597
+    ],
+    "pipeline_editor": [
+      1275,
+      277,
+      625,
+      917
+    ],
+    "zmq_servers": [
+      0,
+      918,
+      1269,
+      276
+    ]
+  },
+  "row_boxes_xywh": {
+    "dataset_cell": [
+      2,
+      279,
+      1265,
+      174
+    ],
+    "analysis_cells": [
+      1277,
+      279,
+      607,
+      348
+    ]
+  },
+  "logical_window_xywh": [
+    0,
+    0,
+    1900,
+    1250
+  ],
+  "native_pixels": [
+    3800,
+    2500
+  ],
+  "selected_png": "/home/ts/wt/openhcs-paper-ui-a3bbb63f/dark_whole_cell1/home/.local/share/openhcs/mcp_outputs/capture/20261103T020050339756Z_main_window_OpenHCS.png",
+  "selected_capture": "main_window_capture_provenance.json",
+  "capture_sha256": "bde074f43cf377b81266a955621e873267d360d306662eb5597248027a477e4a"
+}
