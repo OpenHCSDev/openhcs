@@ -8,7 +8,7 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-Additional methods and figures describe assay measurements, segmentation errors and processing times. Supp. Data 1–8 link the underlying measurements, agent instructions and final pipelines. BBBC identifiers refer to the Broad Bioimage Benchmark Collection.
+Additional methods and figures describe assay measurements, segmentation errors and processing times. We provide the underlying measurements, agent instructions and final pipelines in Supp. Data 1–8. BBBC identifiers refer to the Broad Bioimage Benchmark Collection.
 
 ## Supp. Figure 1. Pipeline preparation and execution {#supplementary-figure-1.-pipeline-preparation-and-execution}
 
@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 6C shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on wells withheld before development, with four wells per control condition. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. Supp. Data 7–8 contain the measurements and pipelines.
+In analysis 2, only nuclei with measurable cytoplasm contributed a green fluorescent protein (GFP) ratio; we therefore checked eligibility alongside control separation. **(A–B)** Fraction of nuclei with measurable cytoplasm in protein translocation analysis 2, across 96 BBBC013 wells including four development wells. Dots represent four wells per dose; horizontal marks and whiskers indicate the mean and sample standard deviation (SD). Main Figure 6C shows the corresponding GFP responses. **(C–D)** Nuclear-to-cytoplasmic GFP ratios from the independent analysis 1 on wells withheld before development, with four wells per control condition. Analysis 1 used mean cell-level GFP ratios; analysis 2 used median log2 ratios. The measurements and pipelines are available in Supp. Data 7–8.
 :::
 
 ## Supp. Figure 3. Nuclear-detection and cell-boundary measurements {#supplementary-figure-3.-nuclear-detection-and-cell-boundary-measurements}
@@ -31,7 +31,7 @@ In analysis 2, only nuclei with measurable cytoplasm contributed a green fluores
 ![Independent nuclear analyses and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 fields and cell-boundary analysis 1 on 12 fields. Both evaluation sets were withheld before development; each analysis used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels between touching cells within two pixels of a manual outline and does not measure recovery of every manual border. Supp. Data 7–8 provide per-field scores and counts.
+Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 fields and cell-boundary analysis 1 on 12 fields. Both evaluation sets were withheld before development; each analysis used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels between touching cells within two pixels of a manual outline and does not measure recovery of every manual border. We provide the per-field scores and counts in Supp. Data 7–8.
 :::
 
 ### Nuclear-detection errors
@@ -43,7 +43,7 @@ Across all 200 fields, nuclear detection analyses 2–4 gave pooled F1 of 0.898�
 ![Orthogonal nuclear localisation, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from the independent H002_FRESH10_89 volume analysis in XY, XZ and YZ. **(D–F)** Retinal region from the R0010_FRESH16_88 continuation before analysis and with first and final outlines; a possible split remains. **(G–I)** H003_POSTPAUSE_88 raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth in the separate H003_FRESH19_96 analysis, not the Fresh26 paired-channel result. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. Supp. Data 8 links the source images and reports.
+Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from the independent H002_FRESH10_89 volume analysis in XY, XZ and YZ. **(D–F)** Retinal region from the R0010_FRESH16_88 continuation before analysis and with first and final outlines; a possible split remains. **(G–I)** H003_POSTPAUSE_88 raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth in the separate H003_FRESH19_96 analysis, not the Fresh26 paired-channel result. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 8.
 :::
 
 ## Supp. Figure 4, continued. Final nuclear localisation views {#supplementary-figure-4-continued.-final-nuclear-localisation-views}
@@ -155,7 +155,7 @@ ArrayBridge supports NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Pr
 | [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface. |
 | [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads function parameters, types, defaults and documentation. |
 | [ObjectState](https://github.com/OpenHCSDev/objectstate) | Stores editable settings, shared defaults and local overrides. |
-| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Generates parameter controls and updates them when settings change. |
+| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Dynamically generates the user interface and updates it when analysis settings change. |
 | [pycodify](https://github.com/OpenHCSDev/pycodify) | Writes analysis steps and settings as editable Python and reads edited values back. |
 | [ArrayBridge](https://github.com/OpenHCSDev/arraybridge) | Converts image arrays between libraries and manages computing resources. |
 | [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads and writes local files, memory, Zarr and OMERO. |
@@ -163,7 +163,7 @@ ArrayBridge supports NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Pr
 
 ## Supp. Table 2. User tasks covered by automated software checks {#supplementary-table-2.-user-tasks-covered-by-automated-software-checks}
 
-The automated checks connect software changes to expected user outcomes. The table distinguishes complete analysis or service runs from focused component checks and lists their configured environments. [Supp. Data 1](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison) records completed output comparisons; [Data 6](analysis_records.md#supplementary-data-6-workflow-regression-tests) links a passed, revision-pinned component-test run. The [test-workflow definition](https://github.com/OpenHCSDev/openhcs/blob/3fea2bb30142aa76ef25fb60120579b2db58d65e/.github/workflows/integration-tests.yml) specifies the configured coverage below, rather than a result for every environment.
+The automated checks connect software changes to expected user outcomes. The table distinguishes complete analysis or service runs from focused component checks and lists their configured environments. We provide completed output comparisons in [Supp. Data 1](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison) and a passed, revision-pinned component-test run in [Data 6](analysis_records.md#supplementary-data-6-workflow-regression-tests). The [test-workflow definition](https://github.com/OpenHCSDev/openhcs/blob/3fea2bb30142aa76ef25fb60120579b2db58d65e/.github/workflows/integration-tests.yml) specifies the configured coverage below, rather than a result for every environment.
 
 | User task | Expected outcome checked | Check and configured environment |
 | --- | --- | --- |

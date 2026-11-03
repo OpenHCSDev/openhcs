@@ -20,11 +20,11 @@ The remaining author questions are factual, not unfinished prose:
   Neurological Institute Animal Care and Use Committee and Canadian Council on
   Animal Care guidelines. Confirm that the approval covers both the E18 rat
   cortical cultures and retinal tissue; add the protocol number if required.
-- Confirm the retinal species and exact microscope model. Original CZI metadata
-  confirms the 20× Plan-Apochromat objective (numerical aperture 0.8), but its
-  microscope system says LSM 800 while a detector is labelled LSM 900. The
-  retained acquisition record in Supp. Data 8 preserves both fields; neither
-  the model nor mouse species is inferred.
+- Confirm the retinal species and whether the CZI's differing system and detector
+  labels describe the acquisition correctly. Methods now reports the recorded
+  Axio Observer.Z1 / 7 stand, LSM 800 system and Plan-Apochromat 20×/0.8 M27 air
+  objective. One detector is labelled LSM 900; the immutable acquisition record
+  in Supp. Data 8 preserves both fields. Mouse species is not inferred.
 - Supply the authorized Zenodo account/deposit route and confirm creators and
   rights for the selected archive. The existing procedure is in
   `supplementary/archive_publication.rst`; no issued OpenHCS DOI is yet verified.

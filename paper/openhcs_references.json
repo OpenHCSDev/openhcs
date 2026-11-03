@@ -2165,6 +2165,23 @@
     "page": "W83-W94"
   },
   {
+    "id": "HaaseNotebooks",
+    "type": "webpage",
+    "title": "Bio-image Analysis Notebooks: Algorithm validation (revision 68845a1a)",
+    "author": [
+      {"given": "Robert", "family": "Haase"},
+      {"given": "Guillaume", "family": "Witz"},
+      {"given": "Miguel", "family": "Fernandes"},
+      {"given": "Marcelo Leomil", "family": "Zoccoler"},
+      {"given": "Shannon", "family": "Taylor"},
+      {"given": "Mara", "family": "Lampert"},
+      {"given": "Till", "family": "Korten"},
+      {"given": "Markus", "family": "Ankenbrand"}
+    ],
+    "URL": "https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/tree/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/29_algorithm_validation",
+    "accessed": {"date-parts": [[2026, 11, 2]]}
+  },
+  {
     "id": "Haase2020",
     "type": "article-journal",
     "title": "CLIJ: GPU-accelerated image processing for everyone",
