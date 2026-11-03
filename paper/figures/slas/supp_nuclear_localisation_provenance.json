@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "fb12a079961b04187b790d716bb667e86fae32b3065e08c7652775a14407d79b",
+  "generator_sha256": "e3b2c5b69cbf5c2a640d58d597d832a0997eacdbd05e677fa4d5037d7e60b6ce",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "ca200de0a64896a9da8554109a036d3bace1405f25ce6bfa4868cf9fb03c96e7",
+    "paper/figures/build_slas_supplement.py": "8c707384a09f981a07c67daad7f830f1e4bcf5b6c7fc1e0da35f711b9ed391e1",
     "paper/figures/slas/h002_measurement_first_provenance.json": "ff84d45b85eeafe668dab973f3fc8dc732c2492ed1d7d50299d706b3492c03d3",
     "paper/figures/slas/h002_measurement_first.png": "95ab36dccf73276d2c50e34b11eb07e346d740ffedbcaef1940c82bb8562e3e1"
   },
@@ -23,9 +23,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_nuclear_localisation.png": "8c399b6e36a00c60f00928c6b25819b0ee1cd7a9efe568d8e075667527a05f35",
-    "supp_nuclear_localisation.pdf": "79b4a2ab60407cb280ab6e5f54c48f83f58b3f826587599f59fcc66f585bbe19",
-    "supp_nuclear_localisation.svg": "3b7a08c0b8d89f28ecdadd782b1a091b68df3702975dcb523c00b77f37a839aa"
+    "supp_nuclear_localisation.png": "ef1017a1bc935cb497dcab21e9db0705ab0daa622e4587c860b99c20f830d366",
+    "supp_nuclear_localisation.pdf": "6f1af571a876bed87bc76511ad443dea298842cf170f340fd2d5317e4ba8fdd0",
+    "supp_nuclear_localisation.svg": "13b4bf12c4a94feec518bd197c5478a1c709cd7b1364d92fdc77d741c80bcfed"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

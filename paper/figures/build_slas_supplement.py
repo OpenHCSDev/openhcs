@@ -128,7 +128,7 @@ def morphology_checks(*, input_root=FigureSheet.default_input_root):
 def final_volume_views(*, input_root=FigureSheet.default_input_root):
     """Retain the final-only localisation views beside supplementary checks."""
     sheet = SupplementFigure("supp_nuclear_localisation", 4.2, input_root=input_root)
-    sheet.heading("M–O  Nuclear localisation 1: final XY, XZ and YZ views", 98)
+    sheet.heading("M–O  Nuclear localization 1: final XY, XZ and YZ views", 98)
     sheet.artwork("h002_measurement_first", (1, 2, 98, 89),
                   crop=(1, 7.5, 99, 58))
     sheet.save()
@@ -145,7 +145,7 @@ def localisation_diagnostic():
     scores = evaluation["scores"]
     thresholds = sorted(map(int, scores))
     errors = [scores[str(threshold)]["mean_localisation_error_voxels"] for threshold in thresholds]
-    sheet.heading("P  Nuclear localisation: a partial-reference diagnostic", 98)
+    sheet.heading("P  Nuclear localization: a partial-reference diagnostic", 98)
     axis = sheet.plot_axes((0.17, 0.23, 0.73, 0.55))
     axis.plot(thresholds, errors, "o-", color=TEAL)
     for threshold, error in zip(thresholds, errors, strict=True):
