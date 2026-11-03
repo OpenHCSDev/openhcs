@@ -59,7 +59,7 @@ Laboratories can extend an analysis without maintaining a separate plugin packag
 ![Full native desktop, expanded dataset and pipeline details, and the same function edited through a generated form or Python, together in one composite.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Dark-theme native desktop with two public example datasets and the imported nine-step ExampleHuman analysis. **(B,C)** Corresponding zoom-ins show complete expanded analysis and dataset cells; coloured outlines locate these regions in A. Native green borders identify configuration scopes. **(D)** A laboratory function's definition and docstring supply its generated controls and agent-facing descriptions. Form and live Python views show the same gain 1.2 and offset 0.0. The definition and live code share a font, background and syntax colours. The native captures are authoring-only: no image analysis was run. Editing records and full source: Supp. Data 5.
+**(A)** Native desktop with two public example datasets and the imported nine-step ExampleHuman analysis. **(B,C)** Corresponding zoom-ins show complete expanded analysis and dataset cells; coloured outlines locate these regions in A. Native green borders identify configuration scopes. **(D)** A laboratory function's definition and docstring supply its generated controls and agent-facing descriptions. Form and live Python views show the same gain 1.2 and offset 0.0. The definition and live code share a font, background and syntax colours. The native captures are authoring-only: no image analysis was run. Editing records and full source: Supp. Data 5.
 :::
 
 ### Execution and viewers
