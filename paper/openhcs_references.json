@@ -1421,6 +1421,23 @@
     "page": "1496-1498"
   },
   {
+    "id": "Ljosa2012",
+    "type": "article-journal",
+    "title": "Annotated high-throughput microscopy image sets for validation",
+    "author": [
+      {"given": "Vebjorn", "family": "Ljosa"},
+      {"given": "Katherine L", "family": "Sokolnicki"},
+      {"given": "Anne E", "family": "Carpenter"}
+    ],
+    "container-title": "Nature Methods",
+    "issued": {"date-parts": [[2012, 6, 28]]},
+    "volume": "9",
+    "issue": "7",
+    "page": "637",
+    "DOI": "10.1038/nmeth.2083",
+    "URL": "https://www.nature.com/articles/nmeth.2083"
+  },
+  {
     "id": "BioFormats",
     "type": "article-journal",
     "title": "Metadata matters: access to image data in the real world",

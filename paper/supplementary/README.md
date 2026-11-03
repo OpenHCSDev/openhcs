@@ -195,14 +195,14 @@ The automated checks connect software changes to expected user outcomes. The tab
 
 ## Supp. Table 5. Tasks, models and evaluation protocols {#supplementary-table-5.-tasks-models-and-evaluation-protocols}
 
-Table: Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities are paper-reported; their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
+Table: Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities come from the [independent-agent validation report](independent_agent_validation.md) and the [earlier supplement's NeuronCyto demonstration](README_before_readability_20261015.md#supplementary-data-4.-method-directed-neuroncyto-demonstration); their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
 
 | Analysis and task/source | Model | Development and evaluation protocol |
 |:---------------------------|:----------------|:------------------------------------------------------|
 | Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
 | Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
 | Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
-| Protein translocation 2, BBBC013 | gpt-6.1-sol | Development from the task brief alone on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Control comparison after the pipeline was frozen, not manual segmentation accuracy. |
+| Protein translocation 2, BBBC013 | gpt-6.1-sol | Independent development from the task brief alone on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Control comparison after the pipeline was frozen, not manual segmentation accuracy. |
 | Nuclear detection 2, BBBC039 | gpt-6.1-sol | Independent development; 200 fields and retrospective 175-field subset. One official-test field viewed before freeze. |
 | Nuclear detection 3–4, BBBC039 | gpt-6.1-sol | Independent development by each agent; same populations; no official-test image viewed before freeze. Distinct guide revisions. |
 | Nuclear detection 2, repair | gpt-6.1-sol | Same three inspected fields; illustrative repair, not another agent or a full-collection validation. |
