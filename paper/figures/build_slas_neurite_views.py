@@ -109,10 +109,17 @@ class FrozenImageView(ABC):
     def scale_bar_length(self, width_px):
         return self.rounded_bar_length(width_px * self.units_per_pixel)
 
+    @property
+    def display_region(self):
+        return self.region
+
+    def display_plane(self, array):
+        return array
+
     def axis(self, bounds):
         x, y, width, height = bounds
         axis = self.sheet.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
-        top, bottom, left, right = self.region
+        top, bottom, left, right = self.display_region
         height_px, width_px = bottom - top, right - left
         length_units = self.scale_bar_length(width_px)
         length_px = length_units / self.units_per_pixel
@@ -129,7 +136,7 @@ class FrozenImageView(ABC):
         return axis
 
     def paint_raw(self, axis):
-        axis.imshow(self.raw, cmap=self.raw_cmap, vmin=self.window[0],
+        axis.imshow(self.display_plane(self.raw), cmap=self.raw_cmap, vmin=self.window[0],
                     vmax=self.window[1], interpolation="nearest", aspect=self.pixel_aspect)
 
     def paint_result(self, axis, labels, opacity):
@@ -189,7 +196,7 @@ class LabelImageView(FrozenImageView):
         rgba = np.zeros((*labels.shape, 4), dtype=np.float32)
         rgba[..., :3] = self.colour(labels)
         rgba[..., 3] = (labels != 0) * opacity
-        axis.imshow(rgba, interpolation="nearest", aspect=self.pixel_aspect)
+        axis.imshow(self.display_plane(rgba), interpolation="nearest", aspect=self.pixel_aspect)
 
 
 class CroppedImageView(FrozenImageView):
@@ -266,6 +273,38 @@ class VolumeImageView(FrozenImageView):
 
 class VolumeComparison(VolumeImageView, CroppedComparison):
     """Compose matched saved volume labels with a selected cropped plane."""
+
+
+class QuarterTurnView(FrozenImageView):
+    """One exact counterclockwise display turn shared by pixels and detections."""
+
+    def __init__(self, sheet, declaration, view_index=0):
+        super().__init__(sheet, declaration, view_index)
+        if self.pixel_aspect != 1:
+            raise ValueError("A quarter-turn view requires square display pixels")
+        sheet.display_transforms.append({
+            "author_run": declaration["author_run"], "operation": "Rotate display 90 degrees counterclockwise",
+            "native_region_yyxx": list(self.region), "display_region_yyxx": list(self.display_region),
+            "interpolation": "none; exact array index permutation", "analysis_rerun": False,
+        })
+
+    @property
+    def display_region(self):
+        top, bottom, left, right = self.region
+        width = self.raw.shape[1]
+        return width - right, width - left, top, bottom
+
+    def display_plane(self, array):
+        return np.rot90(super().display_plane(array), axes=(0, 1))
+
+    def scale_bar_length(self, width_px):
+        # Keep the native view's scale length while laying out its text upright.
+        _, _, left, right = self.region
+        return super().scale_bar_length(right - left)
+
+
+class BodySeparationView(QuarterTurnView, VolumeComparison):
+    """Landscape display of the same frozen body-separation witness."""
 
 
 class FrozenCentres(FrozenImageView):

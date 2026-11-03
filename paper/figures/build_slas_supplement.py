@@ -59,17 +59,12 @@ class VolumeResultsFigure(SupplementFigure):
             self.text(x, 31, heading, size=self.plot_font_size, weight="bold")
             self.artwork("retina_fresh16_repair", (x, 17.3, 30.7, 13.2),
                          crop=(left, 22.2, left + 30.08, 45.8))
-        self.text(3, 12, "G  3D body separation", size=14, weight="bold")
-        self.text(3, 9.5, "Z = 36 voxels", size=self.plot_font_size)
-        for column, (heading, crop) in enumerate((
-            ("Raw", (16, 14.8, 35, 47.2)),
-            ("First labels", (65, 14.8, 84, 47.2)),
-            ("Final labels", (16, 54.8, 35, 87.2)),
-            ("Final + raw", (65, 54.8, 84, 87.2)),
-        )):
-            x = 43 + column * 13.7
-            self.text(x, 15.6, heading, size=self.plot_font_size, weight="bold")
-            self.artwork("h002_fresh22_split_repair", (x, 0.5, 12.5, 14.4), crop=crop)
+        from build_slas_neurite_views import BodySeparationView, VOLUME_REPAIR_SOURCE
+
+        self.text(3, 15, "G  3D body separation", size=14, weight="bold")
+        self.text(97, 15, "Z = 36 voxels", size=self.plot_font_size, ha="right")
+        view = BodySeparationView.read(self, VOLUME_REPAIR_SOURCE)
+        view.draw_columns((3, .5, 94, 12), 12.4, view.label_panels)
 
 
 def infrastructure():
