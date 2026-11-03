@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell.
+For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. Three agents independently measured responses to fusicoccin-A (FC-A) and Y27632 across 180 fields in 20 wells. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell.
 :::
 
 ## Supp. Figure 2, continued. Process length and branching {#supplementary-figure-2-continued.-process-length-and-branching}
@@ -80,24 +80,24 @@ In analysis 2, only nuclei with measurable cytoplasm contributed a green fluores
 
 ## Supp. Figure 6. Segmentation errors in matched image regions {#supplementary-figure-6.-segmentation-errors-in-matched-image-regions}
 
-![Orthogonal nuclear localisation, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
+![Orthogonal nuclear localization, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
 Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from the independent H002_FRESH10_89 volume analysis in XY, XZ and YZ. **(D–F)** Retinal region from the R0010_FRESH16_88 continuation before analysis and with first and final outlines; a possible split remains. **(G–I)** H003_POSTPAUSE_88 raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** A nuclear seed lacks actin-supported cell-body growth in the separate H003_FRESH19_96 analysis, not the Fresh26 paired-channel result. Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 5.
 :::
 
-## Supp. Figure 6, continued. Final nuclear localisation views {#supplementary-figure-6-continued.-final-nuclear-localisation-views}
+## Supp. Figure 6, continued. Final nuclear localization views {#supplementary-figure-6-continued.-final-nuclear-localization-views}
 
-![Final nuclear localisation analysis 1 in XY, XZ and YZ, separate from the sampled body-separation repair.](../figures/slas/supp_nuclear_localisation.png){width=6.5in}
+![Final nuclear localization analysis 1 in XY, XZ and YZ, separate from the sampled body-separation repair.](../figures/slas/supp_nuclear_localisation.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(M–O)** Final 3D nuclear localisation analysis 1 (H002_FRESH15_89), shown in XY, XZ and YZ. Label colours distinguish detected nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. These are final-only views, not a repair sequence. All 15 manually annotated centres have a prediction within the predeclared 30-voxel radius (panel P). Eleven predictions have no matching annotation; partial coverage prevents classifying them as false detections. Distances and scale bars are in voxel-index units, not calibrated physical lengths. Main Figure 5G shows the distinct H002_FRESH22_89 body repair.
+**(M–O)** Final 3D nuclear localization analysis 1 (H002_FRESH15_89), shown in XY, XZ and YZ. Label colours distinguish detected nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. These are final-only views, not a repair sequence. All 15 manually annotated centres have a prediction within the predeclared 30-voxel radius (panel P). Eleven predictions have no matching annotation; partial coverage prevents classifying them as false detections. Distances and scale bars are in voxel-index units, not calibrated physical lengths. Main Figure 5G shows the distinct H002_FRESH22_89 body repair.
 :::
 
 ![Mean matched-centre error across matching distances for the 15-point partial reference.](../figures/slas/supp_localisation_diagnostic.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(P)** Nuclear localisation analysis 1: mean centre-to-centre distance among matched predictions at each matching radius. Labels give the number of matches among the 15 manual centres; the dashed line is the predeclared 30-voxel radius. These partial annotations cannot establish a false-detection rate. This is a diagnostic of the fixed predictions, not a threshold-tuning experiment or the separate body-separation repair.
+**(P)** Nuclear localization analysis 1: mean centre-to-centre distance among matched predictions at each matching radius. Labels give the number of matches among the 15 manual centres; the dashed line is the predeclared 30-voxel radius. These partial annotations cannot establish a false-detection rate. This is a diagnostic of the fixed predictions, not a threshold-tuning experiment or the separate body-separation repair.
 :::
 
 ## Supp. methods: analysis scoring {#supplementary-methods-analysis-scoring}
@@ -118,15 +118,13 @@ Control separation was quantified by Z′ (Z-prime): 1 minus three times the sum
 
 For drug responses, fold change is the measurement divided by its DMSO control mean: 1 means no change, 2 means double and 0.5 means half. Pearson's correlation coefficient, r, describes whether two methods' measurements rise and fall together across wells. It ranges from −1 to 1; values near 1 indicate a strong positive linear relationship, but do not mean that the methods give identical values or effect sizes.
 
-Bright-object detection analysis 1 matched first and final detections one-to-one to computational reference labels from a notebook-derived image. Three-dimensional nuclear localisation analysis 1 matched centres one-to-one to partial manual annotations within a predeclared 30-voxel radius. A voxel is a three-dimensional image pixel; lower centre-to-centre distances indicate more accurate localisation.
+Bright-object detection analysis 1 matched first and final detections one-to-one to computational reference labels from a notebook-derived image. Three-dimensional nuclear localization analysis 1 matched centres one-to-one to partial manual annotations within a predeclared 30-voxel radius. A voxel is a three-dimensional image pixel; lower centre-to-centre distances indicate more accurate localization.
 
 ## Supp. methods: neurite morphometry {#supplementary-methods-neurite-morphometry}
 
 Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Images were acquired on an ImageXpress Micro Confocal using a 10× Plan Apo Lambda objective (0.45 NA) and 2 × 2 camera binning, giving a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; calcein-labelled neurons were recorded in the FITC channel.
 
 To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census.
-
-Doses are equally spaced for display; no concentration–response model was fitted.
 
 OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root. Branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, without specifying crossing resolution. These differences in segmentation and measurement definitions limit comparisons of absolute values; neither method supplies manual tracing ground truth.
 
@@ -213,7 +211,7 @@ Table: Supp. Table 5. Tasks, models and protocols. Development images could info
 | Paired nuclear/cell detection, H003 | gpt-6.1-sol | Fresh26 DNA/actin development; image review and label/table consistency, not a validated census. |
 | Bright-object detection 1, H001 | gpt-6.1-sol | Same-image self-directed repair; computational-reference scoring after freeze. |
 | Bright-object detection 2, H001 | gpt-6.1-sol | Independent same-image development; matched image review, no reference score. |
-| 3D nuclear localisation 1–2, H002 | gpt-6.1-sol | Separate independent analyses of one development volume; partial manual-centre reference after freeze. |
+| 3D nuclear localization 1–2, H002 | gpt-6.1-sol | Separate independent analyses of one development volume; partial manual-centre reference after freeze. |
 | 3D body-separation repair, H002_FRESH22_89 | gpt-6.1-sol | Independent development; candidate01 → candidate02_retry sampled split repair before reference evaluation, not a withheld volume. |
 | 3D final-view analysis, H002_FRESH10_89 | gpt-6.1-sol | Independent task-only development on the released volume; final-only XY/XZ/YZ witnesses. The 22 centres are algorithmic, not a biological census or held-out score. |
 | Retinal cell detection 1–2, R0010 | gpt-6.1-sol | Separate fresh development analyses; matched image review, no manual-reference accuracy. |
