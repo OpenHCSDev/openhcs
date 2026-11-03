@@ -202,7 +202,7 @@ Table: Development images could inform method selection; references were used on
 | Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
 | Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
 | Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
-| Protein translocation 2, BBBC013 | gpt-6.1-sol | Independent task-only development on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Postfreeze control comparison, not manual segmentation accuracy. |
+| Protein translocation 2, BBBC013 | gpt-6.1-sol | Development from the task brief alone on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Control comparison after the pipeline was frozen, not manual segmentation accuracy. |
 | Nuclear detection 2, BBBC039 | gpt-6.1-sol | Independent development; 200 fields and retrospective 175-field subset. One official-test field viewed before freeze. |
 | Nuclear detection 3–4, BBBC039 | gpt-6.1-sol | Independent development by each agent; same populations; no official-test image viewed before freeze. Distinct guide revisions. |
 | Nuclear detection 2, repair | gpt-6.1-sol | Same three inspected fields; illustrative repair, not another agent or a full-collection validation. |
