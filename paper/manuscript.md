@@ -78,7 +78,7 @@ To protect analyses from unintended access and conflicting edits, desktop connec
 
 ### CellProfiler import and output comparison
 
-CellProfiler is an established reference for image analysis in academic and industrial laboratories [@Carpenter2006; @McQuin2018]. To let scientists reuse these pipelines with OpenHCS’s editing, execution and agent tools, we built an importer. We then checked their output images and measurements against native CellProfiler results before comparing execution times (Figure 3).
+CellProfiler is an established reference for image analysis in academic and industrial laboratories [@Carpenter2006; @McQuin2018]. To let scientists reuse CellProfiler pipelines with OpenHCS’s editing, execution and agent tools, we built an importer. We then checked their output images and measurements against native CellProfiler results before comparing execution times (Figure 3).
 
 The importer reads `.cppipe` settings and translates processing and export modules into configurable steps and setup modules into source bindings. Module definitions specify images, objects, measurements, relationships and image-group or plate-wide operation. The resulting pipeline uses OpenHCS compilation and execution and remains editable through graphical controls, Python and MCP. CellProfiler-compatible numerical implementations include Numba-compiled propagation kernels. Named images and objects connect measurements to inputs. We reloaded generated Python for the advanced-segmentation and 3D-monolayer tutorials to check functions and parameters [@CellProfilerTutorials] (Supp. Data 1).
 
