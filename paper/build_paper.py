@@ -16,7 +16,7 @@ from paper_build.declarations import (
     PaperDefinition,
     Preparation,
 )
-from paper_build.word import CaptionedFiguresLayout
+from paper_build.word import CaptionedFiguresLayout, EndTextFiguresLayout
 
 ROOT = Path(__file__).resolve().parent
 BENCHMARK_INCLUDE = Path("figures/slas/benchmark-publication/benchmark_claims.json")
@@ -101,7 +101,9 @@ PAPER = PaperDefinition(
     declaration=Path(__file__).resolve(),
     documents=(
         DocumentDefinition(DocumentRole.MANUSCRIPT, (Path("manuscript.md"),),
-                           layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
+                           layout=EndTextFiguresLayout(
+                               caption_font_size_pt=10,
+                               boundary_heading="OpenHCS supplementary material")),
         DocumentDefinition(DocumentRole.SUPPLEMENT, (Path("supplementary/README.md"),),
                            layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
     ),
