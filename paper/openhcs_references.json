@@ -1,5 +1,21 @@
 [
   {
+    "id": "Abolhasani2023",
+    "type": "article-journal",
+    "title": "The rise of self-driving labs in chemical and materials sciences",
+    "author": [
+      {"given": "Milad", "family": "Abolhasani"},
+      {"given": "Eugenia", "family": "Kumacheva"}
+    ],
+    "container-title": "Nature Synthesis",
+    "issued": {"date-parts": [[2023, 6]]},
+    "volume": "2",
+    "issue": "6",
+    "page": "483-492",
+    "DOI": "10.1038/s44160-022-00231-0",
+    "URL": "https://www.nature.com/articles/s44160-022-00231-0"
+  },
+  {
     "id": "Goldberg2005",
     "type": "article-journal",
     "title": "The Open Microscopy Environment (OME) Data Model and XML file: open tools for informatics and quantitative analysis in biological imaging",
