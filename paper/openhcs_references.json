@@ -198,13 +198,13 @@
   {
     "id": "NapariN2V",
     "type": "webpage",
-    "title": "napari-n2v documentation",
+    "title": "napari-n2v installation and maintenance documentation (revision 0e9fee35)",
     "author": [
       {
         "literal": "Jug Lab"
       }
     ],
-    "URL": "https://juglab.github.io/napari-n2v/documentation.html",
+    "URL": "https://github.com/juglab/napari-n2v/tree/0e9fee355d5f51c8ec0f0a6a3b9e4c71fe35237e",
     "accessed": {
       "date-parts": [
         [
@@ -3141,5 +3141,21 @@
     "title": "PEP 596 – Python 3.9 Release Schedule",
     "URL": "https://peps.python.org/pep-0596/#lifespan",
     "accessed": {"date-parts": [[2026, 10, 29]]}
+  },
+  {
+    "id": "BaSiCPy",
+    "type": "software",
+    "author": [{"literal": "BaSiCPy contributors"}],
+    "title": "BaSiCPy: background and shading correction of optical microscopy images",
+    "URL": "https://github.com/peng-lab/BaSiCPy",
+    "accessed": {"date-parts": [[2026, 11, 3]]}
+  },
+  {
+    "id": "RunCellposeDocumentation",
+    "type": "webpage",
+    "author": [{"literal": "CellProfiler project"}],
+    "title": "RunCellpose: Cellpose-SAM (Cellpose 4) installation",
+    "URL": "https://plugins.cellprofiler.org/runcellpose.html#cellpose-sam-cellpose-4",
+    "accessed": {"date-parts": [[2026, 11, 3]]}
   }
 ]
