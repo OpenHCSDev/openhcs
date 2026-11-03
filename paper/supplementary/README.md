@@ -8,7 +8,7 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-Additional methods and figures describe assay measurements, segmentation errors and processing times. We provide the underlying measurements, agent instructions and final pipelines in Supp. Data 1–8. BBBC identifiers refer to the Broad Bioimage Benchmark Collection. H003 denotes the BBBC007v1 DNA/actin fields, H004 the public NeuronCyto II image 1, and P001 the laboratory DAPI/calcein neurite fields.
+Additional methods and figures describe assay measurements, segmentation errors and processing times. We provide the underlying measurements, agent instructions and final pipelines in Supp. Data 1–8. BBBC identifiers refer to the Broad Bioimage Benchmark Collection. H003 denotes the BBBC007v1 DNA/actin fields, H004 the public NeuronCyto II image 1, and P001 the laboratory DAPI/calcein neurite fields. Public neurite tracing used paired TIFFs from NeuronCyto II image 1 [@NeuronCytoII]; coordinate-level manual traces and verified physical calibration were unavailable. Separate laboratory tracing used nine DAPI/calcein fields from one coded well, distinct from the 20-well drug-response cohort.
 
 ## Supp. Figure 1. Pipeline preparation and execution {#supplementary-figure-1.-pipeline-preparation-and-execution}
 
@@ -177,7 +177,7 @@ Table: Main Methods: Performance measurement defines repetitions, exclusions and
 | Application | Processing | Setup plus processing |
 |:--------------|:--------------------------------------------|:---------------------------------------|
 | CellProfiler | Immediately before the pipeline first runs → batch completion, including internal initialization, image-group preparation, processing, output steps and measurement-file closure. | Before initial output-directory and measurement setup → the same batch completion. |
-| OpenHCS | Server execution-job start → job completion, including saving results and plate-level exports. | Sum of four client intervals: submit compilation, wait for compilation, submit execution and wait for execution. |
+| OpenHCS | Server execution-job start → job completion, including saving results and plate-level exports. | Sum of four client intervals: submit compilation, wait for compilation, submit execution and wait for execution. Server time falls within these client intervals and is not added again. |
 
 ## Supp. Table 4. User tasks covered by automated software checks {#supplementary-table-4.-user-tasks-covered-by-automated-software-checks}
 
