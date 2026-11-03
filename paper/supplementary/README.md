@@ -151,7 +151,7 @@ We built these eight libraries to connect analysis editing, processing, storage 
 ArrayBridge supports NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Processing functions available in OpenHCS include illumination correction through a version of BaSiCPy maintained by OpenHCS and N2V2 denoising in PyTorch with CUDA, NVIDIA's GPU-computing platform.
 
 | Library | Role in the analysis |
-| --- | --- |
+|:--------------------------|:------------------------------------------------------------------------|
 | [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface. |
 | [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads function parameters, types, defaults and documentation. |
 | [ObjectState](https://github.com/OpenHCSDev/objectstate) | Stores editable settings, shared defaults and local overrides. |
@@ -166,7 +166,7 @@ ArrayBridge supports NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Pr
 The automated checks connect software changes to expected user outcomes. The table distinguishes complete analysis or service runs from focused component checks and lists their configured environments. We provide completed output comparisons in [Supp. Data 1](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison) and a passed, revision-pinned component-test run in [Data 6](analysis_records.md#supplementary-data-6-workflow-regression-tests). The [test-workflow definition](https://github.com/OpenHCSDev/openhcs/blob/3fea2bb30142aa76ef25fb60120579b2db58d65e/.github/workflows/integration-tests.yml) specifies the configured coverage below, rather than a result for every environment.
 
 | User task | Expected outcome checked | Check and configured environment |
-| --- | --- | --- |
+|:--------------------|:----------------------------------|:-------------------------------------------|
 | [Reuse a CellProfiler pipeline](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L525-L535) | Execute 30 imported pipelines and compare their outputs with retained native image and measurement references. | Configured: complete pipeline runs on Linux, Windows and macOS, each with Python 3.12 and 3.14. Recorded output comparisons: [30-workflow results and tested environments](analysis_records.md#supplementary-data-1-cellprofiler-workflow-comparison). |
 | [Inspect processing results in Fiji and napari](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L720-L815) | Check that a fresh Fiji process contains images and that napari reports the expected live state after processing. | Real viewer processes: one colocalization workflow with Fiji alone and with Fiji plus napari; Linux, Python 3.12. |
 | [Process images from files or Zarr](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_main.py#L822-L901) | Read generated microscope inputs, execute processing and check output directories and structured metadata. | Synthetic-image integration: disk and Zarr with ImageXpress and Opera Phenix layouts; Linux, Windows and macOS, Python 3.12. |
@@ -180,7 +180,7 @@ The automated checks connect software changes to expected user outcomes. The tab
 These resources address different parts of AI-assisted analysis. The table distinguishes systems that help develop analyses from a benchmark that evaluates agent-produced outputs.
 
 | Resource | Role | Mechanism or evaluation scope |
-| --- | --- | --- |
+|:----------------------|:-----------------------|:----------------------------------------------------|
 | BioImage.IO Chatbot [@Lei2024] | Community-linked assistance | Conversational access to community bioimaging information, resources and analysis extensions. |
 | Omega [@Royer2024] | Code-driven interactive analysis | Generates and executes Python analysis code and creates napari controls for inspection and adjustment. |
 | Agentic-J [@Johanns2026] | Fiji-script development and auditing | Uses bioimage knowledge, plugin instructions and specialized agents; calls external tools through the Model Context Protocol (MCP). The cited version plans repeatability assessment across independent agent sessions. |
@@ -191,7 +191,7 @@ These resources address different parts of AI-assisted analysis. The table disti
 Table: Supp. Table 4. Tasks, models and protocols. Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities are paper-reported; their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
 
 | Analysis and task/source | Model | Development and evaluation protocol |
-|:----------------------------------------|:-------------------|:----------------------------------------------------------|
+|:---------------------------|:----------------|:------------------------------------------------------|
 | Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
 | Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
 | Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
@@ -226,7 +226,7 @@ Table: Supp. Table 4. Tasks, models and protocols. Development images could info
 Table: Supp. Table 5. Timing boundaries used for the execution comparisons. Main Methods: Performance measurement defines repetitions, exclusions and batch sizes.
 
 | Application | Processing | Setup plus processing |
-|---|---|---|
+|:--------------|:--------------------------------------------|:---------------------------------------|
 | CellProfiler | Immediately before the pipeline first runs → batch completion, including internal initialization, image-group preparation, processing, output steps and measurement-file closure. | Before initial output-directory and measurement setup → the same batch completion. |
 | OpenHCS | Server execution-job start → job completion, including saving results and plate-level exports. | Sum of four client intervals: submit compilation, wait for compilation, submit execution and wait for execution. |
 

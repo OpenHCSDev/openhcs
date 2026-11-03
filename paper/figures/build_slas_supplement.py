@@ -61,10 +61,10 @@ class VolumeResultsFigure(SupplementFigure):
                          crop=(left, 22.2, left + 30.08, 45.8))
         from build_slas_neurite_views import BodySeparationView, VOLUME_REPAIR_SOURCE
 
-        self.text(3, 15, "G  3D body separation", size=14, weight="bold")
-        self.text(97, 15, "Z = 36 voxels", size=self.plot_font_size, ha="right")
+        self.text(3, 15.4, "G  3D body separation", size=14, weight="bold")
+        self.text(97, 15.4, "Z = 36 voxels", size=self.plot_font_size, ha="right")
         view = BodySeparationView.read(self, VOLUME_REPAIR_SOURCE)
-        view.draw_columns((3, .5, 94, 12), 12.4, view.label_panels)
+        view.draw_columns((3, .5, 94, 12), 13.3, view.label_panels)
 
 
 def infrastructure():
