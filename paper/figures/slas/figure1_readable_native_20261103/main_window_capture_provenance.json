@@ -1,0 +1,57 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_snapshot_window",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "main_window",
+          "schema_version": "formbridge.v1",
+          "errors": [],
+          "warnings": [],
+          "output_dir_path": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/home/.local/share/openhcs/mcp_outputs/capture",
+          "capture_scope": "window",
+          "frame_condition": "immediate",
+          "observation_timeout_s": 5.0,
+          "captured": true,
+          "resource": {
+            "uri": "file:///home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/home/.local/share/openhcs/mcp_outputs/capture/20261104T015012398480Z_main_window_OpenHCS.png",
+            "title": "OpenHCS",
+            "mime_type": "image/png",
+            "path": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/home/.local/share/openhcs/mcp_outputs/capture/20261104T015012398480Z_main_window_OpenHCS.png",
+            "size_bytes": 844116,
+            "sha256": "99179bd61eb0cf011a3de6494d684401abcfd3f8fce77c44b4278cf8eeb353aa"
+          },
+          "summary": {
+            "object_state_scope_id": null,
+            "dirty": false,
+            "signature_diff": false,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 0,
+            "semantic_markers": [],
+            "managed_action_ids": [],
+            "schema_version": "formbridge.v1",
+            "identity": {
+              "window_id": "main_window"
+            },
+            "title": "OpenHCS",
+            "window_kind": "qt_top_level",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": null,
+            "error_dialog": false
+          },
+          "width": 3800,
+          "height": 2500,
+          "operation_id": null,
+          "observation": null
+        }
+      ]
+    }
+  ]
+}

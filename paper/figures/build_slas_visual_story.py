@@ -902,7 +902,7 @@ def submission_shared_workflow():
     from build_slas_extension import extension
 
     extension(main_panel=True)
-    folder = OUTPUT / "figure1_dark_whole_cell_native_20261103"
+    folder = OUTPUT / "figure1_readable_native_20261103"
     evidence_path = folder / "capture_evidence.json"
     evidence = json.loads(evidence_path.read_text())
     if evidence["expanded_rows"] != {"plate_manager": 2, "pipeline_editor": 9}:

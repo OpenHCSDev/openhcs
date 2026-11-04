@@ -1,0 +1,105 @@
+{
+  "source_head": "9759c91e666bfc28b7f949ed3fe018632d797960",
+  "formbridge_head": "d92abbe6f8c34b300d4faf396c3c2c14a2381dd9",
+  "source_files_sha256": {
+    "openhcs/pyqt_gui/widgets/pipeline_editor.py": "4b44833a904002b7ac829ac85a9d507477b43191bd5d69ffeda84378f253597c",
+    "external/formbridge/src/formbridge/forms/ui_utils.py": "2db31f55e01861da845c975a4aa07f1eb4643d9bb386b2ecf2138aaad39f05ad",
+    "external/formbridge/src/formbridge/utils/preview_formatters.py": "ab05f2efac13c2e8b4117220ec12784bb6e63efe182ab5b5cf4979d71c9f559b"
+  },
+  "capture_program_sha256": "c7cc73bc24e11ed6d7d54c804a29a5e967335fa4c75a56e93e3c682bc8675027",
+  "capture_argv": [
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/capture_dark_ui.py",
+    "--gui",
+    "--capture-root",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2"
+  ],
+  "display": ":1",
+  "qt_scale_factor": "2",
+  "gui_pid": 1061571,
+  "font_point_size": 18.0,
+  "native_theme": "dark",
+  "theme_operation": "ThemeManager.switch_to_dark_theme",
+  "list_preview_presentation": {
+    "show_detail_line": false,
+    "show_active_configs": true,
+    "show_modified_fields": true,
+    "show_group_labels": true
+  },
+  "runtime_data_port": 7777,
+  "pipeline_source": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/ExampleHuman.cppipe",
+  "pipeline_steps": 9,
+  "dataset_scopes": [
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/Examples/ExampleHuman",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/Examples/ExampleFly"
+  ],
+  "initialized_compiled_or_executed": false,
+  "private_home": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/home",
+  "expanded_rows": {
+    "plate_manager": 2,
+    "pipeline_editor": 9
+  },
+  "native_row_text": {
+    "plate_manager": [
+      "",
+      ""
+    ],
+    "pipeline_editor": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  "boxes_xywh": {
+    "plate_manager": [
+      0,
+      277,
+      1269,
+      597
+    ],
+    "pipeline_editor": [
+      1275,
+      277,
+      625,
+      917
+    ],
+    "zmq_servers": [
+      0,
+      918,
+      1269,
+      276
+    ]
+  },
+  "row_boxes_xywh": {
+    "dataset_cell": [
+      2,
+      279,
+      1265,
+      146
+    ],
+    "analysis_cells": [
+      1277,
+      279,
+      607,
+      236
+    ]
+  },
+  "logical_window_xywh": [
+    0,
+    0,
+    1900,
+    1250
+  ],
+  "native_pixels": [
+    3800,
+    2500
+  ],
+  "selected_png": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/dark_whole_cell_readable2/home/.local/share/openhcs/mcp_outputs/capture/20261104T015012398480Z_main_window_OpenHCS.png",
+  "selected_capture": "main_window_capture_provenance.json",
+  "capture_sha256": "99179bd61eb0cf011a3de6494d684401abcfd3f8fce77c44b4278cf8eeb353aa"
+}

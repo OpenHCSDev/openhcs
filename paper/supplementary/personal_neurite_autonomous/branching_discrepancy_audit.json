@@ -1,0 +1,595 @@
+{
+  "analysis_rerun": false,
+  "scope": "Saved540 matched site records and60 method-well records; arithmetic sensitivity only, no images processed or records changed.",
+  "sources_sha256": {
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/cohort.json": "fcfb4cc955c1217a123a111f3005036b02ca520fd50e66445a7ef1e358ac3d34",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author114/source_evidence.json": "35158137d37543d1db57037eff350f5795343e7c2b3780a5ef6acdede1231f2e",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/branching_original_results.xlsx": "ae029a925d05ec16e91105fcb77fedd0a5313f059364b3214caeffc420919e5f",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author114/paired_sites.csv": "30212cde0c2b510777a27eebd232ad72bf580a52b7663aa91d1478573275f5ff",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author114/joined_wells.csv": "a84158436f767e6e2f7340b60ab9dba20f62dca6bc526c6d76a2fa0c4fe26dd9",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author114/treatment_effects.csv": "dce5a0b6189a4de72862365368b46645d6242b05ed5e3bfae90919e9745c48c5",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author115/paired_sites.csv": "2c385187da0096bdf6bcda7bfab82ca538b5345dbbf6df908f3291c76226cd61",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author115/joined_wells.csv": "3a1bc4f37f2edc6ca417e2c048b71849985d6620d111c48a266548515536a903",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author115/treatment_effects.csv": "d1874cd978e63f922c9cf2eb282671113f0911bcd5b2564ca59195f769d52dd2",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author116/paired_sites.csv": "716b782b2bc9855c173e8d2589837b1b61e18185b53ab539ee0536a65bce567a",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author116/joined_wells.csv": "7b579c4b25b5582e8524a427bab30935058f5ef44ef0b1421bf2c872b1342c55",
+    "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/paper/supplementary/personal_neurite_autonomous/author116/treatment_effects.csv": "685eda6d313cac2a672992a83df4383a65ba76b40b6abb3d58527504926be46f"
+  },
+  "generator_sha256": "7319bf1b82ea4eaef7cc52ceb15200174e866eed963827cb146cb64ee934546d",
+  "frozen_software_commit": "2b404bdfa627a3c87f29324d6c068fcf0f5b9775",
+  "original_workbook_endpoints_checked": 540,
+  "original_workbook_sha256_matches_retained_provenance": true,
+  "frozen_source_sha256": "a18d80ab3042ea2ad1db9bacafdae8d0bb8d2398fb71874e1d6c8a86d0600268",
+  "units": {
+    "mean_outgrowth": "micrometers/cell",
+    "cell_count": "count",
+    "total_outgrowth": "micrometers",
+    "branches_per_cell": "branches/cell",
+    "mean_process_length": "micrometers",
+    "median_process_length": "micrometers",
+    "total_branches": "count",
+    "total_processes": "count",
+    "branches_per_process": "branches/primary_process"
+  },
+  "methods": [
+    {
+      "analysis": "Blind 1",
+      "matched_sites": 180,
+      "matched_wells": 20,
+      "max_site_formula_error": 0.0,
+      "max_well_pooling_difference": 0.1930015255332056,
+      "dose_effects": [
+        {
+          "condition": "FC-A",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 2.317165001985292,
+            "control_sd": 0.21485072053465568,
+            "treatment_mean": 3.781238716656096,
+            "treatment_sd": 0.2720293346870128,
+            "delta": 1.4640737146708038,
+            "fold_change": 1.6318383513545303,
+            "fractional_change": 0.6318383513545303,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 2.238472740458283,
+            "control_sd": 0.22485769018198068,
+            "treatment_mean": 3.7749002731122365,
+            "treatment_sd": 0.29773574221098714,
+            "delta": 1.5364275326539536,
+            "fold_change": 1.686373126142872,
+            "fractional_change": 0.686373126142872,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.4706605,
+            "control_sd": 0.12997683298380527,
+            "treatment_mean": 4.4079999999999995,
+            "treatment_sd": 0.4312672542727996,
+            "delta": 2.9373394999999993,
+            "fold_change": 2.997292713036081,
+            "fractional_change": 1.9972927130360811,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.4137029221668054,
+            "control_sd": 0.15119753167291095,
+            "treatment_mean": 4.465880950069148,
+            "treatment_sd": 0.4252654800975047,
+            "delta": 3.0521780279023427,
+            "fold_change": 3.1589953448099406,
+            "fractional_change": 2.1589953448099406,
+            "direction": "increase"
+          }
+        },
+        {
+          "condition": "Y27",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 2.136173158574283,
+            "control_sd": 0.17148577012653188,
+            "treatment_mean": 3.7049452401113916,
+            "treatment_sd": 0.2103468906067659,
+            "delta": 1.5687720815371087,
+            "fold_change": 1.734384324248383,
+            "fractional_change": 0.734384324248383,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 2.0640450281425893,
+            "control_sd": 0.17847215958623633,
+            "treatment_mean": 3.666723083686895,
+            "treatment_sd": 0.2049040207313462,
+            "delta": 1.6026780555443056,
+            "fold_change": 1.7764743664466165,
+            "fractional_change": 0.7764743664466165,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.282715,
+            "control_sd": 0.162354545387556,
+            "treatment_mean": 4.182074999999999,
+            "treatment_sd": 0.19626314397257574,
+            "delta": 2.8993599999999993,
+            "fold_change": 3.260330626834487,
+            "fractional_change": 2.260330626834487,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.2571821516297095,
+            "control_sd": 0.18288221105601396,
+            "treatment_mean": 4.1534907551448805,
+            "treatment_sd": 0.17252653799296894,
+            "delta": 2.896308603515171,
+            "fold_change": 3.3038098335715556,
+            "fractional_change": 2.3038098335715556,
+            "direction": "increase"
+          }
+        }
+      ]
+    },
+    {
+      "analysis": "Blind 2",
+      "matched_sites": 180,
+      "matched_wells": 20,
+      "max_site_formula_error": 0.0,
+      "max_well_pooling_difference": 0.2064388323215276,
+      "dose_effects": [
+        {
+          "condition": "FC-A",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 5.318842062611844,
+            "control_sd": 0.06248161675696276,
+            "treatment_mean": 6.575170623460592,
+            "treatment_sd": 0.3133206100948676,
+            "delta": 1.2563285608487478,
+            "fold_change": 1.236203396540002,
+            "fractional_change": 0.2362033965400021,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 5.215157861543233,
+            "control_sd": 0.10770157215544561,
+            "treatment_mean": 6.526202893540488,
+            "treatment_sd": 0.3246683991054036,
+            "delta": 1.3110450319972555,
+            "fold_change": 1.2513912458268905,
+            "fractional_change": 0.25139124582689054,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.4706605,
+            "control_sd": 0.12997683298380527,
+            "treatment_mean": 4.4079999999999995,
+            "treatment_sd": 0.4312672542727996,
+            "delta": 2.9373394999999993,
+            "fold_change": 2.997292713036081,
+            "fractional_change": 1.9972927130360811,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.4137029221668054,
+            "control_sd": 0.15119753167291095,
+            "treatment_mean": 4.465880950069148,
+            "treatment_sd": 0.4252654800975047,
+            "delta": 3.0521780279023427,
+            "fold_change": 3.1589953448099406,
+            "fractional_change": 2.1589953448099406,
+            "direction": "increase"
+          }
+        },
+        {
+          "condition": "Y27",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 4.8272366246718015,
+            "control_sd": 0.12120177897407698,
+            "treatment_mean": 7.251171535354788,
+            "treatment_sd": 0.28805151381556926,
+            "delta": 2.423934910682987,
+            "fold_change": 1.5021371644170824,
+            "fractional_change": 0.5021371644170824,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 4.735674221611722,
+            "control_sd": 0.13074514464865244,
+            "treatment_mean": 7.181606738747799,
+            "treatment_sd": 0.18784468552265193,
+            "delta": 2.445932517136077,
+            "fold_change": 1.516490873881024,
+            "fractional_change": 0.5164908738810241,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.282715,
+            "control_sd": 0.162354545387556,
+            "treatment_mean": 4.182074999999999,
+            "treatment_sd": 0.19626314397257574,
+            "delta": 2.8993599999999993,
+            "fold_change": 3.260330626834487,
+            "fractional_change": 2.260330626834487,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.2571821516297095,
+            "control_sd": 0.18288221105601396,
+            "treatment_mean": 4.1534907551448805,
+            "treatment_sd": 0.17252653799296894,
+            "delta": 2.896308603515171,
+            "fold_change": 3.3038098335715556,
+            "fractional_change": 2.3038098335715556,
+            "direction": "increase"
+          }
+        }
+      ]
+    },
+    {
+      "analysis": "Blind 3",
+      "matched_sites": 180,
+      "matched_wells": 20,
+      "max_site_formula_error": 0.0,
+      "max_well_pooling_difference": 0.22568634741358284,
+      "dose_effects": [
+        {
+          "condition": "FC-A",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 3.8946875310289792,
+            "control_sd": 0.24736475519886603,
+            "treatment_mean": 6.331156181271069,
+            "treatment_sd": 0.13139410825888942,
+            "delta": 2.43646865024209,
+            "fold_change": 1.6255877091116404,
+            "fractional_change": 0.6255877091116404,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 3.7663527061778166,
+            "control_sd": 0.28767000185160424,
+            "treatment_mean": 6.296452374945154,
+            "treatment_sd": 0.12362579302420659,
+            "delta": 2.530099668767338,
+            "fold_change": 1.6717638697558261,
+            "fractional_change": 0.6717638697558261,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.4706605,
+            "control_sd": 0.12997683298380527,
+            "treatment_mean": 4.4079999999999995,
+            "treatment_sd": 0.4312672542727996,
+            "delta": 2.9373394999999993,
+            "fold_change": 2.997292713036081,
+            "fractional_change": 1.9972927130360811,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.4137029221668054,
+            "control_sd": 0.15119753167291095,
+            "treatment_mean": 4.465880950069148,
+            "treatment_sd": 0.4252654800975047,
+            "delta": 3.0521780279023427,
+            "fold_change": 3.1589953448099406,
+            "fractional_change": 2.1589953448099406,
+            "direction": "increase"
+          }
+        },
+        {
+          "condition": "Y27",
+          "dose_uM": 40,
+          "openhcs_exported_site_mean": {
+            "control_mean": 3.72040629784636,
+            "control_sd": 0.20538902712525584,
+            "treatment_mean": 6.371939925869606,
+            "treatment_sd": 0.026070828941048143,
+            "delta": 2.651533628023246,
+            "fold_change": 1.7127000160058177,
+            "fractional_change": 0.7127000160058177,
+            "direction": "increase"
+          },
+          "openhcs_cell_pooled_sensitivity": {
+            "control_mean": 3.6238501362123907,
+            "control_sd": 0.22038029844468063,
+            "treatment_mean": 6.310685630769919,
+            "treatment_sd": 0.030964569564680976,
+            "delta": 2.6868354945575286,
+            "fold_change": 1.7414311832899856,
+            "fractional_change": 0.7414311832899856,
+            "direction": "increase"
+          },
+          "metaxpress_exported": {
+            "control_mean": 1.282715,
+            "control_sd": 0.162354545387556,
+            "treatment_mean": 4.182074999999999,
+            "treatment_sd": 0.19626314397257574,
+            "delta": 2.8993599999999993,
+            "fold_change": 3.260330626834487,
+            "fractional_change": 2.260330626834487,
+            "direction": "increase"
+          },
+          "metaxpress_exported_total_ratio_sensitivity": {
+            "control_mean": 1.2571821516297095,
+            "control_sd": 0.18288221105601396,
+            "treatment_mean": 4.1534907551448805,
+            "treatment_sd": 0.17252653799296894,
+            "delta": 2.896308603515171,
+            "fold_change": 3.3038098335715556,
+            "fractional_change": 2.3038098335715556,
+            "direction": "increase"
+          }
+        }
+      ]
+    }
+  ],
+  "reference_wells": [
+    {
+      "plate": "24099",
+      "well": "B02",
+      "condition": "Y27",
+      "nominal_dose_uM": "40",
+      "excel_sheet": "results",
+      "excel_row": "124",
+      "branches_per_cell": "4.320854",
+      "total_branches": "782.888889",
+      "cell_count": "183.111111",
+      "total_processes": "861.111111",
+      "branches_per_process": "0.9091612905689239"
+    },
+    {
+      "plate": "24099",
+      "well": "B03",
+      "condition": "Y27",
+      "nominal_dose_uM": "20",
+      "excel_sheet": "results",
+      "excel_row": "125",
+      "branches_per_cell": "3.76457",
+      "total_branches": "713.333333",
+      "cell_count": "194.777778",
+      "total_processes": "858.888889",
+      "branches_per_process": "0.8305304005393881"
+    },
+    {
+      "plate": "24099",
+      "well": "B04",
+      "condition": "Y27",
+      "nominal_dose_uM": "10",
+      "excel_sheet": "results",
+      "excel_row": "126",
+      "branches_per_cell": "2.582716",
+      "total_branches": "491.888889",
+      "cell_count": "183.555556",
+      "total_processes": "752.555556",
+      "branches_per_process": "0.653624686015872"
+    },
+    {
+      "plate": "24099",
+      "well": "B05",
+      "condition": "Y27",
+      "nominal_dose_uM": "5",
+      "excel_sheet": "results",
+      "excel_row": "127",
+      "branches_per_cell": "2.432763",
+      "total_branches": "478.888889",
+      "cell_count": "196.777778",
+      "total_processes": "766.0",
+      "branches_per_process": "0.625181317232376"
+    },
+    {
+      "plate": "24099",
+      "well": "B06",
+      "condition": "Y27",
+      "nominal_dose_uM": "0",
+      "excel_sheet": "results",
+      "excel_row": "128",
+      "branches_per_cell": "1.167913",
+      "total_branches": "207.777778",
+      "cell_count": "184.222222",
+      "total_processes": "583.777778",
+      "branches_per_process": "0.3559192998264487"
+    },
+    {
+      "plate": "24099",
+      "well": "C02",
+      "condition": "Y27",
+      "nominal_dose_uM": "40",
+      "excel_sheet": "results",
+      "excel_row": "136",
+      "branches_per_cell": "4.043296",
+      "total_branches": "625.777778",
+      "cell_count": "155.222222",
+      "total_processes": "734.0",
+      "branches_per_process": "0.852558280653951"
+    },
+    {
+      "plate": "24099",
+      "well": "C03",
+      "condition": "Y27",
+      "nominal_dose_uM": "20",
+      "excel_sheet": "results",
+      "excel_row": "137",
+      "branches_per_cell": "3.877974",
+      "total_branches": "757.0",
+      "cell_count": "194.333333",
+      "total_processes": "860.444444",
+      "branches_per_process": "0.8797778930164142"
+    },
+    {
+      "plate": "24099",
+      "well": "C04",
+      "condition": "Y27",
+      "nominal_dose_uM": "10",
+      "excel_sheet": "results",
+      "excel_row": "138",
+      "branches_per_cell": "3.174991",
+      "total_branches": "666.222222",
+      "cell_count": "204.222222",
+      "total_processes": "828.333333",
+      "branches_per_process": "0.8042924212492122"
+    },
+    {
+      "plate": "24099",
+      "well": "C05",
+      "condition": "Y27",
+      "nominal_dose_uM": "5",
+      "excel_sheet": "results",
+      "excel_row": "139",
+      "branches_per_cell": "2.673261",
+      "total_branches": "620.888889",
+      "cell_count": "225.222222",
+      "total_processes": "893.444444",
+      "branches_per_process": "0.6949384409625362"
+    },
+    {
+      "plate": "24099",
+      "well": "C06",
+      "condition": "Y27",
+      "nominal_dose_uM": "0",
+      "excel_sheet": "results",
+      "excel_row": "140",
+      "branches_per_cell": "1.397517",
+      "total_branches": "257.888889",
+      "cell_count": "186.0",
+      "total_processes": "595.666667",
+      "branches_per_process": "0.4329416153145263"
+    },
+    {
+      "plate": "24099",
+      "well": "D02",
+      "condition": "FC-A",
+      "nominal_dose_uM": "40",
+      "excel_sheet": "results",
+      "excel_row": "148",
+      "branches_per_cell": "4.712952",
+      "total_branches": "909.888889",
+      "cell_count": "190.888889",
+      "total_processes": "813.444444",
+      "branches_per_process": "1.1185630385841077"
+    },
+    {
+      "plate": "24099",
+      "well": "D03",
+      "condition": "FC-A",
+      "nominal_dose_uM": "20",
+      "excel_sheet": "results",
+      "excel_row": "149",
+      "branches_per_cell": "3.86049",
+      "total_branches": "728.444444",
+      "cell_count": "190.777778",
+      "total_processes": "763.666667",
+      "branches_per_process": "0.9538774906355838"
+    },
+    {
+      "plate": "24099",
+      "well": "D04",
+      "condition": "FC-A",
+      "nominal_dose_uM": "10",
+      "excel_sheet": "results",
+      "excel_row": "150",
+      "branches_per_cell": "2.801448",
+      "total_branches": "534.888889",
+      "cell_count": "187.777778",
+      "total_processes": "718.888889",
+      "branches_per_process": "0.7440494590812906"
+    },
+    {
+      "plate": "24099",
+      "well": "D05",
+      "condition": "FC-A",
+      "nominal_dose_uM": "5",
+      "excel_sheet": "results",
+      "excel_row": "151",
+      "branches_per_cell": "2.340403",
+      "total_branches": "500.0",
+      "cell_count": "214.222222",
+      "total_processes": "772.222222",
+      "branches_per_process": "0.647482014574815"
+    },
+    {
+      "plate": "24099",
+      "well": "D06",
+      "condition": "FC-A",
+      "nominal_dose_uM": "0",
+      "excel_sheet": "results",
+      "excel_row": "152",
+      "branches_per_cell": "1.562568",
+      "total_branches": "307.333333",
+      "cell_count": "202.111111",
+      "total_processes": "691.777778",
+      "branches_per_process": "0.4442659807438914"
+    },
+    {
+      "plate": "24099",
+      "well": "E02",
+      "condition": "FC-A",
+      "nominal_dose_uM": "40",
+      "excel_sheet": "results",
+      "excel_row": "160",
+      "branches_per_cell": "4.103048",
+      "total_branches": "722.888889",
+      "cell_count": "173.555556",
+      "total_processes": "743.444444",
+      "branches_per_process": "0.9723509198758636"
+    },
+    {
+      "plate": "24099",
+      "well": "E03",
+      "condition": "FC-A",
+      "nominal_dose_uM": "20",
+      "excel_sheet": "results",
+      "excel_row": "161",
+      "branches_per_cell": "3.246258",
+      "total_branches": "526.0",
+      "cell_count": "161.444444",
+      "total_processes": "658.0",
+      "branches_per_process": "0.7993920972644377"
+    },
+    {
+      "plate": "24099",
+      "well": "E04",
+      "condition": "FC-A",
+      "nominal_dose_uM": "10",
+      "excel_sheet": "results",
+      "excel_row": "162",
+      "branches_per_cell": "2.628254",
+      "total_branches": "460.333333",
+      "cell_count": "175.222222",
+      "total_processes": "686.0",
+      "branches_per_process": "0.6710398440233236"
+    },
+    {
+      "plate": "24099",
+      "well": "E05",
+      "condition": "FC-A",
+      "nominal_dose_uM": "5",
+      "excel_sheet": "results",
+      "excel_row": "163",
+      "branches_per_cell": "2.384084",
+      "total_branches": "413.777778",
+      "cell_count": "173.777778",
+      "total_processes": "634.111111",
+      "branches_per_process": "0.6525319787370828"
+    },
+    {
+      "plate": "24099",
+      "well": "E06",
+      "condition": "FC-A",
+      "nominal_dose_uM": "0",
+      "excel_sheet": "results",
+      "excel_row": "164",
+      "branches_per_cell": "1.378753",
+      "total_branches": "235.222222",
+      "cell_count": "180.0",
+      "total_processes": "589.222222",
+      "branches_per_process": "0.39920799524767414"
+    }
+  ],
+  "limits": [
+    "The pooled alternatives are sensitivity calculations, not replacement scientific measurements.",
+    "Vendor exported mean branches/cell and its exported totals are distinct recorded endpoints; their internal aggregation is not inferred from disagreement.",
+    "Frozen OpenHCS branches are qualified, owner-specific junction clusters, not graph paths, roots or branch-segment counts.",
+    "No biological ground-truth tracing or vendor-internal topology implementation is supplied by these tables."
+  ]
+}
