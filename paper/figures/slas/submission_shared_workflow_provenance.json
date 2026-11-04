@@ -1,21 +1,21 @@
 {
-  "generator_sha256": "e3b2c5b69cbf5c2a640d58d597d832a0997eacdbd05e677fa4d5037d7e60b6ce",
+  "generator_sha256": "c1db21d4b9780a9ba0c3f72e5bf58b58f929860c5c930ffbf06ba811eeff5318",
   "source_sha256": {
-    "paper/figures/slas/figure1_dark_whole_cell_native_20261103/capture_evidence.json": "435533a7351fb229d0c22eb4e867be3758d96ca4b89b8e0fca87c6953c611e5d",
-    "paper/figures/slas/figure1_dark_whole_cell_native_20261103/main_window_capture_provenance.json": "14cc77ae3ad466d190b03d7b1b1af8299ee9c823d04bea15533ef7b0f30029cb",
-    "paper/figures/slas/figure1_dark_whole_cell_native_20261103/20261103T020050339756Z_main_window_OpenHCS.png": "bde074f43cf377b81266a955621e873267d360d306662eb5597248027a477e4a",
-    "paper/figures/slas/submission_custom_function_provenance.json": "3208166ecb8e0ba200445d573e8b5afe9a6cbd21d84a96a1e8e990876fe1aeab",
+    "paper/figures/slas/figure1_readable_native_20261103/capture_evidence.json": "7f34a537b3ecc920f2b09b8b767b0bc59cee175a114a6aa2f1e6a9cbf7e01785",
+    "paper/figures/slas/figure1_readable_native_20261103/main_window_capture_provenance.json": "1c116ceed7609c810c316b31248e0efd0db80c92fb040e6327e08c9d2008350a",
+    "paper/figures/slas/figure1_readable_native_20261103/20261104T015012398480Z_main_window_OpenHCS.png": "99179bd61eb0cf011a3de6494d684401abcfd3f8fce77c44b4278cf8eeb353aa",
+    "paper/figures/slas/submission_custom_function_provenance.json": "d72087a271818b87ba6dfab741c553516e4c7c896f00e3313edc4a1d8afcb3c8",
     "paper/figures/slas/submission_custom_function.png": "37901e93d0f1237fa0827fff8c9d35852da4b2eaf4efa43de30fdd05a20d96a6"
   },
   "input_root": "/",
   "ui_crops": [
     {
-      "source": "paper/figures/slas/figure1_dark_whole_cell_native_20261103/20261103T020050339756Z_main_window_OpenHCS.png",
+      "source": "paper/figures/slas/figure1_readable_native_20261103/20261104T015012398480Z_main_window_OpenHCS.png",
       "xyxy_pixels": [
         2554,
         558,
         3768,
-        1254
+        1030
       ],
       "source_size": [
         3800,
@@ -23,12 +23,12 @@
       ]
     },
     {
-      "source": "paper/figures/slas/figure1_dark_whole_cell_native_20261103/20261103T020050339756Z_main_window_OpenHCS.png",
+      "source": "paper/figures/slas/figure1_readable_native_20261103/20261104T015012398480Z_main_window_OpenHCS.png",
       "xyxy_pixels": [
         4,
         558,
         2534,
-        906
+        850
       ],
       "source_size": [
         3800,
@@ -51,9 +51,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_shared_workflow.png": "d6ec64cb2810f0d13ccd9ea033771765705efdde43d13e53e7f8dbda9e71f993",
-    "submission_shared_workflow.pdf": "0785de17d8857b216fc10a97b6ba3f2b6da6c863c6da5d1626115f035bc772a2",
-    "submission_shared_workflow.svg": "4f40091290a4e007c43d6f4007bde6e542fb5f40cb74ea1186f4276e5c7289f7"
+    "submission_shared_workflow.png": "38aaf56b29b6f397a72cfa46da6f2dddb6f88b168e3be9261007e16ea0778f19",
+    "submission_shared_workflow.pdf": "7db9bf04de444d40944a697f36d1af7b07deb4f5055d1fa3fc2fda15b3844c75",
+    "submission_shared_workflow.svg": "6e098b38724618ad711c8ebff18af12b337469de9141fd5cc31862a0d9f45b87"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
