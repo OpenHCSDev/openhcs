@@ -5,6 +5,7 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
+from formbridge.forms.ui_utils import FieldDisplayText
 from formbridge.services.window_code_document import use_external_code_editor
 from objectstate import ScopeKey
 import copy
@@ -458,10 +459,13 @@ class PipelineEditorWidget(
 
     # -- display --------------------------------------------------------------
 
+    @staticmethod
     def _numbered_step_display_name(
-        self, step: FunctionStep, step_index: Optional[int]
+        step: FunctionStep, step_index: Optional[int]
     ) -> tuple[str, str]:
         step_name = step.name or "Unknown Step"
+        if step_name.isidentifier():
+            step_name = FieldDisplayText.from_field_name(step_name).display_name
         if step.debug_pause:
             step_name = f"Pause | {step_name}"
         if step_index is None:
