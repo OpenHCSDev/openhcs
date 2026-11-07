@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from objectstate.field_value import FieldValue
+
 from formbridge.bridge.dto import (
     AllFields,
     UiCatalogPageMetadata,
+    UiObjectStateFieldDeclaration,
     UiObjectStateFieldHelpResult,
     UiObjectStateFieldListResult,
     UiObjectStateFieldMutationResult,
@@ -46,11 +49,11 @@ class ObjectStatePresentation(McpDevOutputRenderer):
         cls,
         field: UiObjectStateFieldSemanticCarrier,
         field_path: str,
-        object_state_path_type: str,
+        declared_by: UiObjectStateFieldDeclaration,
     ) -> str:
         return (
             f"  [{cls._field_mark(field)}] {field_path}: "
-            f"target={cls.short_type(object_state_path_type)} "
+            f"target={declared_by.display_name} "
             f"raw={cls._preview_text(field.raw_value_preview, field.raw_value)} "
             "-> "
             f"resolved={cls._preview_text(field.resolved_value_preview, field.resolved_value)} "
@@ -61,7 +64,7 @@ class ObjectStatePresentation(McpDevOutputRenderer):
     @classmethod
     def summary_line(cls, field: UiObjectStateFieldSummary) -> str:
         return cls.field_line(
-            field, field.address.field_path, field.object_state_path_type
+            field, field.address.field_path, field.declared_by
         )
 
     @staticmethod
@@ -78,9 +81,9 @@ class ObjectStatePresentation(McpDevOutputRenderer):
 
     @classmethod
     def _preview_text(
-        cls, preview: UiObjectStateValuePreview | None, value: object
+        cls, preview: UiObjectStateValuePreview, value: FieldValue
     ) -> str:
-        return cls.text(value) if preview is None else preview.text
+        return preview.render(value, cls.text)
 
     @classmethod
     def _provenance_text(cls, provenance: UiObjectStateFieldProvenance | None) -> str:
@@ -88,15 +91,8 @@ class ObjectStatePresentation(McpDevOutputRenderer):
             return "<none>"
         return (
             f"{cls.text(provenance.source_scope_id)}:"
-            f"{cls.text(provenance.source_field_path)} "
-            f"({cls.short_type(provenance.source_type)})"
+            f"{cls.text(provenance.source_field_path)}"
         )
-
-    @staticmethod
-    def short_type(value: str | None) -> str:
-        if not value:
-            return "<none>"
-        return value.rsplit(".", 1)[-1]
 
 
 class ObjectStateScopeRenderer(ObjectStatePresentation):
@@ -147,7 +143,7 @@ class ObjectStateScopeRenderer(ObjectStatePresentation):
         )
         line = (
             f"- [{mark}] scope={scope.identity.object_state_scope_id}: "
-            f"type={scope.object_type} params={scope.parameter_count} "
+            f"params={scope.parameter_count} "
             f"dirty={scope.dirty_field_count} "
             f"default_diff={scope.signature_diff_field_count} "
             f"unsaved={scope.has_unsaved_changes} "
@@ -205,44 +201,31 @@ class ObjectStateFieldRenderer(ObjectStatePresentation):
                 )
                 lines.append(
                     f"Scope [{mark}] scope={scope.scope_id}: "
-                    f"type={scope.object_type} dirty={scope.dirty_field_count} "
+                    f"dirty={scope.dirty_field_count} "
                     f"default_diff={scope.signature_diff_field_count} "
                     f"unsaved={scope.has_unsaved_changes} "
                     f"overrides={scope.has_default_overrides}"
                 )
                 lines.extend(
-                    cls.field_line(field, field.field_path, field.object_state_path_type)
+                    cls.field_line(field, field.field_path, field.declared_by)
                     for field in scope.fields
                 )
         return "\n".join(lines)
 
     @staticmethod
     def _semantic_summary(fields: tuple[UiObjectStateFieldSemanticCarrier, ...]) -> str:
-        raw_none_resolved = sum(
-            1
-            for field in fields
-            if field.raw_value_is_none and not field.resolved_value_is_none
-        )
-        resolved_none_raw = sum(
-            1
-            for field in fields
-            if not field.raw_value_is_none and field.resolved_value_is_none
-        )
         semantic = sum(
             1
             for field in fields
             if field.dirty
             or field.signature_diff
             or field.inherited_value
-            or field.raw_value_is_none is not field.resolved_value_is_none
         )
         return (
             "Returned semantics: "
             f"dirty={sum(1 for field in fields if field.dirty)} "
             f"default_diff={sum(1 for field in fields if field.signature_diff)} "
             f"inherited={sum(1 for field in fields if field.inherited_value)} "
-            f"raw_none_resolved={raw_none_resolved} "
-            f"resolved_none_raw={resolved_none_raw} "
             f"plain={len(fields) - semantic}"
         )
 
@@ -278,10 +261,7 @@ class ObjectStateFieldHelpRenderer(ObjectStatePresentation):
             "ObjectState field help: "
             f"scope={payload.address.object_state_scope_id} "
             f"field={payload.address.field_path}",
-            "Target: "
-            f"object={cls.short_type(payload.object_type)} "
-            f"help_target={cls.short_type(payload.help_target_type)} "
-            f"parameter={cls.text(payload.parameter_name)}",
+            f"Parameter: {cls.text(payload.parameter_name)}",
         ]
         if payload.field is not None:
             lines.append("Field:")

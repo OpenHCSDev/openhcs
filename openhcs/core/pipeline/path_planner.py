@@ -35,7 +35,6 @@ from openhcs.core.function_patterns import (
     normalize_function_pattern,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from objectstate import get_base_type_for_lazy
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     PIPELINE_INPUT_ARTIFACT,
@@ -80,6 +79,7 @@ from openhcs.core.step_dependencies import (
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration, Ungrouped
+from python_introspect import resolve_declared_type
 
 logger = logging.getLogger(__name__)
 
@@ -929,7 +929,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 else pipeline_values[parameter_name]
             )
             parameter_type = (
-                get_base_type_for_lazy(parameter.annotation) or parameter.annotation
+                resolve_declared_type(parameter.annotation)
             )
             if not isinstance(provider, parameter_type):
                 raise TypeError(
