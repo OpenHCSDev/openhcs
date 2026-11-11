@@ -1,4 +1,4 @@
-from openhcs.runtime.zmq_orchestrator_environment import (
+from openhcs.runtime.zmq.zmq_orchestrator_environment import (
     ZMQOrchestratorEnvironmentRequest,
 )
 
@@ -45,7 +45,7 @@ def test_selected_external_pipeline_initializes_from_prepared_workspace_path():
 def test_omero_plate_uses_backend_metadata_namespace_authority(monkeypatch):
     from polystore import omero_local
 
-    from openhcs.runtime import omero_instance_manager
+    from openhcs.runtime.runtime_util import omero_instance_manager
 
     connection = object()
     backend_kwargs = {}

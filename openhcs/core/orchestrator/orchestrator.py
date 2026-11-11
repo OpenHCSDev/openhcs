@@ -26,7 +26,7 @@ from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
 from openhcs.core.util.metadata_cache import MetadataCache
@@ -52,7 +52,7 @@ from openhcs.core.debug.debug_runtime import (
 from openhcs.core.progress.types import ProgressExecutionContext, ProgressQueue
 from python_introspect import project_dataclass
 from openhcs.core.io.viewer_streaming_service import StreamingViewerLifecycle
-from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
+from openhcs.runtime.viewer.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
 

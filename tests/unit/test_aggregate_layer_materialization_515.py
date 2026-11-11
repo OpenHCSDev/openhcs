@@ -31,13 +31,13 @@ from openhcs.core.payload.runtime_slice_projection import (
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder,
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.viewer_display import NapariSlots
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentValueDomainPayload,
     ViewerMappingDisplayConfigInput,

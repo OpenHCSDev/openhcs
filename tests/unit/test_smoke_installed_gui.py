@@ -25,7 +25,7 @@ from formbridge.bridge.dto import (
     UiWindowSnapshotResult,
 )
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig, UIConfig
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 from scripts.smoke_installed_gui import (
     INSTALLED_GUI_SMOKE_TIMING,
     InstalledExecutionServerLogEvidence,

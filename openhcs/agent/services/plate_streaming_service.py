@@ -60,9 +60,9 @@ from openhcs.core.io.viewer_streaming_service import (
 from openhcs.core.io.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
-from openhcs.runtime.viewer_display import DeclaredAxes
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_component_system import ViewerComponentValueDomainPayload
+from openhcs.runtime.viewer.viewer_display import DeclaredAxes
+from openhcs.runtime.viewer.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )

@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerControlResponseField,
     ViewerRuntimeEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
     from openhcs.core.config.pipeline_config import FijiStreamingConfig

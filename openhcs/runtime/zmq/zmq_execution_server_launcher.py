@@ -19,7 +19,7 @@ from zmqruntime.startup import (
 )
 from zmqruntime.transport import TransportEndpoint
 
-from openhcs.runtime.import_authority import ImportRootEndpoint
+from openhcs.runtime.runtime_util.import_authority import ImportRootEndpoint
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ def main(
         )
         from dataclasses import replace
 
-        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+        from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
         config = OPENHCS_ZMQ_CONFIG
         if args.config_source is not None:
@@ -153,7 +153,7 @@ def main(
                 "Preparing endpoint function catalog",
             )
             if capability_preparer is None:
-                from openhcs.runtime.function_catalog_preparation import (
+                from openhcs.runtime.runtime_util.function_catalog_preparation import (
                     FunctionCatalogPreparation,
                 )
 
@@ -165,7 +165,7 @@ def main(
             return
 
         if execution_server_type is None:
-            from openhcs.runtime.zmq_execution_server import (
+            from openhcs.runtime.zmq.zmq_execution_server import (
                 ZMQExecutionServer as execution_server_type,
             )
         if server_runner is None:

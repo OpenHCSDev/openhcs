@@ -13,7 +13,7 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
 from openhcs.agent.services import viewer_window_service as service_module
 from openhcs.agent.services.viewer_window_service import ZMQViewerWindowGateway
-from openhcs.runtime.napari_viewer_server import NapariAcceptedControlRequest
+from openhcs.runtime.napari.napari_viewer_server import NapariAcceptedControlRequest
 
 
 def test_default_capture_reply_relation_and_explicit_contradictions(tmp_path):
@@ -110,8 +110,8 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
 
 def test_snapshot_wire_offer_is_admitted_once_and_capture_uses_local_identity(tmp_path):
     from zmqruntime.messages import MessageFields
-    from openhcs.runtime.viewer_protocol import ViewerControlMessageRequest, ViewerRuntimeEndpoint
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.viewer.viewer_protocol import ViewerControlMessageRequest, ViewerRuntimeEndpoint
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
     original = ViewerWindowSnapshotRequest.from_fields(
         connection=ExecutionConnectionSpec(port=5584), output_dir_path=str(tmp_path),

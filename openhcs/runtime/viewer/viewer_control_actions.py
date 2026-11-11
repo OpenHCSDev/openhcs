@@ -29,7 +29,7 @@ from zmqruntime.viewer_protocol import (
     ViewerProtocolStatus,
 )
 
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     OpenHCSViewerControlMessageType,
     ViewerControlField,
     ViewerSettleProgress,

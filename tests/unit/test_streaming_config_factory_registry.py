@@ -8,7 +8,7 @@ from openhcs.core.config.streaming_config_declarations import (
     ViewerFamily,
     ViewerType,
 )
-from openhcs.runtime.viewer_protocol import ManagedViewerLifecycleMixin
+from openhcs.runtime.viewer.viewer_protocol import ManagedViewerLifecycleMixin
 
 VIEWER_FAMILIES = ViewerFamily.families()
 

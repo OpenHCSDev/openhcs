@@ -18,7 +18,7 @@ from openhcs.core.debug.debug_runtime import (
     DebugPausedWorkerStatus,
     DebugReplayMode,
 )
-from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.core.debug.debug_runtime import WarmArtifactReplay
 
 if TYPE_CHECKING:

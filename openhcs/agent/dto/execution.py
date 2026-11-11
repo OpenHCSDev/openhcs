@@ -37,8 +37,8 @@ from openhcs.agent.dto.execution_connection import (
 )
 from openhcs.core.debug.debug_view_models import DebugViewModel
 from openhcs.core.config.streaming_config_declarations import ViewerType
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_client import ExecutionRuntimeLaunchPlan
 
 MAX_EXECUTION_STATUS_TRACEBACK_CHARS = 3000
 

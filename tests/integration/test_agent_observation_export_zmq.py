@@ -40,17 +40,17 @@ from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.runtime_util.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("A01",)):

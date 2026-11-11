@@ -70,8 +70,8 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 from ..openhcs_measured_run import (
     ZMQ_RESULTS_SUMMARY_FILENAME as ZMQ_RESULTS_SUMMARY_FILENAME,

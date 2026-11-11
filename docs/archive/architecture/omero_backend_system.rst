@@ -262,7 +262,7 @@ Auto-Detection
 
 .. code-block:: python
 
-   from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+   from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
 
    manager = OMEROInstanceManager()
 
@@ -312,7 +312,7 @@ The OMERO backend combines with the ZMQ execution system for server-side process
 .. code-block:: python
 
    # Client runs locally
-   from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+   from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
    client = ZMQExecutionClient(
        host='omero-server.example.com',
@@ -416,7 +416,7 @@ Complete Workflow
    from polystore.omero_local import OMEROLocalBackend
    from polystore.base import storage_registry
    from openhcs.microscopes.omero import OMEROHandler
-   from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+   from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
    # 1. Connect to OMERO

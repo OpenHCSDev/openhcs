@@ -85,11 +85,11 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler import align
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
     ZMQRuntimeExecutionObservationExport,
 )

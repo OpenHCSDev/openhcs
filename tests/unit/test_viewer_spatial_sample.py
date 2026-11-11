@@ -10,8 +10,8 @@ from tests.unit.test_viewer_feature_measurement import native_route
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRequest
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.runtime.napari_viewer_server import NapariViewerPayloadProjection
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.napari.napari_viewer_server import NapariViewerPayloadProjection
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerImageSpatialSampleControls,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,

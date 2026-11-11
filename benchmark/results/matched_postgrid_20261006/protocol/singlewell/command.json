@@ -7,7 +7,7 @@
     "/home/ts/code/projects/openhcs/.venv/bin/python",
     "-B",
     "-c",
-    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
     "--manifest",
     "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json",
     "--all-cases",

@@ -46,7 +46,7 @@ from zmqruntime.streaming import StreamingVisualizerServer, VisualizerProcessMan
 from zmqruntime.transport import resolve_transport_mode
 from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_state import ViewerReuseAdmissionABC
-from openhcs.runtime.import_authority import (
+from openhcs.runtime.runtime_util.import_authority import (
     OpenHCSRuntimeImportAuthority,
 )
 from zmqruntime.viewer_protocol import (
@@ -83,30 +83,30 @@ from openhcs.core.config.streaming_config_factory import (
     ViewerProcessLaunchConfig,
 )
 from openhcs.core.util.xdg_paths import get_openhcs_log_dir
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerIntensityWindowControlOptions as ViewerIntensityWindowControlOptions,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerLayerIsolationControlOptions as ViewerLayerIsolationControlOptions,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerNavigationControlOptions as ViewerNavigationControlOptions,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerPayloadControlOptions as ViewerPayloadControlOptions,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerPayloadProjectionOptions as ViewerPayloadProjectionOptions,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerScalar,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
 if TYPE_CHECKING:
-    from openhcs.runtime.napari_streaming_handlers import NapariNativeWindowPresentation
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariNativeWindowPresentation
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -416,7 +416,7 @@ class ViewerPayloadSummary(
     payload_type: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
 
     def coordinate_components(self) -> Mapping[str, ViewerComponentValue]:
-        from openhcs.runtime.viewer_component_system import ViewerComponentMetadataPayload
+        from openhcs.runtime.viewer.viewer_component_system import ViewerComponentMetadataPayload
 
         if self.components is VIEWER_FIELD_ABSENT:
             raise ValueError("Viewer payload summary missing components.")

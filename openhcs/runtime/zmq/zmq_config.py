@@ -14,7 +14,7 @@ import zmq
 from zmqruntime.config import NonBlankString
 from zmqruntime.execution.config import ExecutionTransportConfig
 
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
 SOCKET_ROOT_ENV = "OPENHCS_SOCKET_ROOT"
 """Directory that replaces the socket root for one process tree.

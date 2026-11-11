@@ -14,19 +14,19 @@ from zmqruntime.messages import (
 )
 from zmqruntime.transport import TransportEndpoint
 
-import openhcs.runtime.viewer_protocol as viewer_protocol
+import openhcs.runtime.viewer.viewer_protocol as viewer_protocol
 from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     ViewerProcessLaunchConfig,
 )
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerIntensityWindowControlOptions,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerConnectedExternal,
     DetachedViewerLaunchLog,
     DetachedViewerLaunchRequest,
@@ -47,8 +47,8 @@ from openhcs.runtime.viewer_protocol import (
     SettlementRunning,
     ViewerSettleProgress,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.core.config.streaming_config_declarations import NapariViewer
 
 
@@ -720,7 +720,7 @@ def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
     import_authority = OpenHCSRuntimeImportAuthority.current()
     python_code = DetachedViewerServerEntrypointSpec(
         viewer_family=NapariViewer,
-        module_name="openhcs.runtime.napari_viewer_server",
+        module_name="openhcs.runtime.napari.napari_viewer_server",
         function_name="run_napari_viewer_process",
     ).python_code(
         import_authority,
@@ -734,7 +734,7 @@ def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
     )
 
     assert "run_napari_viewer_process" in python_code
-    assert "openhcs.runtime.napari_viewer_server" in python_code
+    assert "openhcs.runtime.napari.napari_viewer_server" in python_code
     assert " import _napari_viewer_process" not in python_code
     assert str(import_authority.import_root) in python_code
     assert "TransportMode.IPC" in python_code
@@ -745,7 +745,7 @@ def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
 def test_detached_viewer_launch_request_owns_log_and_python_command(tmp_path):
     spec = DetachedViewerServerEntrypointSpec(
         viewer_family=NapariViewer,
-        module_name="openhcs.runtime.napari_viewer_server",
+        module_name="openhcs.runtime.napari.napari_viewer_server",
         function_name="run_napari_viewer_process",
     )
     log_file = DetachedViewerLaunchRequest.log_file_for(

@@ -28,7 +28,7 @@ from zmqruntime.viewer_protocol import (
     ViewerWireValue,
 )
 
-from openhcs.runtime.viewer_display import DeclaredAxes, ViewerSlotFamily
+from openhcs.runtime.viewer.viewer_display import DeclaredAxes, ViewerSlotFamily
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
@@ -51,7 +51,7 @@ from openhcs.core.source.source_matching import (
 from openhcs.core.config.streaming_config_factory import (
     StreamingViewerSurface,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ComponentValue,
     ViewerComponentMetadataNormalizer,
     ViewerComponentValueParser,

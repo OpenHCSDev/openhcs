@@ -13,7 +13,7 @@ from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
-from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
+from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.util.artifact_inspection import (
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
@@ -50,18 +50,18 @@ from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
 from openhcs.authoring.session.session import CallerThread, Session
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.zmq_compilation import (
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_compilation import (
     ZMQCompilationResult,
     ZMQCompileArtifactRecord,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_control import (
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
 )
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,

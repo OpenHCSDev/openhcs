@@ -326,7 +326,7 @@ XDG_CACHE_HOME=/tmp/openhcs-test-cache .venv/bin/python -m pytest \
 2026-06-29 viewer response-field authority slice:
 
 - Moved viewer control, layer, payload, payload-summary, and descriptor
-  response-field declarations to `openhcs.runtime.viewer_protocol`.
+  response-field declarations to `openhcs.runtime.viewer.viewer_protocol`.
 - `ViewerWindowService` now imports those protocol-owned `str` enums instead
   of declaring local response-field classes.
 

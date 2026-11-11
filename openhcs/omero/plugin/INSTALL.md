@@ -31,7 +31,7 @@ omero web restart
 The execution server launcher still exists:
 
 ```bash
-python -m openhcs.runtime.zmq_execution_server_launcher \
+python -m openhcs.runtime.zmq.zmq_execution_server_launcher \
   --port 7777 \
   --transport-mode tcp \
   --persistent

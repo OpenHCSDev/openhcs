@@ -30,7 +30,7 @@ from openhcs.core.callable.processing_preparation import (
     CallablePreparation,
     PreparationCacheBatch,
 )
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 from .unified_registry import (
@@ -317,7 +317,7 @@ class RegistryService:
         command = (
             policy.python_executable(sys.executable),
             *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-                "openhcs.runtime.zmq_execution_server_launcher"
+                "openhcs.runtime.zmq.zmq_execution_server_launcher"
             ),
             "--prepare-capabilities",
             "--log-level",

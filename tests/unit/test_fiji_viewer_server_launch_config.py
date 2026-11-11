@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from openhcs.runtime.fiji_viewer_server import (
+from openhcs.runtime.fiji.fiji_viewer_server import (
     FijiViewerServer,
     FijiViewerServerLaunchConfig,
 )

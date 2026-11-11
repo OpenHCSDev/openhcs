@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from openhcs.agent.path_policy import AgentPathPolicy
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
     from openhcs.agent.services.architecture_projection_service import (
         ArchitectureProjectionService,
     )
@@ -264,7 +264,7 @@ class OpenHCSAgentContext:
             from openhcs.agent.session_access import AgentPathDatasetAccess
             from openhcs.authoring.session.session import CallerThread, Session
             from openhcs.core.config.pipeline_config import GlobalPipelineConfig
-            from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+            from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
             self._session = Session(
                 transport_config=self._session_transport_config or OpenHCSZMQConfig(),

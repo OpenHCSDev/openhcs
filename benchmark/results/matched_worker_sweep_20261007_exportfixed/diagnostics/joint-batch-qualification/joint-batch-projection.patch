@@ -213,13 +213,13 @@
      RuntimeEquivalenceDifference,
      RuntimeEquivalenceReport,
 @@ -98,6 +100,7 @@
- from openhcs.core.runtime_exports import RuntimeExportObservation
+ from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
  from openhcs.core.runtime_equivalence import (
      RuntimeMeasurementSnapshot,
 +    RuntimeMeasurementSnapshotCachePayload,
      runtime_measurement_equivalence,
  )
- from openhcs.core.source_matching import source_component_metadata_value
+ from openhcs.core.source.source_matching import source_component_metadata_value
 @@ -362,6 +365,9 @@
      native_measurement_cache_root: Path | None = None,
      native_reference_report_sha256: str | None = None,
@@ -324,7 +324,7 @@
 +    RuntimeMeasurementSnapshotCachePayload,
      runtime_measurement_equivalence,
  )
- from openhcs.core.runtime_exports import RuntimeExportObservation
+ from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 @@ -57,6 +58,7 @@
      native_measurement_cache_root: Path | None = None,
      native_reference_report_sha256: str | None = None,

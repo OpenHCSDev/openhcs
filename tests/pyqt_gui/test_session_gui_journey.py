@@ -26,7 +26,7 @@ from openhcs.authoring.session.views import DatasetListView
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 from tests.integration.test_session_journey import (
     STAGE_TIMEOUT_SECONDS,
     _port,

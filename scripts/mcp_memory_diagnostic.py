@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Annotated, get_args, get_type_hints
 import openhcs
 from python_introspect import dataclass_from_mapping
 
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
 if TYPE_CHECKING:
     from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile

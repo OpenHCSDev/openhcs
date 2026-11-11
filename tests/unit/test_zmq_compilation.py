@@ -6,7 +6,7 @@ from dataclasses import replace
 import pytest
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
-from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
+from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
@@ -15,7 +15,7 @@ from openhcs.core.execution.compiled_execution import (
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.runtime.zmq_compilation import (
+from openhcs.runtime.zmq.zmq_compilation import (
     ZMQCompilationRequest,
     ZMQCompilationResult,
     ZMQCompileArtifactRecord,

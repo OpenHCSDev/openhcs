@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from openhcs.mcp.dev_client_core import McpDevServerSpec
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 from scripts.mcp_memory_diagnostic import DIAGNOSTIC_MODULE
 
 

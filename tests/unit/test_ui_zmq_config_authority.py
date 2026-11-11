@@ -13,7 +13,7 @@ from openhcs.agent.services.runtime_server_service import (
     RuntimeServerService,
     ZMQRuntimeServerGateway,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementsWindow
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

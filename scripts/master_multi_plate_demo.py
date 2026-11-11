@@ -43,13 +43,13 @@ from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlField,
     ViewerLayerField,
     ViewerRuntimeEndpoint,
     ViewerTransportEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import socket
 
 from zmqruntime import transport_modes
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from zmqruntime import TcpDataControlPortPairAuthority
 
 

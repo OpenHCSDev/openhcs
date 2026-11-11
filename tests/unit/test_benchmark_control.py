@@ -59,13 +59,13 @@ from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineCo
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.runtime.environment_provenance import (
+from openhcs.runtime.runtime_util.environment_provenance import (
     InstalledDistributionVersion,
     RuntimeEnvironmentSnapshot,
 )
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
-from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
+from openhcs.runtime.runtime_util.observation_export_scope import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None:

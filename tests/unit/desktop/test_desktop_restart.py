@@ -23,7 +23,7 @@ from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.desktop.zmq_version_restart import (
     ZMQVersionRestartDialogPresenter,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
 
 def test_desktop_restart_worker_receives_session_and_restart_arguments(

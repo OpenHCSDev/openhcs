@@ -44,7 +44,7 @@ from pyqt_reactive.windows.config_window import (
 )
 
 from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.domains.microscopy.axes import Microscopy
 

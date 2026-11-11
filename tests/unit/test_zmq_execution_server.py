@@ -15,7 +15,7 @@ from zmqruntime.messages import (
     MessageFields,
 )
 
-import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
+import openhcs.runtime.zmq.zmq_execution_server as zmq_execution_server_module
 from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
@@ -36,16 +36,16 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeExecutionObservation,
 )
 from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.zmq_execution_server import (
+from openhcs.runtime.zmq.zmq_execution_server import (
     ZMQAuxiliaryExecutionParams,
     ZMQExecutionContext,
     ZMQExecutionServer,
 )
-from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
-from openhcs.runtime.zmq_execution_signature import (
+from openhcs.runtime.runtime_util.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
     ZMQExecutionCompileControl,
     ZMQExecutionConfigTransport,
@@ -400,7 +400,7 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )
-    from openhcs.runtime.zmq_compilation import (
+    from openhcs.runtime.zmq.zmq_compilation import (
         ZMQCompileArtifactRecord,
         ZMQCompilationResult,
     )
@@ -525,7 +525,7 @@ def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
 
 def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> None:
     from zmqruntime.execution.progress_stream import ProgressStreamSubscriber
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
     server = ZMQExecutionServer()
     record = ExecutionRecord("execution-1", "plate-1", ExecutionStatus.RUNNING.value)

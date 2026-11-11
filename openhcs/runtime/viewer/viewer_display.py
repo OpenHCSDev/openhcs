@@ -405,7 +405,7 @@ class SeparateLayers(NapariVariableSizeHandling):
         from polystore.streaming_constants import StreamingDataType
 
         from openhcs.core.axes.axis_declarations import PartitionAxis
-        from openhcs.runtime.viewer_component_system import ViewerComponentCoordinates
+        from openhcs.runtime.viewer.viewer_component_system import ViewerComponentCoordinates
 
         if context.address.stream_layer_data_type is not StreamingDataType.IMAGE:
             return context

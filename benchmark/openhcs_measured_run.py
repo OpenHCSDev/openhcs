@@ -33,20 +33,20 @@ from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_execution_client import (
     ZMQExecutionRequestBuilder,
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
     ZMQPipelineRunPhase,
     run_compiled_pipeline,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.runtime_util.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 from .timing import (
     BenchmarkPhase,

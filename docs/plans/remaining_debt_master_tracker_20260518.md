@@ -155,10 +155,10 @@ qtcore.QTimer = _DummyQTimer
 sys.modules.setdefault('qtpy', qtpy)
 sys.modules.setdefault('qtpy.QtCore', qtcore)
 sys.modules.setdefault('qtpy.QtWidgets', qtwidgets)
-import openhcs.runtime.napari_stream_visualizer
-import openhcs.runtime.napari_viewer_server
-import openhcs.runtime.fiji_stream_visualizer
-import openhcs.runtime.fiji_viewer_server
+import openhcs.runtime.napari.napari_stream_visualizer
+import openhcs.runtime.napari.napari_viewer_server
+import openhcs.runtime.fiji.fiji_stream_visualizer
+import openhcs.runtime.fiji.fiji_viewer_server
 PY
 # viewer imports ok
 

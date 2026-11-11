@@ -10,10 +10,10 @@ from napari import Viewer
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QComboBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
 
 if TYPE_CHECKING:
-    from openhcs.runtime.napari_viewer_server import NapariViewerServer
+    from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer
 
 
 class OpenHCSOrthogonalWidget(QWidget):
@@ -89,7 +89,7 @@ class OpenHCSOrthogonalWidget(QWidget):
         )
 
     def apply_plane(self) -> None:
-        from openhcs.runtime.napari_viewer_server import (
+        from openhcs.runtime.napari.napari_viewer_server import (
             NapariNavigationControlAction,
         )
 

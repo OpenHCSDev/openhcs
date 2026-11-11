@@ -28,11 +28,11 @@ from zmqruntime.viewer_protocol import ViewerWireField
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.config.streaming_config_declarations import FijiViewer
 from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
-from openhcs.runtime.fiji_macro_runtime import (
+from openhcs.runtime.fiji.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ComponentValue,
     ViewerBatchPayloadFields,
     ViewerComponentAxisSemantics,
@@ -46,13 +46,13 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
-from openhcs.runtime.viewer_control_actions import (
+from openhcs.runtime.viewer.viewer_control_actions import (
     ViewerControlAction,
     ViewerServerPort,
     control_reply,
 )
-from openhcs.runtime.viewer_display import DeclaredAxes, FijiDisplaySettings, FijiSlots
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_display import DeclaredAxes, FijiDisplaySettings, FijiSlots
+from openhcs.runtime.viewer.viewer_protocol import (
     FijiPayloadKind,
     OpenHCSViewerServerABC,
     ViewerBatchContextWireField,
@@ -67,8 +67,8 @@ from openhcs.runtime.viewer_protocol import (
     SettlementRunning,
     ViewerSettleProgress,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 logger = logging.getLogger(__name__)
 _ACK_ERROR = ViewerProtocolStatus.ERROR.value

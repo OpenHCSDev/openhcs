@@ -22,13 +22,13 @@ from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.axes.axis_declarations import StackAxis
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
-from openhcs.runtime.viewer_display import NapariDisplaySettings, NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariDisplaySettings, NapariSlots
 from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ComponentMap,
     ComponentValue,
     ComponentValues,
@@ -39,7 +39,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerComponentValueOrdering,
     ViewerSettlePhase,
     SettlementComplete,
@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from qtpy.QtWidgets import QWidget
     from polystore.streaming.receivers.napari import NapariBatchProcessor
 
-    from openhcs.runtime.napari_viewer_server import NapariViewerServer
+    from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer
 
 
 logger = logging.getLogger(__name__)

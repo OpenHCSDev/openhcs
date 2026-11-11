@@ -2297,7 +2297,7 @@ def prepare_ui_context_reference_fixture(
     from zmqruntime import DataControlPortPairAuthority, TransportMode
 
     from openhcs.mcp.dev_client import McpDevClient
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
     from scripts.master_multi_plate_demo import (
         McpMasterDemoOperations,
         build_demo_schedule,

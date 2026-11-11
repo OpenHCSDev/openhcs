@@ -15,7 +15,7 @@
      MeasurementScalarLiteral,
 +    RuntimeMeasurementRowIdentityContract,
  )
- from openhcs.core.runtime_measurements import (
+ from openhcs.core.measurements.runtime_measurements import (
      MeasurementTable,
 @@ -75,7 +76,7 @@
      return DEFAULT_MEASUREMENT_TABLE_PADDING_GROUP

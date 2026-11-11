@@ -24,7 +24,7 @@ from openhcs.pyqt_gui.widgets.image_browser import (
     NoDataset,
     viewer_actions,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from tests.unit.remote_sensing_witness_domain import RemoteSensing
 
 

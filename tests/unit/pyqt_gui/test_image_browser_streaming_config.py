@@ -24,7 +24,7 @@ from openhcs.pyqt_gui.widgets.image_browser import (
     NoDataset,
     OrchestratorDataset,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from pyqt_reactive.theming import ColorScheme
 
 

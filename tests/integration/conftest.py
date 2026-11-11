@@ -11,7 +11,7 @@ import pytest
 from zmqruntime import EndpointShutdownMode, ZMQClient
 from zmqruntime.transport import DataControlPortPairAuthority
 
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 from tests.integration.helpers.fixture_utils import (
     BACKEND_CONFIGS,

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(production))
 import openhcs,benchmark
 benchmark.__path__.insert(0,str(artifact/'benchmark'))
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.serialization.json import to_jsonable
 source=artifact/'benchmark/matched_cellprofiler_batch.py';source_sha=hashlib.sha256(source.read_bytes()).hexdigest();tree=ast.parse(source.read_text())
 assert isinstance(tree.body[-1],ast.If)

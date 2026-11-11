@@ -63,7 +63,7 @@ from openhcs.core.config.streaming_config_declarations import (
     ViewerFamily,
     ViewerType,
 )
-from openhcs.runtime.viewer_display import (
+from openhcs.runtime.viewer.viewer_display import (
     DECLARED_AXES_FIELD,
     DeclaredAxes,
     DeclaredAxis,

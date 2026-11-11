@@ -101,7 +101,7 @@ if _DIRECTORY:
     _AFTER_IMPORT = {
         "numba.core.caching": _count_cache_lookups,
         "numba.core.event": _count_compilations,
-        "openhcs.runtime.zmq_execution_server": _mark_readiness,
+        "openhcs.runtime.zmq.zmq_execution_server": _mark_readiness,
     }
 
     class _AfterImport(importlib.abc.MetaPathFinder):

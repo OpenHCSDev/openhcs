@@ -140,9 +140,9 @@ from openhcs.core.progress.debug_projection import (
 )
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.runtime_util.observation_export_scope import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.debug.debug_runtime import PersistentPausedWorkerReplay
 from openhcs.core.debug.debug_runtime import (
@@ -156,7 +156,7 @@ if TYPE_CHECKING:
     from openhcs.authoring.session.views import SessionView
     from zmqruntime.messages import PongResponse
 
-    from openhcs.runtime.zmq_execution_client import (
+    from openhcs.runtime.zmq.zmq_execution_client import (
         ZMQExecutionClient,
         ZMQExecutionRequestBuilder,
     )

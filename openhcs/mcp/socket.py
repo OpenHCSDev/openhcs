@@ -39,7 +39,7 @@ def mcp_socket_directory() -> Path:
     (``~/.openhcs/ipc``) so every OpenHCS local socket lives in one place.
     """
 
-    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
     configured = os.getenv(MCP_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE)
     if configured:
@@ -55,7 +55,7 @@ def mcp_dev_socket_path(surface_name: str) -> Path:
     loaded from one checkout is never reused against different sources.
     """
 
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     source_root = OpenHCSRuntimeImportAuthority.current().import_root
     source_token = hashlib.sha256(str(source_root).encode()).hexdigest()[:8]

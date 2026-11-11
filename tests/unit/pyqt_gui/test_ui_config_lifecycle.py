@@ -29,7 +29,7 @@ from tests.unit.pyqt_gui.session_harness import (
     qt_app,
     session_port,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 def test_ui_config_cache_round_trip_applies_environment_at_load(

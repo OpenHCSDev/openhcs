@@ -12,11 +12,11 @@ from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.runtime.zmq_progress import (
+from openhcs.runtime.zmq.zmq_progress import (
     ZMQCompileProgressHeartbeat,
     ZMQProgressEmitter,
 )
-from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
+from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle
 
 if TYPE_CHECKING:
     from openhcs.core.config.pipeline_config import GlobalPipelineConfig

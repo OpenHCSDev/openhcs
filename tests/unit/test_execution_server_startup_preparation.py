@@ -14,8 +14,8 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.processing_preparation import PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
-from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
 
 @pytest.fixture(autouse=True)

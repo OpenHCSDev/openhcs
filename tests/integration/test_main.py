@@ -28,8 +28,8 @@ from openhcs.core.config.pipeline_config import (
     Backend,
     ZarrConfig,
 )
-from openhcs.runtime.viewer_display import PadToMaxSize
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.viewer.viewer_display import PadToMaxSize
+from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.core.config.pipeline_config import (
     LazyStepMaterializationConfig,
     LazyNapariStreamingConfig,
@@ -498,7 +498,7 @@ def _initialize_orchestrator(
     # For OMERO: Register OMERO backend with connection
     omero_manager = None
     if test_config.is_omero:
-        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+        from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
         from polystore.backend_registry import register_cleanup_callback
         from polystore.omero_local import OMEROLocalBackend
         from polystore.base import storage_registry
@@ -706,7 +706,7 @@ def _execute_pipeline_zmq(
     pipeline_config: PipelineConfig,
 ) -> Dict:
     """Execute pipeline using ZMQ execution client."""
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
     import logging
 
     logger = logging.getLogger(__name__)

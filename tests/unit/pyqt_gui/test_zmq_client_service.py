@@ -17,10 +17,10 @@ from zmqruntime.client import EndpointConnectionAttempt
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.authoring.session.execution_client import ZMQClientService
-from openhcs.runtime.zmq_application import (
+from openhcs.runtime.zmq.zmq_application import (
     OPENHCS_ENDPOINT_APPLICATION,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 class SlowFakeExecutionClient:
@@ -94,7 +94,7 @@ class SlowFakeExecutionClient:
 
 
 def test_async_connect_cancellation_retires_same_attempt_and_releases_ownership(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     monkeypatch.setattr(client_module, "ZMQExecutionClient", SlowFakeExecutionClient)
@@ -120,7 +120,7 @@ def test_async_connect_cancellation_retires_same_attempt_and_releases_ownership(
 
 
 def test_zmq_client_service_concurrent_connects_reuse_same_client(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     monkeypatch.setattr(
@@ -169,7 +169,7 @@ def test_cancelled_lock_waiter_releases_late_acquisition() -> None:
 def test_disconnect_sync_cancels_an_in_progress_connection_attempt(
     monkeypatch,
 ) -> None:
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     class BlockingExecutionClient(SlowFakeExecutionClient):
         attempt_started = threading.Event()
@@ -225,7 +225,7 @@ def test_disconnect_sync_cancels_an_in_progress_connection_attempt(
 
 
 def test_zmq_client_service_publishes_derived_endpoint_compatibility(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     monkeypatch.setattr(
@@ -255,7 +255,7 @@ def test_endpoint_compatibility_rejects_a_foreign_application() -> None:
 
 
 def test_foreign_endpoint_is_reported_but_not_admitted(monkeypatch) -> None:
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     class ForeignExecutionClient(SlowFakeExecutionClient):
         def __init__(self, **kwargs) -> None:
@@ -285,7 +285,7 @@ def test_foreign_endpoint_is_reported_but_not_admitted(monkeypatch) -> None:
 
 
 def test_retired_client_cannot_publish_stale_startup_status(monkeypatch) -> None:
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     monkeypatch.setattr(client_module, "ZMQExecutionClient", SlowFakeExecutionClient)
     observed = []
@@ -310,7 +310,7 @@ def test_retired_client_cannot_publish_stale_startup_status(monkeypatch) -> None
 def test_zmq_client_service_restarts_the_endpoint_under_one_lifecycle_lock(
     monkeypatch,
 ) -> None:
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     shutdown_ports = []
@@ -343,7 +343,7 @@ def test_zmq_client_service_restarts_the_endpoint_under_one_lifecycle_lock(
 def test_version_restart_rejects_changed_compatibility_before_shutdown(
     monkeypatch,
 ) -> None:
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     shutdown_ports: list[int] = []
@@ -375,7 +375,7 @@ def test_version_restart_rejects_changed_compatibility_before_shutdown(
 
 
 def test_zmq_client_service_reuses_equivalent_bound_progress_callback(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     class ProgressReceiver:
         def on_progress(self, _event):
@@ -403,7 +403,7 @@ def test_zmq_client_service_reuses_equivalent_bound_progress_callback(monkeypatc
 
 
 def test_zmq_client_service_attaches_to_an_existing_endpoint(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     SlowFakeExecutionClient.existing_endpoint_available = True
@@ -422,7 +422,7 @@ def test_zmq_client_service_attaches_to_an_existing_endpoint(monkeypatch):
 
 
 def test_zmq_client_service_leaves_an_absent_endpoint_disconnected(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     SlowFakeExecutionClient.existing_endpoint_available = False
@@ -441,7 +441,7 @@ def test_zmq_client_service_leaves_an_absent_endpoint_disconnected(monkeypatch):
 
 
 def test_endpoint_termination_disconnects_only_its_exact_client(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
     monkeypatch.setattr(
@@ -467,7 +467,7 @@ def test_endpoint_termination_disconnects_only_its_exact_client(monkeypatch):
 
 
 def test_old_endpoint_termination_does_not_cancel_replacement_handshake(monkeypatch):
-    import openhcs.runtime.zmq_execution_client as client_module
+    import openhcs.runtime.zmq.zmq_execution_client as client_module
 
     class TerminationDuringConnect(SlowFakeExecutionClient):
         def connect(self, timeout):

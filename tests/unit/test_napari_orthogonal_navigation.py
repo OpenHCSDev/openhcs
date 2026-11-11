@@ -9,27 +9,27 @@ from qtpy.QtCore import Qt
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowNavigationRequest
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariComponentGroupStore,
     NapariDimensionLayerState,
     NapariLayerRouteStateStore,
 )
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariNavigationControlAction,
     NapariResultSelectionController,
     NapariViewerStateProjection,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinates,
 )
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
@@ -312,7 +312,7 @@ def test_lower_rank_presentation_maps_to_right_aligned_viewer_dimensions():
 
 
 def test_plugin_choices_and_button_use_same_native_navigation_owner(qtbot, monkeypatch):
-    from openhcs.runtime.napari_orthogonal_widget import OpenHCSOrthogonalWidget
+    from openhcs.runtime.napari.napari_orthogonal_widget import OpenHCSOrthogonalWidget
 
     viewer = ViewerModel()
     image = viewer.add_image(np.zeros((2, 3, 4, 5)), rgb=False)
@@ -346,7 +346,7 @@ def test_plugin_choices_and_button_use_same_native_navigation_owner(qtbot, monke
 
 def test_bundled_plugin_factory_rejects_unmanaged_viewer(qtbot):
     from napari import Viewer
-    from openhcs.runtime.napari_orthogonal_widget import make_orthogonal_widget
+    from openhcs.runtime.napari.napari_orthogonal_widget import make_orthogonal_widget
 
     viewer = Viewer(show=False)
     try:
@@ -357,7 +357,7 @@ def test_bundled_plugin_factory_rejects_unmanaged_viewer(qtbot):
 
 
 def test_plugin_late_native_mount_populates_routes_without_polling(qtbot):
-    from openhcs.runtime.napari_orthogonal_widget import OpenHCSOrthogonalWidget
+    from openhcs.runtime.napari.napari_orthogonal_widget import OpenHCSOrthogonalWidget
 
     viewer = ViewerModel()
     server = harness(viewer)

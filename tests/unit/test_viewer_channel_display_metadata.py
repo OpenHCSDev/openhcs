@@ -17,18 +17,18 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraPayload,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariLayerRouteStateStore,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentNameMetadata,
     ViewerLayerAxisProjection,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
@@ -96,7 +96,7 @@ def test_channel_display_metadata_round_trips_without_replacing_numeric_coordina
 
 
 def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     semantics = ViewerComponentAxisSemanticsFactory.empty()
     route_key = "source-dna"
     server = SimpleNamespace(

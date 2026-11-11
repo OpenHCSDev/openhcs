@@ -55,14 +55,14 @@ from openhcs.agent.dto.functions import (
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.core.callable.callable_contract import CallableImportIdentity
 from openhcs.core.callable.function_reference import ImportableFunctionReference
-from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_control import (
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
 )
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
 
 def test_function_parameter_source_owns_runtime_presentation() -> None:
@@ -99,7 +99,7 @@ def test_local_mcp_context_uses_persisted_desktop_execution_endpoint(
         ZMQFunctionCatalogService,
     )
     from openhcs.mcp.context import create_agent_context
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
     endpoint_config = replace(
         OPENHCS_ZMQ_CONFIG,
@@ -140,7 +140,7 @@ def test_real_mcp_context_composes_typed_preparation_and_catalog_authority(
     )
     from openhcs.mcp.context import OpenHCSAgentContext, create_agent_context
     from openhcs.mcp.server import build_server
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
     from python_introspect import to_jsonable
 
     connection = ExecutionConnectionSpec(port=22319)
@@ -995,7 +995,7 @@ def test_execution_server_runtime_capability_preparation_uses_single_owner(
 def test_execution_server_stop_cancels_catalog_preparation_before_backend_cleanup(
     monkeypatch,
 ) -> None:
-    from openhcs.runtime import zmq_execution_server
+    from openhcs.runtime.zmq import zmq_execution_server
 
     events: list[str] = []
     server = ZMQExecutionServer()
@@ -1023,7 +1023,7 @@ def test_execution_server_stop_cancels_catalog_preparation_before_backend_cleanu
 
 
 def test_function_catalog_preparation_cancellation_reaches_catalog_owner() -> None:
-    from openhcs.runtime.function_catalog_preparation import (
+    from openhcs.runtime.runtime_util.function_catalog_preparation import (
         FunctionCatalogPreparation,
     )
 
@@ -1056,7 +1056,7 @@ def test_persistent_capability_preparation_uses_registry_owner(
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,
     )
-    from openhcs.runtime.function_catalog_preparation import (
+    from openhcs.runtime.runtime_util.function_catalog_preparation import (
         FunctionCatalogPreparation,
     )
 
@@ -1079,7 +1079,7 @@ def test_catalog_readiness_waits_for_kernel_preparation_with_cached_metadata(
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,
     )
-    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+    from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
 
     started = threading.Event()
     release = threading.Event()
@@ -1118,7 +1118,7 @@ def test_kernel_preparation_failure_reaches_catalog_future(monkeypatch) -> None:
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,
     )
-    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+    from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
 
     def fail(**kwargs):
         raise RuntimeError("kernel preparation failed")

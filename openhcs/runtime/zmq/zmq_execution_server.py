@@ -35,33 +35,33 @@ from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.core.runtime_store.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
-from openhcs.runtime.import_authority import ImportRootEndpoint
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_compilation import (
+from openhcs.runtime.runtime_util.environment_provenance import RuntimeEnvironmentSnapshot
+from openhcs.runtime.runtime_util.import_authority import ImportRootEndpoint
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_compilation import (
     ZMQCompilationRequest,
     ZMQCompileArtifactRecord,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.runtime.zmq_control import (
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
 )
-from openhcs.runtime.zmq_execution_signature import (
+from openhcs.runtime.zmq.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
     ZMQAuxiliaryExecutionParams,
     ZMQAuxiliaryParamField,
     ZMQExecutionRequestPayload,
 )
-from openhcs.runtime.zmq_orchestrator_environment import (
+from openhcs.runtime.zmq.zmq_orchestrator_environment import (
     ZMQOrchestratorEnvironmentRequest,
 )
-from openhcs.runtime.zmq_progress import ZMQCompilerProgressQueue, ZMQProgressEmitter
-from openhcs.runtime.zmq_server_hooks import (
+from openhcs.runtime.zmq.zmq_progress import ZMQCompilerProgressQueue, ZMQProgressEmitter
+from openhcs.runtime.zmq.zmq_server_hooks import (
     ZMQResultsSummaryEnricher,
     ZMQWorkerCleanup,
 )
-from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
+from openhcs.runtime.zmq.zmq_worker_execution import ZMQWorkerExecutionRequest
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class FunctionCatalogExecutionServer(ExecutionServer):
         from openhcs.agent.services.function_catalog_service import (
             FunctionCatalogService,
         )
-        from openhcs.runtime.function_catalog_preparation import (
+        from openhcs.runtime.runtime_util.function_catalog_preparation import (
             FunctionCatalogPreparation,
         )
 

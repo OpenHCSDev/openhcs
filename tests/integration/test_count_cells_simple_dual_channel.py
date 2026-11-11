@@ -44,11 +44,11 @@ from openhcs.processing.backends.analysis.count_cells_simple import (
     count_cells_simple_dual_channel,
 )
 from openhcs.processing.custom_functions import CustomFunctionManager
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.demo.synthetic_data import (

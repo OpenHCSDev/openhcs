@@ -44,9 +44,9 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
 )
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_client import (
     FunctionCatalogEndpointUnavailableError,
     FunctionCatalogExecutionClient,
     ZMQExecutionClient,

@@ -53,12 +53,12 @@ from openhcs.mcp.dev_client_commands.viewer import ValidateViewerCommandSpec
 from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerRuntimeEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy

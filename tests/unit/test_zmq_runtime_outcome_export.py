@@ -12,7 +12,7 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
 )

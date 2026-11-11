@@ -203,7 +203,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowNativePresentationRequest,
     ViewerWindowNativePresentationResult,
 )
-from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
 from python_introspect import to_jsonable
 
 if TYPE_CHECKING:

@@ -22,7 +22,7 @@ from openhcs.core.io.virtual_workspace_metadata import (
     METADATA_CONFIG, OpenHCSMetadataSubdirectories,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
+from openhcs.runtime.zmq.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
 from python_introspect import to_jsonable
 from polystore.roi import load_rois_from_zip
 from openhcs.core.axes.axis_declarations import AxisFamily

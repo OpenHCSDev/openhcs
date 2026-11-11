@@ -14,7 +14,7 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 ensure_source_checkout_external_paths()
 
 from openhcs.core.execution.native_threading import configure_native_thread_environment
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, use_private_socket_root
 
 # Tests run pipeline workers inside the pytest process, and a worker sets the
 # native thread count of its process to one. Numba launches its threads once

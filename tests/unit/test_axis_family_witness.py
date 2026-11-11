@@ -37,7 +37,7 @@ from openhcs.core.axes.axis_declarations import (
     Ungrouped,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 from tests.unit.remote_sensing_witness_domain import RemoteSensing
 
 
@@ -128,11 +128,11 @@ def _streamed_display_config(config) -> dict:
 
 def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> None:
     from openhcs.core.config.pipeline_config import FijiDisplayConfig, NapariDisplayConfig
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentNameMetadata,
         ViewerMappingDisplayConfigInput,
     )
-    from openhcs.runtime.viewer_display import (
+    from openhcs.runtime.viewer.viewer_display import (
         FijiDisplaySettings,
         FijiSlots,
         NapariSlots,
@@ -290,7 +290,7 @@ def test_family_declaration_enforces_role_cardinality() -> None:
 def _free_port_pairs(count: int) -> list[int]:
     from zmqruntime import DataControlPortPairAuthority
 
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
     taken: set[int] = set()
     ports = []

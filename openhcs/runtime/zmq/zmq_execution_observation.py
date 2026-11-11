@@ -21,7 +21,7 @@ from openhcs.core.runtime_store.runtime_execution_validation import (
 from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
-from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
+from openhcs.runtime.runtime_util.environment_provenance import RuntimeEnvironmentSnapshot
 
 ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 8
 ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 5

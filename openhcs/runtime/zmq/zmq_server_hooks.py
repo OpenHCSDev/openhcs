@@ -16,7 +16,7 @@ from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryParamField
 from python_introspect import to_jsonable
 
 logger = logging.getLogger(__name__)

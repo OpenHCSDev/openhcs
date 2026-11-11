@@ -411,7 +411,7 @@ def test_viewer_identity_is_owned_by_the_streaming_declaration_type() -> None:
                 definitions.append(str(path.relative_to(PROJECT_ROOT)))
             if (
                 isinstance(node, ast.ImportFrom)
-                and node.module == "openhcs.runtime.viewer_protocol"
+                and node.module == "openhcs.runtime.viewer.viewer_protocol"
                 and any(alias.name in {"ViewerType", "ViewerFamily"} for alias in node.names)
             ):
                 stale_imports.append(f"{path.relative_to(PROJECT_ROOT)}:{node.lineno}")

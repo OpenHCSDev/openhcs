@@ -13,8 +13,8 @@ from python_introspect import dataclass_from_mapping, to_jsonable
 
 from benchmark.contracts.run_artifacts import write_new_measured_artifact
 from benchmark.timing import PhaseTimingRecord
-from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
-from openhcs.runtime.observation_export_scope import (
+from openhcs.runtime.runtime_util.environment_provenance import RuntimeEnvironmentSnapshot
+from openhcs.runtime.runtime_util.observation_export_scope import (
     ExportRuntimeValues,
     ZMQRuntimeObservationExportScope,
 )

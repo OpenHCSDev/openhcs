@@ -122,19 +122,19 @@
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.runtime.zmq_execution_server",
+      "module": "openhcs.runtime.zmq.zmq_execution_server",
       "owner": "ZMQExecutionServer",
       "method": "_execute_with_orchestrator",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.runtime.zmq_execution_server",
+      "module": "openhcs.runtime.zmq.zmq_execution_server",
       "owner": "ZMQExecutionServer",
       "method": "_initialize_orchestrator",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.runtime.zmq_execution_server",
+      "module": "openhcs.runtime.zmq.zmq_execution_server",
       "owner": "ZMQExecutionServer",
       "method": "_export_runtime_observation",
       "descriptor_kind": "function"

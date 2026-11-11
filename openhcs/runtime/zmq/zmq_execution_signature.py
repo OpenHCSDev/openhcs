@@ -14,7 +14,7 @@ from zmqruntime.messages import ExecuteRequest, MessageFields
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
-from openhcs.runtime import observation_export_scope
+from openhcs.runtime.runtime_util import observation_export_scope
 
 if TYPE_CHECKING:
     from openhcs.core.execution.compiled_execution import CompiledExecutionBundle

@@ -8,12 +8,12 @@ from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariImageLayerPresentationPolicy,
     NapariLayerRouteStateStore,
     NapariSourceChannelImageLayerPresentationPolicy,
 )
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariImageLayerDisplayHandler,
     NapariLayerDisplayPipeline,
     NapariLayerDisplayRequest,
@@ -118,7 +118,7 @@ def test_rgb_rgba_stay_trailing_color_carriers(channels, site_count):
 
 
 def test_undeclared_extra_axis_is_not_guessed_as_rgb():
-    from openhcs.runtime.napari_streaming_handlers import (
+    from openhcs.runtime.napari.napari_streaming_handlers import (
         NapariImagePayloadAxisLabelPolicy,
     )
 

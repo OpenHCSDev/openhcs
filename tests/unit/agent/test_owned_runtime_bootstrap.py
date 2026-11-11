@@ -23,8 +23,8 @@ from openhcs.agent.services.runtime_server_service import RuntimeServerService
 from openhcs.mcp.context import OpenHCSAgentContext
 from zmqruntime.messages import EndpointAudience, EndpointLaunch
 
-from openhcs.runtime.zmq_config import SOCKET_ROOT_ENV, OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_config import SOCKET_ROOT_ENV, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import (
     ExecutionRuntimeLaunchPlan,
     ZMQExecutionClient,
 )
@@ -33,7 +33,7 @@ from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 _PRODUCTION_SPAWN = ZMQExecutionClient._spawn_server_process
 
@@ -131,8 +131,8 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
     import subprocess
     import sys
     from openhcs.core.config.config_document import ConfigDocumentCodec
-    from openhcs.runtime import zmq_execution_client as module
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.zmq import zmq_execution_client as module
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     _, _, intercepted_spawn = setup
     config = OpenHCSZMQConfig(
@@ -180,7 +180,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
     assert command[:4] == [sys.executable, "-B", "-X", "faulthandler"]
     assert command[4:6] == list(
         OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-            "openhcs.runtime.zmq_execution_server_launcher"
+            "openhcs.runtime.zmq.zmq_execution_server_launcher"
         )
     )
     child_config = ConfigDocumentCodec.from_source(
@@ -231,7 +231,7 @@ def test_client_consumes_exact_admitted_plan_on_spawn_failure(setup, monkeypatch
 
 
 def test_plan_closes_materialized_log_when_child_creation_fails(setup, monkeypatch):
-    from openhcs.runtime import zmq_execution_client as module
+    from openhcs.runtime.zmq import zmq_execution_client as module
 
     _, request, intercepted_spawn = setup
     client = request.connection.execution_client(OpenHCSZMQConfig())

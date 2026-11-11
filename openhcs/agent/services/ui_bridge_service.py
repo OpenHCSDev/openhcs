@@ -36,7 +36,7 @@ from formbridge.bridge.service import (
 from formbridge.runtime_platform import AgentRuntimePlatform
 
 from openhcs.core.execution.native_threading import native_thread_count_environment_keys
-from openhcs.runtime.viewer_protocol import ViewerLaunchContext
+from openhcs.runtime.viewer.viewer_protocol import ViewerLaunchContext
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 

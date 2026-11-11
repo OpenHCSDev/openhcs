@@ -58,7 +58,7 @@ class ExportRuntimeValues(ZMQRuntimeObservationExportScope):
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
-        from openhcs.runtime.zmq_execution_observation import (
+        from openhcs.runtime.zmq.zmq_execution_observation import (
             ZMQRuntimeExecutionObservationExport,
         )
 
@@ -88,7 +88,7 @@ class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
         from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
-        from openhcs.runtime.zmq_execution_observation import (
+        from openhcs.runtime.zmq.zmq_execution_observation import (
             ZMQRuntimeExecutionOutcomeExport,
         )
 

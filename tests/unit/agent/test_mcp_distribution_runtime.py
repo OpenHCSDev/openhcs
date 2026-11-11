@@ -17,7 +17,7 @@ from formbridge.bridge.service import (
     UiBridgeDescriptorDirectories,
     UiBridgeDescriptorReader,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 

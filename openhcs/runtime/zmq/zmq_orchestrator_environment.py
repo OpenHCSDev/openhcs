@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from polystore.base import reset_memory_backend, storage_registry
 
 from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
-from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQExecutionIdentity
 
 if TYPE_CHECKING:
     from openhcs.core.debug.debug_runtime import DebugExecutionConfig, DebugExecutionPolicy

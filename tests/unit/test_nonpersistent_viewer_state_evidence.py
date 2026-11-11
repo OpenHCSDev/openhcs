@@ -17,9 +17,9 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
     OmitRuntimeRecords,
 )
-from openhcs.runtime.viewer_protocol import ViewerControlResponse
-from openhcs.runtime.zmq_server_hooks import ZMQResultsSummaryEnricher
-from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
+from openhcs.runtime.viewer.viewer_protocol import ViewerControlResponse
+from openhcs.runtime.zmq.zmq_server_hooks import ZMQResultsSummaryEnricher
+from openhcs.runtime.zmq.zmq_worker_execution import ZMQWorkerExecutionRequest
 
 
 def test_settled_viewer_state_survives_zmq_execution_result_transport(

@@ -30,7 +30,7 @@ from openhcs.authoring.session.live_measurements import (
     LiveMeasurementTableEntry,
 )
 from openhcs.pyqt_gui.config import ProgressUIConfig
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 class LiveMeasurementsWindow(QDialog):

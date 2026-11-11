@@ -90,8 +90,8 @@ Do not fold the two modules together in this campaign.
 ```bash
 .venv/bin/python -m pytest tests/unit -q
 .venv/bin/python - <<'PY'
-import openhcs.runtime.napari_stream_visualizer
-import openhcs.runtime.napari_viewer_server
+import openhcs.runtime.napari.napari_stream_visualizer
+import openhcs.runtime.napari.napari_viewer_server
 PY
 python -m nominal_refactor_advisor \
   openhcs/runtime/napari_stream_visualizer.py \

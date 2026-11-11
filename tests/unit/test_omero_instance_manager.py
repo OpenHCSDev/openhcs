@@ -8,7 +8,7 @@ import pytest
 import yaml
 from polystore.omero_tables import OMEROTableServiceUnavailableError
 
-from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
 
 
 def _write_compose(path: Path) -> None:

@@ -15,7 +15,7 @@ from polystore.filemanager import FileManager
 
 from openhcs.core.config.streaming_config_declarations import FijiViewer
 from openhcs.core.config.streaming_config_factory import StreamingViewerRuntimeConfig
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     DetachedViewerPythonArguments,
     DetachedViewerPythonExpression,
     DetachedViewerServerEntrypointSpec,
@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 FIJI_VIEWER_ENTRYPOINT = DetachedViewerServerEntrypointSpec(
     viewer_family=FijiViewer,
-    module_name="openhcs.runtime.fiji_viewer_server",
+    module_name="openhcs.runtime.fiji.fiji_viewer_server",
     function_name="fiji_viewer_server_process",
-    extra_imports=("from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG",),
+    extra_imports=("from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG",),
 )
 
 

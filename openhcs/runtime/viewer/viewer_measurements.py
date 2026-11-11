@@ -13,7 +13,7 @@ from math import ceil, floor, hypot, isfinite, pi, sqrt
 import numpy as np
 from skimage.measure import grid_points_in_poly, profile_line, regionprops
 
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     VerticesYX,
     ViewerIntensityStatistics,
     ViewerPolylineMeasurement,

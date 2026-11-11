@@ -33,9 +33,9 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
 )
 from openhcs.mcp.server import _await_with_declared_progress, build_server
 from openhcs.mcp.dev_client_core import DEFAULT_CALL_TIMEOUT_SECONDS
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 
 class RecordingContext:

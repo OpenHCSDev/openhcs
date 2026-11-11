@@ -37,7 +37,7 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
     ZMQFunctionCatalogService,
 )
 from openhcs.pyqt_gui.config import UIConfig
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator

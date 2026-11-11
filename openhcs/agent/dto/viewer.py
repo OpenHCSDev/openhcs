@@ -47,7 +47,7 @@ from openhcs.agent.dto.execution_connection import (
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
 from openhcs.core.config.streaming_config_declarations import ViewerType
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerImageSpatialSampleControls,
     ViewerMeasurementCoordinates,
     ViewerPolylineMeasurement,
@@ -64,7 +64,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
     ViewerProjectionRecord, ViewerShapeCoordinateBounds,
     ViewerControlField, ViewerControlResponseField, ViewerControlMessageType,

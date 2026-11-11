@@ -8,7 +8,7 @@
     "/home/ts/code/projects/openhcs/.venv/bin/python",
     "-B",
     "-c",
-    "import sys;sys.path.insert(0,'/home/ts/code/projects/openhcs-cp-registry-control');import benchmark;benchmark.__path__=['/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark'];import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__',alter_sys=True)",
+    "import sys;sys.path.insert(0,'/home/ts/code/projects/openhcs-cp-registry-control');import benchmark;benchmark.__path__=['/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark'];import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__',alter_sys=True)",
     "--manifest",
     "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
     "--all-cases",

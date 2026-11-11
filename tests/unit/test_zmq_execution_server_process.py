@@ -16,10 +16,10 @@ from zmqruntime.startup import (
     EndpointStartupStatusWriter,
 )
 
-from openhcs.runtime import zmq_execution_client, zmq_execution_server_launcher
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq import zmq_execution_client, zmq_execution_server_launcher
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 
 class _StartupChild(EndpointProcess):
@@ -93,7 +93,7 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
     ]
     assert command[4:6] == list(
         OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-            "openhcs.runtime.zmq_execution_server_launcher"
+            "openhcs.runtime.zmq.zmq_execution_server_launcher"
         )
     )
     assert popen_call["creationflags"] == 73

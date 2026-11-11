@@ -26,7 +26,7 @@ from pyqt_reactive.widgets.shared import BaseFormDialog
 
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.ui_tab_identities import PlateViewerTab
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
 

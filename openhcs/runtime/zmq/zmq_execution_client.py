@@ -67,16 +67,16 @@ from openhcs.core.io.pipeline_document import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.util.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
-from openhcs.runtime.import_authority import (
+from openhcs.runtime.runtime_util.import_authority import (
     ImportRootEndpoint,
     OpenHCSRuntimeImportAuthority,
 )
-from openhcs.runtime.zmq_config import (
+from openhcs.runtime.zmq.zmq_config import (
     OPENHCS_ZMQ_CONFIG,
     OpenHCSZMQConfig,
     require_bindable_address,
 )
-from openhcs.runtime.zmq_execution_signature import (
+from openhcs.runtime.zmq.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQExecutionCompileControl,
     ZMQExecutionConfigTransport,
@@ -192,7 +192,7 @@ class ExecutionRuntimeLaunchPlan:
             "-X",
             "faulthandler",
             *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-                "openhcs.runtime.zmq_execution_server_launcher"
+                "openhcs.runtime.zmq.zmq_execution_server_launcher"
             ),
             "--log-file-path",
             str(self.log_file),
@@ -1045,7 +1045,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
     def endpoint_compatibility(self) -> EndpointApplicationCompatibility:
         """Compare the local OpenHCS declaration with the connected endpoint."""
 
-        from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+        from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
         handshake = self.connected_endpoint
         if handshake is None:

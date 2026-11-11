@@ -57,7 +57,7 @@
     "5",
     "/home/ts/code/projects/openhcs/.venv/bin/python",
     "-c",
-    "import runpy,sys;from dataclasses import replace;import openhcs.runtime.zmq_config as configuration;configuration.OPENHCS_ZMQ_CONFIG=replace(configuration.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "import runpy,sys;from dataclasses import replace;import openhcs.runtime.zmq.zmq_config as configuration;configuration.OPENHCS_ZMQ_CONFIG=replace(configuration.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
     "/home/ts/code/projects/openhcs-shared-runtime-plumbing/scripts/benchmark_cppipe_well_throughput.py",
     "--manifest",
     "/home/ts/code/projects/openhcs-shared-runtime-plumbing/benchmark/manifests/official30_portable_axis1.json",

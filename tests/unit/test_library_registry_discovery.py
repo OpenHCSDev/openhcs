@@ -650,12 +650,12 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
 
     registry_service.RegistryService.prepare_persistent_catalog()
 
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     assert calls[0][0][:4] == (
         "pythonw.exe",
         *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-            "openhcs.runtime.zmq_execution_server_launcher"
+            "openhcs.runtime.zmq.zmq_execution_server_launcher"
         ),
         "--prepare-capabilities",
     )
@@ -919,8 +919,8 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         from openhcs.processing.backends.lib_registry.unified_registry import (
             LibraryRegistryBase,
         )
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-        from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
         with socket.socket() as candidate:
             candidate.bind(("127.0.0.1", 0))

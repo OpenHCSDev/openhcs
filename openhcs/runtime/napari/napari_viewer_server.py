@@ -74,14 +74,14 @@ from openhcs.core.axes.axis_declarations import PartitionAxis, StackAxis
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor, ViewerWindowLayerRetirementRequest,
 )
-from openhcs.runtime.viewer_snapshot import (
+from openhcs.runtime.viewer.viewer_snapshot import (
     ViewerWindowSnapshotFailureReply,
     ViewerWindowSnapshotService,
 )
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ
 from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
-from openhcs.runtime.viewer_display import (
+from openhcs.runtime.viewer.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,
 )
@@ -91,11 +91,11 @@ from openhcs.core.payload.runtime_image_values import (
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.config.streaming_config_declarations import NapariViewer
 from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
-from openhcs.runtime.viewer_control_actions import (
+from openhcs.runtime.viewer.viewer_control_actions import (
     ViewerControlAction,
     ViewerServerPort,
 )
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariImageLayer,
     NapariLayerKind,
     NapariPointsLayer,
@@ -125,7 +125,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariViewerLayerCreator,
     VisualMetadataField,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ComponentMap,
     ComponentValue,
     ComponentValues,
@@ -146,7 +146,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerFeatureMeasurementControlOptions,
     ViewerMeasurementCoordinates,
     ViewerPolylineControlOptions,
@@ -157,11 +157,11 @@ from openhcs.runtime.viewer_controls import (
     ViewerNativeDimensions,
     ViewerResultElementCoordinates,
 )
-from openhcs.runtime.viewer_measurements import (
+from openhcs.runtime.viewer.viewer_measurements import (
     NativeImageMeasurement,
 )
 from python_introspect import to_jsonable
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     NapariViewerServerRequest,
     OpenHCSViewerServerABC,
     OpenHCSViewerControlMessageType,
@@ -193,8 +193,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettleProgress,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
 
@@ -6862,7 +6862,7 @@ def run_napari_viewer_process(
         listen_host: Explicit TCP bind interface; defaults to local-only
     """
     import polystore
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     logger.warning(
         "Viewer import provenance: server=%s; openhcs_root=%s; polystore=%s",
@@ -6895,7 +6895,7 @@ def run_napari_viewer_process(
         # Create napari viewer in this process (main thread)
         viewer = napari.Viewer(title=viewer_title, show=True)
         server.viewer = viewer
-        from openhcs.runtime.napari_orthogonal_widget import OpenHCSOrthogonalWidget
+        from openhcs.runtime.napari.napari_orthogonal_widget import OpenHCSOrthogonalWidget
 
         orthogonal_widget = OpenHCSOrthogonalWidget(server)
         viewer.window.add_dock_widget(

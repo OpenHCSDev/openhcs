@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     )
     from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
     from openhcs.pyqt_gui.config import UIConfig
-    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 JsonValue = str | int | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
 AgentDtoT = TypeVar("AgentDtoT")

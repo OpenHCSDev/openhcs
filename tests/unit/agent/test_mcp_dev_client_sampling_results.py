@@ -26,7 +26,7 @@ from openhcs.mcp.dev_client_core import (
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.mcp.dev_client_renderers.plate import PlateImageSampleRenderer, SelectedPlateSampleRenderer
 from openhcs.mcp.dev_client_renderers.viewer import ViewerImageSampleRenderer
-from openhcs.runtime.viewer_protocol import ViewerArrayValueSummary
+from openhcs.runtime.viewer.viewer_protocol import ViewerArrayValueSummary
 from python_introspect import to_jsonable
 
 

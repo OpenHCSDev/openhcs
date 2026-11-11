@@ -60,12 +60,12 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
 )
 from openhcs.authoring.session.compilation import DatasetPipelineRequest
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionRequestBuilder,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
     ZMQRuntimeExecutionObservationExport,
 )

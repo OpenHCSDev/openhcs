@@ -33,12 +33,12 @@ from openhcs.core.io.viewer_streaming_service import (
 )
 from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder,
     NapariImagePayloadAxisLabelPolicy,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.napari_viewer_server import NapariBatchPayload, NapariImagePayload
+from openhcs.runtime.napari.napari_viewer_server import NapariBatchPayload, NapariImagePayload
 
 from tests.unit.agent.test_persisted_output_reopen import (
     NoRuntimeBridge,

@@ -33,10 +33,10 @@ from openhcs.processing.backends.cellprofiler.shape import measure_object_size_s
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
 )
 

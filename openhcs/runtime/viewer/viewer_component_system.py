@@ -26,13 +26,13 @@ from zmqruntime.viewer_protocol import (
 from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 
 from openhcs.core.axes.axis_declarations import PartitionAxis
-from openhcs.runtime.viewer_display import (
+from openhcs.runtime.viewer.viewer_display import (
     DeclaredAxes,
     FijiSlots,
     NapariSlots,
     ViewerSlot,
 )
-from openhcs.runtime.viewer_protocol import ViewerComponentValueOrdering
+from openhcs.runtime.viewer.viewer_protocol import ViewerComponentValueOrdering
 
 ComponentValue: TypeAlias = str | int | float | bool | tuple | None
 ComponentWireValue: TypeAlias = ComponentValue | Sequence[ComponentValue]

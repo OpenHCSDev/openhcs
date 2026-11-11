@@ -11,14 +11,14 @@ import pytest
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
     ZMQExecutionRequestBuilder,
     ZMQPipelineRunPhase,
     run_compiled_pipeline,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 class FakeExecutionClient:

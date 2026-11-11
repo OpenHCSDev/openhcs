@@ -10,7 +10,7 @@ by `OMEROInstanceManager`. Docker itself must already be running.
 Start or connect through the runtime owner:
 
 ```python
-from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
 
 with OMEROInstanceManager() as manager:
     connection = manager.conn

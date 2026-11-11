@@ -30,7 +30,7 @@ from openhcs.processing.backends.lib_registry.registry_service import RegistrySe
 from openhcs.processing.custom_functions.signals import CustomFunctionSignals
 from openhcs.pyqt_gui.dialogs import function_selector_dialog as selector_module
 from openhcs.pyqt_gui.dialogs.function_selector_dialog import FunctionSelectorDialog
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def _entry(

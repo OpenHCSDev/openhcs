@@ -21,8 +21,8 @@ if TYPE_CHECKING:
         FunctionCatalogPreparationStatusRequest,
     )
     from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
-    from openhcs.runtime.zmq_compilation import ZMQCompileArtifactRecord
+    from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
+    from openhcs.runtime.zmq.zmq_compilation import ZMQCompileArtifactRecord
 
 
 @dataclass(frozen=True, slots=True)

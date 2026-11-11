@@ -22,7 +22,7 @@ from openhcs.core.config.streaming_config_declarations import NapariViewer
 from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     DetachedViewerPythonArguments,
     DetachedViewerPythonExpression,
     DetachedViewerServerEntrypointSpec,
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 NAPARI_VIEWER_ENTRYPOINT = DetachedViewerServerEntrypointSpec(
     viewer_family=NapariViewer,
-    module_name="openhcs.runtime.napari_viewer_server",
+    module_name="openhcs.runtime.napari.napari_viewer_server",
     function_name="run_napari_viewer_process",
 )
 

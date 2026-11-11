@@ -454,7 +454,7 @@ class OMEROPlateRoot(DatasetRootRule):
         from polystore.backend_registry import register_cleanup_callback
         from polystore.omero_local import OMEROLocalBackend
 
-        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+        from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
 
         omero_manager = OMEROInstanceManager()
         if not omero_manager.connect(timeout=60):

@@ -66,7 +66,7 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec, Output
 from openhcs.core.materialization.presets import roi_zip
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.domains.microscopy.axes import Microscopy

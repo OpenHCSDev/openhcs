@@ -21,7 +21,7 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowGatewayABC,
     ViewerWindowService,
 )
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariComponentGroupStore,
     NapariDimensionLayerState,
@@ -30,7 +30,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerItem,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariLayerDisplayPipeline,
     NapariLayerIsolationControlAction,
     NapariNavigationControlAction,
@@ -40,23 +40,23 @@ from openhcs.runtime.napari_viewer_server import (
     NapariResultSelectionSurface,
     NapariViewerServer,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerPointCoordinates,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinates,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
     ViewerComponentValueDomainPayload,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlResponseField,
     ViewerLayerIsolationField,
 )
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES, ordinal_axes
 
 

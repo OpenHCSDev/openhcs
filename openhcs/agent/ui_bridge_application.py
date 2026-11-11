@@ -6,8 +6,8 @@ from pathlib import Path
 
 from formbridge.bridge.application import UiBridgeApplication
 
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 class OpenHCSUiBridgeApplication(UiBridgeApplication):
