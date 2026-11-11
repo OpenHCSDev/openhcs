@@ -16,7 +16,10 @@ from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.discovery import domain_registry_config
+from openhcs.core.materialization.core import Output
+from openhcs.core.orchestrator.execution_result import ExecutionResult
 
 
 HookObservations = Mapping[str, object]
@@ -52,7 +55,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
         context: ExecutingContext,
         plan: CompiledStepPlan,
         materialization: RuntimeArtifactMaterialization,
-        outputs: tuple["Output", ...],
+        outputs: tuple[Output, ...],
     ) -> object | None:
         """What this hook needs from historical outputs a step reused."""
         del context, plan, materialization, outputs
@@ -79,7 +82,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     # -- the family as the kernel uses it -------------------------------------
 
     @staticmethod
-    def bind_all(global_config: GlobalPipelineConfig) -> tuple["PostExecuteHook", ...]:
+    def bind_all(global_config: GlobalPipelineConfig) -> tuple[PostExecuteHook, ...]:
         return tuple(
             hook_type.bind(global_config)
             for hook_type in PostExecuteHook.__registry__.values()
@@ -101,7 +104,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
         context: ExecutingContext,
         plan: CompiledStepPlan,
         materialization: RuntimeArtifactMaterialization,
-        outputs: tuple["Output", ...],
+        outputs: tuple[Output, ...],
     ) -> HookObservations:
         return _observations(
             (hook, hook.observe_reused_outputs(context, plan, materialization, outputs))
@@ -121,8 +124,8 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def run_all(
-        executed_contexts: Mapping[str, "ExecutingContext"],
-        execution_results: Mapping[str, "ExecutionResult"],
+        executed_contexts: Mapping[str, ExecutingContext],
+        execution_results: Mapping[str, ExecutionResult],
         dataset_runtime_observation: RuntimeExecutionObservation,
     ) -> None:
         """Run every bound hook over the observations of this execution."""
