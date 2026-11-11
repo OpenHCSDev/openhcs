@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import replace
 from functools import lru_cache
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
 )
@@ -69,12 +68,11 @@ from openhcs.core.callable.function_patterns import (
     NormalizedFunctionItem,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        CellProfilerObjectLocationMeasurementRows,
-    )
-    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+    CellProfilerObjectLocationMeasurementRows,
+)
     from openhcs.core.steps.function_runtime import (
         RuntimeCallableKwargs,
         RuntimeFunctionOutput,
