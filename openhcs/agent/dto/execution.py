@@ -79,7 +79,14 @@ class RuntimeServerConnectionToolRequest(AgentCliRequest):
         raise NotImplementedError
 
     def as_tool_arguments(self) -> JsonObject:
-        return {**self.connection.tool_arguments(), "timeout_ms": self.timeout_ms}
+        from openhcs.agent.dto import _dto_wire_value
+        payload: JsonObject = {**self.connection.tool_arguments(), "timeout_ms": self.timeout_ms}
+        if dataclasses.is_dataclass(self):
+            base_names = {"connection", "timeout_ms"}
+            for f in dataclasses.fields(self):
+                if f.name not in base_names:
+                    payload[f.name] = _dto_wire_value(getattr(self, f.name))
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -566,13 +573,6 @@ class RuntimeServerExecutionStatusRequest(
             ),
         )
 
-    def as_tool_arguments(self) -> JsonObject:
-        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
-        for f in dataclasses.fields(self):
-            if f.name not in parent_fields:
-                payload[f.name] = getattr(self, f.name)
-        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -630,14 +630,6 @@ class RuntimeDebugInspectionRequest(
                 else timeout_ms
             ),
         )
-
-    def as_tool_arguments(self) -> JsonObject:
-        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
-        for f in dataclasses.fields(self):
-            if f.name not in parent_fields:
-                payload[f.name] = getattr(self, f.name)
-        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -703,14 +695,6 @@ class RuntimeDebugCommandRequest(
                 else timeout_ms
             ),
         )
-
-    def as_tool_arguments(self) -> JsonObject:
-        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
-        for f in dataclasses.fields(self):
-            if f.name not in parent_fields:
-                payload[f.name] = getattr(self, f.name)
-        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -807,14 +791,6 @@ class RuntimeDebugArtifactExportRequest(
                 else timeout_ms
             ),
         )
-
-    def as_tool_arguments(self) -> JsonObject:
-        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
-        for f in dataclasses.fields(self):
-            if f.name not in parent_fields:
-                payload[f.name] = getattr(self, f.name)
-        return payload
 
 
 @dataclass(frozen=True, slots=True)
