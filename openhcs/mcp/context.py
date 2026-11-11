@@ -5,43 +5,43 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from openhcs.agent.path_policy import AgentPathPolicy
+from openhcs.agent.services.architecture_projection_service import (
+    ArchitectureProjectionService,
+)
+from openhcs.agent.services.artifact_plan_inspection_service import (
+    ArtifactPlanInspectionService,
+)
+from openhcs.agent.services.config_service import ConfigService
+from openhcs.agent.services.endpoint_function_catalog_service import (
+    EndpointFunctionCatalogServiceABC,
+)
+from openhcs.agent.services.function_catalog_service import (
+    FunctionCatalogServiceABC,
+)
+from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
+from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
+from openhcs.agent.services.object_state_field_help_service import (
+    ObjectStateFieldHelpService,
+)
+from openhcs.agent.services.pipeline_authoring_service import (
+    PipelineAuthoringService,
+)
+from openhcs.agent.services.plate_inspection_service import PlateInspectionService
+from openhcs.agent.services.plate_streaming_service import PlateStreamingService
+from openhcs.agent.services.runtime_server_service import RuntimeServerService
+from openhcs.agent.services.selected_plate_service import SelectedPlateService
+from openhcs.agent.services.synthetic_plate_service import (
+    SyntheticPlateGenerationService,
+)
+from openhcs.agent.services.viewer_endpoint_discovery import (
+    ViewerEndpointDiscoveryService,
+)
+from openhcs.agent.services.viewer_window_service import ViewerWindowService
+from openhcs.authoring.session.session import MainThread, Session
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-    from openhcs.agent.services.architecture_projection_service import (
-        ArchitectureProjectionService,
-    )
-    from openhcs.agent.services.config_service import ConfigService
-    from openhcs.agent.services.endpoint_function_catalog_service import (
-        EndpointFunctionCatalogServiceABC,
-    )
-    from openhcs.agent.services.artifact_plan_inspection_service import (
-        ArtifactPlanInspectionService,
-    )
-    from openhcs.authoring.session.session import MainThread, Session
-    from openhcs.agent.services.function_catalog_service import (
-        FunctionCatalogServiceABC,
-    )
-    from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-    from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
-    from openhcs.agent.services.object_state_field_help_service import (
-        ObjectStateFieldHelpService,
-    )
-    from openhcs.agent.services.pipeline_authoring_service import (
-        PipelineAuthoringService,
-    )
-    from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-    from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-    from openhcs.agent.services.runtime_server_service import RuntimeServerService
-    from openhcs.agent.services.selected_plate_service import SelectedPlateService
-    from openhcs.agent.services.synthetic_plate_service import (
-        SyntheticPlateGenerationService,
-    )
     from formbridge.bridge.service import UiBridgeService
-    from openhcs.agent.services.viewer_endpoint_discovery import (
-        ViewerEndpointDiscoveryService,
-    )
-    from openhcs.agent.services.viewer_window_service import ViewerWindowService
 
 
 class OpenHCSAgentContext:

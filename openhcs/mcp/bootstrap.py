@@ -9,12 +9,11 @@ from enum import Enum
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
 
-if TYPE_CHECKING:
-    from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile
-    from openhcs.mcp.execution import McpMainThreadDispatcher
-    from mcp.server.fastmcp import FastMCP
+from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile
+from openhcs.mcp.execution import McpMainThreadDispatcher
+from mcp.server.fastmcp import FastMCP
 
 
 MCP_BOOTSTRAP_SCHEMA_VERSION = "openhcs.mcp.bootstrap.v1"
