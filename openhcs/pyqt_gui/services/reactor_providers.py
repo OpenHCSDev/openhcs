@@ -141,7 +141,7 @@ class OpenHCSServerScanProvider(ServerScanProviderABC):
         from formbridge.services.zmq_server_scan_service import ZMQServerScanService
         from zmqruntime.execution.logs import ExecutionWorkerLogObservation
 
-        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.pipeline_config import get_all_streaming_ports
         from openhcs.core.util.log_utils import classify_log_file
 
         config = self._config_provider()

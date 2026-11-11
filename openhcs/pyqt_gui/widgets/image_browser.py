@@ -311,7 +311,7 @@ class NoDataset(BrowsedDataset):
         return ()
 
     def viewer_ports(self, ports_per_type: int) -> list[int]:
-        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.pipeline_config import get_all_streaming_ports
 
         return get_all_streaming_ports(num_ports_per_type=ports_per_type)
 
@@ -385,7 +385,7 @@ class OrchestratorDataset(BrowsedDataset):
         ).file_records()
 
     def viewer_ports(self, ports_per_type: int) -> list[int]:
-        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.pipeline_config import get_all_streaming_ports
 
         return get_all_streaming_ports(
             config=self.orchestrator.pipeline_config,

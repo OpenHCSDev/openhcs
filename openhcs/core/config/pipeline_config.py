@@ -100,7 +100,8 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 
 
 
-from objectstate import auto_create_decorator, abbreviation
+from objectstate import auto_create_decorator, abbreviation, get_base_config_type
+from objectstate.global_config import get_current_global_config
 from objectstate.lazy_factory import LazyDataclass
 
 
@@ -991,6 +992,37 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
             return CompiledSourceBindingPlan()
         return self.compiled_plan(selected_bindings=bindings)
 
+    def resolve_defaults(self) -> "SourceBindingsConfig":
+        """Return concrete source-binding defaults from eager or lazy config values."""
+        from objectstate import get_base_type_for_lazy
+
+        lazy_base_type = get_base_type_for_lazy(type(self))
+        if lazy_base_type is SourceBindingsConfig:
+            concrete_defaults = SourceBindingsConfig()
+            return SourceBindingsConfig(
+                **{
+                    item.name: (
+                        resolved
+                        if (
+                            resolved := type(self).__getattribute__(
+                                self,
+                                item.name,
+                            )
+                        )
+                        is not None
+                        else object.__getattribute__(concrete_defaults, item.name)
+                    )
+                    for item in fields(SourceBindingsConfig)
+                    if item.init
+                }
+            )
+        if isinstance(self, SourceBindingsConfig):
+            return self
+        raise TypeError(
+            "Source-binding defaults must resolve to SourceBindingsConfig, got "
+            f"{type(self).__name__}."
+        )
+
 @global_pipeline_config(
     preview_label="STEP_SRC",
     abbreviation="step_src",
@@ -1023,34 +1055,7 @@ def source_bindings_defaults_to_base(
     defaults: SourceBindingsConfig,
 ) -> SourceBindingsConfig:
     """Return concrete source-binding defaults from eager or lazy config values."""
-    from objectstate import get_base_type_for_lazy
-
-    lazy_base_type = get_base_type_for_lazy(type(defaults))
-    if lazy_base_type is SourceBindingsConfig:
-        concrete_defaults = SourceBindingsConfig()
-        return SourceBindingsConfig(
-            **{
-                item.name: (
-                    resolved
-                    if (
-                        resolved := type(defaults).__getattribute__(
-                            defaults,
-                            item.name,
-                        )
-                    )
-                    is not None
-                    else object.__getattribute__(concrete_defaults, item.name)
-                )
-                for item in fields(SourceBindingsConfig)
-                if item.init
-            }
-        )
-    if isinstance(defaults, SourceBindingsConfig):
-        return defaults
-    raise TypeError(
-        "Source-binding defaults must resolve to SourceBindingsConfig, got "
-        f"{type(defaults).__name__}."
-    )
+    return defaults.resolve_defaults()
 
 
 @abbreviation("seq")
@@ -1487,3 +1492,29 @@ logger.debug("Configuration framework initialized with OpenHCS types")
 # happens on-demand when config windows are first opened.
 
 # NOTE: Step editor cache warming is done in openhcs.core.steps.__init__ to avoid circular imports
+
+
+def get_all_streaming_ports(
+    config=None,
+    num_ports_per_type: int = 10,
+) -> list[int]:
+    """Get all configured streaming ports for all registered streaming config types."""
+    ports: list[int] = []
+    base_config_type = get_base_config_type()
+
+    if config is None:
+        config = get_current_global_config(base_config_type)
+        if config is None:
+            return ports
+
+    global_config = get_current_global_config(base_config_type)
+
+    for streaming_config_type in tuple(StreamingConfig.__registry__.values()):
+        port = streaming_config_type.port_from_config(config)
+        if port is None and global_config is not None:
+            port = streaming_config_type.port_from_config(global_config)
+        if port is None:
+            continue
+        ports.extend(port + i for i in range(num_ports_per_type))
+
+    return ports
