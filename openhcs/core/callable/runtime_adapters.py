@@ -329,6 +329,3 @@ def runtime_adapter(
     return decorator
 
 
-import openhcs.core.callable.callable_contract as _cc
-
-_cc._registered_adapter_spec_type = RuntimeAdapterSpec

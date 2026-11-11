@@ -376,14 +376,10 @@ def _declared_fields(cls: type) -> tuple[tuple[str, str, DeclaredValue], ...]:
     )
 
 
-_registered_adapter_spec_type: type | None = None
-_registered_processing_contract_family: type | None = None
-_registered_batch_callable_family: type | None = None
-
-
 def _runtime_adapter_spec_type() -> type:
-    assert _registered_adapter_spec_type is not None
-    return _registered_adapter_spec_type
+    from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
+
+    return RuntimeAdapterSpec
 
 
 def _request_binding_type() -> type:
@@ -765,8 +761,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         func: Callable[..., object] | "FunctionReference",
     ) -> CallableContract:
         """Build a contract from callable attributes once at compiler boundary."""
-        assert _registered_batch_callable_family is not None
-        RuntimeBatchCallableFamily = _registered_batch_callable_family
+        from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchCallableFamily
 
         projection = CallableProjection.from_callable(func)
         declaration = CallableDeclaration.from_namespace(
@@ -1803,8 +1798,9 @@ def _project_runtime_owned_parameter_exclusions(func: Any) -> None:
 
 
 def _processing_contract_family() -> type:
-    assert _registered_processing_contract_family is not None
-    return _registered_processing_contract_family
+    from openhcs.core.callable.processing_contracts import ProcessingContract
+
+    return ProcessingContract
 
 
 def _attach_runtime_bound_parameter_metadata(
