@@ -157,15 +157,26 @@ class RuntimeArtifactPartitionBatchRequest:
         processing function. Partition executors enter that same raw boundary;
         compiler admission continues to own whether the invocation is enabled.
         """
+        import inspect
+
         from python_introspect import Enableable
-        from openhcs.core.callable.processing_contracts import SignatureFilteredKwargs
 
         raw_callable = contract.resolve_raw_runtime_callable()
-        kwargs = SignatureFilteredKwargs.accepted_kwargs(
-            raw_callable,
-            Enableable.without_parameter(kwargs),
-            signature=contract.raw_runtime_signature,
-        )
+        filtered_kwargs = Enableable.without_parameter(kwargs)
+        signature = contract.raw_runtime_signature
+        parameters = (
+            inspect.signature(raw_callable) if signature is None else signature
+        ).parameters
+        if any(
+            p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+        ):
+            kwargs = dict(filtered_kwargs)
+        else:
+            kwargs = {
+                name: value
+                for name, value in filtered_kwargs.items()
+                if name in parameters
+            }
         return cls(
             func=raw_callable,
             artifact_batch=artifact_batch,
