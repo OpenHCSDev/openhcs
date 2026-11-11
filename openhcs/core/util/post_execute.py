@@ -21,11 +21,6 @@ from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.materialization.core import Output
-from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    RuntimeExecutionObservation,
-)
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
