@@ -17,10 +17,10 @@ from openhcs.core.config import (
     StepMaterializationConfig,
     StreamingConfig,
 )
+from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import to_jsonable
-from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 
 def _field_by_path(schema, path: str):

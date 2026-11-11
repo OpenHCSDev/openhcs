@@ -1,6 +1,10 @@
 """Object outline backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    ImagePayloadExecutionMode,
+)
 from openhcs.interop.cellprofiler.setting_names import (
     required_setting_value,
     setting_values,
@@ -32,7 +36,6 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from openhcs.core.memory.decorators import numpy
@@ -69,9 +72,6 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.core.axes import Axis
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
 )

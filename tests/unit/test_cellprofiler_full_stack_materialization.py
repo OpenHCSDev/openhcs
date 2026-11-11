@@ -6,7 +6,16 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadStackComposition, ImagePayloadSliceStack, compose_aligned_image_payload)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    FullStackExecution,
+    ImageOutputBundle,
+    ImagePayloadSliceStack,
+    ImagePayloadStackComposition,
+    NaturalExecution,
+    compose_aligned_image_payload,
+)
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
@@ -38,10 +47,6 @@ from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():

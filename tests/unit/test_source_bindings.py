@@ -26,6 +26,7 @@ from openhcs.core.config import (
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
+from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
@@ -102,7 +103,6 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.dataset_sources.choice import AutoDetectedSource
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
 

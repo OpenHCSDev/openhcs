@@ -1,3 +1,4 @@
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
@@ -180,9 +181,6 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
     SliceAlignedLabels,

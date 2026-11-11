@@ -10,6 +10,7 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
 from openhcs.constants.constants import MemoryType
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
@@ -39,9 +40,6 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 
 class MedianFilterModule(CellProfilerModule):

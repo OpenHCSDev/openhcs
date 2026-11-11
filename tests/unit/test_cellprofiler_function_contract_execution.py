@@ -14,8 +14,15 @@ import pytest
 from arraybridge import ArrayPayload
 import openhcs.core.callable_contract as callable_contract_module
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle, compose_aligned_image_payload)
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    ImageOutputBundle,
+    ImagePayloadExecutionMode,
+    NaturalExecution,
+    compose_aligned_image_payload,
+)
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration, CallableProjection, callable_request
@@ -50,11 +57,6 @@ from openhcs.core.processing_contracts import (
     RuntimeCallablePolicy,
     SignatureFilteredKwargs,
     VolumetricToSliceContract,
-)
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-    NaturalExecution,
 )
 
 

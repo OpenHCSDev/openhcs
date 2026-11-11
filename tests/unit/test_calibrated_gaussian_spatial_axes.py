@@ -1,5 +1,6 @@
 """Gaussian consumes declared physical axes, not assembled payload rank."""
 
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
@@ -20,9 +21,6 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import Cel
 from openhcs.processing.backends.cellprofiler.gaussian_filter import gaussian_filter
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 
 def _execute(source):

@@ -25,8 +25,20 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceMeasurementFeature,
 )
 from openhcs.constants.constants import Backend, MemoryType
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ProducedImageStack, ImageOutputBundle, ImagePayloadBundleContext, aligned_image_stack_kwargs, compose_aligned_image_payload, pack_aligned_image_outputs)
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    ImageOutputBundle,
+    ImagePayloadBundleContext,
+    ImagePayloadExecutionMode,
+    NaturalExecution,
+    ProducedImageStack,
+    aligned_image_stack_kwargs,
+    compose_aligned_image_payload,
+    pack_aligned_image_outputs,
+)
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.relations import (
@@ -393,11 +405,6 @@ from openhcs.core.axes import Axis, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-    NaturalExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
     MatchImageStackLabels,

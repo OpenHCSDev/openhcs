@@ -6,7 +6,12 @@ import numpy as np
 import pytest
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    ImageOutputBundle,
+    NaturalExecution,
+)
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import (
@@ -33,9 +38,6 @@ from tests.unit.test_function_artifact_outputs import (
     ContextStub,
     CoreExecutionRequest,
     _execute_function_core,
-)
-from openhcs.core.image_payload_execution_mode import (
-    NaturalExecution,
 )
 
 

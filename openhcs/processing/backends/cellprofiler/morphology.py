@@ -11,6 +11,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING
 import numpy as np
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
@@ -74,9 +75,6 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_enum_from_literal,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,

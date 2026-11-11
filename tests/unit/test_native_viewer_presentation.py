@@ -569,7 +569,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
         StreamingService,
     )
     from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-    from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+    from openhcs.core.dataset_sources.source import DatasetSourceChoice
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filemanager = FileManager({"disk": DiskStorageBackend()})

@@ -9,11 +9,14 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
+from openhcs.core.aligned_image_payload import (
+    ImagePayloadExecutionMode,
+    NaturalExecution,
+)
 from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
 )
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -38,9 +41,6 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.axes import Axis
-from openhcs.core.image_payload_execution_mode import (
-    NaturalExecution,
-)
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract

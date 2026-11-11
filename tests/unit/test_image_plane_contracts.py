@@ -2,7 +2,17 @@ from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceB
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, AlignedImageSliceContext, ImageOutputBundle, compose_aligned_image_payload, pack_aligned_image_outputs, stack_image_payloads)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    ImageOutputBundle,
+    NaturalExecution,
+    compose_aligned_image_payload,
+    pack_aligned_image_outputs,
+    stack_image_payloads,
+)
 from openhcs.core.memory import (
     MEMORY_TYPE_NUMPY,
     stack_runtime_slices,
@@ -21,11 +31,6 @@ from openhcs.core.runtime_image_values import (
     MaskedImagePayload,
 )
 from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 @pytest.mark.parametrize(

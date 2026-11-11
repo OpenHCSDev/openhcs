@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Callable, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import public_names_from_objects, set_signature_analysis_target
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
@@ -49,9 +50,6 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_names,
     setting_values,
     split_symbol_names,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 
 if TYPE_CHECKING:

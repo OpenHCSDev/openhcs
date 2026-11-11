@@ -10,6 +10,7 @@ from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, FunctionStepExecutionScope, ImagePayloadConsumption, PayloadAxisRequirement, PayloadAxisTransition, PreservedPayloadAxes, attach_callable_contract_metadata, preserves_payload_axes, requires_payload_axis, runtime_image_execution_mode
 from openhcs.core.config import LazyDtypeConfig
 import openhcs.core.config as config_module
@@ -44,9 +45,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.core.axes import ColourAxis, TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0
 

@@ -27,7 +27,11 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    ImagePayloadExecutionMode,
+    NaturalExecution,
+)
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
@@ -141,10 +145,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.core.axes import Axis, StackAxis
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpecCollection

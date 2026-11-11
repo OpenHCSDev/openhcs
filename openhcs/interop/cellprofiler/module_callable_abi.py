@@ -30,7 +30,7 @@ from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
-    from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+    from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
     from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.interop.cellprofiler.runtime.artifact_binding import (
         RuntimeInputBindingRequest,

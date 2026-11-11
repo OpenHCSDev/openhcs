@@ -9,6 +9,7 @@ import tifffile
 import pytest
 
 from openhcs.constants import Backend
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.result_file_formats import (
     CsvResultFile,
     NumpyResultFile,
@@ -28,7 +29,6 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
     PlateResultFilePreviewReader,
 )
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from polystore.base import ensure_storage_registry, storage_registry

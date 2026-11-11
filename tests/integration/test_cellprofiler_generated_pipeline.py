@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 
@@ -96,7 +97,6 @@ from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 

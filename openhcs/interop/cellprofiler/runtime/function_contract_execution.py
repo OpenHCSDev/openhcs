@@ -6,8 +6,8 @@ import inspect
 import time
 from collections.abc import Callable, Mapping
 
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.measurement_dialect import executing_measurement_dialect
 from openhcs.core.memory import detect_memory_type, stack_slices
 from openhcs.core.processing_contracts import (

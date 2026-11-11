@@ -11,6 +11,7 @@ import tifffile
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -48,7 +49,6 @@ from openhcs.core.source_bindings import (
     TextStartsWith,
 )
 from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
 from openhcs.core.dataset_sources.openhcs_format import (
     AtomicMetadataWriter,

@@ -7,7 +7,7 @@ import numpy as np
 import tifffile
 
 from openhcs.constants import Backend
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator

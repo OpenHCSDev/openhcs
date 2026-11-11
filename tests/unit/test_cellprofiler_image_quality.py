@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.aligned_image_payload import NaturalExecution
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import replace
@@ -79,9 +80,6 @@ from openhcs.core.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.image_payload_execution_mode import (
-    NaturalExecution,
-)
 
 
 @pytest.mark.parametrize("shape", [(32, 32), (33, 35), (64, 97), (97, 64)])

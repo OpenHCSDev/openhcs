@@ -20,11 +20,6 @@ from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
 from openhcs.constants.constants import Backend
 from openhcs.core.axis_boundaries import GroupingChoices, VariableAxisChoices
-from openhcs.core.dataset_sources.choice import (
-    AutoDetectedSource,
-    DatasetSourceChoice,
-    DatasetSourceChoices,
-)
 from openhcs.core.axes import (
     Axis,
     AxisFamily,
@@ -54,6 +49,11 @@ from zmqruntime.config import (
 from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
+from openhcs.core.dataset_sources.source import (
+    AutoDetectedSource,
+    DatasetSourceChoice,
+    DatasetSourceChoices,
+)
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.streaming_config_declarations import (
     FijiViewer,

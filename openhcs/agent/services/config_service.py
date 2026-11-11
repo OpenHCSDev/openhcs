@@ -54,13 +54,13 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.dataset_sources.choice import DatasetSourceChoices
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
     StreamingConfig,
 )
 from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.dataset_sources.source import DatasetSourceChoices
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import AxisFamily, GroupingDeclaration

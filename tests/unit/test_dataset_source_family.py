@@ -18,7 +18,9 @@ from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source import (
+    AutoDetectedSource,
     DatasetSource,
+    DatasetSourceChoice,
     FormatSpecificSource,
     RemoteServiceSource,
     SourceSelectionRole,
@@ -31,10 +33,6 @@ from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
 from tests.unit.bioformats_fixture import bioformats_filemanager
-from openhcs.core.dataset_sources.choice import (
-    AutoDetectedSource,
-    DatasetSourceChoice,
-)
 
 
 def _write_valid_opera_phenix_plate(root: Path) -> None:
