@@ -129,7 +129,17 @@ class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
 
     name: ClassVar[str | None] = None
     progress_status: ClassVar[type[ProgressStatus]]
-    reports_output_artifacts: ClassVar[bool] = False
+    def reported_output_refs(
+        self, output_artifacts: DebugArtifactRefProjection,
+    ) -> tuple[DebugArtifactRef, ...]:
+        return ()
+
+    def event_artifact_projection(
+        self,
+        output_artifacts: DebugArtifactRefProjection,
+        input_artifacts: DebugArtifactRefProjection,
+    ) -> DebugArtifactRefProjection:
+        return input_artifacts
 
     def validate_exception(self, exception: BaseException | None) -> None:
         if exception is not None:
@@ -139,7 +149,17 @@ class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
 class ReportsOutputArtifactsDebugBoundary:
     """Trait for boundaries that report the artifacts the invocation produced."""
 
-    reports_output_artifacts: ClassVar[bool] = True
+    def reported_output_refs(
+        self, output_artifacts: DebugArtifactRefProjection,
+    ) -> tuple[DebugArtifactRef, ...]:
+        return output_artifacts.refs
+
+    def event_artifact_projection(
+        self,
+        output_artifacts: DebugArtifactRefProjection,
+        input_artifacts: DebugArtifactRefProjection,
+    ) -> DebugArtifactRefProjection:
+        return output_artifacts
 
 
 class BeforeInvocationDebugBoundary(DebugBoundary):
@@ -1109,11 +1129,9 @@ class DebugEvent(DebugBoundaryState):
         invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
     ) -> "DebugEvent":
         event_type.validate_exception(exception)
-        reported_output_artifacts = (
-            output_artifacts.refs if event_type.reports_output_artifacts else ()
-        )
-        event_ref_projection = (
-            output_artifacts if event_type.reports_output_artifacts else input_artifacts
+        reported_output_artifacts = event_type.reported_output_refs(output_artifacts)
+        event_ref_projection = event_type.event_artifact_projection(
+            output_artifacts, input_artifacts,
         )
         exception_text = None
         traceback_text = None
