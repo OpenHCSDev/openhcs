@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 from typing import Self
 
+from openhcs.core.payload.plane_provenance import PlaneProvenance
 
 
 
@@ -40,11 +41,11 @@ class RuntimeSliceProjectableValue(ABC):
         """Return the array a writer stores for this value; only images unwrap."""
         return self
 
-    def scalar_source_provenance(self) -> SourceImageProvenance:
+    def scalar_source_provenance(self) -> PlaneProvenance:
         """Return the source provenance of this value read as one runtime slice."""
         return self.image_metadata.source_provenance
 
-    def slice_source_provenances(self) -> tuple[SourceImageProvenance, ...]:
+    def slice_source_provenances(self) -> tuple[PlaneProvenance, ...]:
         """Return the source provenance of each runtime slice, without reading pixels."""
         from openhcs.core.axes.axis_declarations import ColourAxis
 
@@ -266,12 +267,12 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
-        """Return the source provenance of members composed along this axis.
+    ) -> PlaneProvenance:
+        """Return the provenance of members composed along this axis.
 
         ``topology`` forwards ``preserve_single_topology``; each axis has its
         own default for a single member.
@@ -318,11 +319,11 @@ class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
         from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.stack(
@@ -366,11 +367,11 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
         from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.bundle(
@@ -419,11 +420,11 @@ class NoPlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
         raise ValueError("Members are composed along a declared plane axis.")
 
 
@@ -604,7 +605,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
     def from_source_declaration(
         cls,
         axis: type[RuntimePlaneAxis],
-        source: SourceImageProvenance,
+        source: PlaneProvenance,
     ) -> RuntimePlaneAxisValueProjection | None:
         """Construct the retained axis declared by an exact source-image value.
 
@@ -646,7 +647,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         )
 
     def validate_source_declaration(
-        self, axis: type[RuntimePlaneAxis], source: SourceImageProvenance,
+        self, axis: type[RuntimePlaneAxis], source: PlaneProvenance,
     ) -> None:
         """Check an explicit projection against retained acquisition declarations."""
         if axis.unstacked:

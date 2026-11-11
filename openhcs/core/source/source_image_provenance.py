@@ -19,6 +19,7 @@ from python_introspect import to_jsonable
 from openhcs.core.source.source_metadata import SOURCE_PLANE_COUNT_FIELD, SOURCE_PLANE_INDEX_FIELD, OwnedSourceMetadataFields, SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source.source_matching import SourceImageSetIdentity, source_component_metadata_raw_value, source_component_metadata_value, source_metadata_value, with_source_component_metadata
 from openhcs.core.axes.axis_declarations import AxisFamily, StackAxis
+from openhcs.core.payload.plane_provenance import PlaneProvenance
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]
@@ -789,7 +790,7 @@ class SourceImageProvenancePlanes:
         )
 
 
-class SourceImageProvenance:
+class SourceImageProvenance(PlaneProvenance):
     """Source-image identity carried by image and object-label payloads."""
 
     __slots__ = (
