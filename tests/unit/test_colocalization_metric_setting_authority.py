@@ -173,7 +173,7 @@ def test_disabled_costes_does_not_run_threshold_search_and_preserves_other_value
 
     import numpy as np
 
-    from openhcs.processing.backends.cellprofiler import colocalization as module
+    from openhcs.processing.backends.cellprofiler.colocalization_family import colocalization as module
 
     first = np.linspace(0.01, 0.95, 64, dtype=np.float32)
     second = np.roll(first, 5).copy()
