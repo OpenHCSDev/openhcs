@@ -188,7 +188,7 @@ The system eliminates hardcoded parameter mappings to adapt automatically when A
 
     def _find_pipeline_field_by_type(self, target_type):
         """Find pipeline field by type - no manual mappings."""
-        from openhcs.core.pipeline_config import PipelineConfig
+        from openhcs.core.config.pipeline_config import PipelineConfig
 
         for field in dataclasses.fields(PipelineConfig):
             # Type-based matching eliminates hardcoded field names
