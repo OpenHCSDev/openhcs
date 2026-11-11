@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import ClassVar, TYPE_CHECKING
+from typing import ClassVar, Protocol, runtime_checkable
 
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
@@ -37,10 +37,49 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import (
-        CellProfilerObjectMeasurementRowPolicy,
-    )
+
+@runtime_checkable
+class ObjectMeasurementRowPolicyContract(Protocol):
+    """The contract completion.py needs from the row policy — 5 methods + 1 ClassVar."""
+
+    missing_value_policy: ClassVar[MissingObjectMeasurementValuePolicy]
+
+    def missing_measurement_values(
+        self,
+        *,
+        object_ids: Sequence[int],
+        label_payload: RuntimeCallableArgument,
+        field_name: str,
+        positive_label_extents: Sequence[int | None],
+    ) -> tuple[float, ...]: ...
+
+    def missing_measurement_value(
+        self,
+        *,
+        object_id: int,
+        label_payload: RuntimeCallableArgument,
+        field_name: str,
+        positive_label_extent: int | None = None,
+    ) -> float: ...
+
+    def row_has_measured_object(
+        self,
+        row_mapping: Mapping[str, RuntimeCallableArgument],
+        *,
+        metadata_fields: Collection[str],
+    ) -> bool: ...
+
+    def retains_unmeasured_compact_row(
+        self,
+        row_mapping: Mapping[str, RuntimeCallableArgument],
+        *,
+        schema: ObjectMeasurementRowCompletionSchema,
+    ) -> bool: ...
+
+    def measurement_values_have_result_payload(
+        self,
+        values: object,
+    ) -> bool: ...
 
 ObjectMeasurementAxisKey = tuple[RuntimeCallableArgument, ...]
 ObjectMeasurementIdSet = tuple[int, ...]
@@ -480,7 +519,7 @@ class ObjectMeasurementRowCompletionSchema:
         *,
         label_payload: ObjectLabelValue,
         axis_key: tuple[RuntimeCallableArgument, ...],
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> int | None:
         policy = MissingObjectMeasurementValuePolicy(
             type(row_policy).missing_value_policy
@@ -502,7 +541,7 @@ class ObjectMeasurementRowCompletionSchema:
         self,
         *,
         label_payload: ObjectLabelValue,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
         row_keys: Sequence[tuple[int, tuple[RuntimeCallableArgument, ...]]],
     ) -> dict[tuple[RuntimeCallableArgument, ...], int | None]:
         unique_axis_keys = tuple(
@@ -522,7 +561,7 @@ class ObjectMeasurementRowCompletionSchema:
         *,
         missing_row_keys: Sequence[tuple[int, tuple[RuntimeCallableArgument, ...]]],
         label_payload: ObjectLabelValue,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> tuple[dict[str, RuntimeCallableArgument], ...]:
         positive_extent_by_axis = self.positive_extent_by_axis(
             label_payload=label_payload,
@@ -545,7 +584,7 @@ class ObjectMeasurementRowCompletionSchema:
         *,
         missing_row_keys: Sequence[tuple[int, tuple[RuntimeCallableArgument, ...]]],
         label_payload: ObjectLabelValue,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
         object_row_identity: MeasurementObjectRowIdentity,
     ) -> MeasurementSparseColumnarRows:
         """Return missing object rows directly in the declared column schema."""
@@ -604,7 +643,7 @@ class ObjectMeasurementRowCompletionSchema:
         object_id: int,
         axis_key: Sequence[RuntimeCallableArgument],
         label_payload: ObjectLabelValue,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
         positive_label_extent: int | None = None,
     ) -> dict[str, RuntimeCallableArgument]:
         axis_values = self.axis_values_for_key(axis_key)
@@ -909,7 +948,7 @@ class MeasurementObjectRowIdentityProjectionStrategy(
         self,
         rows: ColumnarRows,
         schema: ObjectMeasurementRowCompletionSchema,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> ObjectMeasurementRowIdentityProjectionResult:
         """Return rows with the requested object-row identity."""
 
@@ -941,7 +980,7 @@ class LabelIdMeasurementObjectRowIdentityProjectionStrategy(
         self,
         rows: ColumnarRows,
         schema: ObjectMeasurementRowCompletionSchema,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> ObjectMeasurementRowIdentityProjectionResult:
         row_mappings = rows.row_mappings()
         row_keys: list[ObjectMeasurementProjectedRowKey] = []
@@ -990,7 +1029,7 @@ class RowOrdinalMeasurementObjectRowIdentityProjectionStrategy(
         self,
         rows: ColumnarRows,
         schema: ObjectMeasurementRowCompletionSchema,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> ObjectMeasurementRowIdentityProjectionResult:
         projected_rows: list[Mapping[str, RuntimeCallableArgument]] = []
         projected_row_keys: ObjectMeasurementSliceRowKeys = []
@@ -1050,7 +1089,7 @@ class RowSequenceMeasurementObjectRowIdentityProjectionStrategy(
         self,
         rows: ColumnarRows,
         schema: ObjectMeasurementRowCompletionSchema,
-        row_policy: CellProfilerObjectMeasurementRowPolicy,
+        row_policy: ObjectMeasurementRowPolicyContract,
     ) -> ObjectMeasurementRowIdentityProjectionResult:
         ordinal_by_axis: dict[tuple[RuntimeCallableArgument, ...], int] = {}
         selected_indices: list[int] = []
