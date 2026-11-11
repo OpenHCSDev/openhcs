@@ -1343,12 +1343,15 @@ class ObjectLineageArtifactType(NominalPayloadKind, ArtifactType):
 
     value = "object_lineage"
     payload_shape = TablePayloadShape
+    _registered_payload_type: type | None = None
 
     @classmethod
     def runtime_payload_type(cls) -> type:
-        from openhcs.core.runtime_relationships import ObjectRelationship
-
-        return ObjectRelationship
+        assert cls._registered_payload_type is not None, (
+            "ObjectLineageArtifactType payload type not registered; "
+            "openhcs.core.runtime_relationships must be imported first."
+        )
+        return cls._registered_payload_type
 
     @classmethod
     def compose_runtime_values(

@@ -494,6 +494,9 @@ class DirectedObjectRelationshipPayload(
         )
 
 
+ObjectLineageArtifactType._registered_payload_type = ObjectRelationship
+
+
 class ObjectRelationshipPayloadKernel(ABC):
     """Kernel contract used by semantic relationship payload policies."""
 
