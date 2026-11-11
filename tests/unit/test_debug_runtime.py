@@ -88,7 +88,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
     ObjectRelationshipDeclaration,

@@ -18,7 +18,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIndexedValue
+
+from openhcs.core.callable.processing_contracts import Pure2DAuxiliaryOutputAggregator
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis, RuntimeSliceIndexedValue
 from openhcs.core.source.source_image_provenance import SourceImageProvenanceFields
 
 from abc import ABC
@@ -495,6 +497,35 @@ class DirectedObjectRelationshipPayload(
 
 
 ObjectLineageArtifactType._registered_payload_type = ObjectRelationship
+
+
+class DirectedRelationshipPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
+    """Aggregate directed relationships over one declared PURE_2D plane axis."""
+
+    value_type = DirectedObjectRelationshipPayload
+
+    def aggregate_values(
+        self,
+        values: list[Any],
+        memory_type: str,
+        *,
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> DirectedObjectRelationshipPayload:
+        del memory_type, plane_axis
+        return DirectedObjectRelationshipPayload(
+            source_ids=tuple(
+                source_id for value in values for source_id in value.source_ids
+            ),
+            target_ids=tuple(
+                target_id for value in values for target_id in value.target_ids
+            ),
+            slice_indices=tuple(
+                slice_index
+                for slice_index, value in enumerate(values)
+                for _target_id in value.target_ids
+            ),
+            slice_count=len(values),
+        )
 
 
 class ObjectRelationshipPayloadKernel(ABC):

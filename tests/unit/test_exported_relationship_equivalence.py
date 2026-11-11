@@ -261,7 +261,7 @@ def test_cached_relationship_preserves_declared_slice_count_and_endpoint_axes() 
         RuntimeMeasurementSubjectKey,
     )
     from openhcs.core.measurements.runtime_measurements import MeasurementScope
-    from openhcs.core.runtime_relationships import (
+    from openhcs.core.object_labels.runtime_relationships import (
         ObjectInstanceKey,
         ObjectInstanceRelationship,
     )
@@ -425,7 +425,7 @@ def test_snapshot_json_cache_retains_correlation_scope(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("slice_index", (None, 0, 2))
 def test_object_identity_owns_required_plane_admission(slice_index: int | None) -> None:
-    from openhcs.core.runtime_relationships import ObjectInstanceKey
+    from openhcs.core.object_labels.runtime_relationships import ObjectInstanceKey
 
     key = ObjectInstanceKey(1, slice_index)
     if slice_index is None:

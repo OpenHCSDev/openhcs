@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.core.object_labels.runtime_relationships import (
+    DirectedObjectRelationshipPayload,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NAMES
 
 from abc import ABC, abstractmethod
@@ -49,11 +53,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     dense_label_centers_2d_numba,
     object_label_dense_array,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.payload.runtime_output_matching import RuntimeOutputBundle
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-)
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,

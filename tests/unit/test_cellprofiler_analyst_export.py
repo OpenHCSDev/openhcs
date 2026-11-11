@@ -35,7 +35,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
@@ -45,7 +45,7 @@ from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.measurements.runtime_measurements import (

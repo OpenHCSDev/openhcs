@@ -61,7 +61,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelSet,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.source.source_image_provenance import (

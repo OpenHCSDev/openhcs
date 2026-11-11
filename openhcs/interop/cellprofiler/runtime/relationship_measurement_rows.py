@@ -10,24 +10,22 @@ from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementSparseColumnarRows,
 )
+from openhcs.core.object_labels.runtime_relationships import (
+    DirectedObjectRelationshipPayload,
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-)
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
-    ObjectRelationshipDeclaration,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceFeatureDeclaration,

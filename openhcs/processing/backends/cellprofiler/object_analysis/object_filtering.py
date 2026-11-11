@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
+from openhcs.core.object_labels.runtime_relationships import (
+    DirectedObjectRelationshipPayload,
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.interop.cellprofiler.measurement_lookup import (
     CellProfilerMeasurementFeature,
     child_count_feature_child_name,
@@ -55,10 +60,6 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.measurements.runtime_measurements import (
     ObjectLabelMeasurementValues,
 )
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-)
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
@@ -102,9 +103,6 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
     object_label_value_with_dense_labels,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
 )
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     ObjectLabelsInputBindingMixin,

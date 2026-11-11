@@ -27,7 +27,7 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable.callable_contract import (
     CallableContract,
     runtime_image_execution_mode,
@@ -82,7 +82,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     SingleMeasurementClassificationRule,
 )
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.payload.runtime_tabular_values import (
@@ -104,7 +104,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues

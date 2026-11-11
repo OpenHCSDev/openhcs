@@ -1,6 +1,7 @@
 """Thin CellProfiler-style view over OpenHCS runtime artifacts."""
 
 from __future__ import annotations
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationship
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import time
@@ -38,9 +39,6 @@ from openhcs.core.measurements.runtime_measurements import (
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
 )
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,

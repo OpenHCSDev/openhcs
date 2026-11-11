@@ -53,7 +53,7 @@ from openhcs.core.pipeline.artifact_planning import (
     artifact_producers_for_outputs,
 )
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,

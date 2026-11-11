@@ -33,7 +33,7 @@ from openhcs.core.equivalence.relationships import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
@@ -41,7 +41,7 @@ from openhcs.core.measurements.runtime_measurements import (
     ObjectReferenceFeatureMarker,
     RuntimeMeasurementFeatureDeclaration,
 )
-from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
+from openhcs.core.object_labels.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,

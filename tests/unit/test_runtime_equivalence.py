@@ -85,7 +85,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
     ObjectRelationship,
@@ -103,7 +103,7 @@ from openhcs.core.measurements.runtime_measurements import (
     ObjectCoreMeasurementFeature,
     ObjectIdentifierFeatureMarker,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectInstanceKey,
 )
 from openhcs.core.object_labels.runtime_object_label_domains import (

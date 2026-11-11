@@ -45,13 +45,13 @@ from openhcs.core.callable.callable_contract import (
 )
 from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig, SourceBindingsConfig
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     CurrentPayloadMeasurementRecordMixin,
     RelationshipMeasurementRecordRowsMixin,

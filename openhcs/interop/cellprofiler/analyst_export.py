@@ -6,6 +6,7 @@ runtime artifacts. It does not make CPA tables a new semantic authority.
 from __future__ import annotations
 
 
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationship
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspacePanel,
@@ -66,9 +67,6 @@ from openhcs.core.payload.runtime_identifier import (
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
 )
 from openhcs.core.source.source_image_provenance import (
     source_component_metadata_consensus,

@@ -27,7 +27,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayloadSourceSpatialDomainAdapter,
     ObjectLabelRepresentation,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectInstanceKey,
     DirectedObjectRelationshipPayload,
     object_label_identity_lineage_payload,

@@ -520,7 +520,7 @@ def test_actual_upstream_consumer_rejects_incompatible_source_planes(kwargs):
 
 
 def test_actual_parent_means_include_each_channel_without_merging_site_ids():
-    from openhcs.core.runtime_relationships import (
+    from openhcs.core.object_labels.runtime_relationships import (
         ObjectRelationship,
         DirectedObjectRelationshipPayload,
         ObjectRelationshipDeclaration,

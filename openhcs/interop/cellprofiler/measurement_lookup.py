@@ -9,7 +9,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureDeclaration
-from openhcs.core.runtime_relationships import DirectParentReferenceFeatureMarker
+from openhcs.core.object_labels.runtime_relationships import DirectParentReferenceFeatureMarker
 from python_introspect import declared_public_names
 from openhcs.core.measurements.measurement_feature_queries import measurement_values_for_feature
 
