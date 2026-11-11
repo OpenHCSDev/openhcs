@@ -4,12 +4,13 @@ Generic validation system for component-agnostic validation.
 This module provides a generic replacement for the component-specific validation
 logic, supporting any component configuration and validation patterns.
 """
+from __future__ import annotations
+
 
 import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence
 
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
 from openhcs.core.callable.function_patterns import NormalizedFunctionPattern
 
 logger = logging.getLogger(__name__)

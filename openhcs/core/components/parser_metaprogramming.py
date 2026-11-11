@@ -1,4 +1,6 @@
 """Filename parsing bound to the active axis family."""
+from __future__ import annotations
+
 
 import logging
 from abc import ABC, abstractmethod
@@ -8,7 +10,7 @@ from typing import Optional, Tuple, TypeAlias
 
 from polystore.streaming.viewer_transport import ViewerFilenameParseResultABC
 
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.components.component_values import AxisValues
 
 logger = logging.getLogger(__name__)

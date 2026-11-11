@@ -1,4 +1,6 @@
 """Immutable progress types following OpenHCS patterns."""
+from __future__ import annotations
+
 
 import multiprocessing.queues
 import queue

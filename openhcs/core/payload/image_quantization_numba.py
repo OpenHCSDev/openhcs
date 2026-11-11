@@ -1,4 +1,6 @@
 """Typed numerical kernels for the image serialization strategy family."""
+from __future__ import annotations
+
 
 import numpy as np
 from numba import njit
