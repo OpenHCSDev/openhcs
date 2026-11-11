@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.measurements.measurement_row_materialization import (
@@ -57,11 +57,9 @@ from collections.abc import Mapping
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
-
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+    CellProfilerOutputRecordRequest,
+)
 
 
 @dataclass(frozen=True, slots=True)
