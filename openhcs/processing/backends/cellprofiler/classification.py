@@ -7,6 +7,7 @@ from dataclasses import asdict, dataclass, replace
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 import numpy as np
 
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
@@ -14,7 +15,7 @@ from openhcs.core.payload.aligned_image_payload import (
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ImageArtifactType
 from openhcs.core.artifacts.specs import ArtifactSpecCollection, ArtifactSpec
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.callable.callable_contract import CallableContract, KeywordRuntimeParameter
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,

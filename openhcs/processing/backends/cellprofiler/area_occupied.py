@@ -4,6 +4,7 @@ Measures the total area in an image that is occupied by objects or foreground.
 """
 from __future__ import annotations
 
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 
 from dataclasses import dataclass, replace
@@ -20,7 +21,6 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable.callable_contract import (
     CallableContract,
-    KeywordRuntimeParameter,
     processing_prepare,
 )
 from openhcs.core.measurements.measurement_row_materialization import (

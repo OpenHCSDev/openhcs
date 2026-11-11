@@ -17,6 +17,7 @@ import numpy as np
 
 from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     FullStackExecution,
@@ -28,10 +29,7 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable.callable_contract import (
-    KeywordRuntimeParameter,
-    runtime_image_execution_mode,
-)
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory import numpy
 from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,

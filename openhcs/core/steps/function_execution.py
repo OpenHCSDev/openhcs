@@ -17,10 +17,10 @@ from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
+from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
-from openhcs.core.callable.callable_contract import ImagePayloadConsumption
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.callable.function_patterns import (

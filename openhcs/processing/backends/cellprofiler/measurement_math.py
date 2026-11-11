@@ -1,6 +1,7 @@
 """CalculateMath measurement semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
@@ -23,7 +24,6 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable.callable_contract import (
     CallableContract,
-    KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
 from openhcs.core.memory.decorators import numpy

@@ -23,6 +23,7 @@ from openhcs.core.artifacts.plans import (
     grouped_artifact_path,
 )
 from openhcs.core.artifacts.specs import ArtifactSpecCollection, ArtifactSpec
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -34,7 +35,7 @@ from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import CallableContract
 from objectstate import get_base_type_for_lazy
 from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,

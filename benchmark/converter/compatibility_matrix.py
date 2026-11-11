@@ -7,10 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    FunctionStepExecutionScope,
-)
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )

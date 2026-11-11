@@ -12,12 +12,13 @@ from typing import ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable.callable_contract import CallableDeclaration, KeywordRuntimeParameter
+from openhcs.core.callable.callable_contract import CallableDeclaration
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.core.callable.runtime_adapters import RuntimeImageExecutionContext

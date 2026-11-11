@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.axes.axis_declarations import Axis
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 
 
 

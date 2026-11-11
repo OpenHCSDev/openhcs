@@ -21,7 +21,8 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     annotation_accepts_runtime_type,
     annotation_produces_runtime_type,

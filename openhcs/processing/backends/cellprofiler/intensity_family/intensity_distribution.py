@@ -20,6 +20,7 @@ import numpy as np
 import scipy.sparse
 
 from openhcs.constants.constants import MemoryType
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
@@ -30,7 +31,6 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,

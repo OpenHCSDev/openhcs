@@ -10,14 +10,12 @@ from typing import ClassVar, Tuple
 import numpy as np
 import scipy.optimize
 
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable.callable_contract import (
-    KeywordRuntimeParameter,
-    runtime_image_execution_mode,
-)
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurements.measurement_feature_queries import (

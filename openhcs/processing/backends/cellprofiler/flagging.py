@@ -12,7 +12,7 @@ from typing import ClassVar, Self
 import numpy as np
 
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
 from openhcs.core.measurements.measurement_row_materialization import (

@@ -66,7 +66,7 @@ from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.core.util.step_dependencies import (

@@ -9,6 +9,7 @@ from typing import Any, Mapping, MutableMapping, Sequence, get_type_hints
 from objectstate import DataclassFieldAccess
 
 from openhcs.core.artifacts.plans import ArtifactSpecRef
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import CompilingContext
@@ -34,7 +35,6 @@ from openhcs.core.payload.vfs_protocol import (
     DatasetPathDeclaration,
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.components.validation import GenericValidator

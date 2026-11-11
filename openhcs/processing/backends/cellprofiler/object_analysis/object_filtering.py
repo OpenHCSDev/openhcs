@@ -1,6 +1,7 @@
 """Object-filtering semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.interop.cellprofiler.measurement_lookup import (
     CellProfilerMeasurementFeature,
     child_count_feature_child_name,
@@ -23,10 +24,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from python_introspect import public_names_from_objects
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.callable.callable_contract import (
-    KeywordRuntimeParameter,
-    processing_prepare,
-)
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,

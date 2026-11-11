@@ -18,15 +18,15 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
+from openhcs.core.callable.callable_declarations import (
+    CallableImportIdentity,
+    FunctionStepExecutionScope,
+)
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.plans import ArtifactSpecRef
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    CallableImportIdentity,
-    FunctionStepExecutionScope,
-)
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.config.pipeline_config import (
     ProcessingConfig,
     StepSourceBindingsConfig,

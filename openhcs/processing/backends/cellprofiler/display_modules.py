@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
 from openhcs.core.measurements.measurement_row_materialization import (

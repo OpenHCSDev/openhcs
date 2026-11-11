@@ -20,10 +20,8 @@ from typing import (
 
 from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    FunctionStepExecutionScope,
-)
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,

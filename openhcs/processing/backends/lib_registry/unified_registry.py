@@ -178,7 +178,7 @@ class FunctionMetadata:
     def import_identity(self):
         """Return the registry-owned public import identity."""
 
-        from openhcs.core.callable.callable_contract import CallableImportIdentity
+        from openhcs.core.callable.callable_declarations import CallableImportIdentity
 
         declared = inspect.unwrap(self.func)
         return CallableImportIdentity(
@@ -404,10 +404,8 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             set_signature_analysis_target,
         )
 
-        from openhcs.core.callable.callable_contract import (
-            CallableContract,
-            FunctionStepExecutionScope,
-        )
+        from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
+        from openhcs.core.callable.callable_contract import CallableContract
         from openhcs.core.config.pipeline_config import runtime_config_parameter
 
         callable_contract = CallableContract.from_callable(func)

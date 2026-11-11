@@ -15,7 +15,7 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.pipeline.function_contracts import (
     execution_scope,

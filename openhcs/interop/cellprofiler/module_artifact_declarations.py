@@ -42,8 +42,8 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.callable.callable_contract import (
     CallableProjection,
     CallableContract,
-    ImagePayloadConsumption,
 )
+from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig, SourceBindingsConfig
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
