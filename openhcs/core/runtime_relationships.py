@@ -12,11 +12,12 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.plans import ArtifactPlan, ArtifactSpecRef
 from openhcs.core.artifacts.relations import ArtifactSpecRelation
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.artifacts.kinds import (
-    ArtifactType,
-    ObjectLabelsArtifactType,
-    ObjectLineageArtifactType,
-)
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ObjectLineageArtifactType
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelMeasurementSource
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIndexedValue
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows

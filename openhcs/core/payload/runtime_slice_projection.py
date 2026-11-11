@@ -20,10 +20,12 @@ from arraybridge.decorators import DtypeConversionConfig
 
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData, is_array_payload
-from openhcs.core.payload.runtime_image_values import (
-    ImagePayloadMetadata,
-    RuntimeSliceProjectionDeclarationError,
-)
+from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,

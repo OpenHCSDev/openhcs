@@ -27,14 +27,12 @@ from openhcs.core.memory import (
     stack_runtime_slices,
     runtime_slice_stack_geometry,
 )
-from openhcs.core.payload.runtime_image_values import (
-    ImageMaskDomain,
-    ImagePayload,
-    ImagePayloadMetadata,
-    ImagePayloadSliceProjector,
-    ImagePayloadSourceSpatialDomainAdapter,
-    project_image_mask_to_data_domain,
-)
+from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata, ImagePayloadSliceProjector, ImagePayloadSourceSpatialDomainAdapter, project_image_mask_to_data_domain
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.payload.runtime_image_values import ImageMaskDomain
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData, array_geometry
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
