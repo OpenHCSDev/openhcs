@@ -12,7 +12,6 @@ from typing import Any, Self
 import numpy as np
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.source.source_spatial_domain import SpatialShapeYX
 from openhcs.core.source.source_image_provenance import (

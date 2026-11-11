@@ -29,10 +29,7 @@ from polystore.streaming.viewer_transport import (
 from zmqruntime.config import ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireMapping
 
-from openhcs.core.config.pipeline_config import StreamingConfig
-from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
@@ -50,7 +47,6 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
 )
-from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:

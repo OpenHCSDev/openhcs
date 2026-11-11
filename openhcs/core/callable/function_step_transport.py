@@ -8,7 +8,6 @@ from dataclasses import dataclass, replace
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionPattern,
@@ -20,11 +19,9 @@ from openhcs.core.callable.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )
-from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from pycodify import SourceDocument
 from python_introspect import Enableable
-
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

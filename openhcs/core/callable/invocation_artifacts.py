@@ -14,7 +14,6 @@ from openhcs.core.util.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.axes.axis_declarations import GroupingDeclaration, Ungrouped, is_grouping_declaration
 from openhcs.core.callable.function_patterns import FunctionInvocationKey, NormalizedFunctionItem
@@ -24,7 +23,6 @@ _ClaimValue = TypeVar("_ClaimValue")
 PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
     "__openhcs_pipeline_input", ImageArtifactType
 )
-
 
 
 def unnamed_main_flow_artifact_name(

@@ -9,8 +9,6 @@ from typing import ClassVar, Mapping
 from polystore.roi import ROI
 
 from openhcs.core.axes.axis_declarations import AxisFamily, StackAxis
-from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source.source_image_provenance import SourceComponentMetadata
 from openhcs.core.source.source_matching import source_component_metadata_items
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 

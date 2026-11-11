@@ -7,15 +7,7 @@ from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any, Hashable
 
-from openhcs.core.axes.axis_declarations import Axis
-from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.source.source_binding_selection import (
-    SourceCandidatePathResolution,
-    SourcePatternResolutionContext,
-    SourceUniverseRuntimeState,
-)
 from openhcs.core.source.source_bindings import SourceBindingRuntimeMetadataNormalizer
-from openhcs.core.source.source_image_provenance import SourceImageIdentity
 from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     ResolvedSourceMetadataRecord,
@@ -23,9 +15,7 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.source.source_matching import source_component_metadata_items
 from openhcs.core.source.source_path_identity import source_path_identity_key
-from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord, SourceIdentityResolutionContext
-
 
 
 @dataclass(frozen=True, slots=True)

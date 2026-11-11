@@ -16,13 +16,11 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
-from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
 from openhcs.runtime.viewer.viewer_display import (
     FijiDisplaySettings,
     NapariDisplaySettings,
     ViewerDisplaySettings,
 )
-
 
 
 class ViewerFamily(ABC, metaclass=AutoRegisterMeta):

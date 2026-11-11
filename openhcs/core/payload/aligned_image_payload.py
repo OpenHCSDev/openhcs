@@ -19,7 +19,6 @@ from arraybridge import ArrayGeometry
 
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
-from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.memory import (
     MemoryType,
     convert_memory,
@@ -48,7 +47,6 @@ from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
-
 
 
 class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):

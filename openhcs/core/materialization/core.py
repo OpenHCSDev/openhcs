@@ -4,9 +4,6 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 from __future__ import annotations
 
-from openhcs.core.artifacts.plans import ArtifactOutputPlan
-from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
@@ -41,7 +38,6 @@ import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsona
 from openhcs.core.source.source_path_identity import source_path_identity
 from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.axes.component_set import ComponentSet
-from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
@@ -94,7 +90,6 @@ from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, 
 
 if TYPE_CHECKING:
     from openhcs.core.materialization.options import SourceOptions
-from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value

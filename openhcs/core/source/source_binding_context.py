@@ -11,7 +11,6 @@ from openhcs.core.config.pipeline_config import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.source.source_bindings_preview import SourceInventory
-from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 
 @dataclass(frozen=True, slots=True)

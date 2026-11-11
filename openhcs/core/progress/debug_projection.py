@@ -16,7 +16,6 @@ from openhcs.core.debug.debug_runtime import (
     DebugSnapshot,
     DebugTerminalSummary,
 )
-from openhcs.core.progress.types import ProgressEvent, ProgressIdentity
 
 from .projection import (
     ExecutionRuntimeProjection,

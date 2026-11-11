@@ -40,11 +40,6 @@ from openhcs.core.measurements.runtime_measurements import (
 from openhcs.core.object_labels.runtime_object_label_domains import (
     dense_object_label_id_domain,
 )
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
-)
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore, StoredRuntimeValue
 from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
@@ -59,7 +54,6 @@ from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
-
 
 
 class RuntimeMeasurementTablesQueryCache(

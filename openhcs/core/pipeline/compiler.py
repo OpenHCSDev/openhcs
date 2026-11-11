@@ -34,7 +34,6 @@ from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.callable.callable_contract import PayloadAxisRequirement
 from openhcs.core.context.processing_context import (
     CompiledContext,
     CompilingContext,
@@ -47,7 +46,6 @@ from openhcs.core.config.pipeline_config import (
     VFSConfig,
     PartitionFilterConfig,
 )
-from openhcs.core.debug.debug_runtime import DebugExecutionPolicy, NoOpDebugExecutionPolicy
 from openhcs.core.axes.axis_filter import (
     StepAxisFilterMap,
     StepAxisFilterResolution,
@@ -84,9 +82,6 @@ from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
 from openhcs.core.pipeline.step_attribute_stripper import StepAttributeStripper
-from openhcs.core.callable.function_patterns import (
-    CompiledFunctionGroup,
-)
 from openhcs.core.payload.image_file_serialization import (
     require_image_file_source_metadata,
 )
@@ -94,7 +89,6 @@ from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     PrimaryPlaneRole,
 )
-from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.config.partition_filter import PartitionFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check

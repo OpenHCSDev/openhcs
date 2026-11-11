@@ -1,7 +1,6 @@
 """Shared source-binding candidate selection for planning and runtime."""
 
 from __future__ import annotations
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
@@ -57,18 +56,12 @@ from openhcs.core.source.source_path_identity import (
     source_path_posix,
     source_paths_equal,
 )
-from openhcs.core.source.source_projection import SourceProjection
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection,
-)
 from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 from openhcs.core.steps.function_io import get_all_image_paths
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value
-
 
 
 SourceCandidatePath = str

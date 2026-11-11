@@ -26,10 +26,8 @@ from openhcs.core.artifacts.plans import (
     ArtifactPlan,
     ArtifactSpecRef,
 )
-from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.measurements.runtime_measurements import MeasurementScope
-
 
 
 @dataclass(frozen=True)

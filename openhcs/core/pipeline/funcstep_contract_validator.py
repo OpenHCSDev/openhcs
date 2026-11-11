@@ -27,9 +27,7 @@ from typing import (
     get_type_hints,
 )
 
-from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable.function_patterns import (
     CompiledFunctionPattern,
     FunctionPatternSyntax,

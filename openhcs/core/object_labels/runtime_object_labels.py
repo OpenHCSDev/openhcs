@@ -47,7 +47,6 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceIdentityProjectableValue,
 )
-from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,

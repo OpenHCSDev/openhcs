@@ -9,7 +9,6 @@ policy used by those algorithms live here too.
 from __future__ import annotations
 
 from openhcs.core.callable.callable_contract import CallableContract
-from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from abc import ABC, abstractmethod
@@ -845,8 +844,6 @@ class TuplePure2DAuxiliaryOutputAggregator(FlatSequencePure2DAuxiliaryOutputAggr
     """Register tuple auxiliary outputs for PURE_2D sequence aggregation."""
 
     value_type = tuple
-
-
 
 
 # ---------------------------------------------------------------------------

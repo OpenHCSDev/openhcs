@@ -16,17 +16,12 @@ from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config.pipeline_config import GlobalPipelineConfig
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.materialization.core import Output
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
     from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
-
 
 
 HookObservations = Mapping[str, object]

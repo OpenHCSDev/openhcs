@@ -6,9 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress
-
 
 
 class MaterializationRelativePathScope(ABC):

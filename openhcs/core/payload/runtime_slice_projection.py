@@ -31,7 +31,6 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceProjectableValue,
 )
-from openhcs.core.source.source_image_provenance import SourceComponentMetadata
 from openhcs.core.payload.runtime_image_values import as_runtime_value
 
 
@@ -108,7 +107,6 @@ def preserve_declared_image_payload_axis(
     else:
         return None
     return preserved_image_plane_projection(owner, projector)
-
 
 
 RuntimeProjectionPrimitive: TypeAlias = str | bytes | int | float | bool | None
@@ -377,8 +375,6 @@ def validate_source_plane_component_metadata(
         f"{len(plane_metadata)} metadata entries for {slice_count} runtime "
         f"slices in {source_description}."
     )
-
-
 
 
 class RuntimeSliceProjection:

@@ -18,9 +18,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.object_labels.runtime_object_labels import ObjectLabelMeasurementSource
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIndexedValue
-from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenanceFields,
@@ -42,7 +40,6 @@ from openhcs.core.object_labels.runtime_object_label_domains import dense_object
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIdentityProjectableValue
 import numpy as np
 from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
-
 
 
 class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):

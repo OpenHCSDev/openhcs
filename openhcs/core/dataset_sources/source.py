@@ -23,7 +23,6 @@ from polystore.virtual_workspace import SourcePixelRef
 from python_introspect import AnnotationChoices
 
 from openhcs.constants.constants import Backend
-from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.source.source_path_identity import absolute_source_path
 from openhcs.core.dataset_sources.interfaces import (
@@ -34,7 +33,6 @@ from openhcs.core.dataset_sources.interfaces import (
 from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
 
 logger = logging.getLogger(__name__)
-
 
 
 # ---------------------------------------------------------------------------
@@ -606,8 +604,6 @@ class DatasetSource(
 
     def get_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         return self.metadata_handler.get_pixel_size(dataset_root)
-
-
 
 
 class AutoDetectedSource(DatasetSourceChoice):

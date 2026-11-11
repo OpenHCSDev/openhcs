@@ -27,7 +27,6 @@ from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.object_labels.runtime_object_labels import FinalLabels
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,

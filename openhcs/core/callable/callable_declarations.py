@@ -10,7 +10,6 @@ from typing import Any, ClassVar
 from metaclass_registry.caches import IdentityBoundProcessCache
 from python_introspect import RuntimeParameterDeclarationABC
 
-from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadComposition,

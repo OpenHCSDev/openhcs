@@ -9,8 +9,6 @@ from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.core.source.source_path_identity import source_path_identity
-from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,
     MissingFilenameComponentError,
@@ -25,7 +23,6 @@ from openhcs.core.source.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None

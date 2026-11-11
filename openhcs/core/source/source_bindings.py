@@ -20,11 +20,8 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.axes.component_set import ComponentSet
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from polystore.formats import get_format_from_extension
 from python_introspect import FieldLabel, RegisteredClassChoices
@@ -46,7 +43,6 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source.source_path_identity import source_path_posix, source_paths_equal
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.axes.axis_boundaries import AxisChoices
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
 from openhcs.core.source.source_matching import source_filters_match, semantic_source_metadata_value, source_component_metadata_values, source_metadata_values_equal
 from openhcs.core.axes.axis_declarations import ColourAxis
@@ -1925,7 +1921,6 @@ class _SourceBindingPlanBase(ABC):
         """Whether the subclass-specific binding payload is empty."""
 
 
-
 def source_binding_group_keys_for_group_by(
     source_bindings: SourceBindingDeclarationsMixin,
     group_by: type[GroupingDeclaration],
@@ -1956,7 +1951,6 @@ def source_binding_group_keys_for_group_by(
             )
         )
     )
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -2141,7 +2135,6 @@ def _coerce_component(value: Any, field_name: str) -> type[Axis]:
         return AxisFamily.active().require(value)
     except TypeError as error:
         raise TypeError(f"{field_name}: {error}") from error
-
 
 
 def _require_name(value: str, field_name: str) -> None:

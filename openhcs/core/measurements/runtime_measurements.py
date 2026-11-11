@@ -33,7 +33,6 @@ import math
 import numpy as np
 import re
 from openhcs.core.axes.axis_declarations import AxisFamily
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
@@ -203,7 +202,6 @@ class MeasurementTable(
                 self.source_image_name,
             )
         )
-
 
 
 @dataclass(frozen=True, slots=True)

@@ -23,7 +23,6 @@ from openhcs.core.axes.alias_property import AliasProperty
 import numpy as np
 
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
-from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
@@ -136,8 +135,6 @@ def measurement_table_axis_values(
         )
         if axis_integer is not None
     }
-
-
 
 
 MeasurementFeatureNameProjection: TypeAlias = Callable[

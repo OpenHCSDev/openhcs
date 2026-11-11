@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from polystore.source_tile_geometry import SourceTileGeometry
 
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-from openhcs.core.source.source_projection import SourceProjectionSet
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, TileAxis
 
 

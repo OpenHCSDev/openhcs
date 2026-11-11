@@ -16,7 +16,6 @@ from openhcs.core.artifacts.kinds import (
     ArtifactTypeValue,
     MeasurementsArtifactType,
 )
-from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -33,7 +32,6 @@ from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
 

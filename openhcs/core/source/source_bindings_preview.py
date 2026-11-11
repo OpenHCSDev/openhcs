@@ -12,14 +12,7 @@ from openhcs.core.source.source_binding_workspace import (
     SourceCandidate,
     _SourceSet,
 )
-from openhcs.core.source.source_metadata import SourceMetadataValue
 from openhcs.core.source.source_bindings import NamedSourceBinding
-from openhcs.core.config.pipeline_config import (
-    EMPTY_SOURCE_BINDINGS,
-    SourceBindingsConfig,
-    StepSourceBindingsConfig,
-)
-from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 
 def _active_source_bindings(

@@ -20,20 +20,13 @@ from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     MetadataHandler,
 )
-from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
 from openhcs.core.io.result_file_formats import (
     ResultFileFormat,
     ResultFilePreviewReader,
 )
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
-from openhcs.core.source.source_projection import (
-    SourceCandidate,
-    SourcePlaneDataset,
-    SourceProjection,
-)
 from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,

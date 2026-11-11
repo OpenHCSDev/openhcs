@@ -15,7 +15,6 @@ from urllib.parse import quote
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.component_values import AxisValues
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_bindings import (
@@ -1398,7 +1397,6 @@ def _plane_filename_pattern(family: type[AxisFamily]) -> re.Pattern[str]:
     return re.compile(
         rf"^(?P<axis0>[^_]+){tokens}(?:_[^.]*)?(?P<extension>(?:\.\w+)+)$"
     )
-
 
 
 def _normalize_projection(projection: SourceProjection) -> None:

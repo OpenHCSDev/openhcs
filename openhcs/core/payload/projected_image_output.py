@@ -10,7 +10,6 @@ from openhcs.core.payload.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
     RuntimeArrayData,
 )
-from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,

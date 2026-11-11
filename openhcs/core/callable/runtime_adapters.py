@@ -24,8 +24,6 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.callable.callable_contract import CallableContract
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
@@ -43,8 +41,6 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.axes.axis_declarations import Axis
-
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])

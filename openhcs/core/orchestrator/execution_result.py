@@ -16,10 +16,6 @@ from typing import ClassVar, Mapping
 from typing import TYPE_CHECKING
 
 from openhcs.constants.constants import Backend
-from openhcs.core.context.processing_context import (
-    ExecutingContext,
-    ProcessingContext,
-)
 from openhcs.core.progress.types import (
     AxisErrorProgressPhase,
     CancelledProgressPhase,

@@ -13,7 +13,6 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.payload.aligned_image_payload import AlignedImageStack, ImageOutputBundle
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelMeasurementSource,
     ObjectLabelValue,
