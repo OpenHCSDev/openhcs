@@ -41,9 +41,11 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     CellCountMeasurementFields,
     CellCountResult,
     ColocalizationAnalysis,
+    ColocalizationAnalyzer,
     ColocalizationMethod,
     DetectionMethod,
     MultiChannelResult,
+    analyze_colocalization,
     ThresholdMethod,
     WatershedThresholdBackend,
     WatershedThresholdMethodStrategy,
@@ -878,24 +880,11 @@ def _analyze_colocalization(
     min_overlap_area: float,
     intensity_threshold: float,
 ) -> MultiChannelResult:
-    """Analyze colocalization between two channels."""
-    try:
-        analyzer = COLOCALIZATION_ANALYZERS[method]
-    except KeyError:
-        raise ValueError(f"Unknown colocalization method: {method}")
-    return analyzer(
-        chan_1_result,
-        chan_2_result,
-        max_distance,
-        min_overlap_area,
-        intensity_threshold,
+    return analyze_colocalization(
+        chan_1_result, chan_2_result, method,
+        max_distance, min_overlap_area, intensity_threshold,
+        analyzers=COLOCALIZATION_ANALYZERS,
     )
-
-
-ColocalizationAnalyzer = Callable[
-    [CellCountResult, CellCountResult, float, float, float],
-    MultiChannelResult,
-]
 
 
 COLOCALIZATION_ANALYZERS: dict[ColocalizationMethod, ColocalizationAnalyzer] = (

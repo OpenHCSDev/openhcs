@@ -66,6 +66,31 @@ def colocalization_analyzer_catalog(
     }
 
 
+ColocalizationAnalyzer = Callable[
+    [CellCountResult, CellCountResult, float, float, float],
+    MultiChannelResult,
+]
+
+
+def analyze_colocalization(
+    chan_1_result: CellCountResult,
+    chan_2_result: CellCountResult,
+    method: ColocalizationMethod,
+    max_distance: float,
+    min_overlap_area: float,
+    intensity_threshold: float,
+    *,
+    analyzers: dict[ColocalizationMethod, ColocalizationAnalyzer],
+) -> MultiChannelResult:
+    try:
+        analyzer = analyzers[method]
+    except KeyError:
+        raise ValueError(f"Unknown colocalization method: {method}")
+    return analyzer(
+        chan_1_result, chan_2_result, max_distance, min_overlap_area, intensity_threshold,
+    )
+
+
 class ThresholdMethod(Enum):
     """Automatic thresholding methods for watershed segmentation."""
 
