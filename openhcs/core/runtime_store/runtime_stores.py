@@ -1275,3 +1275,9 @@ def _validate_overwrite(
             f"'{existing.location.path}', cannot overwrite at "
             f"'{incoming.location.path}'."
         )
+
+
+import openhcs.core.artifacts.kinds as _ak
+
+_ak._registered_RuntimeArtifactLocation = RuntimeArtifactLocation
+_ak._registered_StoredRuntimeValue = StoredRuntimeValue

@@ -15,6 +15,9 @@ from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 
+_empty_image_metadata_factory: Callable[[], Any] | None = None
+
+
 class RuntimeSliceProjectableValue(ABC):
     """A runtime value that owns how it splits into runtime slices.
 
@@ -34,9 +37,8 @@ class RuntimeSliceProjectableValue(ABC):
     @property
     def image_metadata(self) -> "ImagePayloadMetadata":
         """Return the image metadata this value carries; only images carry any."""
-        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-
-        return ImagePayloadMetadata()
+        assert _empty_image_metadata_factory is not None
+        return _empty_image_metadata_factory()
 
     @property
     def array_data(self) -> object:
