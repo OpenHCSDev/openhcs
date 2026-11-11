@@ -53,31 +53,14 @@ from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
 from typing import TYPE_CHECKING
 
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
+
 if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import MetadataHandler
 
 
 
 LookupValueT = TypeVar("LookupValueT")
-
-
-@dataclass(frozen=True, slots=True)
-class VirtualWorkspacePathLookup:
-    """Virtual workspace path identity for source path and metadata lookup."""
-
-    virtual_path: str
-    full_virtual_path: str
-
-    @classmethod
-    def from_paths(
-        cls,
-        virtual_path: str,
-        full_virtual_path: str,
-    ) -> "VirtualWorkspacePathLookup":
-        return cls(str(virtual_path), str(full_virtual_path))
-
-    def candidates(self) -> tuple[str, str]:
-        return (self.virtual_path, self.full_virtual_path)
 
 
 @dataclass(frozen=True, slots=True)

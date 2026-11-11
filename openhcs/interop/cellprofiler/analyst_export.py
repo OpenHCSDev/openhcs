@@ -6,6 +6,7 @@ runtime artifacts. It does not make CPA tables a new semantic authority.
 from __future__ import annotations
 
 
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspacePanel,
     CPAWorkspaceRenderer,
@@ -75,9 +76,6 @@ from openhcs.core.source.source_image_provenance import (
 )
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_metadata import SourceMetadataScalar
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
-)
 
 from .database_column_dialect import (
     CellProfilerDatabaseColumnDialect,

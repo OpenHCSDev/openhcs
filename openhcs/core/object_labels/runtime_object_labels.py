@@ -1,6 +1,10 @@
 """Nominal runtime object-label values and transformations."""
 
 from __future__ import annotations
+from openhcs.core.object_labels.label_declarations import (
+    ObjectLabelRepresentation,
+    ObjectLabelVariant,
+)
 from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
@@ -61,7 +65,6 @@ from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomainFields,
 )
 
-from enum import Enum
 from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry, stack_runtime_slices
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
@@ -81,26 +84,6 @@ def normalize_source_label_data(data: object, channel_axis: int | None) -> objec
         _colors, inverse = np.unique(flat[foreground], axis=0, return_inverse=True)
         labels[foreground] = inverse.astype(np.int32, copy=False) + 1
     return labels.reshape(rgb.shape[:-1])
-
-
-class ObjectLabelRepresentation(str, Enum):
-    """Storage representation used by an object-label artifact payload."""
-
-    DENSE_LABELS = "dense_labels"
-    SPARSE_IJV = "sparse_ijv"
-
-
-class ObjectLabelVariant(ABC, metaclass=AutoRegisterMeta):
-    """A named label array carried beside an object set's final labels.
-
-    The kernel declares only the final labels; a domain declares further
-    variants (for example labels before editing) as subclasses.
-    """
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-
-    name: ClassVar[str]
 
 
 class FinalLabels(ObjectLabelVariant):

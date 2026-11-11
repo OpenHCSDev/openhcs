@@ -1,6 +1,10 @@
 """Object-label reduction and PURE_2D slice aggregation."""
 
 from __future__ import annotations
+from openhcs.core.object_labels.label_declarations import (
+    ObjectLabelRepresentation,
+    ObjectLabelVariant,
+)
 from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
@@ -22,11 +26,7 @@ from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
 )
-from openhcs.core.object_labels.runtime_object_labels import (
-    FinalLabels,
-    ObjectLabelRepresentation,
-    ObjectLabelVariant,
-)
+from openhcs.core.object_labels.runtime_object_labels import FinalLabels
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,

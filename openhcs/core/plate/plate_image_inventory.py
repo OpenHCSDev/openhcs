@@ -35,13 +35,13 @@ from openhcs.core.source.source_projection import (
     SourceProjection,
 )
 from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,
 )
 from python_introspect import JsonValue, to_jsonable
 
 import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager

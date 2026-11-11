@@ -70,9 +70,9 @@ from openhcs.core.io.virtual_workspace_metadata import (
 )
 from openhcs.core.payload.vfs_protocol import FileManagerLike
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, PartitionAxis
-from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
 from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 from openhcs.core.dataset_sources.source import DeclaredFileSource
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 
 
 

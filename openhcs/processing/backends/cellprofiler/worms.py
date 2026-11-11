@@ -13,6 +13,7 @@ import inspect
 
 from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
+from openhcs.core.object_labels.label_declarations import ObjectLabelRepresentation
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -85,9 +86,6 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
-)
-from openhcs.core.object_labels.runtime_object_labels import (
-    ObjectLabelRepresentation,
 )
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.object_labels.runtime_object_labels import (

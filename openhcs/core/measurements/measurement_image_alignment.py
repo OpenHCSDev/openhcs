@@ -1,6 +1,7 @@
 """Nominal measurement-image alignment contracts."""
 
 from __future__ import annotations
+from openhcs.core.object_labels.label_declarations import ObjectLabelRepresentation
 from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 
 import logging
@@ -21,7 +22,6 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_project_plane,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileTimer
-from openhcs.core.object_labels.runtime_object_labels import ObjectLabelRepresentation
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,

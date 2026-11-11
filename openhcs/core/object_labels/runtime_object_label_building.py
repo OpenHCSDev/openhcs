@@ -1,6 +1,7 @@
 """Construction of object-label values from source-image context."""
 
 from __future__ import annotations
+from openhcs.core.object_labels.label_declarations import ObjectLabelRepresentation
 from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 
@@ -17,7 +18,6 @@ from openhcs.core.object_labels.runtime_object_label_domains import (
 )
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
-    ObjectLabelRepresentation,
     ObjectLabelSet,
     ObjectLabelVariantData,
     ObjectLabelVariants,
