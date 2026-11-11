@@ -64,7 +64,6 @@ from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.callable.variable_component_stack_requirement import AlwaysRequiresVariableComponentStack, SemanticControlVariableComponentStackRequirement
 from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
-from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
@@ -1360,9 +1359,16 @@ class LibraryContractCall(ContractCall):
     def _consumes_full_label_stack(self, kwargs: Mapping[str, Any]) -> bool:
         """Whether the callable measures labels over their whole stack."""
 
-        if not object_label_input_execution_mode_from_callable(
-            self.func
-        ).preserves_full_stack(image_stack_required=False):
+        from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+
+        try:
+            namespace = vars(self.func)
+        except TypeError:
+            return False
+        declared = namespace.get(FunctionContractAttribute.object_label_input_execution_mode)
+        if declared is None or not hasattr(declared, "preserves_full_stack"):
+            return False
+        if not declared.preserves_full_stack(image_stack_required=False):
             return False
         positional = (
             dict(zip((p.name for p in self._positional_parameters()), self.args))
