@@ -106,7 +106,7 @@ from openhcs.core.steps.function_output_identity import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis
 from openhcs.core.payload.runtime_image_values import owned_runtime_value
-from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata, as_runtime_value
 from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
@@ -144,6 +144,14 @@ RuntimeFunctionOutput = RuntimePayload | NoMainFlowOutput | tuple[RuntimePayload
 RuntimeCallableArgument = JsonValue | RuntimePayload | ExecutingContext
 RuntimeCallableKwargs = Mapping[str, RuntimeCallableArgument]
 EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
+
+
+@dataclass(frozen=True, slots=True)
+class _ResolvedOutputSlice:
+    payload: ImagePayload
+    metadata: ImagePayloadMetadata
+    path: str
+    record: ProducedOutputSemantics
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1060,6 +1068,74 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 f"{output_shape}"
             ) from exc
 
+    def _resolve_output_slice(
+        self,
+        index: int,
+        img_slice: ImagePayload,
+        output_context: AlignedImageSliceContext,
+        *,
+        matching_files: list[str],
+        num_outputs: int,
+        num_inputs: int,
+        explicit_output_surfaces: bool,
+        passed_through_qualifier: str | None,
+        processed_stack: RuntimeArrayData,
+    ) -> _ResolvedOutputSlice:
+        context = self.context
+        input_filename = matching_files[index] if index < len(matching_files) else None
+        output_path_request = FunctionOutputPathRequest(
+            parser=context.microscope_handler.parser,
+            output_dir=self.execution_plan.output_dir,
+            output_payload=img_slice,
+            input_path=input_filename,
+            variable_components=self.execution_plan.variable_components,
+            input_aligned_output=num_outputs == num_inputs,
+            identity_cache=context.runtime_function_output_identity_cache,
+        )
+        try:
+            output_identity = FunctionOutputIdentity.from_request(output_path_request)
+        except ValueError as exc:
+            if input_filename is None:
+                raise ValueError(
+                    f"Function returned {num_outputs} output slices but only "
+                    f"{num_inputs} input files were available, and output slice "
+                    f"{index} does not carry payload component identity."
+                ) from exc
+            raise
+        if explicit_output_surfaces and not output_context.is_anonymous_main_flow:
+            output_identity = output_identity.with_filename_qualifier(
+                output_context.output_key
+            )
+        elif passed_through_qualifier is not None:
+            output_identity = output_identity.with_filename_qualifier(
+                passed_through_qualifier
+            )
+        output_path_text = str(output_identity.path_for_request(output_path_request))
+        img_slice = output_context.contextualize_image_payload(img_slice)
+        output_metadata = img_slice.metadata
+        output_component_metadata = output_identity.component_metadata(
+            output_metadata.source_component_metadata,
+        )
+        if output_metadata.source_component_metadata != output_component_metadata:
+            output_metadata = output_metadata.with_source_component_metadata(
+                output_component_metadata
+            )
+            img_slice = output_metadata.attach_to(img_slice)
+        output_record = ProducedOutputSemantics.from_output(
+            self.execution_plan,
+            output_path_text,
+            output_identity,
+            output_context=output_context,
+            image_metadata=output_metadata,
+            main_flow_plane_axis=processed_stack.plane_axis_for_output_context(output_context),
+        )
+        return _ResolvedOutputSlice(
+            payload=img_slice,
+            metadata=output_metadata,
+            path=output_path_text,
+            record=output_record,
+        )
+
     def _save_outputs(
         self,
         processed_stack: RuntimeArrayData,
@@ -1137,76 +1213,23 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             Backend.MEMORY.value,
         )
         for i, img_slice in enumerate(output_slices):
-            input_filename = None
-            if i < len(matching_files):
-                input_filename = matching_files[i]
-            output_path_request = FunctionOutputPathRequest(
-                parser=context.microscope_handler.parser,
-                output_dir=self.execution_plan.output_dir,
-                output_payload=img_slice,
-                input_path=input_filename,
-                variable_components=self.execution_plan.variable_components,
-                input_aligned_output=num_outputs == num_inputs,
-                identity_cache=context.runtime_function_output_identity_cache,
+            resolved = self._resolve_output_slice(
+                i, img_slice, output_contexts[i],
+                matching_files=matching_files,
+                num_outputs=num_outputs,
+                num_inputs=num_inputs,
+                explicit_output_surfaces=explicit_output_surfaces,
+                passed_through_qualifier=passed_through_qualifiers[i],
+                processed_stack=processed_stack,
             )
-            try:
-                output_identity = FunctionOutputIdentity.from_request(
-                    output_path_request
-                )
-            except ValueError as exc:
-                if input_filename is None:
-                    raise ValueError(
-                        f"Function returned {num_outputs} output slices but only "
-                        f"{num_inputs} input files were available, and output slice "
-                        f"{i} does not carry payload component identity."
-                    ) from exc
-                raise
-            output_context = output_contexts[i]
-            # Only explicit aligned output surfaces own filename qualifiers.
-            # An unwrapped canonical artifact still owns its typed source
-            # context, while its ordinary main-flow checkpoint keeps the
-            # source filename independently of named artifact materialization.
-            if explicit_output_surfaces and not output_context.is_anonymous_main_flow:
-                output_identity = output_identity.with_filename_qualifier(
-                    output_context.output_key
-                )
-            elif passed_through_qualifiers[i] is not None:
-                # A passed-through surface keeps the qualifier its producer
-                # published it under; dropping it would merge sibling surfaces.
-                output_identity = output_identity.with_filename_qualifier(
-                    passed_through_qualifiers[i]
-                )
-            output_path = output_identity.path_for_request(output_path_request)
-            output_path_text = str(output_path)
-            img_slice = output_context.contextualize_image_payload(img_slice)
-            output_metadata = img_slice.metadata
-            output_component_metadata = output_identity.component_metadata(
-                output_metadata.source_component_metadata,
-            )
-            if output_metadata.source_component_metadata != output_component_metadata:
-                output_metadata = output_metadata.with_source_component_metadata(
-                    output_component_metadata
-                )
-                img_slice = output_metadata.attach_to(img_slice)
-            output_record = ProducedOutputSemantics.from_output(
-                self.execution_plan,
-                output_path_text,
-                output_identity,
-                output_context=output_context,
-                image_metadata=output_metadata,
-                main_flow_plane_axis=processed_stack.plane_axis_for_output_context(output_context),
-            )
-
             if output_directory_exists and context.filemanager.exists(
-                output_path_text,
-                Backend.MEMORY.value,
+                resolved.path, Backend.MEMORY.value,
             ):
-                overwritten_output_paths.append(output_path_text)
-
-            output_payloads.append(img_slice)
-            output_payload_metadata.append(output_metadata)
-            output_paths_batch.append(output_path_text)
-            output_records.append(output_record)
+                overwritten_output_paths.append(resolved.path)
+            output_payloads.append(resolved.payload)
+            output_payload_metadata.append(resolved.metadata)
+            output_paths_batch.append(resolved.path)
+            output_records.append(resolved.record)
 
         FunctionOutputIdentity.validate_output_paths(
             output_paths_batch,
