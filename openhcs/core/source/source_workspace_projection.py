@@ -612,6 +612,44 @@ class VirtualWorkspaceSourceProjection:
         return virtual_path
 
 
+def _accept_source_binding_projection(
+    source_bindings: SourceBindingsConfig,
+    projection: VirtualWorkspaceSourceProjection,
+) -> VirtualWorkspaceSourceProjection:
+    """Filter a prepared projection through declared source-binding filters."""
+    if not source_bindings.source_filter_declarations:
+        return projection
+    selected_paths: set[str] = set()
+    selected_metadata_paths: set[str] = set()
+    for path, ref in projection.source_refs_by_virtual_path.items():
+        metadata = projection.source_metadata_for(
+            VirtualWorkspacePathLookup.from_paths(path, path)
+        )
+        filter_paths = (
+            () if metadata is None else SourceMetadataFields.source_filter_paths(metadata)
+        ) or (ref.backend_address, path)
+        if source_bindings.source_path_filters_match(filter_paths):
+            selected_paths.add(path)
+            selected_metadata_paths.update((path, ref.backend_address))
+    if not selected_paths:
+        raise ValueError("Declared source filters matched no prepared workspace sources.")
+    return VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path=MappingProxyType({
+            path: ref for path, ref in projection.source_refs_by_virtual_path.items()
+            if path in selected_paths
+        }),
+        source_metadata_by_path=MappingProxyType({
+            path: metadata for path, metadata in projection.source_metadata_by_path.items()
+            if path in selected_metadata_paths
+        }),
+        source_projections_by_virtual_path=MappingProxyType({
+            path: source for path, source in projection.source_projections_by_virtual_path.items()
+            if path in selected_paths
+        }),
+        workspace_root=projection.workspace_root,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class VirtualWorkspaceImagePayloadProjection:
     """Join persisted semantics to loaded native headers for one workspace image."""
@@ -700,13 +738,9 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
             return self
         admitted = self.source_accepted_entries.get(declarations)
         if admitted is None:
-            from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
-
             admitted = VirtualWorkspaceSourceProjectionCacheEntry(
                 self.metadata,
-                SourceBindingWorkspaceProjector(source_bindings).accept_prepared_projection(
-                    self.projection
-                ),
+                _accept_source_binding_projection(source_bindings, self.projection),
             )
             self.source_accepted_entries[declarations] = admitted
         return admitted
@@ -921,11 +955,9 @@ class WorkspaceSourceProjections:
                     metadata,
                 )
                 if projection is not None and self.source_bindings is not None:
-                    from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
-
-                    projection = SourceBindingWorkspaceProjector(
-                        self.source_bindings
-                    ).accept_prepared_projection(projection)
+                    projection = _accept_source_binding_projection(
+                        self.source_bindings, projection
+                    )
             else:
                 projection = self.cache.projection_for(
                     workspace_root, metadata, source_bindings=self.source_bindings,
