@@ -1,7 +1,7 @@
-import dataclasses
 """Plate inspection DTOs for the headless OpenHCS agent API."""
 
 from __future__ import annotations
+import dataclasses
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping

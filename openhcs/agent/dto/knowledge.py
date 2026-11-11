@@ -1,7 +1,7 @@
-import dataclasses
 """Knowledge-base DTOs for OpenHCS agent integrations."""
 
 from __future__ import annotations
+import dataclasses
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace

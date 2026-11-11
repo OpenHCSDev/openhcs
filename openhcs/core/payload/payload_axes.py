@@ -1,4 +1,3 @@
-import dataclasses
 """Declared dimensions of a tensor payload.
 
 A payload's array has one :class:`AxisSpec` per dimension. Most dimensions are
@@ -11,6 +10,7 @@ position or name.
 """
 
 from __future__ import annotations
+import dataclasses
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
