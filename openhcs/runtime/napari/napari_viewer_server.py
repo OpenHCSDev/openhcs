@@ -4,8 +4,8 @@ Napari-based real-time visualization module.
 This module provides the NapariStreamVisualizer class for real-time
 visualization of tensors during pipeline execution.
 """
-
 from __future__ import annotations
+
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis, RuntimePlaneAxis
 
 import logging

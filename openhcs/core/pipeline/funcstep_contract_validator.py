@@ -4,8 +4,8 @@ FuncStep memory contract validator for OpenHCS.
 This module provides the FuncStepContractValidator class, which is responsible for
 validating memory type declarations for FunctionStep instances in a pipeline.
 """
-
 from __future__ import annotations
+
 
 import ast
 import importlib

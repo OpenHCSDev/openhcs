@@ -5,8 +5,8 @@ how an explicit request for it resolves to an implementation. The string choice
 list that function signatures, forms and MCP schemas expose is derived from the
 family's registry.
 """
-
 from __future__ import annotations
+
 
 import re
 from abc import ABC, abstractmethod

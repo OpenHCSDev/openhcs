@@ -9,8 +9,8 @@ cannot infer a user's manual segmentation.
 For actual manual annotation, use external tools (napari, Fiji, etc.) and import
 the resulting label images.
 """
-
 from __future__ import annotations
+
 
 from dataclasses import dataclass
 

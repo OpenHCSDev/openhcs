@@ -4,8 +4,8 @@ Shared operations are written once in ``image_stack_operations``; this module
 registers them for CuPy and holds the CuPy-specific algorithms (sharpening,
 top-hat, Sobel kernels).
 """
-
 from __future__ import annotations
+
 
 from abc import abstractmethod
 from typing import List, Optional, Tuple

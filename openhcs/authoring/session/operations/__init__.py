@@ -6,8 +6,8 @@ it only presents something, an MCP tool derived from it in
 ``openhcs.agent.capabilities``. Operations ask the session for everything;
 they keep no state.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar

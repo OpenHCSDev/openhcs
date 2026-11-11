@@ -7,8 +7,8 @@ here and is reset with the session. Clients call :meth:`Session.invoke`,
 read :meth:`Session.view` and follow :meth:`Session.events_after` or
 :meth:`Session.subscribe`; none of them keeps a copy.
 """
-
 from __future__ import annotations
+
 
 import asyncio
 import inspect

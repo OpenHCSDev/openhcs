@@ -5,8 +5,8 @@ kinds, for example one row per pipeline file found in the root; each kind
 spells its scope id, names its rows, offers rows for a newly added root and
 prepares the input workspace that initialization reads.
 """
-
 from __future__ import annotations
+
 
 from objectstate import ScopeKey
 from abc import ABC, abstractmethod

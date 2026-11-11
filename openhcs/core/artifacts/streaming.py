@@ -4,8 +4,8 @@ Every artifact remains available for explicit, on-demand streaming from its
 materialized outputs. The declaration only controls the automatic viewer
 streaming performed as part of pipeline execution.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC
 from typing import ClassVar

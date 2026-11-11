@@ -3,8 +3,8 @@
 Shared operations are written once in ``image_stack_operations``; this module
 registers them for PyTorch and holds the PyTorch-specific algorithms.
 """
-
 from __future__ import annotations
+
 
 import logging
 from typing import List, Optional, Tuple

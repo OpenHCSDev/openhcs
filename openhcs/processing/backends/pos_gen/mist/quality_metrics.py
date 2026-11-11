@@ -3,8 +3,8 @@ Quality Metrics for MIST Algorithm
 
 Functions for computing correlation quality and adaptive thresholds.
 """
-
 from __future__ import annotations
+
 
 import logging
 from typing import TYPE_CHECKING, Dict, List, Tuple

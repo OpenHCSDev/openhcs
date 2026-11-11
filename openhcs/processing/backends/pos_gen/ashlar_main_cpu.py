@@ -5,8 +5,8 @@ Array-based EdgeAligner implementation that works directly with numpy arrays
 instead of file-based readers. This is the complete Ashlar algorithm modified
 to accept arrays directly.
 """
-
 from __future__ import annotations
+
 import logging
 import sys
 from typing import TYPE_CHECKING, Tuple, List

@@ -3,8 +3,8 @@
 Each relation class declares, in its own body, which artifacts may be its
 source and which declarations may carry it; the base class checks both.
 """
-
 from __future__ import annotations
+
 
 import json
 from abc import ABC

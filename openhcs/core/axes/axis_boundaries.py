@@ -5,8 +5,8 @@ Kept out of :mod:`openhcs.core.axes.axis_declarations` so that declaring and act
 annotation library. JSON spells a declaration by its name, decoded through the
 active family.
 """
-
 from __future__ import annotations
+
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import AnnotationChoices, registered_class_from_key, to_jsonable

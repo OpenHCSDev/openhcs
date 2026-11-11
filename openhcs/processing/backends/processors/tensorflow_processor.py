@@ -3,8 +3,8 @@
 Shared operations are written once in ``image_stack_operations``; this module
 registers them for TensorFlow and holds the TensorFlow-specific algorithms.
 """
-
 from __future__ import annotations
+
 
 from typing import List, Optional, Tuple
 

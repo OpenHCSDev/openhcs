@@ -1,7 +1,7 @@
+from __future__ import annotations
 import dataclasses
 """Secondary-object backend strategies for CellProfiler-compatible processing."""
 
-from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod

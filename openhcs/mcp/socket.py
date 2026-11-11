@@ -9,8 +9,8 @@ unix socket, so repeated development calls reuse construction without changing
 the wire protocol: every connection still performs the standard MCP
 initialize handshake and JSON-RPC exchange.
 """
-
 from __future__ import annotations
+
 
 import hashlib
 import io

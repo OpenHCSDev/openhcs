@@ -2,8 +2,8 @@
 
 Key idea: the abstraction boundary is the output *format* (writers), not per-analysis handlers.
 """
-
 from __future__ import annotations
+
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.interfaces import FilenameParser

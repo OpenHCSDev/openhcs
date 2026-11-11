@@ -5,8 +5,8 @@ Implements clean abstraction with internal library-specific logic.
 All CuPy-specific details (GPU handling, CuCIM integration, etc.)
 are handled internally without leaking into the ABC.
 """
-
 from __future__ import annotations
+
 
 from typing import List, Tuple
 

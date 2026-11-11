@@ -3,8 +3,8 @@
 This module intentionally builds render-only CPA views from existing OpenHCS
 runtime artifacts. It does not make CPA tables a new semantic authority.
 """
-
 from __future__ import annotations
+
 
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspacePanel,

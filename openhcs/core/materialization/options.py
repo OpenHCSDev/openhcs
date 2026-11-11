@@ -4,8 +4,8 @@ Greenfield design:
 - the abstraction boundary is the *output format* (CSV/JSON/ROI_ZIP/TIFF/etc)
 - options types are used for dispatch (metaprogramming-friendly)
 """
-
 from __future__ import annotations
+
 
 import csv
 import io

@@ -4,8 +4,8 @@ Multi-Template Matching functions for OpenHCS.
 This module provides template matching capabilities using the Multi-Template-Matching library
 to detect and crop regions of interest in image stacks.
 """
-
 from __future__ import annotations
+
 
 import logging
 from dataclasses import asdict, dataclass, fields

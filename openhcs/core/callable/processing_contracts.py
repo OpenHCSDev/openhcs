@@ -6,8 +6,8 @@ the invocation environment (library registry wrappers, CellProfiler modules).
 The plane slicers, slice-output aggregators and the callable invocation
 policy used by those algorithms live here too.
 """
-
 from __future__ import annotations
+
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 

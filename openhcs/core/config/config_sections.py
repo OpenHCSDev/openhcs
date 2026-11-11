@@ -7,8 +7,8 @@ every declared section as a ``GlobalPipelineConfig`` field before its fields
 are injected. Section modules import nothing from the kernel config, so they
 may be imported in any order.
 """
-
 from __future__ import annotations
+
 
 from typing import ClassVar
 

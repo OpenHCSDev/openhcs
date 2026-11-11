@@ -5,8 +5,8 @@ client either subscribes (the Qt GUI marshals each event to its thread) or
 blocks on :meth:`SessionEventLog.after` for the events past a sequence number
 (headless MCP), so no client polls session state on a timer.
 """
-
 from __future__ import annotations
+
 
 import threading
 from abc import ABC

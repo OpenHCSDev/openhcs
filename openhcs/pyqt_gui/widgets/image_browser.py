@@ -5,8 +5,8 @@ detachable panel, config-action tabs). This module declares what OpenHCS puts
 in them: the dataset being browsed, the kinds of file row, the columns the
 active axis family and the file records give, and the registered viewers.
 """
-
 from __future__ import annotations
+
 
 import logging
 import subprocess

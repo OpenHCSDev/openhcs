@@ -6,8 +6,8 @@ adapters, location features and sparse label columns take spatial names and
 positions from it. Planar placement (``origin_yx``, ``source_shape_yx``)
 locates a crop inside its source image and exists for ranks two and up.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence

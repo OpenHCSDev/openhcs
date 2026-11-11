@@ -3,8 +3,8 @@
 Reference: "Self-Supervised Single-Image Deconvolution with Siamese Neural
 Networks", https://arxiv.org/abs/2308.09426.
 """
-
 from __future__ import annotations
+
 
 import logging
 from dataclasses import dataclass

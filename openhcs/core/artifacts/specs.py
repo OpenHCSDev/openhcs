@@ -3,8 +3,8 @@
 An ``ArtifactSpec`` is one declared artifact term. Its enclosing declaration
 binds its plan role (input or output); the compiler turns it into a plan.
 """
-
 from __future__ import annotations
+
 
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence

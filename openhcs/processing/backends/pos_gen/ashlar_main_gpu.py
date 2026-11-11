@@ -5,8 +5,8 @@ Array-based EdgeAligner implementation that works directly with CuPy arrays
 instead of file-based readers. This is the complete Ashlar algorithm modified
 to accept arrays directly and run on GPU.
 """
-
 from __future__ import annotations
+
 
 import logging
 import sys

@@ -4,8 +4,8 @@ Artifacts are named, non-primary-image values produced or consumed by function
 invocations. This module owns what a payload is independently of its kind: its
 generic shape, its declared name, and the materialization metadata it may carry.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping

@@ -4,8 +4,8 @@ A document covers either the selected datasets (applying it upserts them and
 leaves the rest alone) or all of them (applying it makes the dataset list
 exactly the document's). Each scope is one :class:`DatasetDocumentScope`.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

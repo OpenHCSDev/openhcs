@@ -5,8 +5,8 @@ a list chain, or a dict keyed by component/group. The runtime already treats
 each enabled callable position as the effective execution unit; this module
 gives that unit a named identity for compile-time planning and runtime lookup.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence

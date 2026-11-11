@@ -5,8 +5,8 @@ Implements clean abstraction with internal library-specific logic.
 All scikit-image-specific details (array compliance, channel_axis, etc.)
 are handled internally without leaking into the ABC.
 """
-
 from __future__ import annotations
+
 
 from typing import Any, List, Tuple
 

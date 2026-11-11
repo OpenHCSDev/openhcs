@@ -5,8 +5,8 @@ This module provides comprehensive axon analysis using the skan library,
 including segmentation, skeletonization, and quantitative skeleton analysis.
 Supports both 2D and 3D analysis modes with multiple output formats.
 """
-
 from __future__ import annotations
+
 
 import numpy as np
 import pandas as pd

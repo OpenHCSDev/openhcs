@@ -3,8 +3,8 @@
 These are intentionally small: they make analysis modules read declaratively
 without repeating JsonOptions/CsvOptions boilerplate.
 """
-
 from __future__ import annotations
+
 
 from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from typing import Any, Callable, Dict, List, Optional

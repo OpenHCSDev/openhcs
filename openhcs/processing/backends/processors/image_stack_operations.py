@@ -9,8 +9,8 @@ differs per backend stay in that backend's module.
 Functions taking ``xp``-style calls through ``ops.array_module`` are used only
 by the NumPy-compatible libraries (NumPy, CuPy).
 """
-
 from __future__ import annotations
+
 
 from abc import abstractmethod
 from collections.abc import Sequence

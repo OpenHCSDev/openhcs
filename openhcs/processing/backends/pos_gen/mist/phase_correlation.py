@@ -3,8 +3,8 @@ Phase Correlation Functions for MIST Algorithm
 
 GPU-accelerated phase correlation with subpixel accuracy.
 """
-
 from __future__ import annotations
+
 
 from typing import TYPE_CHECKING, List, Tuple
 

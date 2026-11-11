@@ -3,8 +3,8 @@
 OpenHCS reads its own pipeline documents (``.py``); a domain registers other
 formats from its extension modules (CellProfiler registers ``.cppipe``).
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from pathlib import Path
