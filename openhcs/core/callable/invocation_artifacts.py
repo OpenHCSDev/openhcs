@@ -129,7 +129,7 @@ class ArtifactDeclarationStepContext:
                 spec for spec in declared_sources if spec.ref() in primary_source_refs
             )
             if not main_flow_artifacts:
-                from openhcs.core.pipeline.artifact_planning import ArtifactProducer
+                from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
 
                 main_flow_artifacts = ArtifactSpecCollection((PIPELINE_INPUT_ARTIFACT,))
                 declared_sources = declared_sources.rebind(main_flow_artifacts.specs)
