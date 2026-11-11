@@ -1,3 +1,4 @@
+import dataclasses
 """Plate inspection DTOs for the headless OpenHCS agent API."""
 
 from __future__ import annotations
@@ -391,20 +392,7 @@ class PlateImageSampleRequest(DatasetTarget):
         )
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
-        return {
-            "plate_path": self.plate_path,
-            "image_path": self.image_path,
-            "source_format": self.source_format,
-            "pattern_format": self.pattern_format,
-            "y": self.y,
-            "x": self.x,
-            "height": self.height,
-            "width": self.width,
-            "resolution_index": self.resolution_index,
-            "max_auto_resolution_size": self.max_auto_resolution_size,
-            "include_array_values": self.include_array_values,
-            "max_array_elements": self.max_array_elements,
-        }
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True)

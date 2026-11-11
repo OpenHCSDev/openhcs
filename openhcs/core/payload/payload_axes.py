@@ -1,3 +1,4 @@
+import dataclasses
 """Declared dimensions of a tensor payload.
 
 A payload's array has one :class:`AxisSpec` per dimension. Most dimensions are
@@ -47,7 +48,7 @@ class AxisSpec(ABC, metaclass=AutoRegisterMeta):
         return any(issubclass(declared, role) for declared in self.roles)
 
     def to_mapping(self) -> dict[str, Any]:
-        return {"kind": self.spec_kind}
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "AxisSpec":
