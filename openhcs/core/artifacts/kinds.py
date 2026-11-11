@@ -41,7 +41,6 @@ from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
 
-_registered_OpenHCSPlaneAddress = None
 _registered_RuntimeArtifactLocation = None
 _registered_StoredRuntimeValue = None
 
@@ -899,7 +898,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
-        OpenHCSPlaneAddress = _registered_OpenHCSPlaneAddress
+        from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
             return records
@@ -1363,15 +1362,11 @@ class ObjectLineageArtifactType(NominalPayloadKind, ArtifactType):
 
     value = "object_lineage"
     payload_shape = TablePayloadShape
-    _registered_payload_type: type | None = None
-
     @classmethod
     def runtime_payload_type(cls) -> type:
-        assert cls._registered_payload_type is not None, (
-            "ObjectLineageArtifactType payload type not registered; "
-            "openhcs.core.object_labels.runtime_relationships must be imported first."
-        )
-        return cls._registered_payload_type
+        from openhcs.core.object_labels.runtime_relationships import ObjectRelationship
+
+        return ObjectRelationship
 
     @classmethod
     def compose_runtime_values(

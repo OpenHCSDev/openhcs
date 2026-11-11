@@ -155,6 +155,3 @@ class SourceImageObjectLabelBuildRequest:
                 f"domain: {tuple(label_array.shape[-2:])!r} != {tuple(source_shape_yx)!r}."
             )
         return projection
-
-
-runtime_image_values._registered_SourceImageObjectLabelBuildRequest = SourceImageObjectLabelBuildRequest
