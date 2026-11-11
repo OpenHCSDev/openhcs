@@ -59,6 +59,7 @@ from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.callable.variable_component_stack_requirement import AlwaysRequiresVariableComponentStack, SemanticControlVariableComponentStackRequirement
 from openhcs.core.callable.callable_contract import CallableDeclaration
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 
 
@@ -1325,8 +1326,6 @@ class LibraryContractCall(ContractCall):
 
     def _consumes_full_label_stack(self, kwargs: Mapping[str, Any]) -> bool:
         """Whether the callable measures labels over their whole stack."""
-
-        from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 
         try:
             namespace = vars(self.func)

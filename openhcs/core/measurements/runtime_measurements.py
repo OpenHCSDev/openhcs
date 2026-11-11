@@ -35,6 +35,7 @@ from openhcs.core.source.source_spatial_domain import (
 )
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 from openhcs.core.measurements.measurement_declarations import MeasurementScope, RuntimeMeasurementFeatureRelation, RuntimeMeasurementFeatureRelationDeclaration, RuntimeMeasurementFeatureSemanticMarker
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
 
 @dataclass(slots=True, kw_only=True)
@@ -1151,8 +1152,6 @@ class MeasurementSubject:
         """Return the concrete source image represented by this subject, if any."""
         if self.scope is not MeasurementScope.SAMPLE or self.name is None:
             return None
-        from openhcs.core.measurements.measurement_dialect import MeasurementDialect
-
         if normalize_runtime_identifier(self.name) in (
             MeasurementDialect.unqualified_sample_names()
         ):

@@ -38,6 +38,7 @@ from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
 from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, join_measurement_tables, join_measurement_tables_artifact, measurement_rows_with_source_provenance
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
 
 _registered_OpenHCSPlaneAddress = None
@@ -74,8 +75,6 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def accepts_parameter_annotation(cls, annotation: object) -> bool:
         """Return whether an annotation accepts this artifact's runtime payload."""
-
-        from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
         return any(
             annotation_accepts_runtime_type(annotation, runtime_type)

@@ -17,6 +17,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 from openhcs.core.axes.axis_declarations import Ungrouped, is_grouping_declaration
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
 
 _ClaimValue = TypeVar("_ClaimValue")
 
@@ -127,8 +128,6 @@ class ArtifactDeclarationStepContext:
                 spec for spec in declared_sources if spec.ref() in primary_source_refs
             )
             if not main_flow_artifacts:
-                from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
-
                 main_flow_artifacts = ArtifactSpecCollection((PIPELINE_INPUT_ARTIFACT,))
                 declared_sources = declared_sources.rebind(main_flow_artifacts.specs)
                 source_producers = (
