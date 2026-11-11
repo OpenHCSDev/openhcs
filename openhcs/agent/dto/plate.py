@@ -225,7 +225,7 @@ class DatasetTarget:
 
     @property
     def detects_source_format(self) -> bool:
-        return DatasetSourceChoice.named(self.source_format) is AutoDetectedSource
+        return DatasetSourceChoice.named(self.source_format).auto_detected
 
 
 @dataclass(frozen=True, slots=True)
