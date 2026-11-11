@@ -17,11 +17,6 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
-    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
 
 
 HookObservations = Mapping[str, object]
