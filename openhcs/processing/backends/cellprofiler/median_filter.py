@@ -10,16 +10,16 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
@@ -36,10 +36,10 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
 )
 from openhcs.processing.backends.processors.method_axes import ScipyBoundaryMode
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class MedianFilterModule(CellProfilerModule):

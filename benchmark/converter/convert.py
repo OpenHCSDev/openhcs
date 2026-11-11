@@ -8,7 +8,7 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
 logger = logging.getLogger(__name__)

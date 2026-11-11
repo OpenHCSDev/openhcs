@@ -1,8 +1,8 @@
 """Synthetic public RescaleIntensity declaration -> producer -> native binding."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -11,18 +11,18 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.steps.function_outputs import StreamOutputBatch
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.stream_component_semantics import StreamImagePayloadMetadataProjector

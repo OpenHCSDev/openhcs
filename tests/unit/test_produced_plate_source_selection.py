@@ -7,7 +7,7 @@ import sys
 import pytest
 from objectstate import DataclassFieldAccess
 
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.dataset_sources.source import (
     DatasetSource,
     FormatSpecificSource,
@@ -62,9 +62,9 @@ def test_execution_wire_facts_remain_independent_of_runtime_discovery():
             sys.executable,
             "-c",
             (
-                "import json,sys; import openhcs.core.execution_state; "
+                "import json,sys; import openhcs.core.execution.execution_state; "
                 "print(json.dumps([name in sys.modules for name in "
-                "('openhcs.core.config','openhcs.microscopes')]))"
+                "('openhcs.core.config.pipeline_config','openhcs.microscopes')]))"
             ),
         ],
         check=True,

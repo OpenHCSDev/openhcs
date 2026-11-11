@@ -30,7 +30,7 @@ from scipy.ndimage import distance_transform_edt
 from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevStdioSession, McpDevToolResult
 from python_introspect import to_jsonable
 from openhcs.core.artifacts import ImageArtifactType
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
 from benchmark.cellprofiler_reference_exports import CellProfilerReferenceExportArtifact, CellProfilerReferenceArtifactComparison
 roots=(original.PRIOR/'outputs',original.IPO_PRIOR/'outputs',original.OUTPUT/'outputs')
 def inventory(): return {str(p):sha(p) for root in roots for p in sorted(root.rglob('*')) if p.is_file()}

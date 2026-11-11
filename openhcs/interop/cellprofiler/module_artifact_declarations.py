@@ -39,15 +39,15 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableProjection,
     CallableContract,
     ImagePayloadConsumption,
 )
-from openhcs.core.config import StepSourceBindingsConfig, SourceBindingsConfig
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.runtime_measurements import (
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig, SourceBindingsConfig
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     RuntimeMeasurementFeature,
 )
@@ -70,12 +70,12 @@ if TYPE_CHECKING:
     )
     from collections.abc import Callable
 
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.runtime_tabular_values import ColumnarRows
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_tabular_values import ColumnarRows
     from openhcs.core.steps.function_runtime import (
         RuntimeCallableKwargs,
         RuntimeFunctionOutput,
@@ -388,13 +388,13 @@ class ObjectArtifactOutputModule(
         request: "CellProfilerOutputRecordRequest",
     ) -> "ColumnarRows":
         """Emit canonical count and location rows for declared object outputs."""
-        from openhcs.core.measurement_row_materialization import (
+        from openhcs.core.measurements.measurement_row_materialization import (
             ConcatenatedColumnarRows,
             MeasurementProjectedColumnarRows,
             MeasurementRowsAxisProjection,
         )
-        from openhcs.core.runtime_measurements import MeasurementRowAxisField
-        from openhcs.core.runtime_tabular_values import FieldSpec
+        from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+        from openhcs.core.payload.runtime_tabular_values import FieldSpec
         from openhcs.interop.cellprofiler.measurement_lookup import (
             ObjectCountFeatureName,
         )
@@ -445,7 +445,7 @@ class ObjectArtifactOutputModule(
         rows: "ColumnarRows",
     ) -> "ColumnarRows":
         """Object outputs derive measurements from labels, not backend summaries."""
-        from openhcs.core.measurement_row_materialization import (
+        from openhcs.core.measurements.measurement_row_materialization import (
             MeasurementSparseColumnarRows,
         )
 
@@ -547,7 +547,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
     ) -> tuple[frozenset[ArtifactSpecRef], frozenset[ArtifactSpecRef]]:
         """Return object and source refs constraining one selected feature."""
 
-        from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
+        from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
         from openhcs.interop.cellprofiler.measurement_dialect import (
             CELLPROFILER_MEASUREMENT_DIALECT,
         )
@@ -888,13 +888,13 @@ class SourceQualifiedWideMeasurementRowsModule(
         """Project wide raw fields to exact source-qualified CP features."""
         from types import MappingProxyType
 
-        from openhcs.core.measurement_row_materialization import (
+        from openhcs.core.measurements.measurement_row_materialization import (
             MeasurementProjectedColumnarRows,
             is_structural_missing_measurement_cell,
             wide_measurement_feature_columns,
         )
-        from openhcs.core.runtime_measurements import MeasurementRowAxisField
-        from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
+        from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+        from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
 
         if not isinstance(rows, ColumnarRows):
             raise TypeError(
@@ -1036,7 +1036,7 @@ class ParentChildLineageArtifactOutputModule(
         """Relationship rows replace the internal relationship summary carrier."""
 
         del rows
-        from openhcs.core.measurement_row_materialization import (
+        from openhcs.core.measurements.measurement_row_materialization import (
             MeasurementSparseColumnarRows,
         )
 

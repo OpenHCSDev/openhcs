@@ -9,16 +9,16 @@ import tifffile
 from objectstate.lazy_factory import ensure_global_config_context
 from polystore.bioformats_java import BioFormatsJavaContext
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
     SourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.source import AutoDetectedSource
-from openhcs.core.image_file_serialization import TiffImageFileFormat
+from openhcs.core.payload.image_file_serialization import TiffImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ImagePlaneSource,
     MetadataSelector,
     NamedSourceBinding,
@@ -28,7 +28,7 @@ from openhcs.core.source_bindings import (
     TextContains,
     TextEquals,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsJavaAdapter
 from tests.unit.bioformats_fixture import bioformats_filemanager

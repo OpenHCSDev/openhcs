@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.debug import DebugExecutionConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.debug.debug_runtime import DebugExecutionConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,

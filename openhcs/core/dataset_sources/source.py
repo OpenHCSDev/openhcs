@@ -23,22 +23,22 @@ from polystore.virtual_workspace import SourcePixelRef
 from python_introspect import AnnotationChoices
 
 from openhcs.constants.constants import Backend
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.source_path_identity import absolute_source_path
+from openhcs.core.source.source_path_identity import absolute_source_path
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     MetadataHandler,
     FilenameParserCapability,
 )
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from openhcs.core.config import PipelineConfig
-    from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
-    from openhcs.core.config import SourceBindingsConfig
+    from openhcs.core.config.pipeline_config import PipelineConfig
+    from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
+    from openhcs.core.config.pipeline_config import SourceBindingsConfig
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +203,7 @@ class DatasetSourceChoice(ABC):
         """Construct the selected source bound to ``root``."""
 
         from openhcs.core.dataset_sources.source import DeclaredFileSource
-        from openhcs.core.config import source_bindings_defaults_to_base
+        from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
 
         root = Path(root)
         source_bindings = (

@@ -39,12 +39,12 @@ class LiveOwners:
         import inspect
         import typing
 
-        import openhcs.core.config  # noqa: F401  (declares the config family)
+        import openhcs.core.config.pipeline_config  # noqa: F401  (declares the config family)
         from objectstate.lazy_factory import (
             LazyDataclassFactory,
             is_global_config_type,
         )
-        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
         from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 
         def dataclasses_in(annotation: object):

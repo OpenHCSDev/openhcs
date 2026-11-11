@@ -11,27 +11,27 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
-from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy

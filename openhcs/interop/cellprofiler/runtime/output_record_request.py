@@ -1,7 +1,7 @@
 """Output-record request authority for CellProfiler runtime artifacts."""
 
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -14,14 +14,14 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_plane_alignment import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,

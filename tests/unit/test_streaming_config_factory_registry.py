@@ -2,8 +2,8 @@
 
 import pytest
 
-from openhcs.core.config import StreamingConfig
-from openhcs.core.streaming_config_declarations import (
+from openhcs.core.config.pipeline_config import StreamingConfig
+from openhcs.core.config.streaming_config_declarations import (
     NapariViewer,
     ViewerFamily,
     ViewerType,

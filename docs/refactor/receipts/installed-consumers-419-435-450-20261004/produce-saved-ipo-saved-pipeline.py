@@ -7,7 +7,7 @@ from openhcs.constants.constants import (
     VariableComponents,
 )
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyAnalysisConsolidationConfig,
     LazyCompilationDebugConfig,
     LazyDtypeConfig,
@@ -29,20 +29,20 @@ from openhcs.core.config import (
     MultiprocessingStartMethod,
     PipelineConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceVoxelSpacing,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,

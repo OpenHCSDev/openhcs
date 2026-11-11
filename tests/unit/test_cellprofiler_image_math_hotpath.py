@@ -5,8 +5,8 @@ from collections.abc import Callable
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.aligned_image_payload import ImagePayloadBundleContext
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation,
     ImageMathOperationStrategy,

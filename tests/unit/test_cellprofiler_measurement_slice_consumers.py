@@ -7,20 +7,20 @@ from dataclasses import replace
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -29,7 +29,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (

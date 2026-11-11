@@ -14,13 +14,13 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionPattern,
     FunctionPatternSyntax,
     InvocationArtifactInputEdgePlan,
@@ -29,8 +29,8 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
     InvocationContractProvider,
@@ -45,9 +45,9 @@ from openhcs.core.pipeline.function_contracts import (
     require_variable_component_stack,
     required_axis_roles,
 )
-from openhcs.core.config import LazyProcessingConfig
+from openhcs.core.config.pipeline_config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
@@ -59,7 +59,7 @@ from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     ColourAxis,
     GroupingDeclaration,

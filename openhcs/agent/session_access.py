@@ -6,7 +6,7 @@ from pathlib import Path
 
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.authoring.session.session import DatasetAccess
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
 
 
 class AgentPathDatasetAccess(DatasetAccess):

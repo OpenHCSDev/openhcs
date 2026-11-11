@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config_cache import ConfigCacheSpec
+from openhcs.core.config.config_cache import ConfigCacheSpec
 from openhcs.pyqt_gui import config as config_module
 from openhcs.pyqt_gui.config import (
     AgentUiBridgeConfig,

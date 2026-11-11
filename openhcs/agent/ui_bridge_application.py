@@ -40,7 +40,7 @@ class OpenHCSUiBridgeApplication(UiBridgeApplication):
 
     @classmethod
     def log_file_path(cls) -> str | None:
-        from openhcs.core.log_utils import get_current_log_file_path
+        from openhcs.core.util.log_utils import get_current_log_file_path
 
         return get_current_log_file_path()
 

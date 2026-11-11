@@ -4,8 +4,8 @@ The renderer, disk TIFF writer and wire builder are real. Only the final viewer
 transport is intercepted; no viewer or native process is started.
 """
 
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -16,21 +16,21 @@ from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticObjectLabelsArtifactOutputMaterializationStrategy,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
     RequiredSourceComponentMetadata,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder,
     NapariStreamLayerAddress,

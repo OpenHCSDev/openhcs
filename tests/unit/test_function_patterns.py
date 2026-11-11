@@ -24,15 +24,15 @@ from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
     GroupLineageSourceRelation,
 )
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config.pipeline_config import DtypeConfig
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_patterns import (
     MainFlowInputProjection,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
@@ -52,11 +52,11 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
 )
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.runtime_object_labels import ObjectLabelValue
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.materialization.presets import csv_only
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -992,7 +992,7 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     compiled = compile_function_pattern(admitted_graph(consume), {}, {})
 
     assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan()) == ()
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
     from openhcs.core.pipeline.framework_device_assignment import (
         assign_framework_devices,
     )

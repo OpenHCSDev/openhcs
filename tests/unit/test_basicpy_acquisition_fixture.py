@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 # Initialize OpenHCS's existing metadata configuration before PolyStore.

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 import openhcs
-from openhcs.core.config import StreamingConfig
+from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.processing.backends.cellprofiler.maxima import (
     ExcludeMode,
     MaximaInputStrategy,
@@ -121,8 +121,8 @@ def test_streaming_config_registry_holds_the_declared_lazy_replacement() -> None
 def test_two_axis_families_may_each_declare_the_same_axis_name() -> None:
     from python_introspect import to_jsonable
 
-    import openhcs.core.axis_boundaries  # noqa: F401  (registers the name encoder)
-    from openhcs.core.axes import (
+    import openhcs.core.axes.axis_boundaries  # noqa: F401  (registers the name encoder)
+    from openhcs.core.axes.axis_declarations import (
         Axis,
         AxisFamily,
         GroupingDeclaration,

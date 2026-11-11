@@ -1,7 +1,7 @@
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     FromFileName,
     FromPipelineStart,
     ImagePlaneSource,
@@ -14,13 +14,13 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextContains,
 )
-from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
-from openhcs.core.source_bindings_preview import (
+from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
+from openhcs.core.source.source_bindings_preview import (
     SourceBindingDiagnosticSeverity,
     SourceBindingsPreview,
     SourceInventory,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )

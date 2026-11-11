@@ -32,7 +32,7 @@ from benchmark.cellprofiler_reference_exports import (
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import Backend
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     MaterializeToDisk,
@@ -42,14 +42,14 @@ from openhcs.core.config import (
     PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.config_document import ConfigDocumentCodec
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.function_step_transport import PipelineStepsDocument
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.config.config_document import ConfigDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.function_step_transport import PipelineStepsDocument
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
 )
-from openhcs.core.runtime_exports import (
+from openhcs.core.runtime_store.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
 )

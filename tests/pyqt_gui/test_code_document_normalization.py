@@ -4,8 +4,8 @@ from types import FunctionType
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.pipeline_document import PipelineDocument
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocument
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.services.code_document_normalization import (
     CodeDocumentNormalizationStrategy,

@@ -12,32 +12,32 @@ from openhcs.constants.constants import (
     LOADABLE_IMAGE_EXTENSIONS,
     Backend,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.runtime_stores import RuntimeArtifactInput
-from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
-from openhcs.core.callable_contract import ImagePayloadConsumption
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
+from openhcs.core.callable.callable_contract import ImagePayloadConsumption
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     FunctionGroupKey,
     GroupedPatternMap,
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
-from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
-from openhcs.core.source_binding_selection import (
+from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
+from openhcs.core.source.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
     SourceCandidatePath,
     SourcePatternResolutionContext,
 )
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import PipelineStartInput
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.util.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,
     get_all_image_paths,

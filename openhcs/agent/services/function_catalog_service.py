@@ -62,13 +62,13 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.setting_names import setting_names
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 
 if TYPE_CHECKING:
-    from openhcs.core.function_reference import FunctionReference
+    from openhcs.core.callable.function_reference import FunctionReference
 
 MAX_FUNCTION_DETAIL_DOC_CHARS = 50000
 
@@ -511,7 +511,7 @@ class ParameterDocumentationPolicy:
     def agent_parameter_names(
         self, func: Callable, contract: CallableContract | None = None
     ) -> tuple[str, ...]:
-        from openhcs.core.invocation_artifacts import (
+        from openhcs.core.callable.invocation_artifacts import (
             PipelineInvocationContractProviderAuthority,
         )
 
@@ -1088,7 +1088,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
     def reference(self, function_id: str) -> "FunctionReference":
         """Return the exact compiler reference owned by one catalog declaration."""
 
-        from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+        from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 
         return FunctionReferenceTransportAuthority.function_reference(
             self._metadata(function_id).func

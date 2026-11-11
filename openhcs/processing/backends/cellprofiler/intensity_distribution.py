@@ -20,7 +20,7 @@ import numpy as np
 import scipy.sparse
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
@@ -30,45 +30,45 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable_contract import KeywordRuntimeParameter
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import enum_member_with_payload
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     project_image_mask_to_data_domain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
     RuntimeMeasurementIndexedDescriptorDeclaration,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     dense_object_label_id_domain,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimeSliceIndexedValue,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
@@ -87,7 +87,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
@@ -98,7 +98,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryPropagationBackendStrategy,
     secondary_propagation_backend,
@@ -138,9 +138,9 @@ from openhcs.processing.backends.cellprofiler.zernike import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )

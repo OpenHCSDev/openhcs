@@ -11,8 +11,8 @@ import textwrap
 
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.processing_preparation import CallablePreparation
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.processing_preparation import CallablePreparation
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
 
@@ -53,7 +53,7 @@ def test_raw_callable_reference_construction_does_not_discover_other_modules() -
             if module_name.startswith(prefix)
         }
 
-        from openhcs.core.function_reference import (
+        from openhcs.core.callable.function_reference import (
             FunctionReferenceTransportAuthority,
         )
 
@@ -86,8 +86,8 @@ def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> No
         import importlib
         import sys
 
-        from openhcs.core.callable_contract import CallableImportIdentity
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.callable_contract import CallableImportIdentity
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
         module_name = "openhcs.processing.backends.cellprofiler.crop"
@@ -124,9 +124,9 @@ def test_experiment_measurements_use_recorded_owner_without_catalog_discovery() 
     script = textwrap.dedent("""
         import sys
 
-        from openhcs.core.measurement_row_materialization import MeasurementProjectedColumnarRows
-        from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
-        from openhcs.core.runtime_tabular_values import FieldSpec
+        from openhcs.core.measurements.measurement_row_materialization import MeasurementProjectedColumnarRows
+        from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
+        from openhcs.core.payload.runtime_tabular_values import FieldSpec
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.processing.backends.cellprofiler.image_quality import MeasureImageQualityModule
 

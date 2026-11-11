@@ -1,6 +1,6 @@
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import json
 from pathlib import Path
 from functools import partial
@@ -44,21 +44,21 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 import openhcs  # noqa: F401
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
@@ -67,35 +67,35 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
     ObjectLabelSet,
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.source_image_provenance import (
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectionPlaneMetadata
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
     SourceVoxelSpacing,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, JsonOptions, NameByArtifactName, NameBySourceIdentity, PointROIOptions, ROIOptions, TiffStackOptions
 from openhcs.core.materialization.core import MaterializationSpec, materialize, materialization_outputs, tabular_field_names_from_materialization
@@ -112,10 +112,10 @@ from openhcs.core.materialization.core import (
     RuntimePlaneStackAxesProjectionSelection,
     ViewerStreamBackendCallKwargs,
 )
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 
@@ -2546,15 +2546,15 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     tmp_path, intrinsic
 ):
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-    from openhcs.core.image_file_serialization import TiffImageFileFormat
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-    from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
-    from openhcs.core.source_workspace_projection import (
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.payload.image_file_serialization import TiffImageFileFormat
+    from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.source.source_projection import SourceArtifactProjection, SourcePixelRef
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source.source_workspace_projection import (
         VirtualWorkspaceImagePayloadProjection,
     )
-    from openhcs.core.virtual_workspace_metadata import (
+    from openhcs.core.io.virtual_workspace_metadata import (
         VirtualWorkspaceSourceProjectionEntries,
     )
     from openhcs.core.materialization.core import prepare_materialization

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.runtime_object_labels import ObjectLabelVariant
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariant
 
 
 class UneditedLabels(ObjectLabelVariant):

@@ -11,23 +11,23 @@ from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING
 import numpy as np
-from openhcs.core.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
@@ -82,7 +82,7 @@ from openhcs.core.pipeline.function_contracts import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 
@@ -674,10 +674,10 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
-from openhcs.core.axes import StackAxis
-from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.axes.axis_declarations import StackAxis
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy as numpy_decorator
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
@@ -686,12 +686,12 @@ from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
     equal_value_components_numba,
 )
-from openhcs.core.image_shapes import (
+from openhcs.core.payload.image_shapes import (
     apply_over_trailing_spatial_axes,
     trailing_spatial_factors,
     trailing_spatial_target_shape,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     DenseObjectLabelConsecutiveRelabelingStrategy,
     ExplicitObjectLabelDomainDeclaration,
     ObjectLabelDomain,
@@ -703,13 +703,13 @@ from openhcs.core.runtime_relationships import (
     object_label_identity_lineage_payload,
     object_label_parent_child_payload,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     object_label_value_with_dense_labels,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
@@ -742,12 +742,12 @@ from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
 from arraybridge import SliceBySliceRuntimeParameter
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 HolePredicate = Callable[[int, bool], bool]
 ConnectivityStructureBuilder = Callable[[int], np.ndarray]

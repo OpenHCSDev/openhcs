@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.cellprofiler.illumination import (
@@ -59,7 +59,7 @@ def test_pycodified_public_cp_pipeline_reconstructs_in_fresh_process(
     source_path.write_text(source, encoding="utf-8")
     script = (
         "from pathlib import Path\n"
-        "from openhcs.core.function_step_transport import "
+        "from openhcs.core.callable.function_step_transport import "
         "FunctionStepTransportAuthority\n"
         f"source = Path({str(source_path)!r}).read_text(encoding='utf-8')\n"
         "namespace = {}\n"

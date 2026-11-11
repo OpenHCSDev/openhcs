@@ -18,11 +18,11 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_matching import merge_source_metadata
-from openhcs.core.source_path_identity import absolute_source_path
-from openhcs.core.source_metadata import SourceMetadataMapping
-from openhcs.core.source_projection import (
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_matching import merge_source_metadata
+from openhcs.core.source.source_path_identity import absolute_source_path
+from openhcs.core.source.source_metadata import SourceMetadataMapping
+from openhcs.core.source.source_projection import (
     SourceCandidate,
     SourceDatasetConflictError,
     SourcePlaneDataset,

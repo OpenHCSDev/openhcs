@@ -24,7 +24,7 @@ from enum import Enum
 from typing import Optional
 
 # Import JAX modules as optional dependencies
-from openhcs.core.lazy_gpu_imports import jax
+from openhcs.core.util.lazy_gpu_imports import jax
 from openhcs.core.memory import jax as jax_func
 from openhcs.utils.import_utils import optional_import_or_none
 

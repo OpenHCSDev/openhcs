@@ -13,7 +13,7 @@ from objectstate import (
     set_live_global_config,
     set_saved_global_config,
 )
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from pyqt_reactive.windows.config_window import (
     ConfigEditSession,
     ConfigSaveParticipant,

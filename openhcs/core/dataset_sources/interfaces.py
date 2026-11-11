@@ -14,7 +14,7 @@ from openhcs.core.components.parser_metaprogramming import (
     GenericFilenameParser,
 )
 from openhcs.core.components.component_values import AxisValues
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceMetadataValue,
     SourceVoxelSpacing,
     source_metadata_dict,
@@ -27,12 +27,12 @@ from polystore.streaming.viewer_transport import (
 )
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 
 if TYPE_CHECKING:
-    from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
-    from openhcs.core.source_workspace_projection import (
+    from openhcs.core.source.source_projection import SourcePlaneDataset, SourceProjection
+    from openhcs.core.source.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
@@ -159,7 +159,7 @@ class AnalysisResultDirectory:
         """Resolve a file through the source bindings this directory's metadata declares."""
         if self.source_projection is None:
             return None
-        from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+        from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
 
         return self.source_projection.source_projection_for(
             VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)

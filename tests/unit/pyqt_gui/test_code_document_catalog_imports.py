@@ -13,19 +13,19 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogServiceABC,
     UnknownFunctionIdError,
 )
-from openhcs.core.callable_contract import CallableImportIdentity, CallableDeclaration
-from openhcs.core.config import LazyDtypeConfig
-from openhcs.core.function_reference import (
+from openhcs.core.callable.callable_contract import CallableImportIdentity, CallableDeclaration
+from openhcs.core.config.pipeline_config import LazyDtypeConfig
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     RegistryFunctionReference,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
@@ -70,7 +70,7 @@ def source(imports="from skimage.filters.edges import sobel", name="sobel"):
     return (
         f"{imports}\n"
         "from openhcs.core.steps.function_step import FunctionStep\n"
-        "from openhcs.core.config import GlobalPipelineConfig, PipelineConfig\n"
+        "from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig\n"
         "plate_paths = ['/tmp/plate']\n"
         "global_config = GlobalPipelineConfig()\n"
         "per_plate_configs = {'/tmp/plate': PipelineConfig()}\n"

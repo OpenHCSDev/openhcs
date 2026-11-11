@@ -42,7 +42,7 @@ from benchmark.well_throughput_scaling import (
     well_throughput_start_method_from_manifest,
     write_well_throughput_csv,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     MultiprocessingStartMethod,
     PipelineConfig,
     PartitionFilterConfig,
@@ -50,12 +50,12 @@ from openhcs.core.config import (
 from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourcePlaneProjection,
     SourceProjectionMetadataSerializer,
 )
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     FIELDS,
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,

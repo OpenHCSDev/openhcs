@@ -12,10 +12,10 @@ from typing import ClassVar, Self
 import numpy as np
 
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
@@ -23,9 +23,9 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
@@ -52,7 +52,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     coerce_cellprofiler_enum,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (

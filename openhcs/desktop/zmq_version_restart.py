@@ -9,7 +9,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.execution.execution_state import ManagerExecutionState
 from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import DesktopUpdateError
 

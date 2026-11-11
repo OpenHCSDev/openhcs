@@ -6,10 +6,10 @@ No point producer/materialization, native endpoint, compiler or Root-only graph.
 import pytest
 from polystore.roi import PointShape, ROI
 
-from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import (
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import (
     DeclaredSourceMetadata,
     SourceFilterPathMetadata,
     SourceVoxelSpacing,

@@ -18,26 +18,26 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_matching import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_matching import (
     SourceImageSetIdentityPolicy,
     with_declared_source_metadata,
 )

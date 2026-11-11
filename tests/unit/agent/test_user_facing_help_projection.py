@@ -19,8 +19,8 @@ from python_introspect import (
 from python_introspect.signature_analyzer import ParametersDocstringSection
 
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     count_cells_single_channel,
 )

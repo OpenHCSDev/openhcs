@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import is_enableable, to_jsonable
 
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     BroadcastSource,
     ComponentSelector,
     FromFileName,
@@ -37,7 +37,7 @@ from openhcs.core.source_bindings import (
     TextDoesNotContainRegex,
     TextEquals,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -46,12 +46,12 @@ from openhcs.core.config import (
     StepSourceBindingsConfig,
 )
 from openhcs.constants.constants import Backend
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.source_bindings_preview import SourceInventory
+from openhcs.core.source.source_bindings_preview import SourceInventory
 from formbridge.forms.raw_display_value import RawDisplayValue
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
     SourceBindingsEditorWidget,
@@ -103,7 +103,7 @@ from pyqt_reactive.widgets.shared.clickable_help_components import ProvenanceLab
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
 from pyqt_reactive.widgets.shared.scoped_table_widget import ScopedTableWidget
 from pyqt_reactive.widgets.shared.scope_color_utils import get_scope_color_scheme
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

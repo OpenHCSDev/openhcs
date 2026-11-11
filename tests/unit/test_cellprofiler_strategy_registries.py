@@ -1,11 +1,11 @@
 """Regression tests for JSON-safe CellProfiler compatibility registries."""
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     NaturalExecution,
 )
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 
 from openhcs.processing.backends.cellprofiler.alignment import AlignCropModeStrategy
@@ -32,8 +32,8 @@ from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperationStrategy,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import EMPTY_SOURCE_BINDINGS
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.grid import (
     DefineGridManualModule,
     IdentifyObjectsInGridModule,
@@ -58,10 +58,10 @@ from openhcs.processing.backends.cellprofiler.watershed import (
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )

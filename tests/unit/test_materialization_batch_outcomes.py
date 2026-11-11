@@ -13,9 +13,9 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.debug import NoOpDebugExecutionPolicy
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
     BundleExecutionResults,
@@ -30,7 +30,7 @@ from openhcs.core.orchestrator.worker_execution import (
     _execute_axis_with_sequential_combinations,
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.materialization.options import CsvOptions, JsonOptions

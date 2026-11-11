@@ -66,7 +66,7 @@ from openhcs.authoring.session.events import (
     SessionEvent,
 )
 from openhcs.authoring.session.session import DispatcherThread, Session
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from formbridge.contracts import AgentError
 from openhcs.authoring.session.operations.application import (
     CheckForUpdates,
@@ -596,7 +596,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self,
         ui_config: UIConfig | None = None,
     ) -> list[int]:
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
 
         config = self.runtime_context.ui_config if ui_config is None else ui_config
         zmq_config = config.zmq
@@ -1169,7 +1169,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         try:
             from objectstate.global_config import get_current_global_config
 
-            from openhcs.core.config import GlobalPipelineConfig
+            from openhcs.core.config.pipeline_config import GlobalPipelineConfig
             from openhcs.processing.backends.analysis.consolidate_analysis_results import (
                 consolidate_analysis_results,
             )

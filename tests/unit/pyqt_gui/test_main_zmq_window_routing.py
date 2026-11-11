@@ -19,7 +19,7 @@ from zmqruntime import EndpointConnectionCancelledError
 from zmqruntime.messages import PongResponse, ServerRole
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ManagerExecutionState,
 )
 from openhcs.pyqt_gui.main import OpenHCSMainWindow

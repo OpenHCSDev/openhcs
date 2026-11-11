@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING
 from enum import Enum
 from openhcs.core.memory import numpy
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
 from openhcs.interop.cellprofiler.setting_names import (
@@ -33,7 +33,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.module_settings import (
@@ -82,7 +82,7 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     filter_physical_border_objects_numba,
     manual_declumping_size,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.shape import shape_measurement_backend
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
@@ -91,10 +91,10 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.core.callable_contract import CallableProjection
+from openhcs.core.callable.callable_contract import CallableProjection
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock

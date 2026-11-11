@@ -23,17 +23,17 @@ from zmqruntime.messages import (
 )
 from zmqruntime.startup import EndpointStartupStatusCallback
 
-from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.config.config_document import ConfigDocumentCodec
 from openhcs.core.dataset_sources.discovery import discover_domain_registries
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
-from openhcs.core.runtime_execution_validation import runtime_output_roots
+from openhcs.core.runtime_store.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.import_authority import ImportRootEndpoint
@@ -517,7 +517,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         self,
         request_context: ZMQExecutionContext,
     ):
-        from openhcs.core.debug import DebugPausedWorkerRegistry
+        from openhcs.core.debug.debug_runtime import DebugPausedWorkerRegistry
 
         auxiliary_params = request_context.auxiliary_params
         environment = ZMQOrchestratorEnvironmentRequest(
@@ -696,7 +696,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         *,
         execution_bundle: CompiledExecutionBundle | None = None,
     ) -> list[str]:
-        from openhcs.core.axes import AxisFamily
+        from openhcs.core.axes.axis_declarations import AxisFamily
 
         if axis_filter is not None:
             return list(axis_filter)

@@ -2,7 +2,7 @@
 
 import re
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     ColourAxis,

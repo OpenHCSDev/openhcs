@@ -10,7 +10,7 @@ from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.config import ConfigPatch, ConfigSchemaRequest
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PathPlanningConfig,
     PipelineConfig,
@@ -18,7 +18,7 @@ from openhcs.core.config import (
     StreamingConfig,
 )
 from openhcs.core.dataset_sources.source import AutoDetectedSource
-from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_bindings import NamedSourceBinding
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import to_jsonable
 

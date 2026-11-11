@@ -14,7 +14,7 @@ from benchmark.cellprofiler_comparison import (
     _native_reference_location,
     load_comparison_cases,
 )
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from benchmark.equivalence.outputs import image_paths, table_paths
 
 FIELDNAMES = (

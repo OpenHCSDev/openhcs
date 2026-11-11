@@ -4,18 +4,18 @@ import pytest
 from openhcs.interop.cellprofiler.object_label_variants import (
     UneditedLabels,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayloadSourceSpatialDomainAdapter,
     ObjectLabelRepresentation,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.source_spatial_domain import (
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
     SourceSpatialDomainAdapter,

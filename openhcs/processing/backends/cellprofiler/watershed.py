@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Callable, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import public_names_from_objects, set_signature_analysis_target
-from openhcs.core.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
@@ -14,12 +14,12 @@ from openhcs.processing.backends.cellprofiler.morphology import MorphologyBacken
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
 )
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.callable_contract import (
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.callable.callable_contract import (
     attach_processing_prepare,
     callable_request,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -53,8 +53,8 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 
@@ -389,19 +389,19 @@ from abc import ABC, abstractmethod
 import numpy as np
 from numba import njit
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.image_shapes import trailing_spatial_factors
-from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.payload.image_shapes import trailing_spatial_factors
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
+from openhcs.core.object_labels.runtime_object_label_domains import (
     DenseObjectLabelConsecutiveRelabelingStrategy,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
@@ -419,7 +419,7 @@ from openhcs.processing.backends.cellprofiler.structuring_elements import (
     adapt_structuring_element_rank,
     build_structuring_element,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

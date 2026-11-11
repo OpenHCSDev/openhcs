@@ -6,7 +6,7 @@ from openhcs.core.progress.projection import (
     QueuedSubjectRuntimeState,
     CompilingSubjectRuntimeState,
 )
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionFailed,
 )
 from openhcs.authoring.session.dataset_status import (

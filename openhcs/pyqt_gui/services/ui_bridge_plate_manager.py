@@ -70,7 +70,7 @@ from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
     SessionOperationActionProvider,
 )
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionFailed,
 )
 

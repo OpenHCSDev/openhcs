@@ -13,7 +13,7 @@ from objectstate import abbreviation
 from python_introspect import AnnotatedDataclassValidationMixin, Enableable
 from zmqruntime.config import PositiveFloat
 
-from openhcs.core.config_sections import GlobalConfigSection
+from openhcs.core.config.config_sections import GlobalConfigSection
 
 
 class NormalizationMethod(Enum):

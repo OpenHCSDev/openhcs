@@ -133,12 +133,12 @@ def run_pipeline(work_dir: Path, fields: int, tile: int, runs: int) -> dict:
 
     import openhcs  # noqa: F401
     from objectstate.lazy_factory import ensure_global_config_context
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig, LazyPathPlanningConfig, LazyVFSConfig, MaterializeToDisk,
         PathPlanningConfig, PipelineConfig, VFSConfig,
     )
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
     from openhcs.microscopes.imagexpress import ImageXpressHandler

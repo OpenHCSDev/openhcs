@@ -9,14 +9,14 @@ from tests.unit.test_viewer_feature_measurement import native_route
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRequest
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import NapariViewerPayloadProjection
 from openhcs.runtime.viewer_controls import (
     ViewerImageSpatialSampleControls,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
 )
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 def _native_sample(*, rgb, y, x, height, width, limit=4096):

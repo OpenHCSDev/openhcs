@@ -6,9 +6,9 @@ from zmqruntime.viewer_protocol import (
     ViewerComponentMetadataPayload,
 )
 
-from openhcs.core.source_binding_workspace import PrimaryPlaneBindingProjection
-from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_binding_workspace import PrimaryPlaneBindingProjection
+from openhcs.core.source.source_bindings import ComponentSelector, NamedSourceBinding
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
     SourceProjectionSet,

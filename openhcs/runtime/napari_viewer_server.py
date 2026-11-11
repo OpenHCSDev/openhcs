@@ -6,7 +6,7 @@ visualization of tensors during pipeline execution.
 """
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import NoPlaneAxis, RuntimePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis, RuntimePlaneAxis
 
 import logging
 import os
@@ -70,7 +70,7 @@ from zmqruntime.viewer_protocol import (
     ViewerSourceSpatialDomainPayload,
 )
 
-from openhcs.core.axes import PartitionAxis, StackAxis
+from openhcs.core.axes.axis_declarations import PartitionAxis, StackAxis
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor, ViewerWindowLayerRetirementRequest,
 )
@@ -78,19 +78,19 @@ from openhcs.runtime.viewer_snapshot import (
     ViewerWindowSnapshotFailureReply,
     ViewerWindowSnapshotService,
 )
-from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.runtime.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.streaming_config_declarations import NapariViewer
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.streaming_config_declarations import NapariViewer
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.viewer_control_actions import (
     ViewerControlAction,
     ViewerServerPort,
@@ -195,8 +195,8 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 if TYPE_CHECKING:
     from openhcs.napari_roi_manager import QRoiManager

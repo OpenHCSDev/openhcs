@@ -1,7 +1,7 @@
 """CellProfiler runtime callable introspection behavior."""
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.function_step_transport import PipelineFunctionReferences
+from openhcs.core.callable.function_step_transport import PipelineFunctionReferences
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 import subprocess
@@ -11,24 +11,24 @@ from types import SimpleNamespace
 import pytest
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.sidecars import MaterializedImageCopy
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
-from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
+from openhcs.core.source.source_bindings import ComponentSelector, NamedSourceBinding
 from openhcs.core.steps.function_step import FunctionStep
 from objectstate.object_state import ObjectState
 from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -100,7 +100,7 @@ def _compiled_output_plans(provider, pattern, step_context):
 def test_public_cellprofiler_backend_import_registers_compile_time_contract_provider():
     """Plain public CP callables must be enough for compiler-time contract derivation."""
     script = """
-from openhcs.core.invocation_artifacts import InvocationContractProviderFactory
+from openhcs.core.callable.invocation_artifacts import InvocationContractProviderFactory
 from openhcs.processing.backends.cellprofiler import identify_primary_objects
 names = sorted(cls.__name__ for cls in InvocationContractProviderFactory.__registry__.values())
 assert "CellProfilerInvocationContractProviderFactory" in names, names

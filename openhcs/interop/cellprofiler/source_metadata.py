@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import cast
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_metadata import SourceMetadataScalar
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_metadata import SourceMetadataScalar
 
 _NO_STATIC_DEFAULT = object()
 

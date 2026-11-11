@@ -6,7 +6,7 @@ from typing import Optional
 
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.progress.projection import SubjectRuntimeProjection
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     TerminalExecutionStatus,
 )
 

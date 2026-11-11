@@ -163,7 +163,7 @@ def test_cpu_cell_counter_has_no_false_segmentation_output_toggle() -> None:
 
 
 def test_experimental_analysis_is_not_a_global_pipeline_config() -> None:
-    from openhcs.core.config_sections import GlobalConfigSection
+    from openhcs.core.config.config_sections import GlobalConfigSection
     from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
 
     assert not issubclass(ExperimentalAnalysisConfig, GlobalConfigSection)

@@ -10,7 +10,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

@@ -7,7 +7,7 @@ import asyncio
 import pytest
 
 from openhcs.authoring.session.execution_control import ExecutionControl
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionCancelled,
     ExecutionFailed,
     ManagerExecutionState,

@@ -3,7 +3,7 @@ from enum import Enum
 
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.measurement_scope import (
     CellProfilerMeasurementTargetScope,
 )
@@ -274,13 +274,13 @@ def test_combine_objects_binds_overlap_policy_nominally():
 def test_watershed_function_selection_follows_module_revision():
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         DEFAULT_GROUP_KEY,
         FunctionInvocationKey,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 
     legacy_module = ModuleBlock(
         name="Watershed",
@@ -1277,8 +1277,8 @@ def test_measure_image_quality_splits_exact_image_groups_and_preserves_blur_scal
 
 def test_measure_image_quality_rejects_empty_explicit_selector_at_contract_build():
     from openhcs.core.artifacts.specs import ArtifactSpecCollection
-    from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
     module = ModuleBlock(
         name="MeasureImageQuality",

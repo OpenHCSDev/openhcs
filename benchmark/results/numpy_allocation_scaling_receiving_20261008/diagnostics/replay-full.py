@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import os,sys,time,json,resource,ctypes,gc
 from pathlib import Path
 from multiprocessing import get_context
@@ -6,8 +6,8 @@ os.environ['OPENHCS_CPU_ONLY']='true'
 sys.path.insert(0,'/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
 import numpy as np
 from PIL import Image
-from openhcs.core.runtime_image_values import ImageMetadataPayload,ImagePayloadMetadata,image_payload_data
-from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload,ImagePayloadMetadata,image_payload_data
+from openhcs.core.payload.aligned_image_payload import ImagePayloadSliceStack
 from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
 from openhcs.processing.backends.cellprofiler.color import combine_color_to_gray
 from openhcs.processing.backends.cellprofiler.smoothing import smooth_image

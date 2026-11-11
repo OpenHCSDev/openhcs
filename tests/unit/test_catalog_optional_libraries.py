@@ -15,7 +15,7 @@ from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import MemoryType
-from openhcs.core import lazy_gpu_imports
+from openhcs.core.util import lazy_gpu_imports
 from openhcs.processing.backends.lib_registry import openhcs_registry
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]

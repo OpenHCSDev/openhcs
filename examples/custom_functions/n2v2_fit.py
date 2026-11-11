@@ -11,7 +11,7 @@ from pathlib import Path
 import torch
 
 from openhcs.core.memory import torch as torch_function
-from openhcs.core.vfs_protocol import PlateOutputFile
+from openhcs.core.payload.vfs_protocol import PlateOutputFile
 from openhcs.processing.backends.enhance.n2v2_processor_torch import (
     N2V2UNet,
     extract_patches_vectorized,

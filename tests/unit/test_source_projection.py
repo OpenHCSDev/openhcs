@@ -6,16 +6,16 @@ from pathlib import Path
 import pytest
 from polystore.bioformats_storage import BioFormatsPlaneRef
 
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     PrimaryPlaneRole,
     SourceArtifactRole,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     SourceMetadataFields,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePixelRef,
@@ -23,7 +23,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 _OWNED_PROJECTION_MODULES = (

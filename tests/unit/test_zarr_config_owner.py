@@ -11,7 +11,7 @@ from polystore.zarr import ZarrStorageBackend
 from pycodify import Assignment, generate_python_source
 from objectstate.lazy_factory import FIELD_ABBREVIATIONS_REGISTRY
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyZarrConfig,
     ZarrChunkStrategy,

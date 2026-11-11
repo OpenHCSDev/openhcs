@@ -33,13 +33,13 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationResult,
 )
 from openhcs.agent.dto.viewer import ViewerWindowValidationSummaryResult
-from openhcs.core.config import LazyNapariStreamingConfig
-from openhcs.core.execution_state import ExecutionCompleted
-from openhcs.core.native_threading import configure_native_thread_environment
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.plate_file_inventory import PlateFileKind
+from openhcs.core.config.pipeline_config import LazyNapariStreamingConfig
+from openhcs.core.execution.execution_state import ExecutionCompleted
+from openhcs.core.execution.native_threading import configure_native_thread_environment
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.bootstrap import MCP_VERBOSE_ENVIRONMENT_VARIABLE
 from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
 from openhcs.mcp.dev_client_commands.knowledge_pipeline import (
@@ -60,7 +60,7 @@ from openhcs.runtime.viewer_protocol import (
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:

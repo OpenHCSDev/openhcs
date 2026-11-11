@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING, Any
 
 from zmqruntime.messages import ExecuteRequest, MessageFields
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.runtime import observation_export_scope
 
 if TYPE_CHECKING:
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.debug import DebugExecutionConfig
+    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 
 TransportValue = (
     str
@@ -166,7 +166,7 @@ class ZMQAuxiliaryExecutionParams:
     def _debug_config_from_transport(
         config_params: Mapping[str, Any],
     ) -> DebugExecutionConfig | None:
-        from openhcs.core.debug import DebugExecutionConfig
+        from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 
         payload = config_params.get(DebugExecutionConfig.CONFIG_PARAMS_KEY)
         if payload is None:
@@ -337,7 +337,7 @@ class ZMQExecutionRequestPayload:
 
     @property
     def debug_replay_signature(self) -> str:
-        from openhcs.core.debug import DebugExecutionConfig
+        from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 
         return self.signature_for_config_params(
             DebugExecutionConfig.compatibility_config_params(

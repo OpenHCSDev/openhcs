@@ -37,18 +37,18 @@ from benchmark.contracts.tool_adapter import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants import Backend
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PartitionFilterConfig,
     SourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.source_binding_workspace import (
+from openhcs.core.source.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.source_bindings import ImportedMetadataTable
-from openhcs.core.partition_filter import PartitionFilterProcessor
+from openhcs.core.source.source_bindings import ImportedMetadataTable
+from openhcs.core.config.pipeline_config.partition_filter import PartitionFilterProcessor
 from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import (

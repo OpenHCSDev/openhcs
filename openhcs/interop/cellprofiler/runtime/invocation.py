@@ -1,8 +1,8 @@
 """Typed CellProfiler invocation records and execution-mode utilities."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
@@ -10,40 +10,40 @@ from typing import ClassVar
 
 import numpy as np
 
-from openhcs.core.alias_property import AliasProperty
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle)
+from openhcs.core.axes.alias_property import AliasProperty
+from openhcs.core.payload.aligned_image_payload import (AlignedImageStack, ImageOutputBundle)
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
     MeasurementImageReferenceDomain,
     PreparedMeasurementObjectLabels,
     SourceImageReference,
 )
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
-from openhcs.core.runtime_adapters import (
+from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.callable.runtime_adapters import (
     RuntimeAdapterRequest,
     RuntimeImageExecutionContext,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelMeasurementSource,
     ObjectLabelValue,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
 )
-from openhcs.core.runtime_slice_alignment import (
+from openhcs.core.payload.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.source_spatial_domain import CommonRuntimeValue
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
-from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.runtime_image_values import as_runtime_value
-from openhcs.core.runtime_image_values import owned_runtime_value
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import owned_runtime_value
 
 
 class CellProfilerSourceIdentityMixin:

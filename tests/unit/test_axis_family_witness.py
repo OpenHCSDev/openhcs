@@ -11,7 +11,7 @@ viewer whose layers carry the family's axes.
 """
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 import os
@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     ColourAxis,
@@ -61,7 +61,7 @@ def test_child_processes_serve_the_parent_family(remote_sensing) -> None:
             sys.executable,
             "-c",
             "import openhcs\n"
-            "from openhcs.core.axes import AxisFamily\n"
+            "from openhcs.core.axes.axis_declarations import AxisFamily\n"
             "print(AxisFamily.active().family_name)",
         ],
         capture_output=True,
@@ -90,7 +90,7 @@ def test_family_queries_follow_the_declaration(remote_sensing) -> None:
 
 
 def test_configuration_derives_from_the_active_family(remote_sensing) -> None:
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         FijiDisplayConfig,
         NapariDisplayConfig,
         ProcessingConfig,
@@ -127,7 +127,7 @@ def _streamed_display_config(config) -> dict:
 
 
 def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> None:
-    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+    from openhcs.core.config.pipeline_config import FijiDisplayConfig, NapariDisplayConfig
     from openhcs.runtime.viewer_component_system import (
         ViewerComponentNameMetadata,
         ViewerMappingDisplayConfigInput,
@@ -168,7 +168,7 @@ def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> Non
 
 
 def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
-    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+    from openhcs.core.config.pipeline_config import FijiDisplayConfig, NapariDisplayConfig
 
     class Survey(AxisFamily):
         payload_spatial_rank = 2
@@ -184,7 +184,7 @@ def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
 
 
 def test_plane_addresses_spell_the_declared_tokens(remote_sensing) -> None:
-    from openhcs.core.source_projection import OpenHCSPlaneAddress
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
     parsed = OpenHCSPlaneAddress.from_filename("S07_f002_b3_d014.tif")
     assert parsed is not None
@@ -420,8 +420,8 @@ def telemetry() -> Iterator[type[Telemetry]]:
 def _signal(offset: float):
     import numpy as np
 
-    from openhcs.core.payload_axes import FamilyAxisSpec, PayloadAxes
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.payload_axes import FamilyAxisSpec, PayloadAxes
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     metadata = ImagePayloadMetadata(
         source_dtype="float32",
@@ -437,13 +437,13 @@ def _signal(offset: float):
 def test_time_series_payloads_declare_their_axes(telemetry) -> None:
     import numpy as np
 
-    from openhcs.core.payload_axes import (
+    from openhcs.core.payload.payload_axes import (
         FamilyAxisSpec,
         SpatialAxis,
         UndeclaredAxisSpec,
     )
-    from openhcs.core.runtime_image_values import ImagePayload
-    from openhcs.core.source_spatial_domain import PointSourceSpatialDomain
+    from openhcs.core.payload.runtime_image_values import ImagePayload
+    from openhcs.core.source.source_spatial_domain import PointSourceSpatialDomain
 
     signal = _signal(0.0)
     assert signal.axes == (
@@ -465,13 +465,13 @@ def test_time_series_payloads_declare_their_axes(telemetry) -> None:
 def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -> None:
     import numpy as np
 
-    from openhcs.core.aligned_image_payload import stack_image_payloads
-    from openhcs.core.payload_axes import FamilyAxisSpec, RuntimePlaneAxisSpec
-    from openhcs.core.runtime_image_values import (
+    from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+    from openhcs.core.payload.payload_axes import FamilyAxisSpec, RuntimePlaneAxisSpec
+    from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
     )
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
     signals = (_signal(0.0), _signal(100.0))
     stack = stack_image_payloads(

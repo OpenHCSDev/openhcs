@@ -32,12 +32,12 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazySourceBindingsConfig,
     PipelineConfig,
     SourceBindingsConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
@@ -53,7 +53,7 @@ from openhcs.core.source_bindings import (
     SourceFileName,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )

@@ -28,8 +28,8 @@ from benchmark.runner import (
     run_cellprofiler_compatibility_benchmark,
     run_cellprofiler_cppipe_parity,
 )
-from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceMaterialization
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PartitionFilterConfig
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceMaterialization
 
 SOURCE_ONLY_CPIPE = (
     "\n".join(

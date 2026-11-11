@@ -8,8 +8,8 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting

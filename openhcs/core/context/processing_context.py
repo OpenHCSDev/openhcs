@@ -16,30 +16,30 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar, cast
 
 if TYPE_CHECKING:
-    from openhcs.core.post_execute import PostExecuteHook
+    from openhcs.core.util.post_execute import PostExecuteHook
     from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
 
-from openhcs.core.config import StreamingConfig, TiffConfig
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.debug import (
+from openhcs.core.config.pipeline_config import StreamingConfig, TiffConfig
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.debug.debug_runtime import (
     DebugEventSink,
     DebugExecutionContext,
     NO_OP_DEBUG_EVENT_SINK,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
-from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
+from openhcs.core.payload.runtime_stack_cache import RuntimeImageStackCache
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.core.streaming_config_declarations import ViewerFamily
-from openhcs.core.axis_filter import StepAxisFilterMap
+from openhcs.core.config.streaming_config_declarations import ViewerFamily
+from openhcs.core.axes.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 

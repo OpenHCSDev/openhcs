@@ -21,7 +21,7 @@ from zipfile import ZipFile
 from collections.abc import Iterator
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import to_jsonable
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
 from openhcs.processing.backends.cellprofiler.intensity import (
     MeasureObjectIntensityModule,
 )

@@ -17,10 +17,10 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     PARAMETER_DOCUMENTATION_POLICY,
 )
-from openhcs.core.callable_contract import CallableContract, callable_request
+from openhcs.core.callable.callable_contract import CallableContract, callable_request
 from openhcs.core.memory import numpy as numpy_contract
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )

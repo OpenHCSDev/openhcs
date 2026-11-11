@@ -1,7 +1,7 @@
 """Runtime artifact binding authorities for CellProfiler modules."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -15,37 +15,37 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
     MainFlowInputProjection,
 )
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_slice_alignment import (
+from openhcs.core.payload.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.source_plane_alignment import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.variable_component_stack_requirement import (
+from openhcs.core.callable.variable_component_stack_requirement import (
     VariableComponentStackRequirementRequest,
 )
 from openhcs.interop.cellprofiler.runtime.adapter import (

@@ -1,5 +1,5 @@
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import dataclass
 import inspect
 from typing import Any, get_args, get_origin
@@ -9,57 +9,57 @@ import pytest
 from arraybridge.decorators import PRESERVE_INPUT_DTYPE_CONFIG
 
 import openhcs.processing.backends.cellprofiler  # noqa: F401
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     AlignedStackExecution,
     ImageOutputBundle,
     ImagePayloadComposition,
 )
-from openhcs.core.callable_contract import KeywordRuntimeParameter
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelSet,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import (
     OptionalSourceIdentity,
     RuntimeProjectionSourceIdentityRequest,
     RuntimeSliceProjection,
 )
-from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.runtime_plane_projection import RuntimeSliceProjectableValue
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceProjectableValue
 
 
 def _subclasses(root: type) -> tuple[type, ...]:

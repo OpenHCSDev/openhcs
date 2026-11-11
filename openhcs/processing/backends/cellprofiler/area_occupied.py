@@ -4,7 +4,7 @@ Measures the total area in an image that is occupied by objects or foreground.
 """
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -18,33 +18,33 @@ from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     KeywordRuntimeParameter,
     processing_prepare,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, resolved_callable_parameter, runtime_bound_parameters, special_inputs)
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
@@ -91,22 +91,22 @@ from openhcs.processing.backends.analysis.region_properties import (
     binary_area_and_perimeter_2d,
     label_area_and_rounded_perimeter_2d,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.runtime.artifact_binding import (
         RuntimeInputBindingRequest,
     )

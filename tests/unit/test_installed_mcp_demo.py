@@ -19,9 +19,9 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,
     ViewerWindowValidationSummaryResult,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.plate_file_inventory import PlateFileKind
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
 from openhcs.mcp import installed_demo
 from openhcs.mcp.dev_client import McpDevCommandExecution
 from openhcs.mcp.dev_client_core import (
@@ -242,7 +242,7 @@ def test_portable_source_normalization_defers_catalog_and_execution_runtimes(
     probe = """
 import sys
 from pathlib import Path
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 def forbidden_catalog_discovery(cls):

@@ -5,12 +5,12 @@ from pathlib import Path
 import pytest
 
 from benchmark.demos import official30_lab_meeting as demo
-from openhcs.core.config import PipelineConfig
-from openhcs.core.input_workspace import (
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.execution.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
 )
-from openhcs.core.source_binding_workspace import (
+from openhcs.core.source.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
 )
 from openhcs.core.steps.function_step import FunctionStep

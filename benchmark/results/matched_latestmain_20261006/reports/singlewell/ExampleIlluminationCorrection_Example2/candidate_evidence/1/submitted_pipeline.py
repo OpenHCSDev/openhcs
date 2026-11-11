@@ -6,7 +6,7 @@ from openhcs.constants.constants import (
     VariableComponents,
 )
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config.pipeline_config import (
     LazyAnalysisConsolidationConfig,
     LazyCompilationDebugConfig,
     LazyDtypeConfig,
@@ -28,8 +28,8 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.dataset_sources.source import AutoDetectedSource
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_bindings import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -39,14 +39,14 @@ from openhcs.core.source_bindings import (
     SourceBindingOrigin,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.illumination import (
     FilterSizeMethod,

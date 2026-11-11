@@ -22,7 +22,7 @@ from openhcs.processing.backends.lib_registry.registry_service import RegistrySe
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager

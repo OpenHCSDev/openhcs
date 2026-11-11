@@ -36,7 +36,7 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseService,
 )
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 
 
 class _UnexpectedFunctionCatalog:

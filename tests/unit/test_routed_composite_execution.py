@@ -10,7 +10,7 @@ from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -34,7 +34,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.imagexpress import ImageXpressHandler
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
 

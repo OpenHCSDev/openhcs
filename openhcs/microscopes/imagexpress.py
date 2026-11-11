@@ -24,7 +24,7 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataComponentValueSet,
     FilenameParserCapability,
 )
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)

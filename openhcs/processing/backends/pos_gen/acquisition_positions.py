@@ -7,16 +7,16 @@ from polystore.source_tile_geometry import SourceTileGeometry
 
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_matching import source_component_metadata_value
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
-from openhcs.core.axes import AxisFamily, TileAxis
+from openhcs.core.axes.axis_declarations import AxisFamily, TileAxis
 
 
 def _source_metadata(request: RuntimeAdapterRequest) -> ImagePayloadMetadata:

@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 import ast
 import inspect
 import textwrap
@@ -6,37 +6,37 @@ import textwrap
 import numpy as np
 import pytest
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
     WideMeasurementRowAccumulator,
     coalesced_sparse_measurement_row_mappings,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 
 
 from openhcs.interop.cellprofiler.runtime.object_measurement_row_completion import (

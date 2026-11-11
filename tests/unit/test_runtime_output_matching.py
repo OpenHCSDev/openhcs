@@ -1,10 +1,10 @@
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
 )
@@ -15,24 +15,24 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.runtime_image_values import PlainImagePayload
-from openhcs.core.component_group_scope import (
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 

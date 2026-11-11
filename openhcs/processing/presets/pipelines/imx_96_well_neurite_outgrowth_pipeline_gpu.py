@@ -2,7 +2,7 @@
 
 # Automatically collected imports
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import LazyNapariStreamingConfig
+from openhcs.core.config.pipeline_config import LazyNapariStreamingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
     assemble_stack_cupy,

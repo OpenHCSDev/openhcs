@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.pipeline_document import (
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.io.pipeline_document import (
     PipelineDocument,
     PipelineDocumentCodec,
 )
@@ -154,9 +154,9 @@ def test_render_revalidates_direct_pipeline_document_instances() -> None:
 
 def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
     import pickle
-    from openhcs.core.config import LazySourceBindingsConfig
-    from openhcs.core.config import StepSourceBindingsConfig
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.config.pipeline_config import LazySourceBindingsConfig
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
 
     domain = VolumeSourceSpatialDomain()
     document = PipelineDocumentCodec.from_values(

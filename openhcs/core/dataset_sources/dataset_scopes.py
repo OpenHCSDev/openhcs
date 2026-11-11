@@ -18,7 +18,7 @@ from urllib.parse import quote, unquote
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.input_workspace import InputWorkspacePreparationResult
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationResult
 
 
 

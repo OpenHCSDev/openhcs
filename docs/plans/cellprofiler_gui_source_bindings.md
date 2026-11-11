@@ -99,7 +99,7 @@ Implemented the first load-bearing seam as `openhcs.core.source_bindings_view`. 
 - order/metadata match plans;
 - grouping metadata fields.
 
-The same module now also includes `SourceInventory` and `SourceBindingsPreview`, which apply the typed selectors to concrete source candidates. Preview matching reuses `openhcs.core.source_matching` for filters, metadata extraction, component/metadata comparison, and `ImageSetAssembler` for image-set rows. This keeps the preview aligned with runtime source-schema semantics instead of adding a second matcher.
+The same module now also includes `SourceInventory` and `SourceBindingsPreview`, which apply the typed selectors to concrete source candidates. Preview matching reuses `openhcs.core.source.source_matching` for filters, metadata extraction, component/metadata comparison, and `ImageSetAssembler` for image-set rows. This keeps the preview aligned with runtime source-schema semantics instead of adding a second matcher.
 
 This deliberately stops before a widget implementation. The current useful boundary is a reusable presentation/preview model that can feed GUI, CLI diagnostics, LLM context, and benchmark reporting without duplicating source-binding semantics or adding CellProfiler-specific branches in the step editor.
 

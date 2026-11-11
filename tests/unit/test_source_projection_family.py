@@ -1,21 +1,21 @@
 """Selection and aggregation own different source-projection contracts."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import dataclass, field, replace
 
 import numpy as np
 import pytest
 
-from openhcs.core.projected_image_output import (
+from openhcs.core.payload.projected_image_output import (
     SourcePlaneSelectionImageOutput,
     SourceProjectedImageOutput,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 
 
 @dataclass(frozen=True)

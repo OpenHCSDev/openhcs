@@ -1,26 +1,26 @@
 """Gaussian consumes declared physical axes, not assembled payload rank."""
 
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import numpy as np
 import pytest
 from skimage.filters import gaussian
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_image_values import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadAxisFields,
     ImagePayloadMetadata,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain, VolumeSourceSpatialDomain
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain, VolumeSourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.gaussian_filter import gaussian_filter
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _execute(source):

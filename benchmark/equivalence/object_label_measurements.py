@@ -1,7 +1,7 @@
 """Object-label derived runtime measurement projection."""
 
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 
 from openhcs.core.equivalence.measurement_features import (
     RuntimeMeasurementFactCounterMapping,
@@ -28,27 +28,27 @@ from benchmark.equivalence.measurement_requirements import (
     RequiredRuntimeMeasurementProjection,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     ObjectCoreMeasurementFeature,
     ObjectLocationCoordinateValues,
     object_location_coordinate_arrays,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
     dense_object_label_identity_domains,
     dense_object_label_plane_id_domains,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelData,
     ObjectLabelSet,
     ObjectLabelValue,
     object_label_dense_array,
     object_label_project_plane,
 )
-from openhcs.core.runtime_artifact_values import (
+from openhcs.core.runtime_store.runtime_artifact_values import (
     RuntimeValue,
 )
 from collections import Counter
@@ -57,14 +57,14 @@ from typing import TYPE_CHECKING
 from benchmark.equivalence.row_identity import (
     RuntimeObjectMeasurementRowIdentity,
 )
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.runtime_measurements import (
     ObjectCountFeatureMarker,
     ObjectIdentifierFeatureMarker,
     ObjectLocationFeatureMarker,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
 if TYPE_CHECKING:
     pass
 from types import MappingProxyType

@@ -1,8 +1,8 @@
 # Derived OpenHCS source-binding declaration
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.config import LazySourceBindingsConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import LazySourceBindingsConfig
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
@@ -16,7 +16,7 @@ from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,
@@ -129,7 +129,7 @@ source_bindings_config = LazySourceBindingsConfig(
 from pathlib import Path
 from openhcs.constants.constants import GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyWellFilterConfig, LazyNapariStreamingConfig, NapariDimensionMode, LazyStepMaterializationConfig
+from openhcs.core.config.pipeline_config import LazySourceBindingsConfig, PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyWellFilterConfig, LazyNapariStreamingConfig, NapariDimensionMode, LazyStepMaterializationConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod

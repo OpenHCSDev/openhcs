@@ -31,19 +31,19 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     PipelineInvocationContractProviderAuthority,
 )
@@ -53,7 +53,7 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     artifact_producers_for_outputs,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceArtifactRole,
@@ -579,7 +579,7 @@ def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:
 
 def test_calculate_math_retains_measurement_subjects_across_producer_channels() -> None:
     from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
-    from openhcs.core.component_group_scope import ComponentGroupScope
+    from openhcs.core.axes.component_group_scope import ComponentGroupScope
 
     image = ArtifactSpec.input("CorrProtein", ImageArtifactType)
     objects = tuple(

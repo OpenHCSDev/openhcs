@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import openhcs.processing.custom_functions.manager as manager_module
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.processing.custom_functions import CustomFunctionManager, ValidationError
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,

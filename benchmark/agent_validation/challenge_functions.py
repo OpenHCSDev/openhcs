@@ -6,7 +6,7 @@ import numpy as np
 from skimage.segmentation import expand_labels
 
 from openhcs.core.memory import numpy
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

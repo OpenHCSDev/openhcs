@@ -25,7 +25,7 @@ from benchmark.datasets.cache import (
 )
 from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime
-from openhcs.core.source_bindings import PathIsImage
+from openhcs.core.source.source_bindings import PathIsImage
 
 
 class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
@@ -239,8 +239,8 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from openhcs.agent.path_policy import AgentPathPolicy
         from openhcs.agent.session_access import AgentPathDatasetAccess
         from openhcs.authoring.session.session import CallerThread, Session
-        from openhcs.core.config import GlobalPipelineConfig
-        from openhcs.core.input_workspace import (
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+        from openhcs.core.execution.input_workspace import (
             derived_workspace_root,
             mirror_input_workspace,
         )
@@ -382,7 +382,7 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         subparsers: argparse._SubParsersAction,
     ) -> argparse.ArgumentParser:
         from benchmark.well_throughput_scaling import WellThroughputPreset
-        from openhcs.core.config import MultiprocessingStartMethod
+        from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
 
         parser = self._parser(subparsers)
         parser.add_argument("--manifest", type=Path, required=True)
@@ -448,7 +448,7 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             run_well_throughput_suite,
             well_throughput_start_method_from_manifest,
         )
-        from openhcs.core.config import MultiprocessingStartMethod
+        from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
         from python_introspect import to_jsonable
 
         if args.max_memory_mb is not None and (

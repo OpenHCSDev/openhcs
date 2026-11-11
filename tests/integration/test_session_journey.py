@@ -22,8 +22,8 @@ from openhcs.authoring.session.operations.datasets import (
     InitializeDatasets,
 )
 from openhcs.authoring.session.session import CallerThread
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
@@ -154,7 +154,7 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
     """Initialization never writes into a source it may not write."""
 
     from openhcs.authoring.session.session import Session
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 
     from tests.integration.test_measured_cli_session import (
         _set_writable,

@@ -46,10 +46,10 @@ from benchmark.equivalence.measurement_facts import (
     RuntimeRowProjectionValueT,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.measurement_row_qualifiers import RuntimeMeasurementRowQualifier
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.measurements.measurement_row_qualifiers import RuntimeMeasurementRowQualifier
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementRowDeclaredValue,
     MeasurementRowObjectIdentityRole,
     MeasurementRowObjectLabel,
@@ -57,7 +57,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowSourceImageName,
     measurement_row_has_long_form_measurement_fields,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowValueField,
     MeasurementRowAxisField,
     MeasurementScope,
@@ -65,7 +65,7 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureOwner,
     RuntimeMeasurementRowIdentityContract,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
 )

@@ -1,8 +1,8 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 
-from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.aligned_image_payload import ImagePayloadBundleContext
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation,
     image_math,

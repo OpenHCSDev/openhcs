@@ -1,4 +1,4 @@
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 import csv
 import io
 import logging
@@ -21,7 +21,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,

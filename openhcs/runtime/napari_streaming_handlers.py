@@ -20,14 +20,14 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.axes import StackAxis
+from openhcs.core.axes.axis_declarations import StackAxis
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.runtime.viewer_display import NapariDisplaySettings, NapariSlots
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
-from openhcs.core.runtime_image_values import (
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_spatial_domain import CommonRuntimeValue
+from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
 from openhcs.runtime.viewer_component_system import (
     ComponentMap,
     ComponentValue,
@@ -49,7 +49,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerNativeWindowGeometry,
     ViewerNativeWindowState,
 )
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QWidget

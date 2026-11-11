@@ -17,10 +17,10 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelMeasurementSource
-from openhcs.core.runtime_plane_projection import RuntimeSliceIndexedValue
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.source_image_provenance import (
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelMeasurementSource
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIndexedValue
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenanceFields,
 )
@@ -29,18 +29,18 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectReferenceFeatureMarker,
     MeasurementScalarLiteral,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainMetadataStrategy
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
-from openhcs.core.runtime_object_label_domains import dense_object_label_id_domain
-from openhcs.core.runtime_plane_projection import RuntimeSliceIdentityProjectableValue
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainMetadataStrategy
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.object_labels.runtime_object_label_domains import dense_object_label_id_domain
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIdentityProjectableValue
 import numpy as np
-from openhcs.core.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
 
 
 

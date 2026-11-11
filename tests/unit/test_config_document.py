@@ -7,13 +7,13 @@ from datetime import timedelta
 
 import pytest
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     TiffCompression,
     TiffConfig,
 )
-from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.config.config_document import ConfigDocumentCodec
 
 
 @dataclass(frozen=True)

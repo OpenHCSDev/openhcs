@@ -1,9 +1,9 @@
 from pathlib import Path
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig
-from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.config.pipeline_config import PipelineConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig
+from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.custom_functions import h002_centres_v3_association
 from zmqruntime.config import TransportMode

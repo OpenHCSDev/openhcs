@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from python_introspect import dataclass_from_mapping, to_jsonable
 
-from openhcs.core import config, debug, debug_view_models
+from openhcs.core.config import pipeline_config, debug, debug_view_models
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress import types as progress_types
 

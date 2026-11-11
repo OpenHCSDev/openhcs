@@ -10,8 +10,8 @@ from pyqt_reactive.theming import ColorScheme
 
 from openhcs.constants.constants import OrchestratorReady
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.config import NapariStreamingConfig
-from openhcs.core.debug import (
+from openhcs.core.config.pipeline_config import NapariStreamingConfig
+from openhcs.core.debug.debug_runtime import (
     DebugArtifactRef,
     DebugCommand,
     DebugCommandType,
@@ -21,16 +21,16 @@ from openhcs.core.debug import (
     DebugTerminalSummary,
     FileManagerDebugSnapshotStore,
 )
-from openhcs.core.debug_view_models import DebugViewModel
+from openhcs.core.debug.debug_view_models import DebugViewModel
 from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
-from openhcs.core.execution_state import ManagerExecutionState, ExecutionFailed
+from openhcs.core.execution.execution_state import ManagerExecutionState, ExecutionFailed
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-from openhcs.core.debug_session_projection import (
+from openhcs.core.debug.debug_session_projection import (
     DebugPauseBoundaryState,
     DebugSessionProjectionContext,
     DebugSessionTargetState,
@@ -54,11 +54,11 @@ from openhcs.core.progress.types import (
     PatternGroupProgressPhase,
     SuccessProgressStatus,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     PersistentPausedWorkerReplay,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     ChooseSourceGroupDebugCommand,
     RandomSourceGroupDebugCommand,
     RestartDebugCommand,

@@ -21,7 +21,7 @@ This example shows a complete workflow for cell counting and neurite tracing ana
 
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.steps.function_step import FunctionStep
-    from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig, VFSConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PathPlanningConfig, VFSConfig
     from openhcs.constants.constants import VariableComponents, Backend
 
     # Import analysis functions
@@ -134,7 +134,7 @@ For datasets larger than available RAM, OpenHCS automatically uses ZARR compress
 
 .. code-block:: python
 
-    from openhcs.core.config import ZarrConfig, ZarrCompressor, ZarrChunkStrategy
+    from openhcs.core.config.pipeline_config import ZarrConfig, ZarrCompressor, ZarrChunkStrategy
 
     # Configuration for 100GB+ datasets
     large_dataset_config = GlobalPipelineConfig(

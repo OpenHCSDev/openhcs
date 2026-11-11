@@ -1,5 +1,5 @@
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import ast
 import json
 import threading
@@ -12,16 +12,16 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.debug import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.debug.debug_runtime import (
     NoOpDebugExecutionPolicy,
     DebugArtifactRef,
     DebugArtifactRefProjection,
@@ -71,38 +71,38 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.artifacts.payloads import NoMainFlowOutput
-from openhcs.core.artifact_key_selection import (
+from openhcs.core.util.artifact_key_selection import (
     AdapterRecordedArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
 )
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterSpec
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     FunctionInvocationKey,
@@ -111,18 +111,18 @@ from openhcs.core.function_patterns import (
     RuntimeParameterBinding,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
 )
 from openhcs.core.steps.function_runtime import (
     PatternGroupData,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.processing_contracts import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
     ErrorProgressStatus,
@@ -131,20 +131,20 @@ from openhcs.core.progress.types import (
     StartedProgressStatus,
     SuccessProgressStatus,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
     ExceptionDebugBoundary,
     PersistentPausedWorkerReplay,
     WarmArtifactReplay,
 )
-from openhcs.core.debug import PausedDebugWorker
+from openhcs.core.debug.debug_runtime import PausedDebugWorker
 from python_introspect import (
     dataclass_from_mapping,
     to_jsonable,
 )
-from openhcs.core.debug import DebugBoundary
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import DebugBoundary
+from openhcs.core.debug.debug_runtime import (
     ChooseSourceGroupDebugCommand,
     RunDebugCommand,
     RunToPauseDebugCommand,

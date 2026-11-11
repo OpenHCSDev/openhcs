@@ -36,7 +36,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+    from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 
 ControlReply = dict[str, object]
 

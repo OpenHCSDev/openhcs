@@ -13,14 +13,14 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from openhcs.core.artifact_inspection import (
+from openhcs.core.util.artifact_inspection import (
     CompiledArtifactInspection,
     CompiledArtifactStepInspection,
 )
 from openhcs.core.artifacts.plans import ArtifactPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.debug import DebugArtifactIdentity, DebugArtifactRef, DebugSnapshot
-from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeValueStore
+from openhcs.core.debug.debug_runtime import DebugArtifactIdentity, DebugArtifactRef, DebugSnapshot
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeValueStore
 from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )

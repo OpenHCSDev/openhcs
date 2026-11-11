@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
 
 from pathlib import Path
 
@@ -21,7 +21,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLineageArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
@@ -31,18 +31,18 @@ from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureContext,
     RelationshipAggregateFeatureSemantics,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     ObjectReferenceFeatureMarker,
     RuntimeMeasurementFeatureDeclaration,
 )
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )

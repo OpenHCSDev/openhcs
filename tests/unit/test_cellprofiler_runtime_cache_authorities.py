@@ -1,7 +1,7 @@
 """Focused tests for retained CellProfiler runtime cache authorities."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from types import SimpleNamespace
@@ -12,7 +12,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_input_edge_for_test,
 )
 
-from openhcs.core.aligned_image_payload import AlignedImageStack, ProducedImageStack
+from openhcs.core.payload.aligned_image_payload import AlignedImageStack, ProducedImageStack
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import (
@@ -21,16 +21,16 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
 )
@@ -38,12 +38,12 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (

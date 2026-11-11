@@ -11,19 +11,19 @@ import pytest
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MetadataArtifactType
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledMetadataArtifactInputEdgePlan,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.steps.function_runtime import (
     FunctionCoreExecutor,
     PatternGroupData,

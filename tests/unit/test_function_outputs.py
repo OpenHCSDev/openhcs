@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import json
 from pathlib import Path
 from dataclasses import replace
@@ -20,37 +20,37 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.axes.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     MaterializedOutputPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig
+from openhcs.core.config.pipeline_config import TiffConfig
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
 )
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import (
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
     SOURCE_VOXEL_SPACING_FIELD,
@@ -58,9 +58,9 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )
-from openhcs.core.source_projection import SourceProjectionMetadataSerializer
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.step_dependencies import NoMainFlowInput, StepOutputInput
+from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.util.step_dependencies import NoMainFlowInput, StepOutputInput
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputPathRequest,
@@ -85,11 +85,11 @@ from openhcs.core.steps.function_outputs import (
     StreamOutputBatch,
     finalize_function_step_outputs,
 )
-from openhcs.core.streaming_config_factory import (
+from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     METADATA_CONFIG,
     FIELDS,
@@ -103,12 +103,12 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.core.materialization.core import Output
 from openhcs.core.materialization.options import ImageFileOptions, NameBySourceIdentity
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
-from openhcs.core.streaming_config_declarations import NapariViewer
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.config import IncludePartitions
+from openhcs.core.config.streaming_config_declarations import NapariViewer
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.config.pipeline_config import IncludePartitions
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -2258,7 +2258,7 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     later_image = images_dir / "B03_s1_w1.tif"
     from polystore.memory import MemoryStorageBackend
 
-    from openhcs.core.image_file_serialization import ImageFileFormat
+    from openhcs.core.payload.image_file_serialization import ImageFileFormat
 
     first_pixels = np.zeros((4, 5), dtype=np.uint16)
     ImageFileFormat.require_path(first_image).write(first_image, first_pixels)
@@ -2776,8 +2776,8 @@ def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeyp
 def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     tmp_path, with_artifact
 ):
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
-    from openhcs.core.source_projection import SourceArtifactProjection
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source.source_projection import SourceArtifactProjection
 
     dataset_root = tmp_path / "plate"
     output_dir = dataset_root / "images"

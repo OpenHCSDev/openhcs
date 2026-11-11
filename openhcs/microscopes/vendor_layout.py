@@ -44,7 +44,7 @@ class VirtualMappingSource(DatasetSource):
         """Rename mapped files to their padded vendor spelling with a Z index."""
         from polystore.exceptions import MetadataNotFoundError
 
-        from openhcs.core.virtual_workspace_metadata import FIELDS
+        from openhcs.core.io.virtual_workspace_metadata import FIELDS
 
         metadata = OpenHCSMetadataHandler(filemanager)._load_metadata_dict(dataset_root)
         if FIELDS.SUBDIRECTORIES not in metadata:

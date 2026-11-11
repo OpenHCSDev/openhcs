@@ -13,14 +13,14 @@ from benchmark.agent_validation.challenge_functions import (
 )
 from benchmark.agent_validation.contracts import DiagnosticCheck, ScoringCase
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 
 
 class DiagnosticPerturbationDeclaration(ABC, metaclass=AutoRegisterMeta):

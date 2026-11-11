@@ -22,9 +22,9 @@ from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableProjection
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.callable_contract import CallableContract, CallableProjection
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
@@ -35,7 +35,7 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )

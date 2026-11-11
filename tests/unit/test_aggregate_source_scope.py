@@ -1,6 +1,6 @@
 """Contributor scope and saved producer addresses survive their real consumers."""
 
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
 from pathlib import Path
 import pickle
@@ -10,30 +10,30 @@ import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation, RuntimeExecutionObservation,
 )
-from openhcs.core.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_exports import (
+from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.runtime_store.runtime_exports import (
     RuntimeExportExpectation, RuntimeExportObservation, runtime_export_failures,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_stores import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress, RuntimeArtifactLocation, RuntimeValueStore,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec

@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Any, Callable
 
-from openhcs.core.xdg_paths import get_cache_file_path
+from openhcs.core.util.xdg_paths import get_cache_file_path
 
 logger = logging.getLogger(__name__)
 

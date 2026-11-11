@@ -10,7 +10,7 @@ import warnings
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.intensity import (
     AutomaticHigh,
     AutomaticLow,
@@ -20,7 +20,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     StretchRescaleMethodRunner,
     rescale_intensity,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 def _legacy_stretch(data: np.ndarray) -> np.ndarray:

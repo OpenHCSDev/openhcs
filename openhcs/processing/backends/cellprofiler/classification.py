@@ -7,23 +7,23 @@ from dataclasses import asdict, dataclass, replace
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 import numpy as np
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ImageArtifactType
 from openhcs.core.artifacts.specs import ArtifactSpecCollection, ArtifactSpec
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.callable_contract import CallableContract, KeywordRuntimeParameter
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import CallableContract, KeywordRuntimeParameter
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.config import StepSourceBindingsConfig
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     CellProfilerObjectMeasurementVectorBinding,
 )
@@ -45,7 +45,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_setting_literal,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
@@ -74,7 +74,7 @@ from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import NormalizedFunctionItem
+    from openhcs.core.callable.function_patterns import NormalizedFunctionItem
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -1284,10 +1284,10 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_measurements import ObjectLabelMeasurementValues
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.measurements.runtime_measurements import ObjectLabelMeasurementValues
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
@@ -1298,8 +1298,8 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class _ClassificationMethodBehavior(ABC):

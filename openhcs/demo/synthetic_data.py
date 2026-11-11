@@ -33,12 +33,12 @@ import numpy as np
 import tifffile
 from skimage import draw, filters
 
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
     SourceProjectionMetadataSerializer,
 )
-from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, get_metadata_path
-from openhcs.core.source_metadata import SourceVoxelSpacing, source_metadata_dict
+from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter, get_metadata_path
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, source_metadata_dict
 from openhcs.core.dataset_sources.source import DatasetSource
 from polystore.constants import Backend
 from polystore.disk import DiskStorageBackend

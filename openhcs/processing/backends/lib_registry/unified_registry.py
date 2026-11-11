@@ -55,14 +55,14 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ContractProbe,
     LibraryContractCall,
     ProcessingContract,
 )
-from openhcs.core.runtime_array_values import is_array_payload
-from openhcs.core.runtime_output_matching import runtime_output_tuple
-from openhcs.core.xdg_paths import get_cache_file_path
+from openhcs.core.payload.runtime_array_values import is_array_payload
+from openhcs.core.payload.runtime_output_matching import runtime_output_tuple
+from openhcs.core.util.xdg_paths import get_cache_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ class FunctionMetadata:
     def import_identity(self):
         """Return the registry-owned public import identity."""
 
-        from openhcs.core.callable_contract import CallableImportIdentity
+        from openhcs.core.callable.callable_contract import CallableImportIdentity
 
         declared = inspect.unwrap(self.func)
         return CallableImportIdentity(
@@ -374,11 +374,11 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             set_signature_analysis_target,
         )
 
-        from openhcs.core.callable_contract import (
+        from openhcs.core.callable.callable_contract import (
             CallableContract,
             FunctionStepExecutionScope,
         )
-        from openhcs.core.config import runtime_config_parameter
+        from openhcs.core.config.pipeline_config import runtime_config_parameter
 
         callable_contract = CallableContract.from_callable(func)
         if callable_contract.execution_scope is FunctionStepExecutionScope.PLATE:
@@ -415,7 +415,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 (),
                 source=func,
             )
-            from openhcs.core.callable_contract import attach_callable_contract_metadata
+            from openhcs.core.callable.callable_contract import attach_callable_contract_metadata
 
             attach_callable_contract_metadata(
                 plate_wrapper,
@@ -479,7 +479,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         # If nothing to inject, return original function
         if not params_to_add and not params_to_strip and public_sig == original_sig:
             # Still brand the callable as Enableable metadata.
-            from openhcs.core.callable_contract import attach_callable_contract_metadata
+            from openhcs.core.callable.callable_contract import attach_callable_contract_metadata
 
             mark_enableable(func, enabled_default=True)
             attach_callable_contract_metadata(
@@ -569,8 +569,8 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         )
 
         # The registry wrapper owns the exact declared or runtime-classified contract.
-        from openhcs.core.callable_contract import attach_callable_contract_metadata
-        from openhcs.core.function_contract_metadata import FunctionContractAttribute
+        from openhcs.core.callable.callable_contract import attach_callable_contract_metadata
+        from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 
         processing_contract_key = FunctionContractAttribute.processing_contract
         vars(wrapper)[processing_contract_key] = contract
@@ -931,7 +931,7 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
     @staticmethod
     def probe_spatial_rank() -> int:
         """Spatial rank of the active axis family's payloads."""
-        from openhcs.core.axes import AxisFamily
+        from openhcs.core.axes.axis_declarations import AxisFamily
 
         return AxisFamily.active().payload_spatial_rank
 

@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (
 )
 from pyqt_reactive.theming import ColorScheme
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.authoring.session.live_measurements import (
     LiveMeasurementTable,
     LiveMeasurementTableEntry,

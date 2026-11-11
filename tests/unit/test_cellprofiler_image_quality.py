@@ -1,6 +1,6 @@
 from __future__ import annotations
-from openhcs.core.aligned_image_payload import NaturalExecution
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.aligned_image_payload import NaturalExecution
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import replace
 from types import SimpleNamespace
@@ -16,38 +16,38 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.image_set_numbering import (
@@ -76,7 +76,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.domains.microscopy.axes import Microscopy

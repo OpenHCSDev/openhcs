@@ -12,8 +12,8 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.interop.cellprofiler.object_label_variants import SmallRemovedLabels
 from openhcs.constants.constants import MemoryType
-from openhcs.core.runtime_profile import RuntimeProfiler
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.aligned_image_payload import AlignedImageStack
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
@@ -21,9 +21,9 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.memory import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
@@ -32,20 +32,20 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
     ObjectLabelValue,
@@ -93,14 +93,14 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock

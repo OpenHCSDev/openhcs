@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     FijiDisplayConfig,
     FijiStreamingConfig,
     GlobalPipelineConfig,

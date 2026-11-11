@@ -21,11 +21,11 @@ from openhcs.authoring.session.compilation import (
     run_blocking,
 )
 from openhcs.authoring.session.events import ErrorReported, StatusReported
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionFailed,
     parse_terminal_status,
 )
-from openhcs.core.debug import DebugExecutionConfig
+from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 from openhcs.constants.constants import OrchestratorExecFailed
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams

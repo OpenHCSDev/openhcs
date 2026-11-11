@@ -1,6 +1,6 @@
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
@@ -30,29 +30,29 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.function_patterns import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     MainFlowInputProjection,
     compile_function_pattern,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_measurements import MeasurementRowAxisField, MeasurementTable
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-from openhcs.core.runtime_adapters import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField, MeasurementTable
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.callable.runtime_adapters import (
     RuntimeAdapterRequest,
     runtime_adapter,
 )
@@ -63,54 +63,54 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
 )
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionScope,
     FunctionCoreExecutor,
     PatternGroupData,
 )
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     pack_aligned_image_outputs,
     stack_image_payloads,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     unstack_image_payload_context,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelSet,
     ObjectLabelVariantData,
     ObjectLabelPayload,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
     Pure3DContract,
     VolumetricToSliceContract,
@@ -121,8 +121,8 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
@@ -1392,7 +1392,7 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
 
 
 def test_saved_canonical_source_projection_survives_main_flow_return():
-    from openhcs.core.projected_image_output import SelectedPlaneImageOutput
+    from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
 
     context = ContextStub()
     pixels = np.arange(12, dtype=np.uint16).reshape(2, 2, 3)
@@ -2347,7 +2347,7 @@ def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
 
     with pytest.raises(ValueError, match="cell_counts.*no declared measurement subject") as exc:
         if boundary == "contract":
-            from openhcs.core.callable_contract import CallableContract
+            from openhcs.core.callable.callable_contract import CallableContract
 
             CallableContract.from_callable(count).validate_artifact_output_declarations()
         else:

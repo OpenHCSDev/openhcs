@@ -1,8 +1,8 @@
 """Focused regressions for declaration-owned CellProfiler execution semantics."""
 
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import ast
 import inspect
@@ -17,26 +17,26 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.aligned_image_payload import FullStackExecution, ImageOutputBundle
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import (
+from openhcs.core.payload.aligned_image_payload import FullStackExecution, ImageOutputBundle
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import (
     MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
@@ -55,7 +55,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )

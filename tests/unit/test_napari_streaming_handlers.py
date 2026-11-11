@@ -1,5 +1,5 @@
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass, replace
 from itertools import product
@@ -15,17 +15,17 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.config import TransportMode
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     NapariDisplayConfig,
     NapariDimensionMode,
 )
 from openhcs.runtime.viewer_display import PadToMaxSize, SeparateLayers
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
     ViewerNavigationControlOptions,
@@ -97,7 +97,7 @@ from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 ALL_STACKED = {name: "stack" for name in STREAM_AXES.names()}
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 def _component_name_metadata(payload, context="test component metadata"):
@@ -2014,7 +2014,7 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
     component, mode_field, config_type, stack_origin, raw_first
 ):
     from napari.components import ViewerModel
-    from openhcs.core.config import NapariDimensionMode
+    from openhcs.core.config.pipeline_config import NapariDimensionMode
     from openhcs.runtime.napari_viewer_server import NapariLayerDisplayPipeline
     from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
 
@@ -3810,7 +3810,7 @@ def test_napari_scope_accent_styles_the_existing_main_window(qtbot):
 
 
 def test_napari_runtime_launch_carries_the_projected_scope_accent():
-    from openhcs.core.config import NapariStreamingConfig
+    from openhcs.core.config.pipeline_config import NapariStreamingConfig
     from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
 
     config = NapariStreamingConfig(
@@ -6245,7 +6245,7 @@ def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
 def test_spatial_presentation_owns_scale_and_world_translation(
     values, unit, expected_scale, expected_units
 ):
-    from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+    from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 
     presentation = _axis_presentation(
         layer_key="own-calibrated-source",
@@ -6270,7 +6270,7 @@ def test_spatial_presentation_owns_scale_and_world_translation(
 
 def test_calibrated_native_image_point_and_semantic_navigation_agree_without_qt():
     from napari.layers import Image, Points
-    from openhcs.core.source_metadata import SourceVoxelSpacing
+    from openhcs.core.source.source_metadata import SourceVoxelSpacing
 
     presentation = _axis_presentation(
         layer_key="own-calibrated-source",
@@ -6304,7 +6304,7 @@ def test_calibrated_native_image_point_and_semantic_navigation_agree_without_qt(
 
 
 def test_shape_features_exclude_source_transport_without_mutating_payload():
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 
     full_metadata = {"label": 7, "response": 0.25,
                      ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"}}

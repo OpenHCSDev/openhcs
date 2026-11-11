@@ -1,7 +1,7 @@
 """Prior child measurements select their producer domain, not the child channel."""
 
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import pytest
@@ -13,12 +13,12 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.function_patterns import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionInvocation,
     InvocationArtifactInputProjectionKey,
     FunctionInvocationKey,
@@ -27,7 +27,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.path_planner import (
     PathPlannerArtifactStage,
 )
-from openhcs.core.config import EMPTY_SOURCE_BINDINGS
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
 from tests.unit.test_cellprofiler_relationship_contracts import _contract, _module
 from openhcs.domains.microscopy.axes import Microscopy
@@ -126,18 +126,18 @@ def test_disabled_parent_means_add_no_measurement_inputs():
     assert contract.artifact_inputs.of_artifact_type(MeasurementsArtifactType) == ()
 
 
-from openhcs.core.runtime_stores import RuntimeArtifactInput, RuntimeValueStore
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput, RuntimeValueStore
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_plane_alignment import SourcePlaneIdentitySequenceAlignment
-from openhcs.core.source_bindings import (
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_plane_alignment import SourcePlaneIdentitySequenceAlignment
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     ComponentSelector,
@@ -208,7 +208,7 @@ def test_declared_child_measurements_gather_all_exact_producer_channels(dynamic)
         "3",
         "3",
     ]
-    from openhcs.core.measurement_feature_queries import (
+    from openhcs.core.measurements.measurement_feature_queries import (
         ColumnarMeasurementTableSchema,
     )
 
@@ -261,7 +261,7 @@ def _source_axis(channel, *, sites=("1", "2"), well="A01", time="1"):
             for site in sites
         )
     )
-    from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
     bindings = CompiledSourceBindingPlan(
         bindings=tuple(
@@ -312,18 +312,18 @@ def test_child_measurement_alignment_rejects_ambiguous_target_occurrences():
 
 def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     import numpy as np
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelSet,
         ObjectLabelVariantData,
     )
-    from openhcs.core.runtime_object_label_domains import (
+    from openhcs.core.object_labels.runtime_object_label_domains import (
         ObjectLabelDomain,
     )
-    from openhcs.core.runtime_plane_projection import (
+    from openhcs.core.payload.runtime_plane_projection import (
         RuntimePlaneProjection,
     )
-    from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.artifacts.kinds import RelationshipsArtifactType
     from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
@@ -619,7 +619,7 @@ def test_measurement_input_relation_rejects_an_image_subject_and_nonmeasurement_
 
 @pytest.mark.parametrize("dynamic", (False, True))
 def test_plate_projection_keeps_complete_producer_scope(dynamic):
-    from openhcs.core.callable_contract import FunctionStepExecutionScope
+    from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
     from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 
     edge, _ = _compiled_edge(dynamic=dynamic, declared=False)

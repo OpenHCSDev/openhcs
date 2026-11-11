@@ -8,8 +8,8 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     InProcessCompileInspectionGateway,
     artifact_plan_inspection_from_compilation,
 )
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.cellprofiler.smoothing import reducenoise

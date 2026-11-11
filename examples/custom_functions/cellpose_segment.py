@@ -22,7 +22,7 @@ from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.memory import torch as torch_function

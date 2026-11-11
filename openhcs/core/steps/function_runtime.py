@@ -4,8 +4,8 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import logging
 import time
 from dataclasses import dataclass, replace
@@ -30,17 +30,17 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.payloads import NoMainFlowOutput
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     ImagePayloadConsumption,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
     RuntimeFixedComponentValues,
 )
-from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugCursor,
     DebugEvent,
     DebugEventSink,
@@ -49,7 +49,7 @@ from openhcs.core.debug import (
     DebugInvocationParameter,
     debug_event_sink_from_context,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     InvocationArtifactInputEdgePlan,
@@ -58,7 +58,7 @@ from openhcs.core.function_patterns import (
     RuntimeComponentValue,
     RuntimeInvocationDomain,
 )
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadStackComposition,
     ImageOutputBundle,
@@ -66,68 +66,68 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.memory import (
     unstack_runtime_slices,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactInput,
     RuntimeArtifactLocation,
     replace_runtime_artifact_payload,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_output_matching import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_output_matching import (
     split_runtime_output,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_adapters import (
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
+from openhcs.core.callable.runtime_adapters import (
     RuntimeAdapterRequest,
 )
-from openhcs.core.runtime_slice_alignment import (
+from openhcs.core.payload.runtime_slice_alignment import (
     RuntimeSliceAlignedValueSet,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.source_image_provenance import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,
 )
-from openhcs.core.source_binding_selection import (
+from openhcs.core.source.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
     SourceFileUniverse,
     SourceUniverseRequest,
     SourcePatternResolutionContext,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
     with_source_component_metadata,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     FromPipelineStart,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     PrimaryPlaneRole,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayload,
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_spatial_graph import SpatialGraph
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
@@ -137,11 +137,11 @@ from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputPathRequest,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
-from openhcs.core.runtime_image_values import owned_runtime_value
-from openhcs.core.runtime_image_values import as_runtime_value
-from openhcs.core.debug import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis
+from openhcs.core.payload.runtime_image_values import owned_runtime_value
+from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
     ExceptionDebugBoundary,

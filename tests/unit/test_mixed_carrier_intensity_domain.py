@@ -1,27 +1,27 @@
 """Current intensity units survive composition, projection and native storage."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     ImagePayloadBundleContext, ImagePayloadStackContext, stack_image_payloads,
     ImagePayloadStackComposition,
 )
-from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileSourceMetadata
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat, ImageFileSourceMetadata
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     ImageUnitIntervalIntensityMetadata,
 )
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 
 def source(data, *, scale=255, channel_axis=None):

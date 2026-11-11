@@ -260,7 +260,7 @@ def test_cached_relationship_preserves_declared_slice_count_and_endpoint_axes() 
         RuntimeMeasurementFeatureKey,
         RuntimeMeasurementSubjectKey,
     )
-    from openhcs.core.runtime_measurements import MeasurementScope
+    from openhcs.core.measurements.runtime_measurements import MeasurementScope
     from openhcs.core.runtime_relationships import (
         ObjectInstanceKey,
         ObjectInstanceRelationship,
@@ -360,7 +360,7 @@ def test_physical_inventory_consumes_redundant_edges_and_compares_exact_correlat
     tmp_path: Path, swapped: bool
 ) -> None:
     from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
-    from openhcs.core.runtime_exports import RuntimeExportObservation
+    from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 
     reference = _saved_outputs(tmp_path / "native", edges=False)
     candidate = _saved_outputs(tmp_path / "saved", edges=True, swapped=swapped)

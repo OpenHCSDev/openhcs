@@ -189,7 +189,7 @@
       "source_relative": "openhcs/core/steps/function_outputs.py"
     },
     {
-      "module": "openhcs.core.virtual_workspace_metadata",
+      "module": "openhcs.core.io.virtual_workspace_metadata",
       "owner": "AtomicMetadataWriter",
       "method": "publish_source_projection_metadata",
       "line": 181,
@@ -197,7 +197,7 @@
       "source_relative": "openhcs/core/virtual_workspace_metadata.py"
     },
     {
-      "module": "openhcs.core.runtime_stack_cache",
+      "module": "openhcs.core.payload.runtime_stack_cache",
       "owner": "RuntimeImageStackCache",
       "method": "get",
       "line": 38,
@@ -205,7 +205,7 @@
       "source_relative": "openhcs/core/runtime_stack_cache.py"
     },
     {
-      "module": "openhcs.core.runtime_stack_cache",
+      "module": "openhcs.core.payload.runtime_stack_cache",
       "owner": "RuntimeImageStackCache",
       "method": "store",
       "line": 49,
@@ -213,7 +213,7 @@
       "source_relative": "openhcs/core/runtime_stack_cache.py"
     },
     {
-      "module": "openhcs.core.aligned_image_payload",
+      "module": "openhcs.core.payload.aligned_image_payload",
       "owner": "",
       "method": "stack_image_payload_context",
       "line": 400,
@@ -221,7 +221,7 @@
       "source_relative": "openhcs/core/aligned_image_payload.py"
     },
     {
-      "module": "openhcs.core.aligned_image_payload",
+      "module": "openhcs.core.payload.aligned_image_payload",
       "owner": "",
       "method": "unstack_image_payload_context",
       "line": 598,
@@ -237,7 +237,7 @@
       "source_relative": "openhcs/core/orchestrator/analysis_consolidation.py"
     },
     {
-      "module": "openhcs.core.measurement_feature_queries",
+      "module": "openhcs.core.measurements.measurement_feature_queries",
       "owner": "MeasurementFeatureValueIndex",
       "method": "from_columnar_table_by_object",
       "line": 1327,

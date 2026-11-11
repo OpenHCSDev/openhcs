@@ -16,7 +16,7 @@ from objectstate.object_state import ObjectState, ObjectStateRegistry
 from objectstate.value_semantics import semantic_values_equal
 
 from formbridge.selection import AllItems, SelectedItems, SelectionScope
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from formbridge.selection import SelectedScopeIdsCarrier
 from objectstate import retain_only_authored_paths
 from openhcs.ui.shared.plate_manager_code_document import (

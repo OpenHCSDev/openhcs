@@ -26,11 +26,11 @@ from pyqt_reactive.services.window_navigation import (
 )
 from pyqt_reactive.theming.color_scheme import ColorScheme
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
 )
-from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.config.config_document import ConfigDocumentCodec
 from openhcs.pyqt_gui.config import UIConfig, get_default_ui_config
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.services.window_handlers import (
@@ -525,7 +525,7 @@ def test_pipeline_config_code_document_emits_only_authored_override(qapp) -> Non
     try:
         authored_source = """# OpenHCS configuration
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyPartitionFilterConfig,
     PipelineConfig,
 )
@@ -876,7 +876,7 @@ def test_scope_global_config_window_save_persists_cache(monkeypatch) -> None:
         saved_configs.append(config)
         return True
 
-    from openhcs.core import config_cache
+    from openhcs.core.config import config_cache
     from openhcs.pyqt_gui.windows import config_window
 
     monkeypatch.setattr(config_window, "OpenHCSConfigWindow", FakeConfigWindow)

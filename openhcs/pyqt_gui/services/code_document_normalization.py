@@ -10,12 +10,12 @@ from metaclass_registry import AutoRegisterMeta
 from formbridge.services.function_pattern_code_document import FunctionPatternValue
 from python_introspect import AnnotatedDataclassValidationMixin
 
-from openhcs.core.config_document import ConfigDocumentCodec
-from openhcs.core.function_step_document import (
+from openhcs.core.config.config_document import ConfigDocumentCodec
+from openhcs.core.callable.function_step_document import (
     FunctionStepDocument,
     FunctionStepDocumentCodec,
 )
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.ui.shared.plate_manager_code_document import (

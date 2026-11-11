@@ -5,7 +5,7 @@ import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )

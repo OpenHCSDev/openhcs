@@ -18,8 +18,8 @@ from pathlib import Path
 from types import MappingProxyType
 
 from openhcs.constants import Backend
-from openhcs.core.source_bindings import ImagePlaneSource
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.source.source_bindings import ImagePlaneSource
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 from .cellprofiler_literals import decode_cellprofiler_setting_literal
 

@@ -6,15 +6,15 @@ from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import (
     ArtifactGraph,
     artifact_producers_for_outputs,
 )
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.axes import Ungrouped
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.axes.axis_declarations import Ungrouped
 
 
 def test_context_owns_exact_step_artifact_projection_facts() -> None:

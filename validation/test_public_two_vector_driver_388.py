@@ -52,8 +52,8 @@ def test_complete_real_authoring_render_reconstruction_no_fixture_execution(driv
     from openhcs.agent.dto.pipeline import FunctionStepAddRequest
     from openhcs.agent.services.config_service import ConfigService
     from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-    from openhcs.core.function_patterns import normalize_function_pattern
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.callable.function_patterns import normalize_function_pattern
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
     from openhcs.processing.backends.cellprofiler.classification import (
         ClassificationThresholdMethod, classify_objects_two_measurements,
     )
@@ -116,7 +116,7 @@ def test_driver_public_tools_are_original_declarations(driver):
 
 def test_real_typed_csv_preview_owner_is_used(driver):
     from openhcs.agent.dto.plate import PlateFileQueryResult, PlateFileQueryRecordSummary, PlateInspectionResultFilePreview
-    from openhcs.core.plate_file_inventory import PlateFileKind
+    from openhcs.core.plate.plate_file_inventory import PlateFileKind
     rows = ({"object_label": "1"}, {"object_label": "2"})
     record = PlateFileQueryRecordSummary(kind=PlateFileKind.RESULT, key="rows.csv",
         relative_path="rows.csv", full_path="/owned/rows.csv",

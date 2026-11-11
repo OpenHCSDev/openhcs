@@ -4,8 +4,8 @@ These source controls do not prove BioFormats discovery, compilation, native
 execution, saved CSV/ROI publication, an installed MCP journey, or biology.
 """
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -21,13 +21,13 @@ import pytest
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.axes import AxisFamily
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_matching import source_component_metadata_value
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

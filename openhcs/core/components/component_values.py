@@ -6,7 +6,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from types import MappingProxyType
 from typing import Generic, TypeVar
 
-from openhcs.core.axes import Axis, AxisFamily, is_axis
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, is_axis
 
 ComponentValueT = TypeVar("ComponentValueT")
 

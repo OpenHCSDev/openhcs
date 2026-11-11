@@ -11,7 +11,7 @@ from zmqruntime.shutdown import EndpointShutdownService
 
 from openhcs.authoring.session.events import ErrorReported
 from openhcs.constants.constants import OrchestratorExecFailed
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ManagerExecutionState,
     ExecutionCancelled, ExecutionFailed,
 )

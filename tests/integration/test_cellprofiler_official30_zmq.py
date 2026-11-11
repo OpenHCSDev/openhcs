@@ -35,7 +35,7 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService,
     ViewerWindowValidationAuthority,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
     StreamingConfig,
@@ -44,12 +44,12 @@ from openhcs.core.config import (
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
 )
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactViewerPayloadExpectation,
     runtime_artifact_viewer_component_identity,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.streaming_config_declarations import (
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,
     ViewerFamily,

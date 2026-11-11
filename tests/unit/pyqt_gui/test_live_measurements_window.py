@@ -6,7 +6,7 @@ from types import ModuleType, SimpleNamespace
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from openhcs.authoring.session.live_measurements import LiveMeasurementTable
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.pyqt_gui.windows.live_measurements_window import (
     LiveMeasurementsWindow,
     _scope_text,

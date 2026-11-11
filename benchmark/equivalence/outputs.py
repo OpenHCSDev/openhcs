@@ -1,7 +1,7 @@
 """Runtime output snapshot construction for equivalence checks."""
 
 from __future__ import annotations
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
@@ -12,25 +12,25 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from benchmark.equivalence.images import RuntimeImageSnapshot
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_dialect import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_dialect import (
     MeasurementDialect,
 )
 from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
 )
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.source_bindings import (
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.source.source_bindings import (
     SourceArtifactRole,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_projection import SourceProjectionSet
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_projection import SourceProjectionSet
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.io.virtual_workspace_metadata import (
     METADATA_CONFIG,
     OpenHCSMetadataSubdirectories,
 )

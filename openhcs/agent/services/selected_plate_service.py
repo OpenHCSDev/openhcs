@@ -32,7 +32,7 @@ from openhcs.agent.ui_bridge_identities import DatasetListStateSurfaceIdentity
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from formbridge.bridge.service import UiBridgeGetStateSurfaceOperation, UiBridgeService
-from openhcs.core.plate_image_inventory import PlateFileKind
+from openhcs.core.plate.plate_image_inventory import PlateFileKind
 
 
 @dataclass(frozen=True, slots=True)

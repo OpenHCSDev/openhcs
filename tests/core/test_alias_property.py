@@ -1,4 +1,4 @@
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.alias_property import AliasProperty
 
 
 class AliasExample:

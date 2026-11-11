@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImagePlaneSource,
     MetadataSelector,
@@ -18,9 +18,9 @@ from openhcs.core.source_bindings import (
     TextContainsRegex,
     TextEquals,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_metadata import SourceFilterClause
-from openhcs.core.source_projection import SourceCandidate
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_metadata import SourceFilterClause
+from openhcs.core.source.source_projection import SourceCandidate
 from openhcs.domains.microscopy.axes import Microscopy
 
 

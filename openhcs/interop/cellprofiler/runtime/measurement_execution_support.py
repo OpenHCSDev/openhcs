@@ -8,22 +8,22 @@ from functools import partial
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
 )
-from openhcs.core.runtime_profile import RuntimeProfileTimer
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_profile import RuntimeProfileTimer
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeBatchExecutionDomain,
     RuntimeBatchInvocationRequest,
 )

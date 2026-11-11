@@ -8,7 +8,7 @@ declared name.
 
 from __future__ import annotations
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     ColourAxis,
@@ -20,7 +20,7 @@ from openhcs.core.axes import (
     TileAxis,
     TimeAxis,
 )
-from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
 
 class RemoteSensing(AxisFamily):

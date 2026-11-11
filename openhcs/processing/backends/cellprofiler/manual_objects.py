@@ -16,18 +16,18 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
@@ -38,10 +38,10 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 @dataclass(frozen=True, slots=True)

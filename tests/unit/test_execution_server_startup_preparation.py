@@ -11,8 +11,8 @@ from zmqruntime.execution import ExecutionServer
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import FunctionCatalogPreparationOutcome
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.processing_preparation import PreparationCacheBatch, PreparationOperation
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.processing_preparation import PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer

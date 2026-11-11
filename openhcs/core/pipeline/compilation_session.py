@@ -9,19 +9,19 @@ from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_ty
 from objectstate import DataclassFieldAccess
 
 from openhcs.core.artifacts.plans import ArtifactSpecRef
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import CompilingContext
 from openhcs.core.pipeline.artifact_planning import ArtifactGraph
-from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_metadata import SourceMetadataFields, SourceMetadataMapping
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     normalize_prepared_function_pattern,
     NormalizedFunctionItem,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     InvocationContractProvider,
     InvocationContractPlan,
     ArtifactDeclarationStepContext,
@@ -29,12 +29,12 @@ from openhcs.core.invocation_artifacts import (
     callable_contract_artifact_declarations,
     PipelineInvocationContractProviderAuthority,
 )
-from openhcs.core.vfs_protocol import (
+from openhcs.core.payload.vfs_protocol import (
     FileManagerLike,
     DatasetPathDeclaration,
 )
-from openhcs.core.axes import AxisFamily, Ungrouped
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.components.validation import GenericValidator

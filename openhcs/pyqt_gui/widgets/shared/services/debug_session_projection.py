@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openhcs.core.debug_session_projection import (
+from openhcs.core.debug.debug_session_projection import (
     DebugSessionPhase,
     DebugSessionProjectionContext,
     PendingExecutionDebugSessionPhase,

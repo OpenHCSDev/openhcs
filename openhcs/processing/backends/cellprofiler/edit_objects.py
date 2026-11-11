@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import ClassVar
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
@@ -25,10 +25,10 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     object_label_parent_child_payload,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
     object_label_value_with_dense_labels,
@@ -45,7 +45,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_enum_setting_parser,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs

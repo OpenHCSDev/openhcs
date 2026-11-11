@@ -1,6 +1,6 @@
 """Saved-pixel facts and complete, nominal metadata replay."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import fields
@@ -11,31 +11,31 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.image_file_serialization import (
+from openhcs.core.payload.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
 )
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImageUnitIntervalIntensityMetadata,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceContributor,
     RuntimeSourceImageProvenancePlane,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourcePlaneProjection,
     SourceProjectionMetadataSerializer,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.io.virtual_workspace_metadata import (
     FIELDS,
     AtomicMetadataWriter,
     MetadataWriteError,
@@ -44,8 +44,8 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def metadata_fixture():
@@ -517,7 +517,7 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     restored = image_format.persisted_metadata(path, payload)
     reloaded = ImageMetadataPayload(image_format.read(path), restored)
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {}))
-    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.source.source_bindings import NamedSourceBinding
 
     current = NamedSourceBinding(alias="neurite").apply_loaded_payload( reloaded, context, ).metadata
     assert current.source_dtype == "float32"
@@ -533,7 +533,7 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
 def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_source_facts(
     tmp_path,
 ):
-    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.source.source_bindings import NamedSourceBinding
 
     metadata = metadata_fixture().replace_fields(
         source_spatial_domain=SourceSpatialDomain((0, 0), (4, 6))
@@ -576,7 +576,7 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
 def test_persisted_projection_validates_loaded_window_not_full_source_extent(
     authored_domain, expected_domain
 ):
-    from openhcs.core.source_workspace_projection import (
+    from openhcs.core.source.source_workspace_projection import (
         VirtualWorkspaceImagePayloadProjection,
     )
 
@@ -640,7 +640,7 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
     from polystore.filemanager import FileManager
     from polystore.zarr import ZarrStorageBackend
 
-    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.source.source_bindings import NamedSourceBinding
 
     pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
     metadata = metadata_fixture().replace_fields(

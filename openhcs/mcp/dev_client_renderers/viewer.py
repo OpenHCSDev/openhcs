@@ -29,7 +29,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowStateResult,
     ViewerWindowValidationSummaryResult,
 )
-from openhcs.core.debug_view_models import DebugViewSection
+from openhcs.core.debug.debug_view_models import DebugViewSection
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     McpDevOutputRenderer,

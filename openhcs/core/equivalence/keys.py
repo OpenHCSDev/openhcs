@@ -12,16 +12,16 @@ from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementFeatureNameMode,
 )
-from openhcs.core.measurement_dialect import (
+from openhcs.core.measurements.measurement_dialect import (
     MeasurementDialect,
     RuntimeMeasurementSourceQualifiedFeature,
 )
-from openhcs.core.runtime_identifier import (
+from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_identifier,
     normalize_runtime_source_name,
     runtime_source_name_tokens,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     MeasurementSubject,

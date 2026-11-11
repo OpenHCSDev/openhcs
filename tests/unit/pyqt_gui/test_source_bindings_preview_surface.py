@@ -5,7 +5,7 @@ from __future__ import annotations
 from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QPalette
 
-from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget
 from pyqt_reactive.theming import ColorScheme, PaletteManager
 from pyqt_reactive.widgets.shared.scope_color_utils import get_scope_color_scheme

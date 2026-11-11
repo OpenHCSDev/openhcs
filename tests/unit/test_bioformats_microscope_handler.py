@@ -7,10 +7,10 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.constants import Backend
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
 )

@@ -348,7 +348,7 @@ OME-TIFF, OME-Zarr, TIFF, PNG, and mixed-folder inputs
   the writer execution method. This is an unconditional dependency with no
   try/except, alternate implementation, or fallback chain.
 - Exact stability command:
-  `.venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")'`
+  `.venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")'`
   -> `imports-stable`.
 - Follow-up syntax plus focused suite:
   `.venv/bin/python -m py_compile openhcs/microscopes/bioformats.py openhcs/core/source_binding_workspace.py && .venv/bin/pytest -q tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_microscope_handler.py`
@@ -361,7 +361,7 @@ OME-TIFF, OME-Zarr, TIFF, PNG, and mixed-folder inputs
 
 ### 2026-07-19 06:00 EDT - Generic authority moved; eager cycle eliminated
 
-- Moved `SourceCandidate` to `openhcs.core.source_projection`, alongside
+- Moved `SourceCandidate` to `openhcs.core.source.source_projection`, alongside
   `SourcePixelRef`-based source projections, and removed the duplicate declaration
   from `source_binding_workspace.py`.
 - The proven eager cycle was broader than the temporary Bio-Formats local import:
@@ -375,7 +375,7 @@ OME-TIFF, OME-Zarr, TIFF, PNG, and mixed-folder inputs
   serialization. Core source projection/workspace modules now have zero microscope
   imports; microscope handlers consume those core declarations.
 - Exact syntax/import gate:
-  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_binding_workspace.py openhcs/core/virtual_workspace_metadata.py openhcs/microscopes/openhcs.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")'`
+  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_binding_workspace.py openhcs/core/virtual_workspace_metadata.py openhcs/microscopes/openhcs.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")'`
   -> `imports-stable` with exit code 0.
 - No lazy import, `try`/`except`, compatibility implementation, or fallback masks
   the dependency. Next: make Bio-Formats import the completed core projector normally
@@ -395,7 +395,7 @@ OME-TIFF, OME-Zarr, TIFF, PNG, and mixed-folder inputs
   `rg -n 'BioFormatsCompositeAdapter|bioformats_spw_projector|BioFormatsDatasetAuthority|BioFormatsWorkspaceMetadataWriter|BioFormatsSPWProjector|BioFormatsLayoutProjector|BioFormatsImageEntry|BioFormatsMetadata\\b|BioFormatsPlateIdentity' --glob '*.py' .`
   -> only the unrelated fake class name `FakeBioFormatsMetadata` remains.
 - Syntax/import/collection checkpoint:
-  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_binding_workspace.py openhcs/core/virtual_workspace_metadata.py openhcs/microscopes/openhcs.py openhcs/microscopes/bioformats_adapter.py openhcs/microscopes/bioformats.py tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")' && .venv/bin/pytest --collect-only -q tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py tests/integration/test_bioformats_imagexpress_synthetic.py`
+  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_binding_workspace.py openhcs/core/virtual_workspace_metadata.py openhcs/microscopes/openhcs.py openhcs/microscopes/bioformats_adapter.py openhcs/microscopes/bioformats.py tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")' && .venv/bin/pytest --collect-only -q tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py tests/integration/test_bioformats_imagexpress_synthetic.py`
   -> `imports-stable`; 16 tests collected; exit code 0.
 - First execution run failed 9 tests at one exact boundary:
   `BioFormatsWellKeyAuthority` exposes `key_from_one_based`, while OME Well.Row and
@@ -427,7 +427,7 @@ OME-TIFF, OME-Zarr, TIFF, PNG, and mixed-folder inputs
   `rg -n 'SourcePlaneFilenameCodec|_ADDRESS_COMPONENTS|_METADATA_COMPONENT_KEYS' openhcs tests`
   -> no matches.
 - Syntax/import/test gate:
-  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_metadata.py openhcs/core/source_binding_workspace.py openhcs/microscopes/source_schema.py openhcs/microscopes/bioformats_adapter.py openhcs/microscopes/bioformats.py external/PolyStore/src/polystore/ome_zarr_storage.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")' && .venv/bin/pytest -q tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py tests/unit/test_source_projection.py`
+  `.venv/bin/python -m py_compile openhcs/core/source_projection.py openhcs/core/source_metadata.py openhcs/core/source_binding_workspace.py openhcs/microscopes/source_schema.py openhcs/microscopes/bioformats_adapter.py openhcs/microscopes/bioformats.py external/PolyStore/src/polystore/ome_zarr_storage.py && .venv/bin/python -c 'import benchmark.adapters.cellprofiler; import openhcs.core.source.source_binding_workspace; import openhcs.microscopes.bioformats; print("imports-stable")' && .venv/bin/pytest -q tests/unit/test_bioformats_java_adapter.py tests/unit/test_bioformats_spw_projector.py tests/unit/test_bioformats_microscope_handler.py tests/unit/test_source_projection.py`
   -> `imports-stable`; `27 passed in 6.27s`.
 
 ### 2026-07-19 06:29 EDT - Resume diff, peer, and advisor audit

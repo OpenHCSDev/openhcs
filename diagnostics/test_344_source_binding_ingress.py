@@ -8,14 +8,14 @@ from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
 
 from openhcs.constants import AllComponents, Backend
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector, SourceSetAssembler
-from openhcs.core.source_bindings import source_bindings_defaults_to_base
-from openhcs.core.source_metadata import (
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector, SourceSetAssembler
+from openhcs.core.source.source_bindings import source_bindings_defaults_to_base
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceProjectionSet
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceProjectionSet
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 

@@ -9,7 +9,7 @@ import pytest
 from python_introspect import parameter_exclusions
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.payload.aligned_image_payload import AlignedImageStack
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.sidecars import QaCheckpoint
 from openhcs.core.artifacts.relations import (
@@ -29,19 +29,19 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.processing_preparation import CallablePreparation
-from openhcs.core.config import LazyDtypeConfig
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.processing_preparation import CallablePreparation
+from openhcs.core.config.pipeline_config import LazyDtypeConfig
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.pipeline.function_contracts import annotation_produces_runtime_type
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
-from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
 )

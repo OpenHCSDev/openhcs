@@ -27,18 +27,18 @@ from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
-from openhcs.core.stated_types import require_stated_parameter_types
-from openhcs.core.callable_contract import (
+from openhcs.core.util.stated_types import require_stated_parameter_types
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from python_introspect import is_declared_public_name
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     ProcessingContract,
 )

@@ -9,24 +9,24 @@ from dataclasses import dataclass
 from enum import Enum
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure3DContract,
 )
@@ -57,8 +57,8 @@ from openhcs.core.pipeline.function_contracts import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,
     )

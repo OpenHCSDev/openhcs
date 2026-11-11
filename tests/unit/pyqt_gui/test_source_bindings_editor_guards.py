@@ -8,9 +8,9 @@ from dataclasses import fields, is_dataclass
 from enum import Enum
 from pathlib import Path
 
-import openhcs.core.source_bindings_preview as preview_module
+import openhcs.core.source.source_bindings_preview as preview_module
 import openhcs.pyqt_gui.widgets.source_bindings_editor as editor_module
-from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_bindings import NamedSourceBinding
 from pyqt_reactive.widgets.editable_table import CellEditor, DataclassFieldColumns
 
 
@@ -164,12 +164,12 @@ def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> 
     """New-case test: a registered family member appears in its table's choices."""
     from PyQt6.QtWidgets import QApplication, QComboBox
 
-    from openhcs.core.config import StepSourceBindingsConfig
-    from openhcs.core.source_metadata import (
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+    from openhcs.core.source.source_metadata import (
         SourceFilterClause,
         SourceFilterSubject,
     )
-    from openhcs.core.source_bindings import (
+    from openhcs.core.source.source_bindings import (
         PairByMetadata,
         PathIsImage,
     )

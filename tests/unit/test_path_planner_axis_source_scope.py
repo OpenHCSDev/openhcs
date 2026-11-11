@@ -5,7 +5,7 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.pipeline.path_planner import PathPlanner
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 def test_path_planner_scopes_source_metadata_to_compilation_axis() -> None:

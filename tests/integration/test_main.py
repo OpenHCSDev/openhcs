@@ -9,7 +9,7 @@ Refactored using Systematic Code Refactoring Framework:
 """
 
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
 import json
 import os
@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     MaterializationBackend,
     PathPlanningConfig,
@@ -30,7 +30,7 @@ from openhcs.core.config import (
 )
 from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyStepMaterializationConfig,
     LazyNapariStreamingConfig,
     LazyFijiStreamingConfig,
@@ -42,7 +42,7 @@ from openhcs.core.config import (
     LazyVFSConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep as Step
 
 # Processing functions
@@ -74,8 +74,8 @@ from tests.integration.helpers.fixture_utils import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -400,7 +400,7 @@ def _validate_metadata_structure(metadata: Dict) -> List[str]:
 
 def _get_materialization_subdir() -> str:
     """Get the actual subdirectory name used by LazyStepMaterializationConfig."""
-    from openhcs.core.config import StepMaterializationConfig
+    from openhcs.core.config.pipeline_config import StepMaterializationConfig
 
     return StepMaterializationConfig().sub_dir
 
@@ -789,7 +789,7 @@ def _execute_pipeline_with_mode(
             materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
         # Create pipeline config with lazy configs
-        from openhcs.core.config import (
+        from openhcs.core.config.pipeline_config import (
             LazyPathPlanningConfig,
             LazyStepPartitionFilterConfig,
             LazySequentialProcessingConfig,

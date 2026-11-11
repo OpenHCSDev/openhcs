@@ -23,13 +23,13 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     ObjectCoreMeasurementFeature,

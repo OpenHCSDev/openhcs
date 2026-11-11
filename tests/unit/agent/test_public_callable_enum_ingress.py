@@ -10,10 +10,10 @@ import pytest
 
 from openhcs.agent.dto.pipeline import FunctionStepAddRequest
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.callable_contract import CallableContract, callable_request
-from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.callable.callable_contract import CallableContract, callable_request
+from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
     EphemeralLifetime,

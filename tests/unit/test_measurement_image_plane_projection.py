@@ -1,5 +1,5 @@
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -7,16 +7,16 @@ from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.measurement_image_alignment import ObjectLabelsReference
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.measurements.measurement_image_alignment import ObjectLabelsReference
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )

@@ -1,8 +1,8 @@
 """CalculateMath measurement semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 
 from abc import ABC, abstractmethod
@@ -21,14 +21,14 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
-from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurements.measurement_row_materialization import ConcatenatedColumnarRows
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
@@ -37,22 +37,22 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     enum_member_with_payload,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_slice_alignment import (
+from openhcs.core.payload.runtime_slice_alignment import (
     RuntimeSliceAlignedValueSet,
     RuntimeSliceAlignedValues,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -97,7 +97,7 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation as MathOperation,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (

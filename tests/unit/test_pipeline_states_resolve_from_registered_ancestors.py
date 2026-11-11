@@ -22,7 +22,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.scope_key import ScopeKey
 
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     DtypeConfig,
     GlobalPipelineConfig,
     LazyDtypeConfig,

@@ -2,15 +2,15 @@
 
 import pytest
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.source_bindings import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.source_matching import (
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.source.source_matching import (
     SourceImageSetIdentity,
     SourceImageSetIdentityPolicy,
 )
@@ -142,7 +142,7 @@ def test_path_identity_stays_distinct_without_semantic_field_coordinates():
 
 
 def test_pipeline_config_compiles_the_same_paired_field_identity_policy():
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         LazyProcessingConfig,
         LazySourceBindingsConfig,
         PipelineConfig,

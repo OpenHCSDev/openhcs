@@ -19,13 +19,13 @@ from openhcs.core.artifacts.relations import (
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.streaming import OnDemandStreaming
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
-from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_image_values import (
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelPayload
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelPayload
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
     UneditedLabels,

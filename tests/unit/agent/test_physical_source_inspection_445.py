@@ -20,16 +20,16 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionService,
 )
 from openhcs.constants.constants import Backend
-from openhcs.core.plate_image_inventory import PlateFileKind, PlateImageInventory
-from openhcs.core.source_bindings import (
+from openhcs.core.plate.plate_image_inventory import PlateFileKind, PlateImageInventory
+from openhcs.core.source.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
 from tests.unit.bioformats_fixture import write_bioformats_manifest_fixture
 
@@ -184,7 +184,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # Exercise the existing stream's source preparation, not a viewer/mock
         # or a new decoder. The actual native launch remains parent-owned.
         from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-        from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+        from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
 
         context, errors, _ = service.open_context(
             PlatePathInspectionRequest(plate_path=str(tmp_path), source_format="bioformats")

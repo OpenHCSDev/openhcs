@@ -48,9 +48,9 @@ from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.authoring.session.operations.datasets import InitializeDatasets
 from openhcs.agent.ui_bridge_identities import DatasetListCodeDocumentIdentity
 from openhcs.constants.constants import Backend
-from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.plate.plate_image_inventory import (
     PlateFileKind,
     PlateFileInventory,
     PlateFileInventoryQuery,
@@ -61,7 +61,7 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFilePreviewReader,
     PlateResultFileInventory,
 )
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,

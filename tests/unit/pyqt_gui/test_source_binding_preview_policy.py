@@ -2,8 +2,8 @@
 
 from dataclasses import replace
 
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_bindings import NamedSourceBinding
 from openhcs.pyqt_gui.config import UIConfig
 from formbridge.utils.preview_formatters import PreviewFieldFormatRequest, PreviewValueDetail
 from formbridge.managers.preview_formatting import ManagerPreviewFieldFormatter

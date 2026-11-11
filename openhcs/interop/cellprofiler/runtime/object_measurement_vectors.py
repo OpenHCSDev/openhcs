@@ -11,31 +11,31 @@ from typing import cast, TYPE_CHECKING
 import numpy as np
 
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     measurement_row_has_object_identity,
 )
-from openhcs.core.runtime_artifact_queries import (
+from openhcs.core.runtime_store.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementLabelSliceFeatureBatchQuery,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     MeasurementFeatureQuery,
     RuntimeObjectLabelMeasurementQueryCache,
 )
-from openhcs.core.measurement_row_materialization import measurement_rows
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.measurement_row_materialization import measurement_rows
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     measurement_row_mapping,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -50,7 +50,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (

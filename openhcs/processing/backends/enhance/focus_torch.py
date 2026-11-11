@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Optional
 
 # Import torch modules as optional dependencies
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_decorator
 from openhcs.utils.import_utils import optional_import_placeholder
 

@@ -16,8 +16,8 @@ from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
 from openhcs.core.materialization.path_scopes import (
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,

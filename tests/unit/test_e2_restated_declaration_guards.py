@@ -10,9 +10,9 @@ from pathlib import Path
 
 from pycodify import SourceDocument
 
-import openhcs.core.config_document
-import openhcs.core.function_step_document
-import openhcs.core.pipeline_document  # noqa: F401
+import openhcs.core.config.config_document
+import openhcs.core.callable.function_step_document
+import openhcs.core.io.pipeline_document  # noqa: F401
 
 REPO = Path(__file__).resolve().parents[2]
 PRODUCT = REPO / "openhcs"

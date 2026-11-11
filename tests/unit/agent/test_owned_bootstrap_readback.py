@@ -8,7 +8,7 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.agent.dto.execution import ArtifactMaterializationPlanSummary, ArtifactPlanSummary
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from tests.diagnostics.check_owned_bootstrap_live import fixture_registration_sources, guard
 from tests.diagnostics.owned_bootstrap_readback import require_csv_rows, require_projection_inventory

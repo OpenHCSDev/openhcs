@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QWidget
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 import openhcs.pyqt_gui.main as main_module
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.config import (
     GuiLogLevel,
     PyQtGuiRuntimeContext,

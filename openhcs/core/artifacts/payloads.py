@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.runtime_array_values import is_array_payload
-from openhcs.core.runtime_tabular_values import is_table_payload
+from openhcs.core.payload.runtime_array_values import is_array_payload
+from openhcs.core.payload.runtime_tabular_values import is_table_payload
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.plans import ArtifactOutputPlan

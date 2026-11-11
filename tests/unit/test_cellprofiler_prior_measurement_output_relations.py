@@ -10,8 +10,8 @@ from openhcs.core.artifacts.relations import (
     InputGroupLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.processing.backends.cellprofiler.measurement_math import (
     CalculateMathModule,

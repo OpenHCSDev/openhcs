@@ -19,7 +19,7 @@ from qtpy.QtWidgets import QApplication
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.napari_roi_manager.widgets._roi_manager import QRoiManager
 from openhcs.runtime.napari_streaming_handlers import (
     NapariShapeLayerPayload,

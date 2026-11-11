@@ -14,7 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import config as numba_config
 from numba.core.registry import CPUDispatcher
 
-from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch, PreparationOperation
+from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
@@ -41,7 +41,7 @@ def declare_callable(module, hook):
 def test_generic_kernel_registry_prepares_non_cellprofiler_families_once(
     monkeypatch, kernel_module, tmp_path
 ):
-    from openhcs.core.processing_preparation import (
+    from openhcs.core.callable.processing_preparation import (
         PersistentNumbaKernelPreparation,
         RegisteredNumbaKernelPreparation,
     )
@@ -296,7 +296,7 @@ def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path)
         import os, signal, sys
         from pathlib import Path
         from types import ModuleType
-        from openhcs.core.processing_preparation import (
+        from openhcs.core.callable.processing_preparation import (
             ModuleRegistryPreparation, PreparationCacheBatch,
             PreparationCacheWorker, PreparationOperation,
         )

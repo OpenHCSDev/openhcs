@@ -8,17 +8,17 @@ from pathlib import Path
 
 from metaclass_registry.caches import IdentityBoundProcessCache
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     CallableContractRuntimeCache,
     CallableImportIdentity,
     CallableDeclaration,
 )
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_reference import (
     FunctionReference,
     ImportableFunctionReference,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
 
 PROJECT_ROOT = Path(__file__).parents[2]
 CALLABLE_CONTRACT_PATH = PROJECT_ROOT / "openhcs" / "core" / "callable_contract.py"

@@ -158,7 +158,7 @@ class ProcessingResult:
 
 def _get_default_dtype_config():
     """Get default dtype config for standalone use."""
-    from openhcs.core.config import DtypeConfig
+    from openhcs.core.config.pipeline_config import DtypeConfig
     from openhcs.constants.constants import DtypeConversion
 
     return DtypeConfig(default_dtype_conversion=DtypeConversion.PRESERVE_INPUT)
@@ -331,7 +331,7 @@ def _process_well_worker(
     """
     from pathlib import Path as PP
 
-    from openhcs.core.config import DtypeConfig
+    from openhcs.core.config.pipeline_config import DtypeConfig
     from openhcs.constants.constants import DtypeConversion
     from openhcs.processing.backends.processors.numpy_processor import (
         create_orthogonal_projections,

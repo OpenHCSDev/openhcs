@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, Callable
 
 from arraybridge import MemoryType
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.xdg_paths import get_data_file_path
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.util.xdg_paths import get_data_file_path
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionLifetime,

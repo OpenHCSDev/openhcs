@@ -16,31 +16,31 @@ from polystore.streaming.viewer_transport import ViewerStreamProducer
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
-from openhcs.core.axis_filter import step_axis_allows_config
+from openhcs.core.axes.axis_filter import step_axis_allows_config
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_stores import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenanceFields,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     source_component_metadata_items,
 )
-from openhcs.core.source_metadata import SourceMetadataFields
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_metadata import SourceMetadataFields
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
@@ -50,7 +50,7 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamSourceComponentMetadataItems,
 )
-from openhcs.core.streaming_config_factory import StreamingViewerSurface
+from openhcs.core.config.streaming_config_factory import StreamingViewerSurface
 from openhcs.core.materialization.core import (
     BackendKwargs,
     BackendKwargsAuthority,
@@ -63,8 +63,8 @@ from openhcs.core.materialization.core import (
     materialization_outputs,
     prepare_materialization,
 )
-from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
-from openhcs.core.runtime_image_values import as_runtime_value
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis
+from openhcs.core.payload.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -995,7 +995,7 @@ class RuntimeArtifactMaterialization:
         context: "ExecutingContext",
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
-        from openhcs.core.post_execute import PostExecuteHook
+        from openhcs.core.util.post_execute import PostExecuteHook
 
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
@@ -1220,7 +1220,7 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        from openhcs.core.post_execute import PostExecuteHook
+        from openhcs.core.util.post_execute import PostExecuteHook
 
         return StepExecutionObservation(
             MappingProxyType({address: locations}),

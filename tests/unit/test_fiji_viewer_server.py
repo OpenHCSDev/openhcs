@@ -1,5 +1,5 @@
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import sys
 from types import ModuleType, SimpleNamespace
@@ -10,13 +10,13 @@ import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
 from zmqruntime.messages import AckReturnRoute, ImageTransferIdentity, ProcessIdentity
 
-from openhcs.core.axes import AxisFamily
-from openhcs.core.config import (
+from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.config.pipeline_config import (
     FijiDisplayConfig,
     FijiStreamingConfig,
     NapariDisplayConfig,
 )
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,

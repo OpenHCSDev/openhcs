@@ -30,7 +30,7 @@ def _editor(tmp_path):
 
 
 INVALID_SOURCE = """
-from openhcs.core.config import LazyProcessingConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import LazyProcessingConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_config = PipelineConfig()
@@ -41,7 +41,7 @@ pipeline_steps = [
 
 VALID_SOURCE = """
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.config import LazyProcessingConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import LazyProcessingConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_config = PipelineConfig()
@@ -54,7 +54,7 @@ pipeline_steps = [
 
 VALID_DEFAULT_CONFIG_SOURCE = """
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.config import LazyProcessingConfig
+from openhcs.core.config.pipeline_config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_steps = [

@@ -1,6 +1,6 @@
 """Request-owned display projection uses declarations, never array-rank guesses."""
 
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from types import SimpleNamespace
 from dataclasses import replace
 
@@ -9,25 +9,25 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.config import NapariStreamingConfig
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.config.pipeline_config import NapariStreamingConfig
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
 )
-from openhcs.core.viewer_streaming_service import (
+from openhcs.core.io.viewer_streaming_service import (
     FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     ViewerStreamingSource,
 )
 from python_introspect import to_jsonable
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def image_with_declaration(axis, count=1, *, color=False, masked=False):

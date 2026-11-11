@@ -6,13 +6,13 @@ in both steps. Only embedded enhancement differs. Input TIFFs stay untouched.
 from pathlib import Path
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.axes import Ungrouped
-from openhcs.core.config import (
+from openhcs.core.axes.axis_declarations import Ungrouped
+from openhcs.core.config.pipeline_config import (
     PipelineConfig, LazyPathPlanningConfig, LazyProcessingConfig,
     LazySourceBindingsConfig, LazyNapariStreamingConfig,
 )
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     ComponentSelector,
     SourceSelector,
@@ -23,7 +23,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchDimension,
     SourceBindingMatchField,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
     SourceVoxelSpacing,

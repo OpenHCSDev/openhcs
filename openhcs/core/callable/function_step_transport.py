@@ -1,0 +1,345 @@
+"""Transport normalization for FunctionStep declarations."""
+
+from __future__ import annotations
+
+import logging
+
+from dataclasses import dataclass, replace
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
+    CompiledFunctionGroup,
+    CompiledFunctionPattern,
+    AuthoredFunctionPattern,
+    NormalizedFunctionPattern,
+    NormalizedFunctionItem,
+)
+from openhcs.core.callable.function_reference import (
+    FunctionReference,
+    FunctionReferenceTransportAuthority,
+)
+from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.function_step import FunctionStep
+from pycodify import SourceDocument
+from python_introspect import Enableable
+
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PipelineStepsDocument(SourceDocument):
+    """The steps of one pipeline, saved as a Python file that assigns them."""
+
+    pipeline_steps: list[FunctionStep]
+
+
+class FunctionStepTransportAuthority:
+    """Canonicalize FunctionStep callables before process or ZMQ transport."""
+
+    @classmethod
+    def source_from_pipeline(
+        cls,
+        pipeline_steps: Sequence[FunctionStep],
+        *,
+        clean_mode: bool = True,
+    ) -> str:
+        """Normalize and pycodify one public FunctionStep list."""
+        import openhcs.serialization.pycodify_formatters  # noqa: F401
+
+        steps = list(pipeline_steps)
+        cls._require_function_steps(steps)
+        return PipelineStepsDocument(
+            pipeline_steps=cls.normalize_pipeline(steps)
+        ).to_source(
+            header="# Edit this pipeline and save to apply changes",
+            clean_mode=clean_mode,
+        )
+
+    @classmethod
+    def pipeline_steps_from_namespace(
+        cls,
+        namespace: Mapping[str, object],
+    ) -> list[FunctionStep]:
+        """Require and normalize the public FunctionStep export."""
+        return cls.normalized_steps(
+            PipelineStepsDocument.from_namespace(namespace).pipeline_steps
+        )
+
+    @classmethod
+    def normalized_steps(cls, pipeline_steps: object) -> list[FunctionStep]:
+        """Require a list of FunctionStep and normalize each member."""
+        if type(pipeline_steps) is not list:
+            raise TypeError(
+                "pipeline_steps must be a list[FunctionStep], "
+                f"got {type(pipeline_steps).__name__}."
+            )
+        cls._require_function_steps(pipeline_steps)
+        return cls.normalize_pipeline(pipeline_steps)
+
+    @classmethod
+    def _require_function_steps(cls, pipeline_steps: Sequence[object]) -> None:
+        for index, step in enumerate(pipeline_steps):
+            if not isinstance(step, FunctionStep):
+                raise TypeError(
+                    f"Pipeline member {index} must be FunctionStep, "
+                    f"got {type(step).__name__}."
+                )
+
+    @classmethod
+    def normalize_pipeline(cls, definition_pipeline: list[Any]) -> list[Any]:
+        normalized = [cls.normalize_step(step) for step in definition_pipeline]
+        return normalized
+
+    @classmethod
+    def normalize_contexts(cls, contexts: Mapping[str, Any]) -> dict[str, Any]:
+        # Preserve declaration aliases across axis-specific executable bindings.
+        # The identity table lives only for this normalization.
+        contracts: dict[int, CallableContract] = {}
+        return {
+            axis_id: cls.normalize_context(context, contracts=contracts)
+            for axis_id, context in contexts.items()
+        }
+
+    @classmethod
+    def normalize_context(
+        cls,
+        context: Any,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> Any:
+        """Derive transport plans without replacing prepared runtime contracts."""
+        if contracts is None:
+            contracts = {}
+        return context.with_step_plans({
+            step_id: replace(
+                step_plan,
+                compiled_function_pattern=cls.normalize_compiled_pattern(
+                    step_plan.compiled_function_pattern, contracts=contracts,
+                ),
+            )
+            for step_id, step_plan in context.step_plans.items()
+        })
+
+    @classmethod
+    def normalize_step(cls, step: Any) -> Any:
+        if not isinstance(step, FunctionStep):
+            return step
+        func_spec = step.function_spec()
+        if func_spec is None:
+            return step
+        normalized_func = cls.normalize_function_spec(func_spec)
+        if normalized_func is func_spec:
+            return step
+        return step.with_function_spec(normalized_func)
+
+    @classmethod
+    def normalize_function_spec(cls, func_spec: Any) -> Any:
+        if isinstance(func_spec, NormalizedFunctionPattern):
+            contracts: dict[int, CallableContract] = {}
+            return replace(
+                func_spec,
+                groups=tuple(
+                    replace(
+                        group,
+                        items=tuple(
+                            cls.normalize_compiled_invocation(item, contracts=contracts)
+                            for item in group.items
+                        ),
+                    )
+                    for group in func_spec.groups
+                ),
+            )
+        return AuthoredFunctionPattern.map_leaves(func_spec, cls._normalize_leaf)
+
+    @classmethod
+    def _normalize_leaf(cls, leaf: Any, func: Any, kwargs: Any) -> Any:
+        normalized = cls.normalize_callable(func)
+        if normalized is func:
+            return leaf
+        return normalized if kwargs is None else (normalized, kwargs)
+
+    @classmethod
+    def normalize_callable(cls, func: Any) -> Any:
+        if isinstance(func, FunctionReference):
+            return cls.normalize_function_reference(func)
+        if callable(func):
+            from openhcs.processing.backends.lib_registry.registry_service import (
+                RegistryService,
+            )
+
+            return RegistryService.registered_callable(func)
+        return func
+
+    @classmethod
+    def normalize_function_reference(
+        cls,
+        reference: FunctionReference,
+    ) -> FunctionReference:
+        declaration = FunctionReferenceTransportAuthority.with_raw_function_reference(
+            reference.declaration
+        )
+        if declaration is reference.declaration:
+            return reference
+        return replace(reference, declaration=declaration)
+
+    @classmethod
+    def normalize_compiled_pattern(
+        cls,
+        pattern: CompiledFunctionPattern | None,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> CompiledFunctionPattern | None:
+        if pattern is None:
+            return None
+        if contracts is None:
+            contracts = {}
+        groups = tuple(
+            cls.normalize_compiled_group(group, contracts=contracts)
+            for group in pattern.groups
+        )
+        if all(
+            normalized is original
+            for normalized, original in zip(groups, pattern.groups)
+        ):
+            return pattern
+        return replace(pattern, groups=groups)
+
+    @classmethod
+    def normalize_compiled_group(
+        cls,
+        group: CompiledFunctionGroup,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> CompiledFunctionGroup:
+        if contracts is None:
+            contracts = {}
+        invocations = tuple(
+            cls.normalize_compiled_invocation(invocation, contracts=contracts)
+            for invocation in group.invocations
+        )
+        if all(
+            normalized is original
+            for normalized, original in zip(invocations, group.invocations)
+        ):
+            return group
+        return replace(group, invocations=invocations)
+
+    @classmethod
+    def normalize_compiled_invocation(
+        cls,
+        invocation: NormalizedFunctionItem,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> NormalizedFunctionItem:
+        contract = cls.normalize_callable_contract(
+            invocation.contract, contracts=contracts,
+        )
+        if contract is invocation.contract:
+            return invocation
+        return replace(invocation, contract=contract)
+
+    @classmethod
+    def normalize_callable_contract(
+        cls,
+        contract: CallableContract,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> CallableContract:
+        if contracts is not None and id(contract) in contracts:
+            return contracts[id(contract)]
+        normalized_func = cls.normalize_callable(contract.func)
+        normalized = FunctionReferenceTransportAuthority.with_raw_function_reference(
+            contract
+        )
+        if normalized_func is not contract.func:
+            normalized = replace(normalized, func=normalized_func)
+        if contracts is not None:
+            contracts[id(contract)] = normalized
+        return normalized
+
+
+logger = logging.getLogger(__name__)
+
+
+class PipelineFunctionReferences:
+    """Turn a pipeline's steps and function patterns into FunctionReference leaves."""
+
+    @classmethod
+    def reference_pipeline(
+        cls,
+        pipeline_definition: Sequence["AbstractStep"],
+    ) -> list["AbstractStep"]:
+        """Return a declaration copy whose function specs are FunctionReferences."""
+        return [cls.reference_step(step) for step in pipeline_definition]
+
+    @classmethod
+    def reference_pipeline_in_place(
+        cls,
+        pipeline_definition: list["AbstractStep"],
+    ) -> None:
+        """Mutate FunctionStep callables into FunctionReferences for compilation."""
+        logger.debug(
+            "FUNCTION REFRESH: Processing %s steps",
+            len(pipeline_definition),
+        )
+
+        for step_idx, step in enumerate(pipeline_definition):
+            if not isinstance(step, FunctionStep):
+                continue
+
+            func_spec = step.function_spec()
+            if func_spec is None:
+                logger.debug(
+                    "FUNCTION REFRESH: Step %s (%s): No function pattern",
+                    step_idx,
+                    step.name,
+                )
+                continue
+
+            old_type = type(func_spec).__name__
+            step.func = cls.reference_function_spec(func_spec)
+            new_type = type(step.func).__name__
+            logger.debug(
+                "FUNCTION REFRESH: Step %s (%s): %s -> %s",
+                step_idx,
+                step.name,
+                old_type,
+                new_type,
+            )
+
+    @classmethod
+    def reference_step(cls, step: "AbstractStep") -> "AbstractStep":
+        """Return a FunctionStep copy with referenced function specs."""
+
+        if not isinstance(step, FunctionStep):
+            return step
+        func_spec = step.function_spec()
+        if func_spec is None:
+            return step
+        referenced = cls.reference_function_spec(func_spec)
+        if referenced is func_spec:
+            return step
+        return step.with_function_spec(referenced)
+
+    @classmethod
+    def reference_function_spec(cls, func_value: object) -> object:
+        """Convert callable function-pattern leaves to FunctionReference.
+
+        Disabled leaves are dropped and the enabled flag is removed.
+        """
+
+        if isinstance(func_value, NormalizedFunctionPattern):
+            return func_value
+
+        def reference_leaf(leaf, func, params):
+            func_ref = FunctionReferenceTransportAuthority.function_reference(func) if callable(func) else func
+            if params is None:
+                return func_ref
+            if Enableable.disabled_in(params):
+                return None
+            if Enableable.parameter_in(params):
+                params = Enableable.without_parameter(params)
+            return (func_ref, params)
+
+        return AuthoredFunctionPattern.map_leaves(func_value, reference_leaf)

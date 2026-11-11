@@ -30,9 +30,9 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
     is_structural_missing_measurement_cell,
@@ -43,34 +43,34 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
     measurement_axis_integer_value,
 )
-from openhcs.core.runtime_identifier import (
+from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_identifier,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,
     runtime_batch_executor,
     runtime_callable_defaults,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     source_component_metadata_consensus,
 )
 from openhcs.interop.cellprofiler.database_column_dialect import (
@@ -107,8 +107,8 @@ from openhcs.core.materialization.constants import WriteMode
 from openhcs.core.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
 
 _METADATA_TEMPLATE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
@@ -515,7 +515,7 @@ class CellProfilerSpreadsheetCsvOptions(CsvOptions):
         *,
         schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
     ) -> tuple[str, str]:
-        from openhcs.core.measurement_row_materialization import MeasurementSparseCell
+        from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseCell
 
         columns, headers = self.csv_schema(data) if schema is None else schema
         values = tuple(

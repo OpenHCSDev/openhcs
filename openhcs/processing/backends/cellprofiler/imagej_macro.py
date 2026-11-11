@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     pack_aligned_image_outputs,
@@ -20,9 +20,9 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.config import FijiStreamingConfig
+from openhcs.core.config.pipeline_config import FijiStreamingConfig
 from openhcs.core.pipeline.function_contracts import composed_image_payload
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.payload.vfs_protocol import PlateInputFile
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
 )
@@ -31,7 +31,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
 )
 from openhcs.interop.cellprofiler.setting_names import setting_values
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest

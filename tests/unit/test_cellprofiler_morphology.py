@@ -2,15 +2,15 @@ import numpy as np
 import pytest
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config.pipeline_config import DtypeConfig
 from openhcs.core.memory import numpy
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelSet,
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
@@ -35,7 +35,7 @@ from openhcs.processing.backends.cellprofiler.relationships import (
     ObjectRelationshipBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.thresholding import threshold_primitives
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

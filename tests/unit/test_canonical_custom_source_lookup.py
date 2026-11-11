@@ -15,7 +15,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
@@ -115,8 +115,8 @@ def test_filename_declaration_mismatch_is_not_accepted(source_owner):
 
 
 def test_public_canonical_source_evaluation_and_render_roundtrip_use_selected_owner(source_owner, monkeypatch):
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
-    from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 
     name = "canonical_roundtrip_source"
     (source_owner / f"{name}.py").write_text(source(name), encoding="utf-8")
@@ -136,7 +136,7 @@ def test_public_canonical_source_evaluation_and_render_roundtrip_use_selected_ow
     restored = PipelineDocumentCodec.from_source(rendered)
     assert restored.pipeline_steps[0].func is function
     reference = FunctionReferenceTransportAuthority.function_reference(function)
-    from openhcs.core.function_reference import ModuleExportRegistryFunctionReference
+    from openhcs.core.callable.function_reference import ModuleExportRegistryFunctionReference
     assert isinstance(reference, ModuleExportRegistryFunctionReference)
     assert reference.composite_key == f"openhcs:{name}"
     assert reference.resolve() is function

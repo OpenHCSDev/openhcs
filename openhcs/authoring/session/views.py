@@ -47,8 +47,8 @@ from openhcs.authoring.session.operations.pipelines import (
     LoadExamplePipeline,
     ShowPipelineCode,
 )
-from openhcs.core.config import PathPlanningConfig
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.config.pipeline_config import PathPlanningConfig
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity

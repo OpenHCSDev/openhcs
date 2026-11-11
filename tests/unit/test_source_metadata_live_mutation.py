@@ -2,8 +2,8 @@ from types import MappingProxyType
 
 import pytest
 
-from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord
+from openhcs.core.source.source_matching import (
     DECLARED_SOURCE_METADATA_FIELD,
     semantic_source_metadata_value,
     source_component_metadata_value,

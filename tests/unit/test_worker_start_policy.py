@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import MultiprocessingStartMethod
-from openhcs.core.worker_start_policy import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
+from openhcs.core.execution.worker_start_policy import (
     WorkerStartPlatform,
     WorkerStartExecutionFacts,
     resolve_worker_start_context,

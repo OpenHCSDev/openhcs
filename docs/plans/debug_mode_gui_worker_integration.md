@@ -136,7 +136,7 @@ Add a `DebugSession` model:
 - `snapshot_store_ref`
 - `dirty_from_cursor`
 
-Status: implemented as the core model in `openhcs.core.debug`.
+Status: implemented as the core model in `openhcs.core.debug.debug_runtime`.
 
 ### Debug Cursor
 
@@ -303,7 +303,7 @@ Initial renderers:
 
 Default renderer works for all non-CellProfiler functions.
 
-Status: implemented for the generic view substrate and first CellProfiler renderer. `openhcs.core.debug_views` owns the renderer-independent view model types and the shared artifact-ref table projection. The CellProfiler module owns only the registered renderer family and declarative section specs. The registry returns a default view for unknown modules and an initial specialized view for `IdentifyPrimaryObjects`; the default view renders source paths, artifact refs, preview refs, measurements, relationships, timing, and errors from the same `DebugSnapshot` structure used by PyQt, CLI diagnostics, and future report export.
+Status: implemented for the generic view substrate and first CellProfiler renderer. `openhcs.core.debug.debug_views` owns the renderer-independent view model types and the shared artifact-ref table projection. The CellProfiler module owns only the registered renderer family and declarative section specs. The registry returns a default view for unknown modules and an initial specialized view for `IdentifyPrimaryObjects`; the default view renders source paths, artifact refs, preview refs, measurements, relationships, timing, and errors from the same `DebugSnapshot` structure used by PyQt, CLI diagnostics, and future report export.
 
 ## Implementation Slices
 
@@ -333,7 +333,7 @@ Files likely touched:
 - `openhcs/core/debug/store.py`
 - Filemanager/VFS integration if needed.
 
-Implemented in `openhcs.core.debug`. The snapshot metadata format and progress context carry `snapshot_store_ref`; local GUI readback is wired through `LocalDebugSnapshotStore`; shared FileManager/VFS-backed stores are represented by `FileManagerDebugSnapshotStore`; remote server-mediated metadata readback is implemented through the typed ZMQ snapshot-read control request.
+Implemented in `openhcs.core.debug.debug_runtime`. The snapshot metadata format and progress context carry `snapshot_store_ref`; local GUI readback is wired through `LocalDebugSnapshotStore`; shared FileManager/VFS-backed stores are represented by `FileManagerDebugSnapshotStore`; remote server-mediated metadata readback is implemented through the typed ZMQ snapshot-read control request.
 
 Debug snapshots now receive metadata artifact refs from the invocation planner itself. `DebugArtifactRefProjection` converts compiled artifact input/output plans into cursor-aware refs and separates measurement and relationship refs by `ArtifactKind`. This closes the first preview substrate without storing full images, labels, tables, or measurements in progress events.
 

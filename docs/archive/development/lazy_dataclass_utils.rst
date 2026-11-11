@@ -74,13 +74,13 @@ The system automatically discovers all lazy dataclass types without hardcoding:
 
     from openhcs.introspection.lazy_dataclass_utils import discover_lazy_dataclass_types
     
-    # Discover all lazy types from openhcs.core.config
+    # Discover all lazy types from openhcs.core.config.pipeline_config
     lazy_types = discover_lazy_dataclass_types()
     # Returns: [LazyProcessingConfig, LazyDtypeConfig, LazyNapariStreamingConfig, ...]
 
 **Discovery logic**:
 
-1. Inspect ``openhcs.core.config`` module
+1. Inspect ``openhcs.core.config.pipeline_config`` module
 2. Find all classes with ``has_lazy_resolution()`` method
 3. Return list of lazy dataclass types
 
@@ -283,7 +283,7 @@ Common Gotchas
 ==============
 
 - **Don't use patched constructors outside code editors**: Normal code should use standard lazy resolution
-- **Discovery only finds types in openhcs.core.config**: Lazy types in other modules won't be discovered
+- **Discovery only finds types in openhcs.core.config.pipeline_config**: Lazy types in other modules won't be discovered
 - **Patching is not thread-safe**: Don't use in multi-threaded code editor contexts
 - **Context manager must complete**: Exceptions during exec() will restore original constructors (cleanup guaranteed)
 
@@ -312,7 +312,7 @@ Symptom: None Values Resolving to Defaults
 Symptom: Type Not Discovered
 -----------------------------
 
-**Cause**: Lazy type not in ``openhcs.core.config`` module
+**Cause**: Lazy type not in ``openhcs.core.config.pipeline_config`` module
 
 **Diagnosis**:
 
@@ -321,7 +321,7 @@ Symptom: Type Not Discovered
     lazy_types = discover_lazy_dataclass_types()
     logger.debug(f"Discovered types: {[t.__name__ for t in lazy_types]}")
 
-**Fix**: Move lazy type to ``openhcs.core.config`` or extend discovery to other modules
+**Fix**: Move lazy type to ``openhcs.core.config.pipeline_config`` or extend discovery to other modules
 
 Advanced Usage
 ==============

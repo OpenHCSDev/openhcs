@@ -17,31 +17,31 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
@@ -57,7 +57,7 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     MeasureObjectNeighborsModule,
     measure_object_neighbors,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from tests.context_support import (
@@ -316,7 +316,7 @@ def test_neighbor_relationship_uses_numbered_module_block_identity() -> None:
 def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
     monkeypatch,
 ) -> None:
-    from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+    from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
     from openhcs.interop.cellprofiler.runtime.adapter import (
         CellProfilerRuntimeAdapter,
     )

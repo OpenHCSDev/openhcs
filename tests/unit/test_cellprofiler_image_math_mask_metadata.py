@@ -1,7 +1,7 @@
 import numpy as np
 
-from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_image_values import (
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,

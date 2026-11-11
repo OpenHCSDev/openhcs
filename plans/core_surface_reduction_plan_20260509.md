@@ -194,11 +194,11 @@ VFS/source rule:
 | `ArtifactKind`, `ArtifactSpec` | `openhcs.core.artifacts` | Typed artifact declarations and payload category semantics | module-local string categories |
 | `ModuleArtifactContract` | `openhcs.core.module_artifact_contract` | Callable/module input-output contracts | converter-local contract records |
 | `RuntimeOutputBundle` | `openhcs.core.runtime_invocation` | Nominal multi-output callable returns | CP-only tuple unpacking conventions |
-| `RuntimeSliceProjection` | `openhcs.core.runtime_slice_projection` | Projection of runtime values across slices/planes | CP-only slice aggregation helpers |
+| `RuntimeSliceProjection` | `openhcs.core.payload.runtime_slice_projection` | Projection of runtime values across slices/planes | CP-only slice aggregation helpers |
 | `ObjectLabelPayload`, `ObjectLabelSet` | `openhcs.core.runtime_values` | Object-label runtime values and domains | raw ndarray label conventions in CP glue |
 | `MeasurementTable`, `MeasurementTableRowLayout` | `openhcs.core.runtime_values`, `openhcs.core.runtime_semantics` | Generic table values and long/wide row semantics | ad hoc row dict inspection |
 | `ParentChildRelationshipPayload` | `openhcs.core.runtime_semantics` | Relationship runtime payloads | CP-specific relationship tuple conventions |
-| `SourceBindingMatchPlan`, `StepSourceBindingsConfig` | `openhcs.core.source_bindings` | Source alias matching and execution plans | dataset/path heuristics |
+| `SourceBindingMatchPlan`, `StepSourceBindingsConfig` | `openhcs.core.source.source_bindings` | Source alias matching and execution plans | dataset/path heuristics |
 | `MaterializationSpec` | `openhcs.processing.materialization` | Declared output materialization | local CSV writer-shape inference |
 | `AutoRegisterMeta` strategy families | `openhcs.core` / shared utils | Semantic object registries keyed by nominal type/enum | hand-maintained dicts |
 
@@ -471,7 +471,7 @@ Verification:
 
 Suggested PR slices:
 
-1. Extract returned-output matching into `openhcs.core.runtime_output_matching`.
+1. Extract returned-output matching into `openhcs.core.payload.runtime_output_matching`.
 2. Extract pure-2D auxiliary aggregation into `openhcs.core.runtime_batch_aggregation`, reusing existing lib-registry aggregation concepts.
 3. Extract object-label slice aggregation into `openhcs.core.runtime_object_label_projection`.
 4. Convert CP result wrapper classes to implement or lower through `RuntimeOutputBundle`.

@@ -1,6 +1,6 @@
 import pytest
 
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
     DebugBoundary,

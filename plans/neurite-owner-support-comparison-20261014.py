@@ -21,7 +21,7 @@ from dataclasses import replace
 from pathlib import Path
 from runpy import run_path
 
-from openhcs.core.config import LazyPathPlanningConfig
+from openhcs.core.config.pipeline_config import LazyPathPlanningConfig
 
 baseline = run_path(
     '/home/ts/code/projects/openhcs/plans/neurite-enhancement-comparison-20261014.py'

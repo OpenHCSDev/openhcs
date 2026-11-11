@@ -25,7 +25,7 @@ from zmqruntime.viewer_protocol import (
 )
 from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 
-from openhcs.core.axes import PartitionAxis
+from openhcs.core.axes.axis_declarations import PartitionAxis
 from openhcs.runtime.viewer_display import (
     DeclaredAxes,
     FijiSlots,

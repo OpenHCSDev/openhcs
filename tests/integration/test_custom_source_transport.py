@@ -134,7 +134,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     ObjectMeasurementValueRow, RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
 )
 
@@ -198,7 +198,7 @@ def {name}(image, auxiliary=None):
 
 
 def _manager():
-    from openhcs.core.xdg_paths import get_openhcs_data_dir
+    from openhcs.core.util.xdg_paths import get_openhcs_data_dir
     from openhcs.processing.custom_functions import CustomFunctionManager
 
     # Preexistence prevents get_data_file_path's legacy-home migration entirely.
@@ -211,10 +211,10 @@ def _manager():
 
 
 def _inspection(func):
-    from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
+    from openhcs.core.util.artifact_inspection import CompiledArtifactInvocationInspection
     from openhcs.core.artifacts.plans import ArtifactOutputPlan
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.function_patterns import (
         CompiledFunctionInvocation,
         FunctionInvocationKey,
         InvocationArtifactInputEdgePlan,
@@ -281,10 +281,10 @@ def _assert_specs(actual, expected):
 
 
 def _assert_payload(payload, kind):
-    from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_reference import FunctionReferenceTransportAuthority
-    from openhcs.core.runtime_measurements import ObjectMeasurementValueRow
+    from openhcs.core.util.artifact_inspection import CompiledArtifactInvocationInspection
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
+    from openhcs.core.measurements.runtime_measurements import ObjectMeasurementValueRow
     from openhcs.processing import custom_functions
 
     owners = []
@@ -359,8 +359,8 @@ def _assert_payload(payload, kind):
 
 
 def _produce(path, kind):
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 
     manager = _manager()
     payload = []
@@ -436,7 +436,7 @@ def _spawned_custom_task(payload, execution_id, subject_id):
 def _spawned_compiled_custom_task(context, helpers):
     """Exercise queue transport of the captured contract, not just its reference."""
     import numpy as np
-    from openhcs.core.function_reference import FunctionReference
+    from openhcs.core.callable.function_reference import FunctionReference
 
     plan = context.step_plans[0]
     (invocation,) = tuple(plan.compiled_function_pattern.iter_invocations())
@@ -453,12 +453,12 @@ def _compiled_custom_contexts(payload, runtime):
     from polystore.filemanager import FileManager
     from polystore.memory import MemoryStorageBackend
     from openhcs.constants.constants import Backend
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.function_patterns import (
+    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.callable.function_patterns import (
         compile_function_pattern, normalize_function_pattern,
     )
-    from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+    from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 
     contexts = {}
     for index, (reference, _helpers) in enumerate(payload):
@@ -503,10 +503,10 @@ def _compiled_custom_contexts(payload, runtime):
 
 def _spawn(path):
     import multiprocessing
-    from openhcs.core.compiled_execution import (
+    from openhcs.core.execution.compiled_execution import (
         CompiledRuntimeEnvironmentPlan, CompiledWorkerStartPlan,
     )
-    from openhcs.core.config import MultiprocessingStartMethod
+    from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
     from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
     from openhcs.core.orchestrator.worker_execution import WorkerExecutorFactory
     from openhcs.core.progress.types import ProgressExecutionContext, ProgressStatus
@@ -602,7 +602,7 @@ def _child_main():
             _require_stale_rejection(old_reference.resolve)
             _require_stale_rejection(lambda: _load(path)[0][0].resolve())
             # Alpha's lifecycle must leave beta's nominal helper identity intact.
-            from openhcs.core.callable_contract import CallableContract
+            from openhcs.core.callable.callable_contract import CallableContract
 
             beta = CallableContract.from_callable(payload[1][0].resolve())
             beta_owner = beta.artifact_outputs[0].measurement_feature_owner
@@ -611,7 +611,7 @@ def _child_main():
     elif role == "reject":
         _require_stale_rejection(lambda: _load(path)[0][0].resolve())
         # A change to alpha must not prevent beta's independent source loading.
-        from openhcs.core.callable_contract import CallableContract
+        from openhcs.core.callable.callable_contract import CallableContract
         from openhcs.processing import custom_functions
 
         beta = CallableContract.from_callable(getattr(custom_functions, NAMES[1]))

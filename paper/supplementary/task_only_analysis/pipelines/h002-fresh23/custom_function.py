@@ -12,10 +12,10 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.artifacts.specs import MainFlowStackOutputSpec, ArtifactSpec
 from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.runtime_measurements import ObjectCoreMeasurementFeature, RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext, pack_aligned_image_outputs
+from openhcs.core.measurements.runtime_measurements import ObjectCoreMeasurementFeature, RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext, pack_aligned_image_outputs
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, PointROIOptions, ROIOptions
 

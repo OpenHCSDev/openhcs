@@ -21,8 +21,8 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig,
     LazyStepSourceBindingsConfig,
     PipelineConfig,
@@ -30,13 +30,13 @@ from openhcs.core.config import (
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     FunctionPatternSyntax,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
 )
@@ -44,16 +44,16 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     extract_artifact_declarations,
 )
-from openhcs.core.source_bindings import source_binding_group_keys_for_group_by
+from openhcs.core.source.source_bindings import source_binding_group_keys_for_group_by
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingsBinder,
     SettingToKeywordBinding,
 )
-from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 
 
 @dataclass(frozen=True, slots=True)

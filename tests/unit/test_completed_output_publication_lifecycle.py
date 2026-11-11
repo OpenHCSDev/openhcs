@@ -11,9 +11,9 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
 from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.execution_result import (
@@ -22,16 +22,16 @@ from openhcs.core.orchestrator.execution_result import (
     OmitRuntimeRecords,
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_workspace_projection import (
     RuntimeWorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
     WorkspaceSourceProjections,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
-from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (

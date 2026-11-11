@@ -40,7 +40,7 @@
               "current_selection_count": 0,
               "total_scope_count": 0
             },
-            "source": "# Edit this orchestrator configuration and save to apply changes\n\nfrom openhcs.core.config import GlobalPipelineConfig\n\nplate_paths = []\n\nglobal_config = GlobalPipelineConfig()\n\nper_plate_configs = {}\n\npipeline_data = {}",
+            "source": "# Edit this orchestrator configuration and save to apply changes\n\nfrom openhcs.core.config.pipeline_config import GlobalPipelineConfig\n\nplate_paths = []\n\nglobal_config = GlobalPipelineConfig()\n\nper_plate_configs = {}\n\npipeline_data = {}",
             "mime_type": "text/x-python",
             "size_bytes": 220,
             "sha256": "a23bd4158078dd4d75a0f0153ab6afac7eb1863be6e2610c9dfea0d3be3c9a0a",

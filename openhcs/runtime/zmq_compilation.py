@@ -8,9 +8,9 @@ from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Mapping
 
-from openhcs.core.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.runtime.zmq_progress import (
     ZMQCompileProgressHeartbeat,
@@ -19,7 +19,7 @@ from openhcs.runtime.zmq_progress import (
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 
 if TYPE_CHECKING:
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 

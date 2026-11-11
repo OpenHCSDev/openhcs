@@ -1,6 +1,6 @@
 # OpenHCS configuration
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     PathPlanningConfig,

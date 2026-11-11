@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config import PipelineConfig
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 

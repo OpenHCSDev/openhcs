@@ -27,7 +27,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
     NaturalExecution,
@@ -35,11 +35,11 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
@@ -47,17 +47,17 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import runtime_bound_parameters
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
 )
@@ -140,17 +140,17 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu 
     _weighted_otsu_threshold_numba_compatible,
     _yen_threshold_numba,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.axes import Axis, StackAxis
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import Axis, StackAxis
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpecCollection
     from openhcs.core.artifacts.relations import ArtifactSpecRelation
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,

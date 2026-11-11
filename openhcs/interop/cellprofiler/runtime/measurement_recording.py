@@ -22,29 +22,29 @@ from typing import (
     get_type_hints,
 )
 
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementSubject,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimeSliceIdentityProjectableValue,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementRowsAxisProjection,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.payload.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec
@@ -734,8 +734,8 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
         from openhcs.core.artifacts.kinds import ImageArtifactType
-        from openhcs.core.runtime_image_values import ImagePayloadMetadata
-        from openhcs.core.source_plane_alignment import (
+        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+        from openhcs.core.source.source_plane_alignment import (
             SourcePlaneIdentitySequenceAlignment,
         )
 

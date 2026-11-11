@@ -5,7 +5,7 @@ from dataclasses import replace
 import pytest
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution

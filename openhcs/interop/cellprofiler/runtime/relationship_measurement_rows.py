@@ -6,23 +6,23 @@ import time
 from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.runtime_relationships import (
@@ -40,7 +40,7 @@ from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.core.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import as_runtime_value
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.output_record_request import (

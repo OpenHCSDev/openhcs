@@ -1,7 +1,7 @@
 """Execution-local main-flow output lineage for FunctionStep execution."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -10,35 +10,35 @@ from weakref import WeakKeyDictionary
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.core.source_path_identity import (
+from openhcs.core.source.source_path_identity import (
     source_path_identity,
     source_path_relative_to,
 )
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataValue
+from openhcs.core.util.path_pattern_matching import PathPatternTemplateMatcher
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_metadata import DurableSourceMetadata, SourceMetadataValue
 
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_binding_selection import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_binding_selection import (
     SourceBindingMatchedImageSet,
     SourcePatternResolutionContext,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.axes import AxisFamily, PartitionAxis
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 @dataclass(frozen=True, slots=True)

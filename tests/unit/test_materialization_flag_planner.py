@@ -8,8 +8,8 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import (
     MaterializeAuto, MaterializeToDisk,
     PathPlanningConfig,
     VFSConfig,

@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from packaging.requirements import Requirement
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 

@@ -12,7 +12,7 @@ def test_declumping_preparation_rejects_late_compilation_or_disk_load(tmp_path):
         from contextlib import ExitStack
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import morphology
 
         kernels = (

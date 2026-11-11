@@ -18,7 +18,7 @@ from objectstate import get_base_type_for_lazy, semantic_values_equal
 
 
 # Import LazyStepMaterializationConfig for type hints
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyStepMaterializationConfig,
     LazyStreamingDefaults,
     LazyNapariStreamingConfig,
@@ -29,18 +29,18 @@ from openhcs.core.config import (
     LazyStepSourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
-from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 # ExecutingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.post_execute import HookObservations
+    from openhcs.core.util.post_execute import HookObservations
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,7 +112,7 @@ class StepExecutionObservation:
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
     ) -> "StepExecutionObservation":
-        from openhcs.core.post_execute import PostExecuteHook
+        from openhcs.core.util.post_execute import PostExecuteHook
 
         locations = {}
         paths = []

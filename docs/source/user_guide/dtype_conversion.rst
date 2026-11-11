@@ -27,7 +27,7 @@ The equivalent step declaration is:
 
 .. code-block:: python
 
-   from openhcs.core.config import LazyDtypeConfig
+   from openhcs.core.config.pipeline_config import LazyDtypeConfig
    from arraybridge.decorators import DtypeConversion
 
    step.dtype_config = LazyDtypeConfig(
@@ -43,7 +43,7 @@ step's result:
 
 .. code-block:: python
 
-   from openhcs.core.config import LazyDtypeConfig, LazyStepMaterializationConfig
+   from openhcs.core.config.pipeline_config import LazyDtypeConfig, LazyStepMaterializationConfig
    from openhcs.core.steps.function_step import FunctionStep
    from openhcs.processing.backends.processors.numpy_processor import create_projection
    from arraybridge.decorators import DtypeConversion

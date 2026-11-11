@@ -9,8 +9,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence
 
-from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
-from openhcs.core.function_patterns import NormalizedFunctionPattern
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.callable.function_patterns import NormalizedFunctionPattern
 
 logger = logging.getLogger(__name__)
 

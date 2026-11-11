@@ -12,22 +12,22 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 from numba import njit
 
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
-from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.callable.processing_preparation import PersistentNumbaKernelPreparation
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
@@ -57,11 +57,11 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )

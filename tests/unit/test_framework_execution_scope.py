@@ -5,9 +5,9 @@ import numpy as np
 
 from arraybridge import MemoryType
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.execution.compiled_step_plan import FrameworkDeviceAssignment
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.steps.function_runtime import (
     FunctionCoreExecutor,
 )

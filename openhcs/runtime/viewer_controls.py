@@ -17,11 +17,11 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeLayerTransform,
     ViewerSourceSpatialDomainPayload,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 
 if TYPE_CHECKING:
     import numpy as np
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
 from zmqruntime.viewer_protocol import ViewerWireField
 

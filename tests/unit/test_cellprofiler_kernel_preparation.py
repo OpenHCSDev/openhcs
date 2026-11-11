@@ -10,7 +10,7 @@ from pathlib import Path
 def test_declared_preparation_covers_sobel_and_integer_label_shrink(tmp_path):
     script = textwrap.dedent("""
         import numpy as np
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler.edge import (
             EdgeMethod, enhance_edges, _sobel_numba_kernel,
         )
@@ -61,7 +61,7 @@ def test_registry_preparation_covers_volume_erosion_and_quantized_diagnostics(tm
         import numpy as np
         from numba.core.dispatcher import Dispatcher
 
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler.morphology import (
             NumbaNumpyMorphologyBackendStrategy,
             NumpyMorphologyBackendStrategy,
@@ -156,7 +156,7 @@ def test_illumination_preparation_covers_masked_polynomial_and_array_views(tmp_p
         from contextlib import ExitStack
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import illumination
 
         dispatchers = (
@@ -238,7 +238,7 @@ def test_illumination_preparation_covers_shared_hull_and_line_geometry(tmp_path)
         import numpy as np
         import centrosome.filter
         import centrosome.cpmorphology
-        from openhcs.core.processing_preparation import CallablePreparation
+        from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import illumination, label_geometry, worm_geometry
 
         dispatchers = (

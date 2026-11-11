@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from PyQt6.QtWidgets import QDialog
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.execution.execution_state import ManagerExecutionState
 from openhcs.desktop.update import DesktopUpdateError
 from openhcs.desktop.zmq_version_restart import ZMQVersionRestartWorkflow
 

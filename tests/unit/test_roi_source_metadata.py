@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 from pathlib import Path
 
@@ -8,15 +8,15 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import ROI, PointShape, load_rois_from_zip
 
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.materialization.core import MaterializationSpec, materialize
 from openhcs.core.materialization.options import ROIOptions
 from tests.materialization_plans import output_plan as materialization_output_plan

@@ -1,24 +1,24 @@
 """Focused source-image provenance projection regressions."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.axes import AxisFamily
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 def test_source_provenance_projects_scalar_image_set_identity() -> None:

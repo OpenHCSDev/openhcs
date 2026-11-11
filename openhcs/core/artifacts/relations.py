@@ -26,9 +26,9 @@ from openhcs.core.artifacts.plans import (
     ArtifactPlan,
     ArtifactSpecRef,
 )
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.runtime_measurements import MeasurementSubject
-from openhcs.core.runtime_measurements import MeasurementScope
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
+from openhcs.core.measurements.runtime_measurements import MeasurementSubject
+from openhcs.core.measurements.runtime_measurements import MeasurementScope
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec

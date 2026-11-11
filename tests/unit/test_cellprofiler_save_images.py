@@ -1,7 +1,7 @@
 """Focused contracts for executable CellProfiler SaveImages support."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from pathlib import PurePosixPath
@@ -20,13 +20,13 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
 )
@@ -34,20 +34,20 @@ from openhcs.core.pipeline.artifact_planning import (
     artifact_producers_for_outputs,
     extract_artifact_declarations,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -64,7 +64,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
     save_images_with_measurements,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.materialization.path_scopes import ExecutionAxisMaterializationRelativePathScope
@@ -74,8 +74,8 @@ from openhcs.core.materialization.constants import WriteMode
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
 from tests.context_support import (

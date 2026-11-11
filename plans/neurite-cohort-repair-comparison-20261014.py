@@ -10,7 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 from runpy import run_path
 
-from openhcs.core.config import LazyPathPlanningConfig, LazyTiffConfig
+from openhcs.core.config.pipeline_config import LazyPathPlanningConfig, LazyTiffConfig
 from polystore.config import TiffCompression
 
 previous = run_path(

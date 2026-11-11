@@ -3,7 +3,7 @@ import statistics
 import sys
 import time
 from pathlib import Path
-from openhcs.core import image_file_serialization
+from openhcs.core.payload import image_file_serialization
 
 name = sys.argv[1]
 runs = Path('/home/ts/code/projects/openhcs-benchmark-runs')

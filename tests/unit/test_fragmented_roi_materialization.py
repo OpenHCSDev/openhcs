@@ -12,11 +12,11 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import ROI_ZIP_METADATA_MEMBER, load_rois_from_zip
 
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.materialization.options import ImageFileOptions, ROIOptions
 from openhcs.core.materialization.core import MaterializationSpec, materialization_outputs
 from tests.materialization_plans import output_plan as materialization_output_plan

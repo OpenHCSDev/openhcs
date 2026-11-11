@@ -8,7 +8,7 @@ from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 COMPONENTS = {"well": "A01", "site": "1", "channel": "2", "z_index": "3", "timepoint": "4"}

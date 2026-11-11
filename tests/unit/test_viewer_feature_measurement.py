@@ -30,9 +30,9 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService,
     ZMQViewerWindowGateway,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariComponentGroupStore,
@@ -591,7 +591,7 @@ def test_non_spatial_display_and_unsupported_source_rank_fail_readonly():
 def test_live_journey_fixture_uses_real_persisted_known_source_planes(tmp_path):
     import importlib.util
     from pathlib import Path
-    from openhcs.core.image_file_serialization import ImageFileFormat
+    from openhcs.core.payload.image_file_serialization import ImageFileFormat
 
     script = (
         Path(__file__).resolve().parents[1]

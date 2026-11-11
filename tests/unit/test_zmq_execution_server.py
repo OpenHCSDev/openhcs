@@ -16,12 +16,12 @@ from zmqruntime.messages import (
 )
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     ProcessingConfig,
 )
-from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
@@ -76,7 +76,7 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
         request_payload=ZMQExecutionRequestPayload(
             identity=ZMQExecutionIdentity(subject_id="/tmp/plate"),
             pipeline_code=(
-                "from openhcs.core.config import PipelineConfig\n"
+                "from openhcs.core.config.pipeline_config import PipelineConfig\n"
                 "pipeline_config = PipelineConfig()\n"
                 "pipeline_steps = []\n"
             ),
@@ -383,20 +383,20 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
     request_payload = ZMQExecutionRequestPayload(
         identity=ZMQExecutionIdentity(subject_id="/tmp/plate"),
         pipeline_code=(
-            "from openhcs.core.config import PipelineConfig\n"
+            "from openhcs.core.config.pipeline_config import PipelineConfig\n"
             "pipeline_config = PipelineConfig()\n"
             "pipeline_steps = []\n"
         ),
         config_transport=ZMQExecutionConfigTransport(
             config_code=(
-                "from openhcs.core.config import GlobalPipelineConfig\n"
+                "from openhcs.core.config.pipeline_config import GlobalPipelineConfig\n"
                 "config = GlobalPipelineConfig()\n"
             ),
         ),
         compile_control=ZMQExecutionCompileControl(compile_artifact_id="compile-1"),
     )
 
-    from openhcs.core.compiled_execution import (
+    from openhcs.core.execution.compiled_execution import (
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )
@@ -504,13 +504,13 @@ def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
         identity=ZMQExecutionIdentity(subject_id="/tmp/plate"),
         pipeline_code=(
             "from openhcs.codex_virtual.filters import noop\n"
-            "from openhcs.core.config import PipelineConfig\n"
+            "from openhcs.core.config.pipeline_config import PipelineConfig\n"
             "pipeline_config = PipelineConfig()\n"
             "pipeline_steps = []\n"
         ),
         config_transport=ZMQExecutionConfigTransport(
             config_code=(
-                "from openhcs.core.config import GlobalPipelineConfig\n"
+                "from openhcs.core.config.pipeline_config import GlobalPipelineConfig\n"
                 "config = GlobalPipelineConfig()\n"
             ),
         ),
@@ -648,7 +648,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     from polystore.base import reset_memory_backend
     from polystore.virtual_workspace import VirtualWorkspaceBackend
     from openhcs.constants.constants import Backend
-    from openhcs.core.compiled_execution import (
+    from openhcs.core.execution.compiled_execution import (
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )

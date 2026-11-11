@@ -11,14 +11,14 @@ from openhcs.core.equivalence.policy import (
     NonNegativeFloat,
     RuntimeEquivalencePolicy,
 )
-from openhcs.core.measurement_dialect import (
+from openhcs.core.measurements.measurement_dialect import (
     MeasurementDialect,
     RuntimeMeasurementFeatureLookup,
     FeatureSuffixSourceName,
     SeparateKeySourceName,
     SourceNameEncoding,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     ObjectCoreMeasurementFeature,

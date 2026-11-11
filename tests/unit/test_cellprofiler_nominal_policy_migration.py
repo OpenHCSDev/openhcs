@@ -116,7 +116,7 @@ def test_object_measurement_columnar_rows_own_complete_domain_semantics() -> Non
     from openhcs.processing.backends.cellprofiler.intensity import (
         ObjectIntensityMeasurementRows,
     )
-    from openhcs.core.measurement_row_materialization import (
+    from openhcs.core.measurements.measurement_row_materialization import (
         ObjectMeasurementColumnarRows,
     )
     from openhcs.processing.backends.cellprofiler.shape import (

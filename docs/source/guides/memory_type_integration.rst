@@ -27,7 +27,7 @@ must not be copied into an OpenHCS registry.
 .. code-block:: python
 
    from openhcs.core.memory.decorators import numpy
-   from openhcs.core.processing_contracts import Pure2DContract
+   from openhcs.core.callable.processing_contracts import Pure2DContract
 
    @numpy(contract=Pure2DContract)
    def normalize(image):

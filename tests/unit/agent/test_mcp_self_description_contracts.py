@@ -11,14 +11,14 @@ import pytest
 
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.core.result_file_formats import (
+from openhcs.core.io.result_file_formats import (
     RoiArchiveResultFile,
 )
-from openhcs.core.plate_file_inventory import (
+from openhcs.core.plate.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
 )
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.plate.plate_image_inventory import (
     PlateFileInventory,
     PlateImageRecord,
     PlateResultFileRecord,

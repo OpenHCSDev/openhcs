@@ -122,7 +122,7 @@ def _run_main_window(port: int):
 
     from PyQt6.QtCore import QTimer
 
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
     from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, get_default_ui_config
     from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId

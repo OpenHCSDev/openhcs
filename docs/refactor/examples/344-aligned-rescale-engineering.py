@@ -4,8 +4,8 @@ from pathlib import Path
 from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ImageArtifactType
-from openhcs.core.config import LazyPathPlanningConfig, LazyProcessingConfig, LazyVFSConfig, MaterializationBackend, PipelineConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import LazyPathPlanningConfig, LazyProcessingConfig, LazyVFSConfig, MaterializationBackend, PipelineConfig
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -16,7 +16,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchPlan,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,

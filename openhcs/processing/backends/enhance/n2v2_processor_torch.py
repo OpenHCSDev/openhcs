@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
-from openhcs.core.vfs_protocol import PlateInputFile, PlateOutputFile
+from openhcs.core.payload.vfs_protocol import PlateInputFile, PlateOutputFile
 from openhcs.utils.import_utils import create_placeholder_class, optional_import_or_none
 
 # Import torch modules as optional dependencies

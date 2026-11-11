@@ -17,7 +17,7 @@ from benchmark.matched_cellprofiler_batch import _worker_axis_evidence, _validat
 from benchmark.timing import PhaseTimingRecord, additive_phase_total_seconds
 from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
 def load(path):
     return json.loads(path.read_text())

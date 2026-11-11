@@ -3,11 +3,11 @@
 import numpy as np
 import pytest
 
-from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.pipeline_config import NapariDisplayConfig
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.napari_streaming_handlers import (
     NapariImageLayerPresentationPolicy,
     NapariLayerRouteStateStore,
@@ -24,8 +24,8 @@ from tests.unit.test_napari_streaming_handlers import (
     _FakeViewer,
     _layer_item,
 )
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _display(channels, channel_axis, site_count):

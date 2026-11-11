@@ -1,26 +1,26 @@
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import inspect
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadBundleContext,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationThresholdMaskGroup,
     ColocalizationThresholdMaskRuntimeOutput,
@@ -44,8 +44,8 @@ from openhcs.processing.backends.cellprofiler.worms import (
     _overlapping_worm_outline,
     straighten_worms,
 )
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _source_binding_payload(

@@ -8,7 +8,7 @@ from polystore.disk import DiskBackend
 from polystore.filemanager import FileManager
 
 from openhcs.constants.constants import Backend
-from openhcs.core.config import GlobalPipelineConfig, TiffCompression, TiffConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, TiffCompression, TiffConfig
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
 )

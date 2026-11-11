@@ -7,13 +7,13 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.axes import Axis
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 

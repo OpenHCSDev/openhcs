@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_object_labels import object_label_dense_array
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,

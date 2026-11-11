@@ -13,13 +13,13 @@ import pytest
 
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepAddRequest, FunctionStepSpec
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.memory.decorators import numpy as numpy_function
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (

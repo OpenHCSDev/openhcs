@@ -135,14 +135,14 @@ The dataclass owns the row schema, including the empty-row case.
    )
    from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
    from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
-   from openhcs.core.measurement_row_materialization import (
+   from openhcs.core.measurements.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
    )
    from openhcs.core.pipeline.function_contracts import artifact_outputs
-   from openhcs.core.runtime_measurements import (
+   from openhcs.core.measurements.runtime_measurements import (
        RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
-   from openhcs.core.processing_contracts import Pure2DContract
+   from openhcs.core.callable.processing_contracts import Pure2DContract
    from openhcs.core.materialization.core import MaterializationSpec
    from openhcs.core.materialization.options import CsvOptions, ROIOptions
 
@@ -233,7 +233,7 @@ normal plate compilation/execution supplies image-source and runtime context.
 .. code-block:: python
    :name: callable-artifact-reference-check
 
-   from openhcs.core.callable_contract import CallableContract
+   from openhcs.core.callable.callable_contract import CallableContract
    from openhcs.core.steps.function_step import FunctionStep
 
    fixture = np.zeros((8, 8), dtype=np.uint16)
@@ -290,10 +290,10 @@ This declaration block is for an operation that already produces labels and
    )
    from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
    from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
-   from openhcs.core.measurement_row_materialization import (
+   from openhcs.core.measurements.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
    )
-   from openhcs.core.runtime_measurements import (
+   from openhcs.core.measurements.runtime_measurements import (
        ObjectCoreMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
    from openhcs.core.materialization.core import MaterializationSpec
@@ -380,7 +380,7 @@ keep its labels/rows declarations and replace its image declarations/decorator:
 .. code-block:: python
    :name: callable-artifact-diagnostic-reference
 
-   from openhcs.core.aligned_image_payload import (
+   from openhcs.core.payload.aligned_image_payload import (
        AlignedImageSliceContext, pack_aligned_image_outputs,
    )
 
@@ -438,8 +438,8 @@ as its own custom-function source:
    from openhcs.core.artifacts.specs import ArtifactSpec
    from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
    from openhcs.core.pipeline.function_contracts import artifact_inputs
-   from openhcs.core.runtime_object_labels import ObjectLabelValue
-   from openhcs.core.processing_contracts import Pure2DContract
+   from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+   from openhcs.core.callable.processing_contracts import Pure2DContract
 
    STORED_LABELS = ArtifactSpec.input(
        "fixture_labels", ObjectLabelsArtifactType, parameter_name="objects",
@@ -503,15 +503,15 @@ runtime axis, not biological object counts or an inferred well identity:
        MeasurementsArtifactType,
        SpecialArtifactType,
    )
-   from openhcs.core.callable_contract import FunctionStepExecutionScope
-   from openhcs.core.measurement_row_materialization import (
+   from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+   from openhcs.core.measurements.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
    )
    from openhcs.core.pipeline.function_contracts import (
        artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
    )
-   from openhcs.core.runtime_measurements import MeasurementTable
-   from openhcs.core.runtime_stores import RuntimeArtifactBatch
+   from openhcs.core.measurements.runtime_measurements import MeasurementTable
+   from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
    from openhcs.core.materialization.core import MaterializationSpec
    from openhcs.core.materialization.options import CsvOptions
 

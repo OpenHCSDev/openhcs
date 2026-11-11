@@ -29,7 +29,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerDisplayPipeline,
     NapariLayerIsolationControlAction,

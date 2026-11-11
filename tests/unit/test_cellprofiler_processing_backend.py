@@ -11,11 +11,11 @@ import pytest
 from python_introspect import Enableable, is_enableable
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.memory import numpy as numpy_function
 from openhcs.core.pipeline.function_contracts import execution_scope
-from openhcs.core.runtime_object_labels import ObjectLabelVariantData
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariantData
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler.morphology import (
     resize_objects,
@@ -25,14 +25,14 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,
 )
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.memory.decorators import image_payload_boundary
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 
 def _processing_contract(function):
@@ -88,7 +88,7 @@ def test_cellprofiler_processing_backend_exports_declared_function() -> None:
 
 
 def test_display_data_on_image_treats_hwc_color_image_as_slice() -> None:
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.display_modules import (
@@ -113,7 +113,7 @@ def test_display_data_on_image_treats_hwc_color_image_as_slice() -> None:
 
 
 def test_display_data_on_image_rejects_unprojected_nhwc_label_stack() -> None:
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.display_modules import (
@@ -141,7 +141,7 @@ def test_display_data_on_image_rejects_unprojected_nhwc_label_stack() -> None:
 def test_classify_objects_aligns_dense_label_indexed_measurements_to_sparse_labels() -> (
     None
 ):
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.classification import (
@@ -182,7 +182,7 @@ def test_classify_objects_aligns_dense_label_indexed_measurements_to_sparse_labe
 
 
 def test_classify_objects_measurement_vector_does_not_consume_rgb_main_flow() -> None:
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.classification import (
@@ -214,7 +214,7 @@ def test_classify_objects_measurement_vector_does_not_consume_rgb_main_flow() ->
 
 
 def test_classify_objects_variants_reject_unprojected_label_stacks() -> None:
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.classification import (
@@ -284,12 +284,12 @@ def test_resize_objects_replaces_source_spatial_domain(
     function,
     shape: tuple[int, ...],
 ) -> None:
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
         object_label_dense_array,
     )
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 
     labels = np.zeros(shape, dtype=np.int32)
     labels[(..., slice(1, 3), slice(1, 3))] = 1
@@ -319,11 +319,11 @@ def test_resize_objects_replaces_source_spatial_domain(
 
 
 def test_measure_object_size_shape_retains_dense_label_plane_coordinates() -> None:
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
     from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
 
     labels = np.zeros((5, 5), dtype=np.int32)
@@ -353,13 +353,13 @@ def test_measure_object_size_shape_retains_dense_label_plane_coordinates() -> No
 def test_measure_object_size_shape_restores_only_sparse_local_patch_coordinates() -> (
     None
 ):
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
         ObjectLabelRepresentation,
     )
-    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
     from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
 
     sparse_labels = SparseIJVLabelRows(
@@ -735,7 +735,7 @@ def test_threshold_application_smoothing_matches_cellprofiler_mask_formula() -> 
 
 
 def test_threshold_selection_scale_policy_accepts_uint16_unit_interval_proof() -> None:
-    from openhcs.core.runtime_image_values import (
+    from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
     )
     from openhcs.processing.backends.cellprofiler.thresholding import (
@@ -751,7 +751,7 @@ def test_threshold_selection_scale_policy_accepts_uint16_unit_interval_proof() -
 
 
 def test_cellprofiler_uint8_source_normalization_matches_native_pixel_domain() -> None:
-    from openhcs.core.runtime_image_values import (
+    from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
     )
@@ -796,7 +796,7 @@ def test_cellprofiler_uint8_source_normalization_matches_native_pixel_domain() -
 def test_cellprofiler_uint8_normalization_is_source_format_blind(
     monkeypatch,
 ) -> None:
-    from openhcs.core.runtime_image_values import (
+    from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
     )
@@ -1380,7 +1380,7 @@ def test_default_shape_maximum_position_preserves_cellprofiler_tie_semantics() -
 
 
 def test_medianfilter_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.median_filter import medianfilter
 
     raw = np.arange(25, dtype=np.uint16).reshape(5, 5)
@@ -1394,7 +1394,7 @@ def test_medianfilter_preserves_unit_interval_scale_metadata() -> None:
 
 
 def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.intensity import (
         AutomaticHigh,
         AutomaticLow,
@@ -1421,7 +1421,7 @@ def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> 
 
 
 def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.intensity import (
         AutomaticHigh,
         AutomaticLow,
@@ -1448,7 +1448,7 @@ def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> 
 
 
 def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
@@ -1472,7 +1472,7 @@ def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
 
 
 def test_resize_interpolation_clears_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
@@ -1959,8 +1959,8 @@ def test_cellprofiler_backend_selection_does_not_silently_fallback() -> None:
 def test_object_intensity_inner_edges_match_cellprofiler_boundary_semantics() -> None:
     from skimage.segmentation import find_boundaries
 
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.intensity import (
@@ -1989,8 +1989,8 @@ def test_object_intensity_inner_edges_match_cellprofiler_boundary_semantics() ->
 
 
 def test_object_intensity_3d_batch_matches_single_image_backend() -> None:
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
     from openhcs.processing.backends.cellprofiler.intensity import (

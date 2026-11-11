@@ -731,7 +731,7 @@ from objectstate.lazy_factory import (
     ensure_global_config_context,
     rebuild_lazy_config_with_new_global_reference,
 )
-from openhcs.core.config import GlobalPipelineConfig, LazyWellFilterConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, LazyWellFilterConfig
 from openhcs.core.source_schema_workspace import SourceSchemaImageSetSelection
 
 

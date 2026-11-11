@@ -20,13 +20,13 @@ from openhcs.agent.services.plate_inspection_service import (
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import MetadataArtifactType
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
 from openhcs.core.steps.function_artifact_materialization import (
     MaterializedRuntimeArtifact,
     RuntimeArtifactMaterialization,
@@ -36,7 +36,7 @@ from openhcs.core.steps.function_outputs import (
     ProducedImageMetadataCapability,
     RuntimeArtifactMetadataTarget,
 )
-from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, METADATA_CONFIG, MetadataWriteError
+from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter, METADATA_CONFIG, MetadataWriteError
 from openhcs.core.materialization.core import (
     MaterializationSpec,
     _WRITERS_BY_OPTIONS,
@@ -315,8 +315,8 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
     from polystore.virtual_workspace import SourcePixelRef
 
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
-    from openhcs.core.virtual_workspace_metadata import (
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
+    from openhcs.core.io.virtual_workspace_metadata import (
         AtomicMetadataWriter, FIELDS, VirtualWorkspaceSourceProjectionEntries,
     )
 
@@ -354,7 +354,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
         ref=SourcePixelRef(Backend.DISK.value, virtual_path),
         source_alias="declared_image", artifact_kind=ImageArtifactType,
     )
-    from openhcs.core.source_projection import SourceProjectionMetadataSerializer
+    from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer
     AtomicMetadataWriter().replace_subdirectory_metadata(
         metadata_path, destination,
         SourceProjectionMetadataSerializer.projection_fields(((projection, virtual_path),)),
@@ -374,7 +374,7 @@ def test_reconciliation_keeps_artifact_destination_without_results_field(
 ):
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.core.source_projection import (
+    from openhcs.core.source.source_projection import (
         OpenHCSPlaneAddress,
         SourceArtifactProjection,
         SourceProjectionMetadataSerializer,

@@ -28,13 +28,13 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     MaterializedOutputPlan,
 )
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     RuntimeExecutionAxisScope,
@@ -42,29 +42,29 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.memory import numpy
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.config import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.config.pipeline_config import (
     ProcessingConfig,
     StepMaterializationConfig,
     EMPTY_SOURCE_BINDINGS,
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
     InvocationContractPlan,
     InvocationContractProvider,
     unnamed_main_flow_artifact_name,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledMetadataArtifactInputEdgePlan,
     FunctionInvocationKey,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
@@ -97,11 +97,11 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerValidationStage,
 )
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
-from openhcs.core.source_bindings import (
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
@@ -109,7 +109,7 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.step_dependencies import (
+from openhcs.core.util.step_dependencies import (
     NoMainFlowInput,
     PipelineStartInput,
     StepOutputInput,
@@ -123,7 +123,7 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.core.dataset_sources.interfaces import MetadataArtifactProvider
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
-from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
+from openhcs.core.axes.axis_declarations import Axis, GroupingDeclaration, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     executing_context,
@@ -1162,12 +1162,12 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
 
 
 def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.function_patterns import normalize_function_pattern
+    from openhcs.core.callable.function_patterns import normalize_function_pattern
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -2715,7 +2715,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
     measurement_group,
 ):
     """An exact label selector does not rewrite an explicitly authored group."""
-    from openhcs.core.function_patterns import normalize_function_pattern
+    from openhcs.core.callable.function_patterns import normalize_function_pattern
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProvider,
     )

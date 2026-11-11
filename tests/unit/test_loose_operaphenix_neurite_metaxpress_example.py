@@ -9,11 +9,11 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.function_patterns import AuthoredFunctionPattern
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
@@ -30,7 +30,7 @@ from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth im
 from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth_metaxpress import (
     build_loose_operaphenix_neurite_metaxpress_pipeline,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 

@@ -12,20 +12,20 @@ from contextlib import contextmanager
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
-from openhcs.core.artifact_inspection import (
+from openhcs.core.util.artifact_inspection import (
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -35,8 +35,8 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
-from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,

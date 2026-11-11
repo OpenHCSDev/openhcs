@@ -3,9 +3,9 @@ from __future__ import annotations
 import math
 from typing import Dict, List, Optional, Tuple
 
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_backend_func
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.payload.vfs_protocol import PlateInputFile
 from openhcs.utils.import_utils import create_placeholder_class, optional_import_or_none
 
 # Import torch modules as optional dependencies

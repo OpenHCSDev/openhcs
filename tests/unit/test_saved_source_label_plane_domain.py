@@ -1,25 +1,25 @@
 """Saved label admission retains declared runtime axes, never guessed Z axes."""
 
 from __future__ import annotations
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.runtime_plane_projection import WholeAxisProjection
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.runtime_plane_projection import WholeAxisProjection
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
@@ -297,7 +297,7 @@ def test_explicit_plane_domain_still_requires_projection_and_rejects_global_coun
 
 @pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
-    from openhcs.core.runtime_image_values import ImagePayload
+    from openhcs.core.payload.runtime_image_values import ImagePayload
 
     labels = np.zeros((2, 6, 7), dtype=np.int32)
     labels[0, 1:3, 2:4] = 29

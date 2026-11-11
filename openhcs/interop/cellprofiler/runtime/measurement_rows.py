@@ -12,36 +12,36 @@ from string import Formatter
 from types import MappingProxyType
 from typing import Annotated, TypeVar, get_args, get_origin, get_type_hints
 
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.alias_property import AliasProperty
 import numpy as np
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
 )
 from metaclass_registry import RegisteredEnumMeta
 from metaclass_registry.strategies import str_enum_member_with_payload
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     ObjectCoreMeasurementFeature,
     ObjectLocationCoordinateValues,
     object_location_coordinate_arrays,
 )
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_axis_centers,
     object_label_project_plane,

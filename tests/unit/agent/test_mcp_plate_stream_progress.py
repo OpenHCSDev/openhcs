@@ -21,8 +21,8 @@ from openhcs.agent.capabilities import (
     StreamPlateFilesToViewerCapability, UiStreamSelectedPlateFilesToViewerCapability,
 )
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevSocketSession
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.context import OpenHCSAgentContext

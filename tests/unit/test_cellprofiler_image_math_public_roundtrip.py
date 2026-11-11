@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 

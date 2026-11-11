@@ -80,7 +80,7 @@ def test_relate_objects_hook_uses_the_exact_declared_relationship_spec() -> None
         ObjectLabelsArtifactType,
         RelationshipsArtifactType,
     )
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
     from openhcs.processing.backends.cellprofiler.relationships import (
         RelateObjectsModule,
@@ -148,8 +148,8 @@ def test_relationship_rows_pass_callable_contract_and_exact_output_entry() -> No
         ObjectLabelsArtifactType,
         RelationshipsArtifactType,
     )
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.measurement_row_materialization import (
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.measurements.measurement_row_materialization import (
         MeasurementSparseColumnarRows,
     )
     from openhcs.core.runtime_relationships import (

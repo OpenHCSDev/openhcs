@@ -18,13 +18,13 @@ from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepSpec, PipelineSpec
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     ImportableFunctionReference,
     RegistryFunctionReference,
 )
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.mcp.dev_client_core import McpDevToolResult
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -34,7 +34,7 @@ from openhcs.processing.backends.lib_registry.scikit_image_registry import (
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 

@@ -14,7 +14,7 @@ from pathlib import Path
 target = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(target))
 import openhcs
-from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
 
 assert Path(openhcs.__file__).resolve().is_relative_to(target), openhcs.__file__

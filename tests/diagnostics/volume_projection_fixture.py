@@ -20,12 +20,12 @@ from openhcs.core.artifacts.specs import (
     MainFlowStackOutputSpec,
 )
 from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
-from openhcs.core.processing_contracts import (
+from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.materialization.options import CsvOptions, ROIOptions

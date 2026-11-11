@@ -19,27 +19,27 @@ from typing import (
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import RuntimeParameterDeclarationABC, add_parameter_exclusions
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableDeclaration,
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
 )
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.variable_component_stack_requirement import (
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.callable.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
     VariableComponentStackRequirement,
 )
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import AxisRole
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.axes.axis_declarations import AxisRole
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
 F = TypeVar("F", bound=Callable)
 

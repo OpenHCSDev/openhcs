@@ -11,14 +11,14 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from formbridge.bridge.identities import UiStateSurfaceIdentityDeclarationBase
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
     LiveMeasurementTablePreview,
 )
-from openhcs.core.runtime_artifact_values import ArtifactKey
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
 )

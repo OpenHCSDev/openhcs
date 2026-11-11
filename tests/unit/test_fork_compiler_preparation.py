@@ -9,12 +9,12 @@ import pytest
 from metaclass_registry import AutoRegisterMeta
 from numba import config as numba_config
 
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
-from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, PreparationCacheBatch, PreparationOperation
+from openhcs.core.callable.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )

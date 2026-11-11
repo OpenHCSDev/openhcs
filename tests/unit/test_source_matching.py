@@ -1,13 +1,13 @@
 import pytest
 
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     SourceDirectory,
     SourceFileName,
     TextContains,
     TextDoesNotEqual,
     TextEquals,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     DECLARED_SOURCE_METADATA_FIELD,
     source_component_metadata_raw_value,
     source_component_metadata_values,
@@ -21,8 +21,8 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
     with_declared_source_metadata,
 )
-from openhcs.core.axes import Axis
-from openhcs.core.source_metadata import (
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
 )

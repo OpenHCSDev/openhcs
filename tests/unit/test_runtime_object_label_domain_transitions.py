@@ -1,21 +1,21 @@
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenance,
@@ -118,12 +118,12 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
 def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
     monkeypatch, axis, plane_count
 ):
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelRepresentation, SparseIJVObjectLabelStorageStrategy,
     )
-    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+    from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
     first = SparseIJVLabelRows(np.asarray([[0, 1, 1], [0, 1, 2]], dtype=np.int32))
     planes = (first,) if plane_count == 1 else (
@@ -167,11 +167,11 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
 
 @pytest.mark.parametrize("second_start,expected_layers", [(3, 2), (5, 1)])
 def test_sparse_rendering_layers_preserve_whole_objects(second_start, expected_layers):
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelRepresentation, ObjectLabelStorageStrategy,
     )
-    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 
     rows = SparseIJVLabelRows(np.asarray(
         [(y, x, label) for label, start in ((1, 1), (2_000_000_000, second_start))

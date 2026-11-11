@@ -109,7 +109,7 @@ def test_real_catalog_detail_and_json_project_the_same_parameter_document(monkey
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
-    from openhcs.core.processing_contracts import FlexibleContract
+    from openhcs.core.callable.processing_contracts import FlexibleContract
     from openhcs.processing.backends.lib_registry.unified_registry import (
         FunctionMetadata,
     )
@@ -215,7 +215,7 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
     from openhcs.processing.backends.lib_registry.unified_registry import (
         FunctionMetadata,
     )
-    from openhcs.core.processing_contracts import (
+    from openhcs.core.callable.processing_contracts import (
         FlexibleContract,
     )
     from openhcs.processing.custom_functions.manager import CustomFunctionManager

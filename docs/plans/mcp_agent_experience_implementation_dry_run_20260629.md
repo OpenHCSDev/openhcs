@@ -23,17 +23,17 @@ def show(name, value):
     print(f"{name}: {value}")
 
 from openhcs.core.source_bindings_view import SourceInventoryProvider, SourceBindingsViewModel
-from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_binding_context import SourceBindingContext
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 show("SourceInventoryProvider registry", tuple(sorted(SourceInventoryProvider.__registry__)))
 show("SourceBindingsViewModel.from_schema_and_bindings", signature(SourceBindingsViewModel.from_schema_and_bindings))
 show("SourceBindingContext fields", tuple(f.name for f in fields(SourceBindingContext)))
 show("VirtualWorkspaceSourceProjection methods", tuple(name for name in ("pipeline_start_files", "source_path_for", "source_metadata_for") if hasattr(VirtualWorkspaceSourceProjection, name)))
 
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.source_bindings import CompiledSourceUniversePlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_bindings import CompiledSourceUniversePlan
 from openhcs.core.source_load_plan import SourceLoadPlan
-from openhcs.core.source_binding_selection import SourceUniverseRequest
+from openhcs.core.source.source_binding_selection import SourceUniverseRequest
 show("CompiledStepPlan source/artifact fields", tuple(f.name for f in fields(CompiledStepPlan) if f.name.startswith("source_") or f.name.startswith("artifact_")))
 show("CompiledSourceUniversePlan fields", tuple(f.name for f in fields(CompiledSourceUniversePlan)))
 show("SourceLoadPlan fields", tuple(f.name for f in fields(SourceLoadPlan)))
@@ -47,8 +47,8 @@ show("ArtifactSpec fields", tuple(f.name for f in fields(ArtifactSpec)))
 show("ArtifactInputPlan fields", tuple(f.name for f in fields(ArtifactInputPlan)))
 show("ArtifactOutputPlan fields", tuple(f.name for f in fields(ArtifactOutputPlan)))
 
-from openhcs.core.config import PathPlanningConfig, VFSConfig
-from openhcs.core.plate_image_inventory import PlateFileInventory
+from openhcs.core.config.pipeline_config import PathPlanningConfig, VFSConfig
+from openhcs.core.plate.plate_image_inventory import PlateFileInventory
 from openhcs.core.steps.function_artifact_materialization import planned_materialization_preview
 show("PathPlanningConfig fields", tuple(f.name for f in fields(PathPlanningConfig)))
 show("VFSConfig fields", tuple(f.name for f in fields(VFSConfig)))
@@ -132,7 +132,7 @@ Function and axis semantics:
 
 - `ProcessingContract` lives in
   `openhcs.processing.backends.lib_registry.unified_registry`, not in
-  `openhcs.core.callable_contract`.
+  `openhcs.core.callable.callable_contract`.
 - `ProcessingContract` members are `PURE_3D`, `PURE_2D`, `FLEXIBLE`, and
   `VOLUMETRIC_TO_SLICE`; each owns a nominal
   `ProcessingContractDeclaration`.

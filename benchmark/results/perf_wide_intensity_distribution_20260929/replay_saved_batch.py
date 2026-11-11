@@ -13,11 +13,11 @@ from types import MappingProxyType
 
 import numpy as np
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     WideMeasurementRowAccumulator,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler import spreadsheet_export as export
 
 source = sys.argv[1]

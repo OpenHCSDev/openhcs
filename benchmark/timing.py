@@ -17,8 +17,8 @@ from typing import Iterator
 from python_introspect import dataclass_from_mapping
 from zmqruntime.messages import ExecutionRecord, ExecutionStatus
 
-from openhcs.core.config import Backend
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.config.pipeline_config import Backend
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 
 class BenchmarkPhase(StrEnum):

@@ -36,10 +36,10 @@ from openhcs.agent.ui_bridge_identities import (
     DatasetListStateSurfaceIdentity,
     DatasetListWidgetIdentity,
 )
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution

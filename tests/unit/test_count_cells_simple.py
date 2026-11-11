@@ -12,7 +12,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.processing.backends.analysis.count_cells_simple import (
     Foreground,
     MetaXpressW2Settings,

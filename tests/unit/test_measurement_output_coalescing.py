@@ -12,8 +12,8 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,

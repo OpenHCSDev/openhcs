@@ -11,9 +11,9 @@ from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 from polystore.streaming.identity import StreamProducerOrigin
 
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
 from openhcs.demo.synthetic_data import (
@@ -161,7 +161,7 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
             assert "export_to_spreadsheet" in source
             assert '"export_all_measurement_types": True' in source
         microscopy_import = "from openhcs.domains.microscopy.axes import Microscopy"
-        ungrouped_import = "from openhcs.core.axes import Ungrouped"
+        ungrouped_import = "from openhcs.core.axes.axis_declarations import Ungrouped"
         if blueprint.wavelengths == 1:
             if blueprint.z_stack_levels > 1:
                 assert microscopy_import in source

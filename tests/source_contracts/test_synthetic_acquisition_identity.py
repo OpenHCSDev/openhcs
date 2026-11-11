@@ -12,13 +12,13 @@ import tifffile
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 import openhcs.demo.synthetic_data as producer_module
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
     SourceProjectionMetadataSerializer,
 )
 from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.io.virtual_workspace_metadata import (
     FIELDS, VirtualWorkspaceSourceProjectionEntries,
     AtomicMetadataWriter, get_metadata_path,
 )
@@ -28,7 +28,7 @@ from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser, ImageXpressHandler
 from openhcs.core.dataset_sources.source import DatasetSource
 from polystore.virtual_workspace import SourcePixelRef
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

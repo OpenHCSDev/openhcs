@@ -53,8 +53,8 @@ from openhcs.agent.dto.functions import (
     catalog_page,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.core.callable_contract import CallableImportIdentity
-from openhcs.core.function_reference import ImportableFunctionReference
+from openhcs.core.callable.callable_contract import CallableImportIdentity
+from openhcs.core.callable.function_reference import ImportableFunctionReference
 from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_control import (

@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication
 from objectstate import ObjectStateRegistry
 from objectstate.global_config import set_global_config_for_editing
 from objectstate.object_state import ObjectState
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from pyqt_reactive.forms.parameter_form_chrome_sync import ParameterFormChromeSync
 from pyqt_reactive.forms.parameter_form_tree_index import ParameterFormTreeIndex
 from pyqt_reactive.forms.parameter_form_manager import FormManagerConfig
@@ -403,7 +403,7 @@ def test_flash_paths_keep_single_structural_leaf_but_coalesce_rows() -> None:
 
 def test_local_structural_child_edit_uses_resolved_change_flash() -> None:
     """Inline edits use the same resolved-value callback as other local edits."""
-    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.source.source_bindings import NamedSourceBinding
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.pyqt_gui.widgets.source_bindings_editor import (
         SourceBindingsEditorWidget,

@@ -2,7 +2,7 @@
 
 from formbridge.utils.preview_formatters import resolve_preview_label
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPartitionFilterConfig,
     NapariStreamingConfig,
@@ -12,7 +12,7 @@ from openhcs.core.config import (
 from openhcs.pyqt_gui.widgets.config_preview_formatters import (
     format_partition_filter_config,
 )
-from openhcs.core.config import ExcludePartitions
+from openhcs.core.config.pipeline_config import ExcludePartitions
 
 
 def test_partition_filter_preview_label_is_owned_by_config_declaration() -> None:

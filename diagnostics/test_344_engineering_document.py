@@ -3,11 +3,11 @@
 from pathlib import Path
 
 from openhcs.constants import AllComponents, GroupBy, VariableComponents
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler.intensity import (
     RescaleIntensityModule,

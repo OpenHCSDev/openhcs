@@ -10,21 +10,21 @@ from typing import ClassVar, Tuple
 import numpy as np
 import scipy.optimize
 
-from openhcs.core.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     MeasurementFeatureQuery,
     ColumnarMeasurementTableSchema,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
     measurement_table_axis_values,
@@ -32,19 +32,19 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableAxisProjection
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementTableAxisProjection
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
     MeasurementSubject,
     ObjectLocationFeatureMarker,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
@@ -66,7 +66,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (

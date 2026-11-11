@@ -8,19 +8,19 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     PreservedPayloadAxes,
     preserves_payload_axes,
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import (
     CompilingContext,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     MainFlowInputProjection,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -32,14 +32,14 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.util.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.processing.backends.cellprofiler.crop import crop
 from openhcs.domains.microscopy.axes import Microscopy

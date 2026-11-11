@@ -27,7 +27,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.memory import numpy as numpy_func
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs

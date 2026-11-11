@@ -7,7 +7,7 @@ from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_
 from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
 from benchmark.native_measurement_facts import retained_native_measurement_snapshot
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import RuntimeMeasurementSnapshot
 root=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1');evidence=root/'science-comparison-diagnostic-v1';cache=evidence/'native-fact-cache-proof-v1';policy=_strict_cellprofiler_runtime_equivalence_policy();results=[]
 for name in ['ExampleImagingFlowCytometryObjectsInGrid','ExampleHuman']:

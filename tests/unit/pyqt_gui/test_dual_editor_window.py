@@ -14,7 +14,7 @@ from pyqt_reactive.services.window_navigation import RegisteredWindowNavigationR
 from pyqt_reactive.widgets.shared import ActionTabMaterialization
 
 from openhcs.authoring.session.step_scopes import build_step_scope_id
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.pyqt_gui.services.reactor_providers import (

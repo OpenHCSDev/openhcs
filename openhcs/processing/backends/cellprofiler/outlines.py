@@ -1,7 +1,7 @@
 """Object outline backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
 )
@@ -36,12 +36,12 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,
     object_label_dense_array,
@@ -71,17 +71,17 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     ObjectLabelsInputBindingMixin,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
 
 class OutlineSourceKind(str, Enum):
@@ -150,12 +150,12 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     align_binary_mask_to_shape,
     align_label_plane_to_shape,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import ColourSampleAxisSpec, PayloadAxes
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec, PayloadAxes
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class OverlayOutlinesModule(

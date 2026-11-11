@@ -10,7 +10,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,

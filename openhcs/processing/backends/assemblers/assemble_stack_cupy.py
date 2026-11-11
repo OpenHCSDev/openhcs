@@ -16,7 +16,7 @@ from openhcs.processing.backends.assemblers.blending import (
     TileBlendMethod,
     SubpixelTilePlacement,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     VolumetricToSliceContract,
 )
 from openhcs.utils.import_utils import optional_import_placeholder

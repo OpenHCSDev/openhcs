@@ -1,5 +1,5 @@
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.abstract import StepExecutionObservation
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,14 +12,14 @@ from scipy.io import savemat
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.runtime_object_labels import ObjectLabelSet
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     PairByOrder,
     PrimaryPlaneRole,
@@ -28,11 +28,11 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextEquals,
 )
-from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
-from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_projection import SourcePlaneProjection
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_projection import SourcePlaneProjection
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
@@ -43,7 +43,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _filemanager() -> FileManager:

@@ -80,7 +80,7 @@ def test_viewer_server_imports_no_domain_orchestration_or_config(module) -> None
         name
         for name in loaded
         if name.startswith(("openhcs.microscopes", "openhcs.core.orchestrator"))
-        or name == "openhcs.core.config"
+        or name == "openhcs.core.config.pipeline_config"
     )
     assert forbidden == ()
 

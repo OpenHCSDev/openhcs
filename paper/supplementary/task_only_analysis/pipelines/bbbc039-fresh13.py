@@ -5,7 +5,7 @@ from zmqruntime.config import TransportMode
 # Derived OpenHCS source-binding declaration
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
@@ -74,18 +74,18 @@ source_bindings_config = SourceBindingsConfig(
     )
 )
 # End byte-identical public binding declaration (inlined for native importability).
-from openhcs.core.source_bindings import ImportedMetadataTable, ImportedMetadataJoin
-from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyWellFilterConfig, LazyStepSourceBindingsConfig, LazyNapariStreamingConfig
+from openhcs.core.source.source_bindings import ImportedMetadataTable, ImportedMetadataJoin
+from openhcs.core.config.pipeline_config import PipelineConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyWellFilterConfig, LazyStepSourceBindingsConfig, LazyNapariStreamingConfig
 from openhcs.constants.constants import Microscope, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
-from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_bindings import NamedSourceBinding
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
 from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod, CellProfilerThresholdScope
 from openhcs.processing.backends.cellprofiler.object_images import ImageMode
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,

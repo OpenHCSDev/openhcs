@@ -12,29 +12,29 @@ import warnings
 import numpy as np
 import pytest
 
-import openhcs.core.source_bindings as source_bindings_module
+import openhcs.core.source.source_bindings as source_bindings_module
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     PipelineConfig,
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_matching import source_filters_match
-from openhcs.core.source_bindings import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_matching import source_filters_match
+from openhcs.core.source.source_bindings import (
     BroadcastSource,
     ComponentSelector,
     FromFileName,
@@ -59,8 +59,8 @@ from openhcs.interop.cellprofiler.parser import (
     ModuleSetting,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _field_names(record_type: type[object]) -> frozenset[str]:
@@ -967,7 +967,7 @@ def test_names_and_types_contributes_3d_axis_and_voxel_spacing() -> None:
 
     config = _fold_setup_modules(module)
 
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
 
     assert isinstance(config.source_spatial_domain, VolumeSourceSpatialDomain)
     assert config.source_stack_components == (Microscopy.ZIndex,)

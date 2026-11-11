@@ -276,7 +276,7 @@ XDG_CACHE_HOME=/tmp/openhcs-test-cache .venv/bin/python -m pytest \
 
 2026-06-29 synthetic generation profile slice:
 
-- Added `openhcs.core.synthetic_plate_generation` as the production profile
+- Added `openhcs.core.plate.synthetic_plate_generation` as the production profile
   authority for synthetic plate defaults, validation bounds, and supported
   generation formats.
 - Removed `SyntheticPlateGenerationFormat` and

@@ -10,26 +10,26 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes.component_set import ComponentSet
 from openhcs.constants.constants import Backend
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionPattern,
     FunctionInvocationKey,
     MainFlowInputProjection,
     compile_function_pattern,
 )
-from openhcs.core.invocation_artifacts import unnamed_main_flow_artifact_name
+from openhcs.core.callable.invocation_artifacts import unnamed_main_flow_artifact_name
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_bindings import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     PrimaryPlaneRole,

@@ -15,7 +15,7 @@ from arraybridge import MemoryType
 
 import openhcs.processing.custom_functions as custom_functions
 import openhcs.processing.custom_functions.manager as manager_module
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.manager import (
@@ -38,11 +38,11 @@ def _source(name: str, expression: str = "image") -> str:
 def _plate_source(name: str) -> str:
     return f'''from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, execution_scope, runtime_bound_parameters,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
 
 @execution_scope(FunctionStepExecutionScope.PLATE)
 @runtime_bound_parameters(RuntimeArtifactBatch)
@@ -56,7 +56,7 @@ def {name}(*, artifact_batch: RuntimeArtifactBatch):
 def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
     isolated_custom_runtime, persist,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+    from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
     from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
     from openhcs.processing.custom_functions.runtime_registry import CustomFunctionMetadata
     from openhcs.processing.func_registry import get_function
@@ -129,9 +129,9 @@ def _measurement_source(name: str) -> str:
     return f"""from dataclasses import dataclass
 from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
 )
 
@@ -167,10 +167,10 @@ def {name}(image):
 def test_compiled_inspection_preserves_custom_helper_identity_and_source_isolation(
     isolated_custom_runtime,
 ) -> None:
-    from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
+    from openhcs.core.util.artifact_inspection import CompiledArtifactInvocationInspection
     from openhcs.core.artifacts.plans import ArtifactOutputPlan
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.function_patterns import (
         DEFAULT_GROUP_KEY,
         CompiledFunctionInvocation,
         FunctionInvocationKey,
@@ -217,7 +217,7 @@ def test_unchanged_source_lifecycle_preserves_measurement_owner(
     monkeypatch,
     operation,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
 
     manager = CustomFunctionManager()
     [registered] = manager.register_from_code(_measurement_source("helper_reconcile"))
@@ -249,7 +249,7 @@ def test_unchanged_source_lifecycle_preserves_measurement_owner(
 def test_reconciliation_replaces_helper_owner_only_when_source_changes(
     isolated_custom_runtime,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
 
     manager = CustomFunctionManager()
     name = "helper_source_change"
@@ -278,7 +278,7 @@ def test_publication_preserves_owner_recreated_while_prepared_source_waits(
     monkeypatch,
     operation,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
 
     manager = CustomFunctionManager()
     name = "recreated_source_publication_probe"
@@ -343,7 +343,7 @@ def test_pending_resolution_rejects_retired_source_without_poisoning_current_own
     monkeypatch,
     operation,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
@@ -487,13 +487,13 @@ def test_custom_registration_uses_callable_contract_not_decorator_spelling(
     isolated_custom_runtime,
     decorator,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.processing_contracts import Pure2DContract
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.processing_contracts import Pure2DContract
 
     source = (
         "from openhcs.core.memory.decorators import numpy as cpu\n"
         "from openhcs.core.memory import decorators\n"
-        "from openhcs.core.processing_contracts import Pure2DContract\n"
+        "from openhcs.core.callable.processing_contracts import Pure2DContract\n"
         f"@{decorator}\ndef contract_probe(image):\n    return image + 1\n"
     )
     [function] = CustomFunctionManager().register_from_code(source)

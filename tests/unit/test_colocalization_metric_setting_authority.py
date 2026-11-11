@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.setting_names import setting_names
@@ -100,7 +100,7 @@ def test_recorded_source_pair_features_exclude_disabled_metrics(disabled, famili
 
     import numpy as np
 
-    from openhcs.core.measurement_row_materialization import (
+    from openhcs.core.measurements.measurement_row_materialization import (
         ConcatenatedColumnarRows,
         DataclassMeasurementColumnarRows,
     )

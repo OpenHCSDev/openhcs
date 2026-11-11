@@ -6,7 +6,7 @@ import skimage.measure
 import skimage.segmentation
 import skimage.transform
 
-from openhcs.core.runtime_object_labels import object_label_dense_array
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
 from openhcs.processing.backends.cellprofiler.watershed import (
     WatershedMethod,
     WatershedSegmentationSurface,

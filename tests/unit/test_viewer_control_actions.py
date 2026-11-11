@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 from zmqruntime.messages import EndpointControlCapability
 
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.viewer_control_actions import (
     LifecycleControlAction,
     ViewerServerPort,

@@ -7,7 +7,7 @@ from benchmark.progress import (
     iter_progress_events,
     summarize_progress,
 )
-from openhcs.core.config import Backend
+from openhcs.core.config.pipeline_config import Backend
 
 
 class FakeFileManager:

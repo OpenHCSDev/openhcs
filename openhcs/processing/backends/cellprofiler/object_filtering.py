@@ -23,7 +23,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from python_introspect import public_names_from_objects
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     KeywordRuntimeParameter,
     processing_prepare,
 )
@@ -31,10 +31,10 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     measurement_values_for_feature,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactSpecRef
@@ -49,12 +49,12 @@ from openhcs.core.artifacts.kinds import (
     ObjectLineageArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     DenseObjectLabelExtentDomainDeclaration,
     ObjectLabelIdDomainStrategy,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
-from openhcs.core.runtime_measurements import (
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
+from openhcs.core.measurements.runtime_measurements import (
     ObjectLabelMeasurementValues,
 )
 from openhcs.core.runtime_relationships import (
@@ -68,7 +68,7 @@ from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enu
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
@@ -97,10 +97,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
     MeasurementFeatureSettingBinding,
     SettingToKeywordBinding,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
     object_label_value_with_dense_labels,
@@ -130,7 +130,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
 

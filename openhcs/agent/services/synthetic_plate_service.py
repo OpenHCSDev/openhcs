@@ -15,7 +15,7 @@ from openhcs.agent.dto.plate import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-from openhcs.core.synthetic_plate_generation import (
+from openhcs.core.plate.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
     SyntheticPlateGenerationParameters,

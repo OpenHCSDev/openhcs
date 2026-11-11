@@ -12,7 +12,7 @@ import threading
 import time
 from typing import ClassVar
 
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.axis_declarations.alias_property import AliasProperty
 import psutil
 from zmqruntime.messages import ProcessIdentity
 

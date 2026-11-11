@@ -5,14 +5,14 @@ import textwrap
 
 import numpy as np
 
-from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.measurements.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )

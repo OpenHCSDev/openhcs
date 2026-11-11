@@ -1,6 +1,6 @@
 """Ordinary saved-image streaming must reach the strict receiver with owned axes."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from dataclasses import replace
 from hashlib import sha256
 from multiprocessing.shared_memory import SharedMemory
@@ -19,19 +19,19 @@ from openhcs.agent.dto.plate import PlateFileStreamRequest
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import (
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.viewer_streaming_service import (
+from openhcs.core.io.viewer_streaming_service import (
     ImageStreamingRequest,
     StreamingService,
 )
-from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
+from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder,

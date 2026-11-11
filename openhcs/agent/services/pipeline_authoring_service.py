@@ -33,13 +33,13 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     FunctionCatalogServiceABC,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import PipelineConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import (
     PipelineInvocationContractProviderAuthority,
 )
-from openhcs.core.pipeline_document import (
+from openhcs.core.io.pipeline_document import (
     PipelineDocument,
     PipelineDocumentCodec,
 )

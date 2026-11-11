@@ -25,12 +25,12 @@ from objectstate.field_access import DataclassFieldAccess
 from pycodify import Assignment, generate_python_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.payload.vfs_protocol import PlateInputFile
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 from openhcs.processing.backends.cellprofiler.crop import CropModule, crop
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape

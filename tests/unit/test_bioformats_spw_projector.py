@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsImage,
     BioFormatsPixels,

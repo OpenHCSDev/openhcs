@@ -8,7 +8,7 @@ from openhcs.core.equivalence.measurement_features import (
 
 from dataclasses import dataclass
 
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.axes.axis_declarations.component_group_scope import ComponentGroupScope
 from openhcs.core.equivalence.cells import (
     RuntimeCellSignature,
     RuntimeMeasurementCellSignatureProjection,
@@ -20,8 +20,8 @@ from benchmark.equivalence.measurement_rows import (
     RuntimeMeasurementRowMapping,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
 )
 from openhcs.core.runtime_relationships import (

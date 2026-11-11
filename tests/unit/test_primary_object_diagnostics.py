@@ -1,6 +1,6 @@
 """Lightweight ownership/payload checks; these do not execute segmentation."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import ast
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
@@ -18,9 +18,9 @@ from openhcs.core.artifacts.relations import ArtifactSidecarSourceRelation
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.streaming import OnDemandStreaming
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, MaskedImagePayload
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata, MaskedImagePayload
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
     ExecutedDeclumpingEvidence,
     PrimaryObjectDiagnosticPlanes,
@@ -66,7 +66,7 @@ def _objects(source):
 
 
 def test_selected_response_keeps_source_frame_without_acquisition_intensity_scale():
-    from openhcs.core.runtime_plane_projection import (
+    from openhcs.core.payload.runtime_plane_projection import (
         RuntimePlaneAxisValueProjection,
     )
 
@@ -202,7 +202,7 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
 
 
 def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identity():
-    from openhcs.core.processing_contracts import (
+    from openhcs.core.callable.processing_contracts import (
         Pure2DAuxiliaryOutputAggregator,
     )
     from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import DiagnosticPlaneSource
@@ -221,8 +221,8 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
         planes, "numpy", plane_axis=RuntimeSlicePlaneAxis
     )
     import pickle
-    from openhcs.core.aligned_image_payload import ProducedImageStack
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.payload.aligned_image_payload import ProducedImageStack
+    from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
     assert isinstance(value, ProducedImageStack)
     assert value._composed_payload is None
@@ -247,7 +247,7 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
 @pytest.mark.parametrize("spatial_mask", (False, True))
 def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, spatial_mask):
     import pickle
-    from openhcs.core.aligned_image_payload import ProducedImageStack
+    from openhcs.core.payload.aligned_image_payload import ProducedImageStack
 
     pixels = (np.full((3, 4), 7, dtype=np.uint16),
               np.full((3, 4), 0.25, dtype=np.float32))

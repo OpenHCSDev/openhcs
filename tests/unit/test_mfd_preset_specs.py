@@ -3,7 +3,7 @@ from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.core.config import LazyDtypeConfig
+from openhcs.core.config.pipeline_config import LazyDtypeConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,
     count_cells_single_channel,

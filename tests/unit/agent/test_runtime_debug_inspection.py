@@ -19,9 +19,9 @@ from openhcs.agent.services.runtime_server_service import (
     RuntimeServerService,
     ZMQRuntimeServerGateway,
 )
-from openhcs.core.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
+from openhcs.core.debug.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
 from python_introspect import to_jsonable
-from openhcs.core.debug_views import (
+from openhcs.core.debug.debug_views import (
     RuntimeValueRecordsDebugViewTable,
     RuntimeValuesDebugViewSection,
 )

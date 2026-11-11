@@ -1875,8 +1875,8 @@ jobs:
           # Verify core OpenHCS works without GUI
           python - <<'PY'
           import openhcs
-          from openhcs.core.config import PipelineConfig
-          from openhcs.core.pipeline_document import PipelineDocumentCodec
+          from openhcs.core.config.pipeline_config import PipelineConfig
+          from openhcs.core.io.pipeline_document import PipelineDocumentCodec
           from openhcs.core.steps.function_step import FunctionStep
 
           pipeline_document = PipelineDocumentCodec.from_values(

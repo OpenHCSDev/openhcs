@@ -13,9 +13,9 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import ArtifactPlanInspectionService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-from openhcs.core.config import LazyPartitionFilterConfig, PipelineConfig
-from openhcs.core.config_document import ConfigDocumentCodec
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import LazyPartitionFilterConfig, PipelineConfig
+from openhcs.core.config.config_document import ConfigDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source import (
     AutoDetectedSource,

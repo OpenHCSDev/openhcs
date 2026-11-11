@@ -24,9 +24,9 @@ from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
-from openhcs.core.callable_contract import CallableProjection
-from openhcs.core.function_reference import ResolvedRegistryFunction
-from openhcs.core.processing_preparation import (
+from openhcs.core.callable.callable_contract import CallableProjection
+from openhcs.core.callable.function_reference import ResolvedRegistryFunction
+from openhcs.core.callable.processing_preparation import (
     CallablePreparation,
     PreparationCacheBatch,
 )
@@ -40,8 +40,8 @@ from .unified_registry import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableImportIdentity
-    from openhcs.core.function_reference import RegistryFunctionReference
+    from openhcs.core.callable.callable_contract import CallableImportIdentity
+    from openhcs.core.callable.function_reference import RegistryFunctionReference
 
 logger = logging.getLogger(__name__)
 
@@ -474,7 +474,7 @@ class RegistryService:
                 f"Function registry {reference.registry_name!r} is unavailable."
             ) from exc
 
-        from openhcs.core.function_reference import (
+        from openhcs.core.callable.function_reference import (
             FunctionReferenceTransportAuthority,
         )
 

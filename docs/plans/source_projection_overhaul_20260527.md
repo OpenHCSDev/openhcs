@@ -177,7 +177,7 @@ The new projection authority must validate these before metadata is written:
 
 ### Phase 1: Projection Model and Metadata Serialization
 
-Add a core module, likely `openhcs.core.source_projection`.
+Add a core module, likely `openhcs.core.source.source_projection`.
 
 Responsibilities:
 

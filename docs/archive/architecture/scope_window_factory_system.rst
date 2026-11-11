@@ -100,7 +100,7 @@ Handler functions create and show windows for a given ``scope_id`` and optional 
     def _create_global_config_window(scope_id: str, object_state=None) -> Optional[QWidget]:
         """Create GlobalPipelineConfig editor window."""
         from openhcs.pyqt_gui.windows.config_window import ConfigWindow
-        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
         from objectstate.global_config import (
             get_current_global_config,
             set_global_config_for_editing,
@@ -214,7 +214,7 @@ Plate Config Handler
 
     def _create_plate_config_window(scope_id: str, object_state=None):
         from openhcs.pyqt_gui.windows.config_window import ConfigWindow
-        from openhcs.core.config import PipelineConfig
+        from openhcs.core.config.pipeline_config import PipelineConfig
         from pyqt_reactive.services import ServiceRegistry
         from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 

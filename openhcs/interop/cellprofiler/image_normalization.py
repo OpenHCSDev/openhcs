@@ -18,7 +18,7 @@ def normalize_cellprofiler_image_payload(
     Every image entering CellProfiler semantics passes here, so a bare array
     becomes a payload here.
     """
-    from openhcs.core.runtime_image_values import ImagePayload
+    from openhcs.core.payload.runtime_image_values import ImagePayload
 
     return ImagePayload.of(payload).normalize_intensity_payload(
         dtype=np.dtype(dtype), channel_index=channel_index,

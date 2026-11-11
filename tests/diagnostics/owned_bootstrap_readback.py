@@ -9,23 +9,23 @@ import numpy as np
 
 from openhcs.agent.dto.execution import ArtifactPlanInspection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.source_bindings import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.source.source_matching import source_component_metadata_value
+from openhcs.core.source.source_bindings import (
     PrimaryPlaneRole,
     SourceArtifactRole,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+from openhcs.core.io.virtual_workspace_metadata import (
     METADATA_CONFIG, OpenHCSMetadataSubdirectories,
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
 from python_introspect import to_jsonable
 from polystore.roi import load_rois_from_zip
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

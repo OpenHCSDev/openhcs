@@ -10,14 +10,14 @@ from scipy.io import savemat
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.source_binding_selection import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_binding_selection import (
     PipelineStartSourceUniverseRequest,
     SourceFileUniverse,
     SourceUniverseRuntimeState,
 )
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source.source_bindings import (
     CompiledSourceUniversePlan,
     NamedSourceBinding,
     PairByOrder,
@@ -26,9 +26,9 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextEquals,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_metadata import SourceFilterClause
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_metadata import SourceFilterClause
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import (
     get_all_image_paths,
     zarr_batch_layout,

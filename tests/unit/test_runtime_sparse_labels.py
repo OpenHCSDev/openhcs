@@ -1,7 +1,7 @@
 import numpy as np
 
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 
 
 def test_sparse_ijv_three_column_schema_is_exact_for_zero_rows() -> None:

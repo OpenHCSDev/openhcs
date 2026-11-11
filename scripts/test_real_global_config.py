@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, "/home/ts/code/projects/openhcs-sequential")
 
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from scripts.prototype_flatten_object_state import FlatObjectState
 import logging
 

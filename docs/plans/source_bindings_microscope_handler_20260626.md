@@ -73,8 +73,8 @@ Source-binding handler activation belongs there, not on the regular
 `SourceBindingsConfig`.
 
 For source bindings, the concrete classes live in
-`openhcs.core.source_bindings`, but the public config surface should re-export
-the generated lazy classes from `openhcs.core.config` alongside the other core
+`openhcs.core.source.source_bindings`, but the public config surface should re-export
+the generated lazy classes from `openhcs.core.config.pipeline_config` alongside the other core
 config objects.
 
 ### Compiler Step-Config Consumption Pattern
@@ -584,7 +584,7 @@ Follow the same pattern as `WellFilterConfig` and `StepWellFilterConfig`:
 pipeline/plate scope gets the regular config, and steps get the step-specialized
 subclass.
 
-1. Add `SourceBindingsConfig` to `openhcs.core.source_bindings`.
+1. Add `SourceBindingsConfig` to `openhcs.core.source.source_bindings`.
 2. Make `StepSourceBindingsConfig` inherit it.
 3. Declare `enabled: bool = False` only on concrete `StepSourceBindingsConfig`
    if the field is kept for the step-local config surface. Do not declare it on
@@ -675,7 +675,7 @@ binding payload fields must remain lazy/inheritable.
    step config:
 
 ```python
-from openhcs.core.config import LazyStepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import LazyStepSourceBindingsConfig
 
 source_bindings: LazyStepSourceBindingsConfig = LazyStepSourceBindingsConfig()
 ```
@@ -888,7 +888,7 @@ per-step source access:
 | `openhcs/core/orchestrator/orchestrator.py` | Use effective global + pipeline config for microscope selection, then pass `source_bindings_config` into the source-binding handler |
 | `openhcs/microscopes/microscope_base.py` | Add a polymorphic handler `create()` hook so `SourceBindingsHandler` receives typed config through AutoRegisterMeta-owned handler construction, without a stringly typed factory branch |
 | `openhcs/core/pipeline_image_schema.py` | Host `PipelineImageSchema.to_source_bindings_config()` plus typed representability checks for schema fields that require source-schema materialization |
-| `openhcs/interop/cellprofiler/pipeline_generator.py` | Emit `pipeline_config = PipelineConfig(...)` and import config objects from `openhcs.core.config` plus `Microscope` from constants |
+| `openhcs/interop/cellprofiler/pipeline_generator.py` | Emit `pipeline_config = PipelineConfig(...)` and import config objects from `openhcs.core.config.pipeline_config` plus `Microscope` from constants |
 | `openhcs/interop/cellprofiler/runtime/generated_pipeline.py` | Add a typed optional generated-module export accessor for `pipeline_config` |
 | `openhcs/interop/cellprofiler/runtime_pipeline.py` / `import_records.py` | Install or expose generated `PipelineConfig` only as the ObjectState-owned pipeline config root for the import workflow; do not create a parallel caller-managed runtime config channel |
 | `openhcs/interop/cellprofiler/module_processing_components.py` / `symbol_table.py` | Emit step-local source-binding subsets only for external-source module contracts and stop repeating inherited metadata/match fields on those steps |

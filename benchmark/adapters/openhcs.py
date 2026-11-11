@@ -42,7 +42,7 @@ from benchmark.contracts.tool_adapter import (
     ToolNotInstalledError,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
@@ -57,9 +57,9 @@ from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence,
 )

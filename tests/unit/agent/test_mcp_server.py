@@ -24,7 +24,7 @@ import openhcs.mcp.bootstrap as bootstrap
 import openhcs.mcp.server as server
 import openhcs.mcp.stdio as mcp_stdio
 from openhcs.agent.authoring_contexts import AuthoringContextDeclaration
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.agent.capabilities import (
     AuthoringLocalCapabilitySurfaceProfile,
     CapabilityKind,
@@ -105,7 +105,7 @@ from formbridge.bridge.field_projection import ObjectStateFieldListProjector
 from openhcs.agent.services.selected_plate_service import SelectedPlateService
 from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
@@ -4016,7 +4016,7 @@ def test_mcp_dev_client_artifact_plan_command_projects_tool_arguments():
     import openhcs.mcp.dev_client as dev_client
 
     pipeline_source = (
-        "from openhcs.core.config import PipelineConfig\n"
+        "from openhcs.core.config.pipeline_config import PipelineConfig\n"
         "pipeline_config = PipelineConfig()\n"
         "pipeline_steps = []"
     )
@@ -8475,7 +8475,7 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
     from openhcs.agent.path_policy import AgentPathPolicy
     from formbridge.runtime_platform import AgentRuntimePlatform
     from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
-    from openhcs.core.native_threading import native_thread_count_environment_keys
+    from openhcs.core.execution.native_threading import native_thread_count_environment_keys
     from openhcs.utils.environment import OpenHCSProcessEnvironment
 
     platform_authority = AgentRuntimePlatform.current()

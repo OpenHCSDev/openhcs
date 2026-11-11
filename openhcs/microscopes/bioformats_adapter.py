@@ -23,13 +23,13 @@ from polystore.virtual_workspace import SourcePixelRef
 from polystore.zarr_batch import ZarrStoredBatchSemantics
 
 from openhcs.constants.constants import Backend
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.source_matching import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.source.source_matching import (
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_path_identity import absolute_source_path
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_path_identity import absolute_source_path
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
     SourceDatasetConflictError,

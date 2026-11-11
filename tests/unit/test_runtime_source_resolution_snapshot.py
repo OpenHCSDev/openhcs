@@ -6,25 +6,25 @@ from types import MappingProxyType
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_binding_selection import (
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_binding_selection import (
     DeclaredSourceMetadataRecord,
     SourceBindingMatchedImageSet,
     SourcePatternResolutionContext,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     FromFileName,
     PairByOrder,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     MetadataExtractionRule,
     ResolvedSourceMetadataRecord,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.dataset_sources.interfaces import FilenameParseResult
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
@@ -339,7 +339,7 @@ def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned)
 
 
 def test_durable_workspace_mapping_still_runs_selector_parser_and_rule_fallbacks():
-    from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataRecord
+    from openhcs.core.source.source_metadata import DurableSourceMetadata, SourceMetadataRecord
 
     metadata = DurableSourceMetadata.from_mapping({"site": 8, "literal": "kept"})
     parser = CountingParser()

@@ -409,7 +409,7 @@ Basic Usage
 .. code-block:: python
 
     from openhcs.processing.backends.analysis.cell_counting_cpu import count_cells_single_channel
-    from openhcs.core.config import DetectionMethod, DtypeConversion
+    from openhcs.core.config.pipeline_config import DetectionMethod, DtypeConversion
 
     # Enable segmentation mask return
     Step(

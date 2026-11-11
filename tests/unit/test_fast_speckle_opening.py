@@ -5,20 +5,20 @@ import pytest
 from scipy import ndimage
 from skimage import morphology
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     EnhanceOrSuppressFeaturesModule,
     SpeckleAccuracy,
     enhance_or_suppress_features,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
 from openhcs.interop.cellprofiler.parser import ModuleBlock
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 def reflected_opening_reference(image, footprint):

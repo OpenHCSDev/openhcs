@@ -9,13 +9,13 @@ import numpy as np
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
-from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.payload.runtime_output_matching import RuntimeReturnedOutputMatcher
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.processing.backends.cellprofiler.classification import (

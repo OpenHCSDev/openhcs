@@ -30,7 +30,7 @@ from benchmark.agent_validation.contracts import (
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
 from benchmark.agent_validation.perturbations import DiagnosticPerturbationDeclaration
 from benchmark.agent_validation.scoring import AttemptJournalScorer
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from python_introspect import to_jsonable
 
 

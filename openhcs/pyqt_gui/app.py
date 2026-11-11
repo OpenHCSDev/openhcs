@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from pyqt_reactive.utils.scroll_filter import install_shift_wheel_scrolling
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.branding import openhcs_application_icon
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
 
@@ -229,7 +229,7 @@ class OpenHCSPyQtApp(QApplication):
             ObjectStateRegistry,
         )
 
-        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 
         # Set for editing (UI placeholders) - this uses threading.local() storage
         set_global_config_for_editing(

@@ -1,18 +1,18 @@
 """Prepared raw arguments retain context consumed by nominal CP request owners."""
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     NaturalExecution,
 )
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
@@ -21,9 +21,9 @@ from openhcs.processing.backends.cellprofiler.alignment import AlignModule, alig
 from openhcs.processing.backends.cellprofiler.area_occupied import measure_image_area_occupied
 from openhcs.processing.backends.cellprofiler.crop import CropModule, crop
 from openhcs.processing.backends.cellprofiler.grid import ShapeChoice, identify_objects_in_grid
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_spatial_grid import SpatialGrid
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.cellprofiler.image_quality import measure_image_quality
 from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
 from openhcs.processing.backends.cellprofiler.manual_objects import identify_objects_manually
@@ -35,8 +35,8 @@ from openhcs.processing.backends.cellprofiler.worms import (
     untangle_worms_both,
     untangle_worms_with_overlap,
 )
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _prepared_contract(func):

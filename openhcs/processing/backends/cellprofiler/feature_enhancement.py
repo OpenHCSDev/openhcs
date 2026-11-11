@@ -10,11 +10,11 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.vfs_protocol import PlateInputFile
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -25,14 +25,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     SourceFileSettingBinding,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     OpencvBackendProvider,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock

@@ -18,7 +18,7 @@ from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImagePlaneSource,
     ImportedMetadataJoin,
@@ -53,9 +53,9 @@ from openhcs.core.source_bindings import (
     TextMatchType,
     TextStartsWith,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_matching import source_metadata_component
-from openhcs.core.source_metadata import (
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_matching import source_metadata_component
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,
@@ -64,8 +64,8 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )
-from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     decode_cellprofiler_setting_literal,
 )
@@ -84,7 +84,7 @@ from openhcs.interop.cellprofiler.settings_binder import parse_cellprofiler_bool
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
 )
-from openhcs.core.axes import Axis, AxisFamily, ColourAxis, StackAxis
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, ColourAxis, StackAxis
 
 _METADATA_MATCH_PATTERN = re.compile(
     '\\(metadata does (?P<field>[A-Za-z0-9_]+) \\"(?P<value>[^\\"]+)\\"\\)'

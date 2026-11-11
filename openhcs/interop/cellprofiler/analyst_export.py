@@ -34,48 +34,48 @@ from openhcs.core.artifacts.kinds import (
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileRevision
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat, ImageFileRevision
+from openhcs.core.measurements.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
     ConcatenatedColumnarRows,
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     ColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeScopedMeasurementTable,
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementTableRowLayout,
     measurement_table_row_layout_from_fields,
 )
-from openhcs.core.runtime_identifier import (
+from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_identifier,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     source_component_metadata_consensus,
     SourceImageProvenance,
 )
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_metadata import SourceMetadataScalar
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_metadata import SourceMetadataScalar
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
 )
 

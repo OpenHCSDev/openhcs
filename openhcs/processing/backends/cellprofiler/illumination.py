@@ -15,7 +15,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     FullStackExecution,
     ImagePayloadExecutionMode,
@@ -27,13 +27,13 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     project_image_mask_to_data_domain,
 )
@@ -68,7 +68,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     CellProfilerLabelHull,
     _cellprofiler_column_envelope_vertices_numba,
@@ -87,15 +87,15 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
     _cellprofiler_line_points,
     _fill_cellprofiler_line_points_numba,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
-from openhcs.core.axes import Axis
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
 
 
 class IntensityChoice(Enum):

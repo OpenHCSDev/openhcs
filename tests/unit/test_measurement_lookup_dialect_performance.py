@@ -3,20 +3,20 @@ from __future__ import annotations
 from collections import Counter
 import math
 
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 
 
 class _LookupDialect(MeasurementDialect):
@@ -169,8 +169,8 @@ def test_columnar_lookup_distinguishes_source_object_absence_padding_and_nan() -
 
 def test_feature_batch_preserves_overlapping_axes_last_write_and_live_columns() -> None:
     import numpy as np
-    from openhcs.core.runtime_measurements import MeasurementRowAxisField
-    from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
+    from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+    from openhcs.core.measurements.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
 
     ids = np.asarray([1, 1, 2, 3, 4], dtype=object)
     first = np.asarray([5.0, 7.0, np.nan, MEASUREMENT_SPARSE_CELL, None], dtype=object)
@@ -238,7 +238,7 @@ def test_feature_batch_preserves_overlapping_axes_last_write_and_live_columns() 
 
 def test_feature_batch_keeps_alias_column_priority_and_feature_qualification() -> None:
     import numpy as np
-    from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
+    from openhcs.core.measurements.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
 
     table = MeasurementTable(
         name="SourceQualified",
@@ -294,7 +294,7 @@ def test_feature_batch_keeps_alias_column_priority_and_feature_qualification() -
 
 def test_shared_rows_keep_table_subject_and_result_constructor_authorities() -> None:
     import pytest
-    from openhcs.core.measurement_feature_queries import (
+    from openhcs.core.measurements.measurement_feature_queries import (
         ColumnarMeasurementTableSchema,
     )
 

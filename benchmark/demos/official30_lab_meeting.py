@@ -23,19 +23,19 @@ from benchmark.contracts.comparison_manifest import (
     JSONValue,
     ManifestCasePayload,
 )
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import ArtifactType, MeasurementsArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyPartitionFilterConfig,
 )
-from openhcs.core.input_workspace import (
+from openhcs.core.execution.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
 )
-from openhcs.core.source_matching import source_component_metadata_values
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_matching import source_component_metadata_values
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,

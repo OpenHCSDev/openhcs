@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 
-from openhcs.core.runtime_spatial_graph import SpatialGraph
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
 LayerData = tuple[Any, dict[str, Any], str]
 

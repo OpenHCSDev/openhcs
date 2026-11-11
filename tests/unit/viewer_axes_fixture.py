@@ -1,7 +1,7 @@
 """The microscopy axis declarations a viewer stream carries, for viewer tests."""
 
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import OrdinalValued
+from openhcs.core.axes.axis_declarations import OrdinalValued
 from openhcs.runtime.viewer_display import DECLARED_AXES_FIELD, DeclaredAxes, DeclaredAxis
 
 STREAM_AXES = DeclaredAxes.of(Microscopy.axes)

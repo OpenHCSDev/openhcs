@@ -27,7 +27,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowStateResult,
     ViewerWindowValidationSummaryResult,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity,

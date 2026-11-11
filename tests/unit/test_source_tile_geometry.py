@@ -1,6 +1,6 @@
 """Structural, synthetic-only checks of embedded acquisition tile placement."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.progress.types import ProgressExecutionContext
 import json
 from pathlib import Path
@@ -15,19 +15,19 @@ from polystore.source_tile_geometry import SourceTileGeometry
 from polystore.tiff_header import TiffImageHeader
 
 from openhcs.constants.constants import Backend
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.memory import numpy
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import FromFileName
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
-from openhcs.core.source_tile_geometry import SourceTileLayout
-from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source.source_bindings import FromFileName
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_matching import source_component_metadata_value
+from openhcs.core.source.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
+from openhcs.core.source.source_tile_geometry import SourceTileLayout
+from openhcs.core.io.virtual_workspace_metadata import FIELDS
 from openhcs.microscopes.imagexpress_source_metadata import (
     ImageXpressTiffMetadataEnricher,
 )
@@ -36,14 +36,14 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.processing.backends.pos_gen.acquisition_positions import (
     _source_metadata,
     acquisition_tile_positions,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
@@ -473,7 +473,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
 
     from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         LazySourceBindingsConfig,

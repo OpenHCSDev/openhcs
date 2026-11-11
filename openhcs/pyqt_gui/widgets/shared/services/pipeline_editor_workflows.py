@@ -12,21 +12,21 @@ from objectstate.object_state import ObjectState
 from PyQt6.QtWidgets import QFileDialog
 from formbridge.managers.workflows import ManagerCodeExecutionWorkflow
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.debug import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.debug.debug_runtime import (
     DebugCommandType,
     DebugCursor,
     FileManagerDebugSnapshotStore,
 )
-from openhcs.core.debug_view_models import DebugViewModel
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.debug.debug_view_models import DebugViewModel
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
 )
 from openhcs.pyqt_gui.windows.debug_inspector_window import DebugInspectorWindow
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     RestartDebugCommand,
     RunDebugCommand,
     StepDebugCommand,

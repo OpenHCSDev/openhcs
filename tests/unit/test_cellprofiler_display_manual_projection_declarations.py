@@ -14,25 +14,25 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
 )

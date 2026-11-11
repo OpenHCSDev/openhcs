@@ -25,32 +25,32 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.axis_filter import step_axis_allows_config
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.axes.axis_filter import step_axis_allows_config
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
 )
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.image_file_serialization import (
+from openhcs.core.payload.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
     RuntimeProjectionSourceIdentityRequest,
     RequiredSourceComponentMetadata,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
@@ -80,7 +80,7 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
     OpenHCSMetadataSubdirectories,

@@ -8,11 +8,11 @@ from types import SimpleNamespace
 
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.virtual_workspace_metadata import FIELDS
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.core.io.virtual_workspace_metadata import FIELDS
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
 from openhcs.microscopes.opera_phenix import OperaPhenixHandler
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -68,14 +68,14 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
 ):
     from unittest.mock import Mock
     from objectstate.lazy_factory import ensure_global_config_context
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.source_metadata import SourceFilterClause
-    from openhcs.core.source_bindings import (
+    from openhcs.core.source.source_metadata import SourceFilterClause
+    from openhcs.core.source.source_bindings import (
         SourceFileName,
         TextContains,
     )
-    from openhcs.core.config import SourceBindingsConfig, LazySourceBindingsConfig
+    from openhcs.core.config.pipeline_config import SourceBindingsConfig, LazySourceBindingsConfig
 
     source_handler = OperaPhenixHandler(SimpleNamespace())
     (tmp_path / "Images").mkdir()
@@ -186,8 +186,8 @@ def test_acquisition_spacing_declaration_serves_publication_and_manual_viewer(
 def _ingest_records(records: list[dict]) -> None:
     import typing
 
-    import openhcs.core.source_projection as projection_module
-    from openhcs.core.virtual_workspace_metadata import (
+    import openhcs.core.source.source_projection as projection_module
+    from openhcs.core.io.virtual_workspace_metadata import (
         VirtualWorkspaceSourceProjectionEntries,
     )
 
@@ -256,7 +256,7 @@ class _TwoPayloadProjection:
 
 
 def test_declared_optional_payload_field_is_type_parametric():
-    from openhcs.core.source_projection import declared_optional_payload_field
+    from openhcs.core.source.source_projection import declared_optional_payload_field
 
     assert declared_optional_payload_field(_TwoPayloadProjection, _MarkerA) == "first"
     assert declared_optional_payload_field(_TwoPayloadProjection, _MarkerB) == "second"
@@ -267,7 +267,7 @@ def test_workspace_registration_reuses_owner_and_refreshes_changed_mapping(tmp_p
     import os
     from polystore.filemanager import FileManager
     from openhcs.constants import Backend
-    from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+    from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
     from openhcs.core.dataset_sources.source import DatasetSource
 
     metadata_path = METADATA_CONFIG.metadata_path(tmp_path)
@@ -306,7 +306,7 @@ def test_workspace_registration_replaces_different_plate_or_metadata_contract(tm
     from polystore.filemanager import FileManager
     from polystore.virtual_workspace import VirtualWorkspaceBackend
     from openhcs.constants import Backend
-    from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+    from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
     from openhcs.core.dataset_sources.source import DatasetSource
 
     manager = FileManager({})

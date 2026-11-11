@@ -5,7 +5,7 @@
   "header_source_matches_candidate": true,
   "modules": {
     "openhcs": "/tmp/openhcs-source-header-current-main-installed-20260930/openhcs/__init__.py",
-    "openhcs.core.image_file_serialization": "/tmp/openhcs-source-header-current-main-installed-20260930/openhcs/core/image_file_serialization.py",
+    "openhcs.core.payload.image_file_serialization": "/tmp/openhcs-source-header-current-main-installed-20260930/openhcs/core/image_file_serialization.py",
     "zmqruntime": "/home/ts/code/projects/openhcs/external/zmqruntime/src/zmqruntime/__init__.py",
     "pyqt_reactive": "/home/ts/code/projects/openhcs/external/pyqt-reactive/src/pyqt_reactive/__init__.py",
     "polystore": "/home/ts/code/projects/openhcs/external/PolyStore/src/polystore/__init__.py",

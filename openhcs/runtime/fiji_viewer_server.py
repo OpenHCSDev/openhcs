@@ -25,9 +25,9 @@ from polystore.streaming_constants import StreamingDataType
 from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.streaming_config_declarations import FijiViewer
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.config.streaming_config_declarations import FijiViewer
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,

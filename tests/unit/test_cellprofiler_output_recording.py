@@ -1,10 +1,10 @@
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     NaturalExecution,
 )
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -23,9 +23,9 @@ from openhcs.core.artifacts.kinds import (
     ObjectLineageArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
@@ -33,7 +33,7 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest

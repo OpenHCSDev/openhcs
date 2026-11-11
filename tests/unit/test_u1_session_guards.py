@@ -155,7 +155,7 @@ def test_pipeline_formats_are_importers_not_suffix_branches() -> None:
 
 def test_dataset_scope_kinds_and_importers_register_from_the_domain() -> None:
     from openhcs.core.dataset_sources.dataset_scopes import DatasetScopeKind
-    from openhcs.core.pipeline_import import PipelineImporter
+    from openhcs.core.io.pipeline_import import PipelineImporter
 
     assert ".cppipe" in PipelineImporter.__registry__
     assert ".py" in PipelineImporter.__registry__

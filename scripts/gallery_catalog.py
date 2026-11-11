@@ -40,7 +40,7 @@ from openhcs.agent.ui_bridge_identities import (
     DatasetListWidgetIdentity,
 )
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 
 if TYPE_CHECKING:

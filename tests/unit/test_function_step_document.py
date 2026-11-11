@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.function_step_document import (
+from openhcs.core.callable.function_step_document import (
     FunctionStepDocument,
     FunctionStepDocumentCodec,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService

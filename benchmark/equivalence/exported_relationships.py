@@ -52,19 +52,19 @@ from benchmark.equivalence.measurement_rows import (
     runtime_measurement_row_schema_for_header,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureContext,
     RelationshipAggregateFeatureSemantics,
 )
-from openhcs.core.runtime_measurements import RuntimeScopedMeasurementTable
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.runtime_measurements import RuntimeScopedMeasurementTable
+from openhcs.core.measurements.measurement_row_materialization import (
     columnar_row_values,
     iter_measurement_rows,
     measurement_object_label,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
     MeasurementScope,
@@ -79,15 +79,15 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     measurement_row_mapping,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_plane_alignment import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_plane_alignment import (
     SourcePlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )

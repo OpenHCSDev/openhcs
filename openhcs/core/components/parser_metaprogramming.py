@@ -8,7 +8,7 @@ from typing import Optional, Tuple, TypeAlias
 
 from polystore.streaming.viewer_transport import ViewerFilenameParseResultABC
 
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.core.components.component_values import AxisValues
 
 logger = logging.getLogger(__name__)

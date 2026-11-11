@@ -89,7 +89,7 @@ Manual Cache Management
 
    # Clear all caches
    import shutil
-   from openhcs.core.xdg_paths import get_openhcs_cache_dir
+   from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
    shutil.rmtree(get_openhcs_cache_dir())
 
    # Disable caching for a specific registry

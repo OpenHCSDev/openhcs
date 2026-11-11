@@ -1,7 +1,7 @@
 """Independent-plane NLM uses the original contract, kernel and source owners."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from dataclasses import replace
@@ -15,20 +15,20 @@ from openhcs.agent.services.pipeline_authoring_service import (
     InvalidFunctionKwargsError,
     _validate_callable_kwargs,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_reference import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     RegistryFunctionReference,
 )
 from openhcs.core.memory import numpy as numpy_contract
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.scikit_image_registry import SkimageRegistry
 from openhcs.processing.custom_functions.runtime_registry import project_custom_function
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )

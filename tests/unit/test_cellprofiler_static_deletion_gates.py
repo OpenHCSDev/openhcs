@@ -8,7 +8,7 @@ from fnmatch import fnmatchcase
 from functools import cache
 from pathlib import Path
 import warnings
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 
 PROJECT_ROOT = Path(__file__).parents[2]
 PLAN_PATH = (

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from typing import Any, ClassVar, Iterable, Mapping, Optional
 
-from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
+from openhcs.core.util.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -25,14 +25,14 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.function_patterns import (
     normalize_function_pattern,
     NormalizedFunctionPattern,
     NormalizedFunctionItem,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
     InvocationContractProvider,
@@ -45,10 +45,10 @@ from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
-from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.step_dependencies import (
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.util.step_dependencies import (
     NoMainFlowInput,
     PipelineStartInput,
     StepInputDependency,

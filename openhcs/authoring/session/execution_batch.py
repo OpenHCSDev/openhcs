@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     TerminalExecutionStatus, ExecutionCompleted,
     parse_terminal_status,
 )

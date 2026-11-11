@@ -32,7 +32,7 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeViewportPresentation,
 )
 
-import openhcs.core.plate_image_inventory as core_plate_image_inventory
+import openhcs.core.plate.plate_image_inventory as core_plate_image_inventory
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from formbridge.contracts import AgentError, AgentResourceRef, AgentWarning
 from openhcs.agent.dto.execution import ExecutionConnectionSpec

@@ -17,7 +17,7 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import GroupLineageSourceRelation
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -27,8 +27,8 @@ from openhcs.core.config import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.source import AutoDetectedSource
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_binding_selection import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
     SourceIdentityResolutionContext,
@@ -36,7 +36,7 @@ from openhcs.core.source_binding_selection import (
 )
 import urllib.request
 
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NegatedTextMatch,
     PathIsImage,
     PathIsTif,
@@ -73,17 +73,17 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextContains,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     SourceImageSetIdentityPolicy,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     MetadataExtractionRule,
     MetadataSource,
@@ -93,15 +93,15 @@ from openhcs.core.source_metadata import (
     SourceFilterSubject,
     SourceVoxelSpacing,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
@@ -679,7 +679,7 @@ def test_admitted_request_config_survives_next_live_global_context(
 ):
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline.compiler import AxisCompilationRequest
-    from openhcs.core.post_execute import PostExecuteHook
+    from openhcs.core.util.post_execute import PostExecuteHook
     from openhcs.core.pipeline.materialization_flag_planner import (
         MaterializationFlagPlanner,
     )

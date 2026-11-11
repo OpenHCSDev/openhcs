@@ -1,33 +1,33 @@
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
 import numpy as np
 import pytest
 
 import openhcs.processing.backends.cellprofiler.intensity_distribution as mid
-from openhcs.core.config import DtypeConfig
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.measurements.measurement_feature_queries import (
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
-from openhcs.core.measurement_row_materialization import columnar_row_values
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.measurement_row_materialization import columnar_row_values
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
-from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
+from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )

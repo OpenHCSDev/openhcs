@@ -291,19 +291,19 @@ the same document. Filenames are exact examples; replace them with names present
 directly under the selected plate directory.
 
 ``PipelineConfig.source_bindings_config`` takes ``LazySourceBindingsConfig``
-from ``openhcs.core.config``. ``SourceBindingsConfig`` names the concrete
+from ``openhcs.core.config.pipeline_config``. ``SourceBindingsConfig`` names the concrete
 source-binding semantics; do not pass that concrete class to this lazy field.
 
 .. code-block:: python
 
    from openhcs.constants.input_source import InputSource
-   from openhcs.core.config import (
+   from openhcs.core.config.pipeline_config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
        LazyStepSourceBindingsConfig,
        PipelineConfig,
    )
-   from openhcs.core.source_bindings import (
+   from openhcs.core.source.source_bindings import (
        NamedSourceBinding,
        SourceFilterClause,
        SourceFilterMatchType,
@@ -424,8 +424,8 @@ values equal merely to satisfy validation.
 
 .. code-block:: python
 
-   from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
-   from openhcs.core.source_bindings import (
+   from openhcs.core.config.pipeline_config import LazySourceBindingsConfig, PipelineConfig
+   from openhcs.core.source.source_bindings import (
        ComponentSelector,
        NamedSourceBinding,
        SourceSelector,

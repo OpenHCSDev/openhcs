@@ -111,7 +111,7 @@ def test_replaced_families_and_carrier_name_do_not_exist(product_trees) -> None:
 
 
 def test_metadata_declares_axes_not_one_channel_slot(product_trees) -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     assert "source_channel_axis" not in {
         field.name for field in ImagePayloadMetadata.__dataclass_fields__.values()
@@ -146,9 +146,9 @@ def test_owned_modules_have_no_hand_written_slice_loops() -> None:
 
 
 def test_location_and_sparse_label_names_derive_from_the_spatial_domain() -> None:
-    from openhcs.core.runtime_measurements import object_location_features
-    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-    from openhcs.core.source_spatial_domain import (
+    from openhcs.core.measurements.runtime_measurements import object_location_features
+    from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.source.source_spatial_domain import (
         SourceSpatialDomain,
         VolumeSourceSpatialDomain,
     )

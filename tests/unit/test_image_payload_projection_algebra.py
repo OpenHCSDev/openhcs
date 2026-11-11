@@ -1,27 +1,27 @@
 """Physical source-plane projection preserves composition and mutable isolation."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import fields
 
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadSliceProjector,
     ImageUnitIntervalIntensityMetadata,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import (
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _metadata(axis, channel_axis):

@@ -1,8 +1,8 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     AlignedStackExecution,
@@ -18,19 +18,19 @@ from openhcs.core.memory import (
     stack_runtime_slices,
     unstack_runtime_slices,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadSliceProjector,
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 @pytest.mark.parametrize(

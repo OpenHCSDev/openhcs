@@ -10,7 +10,7 @@ from typing import Any, Callable
 from zmqruntime.execution.logs import ExecutionWorkerLogIdentity
 from zmqruntime.messages import ExecutionStatus
 
-from openhcs.core.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
@@ -19,7 +19,7 @@ from openhcs.core.orchestrator.bundle_execution import (
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.progress.types import ProgressExecutionContext
-from openhcs.core.xdg_paths import get_openhcs_log_dir
+from openhcs.core.util.xdg_paths import get_openhcs_log_dir
 
 logger = logging.getLogger(__name__)
 

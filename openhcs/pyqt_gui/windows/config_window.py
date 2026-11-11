@@ -6,7 +6,7 @@ from typing import ClassVar
 
 from pyqt_reactive.windows.config_window import ConfigDocumentFormat, ConfigWindow
 
-from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.config.config_document import ConfigDocumentCodec
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
 

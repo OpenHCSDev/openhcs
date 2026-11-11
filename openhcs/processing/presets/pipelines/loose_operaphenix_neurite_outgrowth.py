@@ -25,9 +25,9 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -37,17 +37,17 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import AuthoredFunctionPattern
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.source_bindings import (
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
     TextEquals,
     SourceSelector,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.source_metadata import SourceFilterClause, SourceVoxelSpacing
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_metadata import SourceFilterClause, SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,

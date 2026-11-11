@@ -8,9 +8,9 @@ from pathlib import Path
 import numpy as np
 import tifffile
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 def main(root: Path, output_directory: str, receipt_directory: str,

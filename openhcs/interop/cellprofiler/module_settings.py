@@ -36,7 +36,7 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 

@@ -57,13 +57,13 @@ A minimal declaration uses an ordinary registered callable:
 
    from openhcs.core.memory.decorators import numpy
    from openhcs.constants.input_source import InputSource
-   from openhcs.core.config import (
+   from openhcs.core.config.pipeline_config import (
        LazyProcessingConfig,
        LazyStepSourceBindingsConfig,
        PipelineConfig,
    )
    from openhcs.core.steps.function_step import FunctionStep
-   from openhcs.core.processing_contracts import Pure2DContract
+   from openhcs.core.callable.processing_contracts import Pure2DContract
 
    @numpy(contract=Pure2DContract)
    def rescale(image, *, gain: float = 1.0):
@@ -173,7 +173,7 @@ The public importer lowers a ``.cppipe`` directly to the same declarations:
        source_root="/data/plate",
    )
 
-   from openhcs.core.pipeline_document import PipelineDocumentCodec
+   from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
    pipeline_document = PipelineDocumentCodec.from_values(
        pipeline_config=pipeline_config,
@@ -221,13 +221,13 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 
 .. code-block:: python
 
-   from openhcs.core.config import (
+   from openhcs.core.config.pipeline_config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
        LazyStepSourceBindingsConfig,
        PipelineConfig,
    )
-   from openhcs.core.source_bindings import (
+   from openhcs.core.source.source_bindings import (
        ComponentSelector,
        MetadataExtractionRule,
        MetadataSource,

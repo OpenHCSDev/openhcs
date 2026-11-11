@@ -31,7 +31,7 @@ from openhcs.constants.constants import (
     OrchestratorInitFailed,
     OrchestratorState,
 )
-from openhcs.core.execution_state import TerminalExecutionStatus
+from openhcs.core.execution.execution_state import TerminalExecutionStatus
 
 if TYPE_CHECKING:
     pass

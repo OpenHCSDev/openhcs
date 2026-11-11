@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.config_cache import ConfigCacheSpec, load_config_sync
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.config.config_cache import ConfigCacheSpec, load_config_sync
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.pyqt_gui.services.ui_agent_bridge import UiCodeDocumentSourcePolicy
 
 SCRIPT_PATH = (

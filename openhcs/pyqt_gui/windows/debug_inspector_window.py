@@ -21,22 +21,22 @@ from PyQt6.QtWidgets import (
 )
 from pyqt_reactive.widgets.shared import ActionTabbedWindowBody, ActionTabSpec
 
-from openhcs.core.config import StreamingConfig
-from openhcs.core.debug import (
+from openhcs.core.config.pipeline_config import StreamingConfig
+from openhcs.core.debug.debug_runtime import (
     DebugArtifactRef,
     DebugSnapshot,
     DebugSnapshotStore,
     LocalDebugSnapshotStore,
 )
-from openhcs.core.debug_views import snapshot_view_model
-from openhcs.core.debug_view_models import (
+from openhcs.core.debug.debug_views import snapshot_view_model
+from openhcs.core.debug.debug_view_models import (
     DebugViewModel,
     DebugViewSection,
     DebugViewSectionDeclarationBase,
     DebugViewTable,
     DebugViewTableProjectionDeclarationBase,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 
 
 @dataclass(frozen=True, slots=True)

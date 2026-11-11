@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.framework_device_resolver import resolve_framework_devices
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.util.framework_device_resolver import resolve_framework_devices
 
 
 def assign_framework_devices(

@@ -10,7 +10,7 @@ from openhcs.core.dataset_sources.dataset_scopes import (
     DatasetScopeKind,
     DatasetScopeOffer,
 )
-from openhcs.core.input_workspace import (
+from openhcs.core.execution.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
 )

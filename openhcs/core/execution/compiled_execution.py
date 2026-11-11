@@ -1,0 +1,221 @@
+"""Compiler-owned execution artifacts for worker transport."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
+from typing import Mapping, Sequence
+
+from objectstate.lazy_factory import (
+    resolve_lazy_configurations_for_serialization,
+)
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, MultiprocessingStartMethod
+from openhcs.core.context.processing_context import CompiledContext
+from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.execution.worker_start_policy import (
+    WorkerStartDecision,
+    WorkerStartExecutionFacts,
+    resolve_worker_start_context,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledWorkerStartPlan:
+    """Compiled multiprocessing start method decision."""
+
+    requested: MultiprocessingStartMethod
+    resolved: MultiprocessingStartMethod
+    reason: str
+    gpu_enabled: bool
+    server_mode: bool
+
+    @classmethod
+    def from_requested(
+        cls,
+        requested: MultiprocessingStartMethod,
+        *,
+        server_mode: bool,
+        execution_facts: WorkerStartExecutionFacts,
+    ) -> "CompiledWorkerStartPlan":
+        decision = resolve_worker_start_context(
+            requested,
+            server_mode=server_mode,
+            gpu_enabled=execution_facts.gpu_enabled,
+        )
+        return cls(
+            requested=decision.requested,
+            resolved=decision.resolved,
+            reason=decision.reason,
+            gpu_enabled=execution_facts.gpu_enabled,
+            server_mode=server_mode,
+        )
+
+    @property
+    def changed(self) -> bool:
+        return self.requested is not self.resolved
+
+    def multiprocessing_context(self):
+        import multiprocessing
+
+        return multiprocessing.get_context(self.resolved.value)
+
+    def as_decision(self) -> WorkerStartDecision:
+        return WorkerStartDecision(
+            requested=self.requested,
+            resolved=self.resolved,
+            reason=self.reason,
+            context=self.multiprocessing_context(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledRuntimeEnvironmentPlan:
+    """Compiled runtime environment facts consumed by worker execution."""
+
+    worker_start: CompiledWorkerStartPlan
+    use_threading: bool
+    configured_num_workers: int
+
+    @classmethod
+    def from_global_config(
+        cls,
+        global_config: GlobalPipelineConfig,
+        *,
+        compiled_contexts: Mapping[str, CompiledContext] | None,
+        server_mode: bool,
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        execution_facts = WorkerStartExecutionFacts.from_compiled_contexts(
+            compiled_contexts
+        )
+        return cls(
+            worker_start=CompiledWorkerStartPlan.from_requested(
+                global_config.multiprocessing_start_method,
+                server_mode=server_mode,
+                execution_facts=execution_facts,
+            ),
+            use_threading=global_config.use_threading,
+            configured_num_workers=global_config.num_workers,
+        )
+
+    @property
+    def multiprocessing_start_method(self) -> MultiprocessingStartMethod:
+        return self.worker_start.resolved
+
+    def with_execution_shape(
+        self,
+        *,
+        use_threading: bool,
+        configured_num_workers: int,
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        """Return this compiled plan with worker-shape scalars replaced."""
+
+        return replace(
+            self,
+            use_threading=use_threading,
+            configured_num_workers=configured_num_workers,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledExecutionBundle:
+    """Compiled execution data split by semantic role.
+
+    ``runtime_contexts`` preserve the rich in-process compiled state used for
+    runtime facts and fork inheritance. ``transport_contexts`` are the
+    pickle-safe plan snapshots derived at bundle construction and submitted
+    through worker queues. Runtime services and author configuration objects
+    retain their existing shared lifetimes; later runtime plan replacement does
+    not update this transport snapshot.
+    """
+
+    pipeline_definition: Sequence[AbstractStep]
+    runtime_contexts: Mapping[str, CompiledContext]
+    transport_contexts: Mapping[str, CompiledContext]
+    worker_assignments: Mapping[str, list[str]]
+    runtime_environment: CompiledRuntimeEnvironmentPlan
+
+    @property
+    def axis_ids(self) -> tuple[str, ...]:
+        """Return the context-owned multiprocessing-axis identities."""
+
+        return tuple(
+            sorted(
+                {
+                    context.require_axis_id()
+                    for context in self.runtime_contexts.values()
+                }
+            )
+        )
+
+    @property
+    def requires_parent_runtime_observation(self) -> bool:
+        """Return whether compiled scopes require worker records in the parent."""
+
+        return any(
+            plan.execution_scope.requires_parent_runtime_observation
+            for context in self.runtime_contexts.values()
+            for plan in context.step_plans.values()
+        )
+
+    @classmethod
+    def from_runtime_contexts(
+        cls,
+        *,
+        pipeline_definition: Sequence[AbstractStep],
+        runtime_contexts: Mapping[str, CompiledContext],
+        worker_assignments: Mapping[str, list[str]],
+        runtime_environment: CompiledRuntimeEnvironmentPlan,
+    ) -> "CompiledExecutionBundle":
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+
+        transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
+            resolve_lazy_configurations_for_serialization(dict(runtime_contexts.items()))
+        )
+        return cls(
+            pipeline_definition=pipeline_definition,
+            runtime_contexts=dict(runtime_contexts.items()),
+            transport_contexts=transport_contexts,
+            worker_assignments={
+                key: list(value) for key, value in worker_assignments.items()
+            },
+            runtime_environment=runtime_environment,
+        )
+
+    @classmethod
+    def from_unassigned_runtime_contexts(
+        cls,
+        *,
+        pipeline_definition: Sequence[AbstractStep],
+        runtime_contexts: Mapping[str, CompiledContext],
+        runtime_environment: CompiledRuntimeEnvironmentPlan,
+    ) -> "CompiledExecutionBundle":
+        """Create a bundle before worker ownership has been assigned."""
+
+        return cls.from_runtime_contexts(
+            pipeline_definition=pipeline_definition,
+            runtime_contexts=runtime_contexts,
+            worker_assignments={},
+            runtime_environment=runtime_environment,
+        )
+
+    def for_transport_serialization(
+        self,
+        *,
+        context_keys: Sequence[str] | None = None,
+    ) -> "CompiledExecutionBundle":
+        """Derive pickle-safe contexts while retaining shared declarations."""
+
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+
+        contexts = (
+            self.transport_contexts
+            if context_keys is None
+            else {key: self.transport_contexts[key] for key in context_keys}
+        )
+        return replace(
+            self,
+            pipeline_definition=FunctionStepTransportAuthority.normalize_pipeline(
+                list(self.pipeline_definition)
+            ),
+            runtime_contexts=contexts,
+            transport_contexts=contexts,
+        )

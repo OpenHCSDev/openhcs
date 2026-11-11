@@ -8,8 +8,8 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 
 
 class WormControlPointAxis(str, Enum):

@@ -14,16 +14,16 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.config import DtypeConfig, StepSourceBindingsConfig
-from openhcs.core.function_patterns import (
+from openhcs.core.config.pipeline_config import DtypeConfig, StepSourceBindingsConfig
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     NormalizedFunctionItem,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
 from openhcs.core.steps.function_step import FunctionStep

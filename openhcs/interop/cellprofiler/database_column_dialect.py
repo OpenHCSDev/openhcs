@@ -12,13 +12,13 @@ from pathlib import Path
 import re
 from types import MappingProxyType
 from typing import Any, ClassVar
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
-from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
+from openhcs.core.source.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
 )

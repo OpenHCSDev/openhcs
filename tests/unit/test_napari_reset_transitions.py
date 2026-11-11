@@ -17,13 +17,13 @@ from polystore.streaming_constants import StreamingDataType
 from qtpy.QtCore import QEventLoop, QTimer
 from qtpy.QtWidgets import QApplication
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     NapariDimensionMode,
     NapariDisplayConfig,
 )
 from openhcs.runtime.viewer_display import PadToMaxSize
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.napari_streaming_handlers import (
     NapariBatchProcessorStore,
     NapariComponentGroupStore,
@@ -59,7 +59,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerLayerRetirementControlOptions, ViewerNavigationControlOptions,
     ViewerPointCoordinates,
 )
-from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, SettlementComplete, SettlementFailed, SettlementRunning,
 )

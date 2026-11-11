@@ -10,8 +10,8 @@ import pytest
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )

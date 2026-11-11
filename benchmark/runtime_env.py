@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 
-from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.core.execution.native_threading import configure_native_thread_count
 
 
 def configure_headless_cpu_benchmark_runtime(log_level: str) -> None:

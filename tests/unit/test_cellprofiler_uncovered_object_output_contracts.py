@@ -1,7 +1,7 @@
 """Focused contracts for uncovered CellProfiler object-producing leaves."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 
 import inspect
 from pathlib import Path
@@ -17,29 +17,29 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
 from openhcs.interop.cellprofiler.database_column_dialect import (
@@ -65,7 +65,7 @@ from openhcs.processing.backends.cellprofiler.worms import (
     identify_dead_worms,
 )
 from openhcs.core.memory.decorators import image_payload_boundary
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 CONVERT_SETTINGS = (
     ("Select the input image", "Binary"),

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     MaterializationBackend,
     PathPlanningConfig,
@@ -21,7 +21,7 @@ from openhcs.core.config import (
     ZarrConfig,
 )
 
-# from openhcs.core.config import StitcherConfig, PipelineConfig
+# from openhcs.core.config.pipeline_config import StitcherConfig, PipelineConfig
 # from openhcs.core.step_base import Step
 # from openhcs.core.step_registry import PositionGenerationStep, ImageStitchingStep, NormStep, CompositeStep
 # from openhcs.backends.position_generator.ashlar_backend import AshlarPositionGeneratorBackend as IP

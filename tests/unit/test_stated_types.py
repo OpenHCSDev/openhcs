@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.memory.decorators import numpy as numpy_function
-from openhcs.core.stated_types import (
+from openhcs.core.util.stated_types import (
     UnstatedTypeError,
     require_stated_field_types,
     require_stated_parameter_types,
@@ -65,7 +65,7 @@ def test_a_config_field_typed_any_is_refused_by_name_through_nesting() -> None:
 
 def test_every_config_root_states_its_field_types() -> None:
     """The roots call the check when they are declared; importing them is the proof."""
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.pyqt_gui.config import UIConfig
 
     for root in (GlobalPipelineConfig, PipelineConfig, UIConfig):

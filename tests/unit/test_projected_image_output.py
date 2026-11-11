@@ -1,11 +1,11 @@
 """Reject ambiguous or invalid image-source selections at their owner."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
-from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )

@@ -55,9 +55,9 @@ from openhcs.agent.dto.functions import (
     FunctionDetail,
 )
 from formbridge.bridge.dto import UiCodeDocument
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.function_reference import FunctionReference
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_reference import FunctionReference
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
 from openhcs.mcp.dev_client_core import (
