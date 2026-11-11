@@ -57,7 +57,7 @@ from openhcs.core.config.pipeline_config import (
     EMPTY_SOURCE_BINDINGS,
     StepSourceBindingsConfig,
 )
-from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactOutputMaterializationPlanner
+from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactOutputMaterializationPlanner, MissingArtifactInputError
 
 from typing import TYPE_CHECKING
 
@@ -89,27 +89,6 @@ logger = logging.getLogger(__name__)
 
 PlannerGroupKey = str | None
 PathPlannerStepDisplayName = str | int
-
-
-class MissingArtifactInputError(ValueError):
-    """Raised when a step consumes an artifact that no prior producer provides."""
-
-    def __init__(
-        self,
-        *,
-        step_id: int,
-        artifact_key: str,
-        step_name: str | None,
-    ) -> None:
-        self.step_id = step_id
-        self.artifact_key = artifact_key
-        self.step_name = step_name
-        step_label = step_name or str(step_id)
-        super().__init__(
-            f"Step {step_id} ({step_label}) needs artifact input "
-            f"{artifact_key!r}, but no previous step, source binding, or "
-            "metadata resolver provides it."
-        )
 
 
 @dataclass(frozen=True)

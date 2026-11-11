@@ -147,6 +147,14 @@ class RuntimeValuesDebugViewSection(
         )
 
 
+def runtime_inspection_view(controller: object) -> DebugViewModel:
+    """Build a runtime-values debug view from a paused worker controller."""
+    store, session_prefix = controller.runtime_inspection_context()
+    return RuntimeValuesDebugViewSection.view_model_for_store(
+        store, title=f"Runtime Values ({session_prefix})"
+    )
+
+
 class MeasurementsDebugViewSection(
     AvailableEmptySection,
     DebugViewSectionDeclarationBase,

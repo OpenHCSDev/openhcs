@@ -1353,18 +1353,14 @@ class DebugPausedWorkerController:
         with self._condition:
             self._context = context
 
-    def runtime_inspection_view(self) -> "DebugViewModel":
+    def runtime_inspection_context(self) -> tuple[object, str]:
+        """Return (runtime_value_store, debug_session_id_prefix) for view construction."""
         with self._condition:
             if self._context is None:
                 raise RuntimeError("Debug worker context is not available.")
             if self._state is not PausedDebugWorker:
                 raise RuntimeError("Runtime inspection requires a paused debug worker.")
-            from openhcs.core.debug.debug_views import RuntimeValuesDebugViewSection
-
-            return RuntimeValuesDebugViewSection.view_model_for_store(
-                self._context.runtime_value_store,
-                title=f"Runtime Values ({self.debug_session_id[:8]})",
-            )
+            return self._context.runtime_value_store, self.debug_session_id[:8]
 
     def apply_command(
         self, command_type: type[DebugCommandType]

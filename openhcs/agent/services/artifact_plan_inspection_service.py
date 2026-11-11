@@ -31,7 +31,7 @@ from openhcs.agent.services.config_service import ConfigService
 from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
-from openhcs.core.pipeline.path_planner import MissingArtifactInputError
+from openhcs.core.pipeline.artifact_planning import MissingArtifactInputError
 from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressQueue
 from openhcs.core.source.source_workspace_projection import (

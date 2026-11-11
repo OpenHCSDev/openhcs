@@ -591,9 +591,12 @@ class DebugRuntimeInspectionMessageStrategy(ZMQControlMessageStrategy):
 
         try:
             request = DebugRuntimeInspectionRequest.from_dict(message)
-            view_model = DebugPausedWorkerRegistry.controller_for(
+            from openhcs.core.debug.debug_views import runtime_inspection_view
+
+            controller = DebugPausedWorkerRegistry.controller_for(
                 request.debug_session_id
-            ).runtime_inspection_view()
+            )
+            view_model = runtime_inspection_view(controller)
             return DebugRuntimeInspectionResponse(
                 view_model=view_model
             ).to_control_response()
