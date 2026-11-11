@@ -514,13 +514,11 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     def normalize_payload(self, value: object, *, axis_id: str) -> object:
         """Normalize a produced payload through this compiled storage scope."""
 
-        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-
         kind = self.artifact_type
         returned = RuntimeSliceProjection.match_alignment(
             value,
             scalar=lambda scalar: scalar,
-            aligned=lambda aligned: aligned.map_slices(RuntimeValue.payload_of),
+            aligned=lambda aligned: aligned.map_slices(ArtifactType.unwrap_runtime_value),
         )
         normalized = RuntimeSliceProjection.match_alignment(
             kind.normalize_runtime_payload(self.name, returned),

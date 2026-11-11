@@ -274,3 +274,6 @@ class RuntimeValue:
                 materialization_source_metadata=self.materialization_source_metadata,
             )
         return self
+
+
+ArtifactType._runtime_value_type = RuntimeValue
