@@ -52,7 +52,6 @@ from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
-_registered_stack_image_payloads = None
 _registered_RuntimeSliceProjection = None
 _registered_SourceImageObjectLabelBuildRequest = None
 
@@ -1076,7 +1075,9 @@ class ImagePayloadMetadata(
         )
         if len(projected_planes) == 1:
             return projected_planes[0]
-        return _registered_stack_image_payloads(
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+        return stack_image_payloads(
             projected_planes,
             metadata_mode=self.plane_axis,
         )

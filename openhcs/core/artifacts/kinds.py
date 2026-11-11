@@ -44,7 +44,6 @@ from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_t
 _registered_OpenHCSPlaneAddress = None
 _registered_RuntimeArtifactLocation = None
 _registered_StoredRuntimeValue = None
-_registered_stack_image_payloads = None
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -858,8 +857,12 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         payloads = tuple(value.data for value in values)
         metadata_mode = RuntimeSlicePlaneAxis
         if not keeps_memory_type:
-            return _registered_stack_image_payloads(payloads, metadata_mode=metadata_mode)
-        return _registered_stack_image_payloads(
+            from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+            return stack_image_payloads(payloads, metadata_mode=metadata_mode)
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+        return stack_image_payloads(
             payloads,
             memory_type=detect_memory_type(payloads[0].data),
             device_id=0,

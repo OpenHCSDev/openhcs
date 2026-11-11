@@ -1428,8 +1428,5 @@ class LibraryContractCall(ContractCall):
 
 
 import openhcs.core.callable.callable_contract as _cc
-import openhcs.core.payload.aligned_image_payload as _aip
 
 _cc._registered_processing_contract_family = ProcessingContract
-_aip._registered_Pure2DAuxiliaryOutputAggregator = Pure2DAuxiliaryOutputAggregator
-_aip._registered_Pure2DSliceResultBatch = Pure2DSliceResultBatch
