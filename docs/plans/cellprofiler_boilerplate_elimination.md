@@ -65,7 +65,7 @@ The important sequencing point is that mass deletion should follow a complete de
 The preferred generated form is step-only:
 
 ```python
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler import (
     correct_illumination_calculate,
     define_grid,

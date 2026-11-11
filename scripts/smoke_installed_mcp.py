@@ -263,7 +263,7 @@ async def _run_measured_execution_protocol_smoke(
     from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
     from openhcs.core.config import PipelineConfig
     from openhcs.core.pipeline_document import PipelineDocumentCodec
-    from openhcs.core.steps import FunctionStep
+    from openhcs.core.steps.function_step import FunctionStep
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     plate = output_dir / "protocol_plate"

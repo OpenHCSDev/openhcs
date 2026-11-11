@@ -139,7 +139,7 @@ def run_pipeline(work_dir: Path, fields: int, tile: int, runs: int) -> dict:
     )
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.pipeline_document import PipelineDocumentCodec
-    from openhcs.core.steps import FunctionStep
+    from openhcs.core.steps.function_step import FunctionStep
     from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
     from openhcs.microscopes.imagexpress import ImageXpressHandler
     from openhcs.processing.backends.processors.cupy_processor import percentile_normalize

@@ -34,6 +34,11 @@ from openhcs.core.artifacts.payloads import (
     TablePayloadShape,
 )
 from openhcs.core.axes import AxisFamily
+from openhcs.core.runtime_object_labels import (
+    ObjectLabelSet,
+    ObjectLabelValue,
+    normalize_source_label_data,
+)
 from openhcs.core.memory import detect_memory_type
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
@@ -1002,6 +1007,7 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
     """Object-label array artifact type."""
 
     value = "object_labels"
+    payload_shape = ObjectLabelValue.payload_shape
 
     @classmethod
     def description(cls) -> str:
@@ -1009,7 +1015,6 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
 
     @classmethod
     def runtime_payload_type(cls) -> type:
-        from openhcs.core.runtime_object_labels import ObjectLabelValue
 
         return ObjectLabelValue
 
@@ -1055,7 +1060,6 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
     def _bind_compiled_name(cls, name: str, value: object) -> object:
         """Bind or validate the compiled identity of one nominal label value."""
 
-        from openhcs.core.runtime_object_labels import ObjectLabelSet
 
         if cls.accepts_runtime_payload(value):
             return ObjectLabelSet.named(name, value)
@@ -1085,7 +1089,6 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
     ) -> tuple[object, int | None]:
         """Convert color-coded source labels into integer label IDs."""
 
-        from openhcs.core.runtime_object_labels import normalize_source_label_data
 
         return normalize_source_label_data(data, channel_axis), None
 

@@ -56,7 +56,7 @@ from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,

@@ -484,7 +484,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     )
     from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.steps import FunctionStep
+    from openhcs.core.steps.function_step import FunctionStep
 
     assembler = assemble_stack_cpu
     if assembly_backend == "gpu":

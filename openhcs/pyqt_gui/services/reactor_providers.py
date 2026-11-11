@@ -40,7 +40,7 @@ from openhcs.pyqt_gui.config import UIConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
-    from openhcs.core.orchestrator import PipelineOrchestrator
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 DeclarationT = TypeVar("DeclarationT")
 
@@ -224,7 +224,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         from objectstate import ObjectStateRegistry
 
         from openhcs.constants.constants import OrchestratorCreated
-        from openhcs.core.orchestrator import PipelineOrchestrator
+        from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
         orchestrator = ObjectStateRegistry.get_object(plate_manager.session.current_scope_id)
         if not isinstance(orchestrator, PipelineOrchestrator):

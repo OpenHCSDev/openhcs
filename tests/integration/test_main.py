@@ -43,7 +43,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.steps import FunctionStep as Step
+from openhcs.core.steps.function_step import FunctionStep as Step
 
 # Processing functions
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu

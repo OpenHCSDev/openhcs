@@ -1,7 +1,6 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
-from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_plane_projection import (
     NoPlaneAxis,
     RuntimePlaneAxisProjector,
@@ -13,7 +12,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -125,6 +124,7 @@ RuntimeProjectionData: TypeAlias = (
     | RuntimeProjectionMapping
     | RuntimeProjectionSequence
 )
+ProjectionT = TypeVar("ProjectionT", bound=RuntimeProjectionData)
 
 
 @dataclass(frozen=True, slots=True)
@@ -549,27 +549,11 @@ class RuntimeSliceProjection:
         )
 
     @classmethod
-    @overload
     def value_for_slice(
         cls,
-        value: ObjectLabelValue,
+        value: ProjectionT,
         context: RuntimePlaneAxisValueProjection,
-    ) -> ObjectLabelValue: ...
-
-    @classmethod
-    @overload
-    def value_for_slice(
-        cls,
-        value: RuntimeProjectionData,
-        context: RuntimePlaneAxisValueProjection,
-    ) -> RuntimeProjectionData: ...
-
-    @classmethod
-    def value_for_slice(
-        cls,
-        value: RuntimeProjectionData,
-        context: RuntimePlaneAxisValueProjection,
-    ) -> RuntimeProjectionData:
+    ) -> ProjectionT:
         if isinstance(value, RuntimeSliceProjectableValue):
             return value.value_for_slice(context)
         if isinstance(value, (tuple, list)):

@@ -20,7 +20,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import AxisFamily
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.processors.numpy_processor import (

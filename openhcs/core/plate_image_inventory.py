@@ -22,7 +22,7 @@ from openhcs.core.dataset_sources.interfaces import (
 )
 from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
 from openhcs.core.result_file_formats import (
     ResultFileFormat,
