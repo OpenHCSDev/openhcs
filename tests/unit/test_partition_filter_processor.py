@@ -1,5 +1,5 @@
-from openhcs.core.config import ExcludePartitions, IncludePartitions
-from openhcs.core.partition_filter import PartitionFilterProcessor
+from openhcs.core.config.pipeline_config import ExcludePartitions, IncludePartitions
+from openhcs.core.config.partition_filter import PartitionFilterProcessor
 
 
 def test_partition_filter_preserves_available_identity_across_case_variants() -> None:

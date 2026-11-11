@@ -15,7 +15,7 @@ from openhcs.authoring.session.operations.datasets import (
     DeleteDatasets,
     EditDatasetConfig,
 )
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from tests.unit.pyqt_gui.session_harness import caller_session, session_gui
 

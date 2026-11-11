@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from openhcs.constants import GroupBy, Microscope, VariableComponents
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,

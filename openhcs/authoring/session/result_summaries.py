@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from openhcs.core.execution_state import ExecutionCompleted
+from openhcs.core.execution.execution_state import ExecutionCompleted
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     consolidate_multi_plate_summaries,
 )

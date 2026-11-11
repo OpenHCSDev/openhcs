@@ -23,13 +23,13 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
+from openhcs.core.callable.processing_preparation import RegisteredNumbaKernelPreparation
 from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     OrthogonalProjectionPlane,
     SpatialBinMethod,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     VolumetricToSliceContract,
 )

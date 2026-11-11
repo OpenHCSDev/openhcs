@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
@@ -22,7 +22,7 @@ from openhcs.interop.cellprofiler.module_settings import (
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
 )
 

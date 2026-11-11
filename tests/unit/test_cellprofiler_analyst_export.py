@@ -21,52 +21,52 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
-from openhcs.core.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_matching import with_declared_source_metadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_image_provenance import (
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import with_declared_source_metadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenanceContributor,
 )
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
@@ -98,7 +98,7 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
     export_to_database,
 )
 from openhcs.core.materialization.options import FileBundleOptions
-from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     executing_context,
@@ -967,7 +967,7 @@ def test_source_only_calibration_occurrences_export_each_executed_site(
         tmp_path
     )
     assert batch.records_of_type(ImageArtifactType)["A01"] == ()
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
     monkeypatch.setattr(
         VirtualWorkspaceSourceProjection,
         "load_binding_payloads",
@@ -1047,7 +1047,7 @@ def test_source_bound_export_retains_exact_embedded_tiff_frame_selection(
 def test_source_bound_export_does_not_cross_declared_execution_scope(
     tmp_path: Path,
 ) -> None:
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
     builder, batch, channels, _calibration, _document = _borrowed_source_export_fixture(
         tmp_path, calibration_scope=RuntimeExecutionAxisScope("B01")
@@ -1951,8 +1951,8 @@ def _field_rows(
 
 def test_database_projection_includes_derived_grid_measurements() -> None:
     from openhcs.core.artifacts.kinds import SpatialGridArtifactType
-    from openhcs.core.runtime_spatial_grid import SpatialGrid
-    from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
+    from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
     grid = SpatialGrid(
         name="Grid",
@@ -1998,9 +1998,9 @@ def test_source_digest_is_shared_across_image_numbers_and_channel_aliases(
 ):
     from collections import defaultdict
     from hashlib import md5
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-    from openhcs.core.image_file_serialization import ImageFileRevision
-    from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.payload.image_file_serialization import ImageFileRevision
+    from openhcs.core.source.source_image_provenance import SourceImageProvenance
     import tifffile
 
     source = tmp_path / "source.tif"
@@ -2046,7 +2046,7 @@ def test_source_digest_is_shared_across_image_numbers_and_channel_aliases(
 def test_source_projection_frame_error_precedes_digest_read(tmp_path, monkeypatch):
     import tifffile
     import openhcs.interop.cellprofiler.analyst_export as export
-    from openhcs.core.image_file_serialization import ImageFileRevision
+    from openhcs.core.payload.image_file_serialization import ImageFileRevision
 
     source = tmp_path / "source.tif"
     tifffile.imwrite(
@@ -2070,8 +2070,8 @@ def test_source_projection_frame_error_precedes_digest_read(tmp_path, monkeypatc
 def test_repeated_source_contributors_share_physical_projection(tmp_path, monkeypatch):
     from collections import defaultdict
     import openhcs.interop.cellprofiler.analyst_export as export
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-    from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
     source = tmp_path / "DNA.tif"
     import tifffile

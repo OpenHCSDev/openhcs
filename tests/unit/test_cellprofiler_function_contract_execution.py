@@ -1,7 +1,7 @@
 """Focused tests for the CellProfiler mode/processing-contract boundary."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -12,9 +12,9 @@ from typing import Annotated, Any, Union
 import numpy as np
 import pytest
 from arraybridge import ArrayPayload
-import openhcs.core.callable_contract as callable_contract_module
+import openhcs.core.callable.callable_contract as callable_contract_module
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     AlignedStackExecution,
     FullStackExecution,
@@ -25,18 +25,18 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration, CallableProjection, callable_request
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration, CallableProjection, callable_request
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerContractCall,
     CellProfilerFunctionContractExecutor,
@@ -48,10 +48,10 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     morph,
     morphologicalskeleton,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     contextualize_main_image_output,
     FlexibleContract,
     Pure2DContract,
@@ -464,7 +464,7 @@ def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(monke
 
 
 def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_controls(monkeypatch) -> None:
-    from openhcs.core.processing_preparation import CallablePreparation
+    from openhcs.core.callable.processing_preparation import CallablePreparation
     calls = []
     def raw(image: np.ndarray, scale: int = 2) -> np.ndarray:
         calls.append(image.shape)

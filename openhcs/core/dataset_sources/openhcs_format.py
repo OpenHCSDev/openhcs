@@ -24,10 +24,10 @@ from typing import (
 
 from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceVoxelSpacing,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionBuilder,
 )
@@ -35,7 +35,7 @@ from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import ViewerMicroscopeHandlerABC
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     FIELDS,
     METADATA_CONFIG,
@@ -52,7 +52,7 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataViewDocument,
     MetadataViewEntry,
 )
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 
 logger = logging.getLogger(__name__)
@@ -1287,8 +1287,8 @@ from openhcs.core.dataset_sources.source import (
     PreparedWorkspaceSource,
 )
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.config import source_bindings_defaults_to_base
-from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
+from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 
 
 class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):

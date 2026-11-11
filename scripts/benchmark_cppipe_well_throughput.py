@@ -118,7 +118,7 @@ def main() -> int:
         read_well_throughput_csv,
         run_well_throughput_suite,
     )
-    from openhcs.core.config import MultiprocessingStartMethod
+    from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
 
     try:
         plan = WellThroughputBenchmarkPlan.from_requested_modes(

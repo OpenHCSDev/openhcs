@@ -23,11 +23,11 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
     RuntimeMeasurementIndexedDescriptorDeclaration,
@@ -42,13 +42,13 @@ from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CellProfilerEquivalencePolicy,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     project_image_mask_to_data_domain,
 )
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from python_introspect import public_names_from_objects
 from openhcs.interop.cellprofiler.module_measurement_features import (
     IntensityFeature,
@@ -62,11 +62,11 @@ from openhcs.processing.backends.cellprofiler._backend import (
     LegacyFastBackendProvider,
     NativeBackendProvider,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     minimum_enclosing_circle_from_labels,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
 

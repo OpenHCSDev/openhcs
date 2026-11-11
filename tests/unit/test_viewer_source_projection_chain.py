@@ -9,9 +9,9 @@ from openhcs.agent.dto.plate import PlatePathInspectionRequest
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.plate_image_inventory import PlateFileKind
-from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
-from openhcs.core.viewer_streaming_service import (
+from openhcs.core.plate.plate_image_inventory import PlateFileKind
+from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
+from openhcs.core.io.viewer_streaming_service import (
     FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     ViewerStreamingSource,

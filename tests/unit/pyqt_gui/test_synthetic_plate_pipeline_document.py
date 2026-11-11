@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.authoring.session.dataset_document import authored_pipeline_config
 from openhcs.authoring.session.events import PipelineChanged
 from openhcs.pyqt_gui.main import OpenHCSMainWindow

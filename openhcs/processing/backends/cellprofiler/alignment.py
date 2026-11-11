@@ -8,13 +8,13 @@ from typing import Annotated, Any, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from scipy.fftpack import fft2, ifft2
-from openhcs.core.axes import ColourAxis, TileAxis
+from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
@@ -29,19 +29,19 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
@@ -83,10 +83,10 @@ from openhcs.processing.backends.cellprofiler.alignment_mutual_information_offse
     mutual_information_offset_numba,
     mutual_information_offset_unmasked_numba,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class _AlignShiftFieldRole(str, Enum):

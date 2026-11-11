@@ -19,9 +19,9 @@ from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
-from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.object_labels.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
 
 _BACKEND_KEY_SEPARATOR = ":"
 _SELECTION_SUFFIXES = ("BackendProvider", "BackendSelection")

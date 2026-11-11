@@ -31,7 +31,7 @@ Current mirrors:
 ## Existing Authorities
 
 - `GlobalPipelineConfig`, `PipelineConfig`, and generated config decorators in
-  `openhcs.core.config` own config types.
+  `openhcs.core.config.pipeline_config` own config types.
 - `CallableRuntimeConfig.registered_config_types()` and
   `StepConfigUniverse` already show the type-driven config discovery pattern.
 - `CallableContract`, runtime-bound parameter declarations, artifact input

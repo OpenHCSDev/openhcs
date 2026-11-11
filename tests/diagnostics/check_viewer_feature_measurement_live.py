@@ -27,16 +27,16 @@ def make_fixture(root: Path) -> tuple[Path, Path]:
     """Two known cropped planes, one field, sparse channel/Z cross product."""
     import numpy as np
     from polystore.virtual_workspace import SourcePixelRef
-    from openhcs.core.image_file_serialization import ImageFileFormat
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-    from openhcs.core.source_projection import (
+    from openhcs.core.payload.image_file_serialization import ImageFileFormat
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+    from openhcs.core.source.source_projection import (
         OpenHCSPlaneAddress,
         SourcePlaneProjection,
         SourceProjectionSet,
     )
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
-    from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     root.mkdir()
@@ -198,7 +198,7 @@ def main() -> None:
         ViewerTransportEndpoint,
     )
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-    from openhcs.core.streaming_config_declarations import NapariViewer
+    from openhcs.core.config.streaming_config_declarations import NapariViewer
     from zmqruntime.config import TransportMode
     from python_introspect import to_jsonable
     from formbridge.runtime_platform import AgentRuntimePlatform

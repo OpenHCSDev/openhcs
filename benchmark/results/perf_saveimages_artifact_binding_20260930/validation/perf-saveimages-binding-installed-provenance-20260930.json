@@ -9,13 +9,13 @@
       "matches_source": true
     },
     {
-      "module": "openhcs.core.function_patterns",
+      "module": "openhcs.core.callable.function_patterns",
       "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/function_patterns.py",
       "sha256": "7f9f1cd690f081d9cf50e5c7d4b84a399e027080e11c64250e6aa0c49a418353",
       "matches_source": true
     },
     {
-      "module": "openhcs.core.runtime_artifact_values",
+      "module": "openhcs.core.runtime_store.runtime_artifact_values",
       "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/runtime_artifact_values.py",
       "sha256": "83c8de2f8456ca944306d1019723fb9e90a6add55596cac273415701a6d2af3f",
       "matches_source": true

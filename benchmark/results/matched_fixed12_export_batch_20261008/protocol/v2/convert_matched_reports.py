@@ -20,7 +20,7 @@ from benchmark.native_execution_projection import RepeatedSourceNativeBatchRepor
 from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
 from benchmark.timing import PhaseTimingRecord, additive_phase_total_seconds
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
 
 def load(path):

@@ -64,7 +64,7 @@
     "indexed_descriptor_suffix_width_provider": {
       "import_path": "openhcs.core.runtime_measurements.RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for",
       "kind": "callable",
-      "module": "openhcs.core.runtime_measurements",
+      "module": "openhcs.core.measurements.runtime_measurements",
       "name": "indexed_suffix_token_width_for",
       "qualname": "RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for"
     },

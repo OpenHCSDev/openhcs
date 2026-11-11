@@ -10,16 +10,16 @@ import pytest
 
 from openhcs.constants import Backend
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.result_file_formats import (
+from openhcs.core.io.result_file_formats import (
     CsvResultFile,
     NumpyResultFile,
     RoiArchiveResultFile,
     TextResultFile,
     TiffResultFile,
 )
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
+from openhcs.core.plate.plate_image_inventory import (
     PlateFileInventory,
     PlateFileRecord,
     PlateFileRecordAmbiguityError,

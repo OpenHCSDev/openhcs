@@ -91,7 +91,7 @@ def test_to_jsonable_is_the_only_value_to_json_dispatcher():
 
 
 def test_result_file_kinds_are_a_family():
-    from openhcs.core.result_file_formats import ResultFileFormat
+    from openhcs.core.io.result_file_formats import ResultFileFormat
 
     enum_definitions = [
         str(path.relative_to(ROOT))

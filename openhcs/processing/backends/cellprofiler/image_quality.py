@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
@@ -25,26 +25,26 @@ from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
@@ -82,20 +82,20 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     threshold_primitives,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
 
 class ImageQualityThresholdMethod(Enum):

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     import torch.nn as nn
     import torch.nn.functional as F
 
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 
 nn = optional_import_or_none("torch.nn") if torch else None
 F = optional_import_or_none("torch.nn.functional") if torch else None

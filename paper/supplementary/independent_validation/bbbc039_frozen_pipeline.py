@@ -1,6 +1,6 @@
 # OpenHCS pipeline
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     PipelineConfig,
 )

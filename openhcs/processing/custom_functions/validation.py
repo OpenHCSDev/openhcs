@@ -15,8 +15,8 @@ import traceback
 from dataclasses import dataclass, replace
 from typing import Callable
 
-from openhcs.core.stated_types import require_stated_parameter_types
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.util.stated_types import require_stated_parameter_types
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 
 
 class ValidationError(Exception):

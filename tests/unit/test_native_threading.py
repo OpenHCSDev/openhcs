@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from openhcs.core import native_threading
+from openhcs.core.execution import native_threading
 
 
 def test_configure_native_thread_count_updates_future_and_loaded_runtimes(monkeypatch):

@@ -36,18 +36,18 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionService,
 )
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.viewer_streaming_service import ViewerStreamingSource
-from openhcs.core.plate_file_inventory import PlateFileKind
-from openhcs.core.plate_image_inventory import PlateFileRecord
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
+from openhcs.core.plate.plate_image_inventory import PlateFileRecord
 from python_introspect import to_jsonable
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 
@@ -204,8 +204,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     expected = np.arange(2 * 8 * 9, dtype=np.int64).reshape(2, 8, 9)
     manager = FileManager({"disk": DiskStorageBackend()})
     manager.save(expected, path, "disk")
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
     from openhcs.runtime.napari_streaming_handlers import (
         NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
     )
@@ -368,7 +368,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     assert tuple(
         item["channel"] for item in source_items.domain_metadata_items(component_order)
     ) == (2, 1)
-    from openhcs.core.config import NapariDisplayConfig
+    from openhcs.core.config.pipeline_config import NapariDisplayConfig
     from openhcs.core.steps.stream_component_semantics import (
         StreamImagePayloadMetadataProjector,
     )

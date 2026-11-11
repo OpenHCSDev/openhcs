@@ -3,7 +3,7 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Annotated, TYPE_CHECKING
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
@@ -19,26 +19,26 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 )
 from dataclasses import dataclass
 import numpy as np
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ImageArtifactType
 from openhcs.core.memory.decorators import numpy as numpy_backend
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.parser import ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import (
     optional_setting_value,
@@ -52,8 +52,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     MeasurementFeatureRecord,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 SeedObjectLabelsInput = Annotated[
     ObjectLabelValue,

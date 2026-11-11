@@ -17,7 +17,7 @@ configuration objects.
 
 .. code-block:: python
 
-   from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
+   from openhcs.core.config.pipeline_config import LazyProcessingConfig, ProcessingConfig
    from openhcs.core.steps.function_step import FunctionStep
    from openhcs.domains.microscopy.axes import Microscopy
 
@@ -69,7 +69,7 @@ Compilation and execution
    from pathlib import Path
 
    from objectstate import ensure_global_config_context
-   from openhcs.core.config import GlobalPipelineConfig
+   from openhcs.core.config.pipeline_config import GlobalPipelineConfig
    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
    plate_path = Path("/data/plate").resolve()

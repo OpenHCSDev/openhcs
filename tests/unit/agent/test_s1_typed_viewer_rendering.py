@@ -30,7 +30,7 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeLayerTransform,
     ViewerNativeViewportPresentation,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity, McpDevToolBatchResponse, McpDevToolResult,

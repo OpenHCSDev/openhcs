@@ -39,7 +39,7 @@ still structurally weak:
   single richer session/action view model for the UI to render.
 
 This plan turns the debug toolbar into a typed session projection. The runtime
-authorities remain in `openhcs.core.debug`; the UI bridge and Qt widget consume
+authorities remain in `openhcs.core.debug.debug_runtime`; the UI bridge and Qt widget consume
 one OpenHCS GUI projection instead of each re-deriving availability.
 
 ## Existing Authorities
@@ -189,7 +189,7 @@ from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.debug import DebugCommand, DebugCommandType
+from openhcs.core.debug.debug_runtime import DebugCommand, DebugCommandType
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
@@ -449,7 +449,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from openhcs.core.debug import DebugSession
+from openhcs.core.debug.debug_runtime import DebugSession
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     DebugActionPlacement,
     PipelineDebugActionDeclarationBase,
@@ -714,7 +714,7 @@ Update:
 `openhcs/pyqt_gui/widgets/debug_toolbar.py`
 
 ```python
-from openhcs.core.debug import DebugCommandType
+from openhcs.core.debug.debug_runtime import DebugCommandType
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     DebugActionRenderModel,
     DebugToolbarActionProjector,

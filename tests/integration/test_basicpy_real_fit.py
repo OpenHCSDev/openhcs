@@ -13,7 +13,7 @@ from tests.diagnostics.basicpy_observation_fixture import shaded_observations
 
 def test_real_algorithm_uses_numpy_transport_and_is_cpu_catalog_eligible(monkeypatch):
     from openhcs.constants import MemoryType
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         _catalog_memory_types,
         _module_declares_allowed_memory_type,

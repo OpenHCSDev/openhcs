@@ -1,6 +1,6 @@
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from pathlib import Path
@@ -24,12 +24,12 @@ from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
 from zmqruntime.viewer_state import ViewerStateManager
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.dataset_sources.interfaces import MetadataHandler
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     FijiDimensionMode,
     FijiStreamingConfig,
     GlobalPipelineConfig,
@@ -38,25 +38,25 @@ from openhcs.core.config import (
     PipelineConfig,
     StreamingConfig,
 )
-from openhcs.core.streaming_config_factory import get_all_streaming_ports
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_measurements import (
+from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_projection import SourceArtifactProjection
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
-from openhcs.core.viewer_streaming_service import (
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_projection import SourceArtifactProjection
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.io.viewer_streaming_service import (
     ImageStreamingRequest,
     ManualImageStreamProjectionIdentity,
     RoiStreamingRequest,

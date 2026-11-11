@@ -1,10 +1,10 @@
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from openhcs.interop.cellprofiler.measurement_dialect import CellProfilerEquivalencePolicy
 
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
 
 from collections import Counter
 from pathlib import Path
@@ -22,7 +22,7 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.equivalence.cells import runtime_cell_signature
 from openhcs.core.equivalence.measurement_features import (
     RuntimeMeasurementDescriptorSemantics,
@@ -40,13 +40,13 @@ from benchmark.equivalence.object_label_measurements import (
 from benchmark.equivalence.exported_relationships import (
     ObjectInstanceKeyPlaneAlignmentStrategy,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementRowOwnership,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_artifact_values import (
+from openhcs.core.runtime_store.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
@@ -71,16 +71,16 @@ from benchmark.equivalence.runtime import (
 from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence as _runtime_reference_artifact_equivalence,
 )
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
     runtime_records_by_axis,
 )
-from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelSet,
     ObjectLabelVariantData,
@@ -90,11 +90,11 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationshipDeclaration,
     ObjectRelationship,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementStatistic,
@@ -106,26 +106,26 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_relationships import (
     ObjectInstanceKey,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,
     StoredRuntimeValue,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -11423,7 +11423,7 @@ def test_exported_relationships_consume_declared_object_identity(
     from benchmark.equivalence.table_snapshots import (
         RuntimeTableSnapshot,
     )
-    from openhcs.core.runtime_measurements import RuntimeMeasurementRowIdentityContract
+    from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementRowIdentityContract
     from openhcs.interop.cellprofiler.measurement_dialect import (
         CellProfilerMeasurementDialect,
     )

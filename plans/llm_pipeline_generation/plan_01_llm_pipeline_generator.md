@@ -87,7 +87,7 @@ class LLMPipelineService:
 
 ```python
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig, LazyStepWellFilterConfig, LazyStepMaterializationConfig,
     LazyNapariStreamingConfig, LazyFijiStreamingConfig
 )

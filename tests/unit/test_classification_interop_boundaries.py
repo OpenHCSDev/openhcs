@@ -21,14 +21,14 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
@@ -36,17 +36,17 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureOwner,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelSet
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     PriorMeasurementArtifactInputModule,
 )

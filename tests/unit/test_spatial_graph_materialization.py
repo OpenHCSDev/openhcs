@@ -1,5 +1,5 @@
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 import numpy as np
 import pytest
@@ -22,16 +22,16 @@ from openhcs.core.artifacts.relations import (
     ObjectArtifactMemberSubjectRelation,
     ObjectArtifactSubjectBinding,
 )
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_spatial_graph import (
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_spatial_graph import (
     SpatialGraph,
     SpatialGraphEdge,
     SpatialGraphNode,
 )
 
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.materialization.core import BackendSaver, MaterializationSpec, Output, materialization_outputs, registered_materialization_option_types
 from openhcs.core.materialization.options import SpatialGraphROIOptions, SWCOptions
 from openhcs.core.materialization.constants import WriteMode

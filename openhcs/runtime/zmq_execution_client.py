@@ -56,17 +56,17 @@ from zmqruntime.startup import (
 from zmqruntime.transport import TransportEndpoint
 
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.config_document import ConfigDocumentCodec
-from openhcs.core.debug import DebugExecutionConfig
-from openhcs.core.execution_state import ExecutionOutputSummary
-from openhcs.core.pipeline_document import (
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.config_document import ConfigDocumentCodec
+from openhcs.core.debug.debug_runtime import DebugExecutionConfig
+from openhcs.core.execution.execution_state import ExecutionOutputSummary
+from openhcs.core.io.pipeline_document import (
     PipelineDocument,
     PipelineDocumentCodec,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+from openhcs.core.util.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
 from openhcs.runtime.import_authority import (
     ImportRootEndpoint,
     OpenHCSRuntimeImportAuthority,
@@ -85,7 +85,7 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.debug import DebugCommandType
+    from openhcs.core.debug.debug_runtime import DebugCommandType
     from openhcs.agent.dto.functions import (
         CustomFunctionRegistrationDestination,
         CustomFunctionRegistrationDestinationRequest,
@@ -102,7 +102,7 @@ if TYPE_CHECKING:
         FunctionReferenceControlRequest,
         FunctionSearchRequest,
     )
-    from openhcs.core.function_reference import FunctionReference
+    from openhcs.core.callable.function_reference import FunctionReference
 
 logger = logging.getLogger(__name__)
 
@@ -1215,7 +1215,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
         snapshot_store_ref: str,
         snapshot_store_backend: str | None = None,
     ):
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugSnapshotReadRequest,
             DebugSnapshotReadResponse,
         )
@@ -1239,7 +1239,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
     ) -> CompiledArtifactInspection:
         """Read the compiler-owned artifact inspection projection."""
 
-        from openhcs.core.artifact_inspection import (
+        from openhcs.core.util.artifact_inspection import (
             CompiledArtifactInspectionRequest,
             CompiledArtifactInspectionResponse,
         )
@@ -1260,7 +1260,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
         debug_session_id: str,
         command_type: type[DebugCommandType],
     ):
-        from openhcs.core.debug import DebugWorkerCommandRequest, DebugWorkerCommandResponse
+        from openhcs.core.debug.debug_runtime import DebugWorkerCommandRequest, DebugWorkerCommandResponse
 
         if not self.is_connected() and not self.connect():
             raise RuntimeError("Failed to connect to execution server")
@@ -1278,7 +1278,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
         *,
         debug_session_id: str,
     ):
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugRuntimeInspectionRequest,
             DebugRuntimeInspectionResponse,
         )
@@ -1300,7 +1300,7 @@ class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
         snapshot_store_ref: str | None = None,
         snapshot_store_backend: str | None = None,
     ):
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugArtifactExportRequest,
             DebugArtifactExportResponse,
         )

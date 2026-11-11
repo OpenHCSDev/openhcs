@@ -22,7 +22,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
 from openhcs.core.artifacts.specs import MainFlowStackOutputSpec
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
@@ -34,16 +34,16 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_bindings import (
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     FromFileName,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_metadata import MetadataExtractionRule
+from openhcs.core.source.source_metadata import MetadataExtractionRule
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -52,7 +52,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 )
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 

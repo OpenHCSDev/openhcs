@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 if TYPE_CHECKING:
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 
 
 class ZMQRuntimeObservationExportScope(ABC, metaclass=AutoRegisterMeta):
@@ -87,7 +87,7 @@ class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
-        from openhcs.core.runtime_exports import RuntimeExportObservation
+        from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
         from openhcs.runtime.zmq_execution_observation import (
             ZMQRuntimeExecutionOutcomeExport,
         )

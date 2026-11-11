@@ -1,7 +1,7 @@
 """Agent-facing plate file streaming service."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 from dataclasses import replace
@@ -33,31 +33,31 @@ from openhcs.agent.services.plate_inspection_service import (
 )
 from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC, UiBridgeService
 from openhcs.constants import Backend
-from openhcs.core.config import StreamingConfig
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.config.pipeline_config import StreamingConfig
+from openhcs.core.plate.plate_image_inventory import (
     PlateFileKind,
     PlateFileInventoryQuery,
     PlateFileRecord,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionBuilder,
 )
-from openhcs.core.viewer_streaming_service import (
+from openhcs.core.io.viewer_streaming_service import (
     FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     RoiStreamingRequest,
     StreamingService,
     StreamingViewerLifecycle,
 )
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
@@ -66,7 +66,7 @@ from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 def _active_declared_axes() -> DeclaredAxes:

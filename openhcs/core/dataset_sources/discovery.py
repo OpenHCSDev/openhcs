@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from metaclass_registry import LazyDiscoveryDict, RegistryConfig
 from metaclass_registry.discovery import discover_registry_classes
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 _KERNEL_PACKAGE = __name__.rpartition(".")[0]
 _domain_registries: list[LazyDiscoveryDict] = []

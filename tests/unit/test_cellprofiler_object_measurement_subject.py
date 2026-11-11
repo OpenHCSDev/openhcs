@@ -18,10 +18,10 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_measurements import MeasurementScope
+from openhcs.core.measurements.runtime_measurements import MeasurementScope
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
@@ -40,7 +40,7 @@ from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 

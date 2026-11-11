@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 import openhcs
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 REPO_ROOT = Path(openhcs.__file__).resolve().parents[1]

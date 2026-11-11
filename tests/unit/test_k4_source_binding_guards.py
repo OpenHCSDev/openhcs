@@ -11,16 +11,16 @@ from pathlib import Path
 import pytest
 from pycodify import Assignment, generate_python_source
 
-from openhcs.core.source_binding_selection import SourceBoundAnchorPatternPolicy
-from openhcs.core.source_binding_workspace import SourceSetAssembler
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_binding_selection import SourceBoundAnchorPatternPolicy
+from openhcs.core.source.source_binding_workspace import SourceSetAssembler
+from openhcs.core.source.source_bindings import (
     PairByMetadata,
     PairByOrder,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     SourceSetPairing,
 )
-from openhcs.core.source_path_identity import (
+from openhcs.core.source.source_path_identity import (
     source_path_identity,
     source_path_posix,
     source_paths_equal,
@@ -81,10 +81,10 @@ def test_source_bindings_module_declares_no_config_class():
 def test_step_source_bindings_has_one_class_whatever_the_import_order():
     script = "\n".join(
         [
-            "from openhcs.core import source_bindings",
+            "from openhcs.core.source import source_bindings",
             "before = dict(vars(source_bindings))",
-            "from openhcs.core import invocation_artifacts",
-            "from openhcs.core.config import StepSourceBindingsConfig, EMPTY_SOURCE_BINDINGS",
+            "from openhcs.core.callable import invocation_artifacts",
+            "from openhcs.core.config.pipeline_config import StepSourceBindingsConfig, EMPTY_SOURCE_BINDINGS",
             "assert dict(vars(source_bindings)) == before",
             "assert invocation_artifacts.StepSourceBindingsConfig is StepSourceBindingsConfig",
             "assert type(EMPTY_SOURCE_BINDINGS) is StepSourceBindingsConfig",

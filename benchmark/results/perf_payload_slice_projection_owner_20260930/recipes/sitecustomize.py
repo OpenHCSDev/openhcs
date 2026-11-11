@@ -21,9 +21,9 @@ class RuntimeDiagnosticLoader(importlib.abc.Loader):
     def exec_module(self, module):
         self.loader.exec_module(module)
         assert Path(module.__file__).resolve()==Path('/home/ts/code/projects/openhcs/openhcs/core/steps/function_runtime.py')
-        from openhcs.core.source_image_provenance import SourceImageIdentity
-        from openhcs.core.source_metadata import SourceComponentProjectionStrategy
-        from openhcs.core.runtime_image_values import ImagePayloadMetadata
+        from openhcs.core.source.source_image_provenance import SourceImageIdentity
+        from openhcs.core.source.source_metadata import SourceComponentProjectionStrategy
+        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
         def timed(original, label):
             @functools.wraps(original)
             def wrapper(*args, **kwargs):

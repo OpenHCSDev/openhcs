@@ -1,27 +1,27 @@
 """Named source origins select pixel authority, not just a provenance alias."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_binding_selection import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_binding_selection import (
     PipelineStartSourceUniverseRequest,
     SourceUniverseRequest,
     StepInputSourceUniverseRequest,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     FromPipelineStart,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.domains.microscopy.axes import Microscopy
 
 

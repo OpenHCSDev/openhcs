@@ -10,13 +10,13 @@ import numpy as np
 import pytest
 
 from openhcs.core import _tabular_native as native
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseCell,
     _measurement_sparse_cell_values_equal,
 )
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetDelimiter,
     SpreadsheetNanRepresentation,

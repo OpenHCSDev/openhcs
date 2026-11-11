@@ -6,8 +6,8 @@ BASE=Path('/home/ts/.local/state/openhcs-maintenance/20261004/measurement-query-
 prelude=(BASE/'price_actual_values.py').read_text().split('original=ColumnarMeasurementTableSchema.feature_value_indexes')[0]
 prelude=prelude.replace('ColumnarMeasurementTableSchema,MeasurementTableObjectFeatureSemantics,','ColumnarMeasurementTableSchema,').replace('MeasurementTableObjectFeatureSemantics.from_table(table)','ColumnarMeasurementTableSchema.from_table(table)').replace('semantics.object_names','semantics.object_names(table)').replace('semantics.feature_names','semantics.feature_names(table)')
 exec(compile(prelude,str(BASE/'price_actual_values.py'), 'exec'))
-from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows,WideMeasurementRowAccumulator
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.measurements.measurement_row_materialization import ConcatenatedColumnarRows,WideMeasurementRowAccumulator
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.artifacts import MeasurementsArtifactType,RelationshipsArtifactType
 from openhcs.core.progress.live_measurements import _columnar_row_preview
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import render_spreadsheet_bundle
@@ -41,7 +41,7 @@ def query(production):
     if index is not None:output.setdefault(aligned[axis],{}).setdefault(feature,MeasurementFeatureValueIndex()).values_by_label.update(index.values_by_label)
   query_s+=time.perf_counter()-start
  return output,preview_s,query_s
-from openhcs.core.runtime_measurements import MeasurementScalarLiteral
+from openhcs.core.measurements.runtime_measurements import MeasurementScalarLiteral
 baseline,old_preview_s,old_query_s=query(False)
 production,new_preview_s,new_query_s=query(True)
 for a,fs in baseline.items():

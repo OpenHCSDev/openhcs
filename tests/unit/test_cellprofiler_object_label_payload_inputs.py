@@ -16,11 +16,11 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     measure_image_intensity_objects,
 )
 from openhcs.processing.backends.cellprofiler.skeleton import measure_object_skeleton
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
-from openhcs.core.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import as_runtime_value
 
 
 def test_area_occupied_accepts_object_label_payload_input() -> None:

@@ -7,7 +7,7 @@ from threading import Barrier
 
 import pytest
 
-from openhcs.core.runtime_profile import (
+from openhcs.core.payload.runtime_profile import (
     PROFILE_RUNTIME_ENV,
     PROFILE_RUNTIME_PATH_ENV,
     RuntimeProfiler,
@@ -115,11 +115,11 @@ def test_cellprofiler_label_profile_preserves_storage_geometry(
     monkeypatch, tmp_path, sparse
 ):
     import numpy as np
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload, ObjectLabelVariantData, ObjectLabelRepresentation,
         SparseIJVObjectLabelStorageStrategy,
     )
-    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
     from openhcs.interop.cellprofiler.runtime.profile_fields import (
         cellprofiler_profile_payload_fields, object_label_artifact_profile_fields,
     )
@@ -173,7 +173,7 @@ def test_cellprofiler_disabled_label_profile_does_not_build_fields(monkeypatch):
 
 def test_cellprofiler_lazy_label_profile_uses_held_geometry(monkeypatch):
     import numpy as np
-    from openhcs.core.runtime_object_labels import (
+    from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload, ObjectLabelVariantData, PlaneStackObjectLabelVariantData,
     )
     from openhcs.interop.cellprofiler.runtime.profile_fields import (

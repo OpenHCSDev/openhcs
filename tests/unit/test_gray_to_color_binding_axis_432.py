@@ -1,31 +1,31 @@
 """Source-only #432: declared primary binding is not a runtime grouping axis."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
 import pytest
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     AlignedStackExecution,
     FullStackExecution,
     ImagePayloadBundleContext,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
@@ -41,7 +41,7 @@ from tests.unit.test_cellprofiler_generic_special_input_binding import (
 )
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])

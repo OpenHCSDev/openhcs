@@ -24,7 +24,7 @@ from zmqruntime.config import TransportMode
 from zmqruntime.transport import get_zmq_transport_url, remove_ipc_socket
 from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
-from openhcs.core.config import NapariDimensionMode, NapariDisplayConfig
+from openhcs.core.config.pipeline_config import NapariDimensionMode, NapariDisplayConfig
 from openhcs.runtime.napari_viewer_server import (
     NapariControlAction,
     NapariViewerServer,
@@ -39,7 +39,7 @@ from openhcs.runtime.viewer_protocol import (
     SettlementRunning,
     ViewerSettleProgress,
 )
-from openhcs.core.streaming_config_declarations import NapariViewer
+from openhcs.core.config.streaming_config_declarations import NapariViewer
 from tests.unit.native_opengl import native_opengl  # noqa: F401  (fixture)
 
 
@@ -223,7 +223,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     from zmqruntime.transport import get_control_port
     from polystore.filemanager import FileManager
     from polystore.streaming.viewer_transport import ViewerTransportEndpoint
-    from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
+    from openhcs.core.config.streaming_config_factory import StreamingViewerRuntimeConfig
     from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
 
     archive = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_ROI")

@@ -10,8 +10,8 @@ from typing import (
     ClassVar,
     TypeVar,
 )
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.runtime_measurements import (
     MeasuredObjectAnchorFeatureMarker,
     MeasurementScope,
     MeasurementStatistic,
@@ -26,15 +26,15 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureRelationDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.measurement_rows import (
         FormattingMeasurementFeatureTemplate,
     )
     from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.measurements.runtime_measurements import MeasurementTable
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,

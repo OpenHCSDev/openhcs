@@ -6,22 +6,22 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract, CreatedPayloadAxis, PayloadAxisRequirement, PreservedPayloadAxes,
     creates_payload_axis, preserves_payload_axes,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.function_patterns import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup, CompiledFunctionPattern, PayloadAxisProof,
     InheritedPayloadAxisProof, CreatedPayloadAxisProof,
     UnprovedPayloadAxisProof,
 )
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     ImagePayloadBundleContext,
     NaturalExecution,
 )
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.color import (
     ColorToGrayMode, ImageChannelType, color_to_gray, gray_to_color,
@@ -32,8 +32,8 @@ from tests.unit.test_gray_to_color_binding_axis_432 import (
     _source_plane,
 )
 from tests.unit.test_payload_axis_compile_gate import _compiled_pattern, _session
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _gray_creator_session(tmp_path):

@@ -9,16 +9,16 @@ import pytest
 from python_introspect import parameter_exclusions
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.processing_preparation import CallablePreparation
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.callable.processing_preparation import CallablePreparation
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import runtime_context_parameter
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.steps.function_runtime import (
     FunctionCoreExecutor,
     PatternGroupData,
@@ -27,7 +27,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
     save_images_with_measurements,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from tests.context_support import (

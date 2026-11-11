@@ -6,8 +6,8 @@ from dataclasses import replace
 
 from PyQt6.QtWidgets import QCheckBox
 
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImagePlaneSource,
     NamedSourceBinding,

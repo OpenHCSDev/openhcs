@@ -8,9 +8,9 @@ from typing import Dict, List, Mapping, Sequence, TypeAlias
 
 from python_introspect import project_dataclass
 
-from openhcs.core.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import CompiledContext
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugExecutionContext,
     DebugExecutionPolicy,
     DebugSinkInstallRequest,

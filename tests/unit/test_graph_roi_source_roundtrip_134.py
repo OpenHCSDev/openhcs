@@ -1,6 +1,6 @@
 """Receiving #134: actual graph context/writer/ZIP, without a native process."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
@@ -21,18 +21,18 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
-from openhcs.core.config import NapariStreamingConfig
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_spatial_graph import (
+from openhcs.core.config.pipeline_config import NapariStreamingConfig
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_spatial_graph import (
     SpatialGraph,
     SpatialGraphEdge,
     SpatialGraphNode,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 
-from openhcs.core.viewer_streaming_service import RoiStreamingRequest, StreamingService
+from openhcs.core.io.viewer_streaming_service import RoiStreamingRequest, StreamingService
 from openhcs.core.materialization.core import MaterializationSpec, materialization_outputs, materialize
 from openhcs.core.materialization.options import SpatialGraphROIOptions
 from openhcs.core.artifacts.plans import MAIN_FLOW

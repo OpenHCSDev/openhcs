@@ -69,18 +69,18 @@ from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
 from openhcs.authoring.session.session import Session
 from openhcs.authoring.session.views import PipelineStepsView
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     PipelineConfig,
     ProcessingConfig,
     SourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.debug import DebugCursor
-from openhcs.core.debug_session_projection import DebugSessionProjectionContext
+from openhcs.core.debug.debug_runtime import DebugCursor
+from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.debug_projection import DebugRuntimeProjection
-from openhcs.core.source_binding_context import SourceBindingContext
+from openhcs.core.source.source_binding_context import SourceBindingContext
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
@@ -106,7 +106,7 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
 )
 from openhcs.pyqt_gui.windows.dual_editor_tabs import ArtifactsTab, StepSettingsTab
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from openhcs.core.axes import Axis, GroupingDeclaration
+from openhcs.core.axes.axis_declarations import Axis, GroupingDeclaration
 
 logger = logging.getLogger(__name__)
 

@@ -13,26 +13,26 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from openhcs.constants.constants import Backend
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_image_provenance import (
+from openhcs.core.execution.compiled_step_plan import RuntimeArtifactMaterializationPlan
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourcePixelRef,
     SourcePlaneProjection,
     SourceProjectionSet,
     SourceProjectionMetadataSerializer,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (

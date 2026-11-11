@@ -75,14 +75,14 @@ from zmqruntime.viewer_protocol import (
     ViewerTransportEndpoint,
 )
 
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.execution_visualizer import ExecutionVisualizerABC
-from openhcs.core.streaming_config_declarations import ViewerFamily
-from openhcs.core.streaming_config_factory import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
+from openhcs.core.config.streaming_config_declarations import ViewerFamily
+from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     ViewerProcessLaunchConfig,
 )
-from openhcs.core.xdg_paths import get_openhcs_log_dir
+from openhcs.core.util.xdg_paths import get_openhcs_log_dir
 from openhcs.runtime.viewer_controls import (
     ViewerIntensityWindowControlOptions as ViewerIntensityWindowControlOptions,
 )

@@ -25,12 +25,12 @@ from openhcs.authoring.session.events import (
 )
 from openhcs.authoring.session.execution_batch import ExecutionBatchRuntime
 from openhcs.authoring.session.progress import execution_server_status_text
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.debug import DebugCursor, DebugEvent, DebugProgressEventRequest
-from openhcs.core.execution_state import ManagerExecutionState, ExecutionCompleted, ExecutionFailed
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.debug.debug_runtime import DebugCursor, DebugEvent, DebugProgressEventRequest
+from openhcs.core.execution.execution_state import ManagerExecutionState, ExecutionCompleted, ExecutionFailed
 from openhcs.constants.constants import (
     OrchestratorCompileFailed,
     OrchestratorCompiled,
@@ -42,8 +42,8 @@ from openhcs.core.progress.live_measurements import (
     LiveMeasurementTablePreview,
 )
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
-from openhcs.core.runtime_artifact_values import ArtifactKey
-from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
@@ -52,12 +52,12 @@ from openhcs.core.progress.types import (
     StepCompletedProgressPhase,
     SuccessProgressStatus,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     AfterInvocationDebugBoundary,
     BeforeInvocationDebugBoundary,
     PersistentPausedWorkerReplay,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     RunDebugCommand,
     RunToPauseDebugCommand,
     StepDebugCommand,
@@ -672,7 +672,7 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
 
 
 def test_a_standard_run_retires_the_previous_debug_summary(tmp_path, monkeypatch):
-    from openhcs.core.debug import DebugTerminalSummary
+    from openhcs.core.debug.debug_runtime import DebugTerminalSummary
 
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")

@@ -126,8 +126,8 @@ class PipelineModelArchitectureTopic(ArchitectureTopicProjection):
     )
 
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
-        from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-        from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
         from openhcs.core.steps.function_step import FunctionStep
         from openhcs.serialization.pycodify_formatters import FunctionStepFormatter
 
@@ -189,7 +189,7 @@ class CellProfilerTranslationArchitectureTopic(ArchitectureTopicProjection):
     )
 
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
-        from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
         from openhcs.core.steps.function_step import FunctionStep
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock
@@ -252,9 +252,9 @@ class SourceSemanticsArchitectureTopic(ArchitectureTopicProjection):
     )
 
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
-        from openhcs.core.source_metadata import MetadataExtractionRule
-        from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
-        from openhcs.core.source_binding_workspace import (
+        from openhcs.core.source.source_metadata import MetadataExtractionRule
+        from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
+        from openhcs.core.source.source_binding_workspace import (
             SourceBindingWorkspaceProjector,
         )
         from openhcs.interop.cellprofiler.plate_workspace import (
@@ -316,7 +316,7 @@ class ExecutionRuntimeArchitectureTopic(ArchitectureTopicProjection):
     )
 
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
-        from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.runtime.zmq_execution_client import (
             OpenHCSExecutionSubmission,

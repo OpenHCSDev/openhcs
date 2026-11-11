@@ -8,7 +8,7 @@ Generated: 2025-10-21 01:49:14.400609
 
 # Automatically collected imports
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyFijiStreamingConfig,
     LazyNapariStreamingConfig,
     LazyStepMaterializationConfig,

@@ -11,9 +11,9 @@ from openhcs.authoring.session.compilation import (
     pipeline_fingerprint,
 )
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 logger = logging.getLogger(__name__)

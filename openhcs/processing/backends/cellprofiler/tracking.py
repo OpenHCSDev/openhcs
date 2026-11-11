@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.axes import TimeAxis
+from openhcs.core.axes.axis_declarations import TimeAxis
 from openhcs.processing.backends.cellprofiler._font_raster_native import rasterize
 
 from openhcs.constants.constants import MemoryType
@@ -30,7 +30,7 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
@@ -40,31 +40,31 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.image_normalization import (
     normalize_cellprofiler_image_payload,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     dense_label_centers_2d_numba,
     object_label_dense_array,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.runtime_output_matching import RuntimeOutputBundle
+from openhcs.core.payload.runtime_output_matching import RuntimeOutputBundle
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
     ObjectLabelDrivenPrimaryImageInputPolicy,
 )
@@ -76,7 +76,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.interop.cellprofiler.module_settings import (
@@ -110,14 +110,14 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,

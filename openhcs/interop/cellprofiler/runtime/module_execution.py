@@ -1,7 +1,7 @@
 """Execution bridge from generated CellProfiler modules to OpenHCS runtime state."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
 import time
@@ -12,7 +12,7 @@ from dataclasses import (
 )
 from typing import cast
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     ImageOutputBundle,
@@ -26,11 +26,11 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     ImagePayloadConsumption,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowOwnership,
     MeasurementSparseColumnarRows,
@@ -38,29 +38,29 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_adapters import (
+from openhcs.core.callable.runtime_adapters import (
     RuntimeAdapterRequest,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_output_matching import (
+from openhcs.core.payload.runtime_output_matching import (
     RuntimeMatchedOutput,
 )
-from openhcs.core.runtime_profile import RuntimeProfileTimer
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_profile import RuntimeProfileTimer
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeSliceProjection,
     preserved_image_plane_projection,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
 from openhcs.interop.cellprofiler.image_normalization import (
@@ -78,7 +78,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,
 )
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     MeasurementImageReferenceDomain,
     ObjectLabelsReference,
     SourceImageReference,
@@ -115,7 +115,7 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileEvent,
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
 )
 

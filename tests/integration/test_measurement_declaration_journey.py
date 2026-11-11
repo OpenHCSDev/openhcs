@@ -25,34 +25,34 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     MainFlowArtifactContractProvider,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentCodec
-from openhcs.core.measurement_feature_queries import measurement_values_for_feature
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.measurements.measurement_feature_queries import measurement_values_for_feature
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
 from openhcs.core.orchestrator.execution_result import (
     MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_measurements import (
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureOwner,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     PairByOrder,
@@ -60,7 +60,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextContains,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
@@ -83,7 +83,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -92,7 +92,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 )
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 

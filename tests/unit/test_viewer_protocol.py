@@ -15,9 +15,9 @@ from zmqruntime.messages import (
 from zmqruntime.transport import TransportEndpoint
 
 import openhcs.runtime.viewer_protocol as viewer_protocol
-from openhcs.core.execution_visualizer import ExecutionVisualizerABC
-from openhcs.core.streaming_config_declarations import ViewerFamily
-from openhcs.core.streaming_config_factory import (
+from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
+from openhcs.core.config.streaming_config_declarations import ViewerFamily
+from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     ViewerProcessLaunchConfig,
 )
@@ -49,7 +49,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.core.streaming_config_declarations import NapariViewer
+from openhcs.core.config.streaming_config_declarations import NapariViewer
 
 
 @pytest.fixture(autouse=True)

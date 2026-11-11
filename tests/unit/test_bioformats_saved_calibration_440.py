@@ -11,22 +11,22 @@ from polystore.filemanager import FileManager
 from polystore.roi import load_rois_from_zip
 
 from openhcs.constants.constants import Backend
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
 from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
 from types import SimpleNamespace
 from openhcs.microscopes.bioformats import BioFormatsHandler

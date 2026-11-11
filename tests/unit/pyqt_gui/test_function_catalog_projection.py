@@ -24,8 +24,8 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
     FunctionCatalogEndpointRevision,
     ZMQFunctionCatalogService,
 )
-from openhcs.core.callable_contract import CallableImportIdentity
-from openhcs.core.function_reference import ImportableFunctionReference
+from openhcs.core.callable.callable_contract import CallableImportIdentity
+from openhcs.core.callable.function_reference import ImportableFunctionReference
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.signals import CustomFunctionSignals
 from openhcs.pyqt_gui.dialogs import function_selector_dialog as selector_module

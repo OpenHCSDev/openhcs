@@ -39,7 +39,7 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
-    from openhcs.core.function_reference import FunctionReference
+    from openhcs.core.callable.function_reference import FunctionReference
     from openhcs.runtime.zmq_execution_client import (
         FunctionCatalogExecutionClient,
         ZMQExecutionClient,

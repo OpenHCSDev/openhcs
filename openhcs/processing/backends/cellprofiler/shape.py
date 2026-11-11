@@ -6,16 +6,16 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.processing_contracts import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.interop.cellprofiler.module_measurement_features import (
@@ -50,7 +50,7 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
 from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeZernikeFeatureAuthority,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelVariantData
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariantData
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
@@ -453,29 +453,29 @@ from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     dense_object_label_measurement_row_domain,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectFeatureValueTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     object_label_dense_array,
     object_label_sparse_ijv_rows,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.processing.backends.analysis.region_properties import (
     DenseLabelRegionProperties,
     LabelRegionPropertiesBackendStrategy,
@@ -489,7 +489,7 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _edt_1d_numba,
 )

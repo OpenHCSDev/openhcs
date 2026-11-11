@@ -48,15 +48,15 @@ from pyqt_reactive.widgets.shared.record_table_browser import (
     ValueLabelSource,
 )
 
-from openhcs.core.axes import Axis, AxisFamily, GridAddressed, OrdinalValued
-from openhcs.core.config import StreamingConfig
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GridAddressed, OrdinalValued
+from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.core.pipeline.path_planner import ANALYSIS_RESULTS_DIR_SUFFIX
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.plate.plate_image_inventory import (
     FILE_NAME_FIELD,
     PlateFileInventory,
     PlateFileRecord,
 )
-from openhcs.core.result_file_formats import ResultFileFormat, ResultFileOpener
+from openhcs.core.io.result_file_formats import ResultFileFormat, ResultFileOpener
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -311,7 +311,7 @@ class NoDataset(BrowsedDataset):
         return ()
 
     def viewer_ports(self, ports_per_type: int) -> list[int]:
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
 
         return get_all_streaming_ports(num_ports_per_type=ports_per_type)
 
@@ -344,7 +344,7 @@ class OrchestratorDataset(BrowsedDataset):
 
     @cached_property
     def streaming(self):
-        from openhcs.core.viewer_streaming_service import StreamingService
+        from openhcs.core.io.viewer_streaming_service import StreamingService
 
         return StreamingService(
             filemanager=self.orchestrator.filemanager,
@@ -385,7 +385,7 @@ class OrchestratorDataset(BrowsedDataset):
         ).file_records()
 
     def viewer_ports(self, ports_per_type: int) -> list[int]:
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
 
         return get_all_streaming_ports(
             config=self.orchestrator.pipeline_config,
@@ -407,7 +407,7 @@ class OrchestratorDataset(BrowsedDataset):
         return table.reveal_path(file_path, root=self.orchestrator.dataset_root)
 
     def view(self, batch, config, status, failed) -> None:
-        from openhcs.core.viewer_streaming_service import (
+        from openhcs.core.io.viewer_streaming_service import (
             ImageStreamingRequest,
             RoiStreamingRequest,
         )

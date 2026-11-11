@@ -5,15 +5,15 @@ from dataclasses import replace
 import numpy as np
 from scipy import ndimage
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     NaturalExecution,
 )
-from openhcs.core.function_patterns import NormalizedFunctionGroup
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.callable.function_patterns import NormalizedFunctionGroup
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
@@ -24,8 +24,8 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
 )
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _execute_prepared(func, source, kwargs, mode=NaturalExecution):

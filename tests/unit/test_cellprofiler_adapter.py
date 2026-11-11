@@ -34,10 +34,10 @@ from benchmark.adapters.cellprofiler_installation import (
     OPENHCS_BENCHMARK_TOOL_ROOTS_ENV,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError, ToolNotInstalledError
-from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PartitionFilterConfig
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_bindings import (
     ImportedMetadataTable,
 )
 from tests.unit.cellprofiler_runtime_test_support import (

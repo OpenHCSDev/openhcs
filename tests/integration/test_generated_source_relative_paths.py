@@ -7,14 +7,14 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
     CompilationDatasetScope,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 from openhcs.processing.backends.cellprofiler.imagej_macro import run_imagej_macro
 
 

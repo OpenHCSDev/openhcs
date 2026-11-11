@@ -21,17 +21,17 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     annotation_accepts_runtime_type,
     annotation_produces_runtime_type,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.axes import Axis
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.axes.axis_declarations import Axis
 
 if TYPE_CHECKING:
-    from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-    from openhcs.core.runtime_array_values import RuntimeArrayData
+    from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
+    from openhcs.core.payload.runtime_array_values import RuntimeArrayData
     from openhcs.interop.cellprofiler.runtime.artifact_binding import (
         RuntimeInputBindingRequest,
     )
@@ -68,7 +68,7 @@ def _callable_return_slot_variants(annotation: Any) -> tuple[tuple[Any, ...], ..
         slots = get_args(annotation)
         return () if Ellipsis in slots else (slots,)
     if isinstance(annotation, type):
-        from openhcs.core.runtime_output_matching import (
+        from openhcs.core.payload.runtime_output_matching import (
             RuntimeOutputBundle,
         )
 
@@ -266,7 +266,7 @@ class CellProfilerModuleCallableABI:
     ) -> None:
         """Validate one raw callable ABI against its callable artifact declarations."""
 
-        from openhcs.core.aligned_image_payload import AlignedImageStack
+        from openhcs.core.payload.aligned_image_payload import AlignedImageStack
 
         module_name = contract.module_name
         if not isinstance(module_name, str) or not module_name:
@@ -348,7 +348,7 @@ class CellProfilerModuleCallableABI:
             if spec is not None and spec.artifact_type is MeasurementsArtifactType
         )
         if measurement_slot_indices:
-            from openhcs.core.runtime_tabular_values import ColumnarRows
+            from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 
             measurement_variants = tuple(
                 slots

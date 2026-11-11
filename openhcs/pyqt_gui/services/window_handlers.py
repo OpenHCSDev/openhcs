@@ -57,8 +57,8 @@ class OpenHCSWindowCreationAuthority:
         """Create GlobalPipelineConfig editor window."""
         from objectstate import ObjectStateRegistry, set_global_config_for_editing
 
-        from openhcs.core.config import GlobalPipelineConfig
-        from openhcs.core.config_cache import save_global_config_sync
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+        from openhcs.core.config.config_cache import save_global_config_sync
         from openhcs.pyqt_gui.config import UIConfig, save_ui_config_sync
         from pyqt_reactive.windows.config_window import (
             ConfigSaveParticipant,
@@ -156,7 +156,7 @@ class OpenHCSWindowCreationAuthority:
         """Create PipelineConfig editor window for a plate."""
         from objectstate import ObjectStateRegistry
 
-        from openhcs.core.config import PipelineConfig
+        from openhcs.core.config.pipeline_config import PipelineConfig
         from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
 
         from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow

@@ -15,9 +15,9 @@ from typing import Any, Dict, List, Optional, Union
 
 from polystore.filemanager import FileManager
 
-from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
+from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
 
 # Core OpenHCS Interfaces
 from openhcs.core.dataset_sources.interfaces import FilenameParser

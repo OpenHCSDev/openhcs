@@ -20,18 +20,18 @@ from openhcs.core.artifacts.relations import (
     ImageMeasurementSubjectRelation,
     ObjectMeasurementSubjectRelation,
 )
-from openhcs.core.artifact_key_selection import (
+from openhcs.core.util.artifact_key_selection import (
     AdapterRecordedArtifactOutputPolicy,
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.runtime_adapters import RuntimeAdapterSpec, runtime_adapter
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec, runtime_adapter
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
 )
@@ -343,12 +343,12 @@ def test_measurement_row_owner_controls_named_object_roster_admission(policy):
 
 def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     """The real module/provider declares the owner, not a compiler exemption."""
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,

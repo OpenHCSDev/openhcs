@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.morphology import morph, MorphOperation, RepeatMode
 

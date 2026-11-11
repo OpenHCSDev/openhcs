@@ -18,14 +18,14 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_spatial_graph import SpatialGraph
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     NEURITE_OBJECT_LABEL_MATERIALIZATION,
@@ -258,9 +258,9 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     import csv
     from pathlib import Path
     from polystore.roi import load_rois_from_zip
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+    from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 
     image = _draw_fluorescent_neuron(branched=True)
     result = CallableContract.from_callable(

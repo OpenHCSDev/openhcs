@@ -37,7 +37,7 @@ from benchmark.openhcs_measured_run import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyVFSConfig,
@@ -47,18 +47,18 @@ from openhcs.core.config import (
     PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.source_matching import with_source_component_metadata
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_matching import with_source_component_metadata
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.partition_filter import PartitionFilterProcessor
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.config.partition_filter import PartitionFilterProcessor
+from openhcs.core.io.virtual_workspace_metadata import (
     FIELDS,
     AtomicMetadataWriter,
     VirtualWorkspaceMapping,

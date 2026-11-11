@@ -5,7 +5,7 @@ from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
     RuntimeDebugInspectionResult,
 )
-from openhcs.core.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
+from openhcs.core.debug.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser, _calls_from_args
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
@@ -16,7 +16,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolResult,
 )
-from openhcs.core.debug_views import (
+from openhcs.core.debug.debug_views import (
     ErrorDebugViewSection,
     RuntimeValueRecordsDebugViewTable,
     RuntimeValuesDebugViewSection,

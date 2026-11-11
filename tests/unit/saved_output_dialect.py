@@ -9,8 +9,8 @@ canonicalization, so comparisons see the files as written.
 from __future__ import annotations
 
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     RuntimeMeasurementRowIdentityContract,
 )

@@ -16,9 +16,9 @@ from pycodify import (
 from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import callable_declaration_kwargs, parameter_exclusions
 
-from openhcs.core.axes import is_grouping_declaration
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_reference import (
+from openhcs.core.axes.axis_declarations import is_grouping_declaration
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )

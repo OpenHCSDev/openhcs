@@ -1,6 +1,6 @@
 """Prepared canonical signatures survive compilation and worker transport."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import inspect
 import pickle
 from types import SimpleNamespace
@@ -14,25 +14,25 @@ import numpy as np
 import pytest
 from arraybridge import ArrayPayload
 
-import openhcs.core.callable_contract as contract_module
+import openhcs.core.callable.callable_contract as contract_module
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, CallableProjection, attach_callable_contract_metadata, attach_processing_prepare
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, CallableProjection, attach_callable_contract_metadata, attach_processing_prepare
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_patterns import (
     NormalizedFunctionGroup,
     normalize_prepared_function_pattern,
 )
-from openhcs.core.function_reference import ImportableFunctionReference
-from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.callable.function_reference import ImportableFunctionReference
+from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.pipeline.function_contracts import composed_image_payload
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor, RuntimeBatchExecutionDomain,
     SerialPure2DSliceBatchExecutor, runtime_callable_defaults,
 )
 from openhcs.core.pipeline.function_contracts import resolved_callable_parameter
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     RuntimeCallablePolicy,
     SignatureFilteredKwargs,
 )
@@ -416,10 +416,10 @@ def test_pure_2d_executor_selection_retains_exact_declared_executor():
 
 
 def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(monkeypatch):
-    from openhcs.core.aligned_image_payload import (
+    from openhcs.core.payload.aligned_image_payload import (
         AlignedImageSliceContext, ImageOutputBundle,
     )
-    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.callable.function_patterns import compile_function_pattern
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     pixels = tuple(np.full((3, 4), value, dtype=np.float32) for value in (0.25, 0.75))
@@ -457,10 +457,10 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
 
 
 def test_compiled_input_reuses_produced_stack_realization_without_copy():
-    from openhcs.core.aligned_image_payload import (
+    from openhcs.core.payload.aligned_image_payload import (
         AlignedImageSliceContext, ProducedImageStack,
     )
-    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.callable.function_patterns import compile_function_pattern
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     source = ProducedImageStack(

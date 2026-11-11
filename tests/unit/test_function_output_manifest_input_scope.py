@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -14,20 +14,20 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import (
     SOURCE_VOXEL_SPACING_FIELD,
     SourceVoxelSpacing,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     MainFlowInputProjection,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -620,8 +620,8 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
 
 
 def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
-    from openhcs.core.source_metadata import SourceFilterClause
-    from openhcs.core.source_bindings import (
+    from openhcs.core.source.source_metadata import SourceFilterClause
+    from openhcs.core.source.source_bindings import (
         CompiledSourceBindingPlan,
         ComponentSelector,
         NamedSourceBinding,
@@ -629,8 +629,8 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
         SourceSelector,
         TextContains,
     )
-    from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-    from openhcs.core.source_metadata import SourceFilterPathMetadata
+    from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+    from openhcs.core.source.source_metadata import SourceFilterPathMetadata
     from openhcs.core.steps.function_output_manifest import ProducedPathRecordIndex
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 

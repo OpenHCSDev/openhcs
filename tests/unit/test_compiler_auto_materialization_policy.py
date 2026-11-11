@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.core.config import MaterializeToDisk
-from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
+from openhcs.core.config.pipeline_config import MaterializeToDisk
+from openhcs.core.execution.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,

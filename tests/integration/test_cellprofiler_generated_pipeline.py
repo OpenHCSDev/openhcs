@@ -1,7 +1,7 @@
 from __future__ import annotations
 from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
 import ast
 import os
@@ -45,7 +45,7 @@ from openhcs.core.artifacts.kinds import (
     SpecialArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -56,24 +56,24 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_tabular_values import measurement_row_mapping
-from openhcs.core.runtime_stores import StoredRuntimeValue
-from openhcs.core.source_binding_workspace import (
+from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
+from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.source.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     FromPipelineStart,
     NamedSourceBinding,

@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
 from openhcs.processing.backends.enhance.deconvolution import DeconvolutionBlurMode
 

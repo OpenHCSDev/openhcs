@@ -1,12 +1,12 @@
 """Dense full-stack ABI must consume aligned source/artifact values correctly."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     FullStackExecution,
@@ -18,35 +18,35 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_measurements import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
 from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():

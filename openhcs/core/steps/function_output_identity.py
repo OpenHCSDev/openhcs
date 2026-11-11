@@ -7,26 +7,26 @@ from pathlib import Path
 import re
 from typing import ClassVar, Mapping, Sequence, TypeAlias
 
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.source_path_identity import source_path_identity
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.source.source_path_identity import source_path_identity
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,
     MissingFilenameComponentError,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
     SourceImageProvenanceIdentity,
 )
-from openhcs.core.source_metadata import SourceMetadataFields
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_metadata import SourceMetadataFields
+from openhcs.core.source.source_matching import (
     source_component_metadata_items,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None
 FunctionOutputComponentValue: TypeAlias = str | int

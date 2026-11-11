@@ -18,16 +18,16 @@ from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import preserves_payload_axes
+from openhcs.core.callable.callable_contract import preserves_payload_axes
 from openhcs.core.memory.decorators import numpy as numpy_decorator
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
@@ -49,14 +49,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_enum_setting_parser,
     parse_cellprofiler_float,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 

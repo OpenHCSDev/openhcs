@@ -1,6 +1,6 @@
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 import json
 import pickle
@@ -40,35 +40,35 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.axes.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig
+from openhcs.core.config.pipeline_config import TiffConfig
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
     FunctionInvocationKey,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.core.orchestrator.execution_result import (
     MergeAllRuntimeRecords,
@@ -80,53 +80,53 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticMeasurementsArtifactOutputMaterializationStrategy,
 )
-from openhcs.core.runtime_artifact_values import (
+from openhcs.core.runtime_store.runtime_artifact_values import (
     RuntimeValue,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelSet,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_stores import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
@@ -143,7 +143,7 @@ from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
 
-from openhcs.core.streaming_config_factory import (
+from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
@@ -163,13 +163,13 @@ from openhcs.core.materialization.options import (
     NameByArtifactName,
     NameBySourceIdentity,
 )
-from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
-from openhcs.core.streaming_config_declarations import NapariViewer
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
-from openhcs.core.config import IncludePartitions
+from openhcs.core.config.streaming_config_declarations import NapariViewer
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.config.pipeline_config import IncludePartitions
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
 

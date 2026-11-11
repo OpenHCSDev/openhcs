@@ -29,12 +29,12 @@ from openhcs.constants.constants import (
     Backend,
 )
 
-from openhcs.core.function_step_transport import PipelineFunctionReferences
-from openhcs.core.compiled_execution import (
+from openhcs.core.callable.function_step_transport import PipelineFunctionReferences
+from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     FunctionStepExecutionScope,
     PayloadAxisRequirement,
 )
@@ -43,15 +43,15 @@ from openhcs.core.context.processing_context import (
     CompilingContext,
     RequiredVisualizer,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     MaterializeToZarr,
     StreamingConfig,
     VFSConfig,
     PartitionFilterConfig,
 )
-from openhcs.core.debug import DebugExecutionPolicy, NoOpDebugExecutionPolicy
-from openhcs.core.axis_filter import (
+from openhcs.core.debug.debug_runtime import DebugExecutionPolicy, NoOpDebugExecutionPolicy
+from openhcs.core.axes.axis_filter import (
     StepAxisFilterMap,
     StepAxisFilterResolution,
     StepAxisFilterSet,
@@ -64,14 +64,14 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     DEFAULT_SOURCE_PROJECTION_CACHE,
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     InputConversionPlan,
     RuntimeArtifactMaterializationPlan,
@@ -82,28 +82,28 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
     PipelinePathPlanner,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
 from openhcs.core.pipeline.step_attribute_stripper import StepAttributeStripper
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
 )
-from openhcs.core.image_file_serialization import (
+from openhcs.core.payload.image_file_serialization import (
     require_image_file_source_metadata,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     PrimaryPlaneRole,
 )
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.partition_filter import PartitionFilterProcessor
+from openhcs.core.config.partition_filter import PartitionFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
 from dataclasses import dataclass, replace
-from openhcs.core.axes import AxisFamily
-from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.progress.types import (
     CompileProgressPhase,
     RunningProgressStatus,

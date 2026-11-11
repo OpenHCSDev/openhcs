@@ -31,13 +31,13 @@ from openhcs.agent.ui_bridge_identities import (
     DatasetListStateSurfaceIdentity,
     DatasetListWidgetIdentity,
 )
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.mcp.dev_client import McpDevClient
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -391,7 +391,7 @@ def _common_source_header(
 from pathlib import Path
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyNapariStreamingConfig,
@@ -561,7 +561,7 @@ def _dual_channel_source(plate_path: Path, output_path: Path) -> str:
         plate_path,
         output_path,
         processing_imports=(
-            "from openhcs.core.axes import Ungrouped\n"
+            "from openhcs.core.axes.axis_declarations import Ungrouped\n"
             "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(
@@ -616,7 +616,7 @@ def _colocalization_source(plate_path: Path, output_path: Path) -> str:
         plate_path,
         output_path,
         processing_imports=(
-            "from openhcs.core.axes import Ungrouped\n"
+            "from openhcs.core.axes.axis_declarations import Ungrouped\n"
             "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(

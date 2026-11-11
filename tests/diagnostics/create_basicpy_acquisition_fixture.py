@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 
 # Initialize OpenHCS's existing metadata configuration before PolyStore.

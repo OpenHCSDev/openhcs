@@ -8,7 +8,7 @@ from napari.layers.shapes._shapes_constants import ShapeType
 from numpy.typing import NDArray
 from python_introspect import to_jsonable
 
-import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
+import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
 
 @dataclass(frozen=True)

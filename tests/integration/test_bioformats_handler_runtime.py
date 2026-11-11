@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.constants.constants import Backend
-from openhcs.core.source_binding_selection import SourceFileUniverse
+from openhcs.core.source.source_binding_selection import SourceFileUniverse
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,

@@ -5,9 +5,9 @@ Original: gaussianfilter
 
 from typing import ClassVar
 
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.callable_contract import runtime_image_execution_mode
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_float,
@@ -32,10 +32,10 @@ class GaussianFilterModule(CellProfilerModule):
 
 import numpy as np
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 @runtime_image_execution_mode(FullStackExecution)

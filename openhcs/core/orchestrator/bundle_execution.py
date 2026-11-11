@@ -21,24 +21,24 @@ from typing import (
 
 from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.compiled_execution import (
+from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import (
     CompiledContext,
     ExecutingContext,
     RequiredVisualizer,
 )
-from openhcs.core.debug import DebugExecutionPolicy
-from openhcs.core.execution_visualizer import ExecutionVisualizerABC
-from openhcs.core.function_patterns import CompiledFunctionInvocation
-from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.debug.debug_runtime import DebugExecutionPolicy
+from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
+from openhcs.core.callable.function_patterns import CompiledFunctionInvocation
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
@@ -61,20 +61,20 @@ from openhcs.core.pipeline.funcstep_contract_validator import (
     FuncStepContractValidator,
 )
 from openhcs.core.progress.types import ProgressExecutionContext, ProgressPhase, ProgressQueue, ProgressStatus, set_progress_queue
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeArtifactLocation,
     RuntimeArtifactQuery,
     StoredRuntimeValue,
     replace_runtime_artifact_payload,
 )
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,

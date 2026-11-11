@@ -9,15 +9,15 @@ from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineDebugToolbarWidgetIdentity,
 )
-from openhcs.core.debug import DebugCommandType
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.debug.debug_runtime import DebugCommandType
+from openhcs.core.execution.execution_state import ManagerExecutionState
 from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     DebugActionRenderModel,
     DebugSessionPanelText,
     DebugToolbarActionProjector,
 )
-from openhcs.core.debug_session_projection import DebugSessionProjectionContext
+from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     DebugToolbarPlacement,
     InspectRuntimeValuesAction,

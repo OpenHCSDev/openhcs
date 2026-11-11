@@ -13,20 +13,20 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
 )
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
@@ -35,7 +35,7 @@ from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 

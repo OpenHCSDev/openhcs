@@ -28,8 +28,8 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.config import (
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -37,15 +37,15 @@ from openhcs.core.config import (
     PipelineConfig,
     LazySourceBindingsConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
     TextEquals,
     SourceSelector,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NEURITE_MORPHOLOGY_OUTPUT,
@@ -59,7 +59,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize_plane,
 )
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 

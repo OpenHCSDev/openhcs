@@ -83,7 +83,7 @@ Example
 
 .. code-block:: python
 
-   from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
+   from openhcs.core.config.pipeline_config import LazyProcessingConfig, ProcessingConfig
    from openhcs.domains.microscopy.axes import Microscopy
 
    processing = ProcessingConfig(

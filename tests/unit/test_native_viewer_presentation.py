@@ -28,10 +28,10 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowGatewayABC,
     ViewerWindowService,
 )
-from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.pipeline_config import NapariDisplayConfig
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
 )
@@ -57,7 +57,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def presentation():
@@ -551,24 +551,24 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     from polystore.streaming.viewer_transport import ViewerStreamKwarg
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.core.config import NapariStreamingConfig
-    from openhcs.core.image_file_serialization import ImageFileFormat
-    from openhcs.core.source_image_provenance import (
+    from openhcs.core.config.pipeline_config import NapariStreamingConfig
+    from openhcs.core.payload.image_file_serialization import ImageFileFormat
+    from openhcs.core.source.source_image_provenance import (
         SourceImageProvenance,
         SourceImageProvenanceContributor,
         SourceImageIdentity,
         SourceImageProvenancePlanes,
     )
-    from openhcs.core.source_projection import (
+    from openhcs.core.source.source_projection import (
         OpenHCSPlaneAddress,
         SourcePlaneProjection,
         SourceProjectionSet,
     )
-    from openhcs.core.viewer_streaming_service import (
+    from openhcs.core.io.viewer_streaming_service import (
         ImageStreamingRequest,
         StreamingService,
     )
-    from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
+    from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
     from openhcs.core.dataset_sources.source import DatasetSourceChoice
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 

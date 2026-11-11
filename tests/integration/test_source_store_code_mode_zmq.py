@@ -18,7 +18,7 @@ from zmqruntime.execution.responses import (
 
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -30,17 +30,17 @@ from openhcs.core.config import (
 )
 from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_bindings import (
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceFileName,
     SourceSelector,
     TextEquals,
 )
-from openhcs.core.source_metadata import SourceFilterClause, SourceMetadataFields
+from openhcs.core.source.source_metadata import SourceFilterClause, SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.plane_stores import (
     PlaneStoreUnavailableError,
@@ -62,7 +62,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerOrchestratorCodePayload,
 )
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 LIVE_ZMQ_ENV = "OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE"

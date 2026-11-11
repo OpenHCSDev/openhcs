@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerControlResponseField,
@@ -18,7 +18,7 @@ from openhcs.runtime.viewer_protocol import (
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
-    from openhcs.core.config import FijiStreamingConfig
+    from openhcs.core.config.pipeline_config import FijiStreamingConfig
 
 
 @dataclass(frozen=True, slots=True)

@@ -9,20 +9,20 @@ from objectstate.object_state import ObjectState
 from pycodify import Assignment, generate_python_source, to_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableImportIdentity
+from openhcs.core.config.pipeline_config import (
     LazyDtypeConfig,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
     LazyPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     ModuleExportRegistryFunctionReference,
     RegistryFunctionReference,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 from openhcs.processing.backends.cellprofiler.colocalization import (

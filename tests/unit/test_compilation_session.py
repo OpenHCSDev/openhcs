@@ -8,15 +8,15 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
-from openhcs.core.source_metadata import MetadataExtractionRule
+from openhcs.core.source.source_metadata import MetadataExtractionRule
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     MaterializeToDisk, MaterializeToZarr,
     LazyNapariStreamingConfig,
@@ -33,11 +33,11 @@ from openhcs.core.context.processing_context import (
     CompilingContext,
     ProcessingContext,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.compiler import AxisCompilationRequest, PipelineCompiler
 from openhcs.core.pipeline.function_contracts import artifact_inputs
@@ -46,7 +46,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
 )
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
@@ -55,7 +55,7 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceSelector,
 )
-from openhcs.core.step_dependencies import (
+from openhcs.core.util.step_dependencies import (
     PipelineStartInput,
     StepInputDependency,
     StepOutputInput,
@@ -66,7 +66,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
     neurite_outgrowth_metaxpress_pixels,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -380,12 +380,12 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     assert session.pipeline.steps[0].name == "step"
     assert session.plan(0).step_name == "step"
 
-    from openhcs.core.source_metadata import (
+    from openhcs.core.source.source_metadata import (
         DECLARED_SOURCE_METADATA_FIELD,
         DurableSourceMetadata,
         SourceMetadataFields,
     )
-    from openhcs.core.source_workspace_projection import (
+    from openhcs.core.source.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
 
@@ -429,7 +429,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
 
 
 def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(monkeypatch):
-    from openhcs.core.invocation_artifacts import InvocationContractPlan
+    from openhcs.core.callable.invocation_artifacts import InvocationContractPlan
     from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 
     @artifact_inputs("grid_dimensions")

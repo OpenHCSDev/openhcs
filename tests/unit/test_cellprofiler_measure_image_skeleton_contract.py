@@ -8,10 +8,10 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.skeleton import (
     MeasureImageSkeletonModule,

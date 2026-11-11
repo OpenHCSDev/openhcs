@@ -8,7 +8,7 @@ from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity, StreamProducerOrigin
 
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 

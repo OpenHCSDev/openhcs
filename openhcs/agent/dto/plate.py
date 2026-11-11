@@ -20,16 +20,16 @@ from formbridge.contracts import (
 )
 from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.core.component_filters import ComponentFilters
-from openhcs.core.config import NapariDisplayConfig
+from openhcs.core.axes.component_filters import ComponentFilters
+from openhcs.core.config.pipeline_config import NapariDisplayConfig
 from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
-from openhcs.core.plate_file_inventory import (
+from openhcs.core.plate.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
     PlateFileKindSelection,
 )
-from openhcs.core.streaming_config_declarations import NapariViewer, ViewerType
-from openhcs.core.synthetic_plate_generation import (
+from openhcs.core.config.streaming_config_declarations import NapariViewer, ViewerType
+from openhcs.core.plate.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
 )

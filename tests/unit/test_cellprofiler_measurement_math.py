@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.processing.backends.cellprofiler.measurement_math import (
     CalculateMathRoundingMethod,
 )

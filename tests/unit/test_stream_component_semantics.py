@@ -1,27 +1,27 @@
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from types import MappingProxyType
 
 import pytest
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_metadata import DECLARED_SOURCE_METADATA_FIELD
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_metadata import DECLARED_SOURCE_METADATA_FIELD
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
     StreamExecutionAxisDomainProvider,
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.worker_lanes import (
     WorkerAssignmentPlan,
     WorkerLaneExecutionContext,
 )
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     compiled_context,

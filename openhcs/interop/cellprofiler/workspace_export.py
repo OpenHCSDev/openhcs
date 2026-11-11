@@ -10,8 +10,8 @@ from typing import ClassVar, TYPE_CHECKING
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.runtime_measurements import MeasurementSubject, MeasurementScope
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurements.runtime_measurements import MeasurementSubject, MeasurementScope
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 
 from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerDatabaseColumnDialect,

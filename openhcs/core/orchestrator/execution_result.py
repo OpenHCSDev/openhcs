@@ -14,7 +14,7 @@ from types import MappingProxyType
 from typing import ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
-from openhcs.core.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import (
     ExecutingContext,
     ProcessingContext,
@@ -27,7 +27,7 @@ from openhcs.core.progress.types import (
     ProgressPhase,
     ProgressStatus,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
 

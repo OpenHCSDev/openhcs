@@ -821,7 +821,7 @@ def run_installed_gui_smoke(
 
     import openhcs
     from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
     from openhcs.pyqt_gui.config import (
         LoggingConfig,

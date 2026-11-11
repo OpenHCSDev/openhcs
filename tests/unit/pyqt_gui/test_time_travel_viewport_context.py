@@ -3,12 +3,12 @@ from __future__ import annotations
 from PyQt6.QtWidgets import QApplication, QScrollArea, QWidget
 from objectstate import ObjectState, ObjectStateRegistry
 
-from openhcs.core.config import PipelineConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.source.source_bindings import (
     SourceFileName,
     TextEquals,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
     SourceBindingsEditorWidget,
 )

@@ -3,9 +3,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.worm_measurements import (
     WormControlPointAxis,
     WormControlPointMeasurementSchema,

@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
     from openhcs.core.steps.function_artifact_materialization import (
         MaterializedRuntimeArtifact,
         RuntimeArtifactMaterialization,

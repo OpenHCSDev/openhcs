@@ -1,18 +1,18 @@
 """Geometry declarations preserve the payload their raw implementations consume."""
 
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 from typing import get_type_hints
 
 import numpy as np
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_spatial_domain import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
 )

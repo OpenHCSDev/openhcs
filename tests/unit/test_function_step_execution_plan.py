@@ -7,13 +7,13 @@ import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MemoryType
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     FrameworkDeviceAssignment,
     InputConversionPlan,
     MaterializedOutputPlan,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
@@ -30,16 +30,16 @@ from openhcs.core.artifacts.relations import (
     InputStackBroadcastSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )

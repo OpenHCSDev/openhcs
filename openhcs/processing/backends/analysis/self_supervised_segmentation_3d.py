@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
 # Import torch modules as optional dependencies
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
 from openhcs.utils.import_utils import create_placeholder_class, optional_import_or_none
 

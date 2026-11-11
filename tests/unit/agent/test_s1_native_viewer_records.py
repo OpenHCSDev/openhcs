@@ -22,9 +22,9 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowPayloadRecord,
 )
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity, McpDevToolBatchResponse, McpDevToolResult,
 )

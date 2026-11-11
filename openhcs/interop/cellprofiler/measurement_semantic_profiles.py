@@ -9,7 +9,7 @@ from openhcs.core.equivalence.measurement_features import (
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.equivalence.keys import RuntimeMeasurementFeatureKey
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementIndexedDescriptorDeclaration,
 )
 

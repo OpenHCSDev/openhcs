@@ -32,8 +32,8 @@ from openhcs.agent.dto.execution import (
     runtime_execution_status_from_response,
     unreachable_runtime_server_info,
 )
-from openhcs.core.debug_view_models import DebugViewModel
-from openhcs.core.debug import DebugCommandType, DebugPausedWorkerStatus
+from openhcs.core.debug.debug_view_models import DebugViewModel
+from openhcs.core.debug.debug_runtime import DebugCommandType, DebugPausedWorkerStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient

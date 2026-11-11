@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.orchestrator.worker_profiling import (
     CProfileWorkerProfilingPolicy,
@@ -135,7 +135,7 @@ import openhcs
 from numba import njit
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 @njit(nogil=True)
 def profiled_kernel(n):
     value=0.

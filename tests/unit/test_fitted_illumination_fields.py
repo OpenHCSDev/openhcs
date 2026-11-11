@@ -1,14 +1,14 @@
 """Real source-owner projection of one field fitted from all observations."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
 
 

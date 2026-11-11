@@ -73,7 +73,7 @@ from benchmark.well_throughput_scaling import (
     _write_progress_diagnostics,
     well_throughput_start_method_from_manifest,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyPartitionFilterConfig,
@@ -95,21 +95,21 @@ from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceReport,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,
     runtime_measurement_equivalence,
 )
-from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source.source_matching import source_component_metadata_value
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )

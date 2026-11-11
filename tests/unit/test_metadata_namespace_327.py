@@ -17,7 +17,7 @@ from polystore.metadata_writer import METADATA_CONFIG as DEPENDENCY_CONFIG
 from polystore.metadata_writer import MetadataConfig
 from polystore.virtual_workspace import SourcePixelRef, VirtualWorkspaceBackend
 
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
     OpenHCSMetadataConfig,

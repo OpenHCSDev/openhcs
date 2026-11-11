@@ -13,23 +13,23 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
 from openhcs.interop.cellprofiler.runtime.output_record_request import (

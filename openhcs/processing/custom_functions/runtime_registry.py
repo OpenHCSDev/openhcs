@@ -13,7 +13,7 @@ from abc import ABC
 from traceback import TracebackException
 from typing import TYPE_CHECKING
 
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 from openhcs.processing.custom_functions.source_namespace import (
     CustomFunctionSource,

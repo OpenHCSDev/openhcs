@@ -160,7 +160,7 @@ system consumes that decision.
    `RuntimeSliceProjection` projects payload values, pure-2D backend execution
    restamps result identity, CellProfiler output recording slices native values,
    and materialization re-projects runtime slices before writing. These must
-   collapse behind `openhcs.core.runtime_slice_projection`; backend-specific
+   collapse behind `openhcs.core.payload.runtime_slice_projection`; backend-specific
    code can ask for a projected item, but it must not decide slice identity.
 2. Stream item identity is split between `function_outputs.py`,
    `stream_component_semantics.py`, materialization input records, PolyStore

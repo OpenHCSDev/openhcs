@@ -141,7 +141,7 @@ Edits:
 - Have `step_source_bindings_literal()` append `enabled=True` when `config.enabled` is true.
 - Do not add an `isinstance()` branch inside a shared renderer to decide whether enabled exists. The caller already knows whether it is rendering a pipeline config or a step config.
 - Update `generated_function_step_semantic_argument_lines()` to call the step-specific renderer.
-- Update the generated import block to import `LazyStepSourceBindingsConfig` from `openhcs.core.config`.
+- Update the generated import block to import `LazyStepSourceBindingsConfig` from `openhcs.core.config.pipeline_config`.
 - After changing the generated step literal, run `rg -n "StepSourceBindingsConfig" openhcs/interop/cellprofiler/pipeline_generator.py`; remove `StepSourceBindingsConfig` from the generated import block when that import is only used for the old generated literal.
 
 Rationale: generated step declarations participate in ObjectState lazy inheritance. Concrete `StepSourceBindingsConfig(bindings=...)` blocks inheritance of `enabled` and currently defaults to disabled.

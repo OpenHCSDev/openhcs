@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass, replace
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )

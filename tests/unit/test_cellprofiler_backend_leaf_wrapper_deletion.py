@@ -1,15 +1,15 @@
 """Behavior gates retained after backend-leaf wrapper deletion."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
 )

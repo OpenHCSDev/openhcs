@@ -43,7 +43,7 @@ from openhcs.authoring.session.operations.datasets import (
     InitializeDatasets,
 )
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyStepMaterializationConfig,
@@ -495,7 +495,7 @@ def _create_synthetic_plate(tmp_path: Path) -> Path:
 
 def _create_test_global_config() -> GlobalPipelineConfig:
     """Create test global configuration with known values."""
-    from openhcs.core.config import PathPlanningConfig, PartitionFilterConfig
+    from openhcs.core.config.pipeline_config import PathPlanningConfig, PartitionFilterConfig
 
     return GlobalPipelineConfig(
         num_workers=8,

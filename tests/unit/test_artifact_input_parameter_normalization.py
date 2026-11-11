@@ -7,13 +7,13 @@ import pytest
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, SpecialArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.callable.invocation_artifacts import (
     InvocationContractPlan,
     InvocationContractProvider,
 )
-from openhcs.core.runtime_adapters import runtime_adapter
+from openhcs.core.callable.runtime_adapters import runtime_adapter
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     special_inputs,

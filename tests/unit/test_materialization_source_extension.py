@@ -1,6 +1,6 @@
 """Issues257/264: preserve source identity into ordinary image publication."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from pathlib import Path
 from dataclasses import replace
 from types import SimpleNamespace
@@ -10,15 +10,15 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceImagePayloadProjection,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,

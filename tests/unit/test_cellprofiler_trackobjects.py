@@ -1,26 +1,26 @@
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
@@ -43,7 +43,7 @@ from openhcs.processing.backends.cellprofiler.tracking import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.image_geometry import TileModule, tile
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 def _measurement_value(rows, *, slice_index, feature_name, object_label=None):

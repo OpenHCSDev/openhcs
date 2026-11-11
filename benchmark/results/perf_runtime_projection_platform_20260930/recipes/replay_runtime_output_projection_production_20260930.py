@@ -1,10 +1,10 @@
 import json,pickle,time,statistics,sys
 from pathlib import Path
 import numpy as np
-from openhcs.core.runtime_image_values import image_payload_data,image_payload_mask,image_payload_metadata
+from openhcs.core.payload.runtime_image_values import image_payload_data,image_payload_mask,image_payload_metadata
 variant=sys.argv[1]
 if variant=='main':
- from openhcs.core.aligned_image_payload import flatten_aligned_image_payload_slices,flatten_aligned_image_slice_contexts
+ from openhcs.core.payload.aligned_image_payload import flatten_aligned_image_payload_slices,flatten_aligned_image_slice_contexts
  def project(value):return flatten_aligned_image_payload_slices(value),flatten_aligned_image_slice_contexts(value)
 else:
  def project(value):

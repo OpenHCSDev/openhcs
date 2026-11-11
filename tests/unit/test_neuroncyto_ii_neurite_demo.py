@@ -10,18 +10,18 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.streaming import AutomaticStreaming, OnDemandStreaming
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.function_patterns import AuthoredFunctionPattern
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
@@ -44,7 +44,7 @@ from openhcs.processing.presets.pipelines.neuroncyto_ii_crossover_neurite_outgro
 )
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 

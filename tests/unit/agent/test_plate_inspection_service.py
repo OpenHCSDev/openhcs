@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from openhcs.core.component_filters import ComponentFilters
+from openhcs.core.axes.component_filters import ComponentFilters
 
 import numpy as np
 import pytest
@@ -28,11 +28,11 @@ from openhcs.agent.services.plate_inspection_service import (
 from openhcs.agent.services.synthetic_plate_service import (
     SyntheticPlateGenerationService,
 )
-from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
-from openhcs.core.plate_image_inventory import PlateFileKind
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.plate.plate_image_inventory import PlateFileKind
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
@@ -42,7 +42,7 @@ from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
     write_bioformats_manifest_fixture,
 )
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -1080,7 +1080,7 @@ def test_explicit_result_directory_rejects_unreadable_targets_before_preview(
     if target_kind == "symlink":
         (allowed / "escape.txt").symlink_to(secret)
 
-    from openhcs.core.plate_image_inventory import PlateResultFilePreviewReader
+    from openhcs.core.plate.plate_image_inventory import PlateResultFilePreviewReader
 
     def forbidden_preview(*args, **kwargs):
         pytest.fail("Rejected result paths must not reach native preview")

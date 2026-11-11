@@ -7,7 +7,7 @@ from __future__ import annotations
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
 import csv
@@ -37,49 +37,49 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
-import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
-from openhcs.core.source_path_identity import source_path_identity
+import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
+from openhcs.core.source.source_path_identity import source_path_identity
 from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
-from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
     MostDerivedContextStrategyMixin,
 )
-from openhcs.core.runtime_array_values import runtime_array_operand
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import runtime_array_operand
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
     RuntimeProjectionPlaneMetadata,
     RuntimeProjectionSourceIdentityRequest,
     OptionalSourceIdentity,
 )
-from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
     supports_measurement_row_mapping,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
     SourceImageProvenance,
     SourcePlaneIndexedMetadata,
     VariableComponentAxisProjection,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
@@ -107,14 +107,14 @@ from openhcs.core.materialization.options import (
     TextOptions,
     TiffStackOptions,
 )
-from openhcs.core.axes import Axis
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import as_runtime_value
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows, is_structural_missing_measurement_cell, ConcatenatedColumnarRows, MEASUREMENT_SPARSE_CELL
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows, is_structural_missing_measurement_cell, ConcatenatedColumnarRows, MEASUREMENT_SPARSE_CELL
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager

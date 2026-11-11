@@ -22,7 +22,7 @@ from openhcs.core.artifacts.specs import (
     MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyPathPlanningConfig, LazyProcessingConfig, LazyStepMaterializationConfig,
     PipelineConfig,
 )
@@ -32,20 +32,20 @@ from openhcs.core.orchestrator.execution_result import RuntimeContextObservation
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, required_axis_roles,
 )
-from openhcs.core.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.virtual_workspace_metadata import MetadataWriteError
-from openhcs.core.processing_contracts import (
+from openhcs.core.io.virtual_workspace_metadata import MetadataWriteError
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.materialization.options import ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import TileAxis
+from openhcs.core.axes.axis_declarations import TileAxis
 from openhcs.domains.microscopy.axes import Microscopy
 
 

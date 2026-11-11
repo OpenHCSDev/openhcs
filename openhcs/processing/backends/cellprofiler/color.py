@@ -1,7 +1,7 @@
 """Shared CellProfiler color literal semantics."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 
 import re
 from abc import ABC, abstractmethod
@@ -14,8 +14,8 @@ import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.axes import ColourAxis, TileAxis
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     pack_aligned_image_outputs,
@@ -27,7 +27,7 @@ from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     creates_payload_axis,
     requires_payload_axis,
 )
@@ -40,11 +40,11 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     required_axis_roles,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -68,16 +68,16 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure3DContract,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder

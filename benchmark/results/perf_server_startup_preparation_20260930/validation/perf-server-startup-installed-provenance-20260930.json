@@ -3,7 +3,7 @@
   "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
   "modules": [
     {
-      "module": "openhcs.core.processing_preparation",
+      "module": "openhcs.core.callable.processing_preparation",
       "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/core/processing_preparation.py",
       "sha256": "86c47138e34d162a85627741a8c588e059158a7009f16269d11d664e819fddab",
       "matches_source": true

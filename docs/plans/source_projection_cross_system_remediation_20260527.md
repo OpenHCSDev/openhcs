@@ -85,7 +85,7 @@ Compatibility views are not allowed to become semantic authorities.
 
 ### Phase A: Core Projection Contract
 
-Add `openhcs.core.source_projection`.
+Add `openhcs.core.source.source_projection`.
 
 Required types:
 

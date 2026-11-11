@@ -1,8 +1,8 @@
 from pathlib import Path
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, NapariDimensionMode, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyStepSourceBindingsConfig, LazyNapariStreamingConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import PipelineConfig, NapariDimensionMode, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyStepSourceBindingsConfig, LazyNapariStreamingConfig
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceSelector,
     ComponentSelector,
@@ -10,7 +10,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchPlan,
     SourceBindingMatchMethod,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,

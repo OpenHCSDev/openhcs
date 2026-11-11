@@ -28,20 +28,20 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import MissingArtifactInputError
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressQueue
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 
 MAX_INSPECTION_AXES = 8
@@ -112,7 +112,7 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
     def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
         from objectstate.lazy_factory import ensure_global_config_context
 
-        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.core.progress.types import set_progress_queue
 

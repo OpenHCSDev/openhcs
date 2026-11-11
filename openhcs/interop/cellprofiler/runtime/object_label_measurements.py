@@ -9,35 +9,35 @@ import numpy as np
 
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
     MeasurementFeatureQuery,
     RuntimeObjectLabelMeasurementQuery,
     RuntimeObjectSliceMeasurementQuery,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectLabelMeasurementValues,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (
     child_count_feature_child_name,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 

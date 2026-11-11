@@ -27,9 +27,9 @@ from typing import (
     get_type_hints,
 )
 
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionPattern,
     FunctionPatternSyntax,
     NormalizedFunctionItem,
@@ -37,14 +37,14 @@ from openhcs.core.function_patterns import (
     normalize_function_pattern,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
-from openhcs.core.step_dependencies import NoMainFlowInput
-from openhcs.core.variable_component_stack_requirement import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.util.step_dependencies import NoMainFlowInput
+from openhcs.core.callable.variable_component_stack_requirement import (
     VariableComponentStackRequirementRequest,
 )
 
 from openhcs.core.components.validation import GenericValidator
-from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 
 
 logger = logging.getLogger(__name__)

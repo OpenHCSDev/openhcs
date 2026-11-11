@@ -1,6 +1,6 @@
 """Default retained image artifacts keep their declared output role identity."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import replace
 from pathlib import Path
@@ -19,19 +19,19 @@ from tests.unit.test_function_outputs import (
     record_output_path,
 )
 from openhcs.constants.constants import Backend
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext, ImagePayloadBundleContext
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext, ImagePayloadBundleContext
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
+from openhcs.core.execution.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import SourceProjectionMetadataSerializer
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )

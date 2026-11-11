@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
@@ -6,15 +6,15 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.relations import GroupLineageSourceRelation
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.artifacts.plans import MAIN_FLOW
 
 

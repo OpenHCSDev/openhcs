@@ -29,24 +29,24 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     AuthoredFunctionPattern,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
@@ -54,14 +54,14 @@ from openhcs.core.pipeline.artifact_planning import (
 )
 from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
     SourceSelector,
     TextContains,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting

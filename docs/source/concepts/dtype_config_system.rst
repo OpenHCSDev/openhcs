@@ -27,7 +27,7 @@ Configuration
 .. code-block:: python
 
    from arraybridge.decorators import DtypeConversion
-   from openhcs.core.config import DtypeConfig
+   from openhcs.core.config.pipeline_config import DtypeConfig
 
    preserve = DtypeConfig(
        default_dtype_conversion=DtypeConversion.PRESERVE_INPUT,

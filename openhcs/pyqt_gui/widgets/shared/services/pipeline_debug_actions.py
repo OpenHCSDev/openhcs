@@ -11,8 +11,8 @@ from metaclass_registry import AutoRegisterMeta
 from formbridge.contracts import AgentError
 from python_introspect import to_jsonable
 
-from openhcs.core.debug import DebugCommand, DebugCommandType
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import DebugCommand, DebugCommandType
+from openhcs.core.debug.debug_runtime import (
     ChooseSourceGroupDebugCommand,
     RandomSourceGroupDebugCommand,
     RestartDebugCommand,
@@ -25,7 +25,7 @@ from openhcs.core.debug import (
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
-    from openhcs.core.debug_session_projection import DebugSessionProjectionContext
+    from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
     from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
         PipelineEditorDebugWorkflow,
     )

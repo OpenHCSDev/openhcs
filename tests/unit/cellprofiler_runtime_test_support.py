@@ -12,29 +12,29 @@ from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 
 
 @dataclass(slots=True)

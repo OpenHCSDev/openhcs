@@ -11,7 +11,7 @@ from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
 
 if TYPE_CHECKING:
-    from openhcs.core.debug import DebugExecutionConfig, DebugExecutionPolicy
+    from openhcs.core.debug.debug_runtime import DebugExecutionConfig, DebugExecutionPolicy
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +31,7 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
     debug_execution_config: DebugExecutionConfig | None
 
     def prepare(self) -> ZMQOrchestratorEnvironment:
-        from openhcs.core.debug import DebugExecutionPolicy
+        from openhcs.core.debug.debug_runtime import DebugExecutionPolicy
 
         reset_memory_backend()
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
-from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.runtime_image_values import owned_runtime_value
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_image_values import owned_runtime_value
 
 
 def cellprofiler_main_flow_output(

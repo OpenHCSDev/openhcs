@@ -26,7 +26,7 @@ from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
 )
 from openhcs.constants.constants import AllComponents
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -38,13 +38,13 @@ from openhcs.core.config import (
 )
 from benchmark.equivalence.comparison import runtime_image_differences
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.runtime_store.runtime_execution_validation import (
     runtime_artifact_execution_failures,
 )
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.source.source_matching import source_component_metadata_value
 from openhcs.interop.cellprofiler.measurement_dialect import (
     cellprofiler_runtime_equivalence_policy,
 )

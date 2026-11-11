@@ -18,8 +18,8 @@ from openhcs.core.steps.function_artifact_materialization import (
 )
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.materialization.core import (
     MaterializationSpec,
     Output,

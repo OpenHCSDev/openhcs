@@ -55,7 +55,7 @@ from python_introspect import (
     RegisteredClassChoices,
 )
 
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     MetadataSelector,
     FromFileName,
@@ -68,16 +68,16 @@ from openhcs.core.source_bindings import (
     PairByMetadata,
     PairByOrder,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     EMPTY_SOURCE_BINDINGS,
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_bindings_preview import (
+from openhcs.core.source.source_bindings_preview import (
     SourceBindingsPreview,
     SourceInventory,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )

@@ -52,7 +52,7 @@ from openhcs.authoring.session.operations.pipelines import (
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
 from openhcs.authoring.session.views import DatasetListView
 from openhcs.constants.constants import OrchestratorCompleted, OrchestratorCreated, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorInitFailed, OrchestratorReady
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyFijiStreamingConfig,
     LazyNapariStreamingConfig,
@@ -63,18 +63,18 @@ from openhcs.core.config import (
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
-from openhcs.core.debug import DebugTerminalSummary
-from openhcs.core.execution_state import (
+from openhcs.core.debug.debug_runtime import DebugTerminalSummary
+from openhcs.core.execution.execution_state import (
     ExecutionCompletionPayload,
     ExecutionOutputSummary,
     ManagerExecutionState,
     ExecutionCancelled, ExecutionCompleted, ExecutionFailed,
 )
-from openhcs.core.input_workspace import InputWorkspacePreparationResult
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
     PairByMetadata,
@@ -1082,7 +1082,7 @@ def test_clean_code_document_emits_only_the_authored_fiji_override(tmp_path) -> 
         imported_config_names = {
             alias.name
             for node in ast.parse(source).body
-            if isinstance(node, ast.ImportFrom) and node.module == "openhcs.core.config"
+            if isinstance(node, ast.ImportFrom) and node.module == "openhcs.core.config.pipeline_config"
             for alias in node.names
         }
 
@@ -1091,7 +1091,7 @@ def test_clean_code_document_emits_only_the_authored_fiji_override(tmp_path) -> 
             "LazyFijiStreamingConfig",
             "PipelineConfig",
         }
-        assert "from openhcs.core.source_bindings import" not in source
+        assert "from openhcs.core.source.source_bindings import" not in source
         assert "fiji_streaming_config=LazyFijiStreamingConfig(" in source
         assert "partition_filter='333'" in source
         assert "enabled=False" in source
@@ -1178,7 +1178,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
     tmp_path,
 ) -> None:
     from openhcs.authoring.session.compilation import CompiledDataset
-    from openhcs.core.artifact_inspection import CompiledArtifactInspection
+    from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
 
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")

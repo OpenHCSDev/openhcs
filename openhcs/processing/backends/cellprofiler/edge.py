@@ -40,7 +40,7 @@ class EnhanceEdgesModule(CellProfilerModule):
 
 
 from abc import ABC, abstractmethod
-from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.callable.processing_preparation import PersistentNumbaKernelPreparation
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
@@ -53,7 +53,7 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 )
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProvider,
     BackendProviderInput,
@@ -68,10 +68,10 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class EdgeMethod(Enum):

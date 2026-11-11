@@ -10,18 +10,18 @@ from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, FunctionStepExecutionScope, ImagePayloadConsumption, PayloadAxisRequirement, PayloadAxisTransition, PreservedPayloadAxes, attach_callable_contract_metadata, preserves_payload_axes, requires_payload_axis, runtime_image_execution_mode
-from openhcs.core.config import LazyDtypeConfig
-import openhcs.core.config as config_module
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.callable.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, FunctionStepExecutionScope, ImagePayloadConsumption, PayloadAxisRequirement, PayloadAxisTransition, PreservedPayloadAxes, attach_callable_contract_metadata, preserves_payload_axes, requires_payload_axis, runtime_image_execution_mode
+from openhcs.core.config.pipeline_config import LazyDtypeConfig
+import openhcs.core.config.pipeline_config as config_module
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     ImportableFunctionReference,
     RegistryFunctionReference,
 )
-from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.function_contracts import (
@@ -29,8 +29,8 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, ModuleRegistryPreparation, PreparationOperation
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, ModuleRegistryPreparation, PreparationOperation
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeBatchExecutionDomain,
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
@@ -38,12 +38,12 @@ from openhcs.core.runtime_batch_contracts import (
     pure_2d_batch_executor,
 )
 from openhcs.processing.backends.lib_registry.cupy_registry import CupyRegistry
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.axes import ColourAxis, TimeAxis
+from openhcs.core.axes.axis_declarations import ColourAxis, TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
 
 _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0

@@ -8,8 +8,8 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Self, get_args, get_origin, get_type_hints
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 

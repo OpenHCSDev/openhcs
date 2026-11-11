@@ -11,8 +11,8 @@ from openhcs.agent.capabilities import (
     ConfigDraftCapability,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server

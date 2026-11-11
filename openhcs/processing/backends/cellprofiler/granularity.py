@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
@@ -20,7 +20,7 @@ from numba import njit
 import numpy as np
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.equivalence.cells import (
     runtime_cell_signature_counters_equivalent,
 )
@@ -31,26 +31,26 @@ from openhcs.core.equivalence.measurement_features import (
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     measurement_image_batch_executor,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
 from metaclass_registry.caches import (
     ProcessLocalBoundedCache,
     SynchronizedBoundedCache,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementFeature,
     RuntimeMeasurementIndexedDescriptorDeclaration,
 )
@@ -91,7 +91,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
     OpencvBackendProvider,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.processing.backends.cellprofiler._granularity_native import (

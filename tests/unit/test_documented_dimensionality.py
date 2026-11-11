@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.processing.backends.cellprofiler.area_occupied import (
     measure_image_volume_occupied_binary,
@@ -24,7 +24,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     measure_object_size_shape,
 )
 from openhcs.processing.backends.cellprofiler.watershed import watershed_cellprofiler4
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )

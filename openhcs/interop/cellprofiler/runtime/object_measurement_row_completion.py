@@ -12,7 +12,7 @@ from typing import ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ColumnarRowColumnOverlay,
     MEASUREMENT_SPARSE_CELL,
     MeasurementProjectedColumnarRows,
@@ -24,17 +24,17 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     StrategyLabelRegistryMixin,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 
 if TYPE_CHECKING:

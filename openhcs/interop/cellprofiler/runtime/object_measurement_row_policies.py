@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
@@ -15,19 +15,19 @@ from openhcs.core.measurement_row_materialization import (
     measurement_row_object_name,
     measurement_row_source_image_name,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_object_labels import ObjectLabelValue
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
     CellProfilerSourceImagePair,

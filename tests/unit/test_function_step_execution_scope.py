@@ -22,25 +22,25 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
+from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.post_execute import PostExecuteHook
-from openhcs.core.function_patterns import (
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.util.post_execute import PostExecuteHook
+from openhcs.core.callable.function_patterns import (
     normalize_function_pattern,
     compile_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
 )
 from openhcs.core.orchestrator.bundle_execution import (
@@ -66,29 +66,29 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerStepAssemblyStage,
     PathPlannerValidationStage,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchExecutionDomain
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_stores import (
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeArtifactLocation,
     replace_runtime_artifact_payload,
 )
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.step_dependencies import NoMainFlowInput
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.util.step_dependencies import NoMainFlowInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.options import FileBundleOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
     RunningProgressPhase,

@@ -1151,7 +1151,7 @@ Do not add a `DebugEventType -> ProgressStatus` or
 `DebugEventType -> DebugTimelineNodeState` dictionary. Also do not encode those
 fields as tuple payloads on `DebugEventType`. `DebugEventType` remains a closed
 wire enum. The semantic owner is a nominal declaration family in
-`openhcs.core.debug`:
+`openhcs.core.debug.debug_runtime`:
 
 ```python
 class DebugBoundaryOutcome(str, Enum):

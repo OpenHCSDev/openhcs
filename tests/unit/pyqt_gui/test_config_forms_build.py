@@ -10,7 +10,7 @@ def _config_types() -> tuple[type, ...]:
     """The config family: the two roots, the GUI's own config, and every lazy pair."""
     from objectstate.lazy_factory import LazyDataclassFactory
 
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.pyqt_gui.config import UIConfig
 
     family = {GlobalPipelineConfig, PipelineConfig, UIConfig}

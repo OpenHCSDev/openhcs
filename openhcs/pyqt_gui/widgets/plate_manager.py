@@ -80,7 +80,7 @@ from openhcs.authoring.session.views import (
     DatasetListView,
     output_relations,
 )
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.constants.constants import OrchestratorCreated
 from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.session_rendering import (

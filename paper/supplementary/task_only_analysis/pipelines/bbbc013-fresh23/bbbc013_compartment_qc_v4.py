@@ -12,10 +12,10 @@ from openhcs.core.artifacts.relations import (
     InputImageSetContextSourceRelation,
     ImageMeasurementSubjectRelation,
 )
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 

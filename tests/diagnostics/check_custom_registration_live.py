@@ -104,20 +104,20 @@ def fixture(root: Path) -> tuple[Path, object]:
     import numpy as np
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.core.image_file_serialization import ImageFileFormat
-    from openhcs.core.source_projection import (
+    from openhcs.core.payload.image_file_serialization import ImageFileFormat
+    from openhcs.core.source.source_projection import (
         OpenHCSPlaneAddress,
         SourcePlaneProjection,
         SourceProjectionSet,
     )
-    from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
+    from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     root.mkdir()
     pixels = np.arange(64, dtype=np.uint16).reshape(8, 8)
     path = root / "synthetic.tif"
     fmt = ImageFileFormat.require_path(path)
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     payload = ImagePayloadMetadata().payload_with(pixels)
     fmt.write(path, payload)
@@ -635,14 +635,14 @@ def run(args) -> None:
             detail.entry.import_path
             == "openhcs.processing.custom_functions.registration_live_probe"
         )
-        from openhcs.core.config import (
+        from openhcs.core.config.pipeline_config import (
             LazyPathPlanningConfig,
             LazyStepMaterializationConfig,
             LazyVFSConfig,
             MaterializeToDisk,
             PipelineConfig,
         )
-        from openhcs.core.pipeline_document import PipelineDocumentCodec
+        from openhcs.core.io.pipeline_document import PipelineDocumentCodec
         from openhcs.core.steps.function_step import FunctionStep
         from openhcs.processing.custom_functions import registration_live_probe
 
@@ -709,7 +709,7 @@ def run(args) -> None:
         receipt["execution_elapsed_seconds"] = time.monotonic() - execution_started
         output_images = list((owned / "outputs").rglob("*.tif"))
         assert output_images, inspected
-        from openhcs.core.image_file_serialization import ImageFileFormat
+        from openhcs.core.payload.image_file_serialization import ImageFileFormat
 
         checked = []
         for output in output_images:

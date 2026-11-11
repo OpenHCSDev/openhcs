@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import dill as pickle
 import pytest
 
-from openhcs.core.config_cache import (
+from openhcs.core.config.config_cache import (
     ConfigCacheSpec,
     load_config_sync,
     save_config_sync,

@@ -86,7 +86,7 @@ from openhcs.authoring.session.submission import (
     ExecutionSubmission,
     SubmittedExecution,
 )
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.dataset_sources.dataset_roots import (
     DatasetRootRule,
     LocalDirectoryRoot,
@@ -101,30 +101,30 @@ from openhcs.core.dataset_sources.source import (
     PreparedWorkspaceSource,
     SourceSelectionRole,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugCommandType,
     DebugSession,
     DebugSnapshot,
     DebugTerminalSummary,
 )
-from openhcs.core.debug_session_projection import (
+from openhcs.core.debug.debug_session_projection import (
     DebugPauseBoundaryState,
     DebugSessionProjectionContext,
     DebugSessionTargetState,
 )
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionCompletionPayload,
     ManagerExecutionState,
 )
-from openhcs.core.input_workspace import (
+from openhcs.core.execution.input_workspace import (
     InputWorkspacePreparationResult,
     derived_workspace_root,
     mirror_input_workspace,
 )
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.core.xdg_paths import get_openhcs_data_dir
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
-from openhcs.core.pipeline_import import PipelineImporter
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.util.xdg_paths import get_openhcs_data_dir
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_import import PipelineImporter
 from openhcs.constants.constants import (
     OrchestratorCreated,
     OrchestratorExecuting,
@@ -144,8 +144,8 @@ from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.observation_export_scope import ZMQRuntimeObservationExportScope
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
-from openhcs.core.debug import PersistentPausedWorkerReplay
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import PersistentPausedWorkerReplay
+from openhcs.core.debug.debug_runtime import (
     RunDebugCommand,
     StopDebugCommand,
 )

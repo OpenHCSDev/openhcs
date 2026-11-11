@@ -39,7 +39,7 @@ from benchmark.runner import (
 )
 from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
 from openhcs.interop.cellprofiler.module_settings import SettingUnmapped
-from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PartitionFilterConfig
 from benchmark.equivalence.outputs import image_paths, table_paths
 
 if TYPE_CHECKING:

@@ -16,7 +16,7 @@ from openhcs.core.artifacts.relations import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.config import StepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -46,11 +46,11 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     FormattingMeasurementFeatureTemplate,
     ModuleOwnedResultMeasurementRows,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.interop.cellprofiler.setting_names import (
@@ -58,10 +58,10 @@ from openhcs.interop.cellprofiler.setting_names import (
     required_setting_value,
     setting_values,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -584,29 +584,29 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 import numpy as np
-from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
-from openhcs.core.runtime_image_values import PlainImagePayload
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.image_shapes import (
+from openhcs.core.payload.aligned_image_payload import ImagePayloadSliceStack
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.image_shapes import (
     trailing_spatial_target_shape,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 class TileMethod(Enum):

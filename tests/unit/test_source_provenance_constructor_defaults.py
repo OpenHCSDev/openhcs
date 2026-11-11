@@ -7,13 +7,13 @@ import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelSet,
     ObjectLabelVariantData,
@@ -23,10 +23,10 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_spatial_graph import SpatialGraph
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_image_provenance import SourceImageProvenance
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
 
 class EmptyRows(ColumnarRows):

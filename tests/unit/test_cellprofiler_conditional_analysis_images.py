@@ -6,7 +6,7 @@ import inspect
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.payload.aligned_image_payload import AlignedImageStack
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import ArtifactSpecRelation
@@ -15,19 +15,19 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.classification import (
@@ -59,7 +59,7 @@ from openhcs.processing.backends.cellprofiler.intensity_distribution import (
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.memory.decorators import image_payload_boundary
 
 

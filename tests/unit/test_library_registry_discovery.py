@@ -778,7 +778,7 @@ def test_serving_readiness_completes_the_measurement_registry_before_lookup(
     script = textwrap.dedent("""
         from types import SimpleNamespace
 
-        from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
+        from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.processing.backends.cellprofiler.thresholding import threshold
         from openhcs.processing.backends.lib_registry.registry_service import RegistryService

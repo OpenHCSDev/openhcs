@@ -1,7 +1,7 @@
 """Exact regressions for source-provenance reconstruction."""
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenanceFields,
 )

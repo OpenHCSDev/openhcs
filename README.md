@@ -315,7 +315,7 @@ python -m pip install "openhcs[gui,mcp,viz]"
 from pathlib import Path
 
 from objectstate import ensure_global_config_context
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 

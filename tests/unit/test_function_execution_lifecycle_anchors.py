@@ -12,23 +12,23 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.function_patterns import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.function_patterns import (
     RuntimeInvocationDomain,
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
-from openhcs.core.step_dependencies import NoMainFlowInput, StepOutputInput
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
+from openhcs.core.util.step_dependencies import NoMainFlowInput, StepOutputInput
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 from openhcs.domains.microscopy.axes import Microscopy
 

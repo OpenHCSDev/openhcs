@@ -1,24 +1,24 @@
 """Scalar RGB invocations consume only an explicitly declared singleton root."""
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     NaturalExecution,
 )
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.runtime_image_values import (
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.outlines import OverlayOutlinesModule
 from tests.unit.test_cellprofiler_module_execution import (
@@ -27,8 +27,8 @@ from tests.unit.test_cellprofiler_module_execution import (
     _compiled_callable_contract,
     _module_executor,
 )
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
     MatchImageStackLabels,

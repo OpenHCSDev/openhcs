@@ -10,7 +10,7 @@ from functools import cache
 from pathlib import Path
 from typing import get_args, get_type_hints
 
-from openhcs.core.config import AxisRoleModeDisplayConfig, GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import AxisRoleModeDisplayConfig, GlobalPipelineConfig
 from openhcs.pyqt_gui.config import ShortcutConfig, get_default_ui_config
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle

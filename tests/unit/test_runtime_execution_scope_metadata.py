@@ -3,8 +3,8 @@ from copy import deepcopy
 
 import pytest
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.source.source_matching import source_component_metadata_value
 from openhcs.domains.microscopy.axes import Microscopy
 
 

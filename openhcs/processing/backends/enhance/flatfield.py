@@ -4,11 +4,11 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
 
-from openhcs.core.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.axes import AxisFamily, AxisRole, TileAxis
+from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.axes.axis_declarations import AxisFamily, AxisRole, TileAxis
 
 
 class FlatfieldCorrectionMode(Enum):

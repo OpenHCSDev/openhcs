@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import os
 from hashlib import md5
 from pathlib import Path
@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.core.image_file_serialization import (
+from openhcs.core.payload.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
     ImageFileRevision,
@@ -24,11 +24,11 @@ from openhcs.core.image_file_serialization import (
 )
 
 
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 def test_content_digest_is_lazy_shared_and_bounded(tmp_path, monkeypatch) -> None:
@@ -425,7 +425,7 @@ def test_source_header_and_loaded_pixels_refuse_same_invalid_channel_layout(
 
 
 def test_no_channel_declaration_does_not_inspect_payload(monkeypatch) -> None:
-    from openhcs.core import image_file_serialization
+    from openhcs.core.payload import image_file_serialization
 
     monkeypatch.setattr(
         image_file_serialization,
@@ -690,7 +690,7 @@ def test_unknown_image_serialization_suffix_fails_loudly(path) -> None:
 def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
     tmp_path, channel_axis
 ):
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
 
     shape = (
         (3, 4, 4)

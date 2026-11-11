@@ -3,14 +3,14 @@ from __future__ import annotations
 from PyQt6.QtWidgets import QApplication, QPushButton
 
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugArtifactRef,
     DebugCursor,
     DebugSession,
     DebugSnapshot,
     LocalDebugSnapshotStore,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.windows.debug_inspector_window import (
     DebugArtifactMaterializeRequest,
     DebugArtifactOpenRequest,

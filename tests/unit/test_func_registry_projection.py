@@ -18,7 +18,7 @@ class _ExternalProjectionOwner:
 @pytest.mark.parametrize(
     ("source", "expected"),
     (
-        ("from openhcs.core.config import PipelineConfig", False),
+        ("from openhcs.core.config.pipeline_config import PipelineConfig", False),
         ("from openhcs.processing.backends.cellprofiler.crop import crop", False),
         ("from openhcs.skimage.filters import gaussian", True),
         ("from openhcs import skimage", True),

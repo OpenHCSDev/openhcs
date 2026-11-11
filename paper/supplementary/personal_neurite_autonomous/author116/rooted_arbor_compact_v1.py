@@ -2,9 +2,9 @@ from dataclasses import dataclass, asdict
 import numpy as np
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
-from openhcs.core.runtime_spatial_graph import SpatialGraph
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

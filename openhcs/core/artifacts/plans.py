@@ -24,19 +24,19 @@ from openhcs.core.artifacts.payloads import (
 )
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
-from openhcs.core.axes import Axis
-from openhcs.core.component_group_scope import ComponentGroupScope, UngroupedScope
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementSubject
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.axes.component_group_scope import ComponentGroupScope, UngroupedScope
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementSubject
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.relations import (
         ArtifactSpecRelation,
         ObjectArtifactSubjectBinding,
     )
-    from openhcs.core.runtime_artifact_values import RuntimeValue
+    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
 AnswerT = TypeVar("AnswerT")
 
@@ -528,7 +528,7 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     def normalize_payload(self, value: object, *, axis_id: str) -> object:
         """Normalize a produced payload through this compiled storage scope."""
 
-        from openhcs.core.runtime_artifact_values import RuntimeValue
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
         kind = self.artifact_type
         returned = RuntimeSliceProjection.match_alignment(

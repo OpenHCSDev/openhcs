@@ -97,7 +97,7 @@ for relative in ('openhcs/processing/backends/cellprofiler/colocalization.py', '
     path, text = source(relative)
     assert text.count('    ImagePayloadSliceProjector,\n') == 1
     text = text.replace('    ImagePayloadSliceProjector,\n', '')
-    anchor = 'from openhcs.core.runtime_image_values import (\n'
+    anchor = 'from openhcs.core.payload.runtime_image_values import (\n'
     assert text.count(anchor) == 1
     changes[str(path)] = text.replace(anchor, anchor + '    ImagePayloadSliceProjector,\n', 1)
 

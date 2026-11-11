@@ -7,7 +7,7 @@ from dataclasses import fields
 from pathlib import Path
 
 import openhcs
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 import openhcs.core.orchestrator.execution_result as execution_result
 from openhcs.core.pipeline import function_contracts
 

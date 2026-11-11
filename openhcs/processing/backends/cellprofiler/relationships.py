@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Annotated
 from openhcs.core.runtime_relationships import (
     DirectParentReferenceFeatureMarker,
 )
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.alias_property import AliasProperty
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
@@ -27,13 +27,13 @@ from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureContext,
 )
 from openhcs.core.pipeline.function_contracts import runtime_bound_parameters
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     SliceIndexRuntimeParameter,
     runtime_callable_defaults,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementStatistic,
     RuntimeMeasurementFeatureDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
@@ -78,10 +78,10 @@ from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 
@@ -741,27 +741,27 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory.decorators import numpy as numpy_decorator
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementSparseColumnarRows,
     measurement_object_label,
 )
-from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.pipeline.function_contracts import special_inputs
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_output_matching import (
+from openhcs.core.payload.runtime_output_matching import (
     RuntimeOutputBundle,
 )
-from openhcs.core.source_plane_alignment import (
+from openhcs.core.source.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CellProfilerMeasurementDialect,
     cellprofiler_dialect_for_measurement_owner,
@@ -831,24 +831,24 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipPayloadKernel,
     object_label_parent_child_payload,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     measurement_row_mapping,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     measurement_axis_integer_domain,
     measurement_axis_integer_value,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.object_labels.runtime_object_labels import (
     dense_label_centers_2d_numba,
     ObjectLabelValue,
     object_label_value_with_dense_labels,
@@ -856,8 +856,8 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.processing_contracts import (
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

@@ -11,13 +11,13 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,
 )

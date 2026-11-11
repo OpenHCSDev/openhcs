@@ -10,8 +10,8 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     MainFlowArtifactContractProvider,
 )

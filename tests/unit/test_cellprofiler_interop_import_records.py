@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import get_type_hints
 
 from openhcs.constants import Backend
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.pipeline_import import (
     import_cellprofiler_pipeline,
 )

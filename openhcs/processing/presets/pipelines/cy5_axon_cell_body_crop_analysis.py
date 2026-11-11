@@ -4,7 +4,7 @@
 from pathlib import Path
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import LazyDtypeConfig, LazyStepMaterializationConfig
+from openhcs.core.config.pipeline_config import LazyDtypeConfig, LazyStepMaterializationConfig
 from arraybridge.decorators import DtypeConversion
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.cell_counting_cpu import (

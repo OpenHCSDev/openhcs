@@ -1,0 +1,608 @@
+"""Declared processing preparation and its process-local readiness."""
+
+from __future__ import annotations
+
+import importlib
+import multiprocessing
+import os
+import signal
+import traceback
+import sys
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Hashable, Iterable, Iterator
+from contextlib import ExitStack
+from dataclasses import dataclass, field
+from functools import lru_cache
+from itertools import chain, islice
+from multiprocessing.connection import Connection, wait
+from multiprocessing.process import BaseProcess
+from threading import Lock
+from types import ModuleType
+from typing import Any, ClassVar
+
+from metaclass_registry import AutoRegisterMeta
+
+from openhcs.core.callable.callable_contract import (
+    CallableContract,
+    DeclaredCallable,
+    CallableProjection,
+)
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+AUTO_REGISTER_REGISTRY_ATTRIBUTE = "__registry__"
+
+
+class AutoRegisterRegistryPreparation:
+    """Prepare AutoRegisterMeta registries at compiler/runtime boundaries."""
+
+    @classmethod
+    def prepare_module_registered_families(
+        cls,
+        modules: Iterable[ModuleType | None],
+    ) -> tuple[type, ...]:
+        """Run the preparation hook of each compiler-prepared family a module uses.
+
+        Preparing one callable must not complete a lazy registry: reading a
+        registry's members imports its whole discovery package. A family whose
+        hook needs every member asks its own registry.
+        """
+        families = cls.module_registry_owners(modules, compiler_prepared_only=True)
+        for family in families:
+            family.prepare_registered_family()
+        return families
+
+    @classmethod
+    def discover_module_registries(
+        cls,
+        modules: Iterable[ModuleType | None],
+    ) -> tuple[type, ...]:
+        """Complete every lazy registry the modules use, without family warmups.
+
+        Serving readiness calls this once for the whole catalog so that no
+        registry is first discovered during compilation or execution.
+        """
+        families = cls.module_registry_owners(modules, compiler_prepared_only=False)
+        for family in families:
+            tuple(family.__registry__.values())
+        return families
+
+    @classmethod
+    def module_registry_owners(
+        cls,
+        modules: Iterable[ModuleType | None],
+        *,
+        compiler_prepared_only: bool,
+    ) -> tuple[type, ...]:
+        """Derive registry owners once for both discovery and preparation."""
+        registry_ids: set[int] = set()
+        families: list[type] = []
+        for module in modules:
+            if not isinstance(module, ModuleType):
+                continue
+            for candidate in cls.module_registry_families(module):
+                if compiler_prepared_only and not issubclass(
+                    candidate, CompilerPreparedAutoRegisterFamily
+                ):
+                    continue
+                registry = candidate.__registry__
+                registry_id = id(registry)
+                if registry_id in registry_ids:
+                    continue
+                families.append(candidate)
+                registry_ids.add(registry_id)
+        return tuple(families)
+
+    @staticmethod
+    def module_registry_families(
+        module: ModuleType,
+    ) -> tuple[type, ...]:
+        """Return AutoRegisterMeta classes in a module that own registries."""
+        return AutoRegisterRegistryPreparation.cached_module_registry_families(
+            module.__name__
+        )
+
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def cached_module_registry_families(
+        module_name: str,
+    ) -> tuple[type, ...]:
+        """Return cached AutoRegisterMeta registry families for one loaded module."""
+        module = sys.modules.get(module_name)
+        if module is None:
+            return ()
+        families: list[type] = []
+        for candidate in vars(module).values():
+            if not isinstance(candidate, type):
+                continue
+            if not isinstance(candidate, AutoRegisterMeta):
+                continue
+            if AUTO_REGISTER_REGISTRY_ATTRIBUTE not in vars(candidate):
+                continue
+            families.append(candidate)
+        return tuple(families)
+
+
+class CompilerPreparedAutoRegisterFamily(ABC):
+    """AutoRegisterMeta family that can prepare runtime compiler substrates."""
+
+    @classmethod
+    @abstractmethod
+    def prepare_registered_family(cls) -> None:
+        """Prepare registered implementations before timed callable execution."""
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Project cache work independently of process-local readiness."""
+        return (RegistryFamilyPreparation(cls),)
+
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        """Whether preparation populates a persistent cache the parent can load."""
+        return False
+
+
+class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
+    """Isolate declared persistent CPU kernel cache preparation."""
+
+    @classmethod
+    def requires_persistent_kernel_cache(cls) -> bool:
+        """Declared pure kernel operations require a persistent Numba cache."""
+        return True
+
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        """A forked child compiles for the server wherever Numba persists.
+
+        Numba always has a cache for a ``cache=True`` kernel: ``NUMBA_CACHE_DIR``,
+        else ``__pycache__`` beside the source, else its per-user directory. It
+        refuses to define the kernel otherwise.
+        """
+        return (
+            OpenHCSProcessEnvironment.cpu_only_mode()
+            and cls.requires_persistent_kernel_cache()
+        )
+
+
+class PreparationOperation(ABC):
+    """Share successful completion while retaining each obligation's identity."""
+
+    _completed: ClassVar[set[Hashable]] = set()
+    _lock: ClassVar[Lock] = Lock()
+
+    @property
+    @abstractmethod
+    def identity(self) -> Hashable:
+        """Return the process-local obligation, independent of runtime adapters."""
+
+    @abstractmethod
+    def execute(self) -> None:
+        """Perform this operation in the current process."""
+
+    def cache_operations(self) -> tuple[PreparationOperation, ...]:
+        """Project cache work without claiming parent readiness."""
+        return (self,)
+
+    def can_prepare_in_child(self) -> bool:
+        """Opt out unless this operation declares persistent child-safe work."""
+        return False
+
+    def prepare(self) -> None:
+        """Skip completed work and leave failed operations eligible for retry."""
+        identity = self.identity
+        with self._lock:
+            if identity in self._completed:
+                return
+        self.execute()
+        with self._lock:
+            self._completed.add(identity)
+
+    @classmethod
+    def reset(cls) -> None:
+        """Clear core readiness, preserving independently owned kernel caches."""
+        with cls._lock:
+            cls._completed.clear()
+        AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+
+
+class RegisteredNumbaKernelPreparation(
+    PersistentNumbaKernelPreparation, PreparationOperation
+):
+    """Derive independent pure-kernel obligations from each declared registry.
+
+    This abstract parent has no registry. Concrete AutoRegisterMeta declarations
+    own their registries; the common parent owns identity, operation derivation
+    and successful parent preparation.
+    """
+
+    __registry_key__ = "__name__"
+    __registry__: ClassVar[dict[str, type[RegisteredNumbaKernelPreparation]]]
+
+    @property
+    def identity(self) -> Hashable:
+        return type(self)
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        return tuple(declaration() for declaration in cls.__registry__.values())
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryFamilyPreparation(PreparationOperation):
+    """Execute a family's declared warmup and project its admitted child work."""
+
+    family: type[CompilerPreparedAutoRegisterFamily]
+
+    @property
+    def identity(self) -> Hashable:
+        return ("registry-family", id(self.family.__registry__))
+
+    def execute(self) -> None:
+        self.family.prepare_registered_family()
+
+    def can_prepare_in_child(self) -> bool:
+        return self.family.can_prepare_in_child()
+
+
+@dataclass(frozen=True, slots=True)
+class ModuleRegistryPreparation(PreparationOperation):
+    """Derive the same registry owners for parent preparation and child caches."""
+
+    module_name: str
+
+    @property
+    def identity(self) -> Hashable:
+        return ("module-registry", self.module_name)
+
+    def execute(self) -> None:
+        AutoRegisterRegistryPreparation.prepare_module_registered_families(
+            (importlib.import_module(self.module_name),)
+        )
+
+    def cache_operations(self) -> tuple[PreparationOperation, ...]:
+        return tuple(
+            operation
+            for family in AutoRegisterRegistryPreparation.module_registry_owners(
+                (importlib.import_module(self.module_name),),
+                compiler_prepared_only=True,
+            )
+            for operation in family.cache_preparation_operations()
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredHookPreparation(PreparationOperation):
+    """Own hook execution once; contextual leaves supply only identity policy."""
+
+    hook: Callable[..., object]
+
+    def execute(self) -> None:
+        self.hook()
+
+    def cache_operations(self) -> tuple[PreparationOperation, ...]:
+        """A hook bound to a declared operation is that operation's cache work."""
+        operation = getattr(self.hook, "__self__", None)
+        if isinstance(operation, PreparationOperation):
+            return operation.cache_operations()
+        return (self,)
+
+    def can_prepare_in_child(self) -> bool:
+        """A hook's kernels reach the server through the persistent Numba cache."""
+        return PersistentNumbaKernelPreparation.can_prepare_in_child()
+
+
+@dataclass(frozen=True, slots=True)
+class ModuleHookPreparation(DeclaredHookPreparation):
+    module_name: str
+
+    @property
+    def identity(self) -> Hashable:
+        return ("module", self.module_name, id(self.hook))
+
+
+@dataclass(frozen=True, slots=True)
+class CallableHookPreparation(DeclaredHookPreparation):
+    module_name: str | None
+    function_name: str
+
+    @property
+    def identity(self) -> Hashable:
+        module_label = "<unknown>" if self.module_name is None else self.module_name
+        return (
+            "callable",
+            f"{module_label}.{self.function_name}",
+            (str(self.hook.__module__), str(self.hook.__qualname__)),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CallablePreparation:
+    """Project declared operations lazily in their original effect order."""
+
+    projection: CallableProjection
+
+    @classmethod
+    def from_callable(cls, func: Callable[..., object]) -> CallablePreparation:
+        return cls(CallableProjection.from_callable(func))
+
+    def operations(self) -> Iterator[PreparationOperation]:
+        """Read later hook declarations only after preceding operations finish."""
+        module_name = self.projection.module_name
+        if module_name is not None:
+            yield ModuleRegistryPreparation(module_name)
+            module = importlib.import_module(module_name)
+            hook = DeclaredCallable().read(
+                vars(module).get(FunctionContractAttribute.processing_prepare),
+                owner=f"Module {module_name}.{FunctionContractAttribute.processing_prepare}",
+            )
+            if hook is not None:
+                yield ModuleHookPreparation(hook, module_name)
+        hook = DeclaredCallable().read(
+            self.projection.namespace.get(FunctionContractAttribute.processing_prepare),
+            owner=f"{self.projection.name!r}.{FunctionContractAttribute.processing_prepare}",
+        )
+        if hook is not None:
+            yield CallableHookPreparation(hook, module_name, self.projection.name)
+
+    def prepare(self) -> None:
+        for operation in self.operations():
+            operation.prepare()
+
+    def prepared_callable(self) -> Any:
+        """Keep ready library references or prepare live authored targets before validation."""
+        resolved = self.projection.declared_callable()
+        if self.projection.has_published_signature():
+            return resolved
+        for target in CallableProjection.from_callable(resolved).prepare_targets():
+            CallablePreparation.from_callable(target).prepare()
+        return resolved
+
+    def prepared_contract(self) -> CallableContract:
+        """The declared contract, read after this callable's targets are prepared."""
+        return self.projection.contract_of(self.prepared_callable())
+
+    @classmethod
+    def prepare_for_serving(
+        cls,
+        callables: Iterable[Callable[..., object]],
+        status_callback: Callable[[str], None],
+    ) -> None:
+        """Prepare every callable, then complete the registries their modules use.
+
+        Only this step completes lazy registries, so none is first discovered
+        during compilation or execution. Preparing one callable does not.
+        """
+        preparations = tuple(cls.from_callable(func) for func in callables)
+        for preparation in preparations:
+            preparation.prepare()
+            status_callback(
+                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
+            )
+        status_callback("Completing the registries prepared callables use")
+        AutoRegisterRegistryPreparation.discover_module_registries(
+            importlib.import_module(module_name)
+            for module_name in dict.fromkeys(
+                preparation.projection.module_name for preparation in preparations
+            )
+            if module_name is not None
+        )
+
+    def cache_sources(self) -> tuple[PreparationOperation, ...]:
+        module_name = self.projection.module_name
+        if module_name is None:
+            return ()
+        return (ModuleRegistryPreparation(module_name),)
+
+    def hooks(self) -> tuple[DeclaredHookPreparation, ...]:
+        """The declared hooks, which load the kernels the registries cached."""
+        return tuple(
+            operation
+            for operation in self.operations()
+            if isinstance(operation, DeclaredHookPreparation)
+        )
+
+
+def _execute_cache_preparation(
+    operations: tuple[PreparationOperation, ...], result_connection: Connection
+) -> None:
+    """Report completion while allowing the parent to terminate its exact worker."""
+
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
+    try:
+        for operation in operations:
+            operation.execute()
+    except BaseException:
+        result_connection.send(traceback.format_exc()[-4000:])
+        raise
+    else:
+        result_connection.send(None)
+    finally:
+        result_connection.close()
+
+
+@dataclass(slots=True)
+class PreparationCacheWorker:
+    """Own one cache process and its completion channel through cancellation."""
+
+    process: BaseProcess
+    result_connection: Connection
+    closed: bool = field(default=False, init=False)
+
+    @classmethod
+    def start(
+        cls, context, operations: tuple[PreparationOperation, ...]
+    ) -> PreparationCacheWorker:
+        receiver, sender = context.Pipe(duplex=False)
+        process = context.Process(
+            target=_execute_cache_preparation, args=(operations, sender)
+        )
+        try:
+            process.start()
+        except BaseException:
+            receiver.close()
+            process.close()
+            raise
+        finally:
+            sender.close()
+        return cls(process, receiver)
+
+    def wait(self) -> None:
+        try:
+            error = self.result_connection.recv()
+        except EOFError as error:
+            self.process.join()
+            raise RuntimeError(
+                f"Cache preparation worker exited without a result (exit code {self.process.exitcode})"
+            ) from error
+        self.process.join()
+        if error is not None:
+            raise RuntimeError(error)
+        if self.process.exitcode != 0:
+            raise RuntimeError(
+                f"Cache preparation worker failed (exit code {self.process.exitcode})"
+            )
+
+    def close(self) -> None:
+        """Release this owned worker once, including after early slot retirement."""
+
+        if self.closed:
+            return
+        try:
+            if self.process.is_alive():
+                self.process.terminate()
+                self.process.join(timeout=0.25)
+            if self.process.is_alive():
+                self.process.kill()
+                self.process.join(timeout=1.0)
+            if self.process.is_alive():
+                raise TimeoutError("Cache preparation worker did not terminate")
+            self.process.join()
+            self.process.close()
+            self.closed = True
+        finally:
+            self.result_connection.close()
+
+
+def _schedulable_cpu_count() -> int:
+    """CPUs this process may run on.
+
+    Linux exposes the scheduler's affinity set. macOS has no affinity API:
+    every online CPU is schedulable there.
+    """
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return os.cpu_count() or 1
+
+
+@dataclass(frozen=True, slots=True)
+class PreparationCacheBatch:
+    """Schedule derived cache operations without interpreting backend families.
+
+    Stages run in order and each finishes before the next starts, so a later
+    stage loads from the persistent cache what an earlier one compiled.
+    """
+
+    preparations: tuple[PreparationOperation, ...]
+    hooks: tuple[PreparationOperation, ...] = ()
+
+    @classmethod
+    def from_callables(
+        cls, callables: Iterable[Callable[..., object]]
+    ) -> PreparationCacheBatch:
+        """Registry kernels first, then the hooks that call them."""
+        preparations = tuple(
+            CallablePreparation.from_callable(func) for func in callables
+        )
+        sources = {
+            operation.identity: operation
+            for preparation in preparations
+            for operation in preparation.cache_sources()
+        }
+        hooks = {
+            operation.hook: operation
+            for preparation in preparations
+            for operation in preparation.hooks()
+        }
+        return cls(tuple(sources.values()), tuple(hooks.values()))
+
+    def populate_child_caches(
+        self,
+        *,
+        max_workers: int = 1,
+        status_callback: Callable[[str], None] | None = None,
+    ) -> None:
+        """Isolate declared cache work, never parent process-local readiness."""
+        if max_workers < 1:
+            raise ValueError("Preparation worker budget must be positive.")
+        if "fork" not in multiprocessing.get_all_start_methods():
+            return
+        worker_capacity = min(max_workers, _schedulable_cpu_count())
+        context = multiprocessing.get_context("fork")
+        registry_operations = {
+            operation.identity: operation
+            for preparation in self.preparations
+            for operation in preparation.cache_operations()
+        }
+        hook_operations = dict.fromkeys(
+            operation
+            for hook in self.hooks
+            for operation in hook.cache_operations()
+            if operation.identity not in registry_operations
+        )
+        registries, hooks = (
+            tuple(
+                operation
+                for operation in operations
+                if operation.can_prepare_in_child()
+            )
+            for operations in (registry_operations.values(), hook_operations)
+        )
+        # A registry operation compiles for seconds, so each gets a child. A
+        # hook mostly loads what the registries cached, and a child costs about
+        # a second before it does anything: hooks share one child per CPU.
+        for tasks in (
+            tuple((operation,) for operation in registries),
+            tuple(hooks[index::worker_capacity] for index in range(worker_capacity)),
+        ):
+            self._run_children(
+                context, tuple(filter(None, tasks)), worker_capacity, status_callback
+            )
+
+    @staticmethod
+    def _run_children(
+        context,
+        tasks: tuple[tuple[PreparationOperation, ...], ...],
+        worker_capacity: int,
+        status_callback: Callable[[str], None] | None,
+    ) -> None:
+        """Run each task in its own child, or all in one child on a single CPU."""
+        pending = (
+            iter(filter(None, (tuple(chain.from_iterable(tasks)),)))
+            if worker_capacity == 1
+            else iter(tasks)
+        )
+        with ExitStack() as resources:
+            workers: list[PreparationCacheWorker] = []
+            while True:
+                for operations in islice(pending, worker_capacity - len(workers)):
+                    worker = PreparationCacheWorker.start(context, operations)
+                    resources.callback(worker.close)
+                    workers.append(worker)
+                if not workers:
+                    break
+                ready = wait(tuple(worker.result_connection for worker in workers))
+                for worker in tuple(workers):
+                    if worker.result_connection in ready:
+                        worker.wait()
+                        if status_callback is not None:
+                            status_callback(
+                                f"Prepared kernel cache worker {worker.process.pid}"
+                            )
+                        worker.close()
+                        workers.remove(worker)

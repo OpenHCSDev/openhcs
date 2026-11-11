@@ -29,8 +29,8 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
 )
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.dev_client_core import (

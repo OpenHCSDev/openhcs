@@ -7,14 +7,14 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.relations import InputGroupLineageSourceRelation
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
     InvocationContractProvider,

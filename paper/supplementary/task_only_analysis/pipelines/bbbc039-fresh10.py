@@ -1,12 +1,12 @@
 from pathlib import Path
 from dataclasses import replace
-from openhcs.core.source_bindings import ImportedMetadataJoin
+from openhcs.core.source.source_bindings import ImportedMetadataJoin
 import sys
 sys.path.insert(0, "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-preparation-20261002/BBBC039/input")
 from source_bindings import source_bindings_config
 from openhcs.constants.constants import GroupBy, Microscope
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import (PipelineConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyAnalysisConsolidationConfig)
+from openhcs.core.config.pipeline_config import (PipelineConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyAnalysisConsolidationConfig)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod

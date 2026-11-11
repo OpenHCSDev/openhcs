@@ -1,7 +1,7 @@
 """Thin CellProfiler-style view over OpenHCS runtime artifacts."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import time
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import (
@@ -23,35 +23,35 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest, RuntimeAdapterSpec
-from openhcs.core.runtime_artifact_values import (
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest, RuntimeAdapterSpec
+from openhcs.core.runtime_store.runtime_artifact_values import (
     RuntimeValue,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeSliceProjection,
     preserved_image_plane_projection,
 )
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactInput,
     RuntimeArtifactLocation,
     RuntimeArtifactQuery,
@@ -63,7 +63,7 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.callable.callable_contract import CallableContract
 
 RelationshipIdVector = np.ndarray | Sequence[int]
 

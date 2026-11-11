@@ -8,7 +8,7 @@ from xml.etree import ElementTree
 from polystore.source_tile_geometry import SourceTileGeometry
 from polystore.tiff_header import TiffImageHeader
 
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     DeclaredSourceMetadata,
     SourceMetadataMapping,
     SourceVoxelSpacing,

@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from types import FunctionType
 from typing import ClassVar
 
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.processing.custom_functions.validation import ValidationError
 
 

@@ -11,7 +11,7 @@ from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
     UneditedLabels,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
@@ -30,7 +30,7 @@ def _field(empty=False):
     "mode", ["empty", "disabled", "watershed-disabled", "intensity", "shape"]
 )
 def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
-    from openhcs.core.config import DtypeConfig
+    from openhcs.core.config.pipeline_config import DtypeConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
     from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
@@ -115,7 +115,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
     from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         LazySourceBindingsConfig,
@@ -125,21 +125,21 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     MergeAllRuntimeRecords,
 )
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
-    from openhcs.core.runtime_object_labels import object_label_dense_array
-    from openhcs.core.source_metadata import SourceFilterClause
-    from openhcs.core.source_bindings import (
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+    from openhcs.core.source.source_metadata import SourceFilterClause
+    from openhcs.core.source.source_bindings import (
         ComponentSelector,
         NamedSourceBinding,
         SourceFileName,
         SourceSelector,
         TextContains,
     )
-    from openhcs.core.config import StepSourceBindingsConfig
-    from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+    from openhcs.core.source.source_image_provenance import SourceImageProvenance
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.steps.function_step import FunctionStep
-    from openhcs.core.virtual_workspace_metadata import (
+    from openhcs.core.io.virtual_workspace_metadata import (
         FIELDS,
         METADATA_CONFIG,
         VirtualWorkspaceSourceProjectionEntries,
@@ -377,7 +377,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             subdirectory
         ).entries.items()
     }
-    from openhcs.core.plate_image_inventory import (
+    from openhcs.core.plate.plate_image_inventory import (
         PlateFileRecord,
         PlateResultFileInventory,
     )

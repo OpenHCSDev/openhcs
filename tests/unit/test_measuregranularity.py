@@ -5,10 +5,10 @@ from openhcs.processing.backends.cellprofiler._granularity_native import (
     sample_order_one_grid,
 )
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.granularity import (
     GranularityImageSeriesCache,
     GRANULARITY_SPECTRUM_LENGTH,
@@ -29,7 +29,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     granularity_reconstruction_series,
     measure_granularity_objects,
 )
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config.pipeline_config import DtypeConfig
 
 
 @pytest.mark.parametrize(

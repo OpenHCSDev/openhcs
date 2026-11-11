@@ -21,9 +21,9 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.image_file_serialization import ImagePayloadUint8Strategy
+from openhcs.core.payload.image_file_serialization import ImagePayloadUint8Strategy
 from openhcs.core.memory import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (
@@ -31,9 +31,9 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_context_parameter,
     special_inputs,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
@@ -57,21 +57,21 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.materialization.path_scopes import ExecutionAxisMaterializationRelativePathScope
 from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName, NameBySourceIdentity
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.constants import WriteMode
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 

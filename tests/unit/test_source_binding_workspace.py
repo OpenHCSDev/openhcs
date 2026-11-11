@@ -13,9 +13,9 @@ from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_metadata import (
     SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_VOXEL_SPACING_UNIT_FIELD,
     MetadataExtractionRule,
@@ -25,7 +25,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacingUnit,
 )
 from openhcs.core.dataset_sources.interfaces import PixelSizeMetadataArtifactProvider
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     BroadcastSource,
     ComponentSelector,
     FromFileName,
@@ -48,7 +48,7 @@ from openhcs.core.source_bindings import (
     TextEquals,
     TextStartsWith,
 )
-from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
 from openhcs.core.dataset_sources.openhcs_format import (
     AtomicMetadataWriter,
@@ -56,13 +56,13 @@ from openhcs.core.dataset_sources.openhcs_format import (
     OpenHCSMetadataHandler,
     get_metadata_path,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
     WorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
 )
-from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceMapping
+from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceMapping
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from polystore.base import ensure_storage_registry, storage_registry
@@ -179,7 +179,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     context = executing_context(filemanager=filemanager, axis_id="A01")
     context = with_facts(context, dataset_root=workspace)
     context = with_facts(context, microscope_handler=handler)
-    from openhcs.core import source_workspace_projection
+    from openhcs.core.source import source_workspace_projection
     monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
     runtime_projection = WorkspaceSourceProjections.from_context(
         context,
@@ -227,7 +227,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     replacement = context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01")
     assert replacement is not compiled_views["A01"]
     assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
-    from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
+    from openhcs.core.config.pipeline_config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     orchestrator = PipelineOrchestrator(
         workspace, pipeline_config=PipelineConfig(

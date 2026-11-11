@@ -32,7 +32,7 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogServiceABC,
     UnknownFunctionIdError,
 )
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_reference import (
     FunctionReference,
     RegistryFunctionReference,
 )

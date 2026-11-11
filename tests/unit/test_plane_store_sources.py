@@ -22,22 +22,22 @@ from polystore.zarr_batch import (
 )
 
 from openhcs.constants.constants import Backend, OrchestratorCreated
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
     SourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceFileName,
     SourceSelector,
     TextEquals,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_io import (
     save_materialized_data,
     update_metadata_for_zarr_conversion,
@@ -47,7 +47,7 @@ from openhcs.microscopes.bioformats_adapter import OmeZarrStoreAdapter
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

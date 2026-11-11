@@ -1,6 +1,6 @@
 """Selected image declarations must materialize with their exact source identity."""
 
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
@@ -18,28 +18,28 @@ from polystore.streaming import (
     StreamingBatchMessageRequest,
 )
 
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.streaming import AutomaticStreaming
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.projected_image_output import (
+from openhcs.core.payload.projected_image_output import (
     SelectedPlaneImageOutput,
     SourcePlaneSelectionImageOutput,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,

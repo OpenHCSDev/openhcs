@@ -7,7 +7,7 @@ import pytest
 
 from openhcs.agent.dto.plate import PlateFileStreamRequest
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     FijiStreamingConfig,
     NapariDisplayConfig,
     NapariDimensionMode,
@@ -85,9 +85,9 @@ def test_two_physical_channel_layers_share_spatial_view_without_remapping_pixels
     from polystore.streaming.identity import StreamProducerIdentity
     from polystore.streaming_constants import StreamingDataType
     from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_metadata import SourceVoxelSpacing
-    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source.source_metadata import SourceVoxelSpacing
+    from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
     from openhcs.runtime.napari_viewer_server import (
         NapariLayerDisplayPipeline,
         NapariPendingLayerUpdate,

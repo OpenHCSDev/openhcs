@@ -3,8 +3,8 @@
 from inspect import getsource
 
 import openhcs.demo.basic_pipeline as basic_pipeline
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
 
 def test_auto_load_resource_is_a_complete_round_trip_pipeline_document() -> None:

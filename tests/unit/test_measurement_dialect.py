@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     ColourAxis,
@@ -17,11 +17,11 @@ from openhcs.core.axes import (
     PartitionAxis,
     TileAxis,
 )
-from openhcs.core.measurement_dialect import (
+from openhcs.core.measurements.measurement_dialect import (
     MeasurementDialect,
     PlainMeasurementDialect,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,

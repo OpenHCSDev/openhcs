@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )

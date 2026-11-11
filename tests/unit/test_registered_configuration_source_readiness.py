@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import objectstate.lazy_factory as lazy_factory
 from python_introspect import SignatureAnalyzer
 
-from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
+from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 

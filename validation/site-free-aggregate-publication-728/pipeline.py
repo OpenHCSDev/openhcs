@@ -8,7 +8,7 @@ from pathlib import Path
 from zmqruntime.config import TransportMode
 
 from openhcs.constants.constants import GroupBy, Microscope, VariableComponents
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -16,8 +16,8 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
 )

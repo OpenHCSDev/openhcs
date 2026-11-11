@@ -8,9 +8,9 @@ import inspect
 from pathlib import Path
 
 import openhcs
-from openhcs.core import callable_contract, function_patterns
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable import callable_contract, function_patterns
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 
 PACKAGE = Path(openhcs.__file__).parent
 CORE = PACKAGE / "core"

@@ -1,7 +1,7 @@
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.core.config import LazyNapariStreamingConfig
+from openhcs.core.config.pipeline_config import LazyNapariStreamingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.cupy_processor import (
     stack_percentile_normalize,

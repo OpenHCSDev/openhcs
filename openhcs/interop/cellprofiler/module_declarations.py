@@ -18,21 +18,21 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
-from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.plans import ArtifactSpecRef
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     CallableImportIdentity,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     ProcessingConfig,
     StepSourceBindingsConfig,
     SourceBindingsConfig,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     ArtifactInputPlan,
 )
@@ -61,7 +61,7 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 from openhcs.processing.backends.lib_registry.openhcs_registry import (
     OpenHCSFunctionCatalogDeclaration,
 )
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     AxisRole,
@@ -73,7 +73,7 @@ from openhcs.core.axes import (
 _CELLPROFILER_BACKEND_PACKAGE = "openhcs.processing.backends.cellprofiler"
 _CELLPROFILER_MODULE_REGISTRY = LazyDiscoveryDict(enable_cache=False)
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         NormalizedFunctionItem,
     )
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
@@ -422,7 +422,7 @@ class CellProfilerModule(
         config: "SourceBindingsConfig",
     ) -> "SourceBindingsConfig":
         """Fold enabled modules into one public source-binding configuration."""
-        from openhcs.core.config import SourceBindingsConfig
+        from openhcs.core.config.pipeline_config import SourceBindingsConfig
 
         if not isinstance(config, SourceBindingsConfig):
             raise TypeError(

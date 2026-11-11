@@ -13,7 +13,7 @@ import pytest
 
 import openhcs
 from openhcs.core.artifacts.plans import ArtifactPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     SingleKeyScope,

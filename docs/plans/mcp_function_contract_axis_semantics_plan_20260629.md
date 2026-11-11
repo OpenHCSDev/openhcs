@@ -78,7 +78,7 @@ rules.
 
 See `docs/plans/mcp_agent_experience_implementation_dry_run_20260629.md`.
 The dry run corrected the authority path: `ProcessingContract` does not import
-from `openhcs.core.callable_contract`; it imports from
+from `openhcs.core.callable.callable_contract`; it imports from
 `openhcs.processing.backends.lib_registry.unified_registry`. Current members are
 `PURE_3D`, `PURE_2D`, `FLEXIBLE`, and `VOLUMETRIC_TO_SLICE`. The dry run also
 confirmed `CellProfilerModule` is registry backed and exposes `for_module`.

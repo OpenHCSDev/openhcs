@@ -16,23 +16,23 @@ from openhcs.constants.constants import (
     OrchestratorReady,
     OrchestratorState,
 )
-from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.execution_visualizer import ExecutionVisualizerABC
+from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
-from openhcs.core.metadata_cache import MetadataCache
+from openhcs.core.util.metadata_cache import MetadataCache
 from openhcs.core.context.processing_context import CompilingContext
-from openhcs.core.input_workspace import InputWorkspacePreparationResult
-from openhcs.core.source_binding_context import SourceBindingContext
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationResult
+from openhcs.core.source.source_binding_context import SourceBindingContext
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.steps.abstract import AbstractStep
 
@@ -45,13 +45,13 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionRequest,
     execute_bundle_request,
 )
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugExecutionPolicy,
     NoOpDebugExecutionPolicy,
 )
 from openhcs.core.progress.types import ProgressExecutionContext, ProgressQueue
 from python_introspect import project_dataclass
-from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
+from openhcs.core.io.viewer_streaming_service import StreamingViewerLifecycle
 from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
@@ -61,13 +61,13 @@ from polystore.zarr import ZarrStorageBackend
 
 # PipelineConfig now imported directly above
 from openhcs.core.dataset_sources.source import DatasetSource
-from openhcs.core.post_execute import PostExecuteHook
-from openhcs.core.alias_property import AliasProperty
-from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
-from openhcs.core.config import StreamingConfig
+from openhcs.core.util.post_execute import PostExecuteHook
+from openhcs.core.axes.alias_property import AliasProperty
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection, WorkspaceSourceProjections
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection, WorkspaceSourceProjections
 
 # Import generic component system - required for orchestrator functionality
 

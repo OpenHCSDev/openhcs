@@ -6,12 +6,12 @@ which OpenHCS domains join which family.
 
 from metaclass_registry.caches import BoundedCache, ProcessLocalBoundedCache
 
-from openhcs.core.callable_contract import CallableContractRuntimeCache
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.callable.callable_contract import CallableContractRuntimeCache
+from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )
-from openhcs.core.measurement_dialect import RuntimeMeasurementLookupAliasCache
-from openhcs.core.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
+from openhcs.core.measurements.measurement_dialect import RuntimeMeasurementLookupAliasCache
+from openhcs.core.runtime_store.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
 from openhcs.processing.backends.cellprofiler.granularity import (
     GranularityImageSeriesCache,
 )

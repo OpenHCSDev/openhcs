@@ -7,15 +7,15 @@ from collections.abc import Callable
 import numpy as np
 from skimage.measure import label as relabel
 
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.cellprofiler.morphology import (
     MidpointPreservationPolicy,
     MorphologyBackendStrategy,

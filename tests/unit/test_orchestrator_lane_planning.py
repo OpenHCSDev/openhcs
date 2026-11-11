@@ -6,15 +6,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.compiled_execution import (
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
     CompiledWorkerStartPlan,
 )
-from openhcs.core.config import MultiprocessingStartMethod, NapariStreamingConfig
+from openhcs.core.config.pipeline_config import MultiprocessingStartMethod, NapariStreamingConfig
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator import (
     bundle_execution as compiled_plate_execution_module,
 )

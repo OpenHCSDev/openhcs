@@ -22,27 +22,27 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     ProcessingConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.function_patterns import (
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.orchestrator.bundle_execution import (
@@ -50,25 +50,25 @@ from openhcs.core.orchestrator.bundle_execution import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
     ObjectRelationship,
 )
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_bindings import (
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.analyst_export import (
     CPASQLiteRenderer,
     CellProfilerAnalystProjection,

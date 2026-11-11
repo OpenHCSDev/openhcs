@@ -1,46 +1,46 @@
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     ImageOutputBundle,
 )
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     MeasurementImageLabelAlignmentRequest,
     MeasurementImageAlignmentSource,
     PreparedMeasurementObjectLabels,
 )
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     MeasurementImageReferenceDomain,
     ObjectLabelsReference,
     SourceImageReference,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 
 @dataclass(frozen=True, slots=True)

@@ -12,14 +12,14 @@ from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_binding_context import SourceBindingContext
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )
-from openhcs.core.source_projection import SourceCandidate
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_projection import SourceCandidate
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     FromFileName,
     NamedSourceBinding,
@@ -30,8 +30,8 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextContains,
 )
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.axes import Axis
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -122,8 +122,8 @@ def test_source_candidate_owns_one_exact_source_ref() -> None:
 
 
 def test_axis_projection_reads_each_axis_through_its_declarations() -> None:
-    from openhcs.core.axes import AxisFamily
-    from openhcs.core.source_metadata import (
+    from openhcs.core.axes.axis_declarations import AxisFamily
+    from openhcs.core.source.source_metadata import (
         SourceAxisProjection,
         source_metadata_component,
     )

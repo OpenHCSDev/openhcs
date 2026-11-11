@@ -16,7 +16,7 @@ from benchmark.timing import (
     write_phase_timing_csv,
     write_phase_timing_jsonl,
 )
-from openhcs.core.config import Backend
+from openhcs.core.config.pipeline_config import Backend
 
 
 class FakeFileManager:

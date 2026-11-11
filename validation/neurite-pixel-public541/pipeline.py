@@ -6,15 +6,15 @@ No old job, viewer, source receipt or runtime incarnation is reused.
 from pathlib import Path
 
 from openhcs.constants.constants import GroupBy, Microscope, VariableComponents
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
 )
-from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceVoxelSpacing,

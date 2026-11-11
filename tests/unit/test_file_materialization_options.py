@@ -1,7 +1,7 @@
 """Generic image-file and file-bundle materialization contracts."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from pathlib import Path
 
@@ -11,8 +11,8 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.materialization import options as materialization_options
 from openhcs.core.materialization.constants import WriteMode
 from openhcs.core.materialization.core import (

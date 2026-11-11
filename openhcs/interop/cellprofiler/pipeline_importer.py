@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openhcs.core.pipeline_document import PipelineDocument
-from openhcs.core.pipeline_import import PipelineImporter
+from openhcs.core.io.pipeline_document import PipelineDocument
+from openhcs.core.io.pipeline_import import PipelineImporter
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
 

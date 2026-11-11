@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from objectstate import semantic_values_equal
-from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 

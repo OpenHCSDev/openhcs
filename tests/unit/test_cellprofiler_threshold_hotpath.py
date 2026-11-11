@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config.pipeline_config import DtypeConfig
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,

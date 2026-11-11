@@ -23,19 +23,19 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
@@ -43,29 +43,29 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenancePlanes,
     SourceImageProvenance,
     RuntimeSourceImageProvenancePlane,
     SourceImageProvenanceContributor,
     SourceImageIdentity,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_metadata import DECLARED_SOURCE_METADATA_FIELD
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_bindings import ComponentSelector, NamedSourceBinding
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_metadata import DECLARED_SOURCE_METADATA_FIELD
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -96,10 +96,10 @@ from openhcs.processing.backends.cellprofiler.tracking import TrackObjectsModule
 from openhcs.core.materialization.options import FileBundleOptions
 from openhcs.core.materialization.core import MaterializationSpec, materialize, materialization_outputs
 from openhcs.core.materialization.constants import WriteMode
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 from tests.context_support import (
@@ -1958,13 +1958,13 @@ def _relationship_record(name: str, *, axis_id: str) -> StoredRuntimeValue:
 def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
     cycle_aligned: bool,
 ) -> None:
-    from openhcs.core.runtime_spatial_grid import SpatialGrid, SpatialGridAxis
-    from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-    from openhcs.core.runtime_artifact_queries import (
+    from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid, SpatialGridAxis
+    from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+    from openhcs.core.runtime_store.runtime_artifact_queries import (
         RuntimeArtifactQueryContext,
         runtime_measurement_tables,
     )
-    from openhcs.core.runtime_stores import RuntimeValueStore
+    from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 
     provenance = SourceImageProvenance(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -2051,7 +2051,7 @@ def test_image_number_references_follow_exact_source_numbering(
     from openhcs.interop.cellprofiler.image_set_numbering import (
         CellProfilerImageSetNumbering,
     )
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
     provenance = SourceImageProvenancePlanes.from_components(
         paths=("/inputs/first.tif", "/inputs/second.tif", "/inputs/third.tif"),
@@ -2068,7 +2068,7 @@ def test_image_number_references_follow_exact_source_numbering(
     else:
         columns[reference_name] = values
         value_column = reference_name
-    from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+    from openhcs.core.measurements.measurement_row_materialization import ConcatenatedColumnarRows
 
     fields = tuple(
         FieldSpec(name, int)
@@ -2154,7 +2154,7 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
     from openhcs.processing.backends.cellprofiler.image_quality import (
         MeasureImageQualityModule,
     )
-    from openhcs.core.runtime_batch_contracts import (
+    from openhcs.core.callable.runtime_batch_contracts import (
         RuntimeArtifactPartitionBatchRequest,
     )
     from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
@@ -2254,7 +2254,7 @@ def test_partitioned_relationship_export_preserves_producer_then_axis_order(
 ) -> None:
     from dataclasses import replace
     from openhcs.core.materialization.core import ColumnarCsvOutput
-    from openhcs.core.runtime_batch_contracts import (
+    from openhcs.core.callable.runtime_batch_contracts import (
         RuntimeArtifactPartitionBatchRequest,
     )
     from openhcs.processing.backends.cellprofiler.spreadsheet_export import (

@@ -81,37 +81,37 @@ from openhcs.agent.services.viewer_window_service import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, SpecialArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_execution import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
     CompiledWorkerStartPlan,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan, MaterializedOutputPlan
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.config import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan, MaterializedOutputPlan
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
+from openhcs.core.config.pipeline_config import (
     Backend,
     MultiprocessingStartMethod,
     NapariStreamingConfig,
     PipelineConfig,
     LazySourceBindingsConfig,
 )
-from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.config.config_document import ConfigDocumentCodec
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressExecutionContext, ProgressIdentity
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     SourceFilterClause,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core import virtual_workspace_metadata as metadata_module
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.io import virtual_workspace_metadata as metadata_module
 from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
@@ -3335,7 +3335,7 @@ def test_compile_inspection_requires_direct_pipeline_step_list(
         PipelineSourceArtifactPlanInspectionRequest(
             plate_path=str(tmp_path),
             pipeline_source=(
-                "from openhcs.core.config import PipelineConfig\n"
+                "from openhcs.core.config.pipeline_config import PipelineConfig\n"
                 "pipeline_config = PipelineConfig()\n"
                 "pipeline_steps = ()\n"
             ),

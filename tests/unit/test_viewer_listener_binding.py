@@ -7,9 +7,9 @@ import zmq
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import DataControlPortPairAuthority
 
-from openhcs.core.config import StreamingConfig
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
+from openhcs.core.config.pipeline_config import StreamingConfig
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 

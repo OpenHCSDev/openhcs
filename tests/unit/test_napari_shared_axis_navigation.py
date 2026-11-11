@@ -3,7 +3,7 @@
 import pytest
 
 from openhcs.runtime.napari_streaming_handlers import NapariAxisPresentation
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,

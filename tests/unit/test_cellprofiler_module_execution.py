@@ -1,7 +1,7 @@
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
 import sqlite3
 from tests.artifact_graphs import admitted_graph
@@ -25,7 +25,7 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceMeasurementFeature,
 )
 from openhcs.constants.constants import Backend, MemoryType
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     AlignedStackExecution,
@@ -57,121 +57,121 @@ from openhcs.core.artifacts.kinds import (
     SpatialGridArtifactType,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     ImagePayloadConsumption,
     runtime_image_execution_mode,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.config import DtypeConfig
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
     MainFlowInputProjection,
 )
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     MeasurementImageLabelAlignmentRequest,
     PreparedMeasurementObjectLabels,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, object_label_input_execution_mode_from_callable, runtime_bound_parameters, special_inputs)
-from openhcs.core.runtime_artifact_queries import (
+from openhcs.core.runtime_store.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
     RuntimeArtifactQueryContext,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_image_values import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadSliceProjector,
     MaskedImagePayload,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_measurements import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelSet,
     ObjectLabelValue,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
 )
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     object_label_parent_child_payload,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGridOrdering,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     SourceImageSetIdentityPolicy,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
@@ -206,7 +206,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
     CellProfilerSliceAlignedValues,
 )
-from openhcs.core.measurement_image_alignment import (
+from openhcs.core.measurements.measurement_image_alignment import (
     ObjectLabelsReference,
     SourceImageReference,
 )
@@ -386,7 +386,7 @@ from openhcs.processing.backends.cellprofiler.worms import (
     OverlapStyle,
     UntangleWormsModule,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DAuxiliaryOutputAggregator,
     Pure2DContract,
@@ -399,10 +399,10 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_input_edge_for_test,
     runtime_adapter_request_for_test,
 )
-from openhcs.core.axes import Axis, Ungrouped
+from openhcs.core.axes.axis_declarations import Axis, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import ColourAxis
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
     MatchImageStackLabels,
@@ -4568,8 +4568,8 @@ def _calculate_math_object_contract() -> CallableContract:
     from openhcs.core.artifacts.specs import ArtifactSpecCollection
     from openhcs.core.artifacts.relations import GroupLineageSourceRelation
     from openhcs.core.artifacts.kinds import MeasurementsArtifactType
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import (
         ArtifactProducer,
         artifact_producers_for_outputs,
@@ -6923,7 +6923,7 @@ def test_aligned_measurement_provenance_rejects_unequal_and_empty_axes():
 
 
 def test_object_intensity_measurement_image_batch_preserves_request_labels() -> None:
-    from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
+    from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocationRequest
     from openhcs.processing.backends.cellprofiler._backend import (
         DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     )
@@ -9943,7 +9943,7 @@ def test_cellprofiler_main_flow_output_replaces_scalar_output_source_on_stack():
 
 
 def test_cellprofiler_contract_executor_projects_batch_relationship_auxiliary():
-    from openhcs.core.runtime_batch_contracts import (
+    from openhcs.core.callable.runtime_batch_contracts import (
         RuntimePure2DSliceBatchRequest,
         pure_2d_batch_executor,
     )
@@ -18760,7 +18760,7 @@ def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeyp
 def test_composed_measurement_roster_keeps_all_object_source_pairs(
     monkeypatch, batched
 ):
-    from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
+    from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchExecutionDomain
 
     image_specs = tuple(
         ArtifactSpec.input(name, ImageArtifactType) for name in ("DNA", "ER", "RNA")

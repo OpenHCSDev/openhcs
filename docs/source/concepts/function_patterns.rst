@@ -37,7 +37,7 @@ A dictionary selects a function pattern for each compiled group key. The
 
 .. code-block:: python
 
-   from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
+   from openhcs.core.config.pipeline_config import LazyProcessingConfig, ProcessingConfig
    from openhcs.domains.microscopy.axes import Microscopy
 
    by_channel = ProcessingConfig(

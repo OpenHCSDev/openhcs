@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.desktop.installation import DESKTOP_INSTALL_PROFILE
 from openhcs.desktop import update_worker as desktop_update_worker
 from openhcs.resources.brand import BrandAsset, brand_asset_path

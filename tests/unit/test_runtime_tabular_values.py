@@ -4,15 +4,15 @@ from types import MappingProxyType
 
 import pytest
 
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows, is_table_payload
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, is_table_payload
 
 
 @dataclass(frozen=True, slots=True)

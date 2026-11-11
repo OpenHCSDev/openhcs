@@ -1,5 +1,5 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
 from dataclasses import replace
 import pickle
 
@@ -18,13 +18,13 @@ from openhcs.core.artifacts.relations import (
     InputGroupLineageSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_stores import (
+from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactInput,
     RuntimeArtifactDynamicComponentTarget,
@@ -34,49 +34,49 @@ from openhcs.core.runtime_stores import (
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     UngroupedScope,
 )
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.callable_contract import CallableContract
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementObservationAxis,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQuery,
     RuntimeObjectLabelMeasurementQueryCache,
 )
-from openhcs.core.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-from openhcs.core.source_bindings import (
+from openhcs.core.runtime_store.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityCompatibility
+from openhcs.core.source.source_matching import SourceImageSetIdentityCompatibility
 from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from python_introspect import (
     dataclass_from_mapping,

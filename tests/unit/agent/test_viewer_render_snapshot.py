@@ -28,7 +28,7 @@ from openhcs.agent.dto.viewer import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
 
 

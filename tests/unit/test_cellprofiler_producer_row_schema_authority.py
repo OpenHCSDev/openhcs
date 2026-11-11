@@ -7,11 +7,11 @@ from types import SimpleNamespace
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.runtime import measurement_rows
 from openhcs.processing.backends.cellprofiler.alignment import (
     AlignModule,

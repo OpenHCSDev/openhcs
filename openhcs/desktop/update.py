@@ -438,7 +438,7 @@ class DesktopRestartSession:
 
     @classmethod
     def pending(cls) -> DesktopRestartSession:
-        from openhcs.core.xdg_paths import get_openhcs_cache_dir
+        from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
 
         return cls(get_openhcs_cache_dir() / "desktop-updates" / "pending")
 

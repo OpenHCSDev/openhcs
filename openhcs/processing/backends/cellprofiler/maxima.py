@@ -1,7 +1,7 @@
 """CellProfiler-compatible local maxima detection backend."""
 
 from __future__ import annotations
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
@@ -16,11 +16,11 @@ from skimage.feature import peak_local_max
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.memory.decorators import numpy
 from python_introspect import public_names_from_objects
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
@@ -46,7 +46,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 

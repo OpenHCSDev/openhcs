@@ -4,8 +4,8 @@ import ast
 from pathlib import Path
 
 from benchmark.converter import convert
-from openhcs.core.config import PipelineConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import create_projection
 

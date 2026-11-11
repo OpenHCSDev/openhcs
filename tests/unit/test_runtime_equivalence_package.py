@@ -1,4 +1,4 @@
-from openhcs.core.measurement_dialect import PlainMeasurementDialect
+from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
 """Runtime equivalence package boundary tests."""
 
 import ast
@@ -19,7 +19,7 @@ from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementFeatureNumericTolerance,
 )
-from openhcs.core.runtime_identifier import (
+from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_identifier,
     normalize_runtime_source_name,
 )
@@ -40,7 +40,7 @@ from openhcs.core.equivalence.cells import (
     runtime_measurement_cell_signature_if_present,
 )
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-from openhcs.core.runtime_measurements import MeasurementScope
+from openhcs.core.measurements.runtime_measurements import MeasurementScope
 
 PROJECT_ROOT = Path(__file__).parents[2]
 

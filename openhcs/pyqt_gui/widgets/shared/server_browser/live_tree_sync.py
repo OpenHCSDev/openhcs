@@ -12,7 +12,7 @@ from formbridge.services.zmq_server_info import BaseServerInfo
 from formbridge.services.zmq_server_scan_service import StartingEndpointObservation
 from zmqruntime.viewer_state import ViewerState, ViewerStateManager
 
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 
 
 @dataclass(frozen=True, slots=True)

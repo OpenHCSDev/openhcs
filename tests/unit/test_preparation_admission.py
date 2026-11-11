@@ -7,13 +7,13 @@ import os
 
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
-from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
+from openhcs.core.callable.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
@@ -60,7 +60,7 @@ class AuditAfter(DeclaredCache, AdmissionAudit):
 
 def simulated_workers(monkeypatch, affinity):
     """Use actual scheduling/cleanup but no child or socket, under one CPU."""
-    import openhcs.core.processing_preparation as owner
+    import openhcs.core.callable.processing_preparation as owner
 
     monkeypatch.setattr(
         owner.multiprocessing, "get_all_start_methods", lambda: ["fork"]
@@ -295,7 +295,7 @@ def test_selected_hook_failure_is_not_admitted_as_completed(monkeypatch):
         events.append("attempt")
         raise RuntimeError("selected preparation failed")
 
-    from openhcs.core.processing_preparation import CallableHookPreparation
+    from openhcs.core.callable.processing_preparation import CallableHookPreparation
 
     operation = CallableHookPreparation(hook, None, "new_selected")
     for _ in range(2):

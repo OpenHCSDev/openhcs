@@ -7,10 +7,10 @@ from polystore.bioformats_storage import BioFormatsPlaneRef
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import AuthoredFunctionPattern
-from openhcs.core.source_bindings import ComponentSelector
-from openhcs.core.source_projection import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern
+from openhcs.core.source.source_bindings import ComponentSelector
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
     SourceDatasetIdentity,
@@ -34,7 +34,7 @@ from openhcs.processing.presets.pipelines.czi_brain_axon_cellbody import (
     build_czi_brain_axon_cellbody_demo,
     czi_brain_axon_cellbody_demo_contribution,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.bioformats import BioFormatsHandler
 
@@ -419,7 +419,7 @@ def test_czi_contributor_samples_only_declared_crop_planes(
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress.types import set_progress_queue
 

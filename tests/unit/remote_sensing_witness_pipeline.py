@@ -33,8 +33,8 @@ DATES = ("1", "2", "3")
 def write_dataset(root: Path) -> None:
     """Write planes and their openhcsdata record through the kernel writer."""
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
-    from openhcs.core.source_projection import OpenHCSPlaneAddress
-    from openhcs.core.virtual_workspace_metadata import (
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+    from openhcs.core.io.virtual_workspace_metadata import (
         AtomicMetadataWriter,
         get_metadata_path,
     )
@@ -83,7 +83,7 @@ def write_dataset(root: Path) -> None:
 
 
 def pipeline_steps(napari_streaming_config=None) -> list:
-    from openhcs.core.config import LazyProcessingConfig
+    from openhcs.core.config.pipeline_config import LazyProcessingConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.processing.backends.analysis.count_cells_simple import (
         count_cells_simple,
@@ -129,7 +129,7 @@ def run_direct(root: Path, output_root: Path) -> dict:
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyPathPlanningConfig,
         PipelineConfig,
@@ -189,13 +189,13 @@ def run_direct(root: Path, output_root: Path) -> dict:
 def run_zmq(
     root: Path, output_root: Path, execution_port: int, viewer_port: int | None
 ) -> dict:
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyNapariStreamingConfig,
         LazyPathPlanningConfig,
         PipelineConfig,
     )
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
     from openhcs.runtime.zmq_execution_client import (
         OpenHCSExecutionSubmission,
         ZMQExecutionClient,
@@ -285,7 +285,7 @@ def viewer_state(napari) -> dict:
 def describe_output(output_root: Path) -> dict:
     from dataclasses import fields
 
-    from openhcs.core.config import GlobalPipelineConfig as Config
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig as Config
 
     output_dataset = next(output_root.iterdir())
     metadata = json.loads((output_dataset / "openhcs_metadata.json").read_text())

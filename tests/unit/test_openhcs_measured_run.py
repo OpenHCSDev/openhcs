@@ -19,11 +19,11 @@ from benchmark.contracts.run_artifacts import (
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
 )
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport

@@ -15,14 +15,14 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_stores import RuntimeArtifactBatch
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,
     runtime_batch_executor,
@@ -70,11 +70,11 @@ from openhcs.core.materialization.options import FileBundleOptions
 from openhcs.core.materialization.core import MaterializationSpec
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
 
 def _parse_sqlite_database_type(value: str) -> Literal["sqlite"]:

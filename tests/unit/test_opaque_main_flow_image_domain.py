@@ -1,7 +1,7 @@
 """Whole image domains survive the producer/cache/next-load handoff."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -10,23 +10,23 @@ import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.callable.function_patterns import MainFlowInputProjection, compile_function_pattern
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
-from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
+from openhcs.core.payload.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from tests.context_support import (
     executing_context,
     with_facts,
@@ -322,7 +322,7 @@ def _selected_pattern(name):
     from openhcs.core.artifacts.specs import ArtifactSpec
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
-    from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan, InvocationArtifactInputProjectionKey
+    from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan, InvocationArtifactInputProjectionKey
     spec = ArtifactSpec.input(name, ImageArtifactType)
 
     @artifact_inputs(spec)
@@ -416,7 +416,7 @@ def test_multiple_unprojected_named_binding_domains_fail_existing_bundle_grammar
 
 
 def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
-    from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
+    from openhcs.core.payload.aligned_image_payload import ImagePayloadBundleContext
     contexts = tuple(AlignedImageSliceContext.main_flow(name) for name in ("First", "Second"))
     first_mask = np.ones((4, 5), dtype=bool)
     second_mask = first_mask.copy()
@@ -435,7 +435,7 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
 @pytest.mark.parametrize("sites", [(1,), (1, 2, 3)], ids=("one-member", "three-members"))
 def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path, sites):
     """A cohort's rank does not depend on how many members matched (B1)."""
-    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    from openhcs.core.payload.aligned_image_payload import ImagePayloadStackComposition
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 

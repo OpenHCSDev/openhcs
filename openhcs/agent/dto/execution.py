@@ -35,8 +35,8 @@ from openhcs.agent.dto.execution_connection import (
     ExecutionConnectionFields,
     ExecutionConnectionSpec,
 )
-from openhcs.core.debug_view_models import DebugViewModel
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.debug.debug_view_models import DebugViewModel
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
 

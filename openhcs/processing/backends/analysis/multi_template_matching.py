@@ -21,8 +21,8 @@ from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.vfs_protocol import PlateInputFile
+from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
+from openhcs.core.payload.vfs_protocol import PlateInputFile
 from openhcs.core.materialization.options import CsvOptions, TiffStackOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.options import NameByArtifactName

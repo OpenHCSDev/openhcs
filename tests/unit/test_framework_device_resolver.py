@@ -2,8 +2,8 @@ import pytest
 
 from arraybridge import MemoryType
 
-from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
-from openhcs.core.framework_device_resolver import FrameworkDeviceResolver
+from openhcs.core.execution.compiled_step_plan import FrameworkDeviceAssignment
+from openhcs.core.util.framework_device_resolver import FrameworkDeviceResolver
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
 import ast
 import concurrent.futures
@@ -17,20 +17,20 @@ from tempfile import TemporaryDirectory
 import pytest
 from zmqruntime.messages import ControlMessageType, MessageFields
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import CompiledFunctionInvocation, FunctionInvocationKey
-from openhcs.core.function_reference import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import CompiledFunctionInvocation, FunctionInvocationKey
+from openhcs.core.callable.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )
-from openhcs.core.function_step_transport import  PipelineFunctionReferences,FunctionStepTransportAuthority
-from openhcs.core.source_bindings import (
+from openhcs.core.callable.function_step_transport import  PipelineFunctionReferences,FunctionStepTransportAuthority
+from openhcs.core.source.source_bindings import (
     FromPipelineStart,
     NamedSourceBinding,
 )
@@ -395,16 +395,16 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     from polystore.filemanager import FileManager
     from polystore.memory import MemoryStorageBackend
     from openhcs.constants.constants import Backend
-    from openhcs.core.compiled_execution import (
+    from openhcs.core.execution.compiled_execution import (
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.function_patterns import compile_function_pattern, normalize_function_pattern
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.callable.function_patterns import compile_function_pattern, normalize_function_pattern
     from openhcs.core.orchestrator.execution_result import (
         RuntimeExecutionTransportSerialization,
     )
-    from openhcs.core.callable_contract import CallableContractRuntimeCache
+    from openhcs.core.callable.callable_contract import CallableContractRuntimeCache
 
     reference = FunctionReferenceTransportAuthority.function_reference(
         cellprofiler_backend.crop

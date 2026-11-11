@@ -25,7 +25,7 @@ from python_introspect import (
 from zmqruntime.config import NonBlankString
 from zmqruntime.viewer_protocol import ViewerWireMapping, ViewerWirePayload, ViewerWireValue
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisRole,
     AxisValueKind,
@@ -404,7 +404,7 @@ class SeparateLayers(NapariVariableSizeHandling):
     def routing_context(cls, context):
         from polystore.streaming_constants import StreamingDataType
 
-        from openhcs.core.axes import PartitionAxis
+        from openhcs.core.axes.axis_declarations import PartitionAxis
         from openhcs.runtime.viewer_component_system import ViewerComponentCoordinates
 
         if context.address.stream_layer_data_type is not StreamingDataType.IMAGE:

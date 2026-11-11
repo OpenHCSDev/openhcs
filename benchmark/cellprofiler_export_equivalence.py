@@ -15,7 +15,7 @@ from benchmark.equivalence.comparison import (
 )
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
@@ -30,12 +30,12 @@ from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshotCachePayload,
     runtime_measurement_equivalence,
 )
-from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
 from openhcs.interop.cellprofiler.analyst_export import (

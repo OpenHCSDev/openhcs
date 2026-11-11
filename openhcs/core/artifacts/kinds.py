@@ -8,12 +8,12 @@ a kind with one nominal payload type declares it once.
 
 from __future__ import annotations
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.measurement_dialect import MeasurementDialect
-from openhcs.core.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementSubject, MeasurementTable
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
+from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementSubject, MeasurementTable
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimeSlicePlaneAxis,
 )
@@ -33,37 +33,37 @@ from openhcs.core.artifacts.payloads import (
     PayloadShape,
     TablePayloadShape,
 )
-from openhcs.core.axes import AxisFamily
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
     normalize_source_label_data,
 )
 from openhcs.core.memory import detect_memory_type
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import (
+from openhcs.core.payload.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
     RuntimeSliceAlignedValueSet,
 )
-from openhcs.core.runtime_spatial_grid import SpatialGrid
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection, preserve_declared_image_payload_axis
-from openhcs.core.runtime_image_values import owned_runtime_value, as_runtime_value
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
-from openhcs.core.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
-from openhcs.core.runtime_spatial_graph import SpatialGraph
+from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection, preserve_declared_image_payload_axis
+from openhcs.core.payload.runtime_image_values import owned_runtime_value, as_runtime_value
+from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
+from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
 if TYPE_CHECKING:
-    from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+    from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
     from openhcs.core.artifacts.plans import ArtifactOutputPlan, OutputTarget
     from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.runtime_artifact_values import RuntimeValue
-    from openhcs.core.runtime_stores import StoredRuntimeValue
-    from openhcs.core.source_projection import OpenHCSPlaneAddress
+    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+    from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -699,7 +699,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         target: OutputTarget,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        from openhcs.core.runtime_artifact_values import RuntimeValue
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
         projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
             plane_projection,
@@ -857,7 +857,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         *,
         keeps_memory_type: bool,
     ) -> object:
-        from openhcs.core.aligned_image_payload import stack_image_payloads
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 
         components = {value.key.scope.component for value in values}
         if None in components or len(components) != 1:
@@ -906,7 +906,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
-        from openhcs.core.source_projection import OpenHCSPlaneAddress
+        from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
             return records
@@ -1337,8 +1337,8 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         group_key: str | None,
     ) -> tuple[StoredRuntimeValue, ...]:
         from openhcs.constants.constants import Backend
-        from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_stores import (
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+        from openhcs.core.runtime_store.runtime_stores import (
             RuntimeArtifactLocation,
             StoredRuntimeValue,
         )

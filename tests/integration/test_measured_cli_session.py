@@ -24,8 +24,8 @@ import pytest
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur

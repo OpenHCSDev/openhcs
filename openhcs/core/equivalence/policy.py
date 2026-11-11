@@ -7,9 +7,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Annotated, get_args, get_origin, get_type_hints
 
-from openhcs.core.measurement_dialect import MeasurementDialect, PlainMeasurementDialect
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_measurements import MeasurementScope
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect, PlainMeasurementDialect
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.runtime_measurements import MeasurementScope
 
 
 class RuntimeMeasurementFeatureNameMode(str, Enum):

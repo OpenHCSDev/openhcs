@@ -35,7 +35,7 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
 
 
 MergedT = TypeVar("MergedT")

@@ -38,9 +38,9 @@ from openhcs.agent.dto.plate import (
     SelectedPlateImageSampleResult,
     SyntheticPlateGenerationResult,
 )
-from openhcs.core.plate_file_inventory import PlateFileKind
-from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.synthetic_plate_generation import SyntheticPlateFormat
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.plate.synthetic_plate_generation import SyntheticPlateFormat
 from openhcs.mcp.dev_client_core import (
     McpDevServerSpec,
     McpDevToolBatchResponse,

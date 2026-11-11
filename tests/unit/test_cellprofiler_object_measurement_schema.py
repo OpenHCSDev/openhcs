@@ -1,10 +1,10 @@
 import numpy as np
 
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ObjectColocalizationMetricArrays,
 )

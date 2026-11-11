@@ -144,7 +144,7 @@ def test_log_discovery_derives_live_directory_from_ui_config(
     provider = OpenHCSLogDiscoveryProvider(lambda: current)
     captured: dict[str, Path] = {}
 
-    import openhcs.core.log_utils as log_utils
+    import openhcs.core.util.log_utils as log_utils
 
     monkeypatch.setattr(
         log_utils,

@@ -5,7 +5,7 @@ import pytest
 from scipy.ndimage import center_of_mass
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
     assemble_stack_cupy,
@@ -13,7 +13,7 @@ from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     VolumetricToSliceContract,
 )
 

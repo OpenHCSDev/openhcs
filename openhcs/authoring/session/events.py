@@ -15,7 +15,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ExecutionCompletionPayload,
     ManagerExecutionState,
 )

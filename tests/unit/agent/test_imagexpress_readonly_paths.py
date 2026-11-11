@@ -17,11 +17,11 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionFilenameParser,
     PlateInspectionService,
 )
-from openhcs.core.plate_image_inventory import PlateFileInventory
+from openhcs.core.plate.plate_image_inventory import PlateFileInventory
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 from openhcs.core.dataset_sources.source import DatasetSource, DatasetSourceChoice
 from openhcs.core.dataset_sources.interfaces import FilenameParserCapability
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 

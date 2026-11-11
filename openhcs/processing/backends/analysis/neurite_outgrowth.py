@@ -38,30 +38,30 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.memory import numpy
 from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.payload.projected_image_output import SelectedPlaneImageOutput
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_spatial_graph import (
+from openhcs.core.measurements.runtime_spatial_graph import (
     SpatialGraph,
     SpatialGraphEdge,
     SpatialGraphNode,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions, SpatialGraphROIOptions, SWCOptions
 from openhcs.core.materialization.core import MaterializationSpec
 

@@ -5,8 +5,8 @@ from dataclasses import replace
 import pytest
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import ProcessingConfig
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import ProcessingConfig
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler import (
     align,
@@ -22,7 +22,7 @@ from openhcs.processing.backends.cellprofiler import (
     straighten_worms,
     track_objects,
 )
-from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
+from openhcs.core.axes.axis_declarations import Axis, GroupingDeclaration, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 

@@ -2,18 +2,18 @@ from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 import pytest
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     ProcessingConfig,
     StepMaterializationConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.domains.microscopy.axes import Microscopy
 
 

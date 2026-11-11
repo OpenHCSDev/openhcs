@@ -19,7 +19,7 @@ from skimage.filters import median, threshold_li
 from skimage.morphology import skeletonize
 
 from openhcs.constants.constants import Backend
-from openhcs.core.lazy_gpu_imports import torch
+from openhcs.core.util.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.materialization.options import CsvOptions, JsonOptions, TextOptions, TiffStackOptions

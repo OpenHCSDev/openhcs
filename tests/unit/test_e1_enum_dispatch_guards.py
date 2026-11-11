@@ -374,7 +374,7 @@ def test_deleted_names_and_enum_member_spellings_stay_deleted():
 def test_source_family_kinds_are_not_enums():
     from enum import Enum
 
-    from openhcs.core import debug_session_projection, source_bindings
+    from openhcs.core.debug import debug_session_projection, source_bindings
 
     kinds = (
         source_bindings.SourceBindingOrigin,
@@ -413,7 +413,7 @@ def test_dataset_and_store_identity_never_resolve_symlinks():
 def test_numpy_values_encode_through_to_jsonable():
     import numpy as np
 
-    import openhcs.core.numpy_jsonable  # noqa: F401
+    import openhcs.core.util.numpy_jsonable  # noqa: F401
     from python_introspect import to_jsonable
 
     assert to_jsonable(

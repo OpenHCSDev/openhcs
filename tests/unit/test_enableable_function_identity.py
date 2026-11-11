@@ -6,9 +6,9 @@ import importlib
 import inspect
 from types import SimpleNamespace
 
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
-from openhcs.core.function_reference import ImportableFunctionReference
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.callable.function_reference import ImportableFunctionReference
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService

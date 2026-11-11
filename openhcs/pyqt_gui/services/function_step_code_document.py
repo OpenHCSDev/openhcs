@@ -10,7 +10,7 @@ from formbridge.services.window_code_document import (
     WindowCodeDocumentDriver,
 )
 
-from openhcs.core.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from objectstate import patch_lazy_constructors
 

@@ -15,16 +15,16 @@ from openhcs.core.equivalence.cells import (
     runtime_cell_signature,
     runtime_measurement_value_is_present,
 )
-from openhcs.core.measurement_dialect import (
+from openhcs.core.measurements.measurement_dialect import (
     MeasurementDialect,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_row_materialization import (
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
     MeasurementScope,
@@ -32,7 +32,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
     RuntimeMeasurementRowIdentityContract,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )

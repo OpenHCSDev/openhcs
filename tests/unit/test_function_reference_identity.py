@@ -7,12 +7,12 @@ from dataclasses import replace
 import pytest
 from skimage.filters.edges import sobel
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     CallableImportIdentity,
     CallableDeclaration,
 )
-from openhcs.core.function_reference import (
+from openhcs.core.callable.function_reference import (
     FunctionReferenceTransportAuthority,
     ModuleExportRegistryFunctionReference,
     RegistryFunctionReference,
@@ -25,7 +25,7 @@ from openhcs.processing.backends.lib_registry.scikit_image_registry import (
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
 

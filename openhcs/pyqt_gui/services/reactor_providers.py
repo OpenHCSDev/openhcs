@@ -104,7 +104,7 @@ class OpenHCSLogDiscoveryProvider(LogDiscoveryProviderABC):
         self._config_provider = config_provider
 
     def get_current_log_path(self) -> Path:
-        from openhcs.core.log_utils import get_current_log_file_path
+        from openhcs.core.util.log_utils import get_current_log_file_path
 
         return Path(get_current_log_file_path())
 
@@ -114,7 +114,7 @@ class OpenHCSLogDiscoveryProvider(LogDiscoveryProviderABC):
         include_main_log: bool = True,
         log_directory: Path | None = None,
     ) -> list[LogFileInfo]:
-        from openhcs.core.log_utils import discover_logs
+        from openhcs.core.util.log_utils import discover_logs
 
         if log_directory is None:
             log_directory = self._config_provider().logging.resolved_log_directory()
@@ -141,8 +141,8 @@ class OpenHCSServerScanProvider(ServerScanProviderABC):
         from formbridge.services.zmq_server_scan_service import ZMQServerScanService
         from zmqruntime.execution.logs import ExecutionWorkerLogObservation
 
-        from openhcs.core.streaming_config_factory import get_all_streaming_ports
-        from openhcs.core.log_utils import classify_log_file
+        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.util.log_utils import classify_log_file
 
         config = self._config_provider()
         discovered = []
@@ -308,7 +308,7 @@ def register_reactor_providers(
 ) -> None:
     """Register all OpenHCS providers with pyqt-reactive."""
     # FormGenConfig with OpenHCS paths
-    from openhcs.core.xdg_paths import get_data_file_path
+    from openhcs.core.util.xdg_paths import get_data_file_path
 
     config = OpenHCSFormGenConfig(
         path_cache_file=str(get_data_file_path("path_cache.json")),
@@ -335,7 +335,7 @@ def register_reactor_providers(
     # Window handlers are registered in main.py after widgets are created
 
     # Preview formatters (OpenHCS-specific)
-    from openhcs.core.config import PartitionFilterConfig
+    from openhcs.core.config.pipeline_config import PartitionFilterConfig
     from openhcs.pyqt_gui.widgets.config_preview_formatters import (
         format_partition_filter_config,
     )

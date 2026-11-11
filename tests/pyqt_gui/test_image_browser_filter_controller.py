@@ -4,16 +4,16 @@ from pathlib import Path
 from types import SimpleNamespace
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
-from openhcs.core.result_file_formats import (
+from openhcs.core.io.result_file_formats import (
     RoiArchiveResultFile,
     TextResultFile,
     TiffResultFile,
 )
-from openhcs.core.component_filters import ComponentFilters
+from openhcs.core.axes.component_filters import ComponentFilters
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.plate.plate_image_inventory import (
     PlateImageInventory,
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -26,7 +26,7 @@ from openhcs.core.dataset_sources.interfaces import (
     FilenameParserCapability,
     MetadataHandler,
 )
-from openhcs.core.plate_image_inventory import PlateFileRecord
+from openhcs.core.plate.plate_image_inventory import PlateFileRecord
 from openhcs.pyqt_gui.widgets.image_browser import (
     BrowsedFile,
     ImageFile,

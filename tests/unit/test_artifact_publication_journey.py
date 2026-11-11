@@ -10,7 +10,7 @@ import tifffile
 from polystore.virtual_workspace import SourcePixelRef
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyPathPlanningConfig,
     PipelineConfig,
     LazyProcessingConfig,
@@ -25,22 +25,22 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
 )
 from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.pipeline.function_contracts import (artifact_inputs, artifact_outputs, object_label_input_execution_mode)
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.processing_contracts import (
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourcePlaneProjection,
     SourceProjectionMetadataSerializer,

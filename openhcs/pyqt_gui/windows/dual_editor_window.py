@@ -28,9 +28,9 @@ from openhcs.authoring.session.events import (
 )
 from openhcs.authoring.session.session import Session
 from openhcs.authoring.session.step_scopes import StepEditorScope
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.source_binding_context import SourceBindingContext
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.source.source_binding_context import SourceBindingContext
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.session_rendering import QtSessionEventRelay
 from openhcs.pyqt_gui.windows import dual_editor_tabs  # noqa: F401 - declares the tabs

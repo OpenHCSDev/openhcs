@@ -14,9 +14,9 @@ from types import ModuleType
 import psutil
 import pytest
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
 
 
 @dataclass(frozen=True)
@@ -307,7 +307,7 @@ def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path, budget):
         import signal
         from concurrent.futures import CancelledError
         from pathlib import Path
-        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+        from openhcs.core.callable.processing_preparation import PreparationOperation, PreparationCacheBatch
 
         directory = Path(sys.argv[1])
         class SlowPreparation(PreparationOperation):
@@ -367,7 +367,7 @@ def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
     script = textwrap.dedent("""
         import os, sys, time
         from pathlib import Path
-        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+        from openhcs.core.callable.processing_preparation import PreparationOperation, PreparationCacheBatch
 
         directory = Path(sys.argv[1])
         class WrittenPreparation(PreparationOperation):

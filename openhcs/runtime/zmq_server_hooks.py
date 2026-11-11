@@ -12,7 +12,7 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.execution.execution_state import ExecutionOutputSummary
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
 )

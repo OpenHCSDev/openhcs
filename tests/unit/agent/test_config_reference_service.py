@@ -14,7 +14,7 @@ from openhcs.agent.services.config_service import (
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.pyqt_gui.config import UIConfig
-from openhcs.core.source_spatial_domain import (
+from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
 )

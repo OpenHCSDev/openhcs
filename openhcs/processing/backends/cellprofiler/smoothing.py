@@ -3,9 +3,9 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
-from openhcs.core.aligned_image_payload import FullStackExecution
-from openhcs.core.callable_contract import runtime_image_execution_mode
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_float,
@@ -65,9 +65,9 @@ from typing import ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from openhcs.core.callable_contract import processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy as numpy_decorator
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,
 )
@@ -82,11 +82,11 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
     OpencvBackendProvider,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
-from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata
 
 
 class SmoothingMethod(Enum):

@@ -19,21 +19,21 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.plate_file_inventory import PlateFileKind
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_projection import (
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.viewer_streaming_service import StreamingService, ViewerStreamingSource
-from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.io.viewer_streaming_service import StreamingService, ViewerStreamingSource
+from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.viewer_protocol import ViewerLaunchContext
 

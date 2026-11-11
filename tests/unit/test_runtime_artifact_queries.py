@@ -1,6 +1,6 @@
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass
 import weakref
@@ -9,7 +9,7 @@ import pytest
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ArtifactType, MeasurementsArtifactType
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementRowObjectName,
@@ -18,7 +18,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
 )
-from openhcs.core.runtime_artifact_queries import (
+from openhcs.core.runtime_store.runtime_artifact_queries import (
     RuntimeArtifactQueryContext,
     MeasurementLabelSliceFeatureBatchQuery,
     MeasurementLabelSliceFeatureQuery,
@@ -26,7 +26,7 @@ from openhcs.core.runtime_artifact_queries import (
     measurement_table_axis_values,
     measurement_row_mapping,
 )
-from openhcs.core.measurement_feature_queries import (
+from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
     MeasurementFeatureQuery,
     RuntimeObjectLabelMeasurementQuery,
@@ -37,42 +37,42 @@ from openhcs.core.measurement_feature_queries import (
     ordered_measurement_feature_candidates,
     measurement_values_for_feature,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelSet,
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageProvenancePlanes,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 

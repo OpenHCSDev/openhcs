@@ -9,24 +9,24 @@ from arraybridge import MemoryType
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.compiled_execution import (
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
     CompiledWorkerStartPlan,
 )
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     FrameworkDeviceAssignment,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.config import MultiprocessingStartMethod
+from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
 )
-from openhcs.core.debug import NoOpDebugExecutionPolicy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.orchestrator import worker_execution
@@ -37,20 +37,20 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode, MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords,
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 from tests.context_support import (

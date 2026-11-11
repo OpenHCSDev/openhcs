@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.abstract import StepExecutionObservation
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
@@ -19,7 +19,7 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
     stack_image_payloads,
@@ -35,15 +35,15 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.component_group_scope import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.function_patterns import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.function_patterns import (
     MainFlowInputProjection,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
@@ -59,17 +59,17 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.runtime_image_values import (
+from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
-from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
+from openhcs.core.payload.runtime_stack_cache import RuntimeImageStackCache
+from openhcs.core.source.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     FromPipelineStart,
@@ -83,25 +83,25 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     TextContains,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_metadata import SourceFilterClause, SourceFilterPathMetadata
-from openhcs.core.source_projection import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_metadata import SourceFilterClause, SourceFilterPathMetadata
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjectionSet,
 )
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
 )
-from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
+from openhcs.core.util.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
 )
@@ -119,8 +119,8 @@ from openhcs.core.steps.function_output_manifest import (
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
@@ -604,7 +604,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     from polystore.filemanager import FileManager
 
     from openhcs.constants.constants import Backend
-    from openhcs.core.runtime_source_binding_cache import (
+    from openhcs.core.payload.runtime_source_binding_cache import (
         RuntimeSourceBindingContextCache,
     )
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
@@ -2153,10 +2153,10 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.core.config import PipelineConfig
+    from openhcs.core.config.pipeline_config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress.types import set_progress_queue
-    from openhcs.core.config import LazyStepSourceBindingsConfig
+    from openhcs.core.config.pipeline_config import LazyStepSourceBindingsConfig
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionRequest,
     )
@@ -2386,7 +2386,7 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
 
 
 def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -> None:
-    from openhcs.core.runtime_adapters import (
+    from openhcs.core.callable.runtime_adapters import (
         RuntimePlaneProjection,
     )
     from openhcs.core.steps.function_runtime import (
@@ -2683,7 +2683,7 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
 def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from openhcs.core.function_patterns import CompiledFunctionGroup
+    from openhcs.core.callable.function_patterns import CompiledFunctionGroup
     from openhcs.core.steps import function_runtime
 
     first_spec = ArtifactSpec.output("FirstLabels", ObjectLabelsArtifactType)
@@ -3237,13 +3237,13 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.constants.input_source import ReadPipelineStart
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         LazyProcessingConfig,
         PipelineConfig,
     )
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress.types import set_progress_queue
-    from openhcs.core.config import (
+    from openhcs.core.config.pipeline_config import (
         LazySourceBindingsConfig,
         LazyStepSourceBindingsConfig,
     )
@@ -3996,7 +3996,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     """Producer bookkeeping must not override exact workspace source ownership."""
 
     from openhcs.core.steps import function_runtime
-    from openhcs.core.runtime_source_binding_cache import (
+    from openhcs.core.payload.runtime_source_binding_cache import (
         RuntimeSourceBindingContextCache,
     )
 
@@ -5587,10 +5587,10 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     named_topology: str,
 ) -> None:
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
-    from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.function_patterns import compile_function_pattern
-    from openhcs.core.aligned_image_payload import AlignedImageStack
+    from openhcs.core.payload.runtime_stack_cache import RuntimeImageStackCache
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.callable.function_patterns import compile_function_pattern
+    from openhcs.core.payload.aligned_image_payload import AlignedImageStack
 
     class OutputFileManager:
         saved_payloads: list[object] = []
@@ -5989,8 +5989,8 @@ def test_producer_loader_validates_ambiguity_before_cache(
 
 
 def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
-    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.payload.aligned_image_payload import ImagePayloadStackComposition
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
 
     pixels = np.arange(3 * 4 * 5, dtype=np.float32).reshape(3, 4, 5)
     mask = pixels % 2 == 0

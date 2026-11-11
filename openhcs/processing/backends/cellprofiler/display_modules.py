@@ -11,15 +11,15 @@ from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     measurement_rows,
@@ -29,20 +29,20 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     measurement_axis_integer_value,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     measurement_row_mapping,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
@@ -84,15 +84,15 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock

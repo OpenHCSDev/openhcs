@@ -35,7 +35,7 @@ from arraybridge.types import (
 # OpenHCS wraps ArrayBridge decorators to preserve compiler metadata while
 # leaving conversion semantics in ArrayBridge.
 from . import decorators as decorators
-from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_array_values import array_geometry
 
 for _memory_type in MemoryType:
     _memory_type.prepare_import()

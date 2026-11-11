@@ -39,7 +39,7 @@ from openhcs.agent.dto.pipeline import (
     PipelineSpec,
     PipelineValidationResult,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
 from openhcs.mcp.dev_client_core import (

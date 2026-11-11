@@ -2,9 +2,9 @@
 from pathlib import Path
 from openhcs.constants.constants import AllComponents, Microscope, VariableComponents, GroupBy
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyWellFilterConfig, LazyNapariStreamingConfig, NapariDimensionMode
+from openhcs.core.config.pipeline_config import PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyWellFilterConfig, LazyNapariStreamingConfig, NapariDimensionMode
 from zmqruntime.config import TransportMode
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     LazySourceBindingsConfig,
     NamedSourceBinding,
     SourceSelector,
@@ -13,7 +13,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchDimension,
     SourceBindingMatchField,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,
@@ -22,7 +22,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import neurite_outgrowth_metaxpress, MetaXpressCellBodySettings, MetaXpressOutgrowthSettings, MetaXpressNuclearSettings
 

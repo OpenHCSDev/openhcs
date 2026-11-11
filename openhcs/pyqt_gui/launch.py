@@ -172,7 +172,7 @@ def load_configuration(config_path: Optional[Path] = None):
     Returns:
         Global configuration object
     """
-    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 
     try:
         if config_path and config_path.exists():
@@ -183,7 +183,7 @@ def load_configuration(config_path: Optional[Path] = None):
             config = GlobalPipelineConfig()
         else:
             # Load cached configuration (matches TUI pattern)
-            from openhcs.core.config_cache import load_cached_global_config_sync
+            from openhcs.core.config.config_cache import load_cached_global_config_sync
 
             config = load_cached_global_config_sync()
 

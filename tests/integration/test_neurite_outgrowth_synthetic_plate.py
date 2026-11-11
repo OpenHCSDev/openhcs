@@ -1,6 +1,6 @@
 """Synthetic-plate integration coverage for 2D neurite outgrowth."""
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.progress.types import ProgressExecutionContext
 import csv
 import io
@@ -39,7 +39,7 @@ from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -51,14 +51,14 @@ from openhcs.core.config import (
     VFSConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )

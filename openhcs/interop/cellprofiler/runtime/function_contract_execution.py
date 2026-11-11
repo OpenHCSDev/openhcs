@@ -6,11 +6,11 @@ import inspect
 import time
 from collections.abc import Callable, Mapping
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.measurement_dialect import executing_measurement_dialect
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.measurements.measurement_dialect import executing_measurement_dialect
 from openhcs.core.memory import detect_memory_type, stack_slices
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ContractCall,
     PlaneSplit,
     ProcessingContract,
@@ -20,19 +20,19 @@ from openhcs.core.processing_contracts import (
     RuntimeCallablePolicy,
     SignatureFilteredKwargs,
 )
-from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     SliceIndexRuntimeParameter,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayload,
     RuntimeSliceProjectionDeclarationError,
     owned_runtime_value,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeCallableKwargs,

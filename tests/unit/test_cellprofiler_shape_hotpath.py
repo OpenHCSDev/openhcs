@@ -12,18 +12,18 @@ import skimage.measure
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectFeatureValueTable,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelRepresentation,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
     ShapeMeasurementBackendStrategy,

@@ -10,13 +10,13 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelStorageStrategy,
     ObjectLabelVariantData,
     object_label_axis_centers,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 
 
 def generic_centers(labels, domain):
@@ -200,7 +200,7 @@ def test_invalid_geometry_precedes_domain_iteration():
 
 @pytest.mark.parametrize("shape,label_id", (((1, 1), 2**31 - 1), ((64, 64), 4096)))
 def test_sparse_high_ids_reach_domain_error_before_moment_allocation(monkeypatch, shape, label_id):
-    from openhcs.core import runtime_object_labels
+    from openhcs.core.object_labels import runtime_object_labels
 
     def reject_moment_allocation(*_args):
         raise AssertionError("Sparse ID span must not allocate a dense moment table")
@@ -226,7 +226,7 @@ def test_sparse_high_ids_reach_domain_error_before_moment_allocation(monkeypatch
 @pytest.mark.parametrize("dimensions", (2, 3))
 @pytest.mark.parametrize("layout", ("fortran", "reversed", "broadcast"))
 def test_coordinate_scan_borrows_strided_input_without_flatten_copy(monkeypatch, dimensions, layout):
-    from openhcs.core import runtime_object_labels
+    from openhcs.core.object_labels import runtime_object_labels
 
     labels = np.array([[0, 1, 1], [2, 0, 2]], dtype=np.int32)
     if dimensions == 3:
@@ -260,8 +260,8 @@ def test_primary_objects_preparation_readies_all_admitted_storage_signatures(tmp
     script = textwrap.dedent("""
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.processing_preparation import CallablePreparation
-        from openhcs.core.runtime_object_labels import (
+        from openhcs.core.callable.processing_preparation import CallablePreparation
+        from openhcs.core.object_labels.runtime_object_labels import (
             _dense_label_coordinate_moments_numba, dense_label_centers_2d_numba,
             object_label_axis_centers,
         )

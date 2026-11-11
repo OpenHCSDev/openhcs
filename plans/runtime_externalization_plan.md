@@ -352,7 +352,7 @@ def remove_ipc_socket(port: int, config: ZMQConfig = None) -> bool:
 Extract `ZMQServer` ABC from `openhcs/runtime/zmq_base.py`:
 - Remove `from openhcs.runtime.zmq_messages import ...` → `from .messages import ...`
 - Remove `from openhcs.constants.constants import ...` → use `ZMQConfig`
-- Remove `from openhcs.core.config import TransportMode` → `from .config import TransportMode`
+- Remove `from openhcs.core.config.pipeline_config import TransportMode` → `from .config import TransportMode`
 - Make `AutoRegisterMeta` optional via try/except import
 
 #### Step 2.6: client.py
@@ -497,7 +497,7 @@ Change imports:
 # Before
 from openhcs.runtime.zmq_messages import ...
 from openhcs.constants.constants import ...
-from openhcs.core.config import TransportMode
+from openhcs.core.config.pipeline_config import TransportMode
 
 # After
 from zmqruntime import (

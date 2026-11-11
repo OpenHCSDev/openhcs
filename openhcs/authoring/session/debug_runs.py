@@ -10,7 +10,7 @@ from python_introspect import project_dataclass
 
 from openhcs.authoring.session.compilation import DatasetPipelineRequest, run_blocking
 from openhcs.authoring.session.events import StatusReported
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import (
     DebugArtifactExportResponse,
     DebugArtifactRef,
     DebugCommandType,
@@ -19,7 +19,7 @@ from openhcs.core.debug import (
     DebugReplayMode,
 )
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
-from openhcs.core.debug import WarmArtifactReplay
+from openhcs.core.debug.debug_runtime import WarmArtifactReplay
 
 if TYPE_CHECKING:
     from openhcs.authoring.session.session import Session

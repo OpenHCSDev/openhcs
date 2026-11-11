@@ -97,7 +97,7 @@ def test_explicit_centrosome_registration_preserves_default_and_fail_closed_sele
 def test_real_primary_callable_declumps_through_selected_signed_watershed(
     monkeypatch, provider
 ):
-    from openhcs.core.runtime_object_labels import object_label_dense_array
+    from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
     from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
     from openhcs.processing.backends.cellprofiler.primary_objects import (
         UnclumpMethod,

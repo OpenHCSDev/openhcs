@@ -8,21 +8,21 @@ import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.step_dependencies import StepOutputInput
+from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.imagexpress import ImageXpressHandler
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 

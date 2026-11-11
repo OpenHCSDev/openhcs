@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     ImageOutputBundle,
@@ -19,19 +19,19 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_output_matching import (
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.payload.runtime_output_matching import (
     split_runtime_output,
     RuntimeOutputBundle,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from tests.unit.test_function_artifact_outputs import (

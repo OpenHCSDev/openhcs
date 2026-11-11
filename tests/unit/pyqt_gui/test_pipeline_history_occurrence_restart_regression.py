@@ -19,8 +19,8 @@ from formbridge.services.function_pattern_code_document import (
 from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_META_KEY
 from formbridge.services.scope_token_service import ScopeTokenService
 
-from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod

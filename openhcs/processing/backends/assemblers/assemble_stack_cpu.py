@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, List, Tuple, Union
 
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     VolumetricToSliceContract,
 )
 from openhcs.processing.backends.assemblers.blending import (

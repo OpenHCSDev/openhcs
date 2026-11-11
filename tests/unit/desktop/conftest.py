@@ -6,7 +6,7 @@ import pytest
 from objectstate import ObjectStateRegistry
 
 from openhcs.authoring.session.session import CallerThread, Session
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 

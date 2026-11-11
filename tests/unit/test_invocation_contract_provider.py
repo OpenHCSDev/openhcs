@@ -21,14 +21,14 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     PIPELINE_INPUT_ARTIFACT,
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
@@ -38,8 +38,8 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.runtime_adapters import runtime_adapter
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -661,15 +661,15 @@ def test_invocation_contract_plan_rejects_unwritten_consumed_kwarg_with_context(
 def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() -> None:
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import (
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,
     )
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -756,8 +756,8 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
 def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph() -> (
     None
 ):
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -823,8 +823,8 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
 
 
 def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> None:
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -865,8 +865,8 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import ComponentSelector, NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import (
         correct_illumination_calculate,
@@ -1027,7 +1027,7 @@ def test_cellprofiler_invocation_contract_accepts_main_flow_input_without_bindin
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import color_to_gray
     from openhcs.processing.backends.cellprofiler.color import ColorToGrayMode
@@ -1074,8 +1074,8 @@ def test_align_omission_probe_rejects_insufficient_static_source_without_throwin
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import align
 
@@ -1107,15 +1107,15 @@ def test_align_omission_probe_rejects_insufficient_static_source_without_throwin
 def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None:
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import (
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,
     )
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -1170,8 +1170,8 @@ def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> N
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import color_to_gray
     from openhcs.processing.backends.cellprofiler.color import ColorToGrayMode
@@ -1229,11 +1229,11 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
         MeasurementsArtifactType,
         ObjectLabelsArtifactType,
     )
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding, SourceArtifactRole
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source.source_bindings import NamedSourceBinding, SourceArtifactRole
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -1346,8 +1346,8 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
 
 def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
     from openhcs.constants.input_source import ReadPipelineStart
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.config import (
+    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,

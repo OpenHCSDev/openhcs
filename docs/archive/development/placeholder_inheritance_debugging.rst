@@ -257,7 +257,7 @@ Field Path Validation
 
    def validate_field_path_mapping():
        """Ensure all form field_ids map correctly to context fields"""
-       from openhcs.core.config import GlobalPipelineConfig
+       from openhcs.core.config.pipeline_config import GlobalPipelineConfig
        import dataclasses
 
        # Get all dataclass fields from GlobalPipelineConfig

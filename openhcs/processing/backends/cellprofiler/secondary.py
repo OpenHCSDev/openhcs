@@ -25,9 +25,9 @@ from openhcs.core.artifacts.relations import (
     InputGroupLineageSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.callable_contract import processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.memory import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
@@ -39,33 +39,33 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     RegisteredLeafClassSpec,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     ObjectLabelVariantData,
     object_label_dense_array,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
 )
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     object_label_parent_child_payload,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -96,13 +96,13 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 
@@ -285,7 +285,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.core.runtime_profile import RuntimeProfiler
+from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
 )
@@ -314,7 +314,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
 from openhcs.processing.backends.cellprofiler.watershed import (
     cellprofiler_legacy_watershed,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)

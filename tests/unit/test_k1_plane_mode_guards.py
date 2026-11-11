@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.payload.runtime_plane_projection import (
     NoPlaneAxis,
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,

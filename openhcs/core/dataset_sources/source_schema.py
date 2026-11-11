@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from openhcs.core.axes import AxisFamily, GridAddressed
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.axes.axis_declarations import AxisFamily, GridAddressed
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     FilenameParseResult,

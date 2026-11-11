@@ -29,11 +29,11 @@ from zmqruntime.config import (
 from zmqruntime.transport import get_default_transport_mode
 
 from formbridge.bridge.server import UiBridgeServerConfig
-from openhcs.core.stated_types import require_stated_field_types
+from openhcs.core.util.stated_types import require_stated_field_types
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.config_cache import ConfigCacheSpec
-from openhcs.core.xdg_paths import get_openhcs_log_dir
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.config.config_cache import ConfigCacheSpec
+from openhcs.core.util.xdg_paths import get_openhcs_log_dir
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
@@ -357,7 +357,7 @@ def get_default_ui_config() -> UIConfig:
 def ui_config_cache_spec() -> ConfigCacheSpec[UIConfig]:
     """Return the typed persistence identity for the process UI config."""
 
-    from openhcs.core.xdg_paths import get_config_file_path
+    from openhcs.core.util.xdg_paths import get_config_file_path
 
     return ConfigCacheSpec(
         config_type=UIConfig,
@@ -371,7 +371,7 @@ def ui_config_cache_spec() -> ConfigCacheSpec[UIConfig]:
 def load_cached_ui_config_sync() -> UIConfig:
     """Load persisted UI settings and apply authoritative environment overrides."""
 
-    from openhcs.core.config_cache import load_config_sync
+    from openhcs.core.config.config_cache import load_config_sync
 
     cached = load_config_sync(ui_config_cache_spec())
     base = cached if cached is not None else get_default_ui_config()
@@ -384,7 +384,7 @@ def load_cached_ui_config_sync() -> UIConfig:
 def load_cached_ui_execution_endpoint_sync() -> OpenHCSZMQConfig:
     """Project the execution endpoint directly from the canonical UI document."""
 
-    from openhcs.core.config_document import ConfigDocumentCodec
+    from openhcs.core.config.config_document import ConfigDocumentCodec
 
     cache_file = ui_config_cache_spec().cache_file
     if not cache_file.exists():
@@ -407,6 +407,6 @@ def load_cached_ui_execution_endpoint_sync() -> OpenHCSZMQConfig:
 def save_ui_config_sync(config: UIConfig) -> bool:
     """Persist the exact process UI configuration."""
 
-    from openhcs.core.config_cache import save_config_sync
+    from openhcs.core.config.config_cache import save_config_sync
 
     return save_config_sync(config, ui_config_cache_spec())

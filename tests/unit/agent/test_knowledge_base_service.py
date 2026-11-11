@@ -20,7 +20,7 @@ from openhcs.agent.services.knowledge_base_service import (
 )
 from openhcs.mcp.context import OpenHCSAgentContext
 from python_introspect import to_jsonable
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 
 
 def test_knowledge_base_catalog_lists_source_backed_documents():

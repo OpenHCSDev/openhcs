@@ -6,7 +6,7 @@ from openhcs.agent.services.architecture_projection_service import (
     ArchitectureTopicProjection,
 )
 from openhcs.core.dataset_sources.interfaces import MetadataArtifactProvider
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
 )
 

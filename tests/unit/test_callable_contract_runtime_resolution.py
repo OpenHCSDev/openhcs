@@ -2,8 +2,8 @@ from dataclasses import replace
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
 
 
 def test_custom_runtime_wrapper_is_retained_for_its_exact_contract():

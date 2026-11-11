@@ -8,20 +8,20 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import InputStackBroadcastSourceRelation
-from openhcs.core.component_group_scope import (
+from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.function_patterns import (
+from openhcs.core.axes.component_set import ComponentSet
+from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
     InvocationContractProvider,
@@ -31,12 +31,12 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.source_bindings import (
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
+from openhcs.core.source.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
 )
-from openhcs.core.config import StepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler import (

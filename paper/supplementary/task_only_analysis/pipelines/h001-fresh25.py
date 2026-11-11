@@ -1,8 +1,8 @@
 from pathlib import Path
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig, LazyStepMaterializationConfig
-from openhcs.core.source_bindings import LazySourceBindingsConfig, NamedSourceBinding, SourceSelector, ComponentSelector, SourceBindingOrigin, LazyStepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig, LazyStepMaterializationConfig
+from openhcs.core.source.source_bindings import LazySourceBindingsConfig, NamedSourceBinding, SourceSelector, ComponentSelector, SourceBindingOrigin, LazyStepSourceBindingsConfig
 from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
 from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption

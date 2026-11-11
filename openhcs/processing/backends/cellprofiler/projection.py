@@ -1,7 +1,7 @@
 """CellProfiler-compatible image projection backend."""
 
 from __future__ import annotations
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     VolumetricToSliceContract,
 )
 from openhcs.interop.cellprofiler.module_declarations import (
@@ -18,7 +18,7 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from python_introspect import public_names_from_objects

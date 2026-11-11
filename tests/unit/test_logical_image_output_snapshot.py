@@ -1,5 +1,5 @@
 
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 """Typed image sets retain physical coverage across volume/plane exports."""
 
@@ -14,28 +14,28 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from benchmark.equivalence.comparison import runtime_image_differences
 from benchmark.equivalence.images import RuntimeImageSnapshot
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_image_values import ImageMaskDomain, ImagePayloadMetadata
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_projection import (
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.payload.runtime_image_values import ImageMaskDomain, ImagePayloadMetadata
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 Z_STACK = SourceImageSetIdentityPolicy(frozenset({Microscopy.ZIndex}))
 EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0, measurement_dialect=SAVED_OUTPUT_DIALECT)

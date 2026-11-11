@@ -6,7 +6,7 @@ import numpy as np
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import ImagePayloadConsumption
+from openhcs.core.callable.callable_contract import ImagePayloadConsumption
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 import openhcs.interop.cellprofiler.runtime.module_execution as module_execution
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest

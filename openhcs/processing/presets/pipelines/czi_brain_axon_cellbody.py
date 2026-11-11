@@ -33,7 +33,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -42,15 +42,15 @@ from openhcs.core.config import (
     LazyPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.function_patterns import AuthoredFunctionPattern
-from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.source_bindings import (
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern
+from openhcs.core.payload.image_file_serialization import ImageFileFormat
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_projection import SourceCandidate, SourcePlaneDataset
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source.source_projection import SourceCandidate, SourcePlaneDataset
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes.bioformats import BioFormatsHandler, BioFormatsMetadataHandler
 from openhcs.microscopes.bioformats_adapter import BIOFORMATS_MANIFEST_FILENAME
@@ -69,7 +69,7 @@ from openhcs.processing.backends.analysis.skan_axon_analysis import (
 )
 from openhcs.processing.backends.processors.numpy_processor import tophat
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 

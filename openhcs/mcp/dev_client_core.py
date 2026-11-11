@@ -63,11 +63,11 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from formbridge.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ManagerExecutionState,
 )
-from openhcs.core.native_threading import native_thread_count_environment_keys
-from openhcs.core.plate_file_inventory import ALL_PLATE_FILE_KINDS
+from openhcs.core.execution.native_threading import native_thread_count_environment_keys
+from openhcs.core.plate.plate_file_inventory import ALL_PLATE_FILE_KINDS
 from openhcs.mcp.bootstrap import MCP_VERBOSE_ENVIRONMENT_VARIABLE
 from openhcs.mcp.control_timeout import (
     McpControlTimeoutPolicy,
@@ -77,7 +77,7 @@ from openhcs.mcp.control_timeout import (
 from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.authoring.session.operations import SessionOperation
 from openhcs.authoring.session.operations.datasets import DatasetWorkflowOperation
 
@@ -1002,7 +1002,7 @@ def add_component_filter_option(parser: argparse.ArgumentParser) -> None:
 def component_filter_argument(args: argparse.Namespace) -> dict[str, list[str]]:
     """Read ``--filter`` assignments into the request's component_filters."""
 
-    from openhcs.core.component_filters import ComponentFilters
+    from openhcs.core.axes.component_filters import ComponentFilters
 
     return ComponentFilters.from_assignments(args.component_filters).as_mapping()
 

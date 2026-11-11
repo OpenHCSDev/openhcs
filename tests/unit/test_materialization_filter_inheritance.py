@@ -6,11 +6,11 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import ReadPreviousStep
-from openhcs.core.compiled_step_plan import (
+from openhcs.core.execution.compiled_step_plan import (
     CompiledStepPlan,
     MaterializedOutputPlan,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyStepMaterializationConfig,

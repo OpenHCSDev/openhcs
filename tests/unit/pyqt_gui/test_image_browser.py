@@ -12,10 +12,10 @@ from PyQt6.QtCore import Qt
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.record_table_browser import LabelledValue
 
-from openhcs.core.axes import AxisFamily, GridAddressed
-from openhcs.core.config import GlobalPipelineConfig, StreamingConfig
-from openhcs.core.plate_image_inventory import PlateFileKind, PlateFileRecord
-from openhcs.core.result_file_formats import RoiArchiveResultFile, TextResultFile
+from openhcs.core.axes.axis_declarations import AxisFamily, GridAddressed
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, StreamingConfig
+from openhcs.core.plate.plate_image_inventory import PlateFileKind, PlateFileRecord
+from openhcs.core.io.result_file_formats import RoiArchiveResultFile, TextResultFile
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.widgets import image_browser

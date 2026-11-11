@@ -11,13 +11,13 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import ROI, PointShape, load_rois_from_zip
 
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.materialization.core import MaterializationSpec, materialize
 from openhcs.core.materialization.options import ROIOptions
 from tests.materialization_plans import output_plan as materialization_output_plan

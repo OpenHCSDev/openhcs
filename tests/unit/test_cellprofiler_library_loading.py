@@ -1,5 +1,5 @@
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
@@ -13,16 +13,16 @@ import pytest
 import skimage.morphology
 import skimage.segmentation
 from python_introspect import declared_enum_type
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     AlignedStackExecution,
     FullStackExecution,
     ImagePayloadBundleContext,
     NaturalExecution,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.processing_preparation import CallablePreparation
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.processing_preparation import CallablePreparation
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.alignment import (
     AlignModule,
     AlignShiftMeasurement,
@@ -152,30 +152,30 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
 from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.cellprofiler.color import StainType, unmix_colors
 from openhcs.processing.backends.cellprofiler.crop import CropModule
-from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
-from openhcs.core.runtime_slice_projection import (
+from openhcs.core.config.pipeline_config import DtypeConfig
+from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocationRequest
+from openhcs.core.payload.runtime_slice_projection import (
     RuntimeSliceProjection,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     ImageMetadataPayload,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
@@ -193,12 +193,12 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     SourceQualifiedMeasurementFeatureModule,
     SourceQualifiedWideMeasurementRowsModule,
 )
-from openhcs.core.axes import TimeAxis
+from openhcs.core.axes.axis_declarations import TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.axes import ColourAxis
+from openhcs.core.payload.payload_axes import PayloadAxes
+from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.memory.decorators import image_payload_boundary
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
 
 

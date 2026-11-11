@@ -9,7 +9,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -17,7 +17,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 from openhcs.domains.microscopy.axes import Microscopy

@@ -17,11 +17,11 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import setting_name_matches

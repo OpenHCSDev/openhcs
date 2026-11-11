@@ -16,7 +16,7 @@ from pyqt_reactive.theming import ColorScheme
 
 from openhcs.authoring.session.datasets import write_dataset_scope_ids
 from openhcs.authoring.session.session import CallerThread, Session
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 

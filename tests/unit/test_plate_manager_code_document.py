@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )

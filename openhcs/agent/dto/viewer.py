@@ -46,7 +46,7 @@ from openhcs.agent.dto.execution_connection import (
     ExecutionConnectionSpec,
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_controls import (
     ViewerImageSpatialSampleControls,
     ViewerMeasurementCoordinates,

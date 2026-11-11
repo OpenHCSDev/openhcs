@@ -28,7 +28,7 @@ from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.queue_tracker import GlobalQueueTrackerRegistry
 from zmqruntime.transport import DataControlPortPairAuthority, TransportEndpoint
 
-from openhcs.core.config import NapariDisplayConfig
+from openhcs.core.config.pipeline_config import NapariDisplayConfig
 from openhcs.runtime.napari_viewer_server import NapariViewerServer
 from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 

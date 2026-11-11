@@ -23,7 +23,7 @@ from dataclasses import replace
 from pathlib import Path
 from runpy import run_path
 
-from openhcs.core.config import LazyPathPlanningConfig
+from openhcs.core.config.pipeline_config import LazyPathPlanningConfig
 
 previous = run_path('/home/ts/code/projects/openhcs/plans/neurite-soma-20um-cutoff-125-20261015.py')
 pipeline_config = replace(

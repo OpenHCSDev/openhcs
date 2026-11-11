@@ -13,7 +13,7 @@ import tifffile
 from openhcs.agent.services.artifact_plan_inspection_service import (
     AgentProgressQueue, CompileInspectionInput, InProcessCompileInspectionGateway,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig, LazyNapariStreamingConfig, LazyPathPlanningConfig,
     LazyProcessingConfig,
 )
@@ -21,11 +21,11 @@ from openhcs.core.orchestrator.execution_result import (
     MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_bindings import FromFileName
-from openhcs.core.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.source.source_bindings import FromFileName
+from openhcs.core.source.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.io.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline

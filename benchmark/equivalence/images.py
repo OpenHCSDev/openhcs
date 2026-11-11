@@ -13,10 +13,10 @@ from openhcs.core.equivalence.arrays import (
     semantic_array_payload,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.source_projection import SourceArtifactProjection
-from openhcs.core.source_image_provenance import SourcePlaneIndexedMetadata
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.source.source_projection import SourceArtifactProjection
+from openhcs.core.source.source_image_provenance import SourcePlaneIndexedMetadata
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_matching import source_component_metadata_value
 
 
 @dataclass(frozen=True, slots=True)

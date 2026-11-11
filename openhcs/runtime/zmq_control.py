@@ -84,7 +84,7 @@ class DebugControlMessageSupportMixin:
 
     @staticmethod
     def snapshot_store_for_request(request):
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             FileManagerDebugSnapshotStore,
             LocalDebugSnapshotStore,
         )
@@ -142,7 +142,7 @@ class ZMQControlMessageRouter:
 class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
     """Read the exact artifact plans retained by one compile artifact."""
 
-    from openhcs.core.artifact_inspection import CompiledArtifactInspectionRequest
+    from openhcs.core.util.artifact_inspection import CompiledArtifactInspectionRequest
 
     registry_key = CompiledArtifactInspectionRequest.wire_type
 
@@ -151,7 +151,7 @@ class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
         message: dict,
         context: ZMQControlRequestContext,
     ) -> dict:
-        from openhcs.core.artifact_inspection import (
+        from openhcs.core.util.artifact_inspection import (
             CompiledArtifactInspection,
             CompiledArtifactInspectionRequest,
             CompiledArtifactInspectionResponse,
@@ -483,7 +483,7 @@ class DebugSnapshotReadMessageStrategy(
 ):
     """Handle debug snapshot read control messages."""
 
-    from openhcs.core.debug import DebugSnapshotReadRequest
+    from openhcs.core.debug.debug_runtime import DebugSnapshotReadRequest
 
     registry_key = DebugSnapshotReadRequest.wire_type
 
@@ -493,7 +493,7 @@ class DebugSnapshotReadMessageStrategy(
         context: ZMQControlRequestContext,
     ) -> dict:
         del context
-        from openhcs.core.debug import DebugSnapshotReadRequest, DebugSnapshotReadResponse
+        from openhcs.core.debug.debug_runtime import DebugSnapshotReadRequest, DebugSnapshotReadResponse
 
         try:
             request = DebugSnapshotReadRequest.from_dict(message)
@@ -508,7 +508,7 @@ class DebugSnapshotReadMessageStrategy(
 class DebugWorkerCommandMessageStrategy(ZMQControlMessageStrategy):
     """Handle persistent paused-worker control messages."""
 
-    from openhcs.core.debug import DebugWorkerCommandRequest
+    from openhcs.core.debug.debug_runtime import DebugWorkerCommandRequest
 
     registry_key = DebugWorkerCommandRequest.wire_type
 
@@ -518,7 +518,7 @@ class DebugWorkerCommandMessageStrategy(ZMQControlMessageStrategy):
         context: ZMQControlRequestContext,
     ) -> dict:
         del context
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugPausedWorkerRegistry,
             DebugWorkerCommandRequest,
             DebugWorkerCommandResponse,
@@ -540,7 +540,7 @@ class DebugArtifactExportMessageStrategy(
 ):
     """Handle debug artifact export control messages."""
 
-    from openhcs.core.debug import DebugArtifactExportRequest
+    from openhcs.core.debug.debug_runtime import DebugArtifactExportRequest
 
     registry_key = DebugArtifactExportRequest.wire_type
 
@@ -550,7 +550,7 @@ class DebugArtifactExportMessageStrategy(
         context: ZMQControlRequestContext,
     ) -> dict:
         del context
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugArtifactExportPlan,
             DebugArtifactExportRequest,
             DebugArtifactExportResponse,
@@ -573,7 +573,7 @@ class DebugArtifactExportMessageStrategy(
 class DebugRuntimeInspectionMessageStrategy(ZMQControlMessageStrategy):
     """Handle paused-worker live runtime inspection requests."""
 
-    from openhcs.core.debug import DebugRuntimeInspectionRequest
+    from openhcs.core.debug.debug_runtime import DebugRuntimeInspectionRequest
 
     registry_key = DebugRuntimeInspectionRequest.wire_type
 
@@ -583,7 +583,7 @@ class DebugRuntimeInspectionMessageStrategy(ZMQControlMessageStrategy):
         context: ZMQControlRequestContext,
     ) -> dict:
         del context
-        from openhcs.core.debug import (
+        from openhcs.core.debug.debug_runtime import (
             DebugPausedWorkerRegistry,
             DebugRuntimeInspectionRequest,
             DebugRuntimeInspectionResponse,

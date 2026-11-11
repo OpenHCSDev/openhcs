@@ -16,23 +16,23 @@ if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ExecutingContext
 from dataclasses import dataclass, field
 
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementRowsAxisProjection,
     ColumnarRowColumnOverlay,
     MeasurementProjectedColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementRowValueField,
     measurement_axis_integer_value,
 )
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_image_provenance import SourceImageProvenance
-from openhcs.core.source_matching import (
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.source.source_matching import (
     SourceImageSetIdentity,
     SourceImageSetIdentityPolicy,
 )

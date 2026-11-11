@@ -55,8 +55,8 @@ from benchmark.timing import BenchmarkPhase, PhaseTimingRecord
 from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.authoring.session.session import FinishedExecution
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.environment_provenance import (

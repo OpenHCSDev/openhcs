@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import openhcs.core.measurement_row_materialization as row_materialization
-from openhcs.core.measurement_row_materialization import (
+import openhcs.core.measurements.measurement_row_materialization as row_materialization
+from openhcs.core.measurements.measurement_row_materialization import (
     ColumnarMeasurementRowsAxisProjection,
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
@@ -20,11 +20,11 @@ from openhcs.core.measurement_row_materialization import (
     is_structural_missing_measurement_cell,
     measurement_rows_with_source_provenance,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
@@ -473,7 +473,7 @@ def test_dataclass_column_admission_owns_snapshot_and_releases_source_rows() -> 
     import gc
     import weakref
 
-    from openhcs.core.runtime_tabular_values import measurement_row_mapping
+    from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
 
     @dataclass
     class MutableMeasurementRow:
@@ -496,13 +496,13 @@ def test_dataclass_column_admission_owns_snapshot_and_releases_source_rows() -> 
 
 
 def test_bounded_preview_is_live_but_explicit_column_admission_keeps_snapshot() -> None:
-    from openhcs.core.measurement_feature_queries import (
+    from openhcs.core.measurements.measurement_feature_queries import (
         ColumnarMeasurementTableSchema,
         MeasurementFeatureQuery,
         MeasurementFeatureValueIndex,
     )
     from openhcs.core.progress.live_measurements import _columnar_row_preview
-    from openhcs.core.runtime_measurements import (
+    from openhcs.core.measurements.runtime_measurements import (
         MeasurementScope,
         MeasurementSubject,
         MeasurementTable,

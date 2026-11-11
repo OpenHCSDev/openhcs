@@ -20,7 +20,7 @@ from formbridge.contracts import AgentResourceRef
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from formbridge.bridge.dto import UiWindowSnapshotResult
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor, ViewerWindowSnapshotResult
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from scripts.capture_media_gallery import (
     CaptureManifest,
     CaptureRecord,

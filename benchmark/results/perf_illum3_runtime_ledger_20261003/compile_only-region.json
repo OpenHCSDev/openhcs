@@ -186,37 +186,37 @@
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.core.aligned_image_payload",
+      "module": "openhcs.core.payload.aligned_image_payload",
       "owner": "",
       "method": "stack_image_payload_context",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.core.aligned_image_payload",
+      "module": "openhcs.core.payload.aligned_image_payload",
       "owner": "",
       "method": "unstack_image_payload_context",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.core.measurement_feature_queries",
+      "module": "openhcs.core.measurements.measurement_feature_queries",
       "owner": "MeasurementFeatureValueIndex",
       "method": "from_columnar_table_by_object",
       "descriptor_kind": "classmethod"
     },
     {
-      "module": "openhcs.core.virtual_workspace_metadata",
+      "module": "openhcs.core.io.virtual_workspace_metadata",
       "owner": "AtomicMetadataWriter",
       "method": "publish_source_projection_metadata",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.core.runtime_stack_cache",
+      "module": "openhcs.core.payload.runtime_stack_cache",
       "owner": "RuntimeImageStackCache",
       "method": "get",
       "descriptor_kind": "function"
     },
     {
-      "module": "openhcs.core.runtime_stack_cache",
+      "module": "openhcs.core.payload.runtime_stack_cache",
       "owner": "RuntimeImageStackCache",
       "method": "store",
       "descriptor_kind": "function"

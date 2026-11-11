@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING, TypeVar
 
 from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
 
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_signature import (
     TransportValue,

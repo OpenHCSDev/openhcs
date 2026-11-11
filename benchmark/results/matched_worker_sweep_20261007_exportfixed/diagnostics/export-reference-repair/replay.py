@@ -7,12 +7,12 @@ from openhcs._source_dependencies import ensure_source_checkout_external_paths
 ensure_source_checkout_external_paths(Path("/home/ts/code/projects/openhcs"))
 openhcs.core.__path__.append('/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core')
 from openhcs.interop.cellprofiler.image_set_numbering import CellProfilerImageSetNumbering
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_image_provenance import SourceImageProvenance,SourceImageProvenancePlanes
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_measurements import MeasurementTable,MeasurementSubject,MeasurementScope
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows, MEASUREMENT_SPARSE_CELL
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_image_provenance import SourceImageProvenance,SourceImageProvenancePlanes
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.measurements.runtime_measurements import MeasurementTable,MeasurementSubject,MeasurementScope
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows, MEASUREMENT_SPARSE_CELL
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import _with_requested_aggregates
 from collections import OrderedDict
 base=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleTrackObjects')
@@ -91,7 +91,7 @@ receipt=json.loads(Path(__file__).with_name('replay-results.json').read_text());
 Path(__file__).with_name('replay-results.json').write_text(json.dumps(receipt,indent=2))
 print('All 168 genuine image means derived exactly; native local means unchanged.')
 from dataclasses import replace
-from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+from openhcs.core.measurements.measurement_row_materialization import ConcatenatedColumnarRows
 # Same genuine W008 long-form observations partitioned through the real
 # concatenated carrier and its normal axis-projection strategy.
 batches=tuple(MeasurementSparseColumnarRows({name:list(table.rows.column_values(name))[start:stop] for name in table.rows.columns},fields=table.rows.fields) for start,stop in ((0,32),(32,65)))

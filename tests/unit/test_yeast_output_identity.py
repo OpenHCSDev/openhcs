@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImageOutputBundle
+from openhcs.core.payload.aligned_image_payload import ImageOutputBundle
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import (
@@ -18,8 +18,8 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     FunctionInvocationKey,
@@ -196,8 +196,8 @@ def test_preserving_cellprofiler_tail_retains_the_existing_producer(named_produc
     image, image_plan = _image_output("Original", "Gray")
     producer_contract = _executor(image).callable_contract
     if not named_producer:
-        from openhcs.core.artifact_key_selection import NativeReturnArtifactOutputPolicy
-        from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+        from openhcs.core.util.artifact_key_selection import NativeReturnArtifactOutputPolicy
+        from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
 
         producer_contract = replace(
             producer_contract,

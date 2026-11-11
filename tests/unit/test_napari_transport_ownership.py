@@ -14,8 +14,8 @@ from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.transport import get_zmq_transport_url, remove_ipc_socket
 from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
-from openhcs.core.axes import AxisFamily
-from openhcs.core.config import NapariDisplayConfig
+from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.config.pipeline_config import NapariDisplayConfig
 from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG

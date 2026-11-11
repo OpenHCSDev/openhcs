@@ -11,12 +11,12 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
-from openhcs.core.source_bindings import (
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord
+from openhcs.core.source.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -25,14 +25,14 @@ from openhcs.core.source_image_provenance import (
     SourcePlaneIndexedMetadata,
     source_component_metadata_consensus,
 )
-from openhcs.core.source_matching import (
+from openhcs.core.source.source_matching import (
     source_component_metadata_items,
     source_component_metadata_value,
     source_component_metadata_values,
     source_metadata_value,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     DurableSourceMetadata,
     ResolvedSourceMetadataRecord,
@@ -40,18 +40,18 @@ from openhcs.core.source_metadata import (
     SourceMetadataFields,
     source_metadata_scalar,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceImagePayloadProjection,
     VirtualWorkspaceSourceProjection,
 )
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.io.virtual_workspace_metadata import (
     VirtualWorkspaceSourceMetadataEntries,
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 @pytest.mark.parametrize("owner", (ResolvedSourceMetadataRecord, DurableSourceMetadata))

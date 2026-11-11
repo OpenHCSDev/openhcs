@@ -12,7 +12,7 @@ from benchmark.converter.compatibility_matrix import (
     build_cellprofiler_compatibility_report_for_manifest,
     build_cellprofiler_compatibility_report_for_manifests,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.interop.cellprofiler.module_settings import (
     SettingBound,
 )

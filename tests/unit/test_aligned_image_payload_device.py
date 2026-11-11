@@ -1,4 +1,4 @@
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 import sys
@@ -6,16 +6,16 @@ from types import SimpleNamespace
 
 from arraybridge import MemoryType
 
-import openhcs.core.aligned_image_payload as aligned_image_payload
-from openhcs.core.aligned_image_payload import (
+import openhcs.core.payload.aligned_image_payload as aligned_image_payload
+from openhcs.core.payload.aligned_image_payload import (
     ImagePayloadBundleContext, ImagePayloadStackContext,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     ImageUnitIntervalIntensityMetadata,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 @pytest.fixture
@@ -221,11 +221,11 @@ def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
 
 
 def test_independent_cohort_copy_retains_nested_named_bundle_domains():
-    from openhcs.core.aligned_image_payload import (
+    from openhcs.core.payload.aligned_image_payload import (
         AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle,
         ImagePayloadStackComposition,
     )
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     pixels = np.arange(12, dtype=np.float32).reshape(3, 4)
     mask = np.ones((3, 4), dtype=bool)

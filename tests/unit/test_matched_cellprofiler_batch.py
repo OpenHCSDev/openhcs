@@ -24,12 +24,12 @@ from benchmark.matched_cellprofiler_batch import (
     _source_input_inventory,
     _worker_axis_evidence,
 )
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     MultiprocessingStartMethod,
     PipelineConfig,
 )
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeOutputSnapshot,

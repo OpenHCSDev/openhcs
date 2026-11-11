@@ -20,7 +20,7 @@ from benchmark.datasets.registry import DATASET_REGISTRY
 from openhcs.core.components.component_values import AxisValues
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 BIOFORMATS_HCS_VALIDATION_CSV = "bioformats_hcs_validation.csv"

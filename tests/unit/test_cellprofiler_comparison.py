@@ -31,7 +31,7 @@ from benchmark.cellprofiler_comparison import (
 )
 from benchmark.contracts.tool_adapter import BenchmarkResult, ToolExecutionError
 from benchmark.runner import CellProfilerCompatibilityResult
-from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PartitionFilterConfig
 
 
 def test_comparison_observation_extracts_execution_only_speedup(

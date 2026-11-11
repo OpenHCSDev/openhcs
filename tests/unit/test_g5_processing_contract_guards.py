@@ -7,9 +7,9 @@ import re
 from pathlib import Path
 
 import openhcs
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.pipeline.function_contracts import ObjectLabelInputExecutionMode
-from openhcs.core.processing_contracts import ProcessingContract
+from openhcs.core.callable.processing_contracts import ProcessingContract
 
 REPO_ROOT = Path(openhcs.__file__).resolve().parents[1]
 
@@ -228,7 +228,7 @@ def test_kernel_modules_spell_no_cellprofiler_measurement_name() -> None:
 
 
 def test_kernel_measurement_dialect_declares_no_cellprofiler_dialect() -> None:
-    from openhcs.core.measurement_dialect import MeasurementDialect
+    from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
     kernel_dialects = {
         dialect.__module__
@@ -236,4 +236,4 @@ def test_kernel_measurement_dialect_declares_no_cellprofiler_dialect() -> None:
         if dialect.__module__.startswith("openhcs.")
         and not dialect.__module__.startswith("openhcs.interop.")
     }
-    assert kernel_dialects <= {"openhcs.core.measurement_dialect"}
+    assert kernel_dialects <= {"openhcs.core.measurements.measurement_dialect"}

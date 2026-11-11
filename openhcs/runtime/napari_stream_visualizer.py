@@ -18,8 +18,8 @@ from pathlib import Path
 
 from polystore.filemanager import FileManager
 
-from openhcs.core.streaming_config_declarations import NapariViewer
-from openhcs.core.streaming_config_factory import (
+from openhcs.core.config.streaming_config_declarations import NapariViewer
+from openhcs.core.config.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
 )
 from openhcs.runtime.viewer_protocol import (

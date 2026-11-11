@@ -1,8 +1,8 @@
 """Loaded cohorts retain original input facts while plans and call images remain live."""
 
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import FrozenInstanceError, fields, replace
 import inspect
 import pickle
@@ -12,20 +12,20 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     DynamicGroupScope,
     UngroupedScope,
 )
-from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_bindings import (
+from openhcs.core.util.step_dependencies import PipelineStartInput, StepOutputInput
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     FromPipelineStart,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
 from openhcs.core.steps import function_runtime
 from openhcs.core.steps.function_runtime import (
     FunctionCoreExecutor,
@@ -35,7 +35,7 @@ from openhcs.core.steps.function_runtime import (
 )
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
 from tests.context_support import (
     executing_context,
 )
@@ -374,15 +374,15 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.relations import GroupLineageSourceRelation
     from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
-    from openhcs.core.component_set import ComponentSet
+    from openhcs.core.axes.component_set import ComponentSet
     from openhcs.core.pipeline.function_contracts import (
         artifact_inputs,
         artifact_outputs,
     )
     from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-    from openhcs.core.runtime_adapters import runtime_adapter
-    from openhcs.core.runtime_artifact_values import RuntimeValue
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.callable.runtime_adapters import runtime_adapter
+    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
     request, _, payload = _fixture()
     source = ArtifactSpec.input("Canonical", ImageArtifactType)
@@ -725,7 +725,7 @@ def test_artifact_loaded_coordinates_keep_producer_authority_over_original_sourc
 def test_conversion_and_sequential_filter_use_the_same_transport_admission():
     from pathlib import Path
     from openhcs.constants.constants import Backend
-    from openhcs.core.compiled_step_plan import (
+    from openhcs.core.execution.compiled_step_plan import (
         InputConversionPlan,
         SequentialRuntimeFilter,
         SequentialRuntimeFilterPlan,
@@ -782,8 +782,8 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.memory.decorators import numpy as numpy_memory
-    from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
+    from openhcs.core.source.source_bindings import NamedSourceBinding
 
     request, paths, payload = _fixture()
     binding = NamedSourceBinding(alias="Raw", origin=FromPipelineStart)
@@ -794,7 +794,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     def consume(image):
         return image
 
-    from openhcs.core.component_set import ComponentSet
+    from openhcs.core.axes.component_set import ComponentSet
     from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 
     bindings = CompiledSourceBindingPlan(bindings=(binding,))
@@ -880,14 +880,14 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
 
 
 def test_original_source_admission_retains_singleton_alignment_and_label_projection():
-    from openhcs.core.aligned_image_payload import (
+    from openhcs.core.payload.aligned_image_payload import (
         AlignedImageStack, aligned_image_stack_kwargs, stack_image_payloads,
     )
-    from openhcs.core.callable_contract import ImagePayloadConsumption
-    from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-    from openhcs.core.source_binding_selection import SourceUniverseRequest
-    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.callable.callable_contract import ImagePayloadConsumption
+    from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+    from openhcs.core.source.source_binding_selection import SourceUniverseRequest
+    from openhcs.core.source.source_spatial_domain import VolumeSourceSpatialDomain
 
     plan = CompiledSourceBindingPlan()
     pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)

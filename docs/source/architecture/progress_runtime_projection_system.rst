@@ -74,7 +74,7 @@ retained state to status text:
 - ``DebugExecutionPolicy`` installs the selected event sink and controls bounded
   execution, replay, axis selection, and the debugger-specific execution shape.
 
-These are nominal authorities in ``openhcs.core.debug``. Consumers query their
+These are nominal authorities in ``openhcs.core.debug.debug_runtime``. Consumers query their
 registries and typed values; they do not maintain command lists, event tables, or
 parallel debugger state machines.
 

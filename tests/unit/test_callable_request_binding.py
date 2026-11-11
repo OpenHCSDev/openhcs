@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from openhcs.core.callable_contract import (
+from openhcs.core.callable.callable_contract import (
     CallableContract,
     CallableRequestBinding,
     callable_request,

@@ -31,8 +31,8 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationResult,
 )
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-from openhcs.core.axes import AxisFamily
-from openhcs.core.plate_file_inventory import PlateFileKind
+from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
 from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderer,
     McpDevOutputRenderOptions,

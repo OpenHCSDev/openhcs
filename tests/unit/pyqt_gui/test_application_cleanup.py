@@ -28,7 +28,7 @@ def test_cleanup_destroys_native_window_tree_after_event_loop_exit(tmp_path):
 from PyQt6 import sip
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QWidget
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
 

@@ -74,7 +74,7 @@ from openhcs.agent.ui_bridge_identities import (
     DatasetListStateSurfaceIdentity,
     DatasetListWidgetIdentity,
 )
-from openhcs.core.config_cache import ConfigCacheSpec, save_config_sync
+from openhcs.core.config.config_cache import ConfigCacheSpec, save_config_sync
 from openhcs.ui.shared.plate_manager_code_document import PlateManagerDocumentAssignments
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.mcp.dev_client_core import (
@@ -1218,8 +1218,8 @@ from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.axes import Ungrouped
-from openhcs.core.config import (
+from openhcs.core.axes.axis_declarations import Ungrouped
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyDtypeConfig,
     LazyNapariStreamingConfig,
@@ -1231,7 +1231,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.runtime.viewer_display import PadToMaxSize
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,

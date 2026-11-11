@@ -12,10 +12,10 @@ from objectstate import ObjectState, ObjectStateEditSession
 from pyqt_reactive.windows.tabbed_editor_window import EditedObject, EditorTab, SaveRefused
 
 from openhcs.authoring.session.step_scopes import build_step_scope_id
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.config import SourceBindingsConfig
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.source_binding_context import SourceBindingContext
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.source.source_binding_context import SourceBindingContext
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.widgets.step_parameter_editor import StepEditorStateRequest
 

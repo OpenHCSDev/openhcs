@@ -4,21 +4,21 @@ from dataclasses import FrozenInstanceError, fields, replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import NaturalExecution
+from openhcs.core.payload.aligned_image_payload import NaturalExecution
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
-from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     MainFlowInputProjection,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )

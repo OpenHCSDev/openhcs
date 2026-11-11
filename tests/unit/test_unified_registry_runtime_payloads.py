@@ -1,6 +1,6 @@
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import dataclass
 from functools import wraps
@@ -20,25 +20,25 @@ from python_introspect import (
 )
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import CallableContract, callable_request
-from openhcs.core.config import LazyDtypeConfig
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.callable.callable_contract import CallableContract, callable_request
+from openhcs.core.config.pipeline_config import LazyDtypeConfig
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.core.memory import MEMORY_TYPE_NUMPY
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayload,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.source_image_provenance import (
+from openhcs.core.source.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.processing.backends.lib_registry.pyclesperanto_registry import (
@@ -47,7 +47,7 @@ from openhcs.processing.backends.lib_registry.pyclesperanto_registry import (
 from openhcs.processing.backends.lib_registry.unified_registry import (
     LibraryRegistryBase,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     LibraryContractCall,
     FlexibleContract,
     Pure2DContract,
@@ -61,7 +61,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     create_projection,
     gaussian_blur,
 )
-from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.payload.payload_axes import PayloadAxes
 
 
 class MinimalRegistry(LibraryRegistryBase):

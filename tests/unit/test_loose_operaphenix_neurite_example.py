@@ -11,8 +11,8 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSearchRequest,
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.function_patterns import AuthoredFunctionPattern, normalize_function_pattern
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern, normalize_function_pattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

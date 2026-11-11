@@ -5,23 +5,23 @@ import pytest
 
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
-from openhcs.core.runtime_measurements import (
+from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     ObjectFeatureValueTable,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )

@@ -61,7 +61,7 @@ import openhcs
 import openhcs.processing
 import openhcs.processing.func_registry
 import openhcs.processing.backends.lib_registry.unified_registry
-import openhcs.core.runtime_artifact_queries
+import openhcs.core.runtime_store.runtime_artifact_queries
 PY
 
 .venv/bin/python -m pytest \

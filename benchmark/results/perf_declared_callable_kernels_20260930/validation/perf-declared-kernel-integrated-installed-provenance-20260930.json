@@ -4,12 +4,12 @@
   "wheel_sha256": "1d35daa35d0b802c07aea7b99ca954fbedc6f7f6b86dc7f6eb53746a58e53d06",
   "module_paths": [
     {
-      "module": "openhcs.core.callable_contract",
+      "module": "openhcs.core.callable.callable_contract",
       "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/callable_contract.py",
       "sha256": "bf59a55063f221d8352af6b1e187eb6c130a6f9d6f7a0c2a9a75b83dcfbab256"
     },
     {
-      "module": "openhcs.core.processing_preparation",
+      "module": "openhcs.core.callable.processing_preparation",
       "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/processing_preparation.py",
       "sha256": "9504dcb96224ea75b6999ba07f3cf3f1cb1dafe56fc5076bebdd7cdd69b90614"
     },

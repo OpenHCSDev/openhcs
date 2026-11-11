@@ -176,7 +176,7 @@ def test_dataclass_help_replaces_parameter_window_without_reusing_parameter_dial
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
     from PyQt6.QtWidgets import QApplication
-    from openhcs.core.config import PathPlanningConfig
+    from openhcs.core.config.pipeline_config import PathPlanningConfig
     from pyqt_reactive.windows.help_window_manager import (
         DocstringHelpWindow,
         HelpWindowManager,
@@ -246,7 +246,7 @@ def test_help_context_routes_parameter_help_with_function_target(monkeypatch) ->
 
 def test_dataclass_help_uses_source_field_docs_instead_of_signature() -> None:
     import openhcs  # noqa: F401 - activates source-checkout externals first
-    from openhcs.core.config import LazyPathPlanningConfig, PathPlanningConfig
+    from openhcs.core.config.pipeline_config import LazyPathPlanningConfig, PathPlanningConfig
     from formbridge.services.parameter_help_service import (
         docstring_info_for_target,
         resolved_parameter_description,
@@ -285,7 +285,7 @@ def test_nested_dataclass_form_uses_nested_dataclass_help_target(
     import openhcs  # noqa: F401 - activates source-checkout externals first
     from PyQt6.QtWidgets import QApplication
     from objectstate import ObjectState
-    from openhcs.core.config import PathPlanningConfig, PipelineConfig
+    from openhcs.core.config.pipeline_config import PathPlanningConfig, PipelineConfig
     from pyqt_reactive.forms.parameter_form_manager import (
         FormManagerConfig,
         ParameterFormManager,

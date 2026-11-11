@@ -6,7 +6,7 @@ import numpy as np
 from basicpy import BaSiC
 from basicpy.basicpy import FittingMode
 
-from openhcs.core.axes import ColourAxis
+from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.artifacts.sidecars import QaCheckpoint
 from openhcs.core.artifacts.specs import (
     ArtifactSpec,
@@ -15,7 +15,7 @@ from openhcs.core.artifacts.specs import (
 )
 from openhcs.core.artifacts.streaming import OnDemandStreaming
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config.pipeline_config import DtypeConfig
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import (
     allowed_group_by_roles,
@@ -23,7 +23,7 @@ from openhcs.core.pipeline.function_contracts import (
     required_axis_roles,
 )
 from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName

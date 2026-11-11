@@ -10,9 +10,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt6.QtWidgets import QApplication
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
-from openhcs.core.artifact_inspection import (
+from openhcs.core.util.artifact_inspection import (
     CompiledArtifactInspection,
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
@@ -21,15 +21,15 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.debug import DebugArtifactRef, DebugCursor, DebugSnapshot
-from openhcs.core.function_patterns import (
+from openhcs.core.debug.debug_runtime import DebugArtifactRef, DebugCursor, DebugSnapshot
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -41,8 +41,8 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
-from openhcs.core.runtime_artifact_values import ArtifactKey
-from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
+from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
 from openhcs.pyqt_gui.widgets.artifact_plan_view import (
     ArtifactPlanViewModel,
     ArtifactPlanViewWidget,

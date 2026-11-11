@@ -14,7 +14,7 @@ the selected TIFFs were copied away from that plate metadata.
 from pathlib import Path
 
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
     PipelineConfig,
@@ -33,7 +33,7 @@ from .loose_operaphenix_neurite_outgrowth import (
     SemanticImageSource,
     build_loose_operaphenix_neurite_config,
 )
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 

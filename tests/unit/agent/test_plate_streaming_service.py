@@ -17,31 +17,31 @@ from openhcs.agent.services.plate_inspection_service import PlateInspectionConte
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.constants.constants import Backend
-from openhcs.core.result_file_formats import (
+from openhcs.core.io.result_file_formats import (
     CsvResultFile,
     JsonResultFile,
     RoiArchiveResultFile,
     TiffResultFile,
 )
-from openhcs.core.plate_image_inventory import (
+from openhcs.core.plate.plate_image_inventory import (
     PlateFileInventory,
     PlateFileRecord,
     PlateFileKind,
     PlateImageRecord,
     PlateResultFileRecord,
 )
-from openhcs.core.streaming_config_declarations import NapariViewer, ViewerType
-from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
-from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
-from openhcs.core.runtime_measurements import (
+from openhcs.core.config.streaming_config_declarations import NapariViewer, ViewerType
+from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
+from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.core.payload.runtime_tabular_values import FieldSpec
+from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
 from openhcs.core.materialization.core import MaterializationSpec, materialize
 from openhcs.core.materialization.options import PointROIOptions
 from polystore.disk import DiskStorageBackend
@@ -72,16 +72,16 @@ class FakeHandler:
 def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp_path):
     from types import SimpleNamespace
     from openhcs.core.artifacts.kinds import ImageArtifactType
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-    from openhcs.core.plate_image_inventory import PlateImageInventory
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_image_provenance import (
+    from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.plate.plate_image_inventory import PlateImageInventory
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source.source_image_provenance import (
         SourceImageIdentity, SourceImageProvenance, SourceImageProvenanceContributor,
     )
-    from openhcs.core.source_projection import SourceArtifactProjection
-    from openhcs.core.source_metadata import SourceVoxelSpacing
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
-    from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+    from openhcs.core.source.source_projection import SourceArtifactProjection
+    from openhcs.core.source.source_metadata import SourceVoxelSpacing
+    from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
+    from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filename = "A01_s001_w1_z001_t001.tif"

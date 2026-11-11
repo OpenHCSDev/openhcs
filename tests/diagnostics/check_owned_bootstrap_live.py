@@ -314,10 +314,10 @@ def run(args) -> None:
                 page = call('openhcs_search_functions', dict(query=name, limit=5), FunctionCatalogPage)
                 assert registered.functions[0].function_id in {entry.function_id for entry in page.items}
                 save()
-            from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
+            from openhcs.core.config.pipeline_config import (PipelineConfig, LazyPathPlanningConfig,
                                              LazyVFSConfig, MaterializeToDisk,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
-            from openhcs.core.pipeline_document import PipelineDocumentCodec
+            from openhcs.core.io.pipeline_document import PipelineDocumentCodec
             from openhcs.core.steps.function_step import FunctionStep
             from openhcs.processing.custom_functions import (
                 select_volume_fixture_planes_v2, inspect_volume_fixture_v2,

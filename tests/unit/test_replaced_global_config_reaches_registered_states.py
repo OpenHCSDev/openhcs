@@ -20,7 +20,7 @@ from pyqt_reactive.windows.config_window import ConfigSaveParticipant, ConfigWin
 
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
 from openhcs.authoring.session.session import CallerThread, Session
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     DtypeConfig,
     GlobalPipelineConfig,
     LazyDtypeConfig,

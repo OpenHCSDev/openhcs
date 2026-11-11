@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from skimage.draw import line
 
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings, PixelOutgrowthSettings, _TopologyResult,
     _build_cell_results, _build_neurite_morphology_graph, _render_owned_skeleton,

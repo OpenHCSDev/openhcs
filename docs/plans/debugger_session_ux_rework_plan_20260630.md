@@ -390,7 +390,7 @@ File: `openhcs/pyqt_gui/widgets/shared/services/pipeline_debug_actions.py`
 This layer owns GUI action presentation and availability. It does not own core
 command semantics. Any behavior that is true for a `DebugCommandType` outside
 the Pipeline Editor UI, such as advancing one boundary, must live on
-`DebugCommandDeclarationBase` in `openhcs.core.debug`.
+`DebugCommandDeclarationBase` in `openhcs.core.debug.debug_runtime`.
 
 Add to `PipelineDebugActionDeclarationBase`:
 

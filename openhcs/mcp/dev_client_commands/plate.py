@@ -18,8 +18,8 @@ from openhcs.agent.dto.plate import (
     SelectedPlateImageSampleRequest,
     SyntheticPlateGenerationRequest,
 )
-from openhcs.core.plate_file_inventory import PlateFileInventoryQuery
-from openhcs.core.synthetic_plate_generation import SYNTHETIC_PLATE_GENERATION_PROFILE
+from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery
+from openhcs.core.plate.synthetic_plate_generation import SYNTHETIC_PLATE_GENERATION_PROFILE
 from openhcs.mcp.dev_client_commanding import SingleToolCommandSpec
 from openhcs.mcp.dev_client_core import (
     add_component_filter_option,

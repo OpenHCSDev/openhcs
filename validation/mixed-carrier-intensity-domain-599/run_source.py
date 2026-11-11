@@ -19,8 +19,8 @@ from openhcs._source_dependencies import ensure_source_checkout_external_paths
 ensure_source_checkout_external_paths(root / 'source-runtime')
 
 import numpy as np
-import openhcs.core.runtime_image_values as values
-from openhcs.core.aligned_image_payload import stack_image_payloads
+import openhcs.core.payload.runtime_image_values as values
+from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 assert Path(values.__file__).is_relative_to(source)
 print(json.dumps({'source': str(source), 'metadata_module': values.__file__,
     'sha256': hashlib.sha256(Path(values.__file__).read_bytes()).hexdigest(),

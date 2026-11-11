@@ -17,22 +17,22 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     SpecialArtifactType,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.component_group_scope import (
+from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
     composed_image_payload,
     execution_scope,
 )
-from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     FromPipelineStart,
@@ -43,11 +43,11 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     SourceSelector,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_workspace_projection import (
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspaceSourceProjection, WorkspaceSourceProjections,
 )
-from openhcs.core.step_dependencies import PipelineStartInput
+from openhcs.core.util.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
 )

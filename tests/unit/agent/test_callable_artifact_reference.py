@@ -1,8 +1,8 @@
 """Execute the canonical public usage code, rather than a copied example."""
 
-from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import re
 import runpy
 import sys
@@ -25,23 +25,23 @@ from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.invocation_artifacts import (
+from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     MainFlowArtifactContractProvider,
     PIPELINE_INPUT_ARTIFACT,
 )
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 
@@ -209,10 +209,10 @@ def test_diagnostic_reference_uses_one_canonical_slot_and_exact_trailing_artifac
 def test_points_declaration_materializes_fractional_geometry_and_full_source_domain(
     reference_namespace, tmp_path,
 ):
-    from openhcs.core.roi_point_metadata import ROIFractionalZ
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-    from openhcs.core.runtime_measurements import MeasurementTable
-    from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+    from openhcs.core.io.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.measurements.runtime_measurements import MeasurementTable
+    from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
     from polystore.roi import PointShape
 
     namespace = reference_namespace
@@ -362,12 +362,12 @@ def test_input_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch
 def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
     reference_namespace, tmp_path, monkeypatch,
 ):
-    from openhcs.core.callable_contract import FunctionStepExecutionScope
+    from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
     from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
     from openhcs.core.artifacts.kinds import SpecialArtifactType
-    from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
-    from openhcs.core.runtime_measurements import MeasurementTable
-    from openhcs.core.runtime_stores import RuntimeArtifactBatch
+    from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
+    from openhcs.core.measurements.runtime_measurements import MeasurementTable
+    from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
 
     monkeypatch.setattr(
         custom_manager, "get_data_file_path",

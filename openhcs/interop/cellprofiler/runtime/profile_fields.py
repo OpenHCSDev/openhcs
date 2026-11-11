@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from openhcs.core.runtime_profile import RuntimeProfileFieldValue
+from openhcs.core.payload.runtime_profile import RuntimeProfileFieldValue
 from arraybridge import ArrayGeometry
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayPayload, runtime_array_operand
+from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload, runtime_array_operand
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,

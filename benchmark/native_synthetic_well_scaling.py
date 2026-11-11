@@ -27,8 +27,8 @@ from benchmark.matched_cellprofiler_batch import (
     _native_python_executable,
 )
 from benchmark.well_throughput_scaling import _synthetic_well_ids
-from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.source.source_matching import source_component_metadata_value
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )

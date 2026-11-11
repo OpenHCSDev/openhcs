@@ -10,10 +10,10 @@ from openhcs.core.artifacts.relations import (
     InputStackBroadcastSourceRelation,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.source.source_bindings import NamedSourceBinding
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.crop import CropModule
@@ -24,7 +24,7 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     RemoveHolesModule,
     ShrinkToObjectCentersModule,
 )
-from openhcs.core.axes import Axis
+from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
 

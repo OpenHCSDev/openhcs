@@ -9,7 +9,7 @@ from formbridge.bridge.dto import (
     UiLiveOverviewSection,
     UiLiveOverviewSeverity,
 )
-from openhcs.core.streaming_config_declarations import ViewerFamily
+from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from formbridge.bridge.contracts import (
     UiLiveOverviewContributorABC,
     UiLiveOverviewContributorIdentity,

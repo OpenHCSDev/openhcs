@@ -9,22 +9,22 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     ImageOutputBundle,
     ImagePayloadStackComposition,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.component_group_scope import (
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
-from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.callable.function_patterns import compile_function_pattern
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from tests.context_support import (
     executing_context,
     with_facts,

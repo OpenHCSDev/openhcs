@@ -8,7 +8,7 @@ from objectstate.global_config import (
     set_global_config_for_editing,
 )
 
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from tests import conftest, family_registries
 
 

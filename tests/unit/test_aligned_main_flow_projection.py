@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     ImageOutputBundle,
@@ -22,7 +22,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
@@ -32,8 +32,8 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
 )
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.runtime_image_values import PlainImagePayload
-from openhcs.core.component_group_scope import (
+from openhcs.core.payload.runtime_image_values import PlainImagePayload
+from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
 )
 

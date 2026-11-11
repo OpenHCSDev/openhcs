@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import inspect
 
-from openhcs.core.axes import ColourAxis, TileAxis
+from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -49,7 +49,7 @@ from scipy.ndimage import (
 )
 from python_introspect import set_signature_analysis_target
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
@@ -64,9 +64,9 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import KeywordRuntimeParameter, processing_prepare
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.callable.callable_contract import KeywordRuntimeParameter, processing_prepare
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementRowQualifier,
@@ -77,30 +77,30 @@ from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.worm_measurements import (
     WormControlPointMeasurementSchema,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelRepresentation,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     object_label_dense_array,
     object_label_sparse_ijv_rows,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.core.processing_contracts import (
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
@@ -148,18 +148,18 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.core.payload_axes import ColourSampleAxisSpec
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
+from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import (
+    from openhcs.core.callable.function_patterns import (
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,
     )

@@ -9,8 +9,8 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Iterator, Mapping
 
-from openhcs.core.config import Backend
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.config.pipeline_config import Backend
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 
 class BenchmarkProgressEventKind(Enum):

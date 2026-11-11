@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 import numpy as np
-from openhcs.core import runtime_image_values as values
+from openhcs.core.payload import runtime_image_values as values
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--label', required=True)

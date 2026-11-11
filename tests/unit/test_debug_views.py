@@ -4,9 +4,9 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.debug import DebugArtifactRef, DebugCursor, DebugSnapshot
-from openhcs.core.debug_view_models import DebugViewModel
-from openhcs.core.debug_views import (
+from openhcs.core.debug.debug_runtime import DebugArtifactRef, DebugCursor, DebugSnapshot
+from openhcs.core.debug.debug_view_models import DebugViewModel
+from openhcs.core.debug.debug_views import (
     ErrorDebugViewSection,
     InputArtifactsDebugViewSection,
     MeasurementsDebugViewSection,

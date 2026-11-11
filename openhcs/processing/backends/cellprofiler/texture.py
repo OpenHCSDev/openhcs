@@ -14,32 +14,32 @@ import numpy as np
 
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     RuntimeMeasurementFeature,
 )
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_enum_from_literal,
 )
@@ -77,7 +77,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 

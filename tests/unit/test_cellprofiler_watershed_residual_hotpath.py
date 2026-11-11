@@ -7,8 +7,8 @@ import skimage.segmentation
 
 from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
 
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_object_labels import object_label_dense_array
+from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
 )

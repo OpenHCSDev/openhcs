@@ -14,13 +14,13 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.config import StepSourceBindingsConfig
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (

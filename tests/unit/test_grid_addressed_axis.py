@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.axes import (
+from openhcs.core.axes.axis_declarations import (
     Axis,
     AxisFamily,
     GridAddressed,
@@ -13,7 +13,7 @@ from openhcs.core.axes import (
     PartitionAxis,
     TileAxis,
 )
-from openhcs.core.component_filters import ComponentFilters
+from openhcs.core.axes.component_filters import ComponentFilters
 from openhcs.domains.microscopy.axes import Microscopy
 
 

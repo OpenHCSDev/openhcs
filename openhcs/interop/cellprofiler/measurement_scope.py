@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from types import MappingProxyType
 
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementScopeSelection,
 )

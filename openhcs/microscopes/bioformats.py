@@ -10,11 +10,11 @@ from polystore.filemanager import FileManager
 from polystore.ome_zarr_storage import OmeZarrStorageBackend
 
 from openhcs.constants.constants import Backend
-from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.config import SourceBindingsConfig, source_bindings_defaults_to_base
-from openhcs.core.source_projection import SourcePlaneDataset
-from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.virtual_workspace_metadata import (
+from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.config.pipeline_config import SourceBindingsConfig, source_bindings_defaults_to_base
+from openhcs.core.source.source_projection import SourcePlaneDataset
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
+from openhcs.core.io.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     FIELDS,
     get_metadata_path,
@@ -33,7 +33,7 @@ from openhcs.core.dataset_sources.interfaces import (
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
-from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 
 class BioFormatsFilenameParser(SourceSchemaFilenameParser):

@@ -31,7 +31,7 @@ def test_real_generated_source_inspection_keeps_original_compiler_on_main(monkey
     ).generate_dataset()
     # This is a declared-module source fixture, not a catalog-cold/render proof.
     # The installed cold canonical journey remains parent-owned.
-    source = """from openhcs.core.config import PipelineConfig
+    source = """from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.smoothing import reducenoise
 

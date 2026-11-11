@@ -155,7 +155,7 @@ def submit_pipeline(request, plate_id, conn=None, **kwargs):
 
         # If no config provided, use default (auto-detection will handle OMERO-specific settings)
         if not config_code:
-            config_code = "from openhcs.core.config import GlobalPipelineConfig\nconfig = GlobalPipelineConfig()"
+            config_code = "from openhcs.core.config.pipeline_config import GlobalPipelineConfig\nconfig = GlobalPipelineConfig()"
 
         # Get ZMQ client
         client = _get_zmq_client()

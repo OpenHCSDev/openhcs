@@ -3,13 +3,13 @@ from pathlib import Path
 from openhcs.processing.custom_functions import selected_channel_gaussian_v1, rooted_arbor_compact_v1, coded_well_summary_v1
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import NapariDimensionMode, PipelineConfig, LazyWellFilterConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import NapariDimensionMode, PipelineConfig, LazyWellFilterConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,

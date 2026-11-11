@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
-from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
+from openhcs.core.callable.processing_preparation import RegisteredNumbaKernelPreparation
+from openhcs.core.object_labels.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
 from openhcs.processing.backends.cellprofiler.perf_fixtures import capture_enabled
 
 

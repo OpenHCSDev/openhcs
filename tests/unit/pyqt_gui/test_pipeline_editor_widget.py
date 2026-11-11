@@ -32,16 +32,16 @@ from openhcs.authoring.session.pipelines import (
 )
 from openhcs.authoring.session.step_scopes import StepEditorScope
 from openhcs.constants.constants import OrchestratorCompiled, OrchestratorReady
-from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.axes import Ungrouped
-from openhcs.core.config import (
+from openhcs.core.util.artifact_inspection import CompiledArtifactInspection
+from openhcs.core.axes.axis_declarations import Ungrouped
+from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig,
     LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.execution.execution_state import ManagerExecutionState
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
@@ -56,7 +56,7 @@ from openhcs.authoring.session.step_scopes import build_step_scope_id
 from formbridge.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
-from openhcs.core.debug import StepDebugCommand
+from openhcs.core.debug.debug_runtime import StepDebugCommand
 
 TEST_PLATE_SCOPE = "plate"
 

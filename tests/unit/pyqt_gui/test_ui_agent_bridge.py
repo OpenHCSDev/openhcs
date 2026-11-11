@@ -114,24 +114,24 @@ from openhcs.authoring.session.operations.pipelines import (
 from openhcs.authoring.session.session import CallerThread, Renderer, Session
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
 from openhcs.constants.constants import OrchestratorExecuting, OrchestratorReady
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     PipelineConfig,
 )
-from openhcs.core.config_document import ConfigDocumentCodec
-from openhcs.core.debug import (
+from openhcs.core.config.config_document import ConfigDocumentCodec
+from openhcs.core.debug.debug_runtime import (
     DebugCursor,
     DebugProgressContext,
     DebugSession,
     DebugTerminalSummary,
 )
-from openhcs.core.execution_state import (
+from openhcs.core.execution.execution_state import (
     ManagerExecutionState,
 )
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
-from openhcs.core.pipeline_document import PipelineDocument
+from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.io.pipeline_document import PipelineDocument
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     RuntimeProjectionBuilder,
@@ -216,8 +216,8 @@ from openhcs.core.progress.types import (
     PatternGroupProgressPhase,
     SuccessProgressStatus,
 )
-from openhcs.core.debug import AfterInvocationDebugBoundary
-from openhcs.core.debug import (
+from openhcs.core.debug.debug_runtime import AfterInvocationDebugBoundary
+from openhcs.core.debug.debug_runtime import (
     RestartDebugCommand,
     RunDebugCommand,
     StepDebugCommand,
@@ -244,7 +244,7 @@ SELECTED_SELECTION_MODE = SelectedItems.name
 BRIDGE_INSTANCE_ID = "bridge-test"
 BRIDGE_AUTH_TOKEN = "secret-token"
 VALID_SOURCE = (
-    "from openhcs.core.config import GlobalPipelineConfig, PipelineConfig\n"
+    "from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig\n"
     f"plate_paths = ['{PLATE_SCOPE_ID}']\n"
     "global_config = GlobalPipelineConfig()\n"
     f"per_plate_configs = {{'{PLATE_SCOPE_ID}': PipelineConfig()}}\n"
@@ -2757,7 +2757,7 @@ def test_validation_rejects_legacy_pipeline_config_assignment() -> None:
         UiCodeDocumentValidationRequest(
             document_id=DOCUMENT_ID,
             source=(
-                "from openhcs.core.config import PipelineConfig\n"
+                "from openhcs.core.config.pipeline_config import PipelineConfig\n"
                 f"plate_paths = ['{PLATE_SCOPE_ID}']\n"
                 "pipeline_config = PipelineConfig()\n"
                 f"pipeline_data = {{'{PLATE_SCOPE_ID}': []}}\n"
@@ -2951,7 +2951,7 @@ def test_source_policy_rejects_undeclared_external_constructor_type() -> None:
 
 def test_source_policy_allows_safe_builtin_type_references_only() -> None:
     source = (
-        "from openhcs.core.runtime_tabular_values import FieldSpec\n"
+        "from openhcs.core.payload.runtime_tabular_values import FieldSpec\n"
         f"plate_paths = ['{PLATE_SCOPE_ID}']\n"
         "global_config = None\n"
         f"per_plate_configs = {{'{PLATE_SCOPE_ID}': "

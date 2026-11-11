@@ -17,8 +17,8 @@ import pytest
 from arraybridge import MemoryType
 from arraybridge.array_operations import ArrayOperations
 
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.processing_contracts import VolumetricToSliceContract
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.processing_contracts import VolumetricToSliceContract
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.processors import image_stack_operations
 from openhcs.processing.backends.processors.method_axes import (

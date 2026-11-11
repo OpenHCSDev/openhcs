@@ -21,7 +21,7 @@ Backend options (uncomment one):
 
 # Core imports
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
     LazyNapariStreamingConfig,

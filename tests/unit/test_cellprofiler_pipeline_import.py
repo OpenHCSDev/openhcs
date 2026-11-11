@@ -20,31 +20,31 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.config.pipeline_config import (
     PipelineConfig,
     ProcessingConfig,
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import (
+from openhcs.core.callable.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import (
     artifact_producers_for_outputs,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     PairByOrder,
     PrimaryPlaneRole,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -73,7 +73,7 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     measure_object_neighbors,
 )
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
-from openhcs.core.axes import Ungrouped
+from openhcs.core.axes.axis_declarations import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 
 PIPELINE_IMPORT_PATH = (
@@ -219,7 +219,7 @@ def test_adjacent_filters_preserve_original_named_object_lineage(
 ) -> None:
     from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
-    from openhcs.core.pipeline_document import PipelineDocumentCodec
+    from openhcs.core.io.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 
     cppipe_path = Path("pipelines/repeated-filters.cppipe")
@@ -309,7 +309,7 @@ FilterObjects:[module_num:5|enabled:True]
     # Exercise the unchanged native leaves as well as their admitted graph.
     import inspect
     import numpy as np
-    from openhcs.core.runtime_object_labels import object_label_dense_array
+    from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
     from openhcs.processing.backends.cellprofiler.object_images import convert_image_to_objects
     from openhcs.processing.backends.cellprofiler.object_filtering import FilterMode, filter_objects
     from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape

@@ -8,13 +8,13 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ObjectLocationMeasurementRows,
 )

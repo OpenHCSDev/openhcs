@@ -14,22 +14,22 @@ from objectstate import ObjectState, ObjectStateRegistry
 from python_introspect import Enableable
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import (
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     PathPlanningConfig,
     PipelineConfig,
 )
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.callable.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
     CompilationDatasetScope,
     resolve_declared_dataclass_paths,
 )
 from openhcs.core.pipeline.path_planner import _cached_output_dataset_root
-from openhcs.core.vfs_protocol import (
+from openhcs.core.payload.vfs_protocol import (
     FileManagerLike,
     PlateInputDirectoryDeclaration,
     PlateInputFile,

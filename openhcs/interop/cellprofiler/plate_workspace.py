@@ -12,17 +12,17 @@ from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
 
 from openhcs.constants import Backend
-from openhcs.core.input_workspace import (
+from openhcs.core.execution.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
     PipelineImportDiagnostic,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.source_binding_workspace import (
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.source.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.config import source_bindings_defaults_to_base
+from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 

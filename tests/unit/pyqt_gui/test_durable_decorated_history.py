@@ -13,9 +13,9 @@ from arraybridge.types import MemoryType
 from objectstate import ObjectStateRegistry
 from formbridge.services.scope_token_service import ScopeTokenService
 
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.memory import numpy
-from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import tophat
 from openhcs.authoring.session.pipelines import (

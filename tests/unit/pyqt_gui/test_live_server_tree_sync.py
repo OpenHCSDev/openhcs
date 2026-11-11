@@ -15,7 +15,7 @@ from formbridge.services.zmq_server_scan_service import StartingEndpointObservat
 from zmqruntime.messages import PongResponse
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.widgets.shared.server_browser import live_tree_sync
 from openhcs.pyqt_gui.widgets.shared.server_browser.live_tree_sync import (
     LaunchingViewerServerInfo,

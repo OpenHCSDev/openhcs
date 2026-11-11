@@ -14,7 +14,7 @@ from openhcs.authoring.session.operations.datasets import (
 )
 from openhcs.authoring.session.views import DatasetListView
 from openhcs.constants.constants import OrchestratorReady
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.execution.execution_state import ManagerExecutionState
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget

@@ -27,11 +27,11 @@ def _codebook_image(*, seed: int) -> np.ndarray:
 
 
 def test_virtual_source_uses_generic_payload_intensity_scale() -> None:
-    from openhcs.core.runtime_image_values import (
+    from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
     )
-    from openhcs.core.source_metadata import (
+    from openhcs.core.source.source_metadata import (
         SOURCE_FILTER_PATHS_METADATA_FIELD,
         SourceFilterPathMetadata,
     )
@@ -62,7 +62,7 @@ def test_virtual_source_uses_generic_payload_intensity_scale() -> None:
 
 
 def test_full_stack_uses_retained_source_plane_dtype_scale() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     image = _codebook_image(seed=7)[None, ...]
     metadata = ImagePayloadMetadata(
@@ -74,7 +74,7 @@ def test_full_stack_uses_retained_source_plane_dtype_scale() -> None:
 
 
 def test_full_stack_rejects_conflicting_source_plane_dtype_scales() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
     image = np.zeros((2, 4, 4), dtype=np.float32)
     metadata = ImagePayloadMetadata(

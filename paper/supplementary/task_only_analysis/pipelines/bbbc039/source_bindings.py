@@ -1,7 +1,7 @@
 # Derived OpenHCS source-binding declaration
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.source_bindings import (
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
@@ -11,7 +11,7 @@ from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     SourceSelector,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
     SourceFilterClause,

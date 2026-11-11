@@ -9,14 +9,14 @@ import pytest
 from pycodify import SourceDocument
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.config_document import ConfigDocument
-from openhcs.core.function_step_document import FunctionStepDocumentCodec
-from openhcs.core.function_step_transport import (
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config.config_document import ConfigDocument
+from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
+from openhcs.core.callable.function_step_transport import (
     FunctionStepTransportAuthority,
     PipelineStepsDocument,
 )
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 

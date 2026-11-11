@@ -22,7 +22,7 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
 
 
 class FirstMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):

@@ -1,7 +1,7 @@
 """Intensity-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.aligned_image_payload import FullStackExecution
+from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, ClassVar
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
@@ -65,13 +65,13 @@ from openhcs.interop.cellprofiler.setting_names import (
     optional_setting_value,
     required_setting_value,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelVariantData
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariantData
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -267,45 +267,45 @@ import time
 from typing import TypeAlias
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
-from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes.alias_property import AliasProperty
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
-from openhcs.core.runtime_batch_contracts import (
+from openhcs.core.callable.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
     measurement_image_batch_executor,
     pure_2d_batch_executor,
 )
 from python_introspect import public_names_from_objects
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ConsecutiveObjectLabelIdProjection,
     ObjectLabelDomain,
     dense_object_label_measurement_row_domain,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureRelationDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
+from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
+from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocationRequest
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     PreparedObjectMeasurementInvocation,
 )
@@ -337,7 +337,7 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
     _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
     Pure3DContract,
@@ -345,7 +345,7 @@ from openhcs.core.processing_contracts import (
 from openhcs.core.equivalence.measurement_features import (
     TieSensitiveLocationValueFeatureRelation,
 )
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 logger = logging.getLogger(__name__)
 ImageIntensityOutput: TypeAlias = np.ndarray | ImageMetadataPayload | MaskedImagePayload

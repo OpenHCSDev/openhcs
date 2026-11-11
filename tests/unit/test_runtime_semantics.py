@@ -1,18 +1,18 @@
 from __future__ import annotations
-from openhcs.core.runtime_object_label_domains import PlaneLabelScope
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.object_labels.runtime_object_label_domains import PlaneLabelScope
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageStackKwargResolver,
     ImagePayloadBundleContext,
 )
-from openhcs.core.runtime_slice_projection import preserve_declared_image_payload_axis
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.runtime_object_label_domains import (
+from openhcs.core.payload.runtime_slice_projection import preserve_declared_image_payload_axis
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelDomain,
     DenseObjectLabelConsecutiveRelabelingStrategy,
     DenseObjectLabelExtentDomainDeclaration,
@@ -23,7 +23,7 @@ from openhcs.core.runtime_object_label_domains import (
     dense_object_label_measurement_row_domain,
     dense_object_label_plane_id_domains,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayloadSourceSpatialDomainAdapter,
     ObjectLabelRepresentation,
 )
@@ -33,25 +33,25 @@ from openhcs.core.runtime_relationships import (
     object_label_identity_lineage_payload,
     object_label_parent_child_payload,
 )
-from openhcs.core.runtime_plane_projection import (
+from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.source_spatial_domain import (
+from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomainAdapter,
 )
-from openhcs.core.runtime_image_values import (
+from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
     ObjectLabelSet,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 
 
 def declared_label_payload(labels: object) -> ObjectLabelPayload:

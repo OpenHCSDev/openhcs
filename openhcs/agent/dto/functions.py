@@ -22,7 +22,7 @@ from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts.streaming import AutomaticStreaming
-from openhcs.core.function_reference import FunctionReference
+from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000

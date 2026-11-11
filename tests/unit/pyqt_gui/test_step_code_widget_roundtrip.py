@@ -4,7 +4,7 @@ import pytest
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 from objectstate import ObjectState, ObjectStateRegistry
 
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config.pipeline_config import PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.pyqt_gui.services.reactor_providers import (

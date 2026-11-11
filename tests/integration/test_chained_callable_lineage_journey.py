@@ -15,29 +15,29 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
 )
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.config import (
+from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazySourceBindingsConfig,
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.function_patterns import MainFlowInputProjection
+from openhcs.core.callable.function_patterns import MainFlowInputProjection
 from openhcs.core.orchestrator.execution_result import (
     MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_stores import RuntimeArtifactQuery
-from openhcs.core.source_bindings import (
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactQuery
+from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
     SourceSelector,
     TextContains,
 )
-from openhcs.core.source_metadata import SourceFilterClause
+from openhcs.core.source.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,

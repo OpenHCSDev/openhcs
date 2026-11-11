@@ -10,7 +10,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 import numpy as np
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
 )
@@ -20,7 +20,7 @@ from openhcs.processing.backends.cellprofiler._preparation import (
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
@@ -32,28 +32,28 @@ from openhcs.core.artifacts.kinds import (
     SpatialGridArtifactType,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import (
+from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGridOrdering,
     SpatialGridOrigin,
 )
-from openhcs.core.runtime_spatial_grid import (
+from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
@@ -87,18 +87,18 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
-from openhcs.core.processing_contracts import (
+from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.core.axes import Axis
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.function_patterns import FunctionInvocationKey
-    from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.callable.function_patterns import FunctionInvocationKey
+    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+    from openhcs.core.callable.callable_contract import CallableContract
+    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 
 
 class DefineGridCycleScope(str, Enum):

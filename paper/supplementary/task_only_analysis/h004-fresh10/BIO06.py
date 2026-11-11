@@ -2,8 +2,8 @@ from pathlib import Path
 from zmqruntime.config import TransportMode
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import PipelineConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyNapariStreamingConfig, NapariDimensionMode
-from openhcs.core.source_bindings import (
+from openhcs.core.config.pipeline_config import PipelineConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyNapariStreamingConfig, NapariDimensionMode
+from openhcs.core.source.source_bindings import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     NamedSourceBinding,
@@ -13,7 +13,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchPlan,
     SourceBindingMatchMethod,
 )
-from openhcs.core.source_metadata import (
+from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -43,7 +43,7 @@ from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
 from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
 from openhcs.processing.backends.cellprofiler.feature_enhancement import OperationMethod, EnhanceMethod, NeuriteMethod
-from openhcs.core.config import LazyStepMaterializationConfig
+from openhcs.core.config.pipeline_config import LazyStepMaterializationConfig
 from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
 from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
 

@@ -13,12 +13,12 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
         import numpy as np
         from numba.core.caching import Cache
         from numba.core.dispatcher import Dispatcher
-        from openhcs.core.callable_contract import (
+        from openhcs.core.callable.callable_contract import (
             CallableContract, CallableProjection,
         )
-        from openhcs.core.processing_preparation import CallablePreparation
-        from openhcs.core.payload_axes import PayloadAxes
-        from openhcs.core.runtime_image_values import ImagePayloadMetadata
+        from openhcs.core.callable.processing_preparation import CallablePreparation
+        from openhcs.core.payload.payload_axes import PayloadAxes
+        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
         from openhcs.processing.backends.cellprofiler import colocalization as module
 
         for process in (module.measure_colocalization, module.measure_colocalization_objects):

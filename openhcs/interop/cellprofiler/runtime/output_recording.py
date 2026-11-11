@@ -22,16 +22,16 @@ from openhcs.core.artifacts.kinds import (
     ObjectLineageArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable.callable_contract import CallableContract
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.core.aligned_image_payload import (
+from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImageOutputBundle,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.interop.cellprofiler.image_normalization import (
     normalize_cellprofiler_image_payload,
 )
@@ -39,11 +39,11 @@ from openhcs.interop.cellprofiler.runtime.main_flow import cellprofiler_main_flo
 from openhcs.interop.cellprofiler.runtime.measurement_source_names import (
     single_source_name,
 )
-from openhcs.core.runtime_object_labels import (
+from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
 )
-from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
+from openhcs.core.payload.runtime_output_matching import RuntimeMatchedOutput
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
@@ -64,8 +64,8 @@ from openhcs.interop.cellprofiler.runtime.profile_fields import (
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.core.runtime_image_values import as_runtime_value
-from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
 if TYPE_CHECKING:

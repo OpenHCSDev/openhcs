@@ -80,7 +80,7 @@ def test_launch_plan_projects_native_owners_without_materialization(
     setup, tmp_path, mode
 ):
     from metaclass_registry.cache import get_cache_file_path
-    from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+    from openhcs.core.util.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
 
     _, _, spawn = setup
@@ -130,7 +130,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
 ):
     import subprocess
     import sys
-    from openhcs.core.config_document import ConfigDocumentCodec
+    from openhcs.core.config.config_document import ConfigDocumentCodec
     from openhcs.runtime import zmq_execution_client as module
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 

@@ -9,7 +9,7 @@ from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
 from openhcs.interop.cellprofiler.analyst_export import (
     CellProfilerDatabaseExportSettings,
     CellProfilerObjectTableMode,
