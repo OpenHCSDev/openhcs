@@ -59,7 +59,7 @@ from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.payload.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError, ImagePayload
+from openhcs.core.payload.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError
 from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.config.pipeline_config import runtime_config_parameter
@@ -1145,7 +1145,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in _nominal_argument_types(annotation)
-        ) or not isinstance(source_payload, ImagePayload) else source_payload.data
+        ) else source_payload.array_data
 
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""

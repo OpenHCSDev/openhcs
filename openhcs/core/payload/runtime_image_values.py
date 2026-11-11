@@ -1467,6 +1467,11 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         )
         return resolved_metadata.payload_with(data, resolved_mask)
 
+    def wrap_raw_output(self, raw_data: object) -> object:
+        if self.mask is None and not self.metadata.has_values:
+            return raw_data
+        return self.with_pixels(raw_data)
+
     def mask_for_data(self, data: Any, *, mask: Any | None = None) -> Any | None:
         """Return this payload's mask, or ``mask``, broadcast onto ``data``."""
         source_mask = self.mask if mask is None else mask

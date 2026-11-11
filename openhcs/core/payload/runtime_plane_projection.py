@@ -102,6 +102,15 @@ class RuntimeSliceProjectableValue(ABC):
         """Return the separately stored members ``map_slices`` transforms."""
         return (self,)
 
+    def wrap_raw_output(self, raw_data: object) -> object:
+        """Wrap a raw array result back into this value's type, preserving context.
+
+        Returns ``raw_data`` unchanged when this value has no context worth
+        preserving (no mask, no metadata).  Image payloads override this to
+        call ``with_pixels``.
+        """
+        return raw_data
+
     def match_alignment(
         self,
         *,
