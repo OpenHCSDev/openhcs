@@ -158,6 +158,23 @@ def _refresh_function_objects_in_steps(pipeline_definition: List[AbstractStep]) 
     PipelineFunctionReferences.reference_pipeline_in_place(pipeline_definition)
 
 
+def _empty_compiled_bundle(
+    pipeline_definition: list[AbstractStep],
+    effective_config: GlobalPipelineConfig,
+    is_zmq_execution: bool,
+) -> CompiledExecutionBundle:
+    return CompiledExecutionBundle.from_runtime_contexts(
+        pipeline_definition=pipeline_definition,
+        runtime_contexts={},
+        worker_assignments={},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            effective_config,
+            compiled_contexts={},
+            server_mode=is_zmq_execution,
+        ),
+    )
+
+
 class PipelineCompiler:
     """
     Compiles a pipeline by populating step plans within a ProcessingContext.
@@ -1508,15 +1525,8 @@ class PipelineCompiler:
             )
             if not axis_values_to_process:
                 logger.warning("No axis values found to process based on filter.")
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return _empty_compiled_bundle(
+                    pipeline_definition, effective_config, is_zmq_execution,
                 )
 
             logger.info(
@@ -1530,15 +1540,8 @@ class PipelineCompiler:
                 logger.warning(
                     "All steps were disabled. Pipeline is empty after filtering."
                 )
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return _empty_compiled_bundle(
+                    pipeline_definition, effective_config, is_zmq_execution,
                 )
             path_resolver = CompilationPathResolver(
                 dataset_scope=CompilationDatasetScope.from_path(orchestrator.dataset_root),
