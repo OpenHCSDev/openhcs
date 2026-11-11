@@ -124,7 +124,7 @@ def build_mst_gpu(
 
     This is a wrapper that imports and calls the Borůvka implementation.
     """
-    from .boruvka_mst import build_mst_gpu_boruvka
+    from openhcs.processing.backends.pos_gen.mist.boruvka_mst import build_mst_gpu_boruvka
 
     return build_mst_gpu_boruvka(
         connection_from,

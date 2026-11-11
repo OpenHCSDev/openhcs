@@ -277,7 +277,7 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         footprint = _structuring_element(request.radius)
         masked = request.mask_context.masked_original
         if request.speckle_accuracy is SpeckleAccuracy.FAST and request.radius > 3:
-            from .morphology import MorphologyBackendStrategy
+            from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MorphologyBackendStrategy
 
             opened = MorphologyBackendStrategy.for_callable(
                 enhance_or_suppress_features,
