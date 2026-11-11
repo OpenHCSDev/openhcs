@@ -29,6 +29,7 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     IntensityColocalizationMetrics,
     MultiChannelResult,
     ThresholdMethod,
+    detection_method_catalog,
 )
 
 
@@ -370,19 +371,11 @@ def _detect_cells_single_method(
     image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
     """Detect cells using specified method."""
-
-    if method is DetectionMethod.BLOB_LOG:
-        return _detect_cells_blob_log(image, slice_idx, params)
-    elif method is DetectionMethod.BLOB_DOG:
-        return _detect_cells_blob_dog(image, slice_idx, params)
-    elif method is DetectionMethod.BLOB_DOH:
-        return _detect_cells_blob_doh(image, slice_idx, params)
-    elif method is DetectionMethod.WATERSHED:
-        return _detect_cells_watershed(image, slice_idx, params)
-    elif method is DetectionMethod.THRESHOLD:
-        return _detect_cells_threshold(image, slice_idx, params)
-    else:
+    try:
+        detector = _DETECTION_METHODS[method]
+    except KeyError:
         raise ValueError(f"Unknown detection method: {method}")
+    return detector(image, slice_idx, params)
 
 
 def _detect_cells_blob_log(
@@ -956,6 +949,15 @@ def _detect_cells_threshold(
         confidences,
         params,
     )
+
+
+_DETECTION_METHODS = detection_method_catalog(
+    blob_log=_detect_cells_blob_log,
+    blob_dog=_detect_cells_blob_dog,
+    blob_doh=_detect_cells_blob_doh,
+    watershed=_detect_cells_watershed,
+    threshold=_detect_cells_threshold,
+)
 
 
 def _analyze_colocalization(

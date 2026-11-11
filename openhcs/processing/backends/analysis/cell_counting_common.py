@@ -79,7 +79,7 @@ class CellCountResult:
     """Results for single-channel cell counting."""
 
     slice_index: int
-    method: DetectionMethod
+    method: str
     cell_count: int
     cell_positions: list[tuple[float, float]]
     cell_areas: list[float]
@@ -92,7 +92,7 @@ class CellCountResult:
     def from_measurements(
         cls,
         slice_index: int,
-        method: DetectionMethod,
+        method: str,
         positions: list[tuple[float, float]],
         areas: list[float],
         intensities: list[float],

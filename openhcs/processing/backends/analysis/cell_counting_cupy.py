@@ -473,7 +473,7 @@ def _detect_cells_blob_log(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, DetectionMethod.BLOB_LOG, *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_LOG.value, *filtered_data, params
     )
 
 
@@ -525,7 +525,7 @@ def _detect_cells_blob_dog(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, DetectionMethod.BLOB_DOG, *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOG.value, *filtered_data, params
     )
 
 
@@ -578,7 +578,7 @@ def _detect_cells_blob_doh(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, DetectionMethod.BLOB_DOH, *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOH.value, *filtered_data, params
     )
 
 
@@ -655,7 +655,7 @@ def _detect_cells_watershed(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        DetectionMethod.WATERSHED,
+        DetectionMethod.WATERSHED.value,
         positions,
         areas,
         intensities,
@@ -708,7 +708,7 @@ def _detect_cells_threshold(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        DetectionMethod.THRESHOLD,
+        DetectionMethod.THRESHOLD.value,
         positions,
         areas,
         intensities,
