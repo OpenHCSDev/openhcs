@@ -169,22 +169,18 @@ class GenericFilenameParser(ABC):
     @abstractmethod
     def can_parse(cls, filename: str) -> bool:
         """Check if this parser can parse the given filename."""
-        pass
 
     @abstractmethod
     def extract_component_coordinates(self, component_value: str) -> Tuple[str, str]:
         """Extract coordinates from component identifier (typically well)."""
-        pass
 
     @abstractmethod
     def parse_filename(self, filename: str) -> Optional[FilenameParseResult]:
         """Parse a filename to extract all components."""
-        pass
 
     @abstractmethod
     def construct_filename(self, components: FilenameParseResult) -> str:
         """Construct a filename from one nominal component result."""
-        pass
 
     def construct_acquisition_filename(
         self,

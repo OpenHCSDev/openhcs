@@ -297,12 +297,10 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def get_library_version(self) -> str:
         """Get library version for cache validation."""
-        pass
 
     @abstractmethod
     def is_library_available(self) -> bool:
         """Check if the library is available for import."""
-        pass
 
     def is_available_for_catalog(self) -> bool:
         """Return whether this registry can participate in catalog discovery.
@@ -324,7 +322,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def discover_functions(self) -> Dict[str, FunctionMetadata]:
         """Discover and return function metadata. Must be implemented by subclasses."""
-        pass
 
     @classmethod
     def metadata_for_declared_callable(
@@ -939,7 +936,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def get_library_object(self):
         """Get the main library object to scan for modules. Library-specific implementation."""
-        pass
 
 
 class RuntimeTestingRegistryBase(LibraryRegistryBase):
@@ -975,7 +971,6 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
     @abstractmethod
     def _create_array(self, shape: Tuple[int, ...], dtype):
         """Create array with specified shape and dtype. Library-specific implementation."""
-        pass
 
     def _get_float_dtype(self):
         """Get the appropriate float dtype for this library."""
@@ -1030,12 +1025,10 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
     @abstractmethod
     def _stack_2d_results(self, func, test_3d):
         """Stack 2D results. Library-specific implementation required."""
-        pass
 
     @abstractmethod
     def _arrays_close(self, arr1, arr2):
         """Compare arrays. Library-specific implementation required."""
-        pass
 
     def runtime_owned_parameter_names(
         self,
@@ -1164,12 +1157,10 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
     @abstractmethod
     def _preprocess_input(self, image, func_name: str):
         """Preprocess input image. Library-specific implementation."""
-        pass
 
     @abstractmethod
     def _postprocess_output(self, result, original_image, func_name: str):
         """Postprocess output result. Library-specific implementation."""
-        pass
 
     # ===== BASIC FILTERING =====
     def should_include_function(self, func: Callable, func_name: str) -> bool:
@@ -1228,7 +1219,6 @@ class RuntimeTestingRegistryBase(LibraryRegistryBase):
     @abstractmethod
     def _check_first_parameter(self, first_param, func_name: str) -> bool:
         """Check if first parameter meets library-specific criteria. Library-specific implementation."""
-        pass
 
     # ===== RUNTIME TESTING IMPLEMENTATION =====
     def discover_functions(self) -> Dict[str, FunctionMetadata]:

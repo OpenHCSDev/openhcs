@@ -1874,7 +1874,6 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
 
     def handle_data_message(self, message: Mapping[str, FijiWireValue]):
         """Handle incoming image data - called by process_messages()."""
-        pass
 
     def display_image(self, image_data, metadata: dict) -> None:
         """Display a single image payload (no-op; Fiji uses batch processing)."""

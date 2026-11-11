@@ -320,7 +320,6 @@ class FilenameParser(
         Returns:
             bool: True if this parser can parse the filename, False otherwise
         """
-        pass
 
     @abstractmethod
     def parse_filename(self, filename: str) -> Optional[FilenameParseResult]:
@@ -333,7 +332,6 @@ class FilenameParser(
         Returns:
             A complete nominal component result, or ``None`` when parsing fails.
         """
-        pass
 
     @abstractmethod
     def extract_component_coordinates(self, component_value: str) -> Tuple[str, str]:
@@ -349,12 +347,10 @@ class FilenameParser(
         Raises:
             ValueError: If component format is invalid for this parser
         """
-        pass
 
     @abstractmethod
     def construct_filename(self, components: FilenameParseResult) -> str:
         """Construct a filename from one complete nominal component result."""
-        pass
 
 
 class FilenameParserCapability(ABC):
@@ -523,7 +519,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             TypeError: If dataset_root is not a valid path type
             FileNotFoundError: If no metadata file is found
         """
-        pass
 
     @abstractmethod
     def get_grid_dimensions(self, dataset_root: Union[str, Path]) -> Tuple[int, int]:
@@ -541,7 +536,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             FileNotFoundError: If no metadata file is found
             ValueError: If grid dimensions cannot be determined
         """
-        pass
 
     def get_metadata_grid_dimensions(self, dataset_root: Union[str, Path]) -> list[int]:
         """Serialization view: an empty list preserves genuinely unknown layout.
@@ -608,7 +602,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             FileNotFoundError: If no metadata file is found
             ValueError: If pixel size cannot be determined
         """
-        pass
 
     @abstractmethod
     def component_value_set(
@@ -617,7 +610,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     ) -> MetadataComponentValueSet:
         """Return value labels for every declared axis."""
 
-        pass
 
     def get_component_values(
         self,
@@ -641,7 +633,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         Subclasses list their format's files; the base class
         must not infer another source's workspace metadata layout.
         """
-        pass
 
     def analysis_result_directories(
         self,

@@ -534,7 +534,6 @@ class ObjectLabelValue(
 
     def validate_admitted(self) -> None:
         """Override in subclasses that need admission validation."""
-        pass
     representation: ObjectLabelRepresentation
     domain: ObjectLabelDomain
     plane_axis: type[RuntimePlaneAxis]

@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 class DataWarning(Warning):
     """Warnings about the content of user-provided image data."""
 
-    pass
 
 
 def warn_data(message):
