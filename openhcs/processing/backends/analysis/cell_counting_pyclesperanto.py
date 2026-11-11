@@ -1096,7 +1096,7 @@ def _colocalization_overlap_based(
     result = _colocalization_distance_based(
         chan_1_result, chan_2_result, distance_threshold
     )
-    result.colocalization_method = "overlap_area"
+    result.colocalization_method = ColocalizationMethod.OVERLAP_AREA
     result.colocalization_metrics["min_overlap_threshold"] = min_overlap_area
     result.colocalization_metrics["note"] = "Approximated using distance-based method"
 
@@ -1205,7 +1205,7 @@ def _colocalization_manders(
     m1 = coloc_int_1 / total_int_1 if total_int_1 > 0 else 0
     m2 = coloc_int_1 / total_int_2 if total_int_2 > 0 else 0  # Simplified
 
-    intensity_result.colocalization_method = "manders_coefficients"
+    intensity_result.colocalization_method = ColocalizationMethod.MANDERS_COEFFICIENTS
     intensity_result.colocalization_metrics.update(
         {
             "manders_m1": m1,

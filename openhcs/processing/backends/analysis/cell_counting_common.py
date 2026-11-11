@@ -121,7 +121,7 @@ class MultiChannelResult:
     slice_index: int
     chan_1_results: CellCountResult
     chan_2_results: CellCountResult
-    colocalization_method: str
+    colocalization_method: ColocalizationMethod
     colocalized_count: int
     colocalization_percentage: float
     chan_1_only_count: int
@@ -232,10 +232,6 @@ class AreaFilter:
 class ColocalizationAnalysis:
     """Shared cell-counting colocalization semantics for CPU and GPU callers."""
 
-    DISTANCE_BASED_METHOD = "distance_based"
-    OVERLAP_AREA_METHOD = "overlap_area"
-    INTENSITY_CORRELATION_METHOD = "intensity_correlation"
-    MANDERS_COEFFICIENTS_METHOD = "manders_coefficients"
     OVERLAP_DISTANCE_THRESHOLD = 2.0
     INTENSITY_PAIRING_DISTANCE_THRESHOLD = 5.0
 
@@ -249,7 +245,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.DISTANCE_BASED_METHOD,
+                ColocalizationMethod.DISTANCE_BASED,
             )
 
         colocalized_pairs = self.nearest_pairs(
@@ -281,7 +277,7 @@ class ColocalizationAnalysis:
             slice_index=chan_1_result.slice_index,
             chan_1_results=chan_1_result,
             chan_2_results=chan_2_result,
-            colocalization_method=self.DISTANCE_BASED_METHOD,
+            colocalization_method=ColocalizationMethod.DISTANCE_BASED,
             colocalized_count=colocalized_count,
             colocalization_percentage=colocalization_percentage,
             chan_1_only_count=chan_1_result.cell_count - colocalized_count,
@@ -307,7 +303,7 @@ class ColocalizationAnalysis:
             chan_2_result,
             self.OVERLAP_DISTANCE_THRESHOLD,
         )
-        result.colocalization_method = self.OVERLAP_AREA_METHOD
+        result.colocalization_method = ColocalizationMethod.OVERLAP_AREA
         result.colocalization_metrics["min_overlap_threshold"] = min_overlap_area
         result.colocalization_metrics["note"] = (
             "Approximated using distance-based method"
@@ -324,7 +320,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.INTENSITY_CORRELATION_METHOD,
+                ColocalizationMethod.INTENSITY_CORRELATION,
             )
 
         colocalized_pairs: list[tuple[int, int]] = []
@@ -358,7 +354,7 @@ class ColocalizationAnalysis:
             slice_index=chan_1_result.slice_index,
             chan_1_results=chan_1_result,
             chan_2_results=chan_2_result,
-            colocalization_method=self.INTENSITY_CORRELATION_METHOD,
+            colocalization_method=ColocalizationMethod.INTENSITY_CORRELATION,
             colocalized_count=colocalized_count,
             colocalization_percentage=(
                 2 * colocalized_count / total_cells * 100 if total_cells > 0 else 0
@@ -379,7 +375,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.MANDERS_COEFFICIENTS_METHOD,
+                ColocalizationMethod.MANDERS_COEFFICIENTS,
             )
 
         result = self.intensity_based(
@@ -394,7 +390,7 @@ class ColocalizationAnalysis:
             if chan_1_result.cell_intensities and chan_2_result.cell_positions
             else 0.0
         )
-        result.colocalization_method = self.MANDERS_COEFFICIENTS_METHOD
+        result.colocalization_method = ColocalizationMethod.MANDERS_COEFFICIENTS
         result.colocalization_metrics.update(
             {
                 "manders_m1": (
