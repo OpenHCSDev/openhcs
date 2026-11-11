@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
 from openhcs.core.source.source_path_identity import source_path_identity, source_path_join
 from openhcs.constants import Backend
@@ -52,10 +52,6 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ExecutingContext
-    from polystore.filemanager import FileManager
-    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")

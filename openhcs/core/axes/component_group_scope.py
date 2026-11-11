@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.source.source_matching import (
@@ -21,8 +21,6 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis, is_axis
 from openhcs.core.source.source_matching import semantic_source_metadata_value, source_component_metadata_value, with_source_component_metadata
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
 
 ComponentGroupKey = str | None
 RuntimeFixedComponentValues = tuple[tuple[type[Axis], str], ...]

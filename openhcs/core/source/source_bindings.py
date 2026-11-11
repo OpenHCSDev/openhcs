@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self
+from typing import Annotated, Any, ClassVar, Self
 from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
@@ -53,12 +53,6 @@ from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImageUnitIntervalIntensityMetadata
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
-    from openhcs.core.source.source_binding_selection import (
-        SourceBoundAnchorPatternPolicy,
-        SourcePatternResolutionContext,
-    )
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
+from typing import Any, Mapping, MutableMapping, Sequence, get_type_hints
 
 from objectstate import DataclassFieldAccess
 
@@ -39,8 +39,6 @@ from openhcs.core.pipeline.artifact_planning import extract_artifact_declaration
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.components.validation import GenericValidator
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
 @dataclass(frozen=True, slots=True)

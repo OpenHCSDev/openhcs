@@ -7,7 +7,7 @@ import os
 from abc import ABC
 from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, ClassVar, Mapping, Sequence, TypeAlias
+from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayout
 
@@ -34,10 +34,6 @@ from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter, OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries, get_metadata_path
 from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
 
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
-    from openhcs.core.context.processing_context import ExecutingContext
 
 logger = logging.getLogger(__name__)
 

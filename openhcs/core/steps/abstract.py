@@ -6,13 +6,15 @@ in the OpenHCS pipeline. It provides the core functionality for step execution,
 validation, and state management.
 """
 
+from __future__ import annotations
+
 import abc
 import inspect
 from pathlib import Path
 from collections.abc import Mapping
 from dataclasses import dataclass, field, is_dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Iterable, get_type_hints
+from typing import Iterable, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
 
@@ -37,10 +39,6 @@ from openhcs.core.runtime_store.runtime_stores import (
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 # ExecutingContext is used in type hints
-if TYPE_CHECKING:
-    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
-    from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.util.post_execute import HookObservations
 
 
 @dataclass(frozen=True, slots=True)

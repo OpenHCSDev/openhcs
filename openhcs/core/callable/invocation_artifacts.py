@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -25,9 +25,6 @@ PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
     "__openhcs_pipeline_input", ImageArtifactType
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactProducer
-    from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 
 def unnamed_main_flow_artifact_name(

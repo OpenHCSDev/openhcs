@@ -15,14 +15,12 @@ from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisProjector
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from typing import ClassVar
 import numpy as np
 
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
-if TYPE_CHECKING:
-    from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
 
 
 DeclaredObjectIds = tuple[int, ...] | list[int] | None

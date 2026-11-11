@@ -64,15 +64,6 @@ from openhcs.core.payload.runtime_image_values import owned_runtime_value, Runti
 from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_reference import FunctionReference
-    from openhcs.core.payload.image_file_serialization import ImageFileSourceMetadata
-    from openhcs.core.pipeline.compilation_session import CompilationPathResolver
-    from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
-    from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchExecutionDomain
-    from openhcs.core.callable.processing_contracts import (
-        ProcessingContract,
-    )
 
 
 CallableNamespace = Mapping[str, Any]

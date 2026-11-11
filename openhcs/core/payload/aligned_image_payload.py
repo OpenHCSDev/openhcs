@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from dataclasses import InitVar, dataclass, field, fields
 from threading import Lock
-from typing import Any, ClassVar, Mapping, TYPE_CHECKING
+from typing import Any, ClassVar, Mapping
 
 import numpy as np
 from arraybridge import ArrayGeometry
@@ -51,15 +51,6 @@ from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
-if TYPE_CHECKING:
-    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.callable.processing_contracts import ContractCall, ProcessingContract
-    from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocationRequest
-    from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
-    from openhcs.core.source.source_workspace_projection import (
-        VirtualWorkspaceSourceProjection,
-        VirtualWorkspacePathLookup,
-    )
 
 
 class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):

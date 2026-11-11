@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, ClassVar, TypeVar
+from typing import ClassVar, TypeVar
 
 from openhcs.core.artifacts.plans import (
     ArtifactOutputPlan,
@@ -15,8 +15,6 @@ from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
 
 
 class ArtifactOutputPolicy(ABC):

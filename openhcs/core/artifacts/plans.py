@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, Self, TypeVar, cast
+from typing import ClassVar, Self, TypeVar, cast
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -31,12 +31,6 @@ from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.relations import (
-        ArtifactSpecRelation,
-        ObjectArtifactSubjectBinding,
-    )
-    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
 AnswerT = TypeVar("AnswerT")
 

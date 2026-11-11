@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Mapping, Self
+from typing import Any, Callable, ClassVar, Mapping, Self
 from uuid import uuid4
 
 from metaclass_registry import AutoRegisterMeta
@@ -52,8 +52,6 @@ from openhcs.core.progress.types import (
 from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.payload.vfs_protocol import FileManagerLike
 
-if TYPE_CHECKING:
-    from openhcs.core.pipeline.compiler import CompiledRuntimeEnvironmentPlan
 
 
 class DebugCommandType(ABC, metaclass=AutoRegisterMeta):

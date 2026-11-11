@@ -10,16 +10,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.payload.runtime_array_values import is_array_payload
 from openhcs.core.payload.runtime_tabular_values import is_table_payload
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.plans import ArtifactOutputPlan
-    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 
 class PayloadShape(ABC, metaclass=AutoRegisterMeta):

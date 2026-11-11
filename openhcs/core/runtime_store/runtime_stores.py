@@ -9,7 +9,7 @@ from dataclasses import dataclass, field as dataclass_field
 import inspect
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from python_introspect import RuntimeParameterDeclarationABC
 
@@ -45,8 +45,6 @@ from openhcs.core.source.source_matching import (
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes.axis_declarations import Axis, PartitionAxis
 
-if TYPE_CHECKING:
-    from openhcs.core.materialization.core import Output
 
 
 @dataclass(frozen=True, slots=True)

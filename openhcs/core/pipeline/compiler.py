@@ -110,8 +110,6 @@ from openhcs.core.progress.types import (
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 logger = logging.getLogger(__name__)
 
