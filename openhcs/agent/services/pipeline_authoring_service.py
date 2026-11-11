@@ -8,7 +8,6 @@ from dataclasses import replace
 from itertools import count
 from typing import TypeAlias
 
-from objectstate import get_base_type_for_lazy
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, RenderedSource
 from formbridge.contracts import AgentError, AgentWarning
@@ -45,6 +44,7 @@ from openhcs.core.pipeline_document import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
+from python_introspect import resolve_declared_type
 
 StepConfig: TypeAlias = object
 PIPELINE_EMPTY_WARNING = AgentWarning(
@@ -475,6 +475,6 @@ def _step_config_class_from_patch(patch: ConfigPatch) -> type[StepConfig]:
 
 def _instantiate_config_patch(patch: ConfigPatch) -> StepConfig:
     config_class = _step_config_class_from_patch(patch)
-    coercion_class = get_base_type_for_lazy(config_class) or config_class
+    coercion_class = resolve_declared_type(config_class)
     values = coerce_dataclass_patch_values(coercion_class, patch.values)
     return config_class(**values)

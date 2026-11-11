@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import importlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from types import ModuleType
 
 from formbridge.services.parameter_help_service import (
     NO_PARAMETER_DESCRIPTION,
@@ -138,7 +136,7 @@ class ObjectStateFieldHelpService:
             )
 
         try:
-            help_target = self._import_qualified_target(field.object_state_path_type)
+            help_target = field.declared_by.resolve()
             parameter_info = UnifiedParameterAnalyzer.analyze(help_target).get(
                 field.field_name
             )
@@ -158,7 +156,7 @@ class ObjectStateFieldHelpService:
             parameter_description = self._description_with_function_parameter_context(
                 parameter_content.description,
                 help_target,
-                field.object_state_path_type,
+                field.declared_by.import_path,
                 field.field_name,
                 request.max_description_chars,
             )
@@ -176,8 +174,6 @@ class ObjectStateFieldHelpService:
                 schema_version=SCHEMA_VERSION,
                 address=field.address,
                 field=field,
-                object_type=scope.object_type,
-                help_target_type=field.object_state_path_type,
                 parameter_name=field.field_name,
                 target_summary=target_docstring.summary,
                 target_description=target_docstring.description,
@@ -289,45 +285,18 @@ class ObjectStateFieldHelpService:
             return scope, None
         return None, None
 
-    @staticmethod
-    def _import_qualified_target(
-        qualified_name: str,
-    ) -> type | Callable[..., object]:
-        module_name, _, qualname = qualified_name.partition(":")
-        if not qualname:
-            module_name, _, qualname = qualified_name.rpartition(".")
-        if not module_name or not qualname:
-            raise ValueError(f"Help target name is not importable: {qualified_name!r}")
-        module = importlib.import_module(module_name)
-        symbol = ObjectStateFieldHelpService._resolve_qualname(module, qualname)
-        if not isinstance(symbol, type) and not callable(symbol):
-            raise TypeError(
-                f"Imported symbol is not a class or callable: {qualified_name!r}"
-            )
-        return symbol
-
-    @staticmethod
-    def _resolve_qualname(module: ModuleType, qualname: str) -> object:
-        symbol: object = module
-        for name in qualname.split("."):
-            symbol = vars(symbol)[name]
-        return symbol
-
     def _description_with_value_context(
         self,
         parameter_description: str | None,
         field: UiObjectStateFieldSummary,
         max_description_chars: int,
     ) -> str | None:
-        callable_context = self._callable_value_context(
-            field.resolved_value,
-            max_description_chars=max_description_chars,
+        describe = lambda value: self._callable_value_context(
+            value, max_description_chars=max_description_chars
         )
+        callable_context = field.resolved_value.project(describe)
         if callable_context is None:
-            callable_context = self._callable_value_context(
-                field.raw_value,
-                max_description_chars=max_description_chars,
-            )
+            callable_context = field.raw_value.project(describe)
         if callable_context is None:
             return parameter_description
         if parameter_description:

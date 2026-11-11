@@ -99,7 +99,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.partition_filter import PartitionFilterProcessor
-from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
+from objectstate import ObjectState, ObjectStateRegistry
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
@@ -108,6 +108,7 @@ from openhcs.core.progress.types import (
     CompileProgressPhase,
     RunningProgressStatus,
 )
+from python_introspect import resolve_declared_type
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -426,7 +427,7 @@ class PipelineCompiler:
         step_plan: CompiledStepPlan,
         config_type: type[StreamingConfig],
     ) -> None:
-        resolved_config_type = get_base_type_for_lazy(config_type) or config_type
+        resolved_config_type = resolve_declared_type(config_type)
         configs = tuple(
             value
             for value in vars(step).values()

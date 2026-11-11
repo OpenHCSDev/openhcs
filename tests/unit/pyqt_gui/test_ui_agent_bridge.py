@@ -2515,14 +2515,13 @@ def test_global_config_object_state_fields_use_stable_window_id() -> None:
     assert global_scope.signature_diff_marker == "_"
     assert field.address.object_state_scope_id == OpenHCSUiWindowId.global_config
     assert field.address.window_id == OpenHCSUiWindowId.global_config
-    assert field.raw_value is None
-    assert field.resolved_value is None
+    from objectstate.field_value import Unset
+    assert field.raw_value == Unset()
+    assert field.resolved_value == Unset()
     assert field.raw_value_preview is not None
     assert field.resolved_value_preview is not None
     assert field.raw_value_preview.text == "2"
     assert field.resolved_value_preview.text == "2"
-    assert field.raw_value_is_none is False
-    assert field.resolved_value_is_none is False
     assert field.semantic_markers == ("*", "_")
 
 
@@ -2580,8 +2579,9 @@ def test_object_state_fields_can_include_full_values_on_request() -> None:
     )
 
     field = global_scope.fields[0]
-    assert field.raw_value == 2
-    assert field.resolved_value == 2
+    from objectstate.field_value import Value
+    assert field.raw_value == Value(2)
+    assert field.resolved_value == Value(2)
     assert field.raw_value_preview is not None
     assert field.resolved_value_preview is not None
 
@@ -2639,7 +2639,7 @@ def test_object_state_exact_field_paths_include_path_type_and_description() -> N
     assert len(global_scope.fields) == 1
     field = global_scope.fields[0]
     assert field.address.field_path == "napari_display_config"
-    assert field.object_state_path_type == "openhcs.core.config.NapariDisplayConfig"
+    assert field.declared_by.resolve() is state.fields.napari_display_config.declaring_type
     assert field.parameter_description is not None
     assert (
         field.parameter_description
