@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 import inspect
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -21,8 +21,6 @@ from openhcs.core.payload.runtime_plane_projection import (
 )
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.processing_contracts import ProcessingContract
 
 
 F = TypeVar("F", bound=Callable)

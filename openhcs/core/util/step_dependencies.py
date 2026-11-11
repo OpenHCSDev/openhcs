@@ -5,10 +5,8 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
-if TYPE_CHECKING:
-    from openhcs.core.pipeline.path_planner import PathPlanner
 
 
 @dataclass(frozen=True, slots=True)

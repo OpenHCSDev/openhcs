@@ -95,12 +95,6 @@ from openhcs.core.progress.types import (
     ViewerSettlementProgressPhase,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.runtime.viewer.viewer_protocol import (
-        ViewerControlResponse,
-        ViewerSettleProgress,
-    )
 
 
 logger = logging.getLogger(__name__)

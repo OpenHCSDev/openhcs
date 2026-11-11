@@ -5,7 +5,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
@@ -45,8 +45,6 @@ from openhcs.core.payload.runtime_plane_projection import (
 )
 from openhcs.core.axes.axis_declarations import Axis
 
-if TYPE_CHECKING:
-    from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])

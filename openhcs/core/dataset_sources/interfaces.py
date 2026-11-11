@@ -7,7 +7,7 @@ from collections.abc import Hashable, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from typing import ClassVar, Dict, Mapping, Optional, TYPE_CHECKING, Tuple, Union
+from typing import ClassVar, Dict, Mapping, Optional, Tuple, Union
 from openhcs.constants.constants import Backend
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,
@@ -30,12 +30,6 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
 
-if TYPE_CHECKING:
-    from openhcs.core.source.source_projection import SourcePlaneDataset, SourceProjection
-    from openhcs.core.source.source_workspace_projection import (
-        VirtualWorkspaceSourceProjection,
-    )
-    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
 
 @dataclass(frozen=True, slots=True, init=False, eq=False)

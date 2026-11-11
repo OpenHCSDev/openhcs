@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from objectstate import DataclassFieldAccess, get_base_config_type
 from python_introspect.validation import overlay_non_none_dataclass
@@ -27,9 +27,6 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import StreamingConfig
-    from openhcs.core.context.processing_context import ExecutingContext
 
 
 @dataclass(frozen=True, slots=True)

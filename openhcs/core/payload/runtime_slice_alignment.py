@@ -6,7 +6,7 @@ from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 
@@ -17,8 +17,6 @@ from openhcs.core.payload.runtime_plane_projection import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.aligned_image_payload import AlignedImageStackKwargResolver
 
 SliceValueT = TypeVar("SliceValueT")
 MappedValueT = TypeVar("MappedValueT")

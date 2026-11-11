@@ -15,14 +15,8 @@ from dataclasses import dataclass, field, fields, replace
 from functools import partial
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TypeAlias
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
-    from openhcs.core.execution.compiled_step_plan import FrameworkDeviceAssignment
-    from openhcs.core.pipeline.compilation_session import CompilationPathResolver
-    from openhcs.core.pipeline.artifact_planning import ArtifactGraph
-    from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from arraybridge import MemoryType
 from formbridge.pattern_metadata import PatternScopeToken

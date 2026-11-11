@@ -13,11 +13,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TypeVar, cast
 
-if TYPE_CHECKING:
-    from openhcs.core.util.post_execute import PostExecuteHook
-    from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig

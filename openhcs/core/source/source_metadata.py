@@ -186,8 +186,6 @@ class MetadataExtractionRule:
 
         return tuple(re.compile(self.pattern).groupindex)
 
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 DECLARED_SOURCE_METADATA_FIELD = "OpenHCSOriginalSourceMetadata"

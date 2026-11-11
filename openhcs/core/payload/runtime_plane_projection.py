@@ -8,15 +8,11 @@ from metaclass_registry import AutoRegisterMeta
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 from typing import Self
-from typing import TYPE_CHECKING
 
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.axes.axis_declarations import ColourAxis
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.aligned_image_payload import AlignedImageStackKwargResolver
-    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
 
 class RuntimeSliceProjectableValue(ABC):

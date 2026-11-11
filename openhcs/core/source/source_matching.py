@@ -6,7 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
+from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -30,8 +30,6 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import PipelineConfig
 
 
 def metadata_from_rules(

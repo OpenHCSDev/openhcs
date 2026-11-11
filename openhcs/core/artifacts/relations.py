@@ -10,7 +10,7 @@ import json
 from abc import ABC
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -30,8 +30,6 @@ from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.measurements.runtime_measurements import MeasurementScope
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.specs import ArtifactSpec
 
 
 @dataclass(frozen=True)

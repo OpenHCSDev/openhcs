@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from inspect import isabstract
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, List, Optional, Tuple, Type, Union
+from typing import ClassVar, List, Optional, Tuple, Type, Union
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate.lazy_factory import replace_raw
@@ -35,10 +35,6 @@ from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, 
 
 logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import PipelineConfig
-    from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
-    from openhcs.core.config.pipeline_config import SourceBindingsConfig
 
 
 # ---------------------------------------------------------------------------

@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, TypeAlias
+from typing import Any, Callable, TypeAlias
 
 from polystore.atomic import FileLockError, atomic_update_json
 from polystore.metadata_writer import MetadataConfig
@@ -37,9 +37,6 @@ from openhcs.core.source.source_projection import (
 from openhcs.core.source.source_tile_geometry import SourceTileLayout
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, ColourAxis
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 
 
 @dataclass(frozen=True)

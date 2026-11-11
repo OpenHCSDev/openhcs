@@ -13,13 +13,11 @@ from __future__ import annotations
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import JsonValue, to_jsonable
 
-if TYPE_CHECKING:
-    from openhcs.core.debug.debug_runtime import DebugSnapshot
 
 
 class DebugViewSectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):

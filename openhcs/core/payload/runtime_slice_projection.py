@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
+from typing import Any, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -108,8 +108,6 @@ def preserve_declared_image_payload_axis(
     return preserved_image_plane_projection(owner, projector)
 
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.aligned_image_payload import AlignedImageStackKwargResolver
 
 RuntimeProjectionPrimitive: TypeAlias = str | bytes | int | float | bool | None
 RuntimeProjectionMapping: TypeAlias = Mapping[str, "RuntimeProjectionData"]

@@ -21,7 +21,7 @@ from openhcs.core.payload.runtime_plane_projection import (
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import ClassVar, cast
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -57,13 +57,6 @@ from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLa
 from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
-if TYPE_CHECKING:
-    from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
-    from openhcs.core.artifacts.plans import ArtifactOutputPlan, OutputTarget
-    from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-    from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
-    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):

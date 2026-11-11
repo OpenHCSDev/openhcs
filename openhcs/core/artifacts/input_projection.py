@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -12,8 +11,6 @@ from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.axes.component_set import ComponentSet
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
 
 
 @dataclass(frozen=True, slots=True)

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -23,10 +23,6 @@ from openhcs.runtime.viewer.viewer_display import (
     ViewerDisplaySettings,
 )
 
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
-    from openhcs.core.config.streaming_config_factory import StreamingViewerRuntimeConfig
 
 
 class ViewerFamily(ABC, metaclass=AutoRegisterMeta):

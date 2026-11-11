@@ -9,7 +9,7 @@ from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
+from typing import ClassVar, Mapping, Sequence
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
@@ -69,11 +69,6 @@ from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
-    from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
-    from polystore.filemanager import FileManager
-    from openhcs.core.context.processing_context import ExecutingContext
 
 
 SourceCandidatePath = str
