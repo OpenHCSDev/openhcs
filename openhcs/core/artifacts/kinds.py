@@ -41,6 +41,9 @@ from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
 
 _registered_OpenHCSPlaneAddress = None
+_registered_RuntimeArtifactLocation = None
+_registered_StoredRuntimeValue = None
+_registered_stack_image_payloads = None
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -837,8 +840,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         *,
         keeps_memory_type: bool,
     ) -> object:
-        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
-
         components = {value.key.scope.component for value in values}
         if None in components or len(components) != 1:
             raise ValueError(
@@ -848,8 +849,8 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         payloads = tuple(value.data for value in values)
         metadata_mode = RuntimeSlicePlaneAxis
         if not keeps_memory_type:
-            return stack_image_payloads(payloads, metadata_mode=metadata_mode)
-        return stack_image_payloads(
+            return _registered_stack_image_payloads(payloads, metadata_mode=metadata_mode)
+        return _registered_stack_image_payloads(
             payloads,
             memory_type=detect_memory_type(payloads[0].data),
             device_id=0,
@@ -1317,11 +1318,10 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         group_key: str | None,
     ) -> tuple[StoredRuntimeValue, ...]:
         from openhcs.constants.constants import Backend
-        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_store.runtime_stores import (
-            RuntimeArtifactLocation,
-            StoredRuntimeValue,
-        )
+
+        RuntimeValue = ArtifactType._runtime_value_type
+        RuntimeArtifactLocation = _registered_RuntimeArtifactLocation
+        StoredRuntimeValue = _registered_StoredRuntimeValue
 
         if len(records) <= 1:
             return records

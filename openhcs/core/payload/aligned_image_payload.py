@@ -2035,6 +2035,8 @@ def aligned_image_stack_kwargs(
 
 import openhcs.core.payload.runtime_image_values as _riv
 import openhcs.core.payload.runtime_slice_alignment as _rsa
+import openhcs.core.artifacts.kinds as _ak
 
 _riv._registered_stack_image_payloads = stack_image_payloads
 _rsa._registered_stack_image_payloads = stack_image_payloads
+_ak._registered_stack_image_payloads = stack_image_payloads

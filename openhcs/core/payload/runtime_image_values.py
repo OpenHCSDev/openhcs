@@ -49,6 +49,7 @@ from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 _registered_stack_image_payloads = None
 _registered_RuntimeSliceProjection = None
+_registered_SourceImageObjectLabelBuildRequest = None
 
 
 class RuntimeSliceProjectionDeclarationError(ValueError):
@@ -1617,11 +1618,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> Any:
         """Build object labels from these dense label pixels in ``source``'s domain."""
-        from openhcs.core.object_labels.runtime_object_label_building import (
-            SourceImageObjectLabelBuildRequest,
-        )
-
-        return SourceImageObjectLabelBuildRequest(
+        return _registered_SourceImageObjectLabelBuildRequest(
             image=source,
             labels=self.data,
             plane_projection=plane_projection,
