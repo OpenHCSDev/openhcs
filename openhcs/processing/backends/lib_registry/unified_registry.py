@@ -812,11 +812,12 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         )
 
     def cache_source_mtimes(self) -> Dict[str, float]:
-        """Return implementation source mtimes that own discovery semantics."""
+        """Return source mtimes of every registry class this one is built on."""
 
         source_paths = {
-            Path(__file__),
-            Path(inspect.getsourcefile(type(self)) or __file__),
+            Path(inspect.getsourcefile(registry_class) or __file__)
+            for registry_class in type(self).__mro__
+            if issubclass(registry_class, LibraryRegistryBase)
         }
         return {
             str(source_path): source_path.stat().st_mtime

@@ -1020,3 +1020,33 @@ def test_installed_requirements_are_parsed_once_per_process(monkeypatch):
         assert reads == ["openhcs"]
     finally:
         openhcs_registry._openhcs_requirements.cache_clear()
+
+
+def test_openhcs_registry_claims_exactly_the_modules_it_catalogues() -> None:
+    """A decorated function outside the scanned modules is not an ``openhcs:`` function."""
+
+    import openhcs
+    from openhcs.core.memory import numpy as numpy_function
+    from openhcs.processing.backends.lib_registry import registry_service
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        OpenHCSRegistry,
+    )
+
+    registry = OpenHCSRegistry()
+    registry._ensure_module_inventory()
+    root = Path(openhcs.__file__).parent
+    source_modules = {
+        ".".join(path.relative_to(root.parent).with_suffix("").parts).removesuffix(
+            ".__init__"
+        )
+        for path in root.rglob("*.py")
+    }
+    claimed = {name for name in source_modules if registry.owns_module(name)}
+    assert claimed == set(registry.MODULES_TO_SCAN) & source_modules
+    assert claimed
+
+    def outside(image):
+        return image
+
+    outside.__module__ = registry_service.__name__
+    assert OpenHCSRegistry.metadata_for_declared_callable(numpy_function(outside)) is None
