@@ -108,7 +108,7 @@ class DeclaredAxis:
 
     def to_wire(self) -> dict[str, ViewerWireValue]:
         result: dict[str, ViewerWireValue] = {}
-        for f in dataclasses.fields(self):
+        for f in fields(self):
             value = getattr(self, f.name)
             transform = self._WIRE_TRANSFORMS.get(f.name)
             result[f.name] = transform(value) if transform else value
