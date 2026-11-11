@@ -29,6 +29,7 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     IntensityColocalizationMetrics,
     MultiChannelResult,
     ThresholdMethod,
+    detect_cells_single_method,
     detection_method_catalog,
 )
 
@@ -370,12 +371,9 @@ def _preprocess_image(image, gaussian_sigma: float, median_disk_size: int):
 def _detect_cells_single_method(
     image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
-    """Detect cells using specified method."""
-    try:
-        detector = _DETECTION_METHODS[method]
-    except KeyError:
-        raise ValueError(f"Unknown detection method: {method}")
-    return detector(image, slice_idx, params)
+    return detect_cells_single_method(
+        image, slice_idx, method, params, methods=_DETECTION_METHODS,
+    )
 
 
 def _detect_cells_blob_log(

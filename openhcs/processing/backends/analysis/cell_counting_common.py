@@ -23,6 +23,24 @@ class DetectionMethod(Enum):
     THRESHOLD = "threshold"
 
 
+DetectionMethodHandler = Callable[..., CellCountResult]
+
+
+def detect_cells_single_method(
+    image: object,
+    slice_idx: int,
+    method: DetectionMethod,
+    params: dict[str, object],
+    *,
+    methods: dict[DetectionMethod, DetectionMethodHandler],
+) -> CellCountResult:
+    try:
+        detector = methods[method]
+    except KeyError:
+        raise ValueError(f"Unknown detection method: {method}")
+    return detector(image, slice_idx, params)
+
+
 def detection_method_catalog(
     *,
     blob_log: Callable[..., CellCountResult],
