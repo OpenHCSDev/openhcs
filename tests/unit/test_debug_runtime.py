@@ -1,3 +1,4 @@
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import ast
 import json
@@ -123,9 +124,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.progress.types import (
     ErrorProgressStatus,
     PatternGroupProgressPhase,

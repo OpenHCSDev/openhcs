@@ -6,7 +6,13 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.callable_contract import CallableContract, ImagePayloadConsumption
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -54,11 +60,6 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 @artifact_inputs(ArtifactSpec.input("FITC", ImageArtifactType))

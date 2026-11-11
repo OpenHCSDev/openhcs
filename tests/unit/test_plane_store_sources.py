@@ -28,6 +28,7 @@ from openhcs.core.config import (
     PipelineConfig,
     SourceBindingsConfig,
 )
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
@@ -44,7 +45,6 @@ from openhcs.core.steps.function_io import (
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import OmeZarrStoreAdapter
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
 from openhcs.core.axes import AxisFamily

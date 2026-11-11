@@ -1,5 +1,6 @@
 """Geometry declarations preserve the payload their raw implementations consume."""
 
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
@@ -23,9 +24,6 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     mask_image,
     resize,
     resize_volumetric,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 
 

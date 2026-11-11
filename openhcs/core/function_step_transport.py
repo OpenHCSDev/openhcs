@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from dataclasses import dataclass, replace
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -18,8 +20,10 @@ from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )
+from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from pycodify import SourceDocument
+from python_introspect import Enableable
 
 
 
@@ -253,3 +257,89 @@ class FunctionStepTransportAuthority:
         if contracts is not None:
             contracts[id(contract)] = normalized
         return normalized
+
+
+logger = logging.getLogger(__name__)
+
+
+class PipelineFunctionReferences:
+    """Turn a pipeline's steps and function patterns into FunctionReference leaves."""
+
+    @classmethod
+    def reference_pipeline(
+        cls,
+        pipeline_definition: Sequence["AbstractStep"],
+    ) -> list["AbstractStep"]:
+        """Return a declaration copy whose function specs are FunctionReferences."""
+        return [cls.reference_step(step) for step in pipeline_definition]
+
+    @classmethod
+    def reference_pipeline_in_place(
+        cls,
+        pipeline_definition: list["AbstractStep"],
+    ) -> None:
+        """Mutate FunctionStep callables into FunctionReferences for compilation."""
+        logger.debug(
+            "FUNCTION REFRESH: Processing %s steps",
+            len(pipeline_definition),
+        )
+
+        for step_idx, step in enumerate(pipeline_definition):
+            if not isinstance(step, FunctionStep):
+                continue
+
+            func_spec = step.function_spec()
+            if func_spec is None:
+                logger.debug(
+                    "FUNCTION REFRESH: Step %s (%s): No function pattern",
+                    step_idx,
+                    step.name,
+                )
+                continue
+
+            old_type = type(func_spec).__name__
+            step.func = cls.reference_function_spec(func_spec)
+            new_type = type(step.func).__name__
+            logger.debug(
+                "FUNCTION REFRESH: Step %s (%s): %s -> %s",
+                step_idx,
+                step.name,
+                old_type,
+                new_type,
+            )
+
+    @classmethod
+    def reference_step(cls, step: "AbstractStep") -> "AbstractStep":
+        """Return a FunctionStep copy with referenced function specs."""
+
+        if not isinstance(step, FunctionStep):
+            return step
+        func_spec = step.function_spec()
+        if func_spec is None:
+            return step
+        referenced = cls.reference_function_spec(func_spec)
+        if referenced is func_spec:
+            return step
+        return step.with_function_spec(referenced)
+
+    @classmethod
+    def reference_function_spec(cls, func_value: object) -> object:
+        """Convert callable function-pattern leaves to FunctionReference.
+
+        Disabled leaves are dropped and the enabled flag is removed.
+        """
+
+        if isinstance(func_value, NormalizedFunctionPattern):
+            return func_value
+
+        def reference_leaf(leaf, func, params):
+            func_ref = FunctionReferenceTransportAuthority.function_reference(func) if callable(func) else func
+            if params is None:
+                return func_ref
+            if Enableable.disabled_in(params):
+                return None
+            if Enableable.parameter_in(params):
+                params = Enableable.without_parameter(params)
+            return (func_ref, params)
+
+        return AuthoredFunctionPattern.map_leaves(func_value, reference_leaf)

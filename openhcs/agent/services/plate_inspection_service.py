@@ -49,6 +49,7 @@ from openhcs.authoring.session.operations.datasets import InitializeDatasets
 from openhcs.agent.ui_bridge_identities import DatasetListCodeDocumentIdentity
 from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
+from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
 from openhcs.core.plate_image_inventory import (
     PlateFileKind,
     PlateFileInventory,
@@ -61,7 +62,6 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
 )
 from openhcs.core.axes import Axis, AxisFamily
-from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -1870,7 +1870,7 @@ class PlateInspectionService:
         plate_path: Path,
         filemanager: "FileManager",
     ) -> "DatasetSource":
-        from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+        from openhcs.core.dataset_sources.source import DatasetSourceChoice
 
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,

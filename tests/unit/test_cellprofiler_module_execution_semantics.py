@@ -17,7 +17,7 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.aligned_image_payload import ImageOutputBundle
+from openhcs.core.aligned_image_payload import FullStackExecution, ImageOutputBundle
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -56,9 +56,6 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
 from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )

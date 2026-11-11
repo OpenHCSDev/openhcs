@@ -3,6 +3,7 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -14,9 +15,6 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 
 class ReducenoiseModule(CellProfilerModule):

@@ -1,6 +1,7 @@
 """Intensity-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -65,9 +66,6 @@ from openhcs.interop.cellprofiler.setting_names import (
     required_setting_value,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )

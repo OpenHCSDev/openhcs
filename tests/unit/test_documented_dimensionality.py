@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.processing.backends.cellprofiler.area_occupied import (
@@ -26,9 +27,6 @@ from openhcs.processing.backends.cellprofiler.watershed import watershed_cellpro
 from openhcs.core.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,

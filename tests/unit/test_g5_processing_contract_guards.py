@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 import openhcs
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.pipeline.function_contracts import ObjectLabelInputExecutionMode
 from openhcs.core.processing_contracts import ProcessingContract
 
@@ -37,7 +37,7 @@ DELETED_NAMES = frozenset(
 # Each family's module may compare its own members; nothing else may.
 FAMILY_MODULES = {
     ProcessingContract: "openhcs/core/processing_contracts.py",
-    ImagePayloadExecutionMode: "openhcs/core/image_payload_execution_mode.py",
+    ImagePayloadExecutionMode: "openhcs/core/aligned_image_payload.py",
     ObjectLabelInputExecutionMode: "openhcs/core/pipeline/function_contracts.py",
 }
 

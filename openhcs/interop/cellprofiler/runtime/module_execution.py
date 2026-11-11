@@ -12,8 +12,13 @@ from dataclasses import (
 )
 from typing import cast
 
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    ImageOutputBundle,
+    ImagePayloadExecutionMode,
+    NaturalExecution,
+)
 from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import (
@@ -112,9 +117,6 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
 )
 from openhcs.core.processing_contracts import (
     ProcessingContract,
-)
-from openhcs.core.image_payload_execution_mode import (
-    NaturalExecution,
 )
 
 logger = logging.getLogger(__name__)

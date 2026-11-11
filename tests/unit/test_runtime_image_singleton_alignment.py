@@ -4,7 +4,12 @@ from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceB
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, compose_aligned_image_payload)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    compose_aligned_image_payload,
+)
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
@@ -13,10 +18,6 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-)
 
 _SPATIAL_DOMAIN = SourceSpatialDomain(source_shape_yx=(4, 5))
 _SINGLETON_MASK = np.array(

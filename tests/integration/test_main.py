@@ -8,6 +8,7 @@ Refactored using Systematic Code Refactoring Framework:
 - Reduced verbosity and defensive programming patterns
 """
 
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import json
@@ -76,7 +77,6 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 
 
 @dataclass(frozen=True)

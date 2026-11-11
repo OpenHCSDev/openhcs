@@ -1,4 +1,8 @@
 """Prepared raw arguments retain context consumed by nominal CP request owners."""
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
@@ -33,10 +37,6 @@ from openhcs.processing.backends.cellprofiler.worms import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 def _prepared_contract(func):

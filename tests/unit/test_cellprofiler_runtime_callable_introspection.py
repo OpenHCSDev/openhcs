@@ -1,6 +1,7 @@
 """CellProfiler runtime callable introspection behavior."""
 
 from tests.artifact_graphs import admitted_graph
+from openhcs.core.function_step_transport import PipelineFunctionReferences
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 import subprocess
@@ -25,7 +26,6 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
@@ -350,7 +350,7 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
             source_bindings=source_bindings,
         ),
     ]
-    FunctionReferenceTransportAuthority.reference_pipeline_in_place(steps)
+    PipelineFunctionReferences.reference_pipeline_in_place(steps)
     session = _compilation_session_for_steps(steps)
     provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
         session.pipeline
@@ -507,7 +507,7 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
             )
         ]
     )
-    FunctionReferenceTransportAuthority.reference_pipeline_in_place(
+    PipelineFunctionReferences.reference_pipeline_in_place(
         module.pipeline_steps
     )
     session = _compilation_session_for_steps(module.pipeline_steps)

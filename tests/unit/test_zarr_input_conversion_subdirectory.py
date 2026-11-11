@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.progress import ProgressExecutionContext
 import json
 import queue
@@ -17,7 +18,6 @@ from openhcs.core.config import (
     PipelineConfig,
     VFSConfig,
 )
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.steps import FunctionStep

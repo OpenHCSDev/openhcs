@@ -37,9 +37,7 @@ from python_introspect import (
     validate_annotation_value,
 )
 
-from openhcs.core.image_payload_execution_mode import (
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     ArtifactPlanKeySelector,

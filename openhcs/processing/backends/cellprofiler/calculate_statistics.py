@@ -10,6 +10,7 @@ from typing import ClassVar, Tuple
 import numpy as np
 import scipy.optimize
 
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
@@ -70,9 +71,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 
 

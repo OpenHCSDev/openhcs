@@ -15,8 +15,11 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (AlignedImageStack)
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    FullStackExecution,
+    ImagePayloadExecutionMode,
+)
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
@@ -90,9 +93,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey

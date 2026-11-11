@@ -1,4 +1,8 @@
 """Scalar RGB invocations consume only an explicitly declared singleton root."""
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
@@ -22,10 +26,6 @@ from tests.unit.test_cellprofiler_module_execution import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
     MatchImageStackLabels,

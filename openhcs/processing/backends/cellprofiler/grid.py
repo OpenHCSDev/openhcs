@@ -10,13 +10,16 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 import numpy as np
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    ImagePayloadExecutionMode,
+)
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
@@ -89,9 +92,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec

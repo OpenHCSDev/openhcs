@@ -1,5 +1,9 @@
 """Regression tests for JSON-safe CellProfiler compatibility registries."""
 
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
@@ -60,10 +64,6 @@ from openhcs.core.runtime_object_label_domains import (
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
 )
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,

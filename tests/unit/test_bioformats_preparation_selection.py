@@ -15,6 +15,7 @@ from openhcs.core.config import (
     PipelineConfig,
     SourceBindingsConfig,
 )
+from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.core.image_file_serialization import TiffImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
@@ -36,7 +37,6 @@ from tests.unit.test_bioformats_java_adapter import (
     FakeBioFormatsMetadata,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 
 def _file_filter(name):

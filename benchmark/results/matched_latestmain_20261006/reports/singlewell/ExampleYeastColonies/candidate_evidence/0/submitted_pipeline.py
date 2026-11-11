@@ -27,6 +27,7 @@ from openhcs.core.config import (
     LazyZarrConfig,
     PipelineConfig,
 )
+from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -71,7 +72,6 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import Spreadsh
 from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdAssignment
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
-from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 pipeline_config = PipelineConfig(
     materialization_results_path=Path('results'),

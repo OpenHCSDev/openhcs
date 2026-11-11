@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from inspect import isabstract
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, List, Optional, Tuple, Type, Union
 
@@ -19,10 +20,10 @@ from objectstate.lazy_factory import replace_raw
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import ViewerMicroscopeHandlerABC
 from polystore.virtual_workspace import SourcePixelRef
+from python_introspect import AnnotationChoices
 
 from openhcs.constants.constants import Backend
 from openhcs.core.axes import Axis
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.source_path_identity import absolute_source_path
 from openhcs.core.dataset_sources.interfaces import (
@@ -134,6 +135,97 @@ class PreparedWorkspaceSource(SourceSelectionRole):
 
     role_name = "prepared_workspace"
     allows_declared_source_override = False
+
+
+class DatasetSourceChoice(ABC):
+    """A class that selects the dataset source for one dataset root."""
+
+    source_name: ClassVar[str]
+
+    @staticmethod
+    def iter_choices() -> Iterator[type["DatasetSourceChoice"]]:
+        """Detection first, then every registered source in registry order.
+
+        Lazy, so decoding detection's spelling discovers no registered source.
+        """
+
+        yield AutoDetectedSource
+        from openhcs.core.dataset_sources.source import DatasetSource
+
+        yield from DatasetSource.__registry__.values()
+
+    @staticmethod
+    def choices() -> tuple[type["DatasetSourceChoice"], ...]:
+        return tuple(DatasetSourceChoice.iter_choices())
+
+    @staticmethod
+    def named(name: str) -> type["DatasetSourceChoice"]:
+        """Decode one boundary spelling."""
+
+        for choice in DatasetSourceChoice.iter_choices():
+            if choice.source_name == name:
+                return choice
+        raise ValueError(
+            f"Unknown dataset source {name!r}; available: "
+            f"{[choice.source_name for choice in DatasetSourceChoice.choices()]}."
+        )
+
+    @classmethod
+    def coerce(cls, value: object) -> type["DatasetSourceChoice"]:
+        """Accept a choice class or its boundary spelling."""
+
+        if isinstance(value, str):
+            return cls.named(value)
+        if isinstance(value, type) and issubclass(value, DatasetSourceChoice):
+            return value
+        raise TypeError(f"Expected a dataset source choice, got {value!r}.")
+
+    @classmethod
+    @abstractmethod
+    def source_type_for(
+        cls,
+        root: Path,
+        filemanager: "FileManager",
+        source_bindings: "SourceBindingsConfig | None",
+    ) -> "type[DatasetSource]":
+        """Return the source class that opens ``root``."""
+
+    @classmethod
+    def open(
+        cls,
+        root: str | Path,
+        *,
+        filemanager: "FileManager",
+        pattern_format: str | None = None,
+        source_bindings_config: "SourceBindingsConfig | None" = None,
+    ) -> "DatasetSource":
+        """Construct the selected source bound to ``root``."""
+
+        from openhcs.core.dataset_sources.source import DeclaredFileSource
+        from openhcs.core.config import source_bindings_defaults_to_base
+
+        root = Path(root)
+        source_bindings = (
+            None
+            if source_bindings_config is None
+            else source_bindings_defaults_to_base(source_bindings_config)
+        )
+        source_type = cls.source_type_for(root, filemanager, source_bindings)
+        if (
+            source_bindings is not None
+            and not source_bindings.is_empty
+            and source_type.source_selection_role().bindings_may_select_source(
+                projects_bindings=source_type.projects_declared_source_bindings()
+            )
+        ):
+            source_type = DeclaredFileSource.require_registered_source()
+        source = source_type.create(
+            filemanager=filemanager,
+            pattern_format=pattern_format,
+            source_bindings_config=source_bindings_config,
+        )
+        source.dataset_root = root
+        return source
 
 
 # ---------------------------------------------------------------------------
@@ -524,6 +616,70 @@ class DatasetSource(
 
     def get_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         return self.metadata_handler.get_pixel_size(dataset_root)
+
+
+
+
+class AutoDetectedSource(DatasetSourceChoice):
+    """Select the first registered source whose detection claims the root."""
+
+    source_name = "auto"
+
+    @classmethod
+    def source_type_for(
+        cls,
+        root: Path,
+        filemanager: "FileManager",
+        source_bindings: "SourceBindingsConfig | None",
+    ) -> "type[DatasetSource]":
+        from openhcs.core.dataset_sources.source import DatasetSource, DeclaredFileSource
+
+        detected = DatasetSource.detect_source_type(root, filemanager, source_bindings)
+        if detected is not None:
+            return detected
+        if source_bindings is None or source_bindings.is_empty:
+            raise ValueError(f"Could not detect a dataset source in {root}.")
+        return DeclaredFileSource.require_registered_source()
+
+
+class _RegisteredChoices(Sequence):
+    """The choice set; membership is by inheritance, so testing it needs no discovery.
+
+    Configs are validated while modules are still importing, before the
+    registry may discover its members; listing the choices discovers them.
+    """
+
+    def __contains__(self, value: object) -> bool:
+        return (
+            isinstance(value, type)
+            and issubclass(value, DatasetSourceChoice)
+            and not isabstract(value)
+        )
+
+    def __getitem__(self, index):
+        return DatasetSourceChoice.choices()[index]
+
+    def __len__(self) -> int:
+        return len(DatasetSourceChoice.choices())
+
+
+class DatasetSourceChoices(AnnotationChoices):
+    """A field holding a dataset source choice."""
+
+    def choices(self) -> Sequence[object]:
+        return _RegisteredChoices()
+
+    def label(self, choice: object) -> str:
+        return choice.source_name  # type: ignore[attr-defined]
+
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other)
+
+    def __hash__(self) -> int:
+        return hash(type(self))
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
 
 
 __all__ = [

@@ -29,6 +29,7 @@ from openhcs.constants.constants import (
     Backend,
 )
 
+from openhcs.core.function_step_transport import PipelineFunctionReferences
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
@@ -86,7 +87,6 @@ from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
 from openhcs.core.pipeline.step_attribute_stripper import StepAttributeStripper
-from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
 )
@@ -182,7 +182,7 @@ class AxisCompilationRequest:
 
 def _refresh_function_objects_in_steps(pipeline_definition: List[AbstractStep]) -> None:
     """Refresh all function objects in pipeline steps for picklable transport."""
-    FunctionReferenceTransportAuthority.reference_pipeline_in_place(pipeline_definition)
+    PipelineFunctionReferences.reference_pipeline_in_place(pipeline_definition)
 
 
 class PipelineCompiler:

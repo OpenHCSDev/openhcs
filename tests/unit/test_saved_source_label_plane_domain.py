@@ -1,6 +1,7 @@
 """Saved label admission retains declared runtime axes, never guessed Z axes."""
 
 from __future__ import annotations
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_plane_projection import WholeAxisProjection
 from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
@@ -24,9 +25,6 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.shape import MeasureObjectSizeShapeModule, measure_object_size_shape
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 
 
 def _source(labels, *, axis=RuntimeSlicePlaneAxis, plane_count=None, spacing=(1.3556, 1.3556)):

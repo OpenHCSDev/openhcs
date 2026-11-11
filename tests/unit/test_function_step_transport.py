@@ -29,7 +29,7 @@ from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
 )
-from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.function_step_transport import  PipelineFunctionReferences,FunctionStepTransportAuthority
 from openhcs.core.source_bindings import (
     FromPipelineStart,
     NamedSourceBinding,
@@ -103,7 +103,7 @@ def test_transport_authority_accepts_stripped_compiled_function_steps() -> None:
 
 def test_function_reference_transport_rejects_three_member_leaf() -> None:
     with pytest.raises(TypeError, match="exactly two"):
-        FunctionReferenceTransportAuthority.reference_function_spec(
+        PipelineFunctionReferences.reference_function_spec(
             (cellprofiler_backend.crop, {}, object())
         )
 
@@ -138,7 +138,7 @@ def test_compiler_referenced_steps_render_only_public_callables() -> None:
             name="Crop",
         ),
     ]
-    FunctionReferenceTransportAuthority.reference_pipeline_in_place(pipeline)
+    PipelineFunctionReferences.reference_pipeline_in_place(pipeline)
 
     first_reference = pipeline[0].func[0]
     assert isinstance(first_reference, FunctionReference)
@@ -561,7 +561,7 @@ def codex_pickle_probe(image):
             assert reference.resolve() is custom_func
 
             compiler_pipeline = [FunctionStep(func=custom_func, name="CustomProbe")]
-            FunctionReferenceTransportAuthority.reference_pipeline_in_place(
+            PipelineFunctionReferences.reference_pipeline_in_place(
                 compiler_pipeline
             )
             assert isinstance(compiler_pipeline[0].func, FunctionReference)
@@ -647,7 +647,7 @@ def {func_name}(image, offset=0):
     )
     registered = vars(custom_functions)[func_name]
     compiler_pipeline = [FunctionStep(func=registered, name="SpawnedCustomProbe")]
-    FunctionReferenceTransportAuthority.reference_pipeline_in_place(compiler_pipeline)
+    PipelineFunctionReferences.reference_pipeline_in_place(compiler_pipeline)
     reference = compiler_pipeline[0].func
     assert isinstance(reference, FunctionReference)
     contract = CallableContract.from_callable(reference)

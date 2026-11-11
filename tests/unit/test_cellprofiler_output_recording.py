@@ -1,3 +1,7 @@
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
@@ -43,10 +47,6 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     SpatialGridOutputRecorder,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 def _contract(*, outputs: tuple[ArtifactSpec, ...]) -> CallableContract:

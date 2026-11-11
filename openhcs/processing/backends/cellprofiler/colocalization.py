@@ -17,7 +17,11 @@ import numpy as np
 
 from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (AlignedImageStack, pack_aligned_image_outputs)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    FullStackExecution,
+    pack_aligned_image_outputs,
+)
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
@@ -148,9 +152,6 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-)
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )

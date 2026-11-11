@@ -22,7 +22,7 @@ from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
+from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -213,7 +213,7 @@ class DatasetTarget:
     """How a request opens its dataset: one registered source format, or detection.
 
     ``source_format`` is the boundary spelling of a
-    :class:`~openhcs.core.dataset_sources.choice.DatasetSourceChoice`
+    :class:`~openhcs.core.dataset_sources.source.DatasetSourceChoice`
     (``"auto"`` detects the format).
     """
 

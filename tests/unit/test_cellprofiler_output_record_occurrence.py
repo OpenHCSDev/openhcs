@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError, fields, replace
 import numpy as np
 import pytest
 
+from openhcs.core.aligned_image_payload import NaturalExecution
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
@@ -28,9 +29,6 @@ from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
-from openhcs.core.image_payload_execution_mode import (
-    NaturalExecution,
-)
 
 
 def _output_record_request(

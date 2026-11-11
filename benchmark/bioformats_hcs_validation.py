@@ -18,7 +18,7 @@ from benchmark.contracts.dataset import (
 from benchmark.datasets.acquire import acquire_dataset
 from benchmark.datasets.registry import DATASET_REGISTRY
 from openhcs.core.components.component_values import AxisValues
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy

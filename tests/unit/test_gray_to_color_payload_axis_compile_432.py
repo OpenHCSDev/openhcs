@@ -17,8 +17,10 @@ from openhcs.core.function_patterns import (
     UnprovedPayloadAxisProof,
 )
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
-from openhcs.core.image_payload_execution_mode import NaturalExecution
+from openhcs.core.aligned_image_payload import (
+    ImagePayloadBundleContext,
+    NaturalExecution,
+)
 from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.color import (

@@ -7,7 +7,12 @@ import numpy as np
 import pytest
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    ImagePayloadBundleContext,
+)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
@@ -37,10 +42,6 @@ from tests.unit.test_cellprofiler_generic_special_input_binding import (
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-)
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])

@@ -1,3 +1,4 @@
+from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.abstract import StepExecutionObservation
 from pathlib import Path
@@ -39,7 +40,6 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
-from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy

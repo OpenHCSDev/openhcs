@@ -8,7 +8,7 @@ from functools import partial
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec

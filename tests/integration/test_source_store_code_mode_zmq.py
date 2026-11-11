@@ -28,6 +28,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
 )
+from openhcs.core.dataset_sources.source import AutoDetectedSource
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.image_file_serialization import ImageFileFormat
@@ -63,7 +64,6 @@ from openhcs.ui.shared.plate_manager_code_document import (
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 LIVE_ZMQ_ENV = "OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE"
 REQUIRE_FORMAT_FIXTURES_ENV = "OPENHCS_REQUIRE_SOURCE_STORE_FORMAT_FIXTURES"

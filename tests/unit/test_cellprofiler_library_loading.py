@@ -13,7 +13,13 @@ import pytest
 import skimage.morphology
 import skimage.segmentation
 from python_introspect import declared_enum_type
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    AlignedStackExecution,
+    FullStackExecution,
+    ImagePayloadBundleContext,
+    NaturalExecution,
+)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -193,11 +199,6 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
 from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.runtime_image_values import PlainImagePayload
-from openhcs.core.image_payload_execution_mode import (
-    AlignedStackExecution,
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 

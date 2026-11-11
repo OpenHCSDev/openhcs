@@ -1,6 +1,7 @@
 """CalculateMath measurement semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.aligned_image_payload import FullStackExecution
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 
@@ -101,9 +102,6 @@ from openhcs.core.processing_contracts import (
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-)
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
 )
 
 if TYPE_CHECKING:

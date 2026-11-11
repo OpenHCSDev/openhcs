@@ -5,6 +5,10 @@ from dataclasses import replace
 import numpy as np
 from scipy import ndimage
 
+from openhcs.core.aligned_image_payload import (
+    FullStackExecution,
+    NaturalExecution,
+)
 from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
@@ -22,10 +26,6 @@ from openhcs.processing.backends.cellprofiler.secondary import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
-from openhcs.core.image_payload_execution_mode import (
-    FullStackExecution,
-    NaturalExecution,
-)
 
 
 def _execute_prepared(func, source, kwargs, mode=NaturalExecution):
