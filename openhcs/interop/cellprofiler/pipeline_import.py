@@ -40,10 +40,8 @@ from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
 )
-from openhcs.core.pipeline.artifact_planning import (
-    ArtifactProducer,
-    extract_artifact_declarations,
-)
+from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.source.source_bindings import source_binding_group_keys_for_group_by
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.payload.vfs_protocol import FileManagerLike

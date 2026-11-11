@@ -42,14 +42,8 @@ class StepExecutionObservation:
     def __post_init__(self) -> None:
         projections = dict(self.source_projection_entries_by_target)
         if projections:
-            from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
-
             for target, entries in projections.items():
-                if not isinstance(target, OpenHCSMetadataTarget):
-                    raise TypeError(
-                        "Persisted source projection observations require declared metadata targets."
-                    )
-                if target.artifact_materializations:
+                if hasattr(target, "artifact_materializations") and target.artifact_materializations:
                     raise ValueError(
                         "Persisted source projection observations cannot retain image materializations."
                     )
@@ -112,15 +106,17 @@ class StepExecutionObservation:
             ) in observation.source_projection_entries_by_target.items():
                 source_projections.setdefault(target, []).append(entries)
 
+        combined_projections: dict = {}
+        if source_projections:
+            combined_projections = {
+                target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
+                for target, entries in source_projections.items()
+            }
+
         return cls(
             MappingProxyType(locations),
             tuple(dict.fromkeys(paths)),
             PostExecuteHook.combine_all(hook_observations),
             MappingProxyType(sample_numbers),
-            MappingProxyType(
-                {
-                    target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
-                    for target, entries in source_projections.items()
-                }
-            ),
+            MappingProxyType(combined_projections),
         )

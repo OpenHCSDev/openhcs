@@ -39,8 +39,8 @@ if TYPE_CHECKING:
         FunctionInvocationKey,
         NormalizedFunctionItem,
     )
+    from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-    from openhcs.core.pipeline.artifact_planning import ArtifactProducer
 
 
 class UniqueReturnSlots:
