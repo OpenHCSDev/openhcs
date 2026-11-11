@@ -1438,9 +1438,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
 
-        from openhcs.core.pipeline.function_contracts import (
-            special_input_parameter_accepts_sequence,
-        )
+        from openhcs.core.pipeline.annotation_checks import special_input_parameter_accepts_sequence
 
         artifact_parameters = {}
         parameters = self.canonical_signature.parameters

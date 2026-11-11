@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING, ClassVar
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
-from openhcs.core.pipeline.function_contracts import (
-    annotation_accepts_runtime_type,
-    resolved_callable_parameter,
-)
+from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
+from openhcs.core.pipeline.function_contracts import resolved_callable_parameter
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
