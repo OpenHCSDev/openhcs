@@ -1,13 +1,14 @@
 """Bio-Formats store reader emitting generic addressable source planes."""
 
 from __future__ import annotations
+import dataclasses
 
 import filecmp
 import json
 from dataclasses import dataclass, replace
 from itertools import product
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import ClassVar, TYPE_CHECKING, Any, Mapping
 
 import numpy as np
 from polystore.bioformats_java import (
@@ -114,18 +115,19 @@ class BioFormatsPackedRgbSeriesExclusion(SourceDatasetDiagnostic):
             "channel planes."
         )
 
-    def metadata_payload(self) -> Mapping[str, Any]:
-        """Serialize exact exclusion identity without generic type dispatch."""
+    diagnostic_type: ClassVar[str] = "bioformats_packed_rgb_series_exclusion"
 
-        return {
-            "diagnostic_type": "bioformats_packed_rgb_series_exclusion",
-            "image_id": self.image_id,
-            "image_name": self.image_name,
-            "message": self.message,
-            "rgb_channel_count": self.rgb_channel_count,
-            "series_index": self.series_index,
-            "source_files": [str(path) for path in self.source_files],
-        }
+    def metadata_payload(self) -> Mapping[str, Any]:
+        """Serialize exact exclusion identity from declared fields."""
+
+        payload: dict[str, Any] = {"diagnostic_type": self.diagnostic_type}
+        for f in dataclasses.fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, (list, tuple)) and value and isinstance(value[0], Path):
+                payload[f.name] = [str(v) for v in value]
+            else:
+                payload[f.name] = value
+        return payload
 
 
 class BioFormatsNoScalarSourceError(PlaneStoreUnavailableError):
