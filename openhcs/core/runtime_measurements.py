@@ -124,9 +124,7 @@ class MeasurementTable(
             return self.source_provenance.source_plane_count
         if self.source_provenance.addressable:
             return None
-        from openhcs.core.runtime_slice_projection import (
-            RuntimeSliceProjectionDeclarationError,
-        )
+        from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
         raise RuntimeSliceProjectionDeclarationError(
             "Runtime-slice measurement table requires declared source-plane "

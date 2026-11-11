@@ -19,11 +19,13 @@ from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,

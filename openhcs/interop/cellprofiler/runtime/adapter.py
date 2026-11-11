@@ -28,10 +28,7 @@ from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    preserved_image_plane_projection,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
@@ -49,6 +46,7 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import (
     RuntimeSliceProjection,
+    preserved_image_plane_projection,
 )
 from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,

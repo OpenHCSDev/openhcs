@@ -1,7 +1,11 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_plane_projection import (
+    NoPlaneAxis,
+    RuntimePlaneAxisProjector,
+    SourceBindingPlaneAxis,
+)
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
@@ -14,9 +18,12 @@ import numpy as np
 import numpy.typing as npt
 from arraybridge.decorators import DtypeConversionConfig
 
-from openhcs.core.axes import Axis
+from openhcs.core.axes import Axis, AxisFamily
 from openhcs.core.runtime_array_values import RuntimeArrayData, is_array_payload
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -24,6 +31,82 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.source_image_provenance import SourceComponentMetadata
 from openhcs.core.runtime_image_values import as_runtime_value
+
+
+def preserved_image_plane_projection(
+    value: Any,
+    projector: RuntimePlaneAxisProjector,
+    source_aliases: tuple[str, ...] = (),
+) -> RuntimePlaneAxisValueProjection | None:
+    """Resolve a value's declared leading plane axis against one invocation."""
+
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
+    if plane_axis.unstacked:
+        return RuntimeSliceProjection.preserved_context_for_value(value)
+    if plane_axis.one_plane_per_runtime_slice:
+        invocation_projection = RuntimePlaneAxisValueProjection.from_projector(
+            projector,
+            plane_axis,
+            source_aliases,
+        )
+        if (
+            invocation_projection is not None
+            and invocation_projection.selects_one_plane
+        ):
+            return None
+        payload_projection = RuntimeSliceProjection.preserved_context_for_value(value)
+        if payload_projection is None:
+            raise ValueError(
+                "Runtime-slice image metadata requires a payload with the same "
+                "nominal leading axis."
+            )
+        return payload_projection
+
+    shape = value.geometry.shape
+    if len(shape) <= AxisFamily.active().payload_spatial_rank:
+        raise ValueError(
+            "Source-binding image metadata requires its declared plane axis as "
+            f"the leading dimension, got shape {shape!r}."
+        )
+    axis_size = shape[0]
+    return RuntimePlaneAxisValueProjection.for_plane(
+        axis=SourceBindingPlaneAxis,
+        source_aliases=source_aliases,
+        plane_index=value.metadata.source_provenance.source_alias_plane_index(
+            source_aliases,
+            axis_size,
+        ),
+        axis_size=axis_size,
+    )
+
+
+def preserve_declared_image_payload_axis(
+    projector: RuntimePlaneAxisProjector,
+    output_value: Any,
+    *,
+    source_payload: Any = None,
+) -> RuntimePlaneAxisValueProjection | None:
+    """Preserve the plane axis declared by the output, else by its source."""
+
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    def declared_axis(value: Any) -> type[RuntimePlaneAxis]:
+        plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
+        if plane_axis.leads_data:
+            return plane_axis
+        projection = RuntimeSliceProjection.preserved_context_for_value(value)
+        return NoPlaneAxis if projection is None else projection.axis
+
+    if declared_axis(output_value).leads_data:
+        owner = output_value
+    elif declared_axis(source_payload).leads_data:
+        owner = source_payload
+    else:
+        return None
+    return preserved_image_plane_projection(owner, projector)
+
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
@@ -42,10 +125,6 @@ RuntimeProjectionData: TypeAlias = (
     | RuntimeProjectionMapping
     | RuntimeProjectionSequence
 )
-
-
-class RuntimeSliceProjectionDeclarationError(ValueError):
-    """Raised when runtime-slice behavior has no complete nominal declaration."""
 
 
 @dataclass(frozen=True, slots=True)

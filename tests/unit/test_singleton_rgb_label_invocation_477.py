@@ -11,11 +11,14 @@ import pytest
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImageMetadataPayload,
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.outlines import OverlayOutlinesModule
 from tests.unit.test_cellprofiler_module_execution import (

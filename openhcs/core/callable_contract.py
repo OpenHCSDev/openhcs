@@ -964,10 +964,8 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         )
         from openhcs.core.runtime_image_values import owned_runtime_value
         from openhcs.core.runtime_output_matching import split_runtime_output
-        from openhcs.core.runtime_slice_projection import (
-            RuntimeSliceProjection,
-            RuntimeSliceProjectionDeclarationError,
-        )
+        from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         canonical_specs = self.canonical_return_output_specs.specs
         if len(canonical_specs) <= 1:

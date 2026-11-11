@@ -30,8 +30,10 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes

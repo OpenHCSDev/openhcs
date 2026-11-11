@@ -14,6 +14,7 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -21,10 +22,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import (
-    RuntimeSliceProjection,
-    RuntimeSliceProjectionDeclarationError,
-)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 
 def _resolver(*, axis=RuntimeSlicePlaneAxis, size=2, index=1):

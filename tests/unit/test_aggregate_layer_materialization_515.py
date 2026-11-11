@@ -17,14 +17,16 @@ from openhcs.core.pipeline.artifact_planning import (
     AutomaticObjectLabelsArtifactOutputMaterializationStrategy,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
     RequiredSourceComponentMetadata,
-    RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing

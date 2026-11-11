@@ -9,8 +9,8 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageStackKwargResolver,
     ImagePayloadBundleContext,
-    ObjectLabelPayloadSourceSpatialDomainAdapter,
 )
+from openhcs.core.runtime_slice_projection import preserve_declared_image_payload_axis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
@@ -24,6 +24,7 @@ from openhcs.core.runtime_object_label_domains import (
     dense_object_label_plane_id_domains,
 )
 from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayloadSourceSpatialDomainAdapter,
     ObjectLabelRepresentation,
 )
 from openhcs.core.runtime_relationships import (
@@ -43,7 +44,6 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,
-    preserve_declared_image_payload_axis,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,

@@ -21,7 +21,10 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
+)
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
@@ -44,7 +47,6 @@ from openhcs.core.runtime_slice_projection import (
     OptionalSourceIdentity,
     RuntimeProjectionSourceIdentityRequest,
     RuntimeSliceProjection,
-    RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
 from openhcs.core.runtime_spatial_grid import (

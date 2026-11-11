@@ -313,10 +313,8 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     ) -> object:
         """Resolve plane projection only after the artifact strategy is selected."""
 
-        from openhcs.core.runtime_image_values import (
-            owned_runtime_value,
-            preserve_declared_image_payload_axis,
-        )
+        from openhcs.core.runtime_slice_projection import preserve_declared_image_payload_axis
+        from openhcs.core.runtime_image_values import owned_runtime_value
 
         output_value = owned_runtime_value(output_value)
         plane_projection = (

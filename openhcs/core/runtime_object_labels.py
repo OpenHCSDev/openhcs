@@ -14,7 +14,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from threading import Lock
 from types import MappingProxyType
 from typing import Any, ClassVar, Self, cast
@@ -61,6 +61,7 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
+    SourceSpatialDomainAdapter,
     SourceSpatialDomainFields,
 )
 
@@ -689,9 +690,7 @@ class ObjectLabelValue(
     def _declared_runtime_slice_count(self) -> int:
         plane_count = self.declared_plane_count()
         if plane_count is None:
-            from openhcs.core.runtime_slice_projection import (
-                RuntimeSliceProjectionDeclarationError,
-            )
+            from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Runtime-slice object labels have no nominal plane-stack contract."
@@ -705,9 +704,7 @@ class ObjectLabelValue(
             return self
         plane_count = self.declared_plane_count()
         if plane_count is None:
-            from openhcs.core.runtime_slice_projection import (
-                RuntimeSliceProjectionDeclarationError,
-            )
+            from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Object labels have no nominal plane-stack contract for their "
@@ -2071,6 +2068,65 @@ def object_label_dense_array(
     if copy is None:
         return np.asarray(dense_data, dtype=dtype)
     return np.array(dense_data, dtype=dtype, copy=copy)
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectLabelPayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
+    """Source-domain adapter for object-label payload values."""
+
+    value: ObjectLabelValue
+    source_shape_override_yx: tuple[int, int] | None = None
+
+    @property
+    def array(self) -> Any:
+        return object_label_dense_array(self.value)
+
+    @property
+    def domain(self) -> SourceSpatialDomain:
+        return self.value.object_label_source_spatial_domain().with_missing_from(
+            SourceSpatialDomain(source_shape_yx=self.source_shape_override_yx)
+        )
+
+    @property
+    def spatial_axes_yx(self) -> tuple[int, int]:
+        array = np.asarray(self.array)
+        axes = self.value.metadata.spatial_axes_yx(array)
+        if axes is None:
+            raise ValueError(
+                "Object-label source-spatial payloads require two declared "
+                f"spatial axes, got shape {array.shape!r}."
+            )
+        return axes
+
+    def dense_variant(self, labels: object) -> object:
+        """Materialize one label variant through its nominal object-label carrier."""
+        variant = self.value.with_labels(labels)
+        return object_label_dense_array(variant)
+
+    def value_in_payload_domain(
+        self,
+        target: SourceSpatialDomainAdapter,
+    ) -> ObjectLabelValue:
+        """Project every label variant into another declared payload domain."""
+        target_domain = replace(
+            self.domain,
+            origin_yx=target.payload_domain.origin_yx,
+            source_shape_yx=target.payload_domain.source_shape_yx,
+        )
+        variants = self.value.variant_data.project(
+            lambda labels: target.extract_source_array(
+                self.domain.materialize(
+                    self.dense_variant(labels),
+                    spatial_axes_yx=self.spatial_axes_yx,
+                ),
+                spatial_axes_yx=self.spatial_axes_yx,
+            )
+        )
+        return self.value.with_variants(
+            variants,
+            source_spatial_domain=target_domain,
+            representation=ObjectLabelRepresentation.DENSE_LABELS,
+        )
 
 
 def object_label_sparse_ijv_rows(payload: object) -> SparseIJVLabelRows:
