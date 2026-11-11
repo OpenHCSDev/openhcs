@@ -119,23 +119,6 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
         """Read formatting-ready lexemes with this writer's dialect."""
         return csv.reader(io.StringIO(text, newline=""))
 
-    def render_parts(
-        self,
-        rows: ColumnarRows,
-        *,
-        schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
-    ) -> tuple[str, str]:
-        """Derive header and complete CSV through this writer's format owner."""
-        from openhcs.core.materialization.core import _render_csv_rows
-
-        columns, _headers = self.csv_schema(rows) if schema is None else schema
-        return _render_csv_rows((), columns), self.render(rows)
-
-    def render(self, data: Any) -> str:
-        """Render through the existing CSV format owner."""
-        from openhcs.core.materialization.core import _render_csv
-
-        return _render_csv(data, self)
 
 
 @dataclass(frozen=True)

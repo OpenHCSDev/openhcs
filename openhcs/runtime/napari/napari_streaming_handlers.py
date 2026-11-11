@@ -27,7 +27,7 @@ from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata, ROIPla
 from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
-from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
+from openhcs.core.source.common_runtime_value import CommonRuntimeValue
 from openhcs.runtime.viewer.viewer_component_system import (
     ComponentMap,
     ComponentValue,

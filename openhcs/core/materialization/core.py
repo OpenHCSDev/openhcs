@@ -537,7 +537,7 @@ class ColumnarCsvOutput(Output):
     def rendered(self) -> Utf8TextOutput:
         return Utf8TextOutput(
             path=self.path,
-            content=self.options.render(self.content).encode("utf-8"),
+            content=csv_render(self.content, self.options).encode("utf-8"),
             table_shape_info=self.table_shape(),
             metadata=self.metadata,
             variable_components=self.variable_components,
@@ -631,7 +631,7 @@ class ColumnarCsvOutput(Output):
                 presence[name] = np.packbits(
                     np.zeros(self.content.row_count(), dtype=bool)
                 ).tobytes()
-        header, text = self.options.render_parts(self.content, schema=schema)
+        header, text = csv_render_parts(self.options, self.content, schema=schema)
         return RenderedColumnarCsvOutput(
             path=self.path,
             content=text.encode("utf-8"),
@@ -2824,6 +2824,22 @@ class FieldValueAuthority:
         if field_name in field_values:
             return field_values[field_name]
         return SourceSegmentAuthority.resolve(item, field_name)
+
+
+def csv_render(data: Any, options: CsvOptions) -> str:
+    """Render data through the CSV format owner (public API replacing CsvOptions.render)."""
+    return _render_csv(data, options)
+
+
+def csv_render_parts(
+    options: CsvOptions,
+    rows: Any,
+    *,
+    schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
+) -> tuple[str, str]:
+    """Derive header and complete CSV (public API replacing CsvOptions.render_parts)."""
+    columns, _headers = options.csv_schema(rows) if schema is None else schema
+    return _render_csv_rows((), columns), _render_csv(rows, options)
 
 
 def _render_csv(data: MaterializationValue, options: CsvOptions) -> str:

@@ -14,6 +14,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, replace
 from typing import Any, ClassVar, Generic, Self, TypeVar
 
+from openhcs.core.source.common_runtime_value import CommonRuntimeValue
+
 from metaclass_registry import AutoRegisterMeta, RegistryFamily
 import numpy as np
 
@@ -630,37 +632,6 @@ class SourceSpatialPayloadDomain:
     origin_yx: tuple[int, int]
     spatial_shape_yx: tuple[int, int]
     source_shape_yx: tuple[int, int] | None
-
-
-@dataclass(frozen=True, slots=True)
-class CommonRuntimeValue:
-    """Projection of a value family that is only valid when all values agree."""
-
-    values: tuple[Any, ...]
-
-    @classmethod
-    def from_values(
-        cls,
-        values: Iterable[Any],
-        *,
-        ignore_none: bool = False,
-    ) -> "CommonRuntimeValue":
-        unique_values: list[Any] = []
-        for value in values:
-            if ignore_none and value is None:
-                continue
-            if not any(value == existing for existing in unique_values):
-                unique_values.append(value)
-        return cls(tuple(unique_values))
-
-    @property
-    def single(self) -> Any | None:
-        """Return the shared value, or None when values disagree or are absent."""
-        if len(self.values) == 1:
-            return self.values[0]
-        return None
-
-
 class SpatiallyPlacedValue(ABC):
     """A runtime value that knows its placement in a source spatial domain."""
 

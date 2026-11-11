@@ -36,12 +36,14 @@ from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_source_name,
     runtime_source_name_tokens,
 )
-from openhcs.core.measurements.runtime_measurements import MeasurementScope, RuntimeMeasurementFeatureRelationDeclarationCollection, RuntimeMeasurementFeatureSemanticMarker, RuntimeMeasurementRowIdentityContract
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureRelation, RuntimeMeasurementFeatureRelationDeclaration
+from openhcs.core.measurements.measurement_declarations import (
+    MeasurementScope,
+    RuntimeMeasurementFeatureRelation,
+    RuntimeMeasurementFeatureRelationDeclaration,
+    RuntimeMeasurementFeatureRelationDeclarationCollection,
+    RuntimeMeasurementFeatureSemanticMarker,
+    RuntimeMeasurementRowIdentityContract,
+)
 
 FeatureParts = tuple[str, ...]
 

@@ -39,7 +39,7 @@ from openhcs.core.payload.runtime_slice_alignment import (
 )
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
-from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
+from openhcs.core.source.common_runtime_value import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.core.payload.runtime_array_values import array_geometry
 from openhcs.core.payload.runtime_image_values import as_runtime_value
