@@ -1,6 +1,7 @@
 """Texture-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -129,9 +130,7 @@ class MeasureTextureModule(
 ):
     module_name = "MeasureTexture"
     function_name = "measure_texture"
-    validated = True
     function_variants = ("measure_texture_objects",)
-    confidence = 1.0
     measurement_category_prefixes = (("texture",),)
     measurement_scope_binding = SettingToKeywordBinding(
         SettingNameFamily(

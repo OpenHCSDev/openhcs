@@ -1,6 +1,7 @@
 """Object-label image rendering for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -84,8 +85,6 @@ class ConvertObjectsToImageModule(
 ):
     module_name = "ConvertObjectsToImage"
     function_name = "convert_objects_to_image"
-    validated = True
-    confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the input objects")
     output_image_setting = SettingNameFamily("Name the output image")
     input_objects_binding = SettingToKeywordBinding.input(
@@ -393,8 +392,6 @@ class ConvertImageToObjectsModule(
 ):
     module_name = "ConvertImageToObjects"
     function_name = "convert_image_to_objects"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     output_objects_setting = SettingNameFamily("Name the output objects")
     setting_bindings = (

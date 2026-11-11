@@ -1,6 +1,7 @@
 """Intensity-distribution backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from metaclass_registry.caches import ProcessLocalBoundedCache
 
@@ -437,8 +438,6 @@ class MeasureObjectIntensityDistributionModule(
     module_name = "MeasureObjectIntensityDistribution"
     function_name = "measure_object_intensity_distribution"
     zernike_backend_provider = CellProfilerBackendProvider.LEGACY_FAST
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (
         ("radial", "distribution"),
         ("intensity", "distribution"),

@@ -53,6 +53,7 @@ from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 if TYPE_CHECKING:
     from openhcs.core.callable.function_patterns import FunctionInvocationKey
@@ -75,8 +76,6 @@ class CropModule(
 ):
     module_name = "Crop"
     function_name = "crop"
-    validated = True
-    confidence = 1.0
     cycle_pattern_setting: ClassVar[str] = "Apply which cycle's cropping pattern?"
     ignored_settings = (cycle_pattern_setting,)
     measurement_category_prefixes = (("crop",),)

@@ -6,13 +6,12 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
-class EnhanceEdgesModule(CellProfilerModule):
+class EnhanceEdgesModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "EnhanceEdges"
     function_name = "enhance_edges"
-    validated = True
-    confidence = 1.0
     input_image_setting = "Select the input image"
     output_image_setting = "Name the output image"
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (

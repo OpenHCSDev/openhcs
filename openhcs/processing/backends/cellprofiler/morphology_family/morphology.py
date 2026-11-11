@@ -6,6 +6,7 @@ the optional Centrosome provider is allowed for matching legacy morphology
 behavior when explicitly requested.
 """
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from collections.abc import Callable
 from enum import Enum
@@ -144,11 +145,9 @@ class ImageStructuringElementModule(
         )
 
 
-class ClosingModule(ImageStructuringElementModule):
+class ClosingModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
     module_name = "Closing"
     function_name = "closing"
-    validated = True
-    confidence = 1.0
 
 
 class ObjectTransformContractModule(
@@ -215,8 +214,6 @@ class CombineobjectsModule(
 ):
     module_name = "Combineobjects"
     function_name = "combineobjects"
-    validated = True
-    confidence = 1.0
     first_objects_setting = SettingNameFamily("Select initial object set")
     second_objects_setting = SettingNameFamily("Select object set to combine")
     output_objects_setting = SettingNameFamily("Name the combined object set")
@@ -285,12 +282,10 @@ class CombineobjectsModule(
         return (SourceStackLineageSourceRelation(source=source.ref()),)
 
 
-class DilateImageModule(ImageStructuringElementModule):
+class DilateImageModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
     module_name = "DilateImage"
     function_name = "dilate_image"
-    validated = True
     aliases = ("Dilation",)
-    confidence = 1.0
 
 
 class ZStackFunctionVariantModule:
@@ -324,20 +319,16 @@ class DilateObjectsModule(
     module_name = "DilateObjects"
     function_name = "dilate_objects"
     function_variants = ("dilate_objects_3d",)
-    validated = True
-    confidence = 1.0
     structuring_element_binding = StructuringElementSettingBinding(
         shape_keyword="structuring_element_shape",
         size_keyword="structuring_element_size",
     )
 
 
-class ErodeImageModule(ImageStructuringElementModule):
+class ErodeImageModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
     module_name = "ErodeImage"
     function_name = "erode_image"
-    validated = True
     aliases = ("Erosion",)
-    confidence = 1.0
 
 
 class ErodeObjectsModule(
@@ -348,8 +339,6 @@ class ErodeObjectsModule(
 ):
     module_name = "ErodeObjects"
     function_name = "erode_objects"
-    validated = True
-    confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding(
             "Prevent object removal", "preserve_midpoints", parse_cellprofiler_bool
@@ -392,8 +381,6 @@ class ExpandOrShrinkObjectsModule(
 ):
     module_name = "ExpandOrShrinkObjects"
     function_name = "expand_or_shrink_objects"
-    validated = True
-    confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the input objects")
     output_objects_setting = SettingNameFamily("Name the output objects")
     setting_bindings = (
@@ -426,8 +413,6 @@ class MaskObjectsModule(
 ):
     module_name = "MaskObjects"
     function_name = "mask_objects"
-    validated = True
-    confidence = 1.0
     outline_retention_setting = "Retain outlines of the resulting objects?"
     outline_image_setting = "Name the outline image"
     input_objects_setting = SettingNameFamily(
@@ -529,11 +514,9 @@ class MaskObjectsModule(
         )
 
 
-class OpeningModule(ImageStructuringElementModule):
+class OpeningModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
     module_name = "Opening"
     function_name = "opening"
-    validated = True
-    confidence = 1.0
 
 
 class RemoveHolesModule(
@@ -542,9 +525,7 @@ class RemoveHolesModule(
 ):
     module_name = "RemoveHoles"
     function_name = "remove_holes"
-    validated = True
     function_variants = ("remove_holes_3d",)
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     output_image_setting = SettingNameFamily("Name the output image")
     setting_bindings = (
@@ -564,9 +545,7 @@ class ResizeObjectsModule(
 ):
     module_name = "ResizeObjects"
     function_name = "resize_objects"
-    validated = True
     function_variants = ("resize_objects_3d",)
-    confidence = 1.0
     desired_dimensions_image_setting = SettingNameFamily(
         "Select the image with the desired dimensions"
     )
@@ -6724,8 +6703,6 @@ class FillObjectsModule(
 ):
     module_name = "FillObjects"
     function_name = "fill_objects"
-    validated = True
-    confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the input objects")
     output_objects_setting = SettingNameFamily("Name the output objects")
     input_objects_binding = SettingToKeywordBinding.input(
@@ -6741,11 +6718,9 @@ class FillObjectsModule(
     )
 
 
-class MorphModule(CellProfilerModule):
+class MorphModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "Morph"
     function_name = "morph"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     output_image_setting = SettingNameFamily("Name the output image")
     setting_bindings = (
@@ -6778,8 +6753,6 @@ class ShrinkToObjectCentersModule(
     module_name = "ShrinkToObjectCenters"
     function_name = "shrink_to_object_centers"
     function_variants = ("shrink_to_object_centers_3d",)
-    validated = True
-    confidence = 1.0
 
 
 class SplitOrMergeObjectsModule(
@@ -6794,8 +6767,6 @@ class SplitOrMergeObjectsModule(
         "split_or_merge_objects_with_guide_image",
         "split_or_merge_objects_per_parent",
     )
-    validated = True
-    confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the input objects")
     output_objects_setting = SettingNameFamily("Name the new objects")
     guide_image_setting = SettingNameFamily(

@@ -4,6 +4,7 @@ Original: gaussianfilter
 """
 
 from typing import ClassVar
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.callable.callable_contract import runtime_image_execution_mode
@@ -18,11 +19,9 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 
-class GaussianFilterModule(CellProfilerModule):
+class GaussianFilterModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "GaussianFilter"
     function_name = "gaussian_filter"
-    validated = True
-    confidence = 1.0
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
         SettingToKeywordBinding.output("Name the output image", ImageArtifactType),

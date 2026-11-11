@@ -95,6 +95,7 @@ from openhcs.core.callable.callable_contract import CallableProjection
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -634,8 +635,6 @@ class IdentifyPrimaryObjectsModule(
 ):
     module_name = "IdentifyPrimaryObjects"
     function_name = "identify_primary_objects"
-    validated = True
-    confidence = 1.0
 
     @classmethod
     def finalize_artifact_contract_outputs(

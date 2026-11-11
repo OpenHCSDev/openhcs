@@ -80,8 +80,6 @@ class MeasureObjectSizeShapeModule(
 ):
     module_name = "MeasureObjectSizeShape"
     function_name = "measure_object_size_shape"
-    validated = True
-    confidence = 1.0
     ignored_settings = ("Select objects to measure", "Select object sets to measure")
     measurement_category_prefixes = (("area", "shape"), ("location",))
 
@@ -492,6 +490,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
     _edt_1d_numba,
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)

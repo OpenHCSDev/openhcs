@@ -8,6 +8,7 @@ to a pass-through that optionally applies renumbering. For actual manual editing
 use the interactive napari-based tools in OpenHCS.
 """
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 import numpy as np
@@ -152,8 +153,6 @@ class EditObjectsManuallyModule(
 ):
     module_name = "EditObjectsManually"
     function_name = "edit_objects_manually"
-    validated = True
-    confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the objects to be edited")
     output_objects_setting = SettingNameFamily("Name the edited objects")
     guide_image_setting = SettingNameFamily("Select the guiding image")

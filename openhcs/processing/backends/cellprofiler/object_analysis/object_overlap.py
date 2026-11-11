@@ -1,6 +1,7 @@
 """Overlap measurement semantics for CellProfiler-compatible backends."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from collections.abc import Callable
 import numpy as np
@@ -788,8 +789,6 @@ class MeasureImageOverlapModule(
     module_name = "MeasureImageOverlap"
     function_name = "measureimageoverlap"
     function_variants = ("measureimageoverlap_with_emd",)
-    validated = True
-    confidence = 1.0
     ground_truth_setting = "Select the image to be used as the ground truth basis for calculating the amount of overlap"
     test_image_setting = "Select the image to be used to test for overlap"
     setting_bindings = (
@@ -826,8 +825,6 @@ class MeasureObjectOverlapModule(
     module_name = "MeasureObjectOverlap"
     function_name = "measure_object_overlap"
     function_variants = ("measure_object_overlap_with_emd",)
-    validated = True
-    confidence = 1.0
     ground_truth_setting = "Select the objects to be used as the ground truth basis for calculating the amount of overlap"
     test_objects_setting = (
         "Select the objects to be tested for overlap against the ground truth"

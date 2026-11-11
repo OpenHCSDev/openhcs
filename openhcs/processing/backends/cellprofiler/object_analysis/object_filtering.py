@@ -492,8 +492,6 @@ class FilterObjectsModule(
 ):
     module_name = "FilterObjects"
     function_name = "filter_objects"
-    validated = True
-    confidence = 1.0
     input_setting = SettingNameFamily(
         "Select the object to filter",
         aliases=("Select the objects to filter", "Select the input objects"),

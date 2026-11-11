@@ -54,6 +54,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
 )
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 SeedObjectLabelsInput = Annotated[
     ObjectLabelValue,
@@ -431,8 +432,6 @@ class MeasureImageSkeletonModule(
     module_name = "MeasureImageSkeleton"
     function_name = "measure_image_skeleton"
     function_variants = ("measure_image_skeleton_3d",)
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("skeleton",),)
 
     class MeasurementFeature(RuntimeMeasurementFeature):
@@ -451,8 +450,6 @@ class MeasureObjectSkeletonModule(
     module_name = "MeasureObjectSkeleton"
     function_name = "measure_object_skeleton"
     function_variants = ("measure_object_skeleton_with_branchpoint_image",)
-    validated = True
-    confidence = 1.0
 
     seed_objects_setting = "Select the seed objects"
     skeleton_image_setting = "Select the skeletonized image"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -121,8 +122,6 @@ class ImageMathModule(
 ):
     module_name = "ImageMath"
     function_name = "image_math"
-    validated = True
-    confidence = 1.0
     first_image_setting = SettingNameFamily("Select the first image")
     second_image_setting = SettingNameFamily("Select the second image")
     third_image_setting = SettingNameFamily("Select the third image")

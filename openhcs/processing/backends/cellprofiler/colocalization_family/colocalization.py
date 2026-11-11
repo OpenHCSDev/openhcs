@@ -1,6 +1,7 @@
 """Colocalization backends for CellProfiler-compatible measurements."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
@@ -507,11 +508,9 @@ class MeasureColocalizationModule(
 ):
     module_name = "MeasureColocalization"
     function_name = "measure_colocalization"
-    validated = True
     aliases = ("MeasureCorrelation",)
     function_variants = ("measure_colocalization_objects",)
     group_by_role = TileAxis
-    confidence = 1.0
     measurement_category_prefixes = (
         ("correlation",),
         ("colocalization",),

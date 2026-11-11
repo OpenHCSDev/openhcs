@@ -1,6 +1,7 @@
 """CellProfiler-compatible spreadsheet projection over runtime artifacts."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.object_labels.runtime_relationships import (
@@ -1855,13 +1856,11 @@ def export_to_spreadsheet(
     )
 
 
-class ExportToSpreadsheetModule(ArtifactExportModule):
+class ExportToSpreadsheetModule(ArtifactExportModule, ValidatedHighConfidenceModule):
     """Executable plate-scoped CellProfiler spreadsheet export declaration."""
 
     module_name = "ExportToSpreadsheet"
     function_name = "export_to_spreadsheet"
-    validated = True
-    confidence = 1.0
 
     delimiter_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
         "Select the column delimiter"

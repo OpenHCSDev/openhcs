@@ -1,6 +1,7 @@
 """Executable CellProfiler-compatible SaveImages declaration."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from dataclasses import dataclass
 from enum import Enum
@@ -345,8 +346,6 @@ class SaveImagesModule(
     module_name = "SaveImages"
     function_name = "save_images"
     function_variants = ("save_images_with_measurements",)
-    validated = True
-    confidence = 1.0
     relative_path_scope = ExecutionAxisMaterializationRelativePathScope()
 
     image_kind_setting = SettingNameFamily("Select the type of image to save")

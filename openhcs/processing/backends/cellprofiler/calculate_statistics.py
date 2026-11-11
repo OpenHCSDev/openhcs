@@ -50,6 +50,7 @@ from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
 )
 from openhcs.interop.cellprofiler.module_declarations import (
+    ValidatedHighConfidenceModule,
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
@@ -582,12 +583,9 @@ def calculate_statistics(
 class CalculateStatisticsModule(
     CalculateStatisticsInputPolicy,
     MeasurementArtifactOutputModule,
-    CellProfilerModule,
-):
+    CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "CalculateStatistics"
     function_name = "calculate_statistics"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (
         ("zfactor",),
         ("vfactor",),

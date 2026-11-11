@@ -1,6 +1,7 @@
 """Threshold diagnostic backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 import logging
 import math
@@ -3210,8 +3211,6 @@ class ThresholdModule(
 ):
     module_name = "Threshold"
     function_name = "threshold"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("threshold",),)
     measurement_feature_part_rewrites = {
         ("otsu",): ("threshold", "otsu"),

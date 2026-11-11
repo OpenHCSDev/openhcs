@@ -1,6 +1,7 @@
 """CellProfiler display module declarations and implementations."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -1341,8 +1342,6 @@ class DisplayDataOnImageModule(
 ):
     module_name = "DisplayDataOnImage"
     function_name = "display_data_on_image"
-    validated = True
-    confidence = 1.0
     image_input_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
         "Select the image on which to display the measurements"
     )
@@ -1508,8 +1507,6 @@ class DisplayDensityPlotModule(
 ):
     module_name = "DisplayDensityPlot"
     function_name = "display_density_plot"
-    validated = True
-    confidence = 1.0
     x_object_setting = SettingNameFamily("Select the object to display on the X-axis")
     x_measurement_setting = SettingNameFamily(
         "Select the object measurement to plot on the X-axis"
@@ -1573,8 +1570,6 @@ class DisplayHistogramModule(
 ):
     module_name = "DisplayHistogram"
     function_name = "display_histogram"
-    validated = True
-    confidence = 1.0
     object_setting = SettingNameFamily(
         "Select the object whose measurements will be displayed"
     )
@@ -1626,8 +1621,6 @@ class DisplayPlatemapModule(
 ):
     module_name = "DisplayPlatemap"
     function_name = "display_platemap"
-    validated = True
-    confidence = 1.0
     measurement_setting = SettingNameFamily("Select the measurement to plot")
     plate_metadata_setting = SettingNameFamily("Select your plate metadata")
     well_metadata_setting = SettingNameFamily("Select your well metadata")
@@ -1699,8 +1692,6 @@ class DisplayScatterPlotModule(
 ):
     module_name = "DisplayScatterPlot"
     function_name = "display_scatter_plot"
-    validated = True
-    confidence = 1.0
     x_measurement_setting = SettingNameFamily(
         "Select the measurement to plot on the X-axis"
     )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from openhcs.core.payload.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 import re
 from abc import ABC, abstractmethod
@@ -140,8 +141,6 @@ class ColorToGrayModule(
 ):
     module_name = "ColorToGray"
     function_name = "color_to_gray"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     output_image_setting = SettingNameFamily("Name the output image")
     channel_output_image_setting = SettingNameFamily("Image name")
@@ -637,9 +636,7 @@ class GrayToColorModule(
 ):
     module_name = "GrayToColor"
     function_name = "gray_to_color"
-    validated = True
     group_by_role = TileAxis
-    confidence = 1.0
     color_scheme_setting = SettingNameFamily("Select a color scheme")
     rescale_setting = SettingNameFamily("Rescale intensity")
     current_rescale_default = "Yes"
@@ -1094,8 +1091,6 @@ class UnmixColorsModule(
 ):
     module_name = "UnmixColors"
     function_name = "unmix_colors"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily(
         "Select the input color image", aliases=("Color image",)
     )
@@ -2237,9 +2232,7 @@ class InvertForPrintingModule(
         "invert_for_printing_grayscale",
         "invert_for_printing_without_output",
     )
-    validated = True
     group_by_role = TileAxis
-    confidence = 1.0
 
     input_mode_setting = "Input image type"
     red_input_flag_setting = "Use a red image?"

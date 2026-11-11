@@ -205,8 +205,6 @@ class FindMaximaModule(
     module_name = "FindMaxima"
     function_name = "find_maxima"
     function_variants = ("find_maxima_with_mask",)
-    validated = True
-    confidence = 1.0
 
     input_image_setting = SettingNameFamily("Select the input image")
     output_image_setting = SettingNameFamily("Name the output image")

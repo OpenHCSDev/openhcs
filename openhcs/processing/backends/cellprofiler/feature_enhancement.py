@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
@@ -118,11 +119,9 @@ def enhance_or_suppress_features(
     )
 
 
-class EnhanceOrSuppressFeaturesModule(CellProfilerModule):
+class EnhanceOrSuppressFeaturesModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "EnhanceOrSuppressFeatures"
     function_name = "enhance_or_suppress_features"
-    validated = True
-    confidence = 1.0
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
         SettingToKeywordBinding.output("Name the output image", ImageArtifactType),
@@ -465,11 +464,9 @@ def _prepare_enhance_or_suppress_features() -> None:
     )
 
 
-class MatchTemplateModule(CellProfilerModule):
+class MatchTemplateModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "MatchTemplate"
     function_name = "match_template"
-    validated = True
-    confidence = 1.0
     template_binding = SourceFileSettingBinding("Template", "template_path")
     setting_bindings = (
         SettingToKeywordBinding.input("Image", ImageArtifactType),

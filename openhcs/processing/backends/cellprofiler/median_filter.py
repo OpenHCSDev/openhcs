@@ -1,6 +1,7 @@
 """Median-filter backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -43,11 +44,9 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
-class MedianFilterModule(CellProfilerModule, NativeNumpyBackend):
+class MedianFilterModule(CellProfilerModule, NativeNumpyBackend, ValidatedHighConfidenceModule):
     module_name = "MedianFilter"
     function_name = "medianfilter"
-    validated = True
-    confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
         SettingToKeywordBinding.output("Name the output image", ImageArtifactType),

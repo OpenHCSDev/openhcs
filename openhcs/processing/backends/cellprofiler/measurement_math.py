@@ -5,6 +5,7 @@ from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 import time
@@ -494,8 +495,6 @@ class CalculateMathModule(
 ):
     module_name = "CalculateMath"
     function_name = "calculate_math"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("math",),)
     calculated_measurement_feature_prefixes = (("math",),)
 
