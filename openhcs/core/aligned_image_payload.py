@@ -44,7 +44,6 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_slice_projection import preserved_image_plane_projection
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import (
-    SourceSpatialDomain,
     SourceSpatialDomainAdapter,
 )
 from openhcs.core.axes import ColourAxis

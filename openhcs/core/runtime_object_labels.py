@@ -747,9 +747,6 @@ class ObjectLabelValue(
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> Any:
         """Place every label variant in this value's source domain."""
-        from openhcs.core.aligned_image_payload import (
-            ObjectLabelPayloadSourceSpatialDomainAdapter,
-        )
 
         return ObjectLabelPayloadSourceSpatialDomainAdapter(
             self, source_shape_override_yx=source_shape_override_yx,

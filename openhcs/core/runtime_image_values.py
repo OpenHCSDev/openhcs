@@ -1438,9 +1438,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> Any:
         """Place this payload in the source domain its metadata declares."""
-        from openhcs.core.aligned_image_payload import (
-            ImagePayloadSourceSpatialDomainAdapter,
-        )
 
         del source_shape_override_yx
         return ImagePayloadSourceSpatialDomainAdapter.for_payload(self)
@@ -1566,7 +1563,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
                 (self.value_for_slice(projection.selected_plane(index)), None)
                 for index in range(projection.axis_size)
             )
-        from openhcs.core.aligned_image_payload import unstack_image_payload_context
 
         return tuple(
             (payload, None)
@@ -2014,9 +2010,6 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> Any:
         """Bare pixels sit at the origin of the source domain a caller supplies."""
-        from openhcs.core.aligned_image_payload import (
-            BareArraySourceSpatialDomainAdapter,
-        )
 
         return BareArraySourceSpatialDomainAdapter.for_array(
             self.data, source_shape_override_yx=source_shape_override_yx,
