@@ -39,7 +39,7 @@ class OpenHCSRuntimeImportAuthority:
     def current(cls) -> Self:
         """Derive the import root from this loaded authority declaration."""
 
-        package_root = Path(__file__).resolve().parents[1]
+        package_root = Path(__file__).resolve().parents[2]
         if package_root.name != cls.package_name:
             raise OpenHCSRuntimeImportError(
                 "Loaded runtime authority is not inside the OpenHCS package: "
