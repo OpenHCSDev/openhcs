@@ -1833,6 +1833,15 @@ class AgentCapabilityGroup:
     def title(self) -> str:
         return self.workflow_group.title
 
+    def to_jsonable(self) -> dict[str, object]:
+        return {
+            "workflow_group": self.workflow_group.value,
+            "title": self.title,
+            "capability_names": list(self.capability_names),
+            "tool_count": self.tool_count,
+            "resource_count": self.resource_count,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class AgentCapabilityRegistry:
@@ -1840,6 +1849,14 @@ class AgentCapabilityRegistry:
     capabilities: tuple[type[AgentCapabilityDeclaration], ...]
     groups: tuple[AgentCapabilityGroup, ...] = ()
     surface_profile: str = FullLocalCapabilitySurfaceProfile.name
+
+    def to_jsonable(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "surface_profile": self.surface_profile,
+            "capabilities": [to_jsonable(capability) for capability in self.capabilities],
+            "groups": [group.to_jsonable() for group in self.groups],
+        }
 
     @property
     def non_read_only_tools(self) -> tuple[type[AgentCapabilityDeclaration], ...]:
@@ -1897,25 +1914,14 @@ def _jsonable_agent_capability(
 
 @to_jsonable.register(AgentCapabilityGroup)
 def _jsonable_agent_capability_group(value: AgentCapabilityGroup) -> dict[str, object]:
-    return {
-        "workflow_group": value.workflow_group.value,
-        "title": value.title,
-        "capability_names": list(value.capability_names),
-        "tool_count": value.tool_count,
-        "resource_count": value.resource_count,
-    }
+    return value.to_jsonable()
 
 
 @to_jsonable.register(AgentCapabilityRegistry)
 def _jsonable_agent_capability_registry(
     value: AgentCapabilityRegistry,
 ) -> dict[str, object]:
-    return {
-        "schema_version": value.schema_version,
-        "surface_profile": value.surface_profile,
-        "capabilities": [to_jsonable(capability) for capability in value.capabilities],
-        "groups": [to_jsonable(group) for group in value.groups],
-    }
+    return value.to_jsonable()
 
 
 TOPIC_ID_INPUT = AgentScalarInputContract("topic_id", default_value="pipeline_model")

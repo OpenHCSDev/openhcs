@@ -139,11 +139,7 @@ class DistanceColocalizationMetrics:
     distance_threshold_used: float
 
     def as_dict(self) -> dict[str, float]:
-        return {
-            "average_colocalization_distance": self.average_colocalization_distance,
-            "max_colocalization_distance": self.max_colocalization_distance,
-            "distance_threshold_used": self.distance_threshold_used,
-        }
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,10 +150,7 @@ class IntensityColocalizationMetrics:
     correlation_method: str = "threshold_based"
 
     def as_dict(self) -> dict[str, float | str]:
-        return {
-            "intensity_threshold_used": self.intensity_threshold_used,
-            "correlation_method": self.correlation_method,
-        }
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True)
