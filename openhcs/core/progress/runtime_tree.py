@@ -43,7 +43,6 @@ class RuntimeTreeNodeDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     node_kind: ClassVar[str | None] = None
     sort_order: ClassVar[int] = 0
-    preserve_existing_info: ClassVar[bool] = False
 
     @classmethod
     def require_node_kind(cls) -> str:
@@ -66,8 +65,6 @@ class RuntimeTreeNodeDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def info_for(cls, node: RuntimeTreeNode) -> str:
-        if cls.preserve_existing_info and node.info:
-            return node.info
         return f"{node.percent:.1f}%"
 
     @classmethod
@@ -143,7 +140,10 @@ class StepProgressTreeNode(
 ):
     node_kind = "step"
     sort_order = 30
-    preserve_existing_info = True
+
+    @classmethod
+    def info_for(cls, node: RuntimeTreeNode) -> str:
+        return node.info or f"{node.percent:.1f}%"
 
     @classmethod
     def label_for(cls, identity: RuntimeTreeNodeIdentity) -> str:
