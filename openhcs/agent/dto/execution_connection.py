@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from formbridge.connection import EndpointConnectionFields, EndpointConnectionSpec
 from python_introspect import project_dataclass
 
 from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-
-if TYPE_CHECKING:
-    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 
 @dataclass(frozen=True, slots=True)

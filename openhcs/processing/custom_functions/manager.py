@@ -21,7 +21,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from arraybridge import MemoryType
 
@@ -48,10 +48,7 @@ from openhcs.processing.custom_functions.validation import (
     validate_function,
 )
 
-if TYPE_CHECKING:
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        FunctionMetadata,
-    )
+from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 
 logger = logging.getLogger(__name__)
 

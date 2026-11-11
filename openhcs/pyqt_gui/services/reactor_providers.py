@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 from formbridge.core.log_utils import LogFileInfo
 from formbridge.protocols.codegen_provider import CodegenProviderABC, register_codegen_provider
@@ -38,9 +38,7 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
 )
 from openhcs.pyqt_gui.config import UIConfig
 from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 DeclarationT = TypeVar("DeclarationT")
 

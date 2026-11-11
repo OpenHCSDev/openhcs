@@ -6,7 +6,7 @@ import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, TypeAlias
+from typing import Any, Callable, TypeAlias
 
 from objectstate.object_state import ObjectState
 from PyQt6.QtWidgets import QFileDialog
@@ -35,9 +35,6 @@ from openhcs.core.debug.debug_runtime import (
 logger = logging.getLogger(__name__)
 
 TimeTravelDirtyStates: TypeAlias = Iterable[tuple[str, ObjectState]]
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True, slots=True)

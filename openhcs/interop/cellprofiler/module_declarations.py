@@ -11,7 +11,6 @@ from abc import ABC
 from collections.abc import Callable, Iterable
 from dataclasses import replace
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
 )
@@ -72,11 +71,9 @@ from openhcs.core.axes.axis_declarations import (
 
 _CELLPROFILER_BACKEND_PACKAGE = "openhcs.processing.backends.cellprofiler"
 _CELLPROFILER_MODULE_REGISTRY = LazyDiscoveryDict(enable_cache=False)
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        NormalizedFunctionItem,
-    )
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+
+from openhcs.core.callable.function_patterns import NormalizedFunctionItem
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
 
 def _required_string(value: object, name: str, owner: str) -> str:

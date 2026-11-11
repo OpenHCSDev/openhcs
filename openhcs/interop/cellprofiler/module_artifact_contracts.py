@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import replace
-from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
@@ -23,7 +22,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
 )
 from openhcs.core.callable.callable_contract import CallableContract, CallableProjection
-from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey, NormalizedFunctionItem
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.interop.cellprofiler_setting_normalization import (
@@ -33,14 +32,8 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_names,
     setting_values,
 )
-
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
 
 class UniqueReturnSlots:
