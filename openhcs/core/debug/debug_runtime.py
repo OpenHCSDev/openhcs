@@ -232,8 +232,27 @@ class DebugReplayMode(ABC, metaclass=AutoRegisterMeta):
 
     name: ClassVar[str | None] = None
     retains_compile_artifact: ClassVar[bool] = True
-    keeps_worker_paused: ClassVar[bool] = False
-    """The worker stays alive between commands, paused at invocation boundaries."""
+
+    @classmethod
+    def pause_controller_for(
+        cls, debug_session_id: str
+    ) -> "DebugPausedWorkerController | None":
+        return None
+
+    @classmethod
+    def cleanup_paused_worker(cls, debug_session_id: str) -> None:
+        pass
+
+    @classmethod
+    def adjusted_worker_count(cls, configured: int) -> int:
+        return configured
+
+    @classmethod
+    def adjusted_runtime_environment(
+        cls,
+        runtime_environment: "CompiledRuntimeEnvironmentPlan",
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        return runtime_environment
 
 
 class ColdReplay(DebugReplayMode):
@@ -247,7 +266,30 @@ class WarmArtifactReplay(DebugReplayMode):
 
 class PersistentPausedWorkerReplay(DebugReplayMode):
     name = "persistent_paused_worker"
-    keeps_worker_paused = True
+
+    @classmethod
+    def pause_controller_for(
+        cls, debug_session_id: str
+    ) -> "DebugPausedWorkerController | None":
+        return DebugPausedWorkerRegistry.controller_for(debug_session_id)
+
+    @classmethod
+    def adjusted_worker_count(cls, configured: int) -> int:
+        return 1
+
+    @classmethod
+    def cleanup_paused_worker(cls, debug_session_id: str) -> None:
+        DebugPausedWorkerRegistry.remove(debug_session_id)
+
+    @classmethod
+    def adjusted_runtime_environment(
+        cls,
+        runtime_environment: "CompiledRuntimeEnvironmentPlan",
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        return runtime_environment.with_execution_shape(
+            use_threading=True,
+            configured_num_workers=1,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1830,10 +1872,8 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         request: DebugSinkInstallRequest,
     ) -> None:
         invocation_strategy = DebugInvocationExecutionStrategy.for_config(self.config)
-        pause_controller = (
-            DebugPausedWorkerRegistry.controller_for(self.config.debug_session_id)
-            if self.config.replay_mode.keeps_worker_paused
-            else None
+        pause_controller = self.config.replay_mode.pause_controller_for(
+            self.config.debug_session_id
         )
         if pause_controller is not None:
             pause_controller.bind_context(request.context)
@@ -1907,20 +1947,13 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         return [] if not available_axis_ids else [available_axis_ids[0]]
 
     def compile_worker_count(self, configured_num_workers: int) -> int:
-        if self.config.replay_mode.keeps_worker_paused:
-            return 1
-        return configured_num_workers
+        return self.config.replay_mode.adjusted_worker_count(configured_num_workers)
 
     def compiled_runtime_environment(
         self,
         runtime_environment: "CompiledRuntimeEnvironmentPlan",
     ) -> "CompiledRuntimeEnvironmentPlan":
-        if not self.config.replay_mode.keeps_worker_paused:
-            return runtime_environment
-        return runtime_environment.with_execution_shape(
-            use_threading=True,
-            configured_num_workers=1,
-        )
+        return self.config.replay_mode.adjusted_runtime_environment(runtime_environment)
 
     def snapshot_store_for_context(
         self,
