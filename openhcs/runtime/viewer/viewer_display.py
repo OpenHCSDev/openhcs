@@ -9,7 +9,7 @@ an axis into, and which roles default to which slot.
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum
 from functools import cache
@@ -108,7 +108,7 @@ class DeclaredAxis:
 
     def to_wire(self) -> dict[str, ViewerWireValue]:
         result: dict[str, ViewerWireValue] = {}
-        for f in dataclasses.fields(self):
+        for f in fields(self):
             value = getattr(self, f.name)
             transform = self._WIRE_TRANSFORMS.get(f.name)
             result[f.name] = transform(value) if transform else value

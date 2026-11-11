@@ -1,6 +1,7 @@
 """Execution session DTOs for the OpenHCS agent API."""
 
 from __future__ import annotations
+import dataclasses
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
@@ -571,7 +572,10 @@ class RuntimeServerExecutionStatusRequest(
 
     def as_tool_arguments(self) -> JsonObject:
         payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        payload["execution_id"] = self.execution_id
+        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
+        for f in dataclasses.fields(self):
+            if f.name not in parent_fields:
+                payload[f.name] = getattr(self, f.name)
         return payload
 
 
@@ -633,7 +637,10 @@ class RuntimeDebugInspectionRequest(
 
     def as_tool_arguments(self) -> JsonObject:
         payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        payload["debug_session_id"] = self.debug_session_id
+        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
+        for f in dataclasses.fields(self):
+            if f.name not in parent_fields:
+                payload[f.name] = getattr(self, f.name)
         return payload
 
 
@@ -703,8 +710,10 @@ class RuntimeDebugCommandRequest(
 
     def as_tool_arguments(self) -> JsonObject:
         payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        payload["debug_session_id"] = self.debug_session_id
-        payload["command_type"] = self.command_type
+        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
+        for f in dataclasses.fields(self):
+            if f.name not in parent_fields:
+                payload[f.name] = getattr(self, f.name)
         return payload
 
 
@@ -805,11 +814,10 @@ class RuntimeDebugArtifactExportRequest(
 
     def as_tool_arguments(self) -> JsonObject:
         payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
-        payload["debug_session_id"] = self.debug_session_id
-        payload["artifact_ref"] = self.artifact_ref
-        payload["export_root"] = self.export_root
-        payload["snapshot_store_ref"] = self.snapshot_store_ref
-        payload["snapshot_store_backend"] = self.snapshot_store_backend
+        parent_fields = {f.name for f in dataclasses.fields(RuntimeServerConnectionToolRequest)}
+        for f in dataclasses.fields(self):
+            if f.name not in parent_fields:
+                payload[f.name] = getattr(self, f.name)
         return payload
 
 
