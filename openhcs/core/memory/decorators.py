@@ -14,6 +14,12 @@ from typing import Any
 
 import arraybridge as _arraybridge
 from arraybridge import MemoryType
+from openhcs.core.callable.callable_contract import (
+    attach_callable_contract_metadata,
+    attach_processing_prepare,
+)
+from openhcs.core.callable.processing_contracts import FlexibleContract, ProcessingContract
+from openhcs.core.config.pipeline_config import runtime_config_parameter
 from openhcs.core.payload.runtime_image_values import ImagePayload, PlainImagePayload
 from openhcs.core.payload.runtime_array_values import is_array_payload
 
@@ -27,11 +33,6 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
         contract: Any = None,
         **kwargs: Any,
     ) -> Any:
-        from openhcs.core.callable.processing_contracts import (
-            FlexibleContract,
-            ProcessingContract,
-        )
-
         if contract is None:
             contract = FlexibleContract
         processing_contract = (
@@ -172,8 +173,6 @@ def _attach_openhcs_metadata(
     prepare: Any,
     processing_contract: Any,
 ) -> None:
-    from openhcs.core.callable.callable_contract import attach_callable_contract_metadata
-    from openhcs.core.config.pipeline_config import runtime_config_parameter
     from python_introspect import add_parameter_exclusions, parameter_exclusions
 
     signature = _signature_with_resolved_raw_annotations(wrapped)
@@ -198,8 +197,6 @@ def _attach_openhcs_metadata(
     if runtime_config_parameter_names:
         add_parameter_exclusions(wrapped, tuple(runtime_config_parameter_names))
     if prepare is not None:
-        from openhcs.core.callable.callable_contract import attach_processing_prepare
-
         attach_processing_prepare(wrapped, prepare)
     if processing_contract is not None:
         _strip_unowned_semantic_controls(wrapped, processing_contract)

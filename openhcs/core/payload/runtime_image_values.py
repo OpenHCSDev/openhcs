@@ -67,6 +67,7 @@ from openhcs.core.source.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, AxisRole, ColourAxis
+from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
 class RuntimeSliceProjectionDeclarationError(ValueError):
@@ -592,8 +593,6 @@ class ImagePayloadMetadata(
         source_path: str | None = None,
     ) -> "ImagePayloadMetadata":
         """Build source metadata from an arraybridge-detectable payload."""
-        from openhcs.core.memory import MEMORY_TYPE_NUMPY, detect_memory_type
-
         memory_type = detect_memory_type(array)
         dtype = array.dtype
         if memory_type == MEMORY_TYPE_NUMPY:
@@ -1395,8 +1394,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
 
     def copied(self, *, memory_type: str, device_id: int | None) -> "ImagePayload":
         """Copy pixels, mask and metadata into an independent buffer."""
-        from openhcs.core.memory import stack_runtime_slices
-
         copied_data = stack_runtime_slices((self.data,), memory_type, device_id)[0]
         mask = self.mask
         copied_mask = (
