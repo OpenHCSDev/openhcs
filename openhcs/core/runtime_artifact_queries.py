@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import numpy as np
 
@@ -44,6 +44,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.runtime_stores import RuntimeValueStore, StoredRuntimeValue
 from openhcs.core.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
@@ -58,8 +59,6 @@ from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.runtime_stores import RuntimeValueStore, StoredRuntimeValue
 
 
 class RuntimeMeasurementTablesQueryCache(

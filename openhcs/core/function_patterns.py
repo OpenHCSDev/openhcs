@@ -19,8 +19,6 @@ from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-    from openhcs.core.source_bindings import CompiledSourceBindingPlan
-    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph
@@ -41,7 +39,10 @@ from openhcs.core.artifacts.specs import (
     ArtifactSpecAccumulator,
     ArtifactSpecCollection,
 )
-from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    ImagePayloadStackComposition,
+)
 from openhcs.core.callable_contract import (
     CallableProjection,
     CallableContract,
@@ -54,6 +55,7 @@ from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict

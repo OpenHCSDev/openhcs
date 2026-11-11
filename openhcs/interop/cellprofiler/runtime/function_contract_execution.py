@@ -25,13 +25,14 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     SliceIndexRuntimeParameter,
 )
-from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.runtime_image_values import (
+    ImagePayload,
+    RuntimeSliceProjectionDeclarationError,
+    owned_runtime_value,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import (
-    RuntimeSliceProjection,
-    RuntimeSliceProjectionDeclarationError,
-)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeCallableKwargs,

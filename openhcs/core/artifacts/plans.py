@@ -27,6 +27,8 @@ from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
 from openhcs.core.axes import Axis
 from openhcs.core.component_group_scope import ComponentGroupScope, UngroupedScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_measurements import MeasurementSubject
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.relations import (
@@ -34,8 +36,6 @@ if TYPE_CHECKING:
         ObjectArtifactSubjectBinding,
     )
     from openhcs.core.runtime_artifact_values import RuntimeValue
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.runtime_measurements import MeasurementSubject
 
 AnswerT = TypeVar("AnswerT")
 

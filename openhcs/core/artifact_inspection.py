@@ -4,21 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar
 
 from zmqruntime.messages import TypedWireMessage
 
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.compiled_execution import CompiledExecutionBundle
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.function_patterns import (
+    CompiledFunctionInvocation,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.function_patterns import CompiledFunctionInvocation
 
 
 @dataclass(frozen=True, slots=True)

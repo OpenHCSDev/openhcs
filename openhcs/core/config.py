@@ -13,7 +13,7 @@ import inspect
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union, List, Annotated, ClassVar, Self
+from typing import Optional, Union, List, Annotated, ClassVar, Self
 from enum import Enum
 from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
@@ -49,12 +49,14 @@ from zmqruntime.config import (
 from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.dataset_sources.source import (
     AutoDetectedSource,
     DatasetSourceChoice,
     DatasetSourceChoices,
 )
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,
@@ -97,9 +99,6 @@ from openhcs.core.source_metadata import (
 from openhcs.core.source_path_identity import source_path_posix
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
-if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.step_dependencies import StepInputDependency
 
 
 from objectstate import auto_create_decorator, abbreviation

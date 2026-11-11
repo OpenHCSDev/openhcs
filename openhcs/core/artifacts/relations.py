@@ -27,10 +27,10 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.runtime_measurements import MeasurementSubject
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.runtime_measurements import MeasurementSubject
 
 
 @dataclass(frozen=True)

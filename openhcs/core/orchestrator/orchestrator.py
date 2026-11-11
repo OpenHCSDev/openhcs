@@ -17,7 +17,11 @@ from openhcs.constants.constants import (
     OrchestratorState,
 )
 from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.config import GlobalPipelineConfig, source_bindings_defaults_to_base
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    source_bindings_defaults_to_base,
+)
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
@@ -52,7 +56,6 @@ from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
-    from openhcs.core.config import PipelineConfig
 
 # Zarr backend is CPU-only; always import it (even in subprocess/no-GPU mode)
 from polystore.zarr import ZarrStorageBackend

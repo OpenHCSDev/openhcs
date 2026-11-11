@@ -14,8 +14,10 @@ from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.axes import GroupingDeclaration, Ungrouped, is_grouping_declaration
+from openhcs.core.function_patterns import FunctionInvocationKey, NormalizedFunctionItem
 
 _ClaimValue = TypeVar("_ClaimValue")
 
@@ -24,11 +26,6 @@ PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactProducer
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 

@@ -7,12 +7,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from openhcs.core.artifacts.payloads import TablePayloadShape
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_stores import StoredRuntimeValue
@@ -26,8 +27,6 @@ from openhcs.core.materialization import (
 )
 from openhcs.core.materialization.core import materialization_is_empty
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 
 
 @dataclass(frozen=True, slots=True)

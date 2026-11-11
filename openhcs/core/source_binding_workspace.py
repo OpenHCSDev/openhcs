@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 from itertools import product
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import ClassVar, cast
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from polystore.virtual_workspace import SourcePixelRef
@@ -62,6 +62,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     FIELDS,
@@ -70,8 +71,6 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.core.axes import AxisFamily, ColourAxis, PartitionAxis
 
-if TYPE_CHECKING:
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 @dataclass(frozen=True, slots=True)

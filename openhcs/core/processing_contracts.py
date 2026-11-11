@@ -8,6 +8,7 @@ policy used by those algorithms live here too.
 """
 
 from __future__ import annotations
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
@@ -15,7 +16,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar
 
 import numpy as np
 from arraybridge import SliceBySliceRuntimeParameter
@@ -69,8 +70,6 @@ from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
 

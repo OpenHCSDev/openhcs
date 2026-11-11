@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
+from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.runtime.viewer_display import (
     FijiDisplaySettings,
     NapariDisplaySettings,
@@ -25,7 +26,6 @@ from openhcs.runtime.viewer_display import (
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.core.execution_visualizer import ExecutionVisualizerABC
     from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
 
 

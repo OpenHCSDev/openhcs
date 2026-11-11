@@ -16,10 +16,10 @@ Doctrinal Clauses:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import Any, Mapping
 
-if TYPE_CHECKING:
-    from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.compiled_step_plan import CompiledStepPlan
+
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,9 @@
 """Nominal runtime image payload values and metadata."""
 
 from __future__ import annotations
+from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import (
@@ -10,7 +11,7 @@ from collections.abc import (
     Iterable,
     Sequence,
 )
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 from typing import Any, TypeVar
 
 import numpy as np
@@ -41,7 +42,6 @@ from openhcs.core.runtime_array_values import (
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
-    RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,
     RuntimeSliceProjectableValue,
@@ -58,7 +58,9 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacingFields,
 )
 from openhcs.core.source_spatial_domain import (
+    FillValue,
     SourceSpatialDomain,
+    SourceSpatialDomainAdapter,
     SourceSpatialDomainFields,
     SpatiallyPlacedValue,
 )
@@ -66,6 +68,11 @@ from openhcs.core.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )
 from openhcs.core.axes import AxisFamily, AxisRole, ColourAxis
+
+
+class RuntimeSliceProjectionDeclarationError(ValueError):
+    """Raised when runtime-slice behavior has no complete nominal declaration."""
+
 
 PhysicalBorderEdgesYX = tuple[bool, bool, bool, bool] | None
 
@@ -1431,9 +1438,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> Any:
         """Place this payload in the source domain its metadata declares."""
-        from openhcs.core.aligned_image_payload import (
-            ImagePayloadSourceSpatialDomainAdapter,
-        )
 
         del source_shape_override_yx
         return ImagePayloadSourceSpatialDomainAdapter.for_payload(self)
@@ -1559,7 +1563,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
                 (self.value_for_slice(projection.selected_plane(index)), None)
                 for index in range(projection.axis_size)
             )
-        from openhcs.core.aligned_image_payload import unstack_image_payload_context
 
         return tuple(
             (payload, None)
@@ -1715,6 +1718,224 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         return resolver.resolve_source_spatial_value(self)
 
 
+@dataclass(frozen=True, slots=True)
+class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
+    """Source-domain adapter for image payload data and masks."""
+
+    value: Any
+    source_domain: SourceSpatialDomain
+    domain = AliasProperty[SourceSpatialDomain]("source_domain")
+
+    @property
+    def array(self) -> Any:
+        return self.value.data
+
+    @property
+    def metadata(self) -> ImagePayloadMetadata:
+        """Return the image metadata that declares this value's axes."""
+        return self.value.metadata
+
+    @classmethod
+    def for_payload(cls, value: ImagePayload) -> "ImagePayloadSourceSpatialDomainAdapter":
+        """Place an image payload in the source domain its metadata declares."""
+        return cls(
+            value,
+            cls.domain_from_metadata(
+                value.metadata,
+                value_name="Image payload",
+            ),
+        )
+
+    @classmethod
+    def domain_from_metadata(
+        cls,
+        metadata: ImagePayloadMetadata,
+        *,
+        fill_value: FillValue = 0,
+        source_domain: SourceSpatialDomain | None = None,
+        value_name: str,
+    ) -> SourceSpatialDomain:
+        domain = metadata.source_spatial_domain
+        if source_domain is not None:
+            domain = domain.with_missing_from(source_domain)
+        return (
+            domain.with_missing_from(SourceSpatialDomain(origin_yx=(0, 0)))
+            .with_fill_value(fill_value)
+            .with_value_name(value_name)
+        )
+
+    @property
+    def spatial_axes_yx(self) -> tuple[int, int]:
+        axes = self.metadata.spatial_axes_yx(self.value)
+        if axes is None:
+            raise ValueError(
+                "Source-spatial image payload metadata does not declare two "
+                f"spatial axes for shape {tuple(np.shape(self.array))!r}."
+            )
+        return axes
+
+    @property
+    def spatial_shape_yx(self) -> tuple[int, int]:
+        shape = self.metadata.spatial_shape_yx(self.value)
+        if shape is None:
+            raise ValueError(
+                "Source-spatial image payloads require at least two dimensions, "
+                f"got shape {tuple(np.shape(self.array))!r}."
+            )
+        return shape
+
+    @classmethod
+    def payloads_aligned_to_common_source_domain(
+        cls,
+        payloads: tuple[RuntimeArrayData, ...],
+    ) -> tuple[RuntimeArrayData, ...]:
+        adapters = cls.source_domain_adapters(payloads)
+        source_domain = SourceSpatialDomainAdapter.common_source_domain(
+            adapters,
+            value_name="Image bundle source image",
+        )
+        if (
+            source_domain is None
+            or not SourceSpatialDomainAdapter.requires_source_domain_alignment(adapters)
+        ):
+            return payloads
+        return tuple(
+            cls.payload_in_source_domain(payload, source_domain) for payload in payloads
+        )
+
+    @classmethod
+    def source_domain_adapters(
+        cls,
+        payloads: tuple[RuntimeArrayData, ...],
+    ) -> tuple["ImagePayloadSourceSpatialDomainAdapter", ...]:
+        adapters: list[ImagePayloadSourceSpatialDomainAdapter] = []
+        for payload in payloads:
+            adapter = SourceSpatialDomainAdapter.for_value(payload)
+            if not isinstance(adapter, cls):
+                raise TypeError(
+                    "Image bundle alignment requires image payload adapters."
+                )
+            adapters.append(adapter)
+        return tuple(adapters)
+
+    @classmethod
+    def payload_in_source_domain(
+        cls,
+        payload: RuntimeArrayData,
+        source_domain: SourceSpatialDomain,
+    ) -> RuntimeArrayData:
+        metadata = payload.metadata
+        source_extent = source_domain.with_origin_yx(None)
+        source_metadata = metadata.with_materialized_source_domain(source_extent)
+        data = cls(
+            payload,
+            cls.domain_from_metadata(
+                metadata,
+                source_domain=source_extent,
+                value_name="Image payload",
+            ),
+        ).materialize()
+        return source_metadata.payload_with(
+            data,
+            cls.mask_in_source_domain(payload, metadata, source_extent),
+        )
+
+    @classmethod
+    def mask_in_source_domain(
+        cls,
+        payload: RuntimeArrayData,
+        metadata: ImagePayloadMetadata,
+        source_domain: SourceSpatialDomain,
+    ) -> RuntimeArrayData | None:
+        mask = payload.mask
+        if mask is None:
+            return None
+        return BareArraySourceSpatialDomainAdapter(
+            mask,
+            cls.domain_from_metadata(
+                metadata,
+                fill_value=False,
+                source_domain=source_domain,
+                value_name="Image mask",
+            ),
+        ).materialize()
+
+    def value_in_payload_domain(
+        self,
+        target: SourceSpatialDomainAdapter,
+    ) -> RuntimeArrayData:
+        """Project this image payload into another declared payload domain."""
+        materialized = self.payload_in_source_domain(self.value, target.domain)
+        target_domain = replace(
+            self.domain,
+            origin_yx=target.payload_domain.origin_yx,
+            source_shape_yx=target.payload_domain.source_shape_yx,
+        )
+        metadata = replace(
+            materialized.metadata,
+            source_spatial_domain=target_domain,
+            physical_border_edges_yx=target_domain.physical_border_edges_for_shape(
+                target.payload_domain.spatial_shape_yx
+            ),
+        )
+        materialized_mask = materialized.mask
+        return materialized.with_pixels(target.extract_source_array(
+                materialized.data,
+                spatial_axes_yx=self.spatial_axes_yx,
+            ),
+            mask=(
+                None
+                if materialized_mask is None
+                else target.extract_source_array(
+                    materialized_mask,
+                    spatial_axes_yx=self.spatial_axes_yx,
+                )
+            ),
+            metadata=metadata,)
+
+
+class BareArraySourceSpatialDomainAdapter(
+    ImagePayloadSourceSpatialDomainAdapter
+):
+    """Source-domain adapter for bare pixels, which declare no placement."""
+
+    @classmethod
+    def for_array(
+        cls,
+        value: Any,
+        *,
+        source_shape_override_yx: tuple[int, int] | None = None,
+    ) -> "BareArraySourceSpatialDomainAdapter":
+        return cls(
+            value,
+            SourceSpatialDomain(
+                origin_yx=(0, 0),
+                source_shape_yx=source_shape_override_yx,
+                fill_value=0,
+                value_name="NumPy image payload",
+            ),
+        )
+
+    @property
+    def array(self) -> Any:
+        return self.value
+
+    @property
+    def metadata(self) -> ImagePayloadMetadata:
+        """Bare arrays declare nothing; the active family's defaults apply."""
+        return ImagePayloadMetadata()
+
+    def value_in_payload_domain(
+        self,
+        target: SourceSpatialDomainAdapter,
+    ) -> Any:
+        """Project a raw array without introducing a nominal payload carrier."""
+        return target.extract_source_array(
+            self.materialize(),
+            spatial_axes_yx=self.spatial_axes_yx,
+        )
+
+
 def owned_runtime_value(value: Any) -> Any:
     """Return a function's returned value with a bare array wrapped once.
 
@@ -1789,9 +2010,6 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> Any:
         """Bare pixels sit at the origin of the source domain a caller supplies."""
-        from openhcs.core.aligned_image_payload import (
-            BareArraySourceSpatialDomainAdapter,
-        )
 
         return BareArraySourceSpatialDomainAdapter.for_array(
             self.data, source_shape_override_yx=source_shape_override_yx,
@@ -1879,81 +2097,6 @@ class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
             mask=self.mask if mask is None else mask,
             metadata=self.metadata,
         )
-
-
-def preserved_image_plane_projection(
-    value: Any,
-    projector: RuntimePlaneAxisProjector,
-    source_aliases: tuple[str, ...] = (),
-) -> RuntimePlaneAxisValueProjection | None:
-    """Resolve a value's declared leading plane axis against one invocation."""
-
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-    plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
-    if plane_axis.unstacked:
-        return RuntimeSliceProjection.preserved_context_for_value(value)
-    if plane_axis.one_plane_per_runtime_slice:
-        invocation_projection = RuntimePlaneAxisValueProjection.from_projector(
-            projector,
-            plane_axis,
-            source_aliases,
-        )
-        if (
-            invocation_projection is not None
-            and invocation_projection.selects_one_plane
-        ):
-            return None
-        payload_projection = RuntimeSliceProjection.preserved_context_for_value(value)
-        if payload_projection is None:
-            raise ValueError(
-                "Runtime-slice image metadata requires a payload with the same "
-                "nominal leading axis."
-            )
-        return payload_projection
-
-    shape = value.geometry.shape
-    if len(shape) <= AxisFamily.active().payload_spatial_rank:
-        raise ValueError(
-            "Source-binding image metadata requires its declared plane axis as "
-            f"the leading dimension, got shape {shape!r}."
-        )
-    axis_size = shape[0]
-    return RuntimePlaneAxisValueProjection.for_plane(
-        axis=SourceBindingPlaneAxis,
-        source_aliases=source_aliases,
-        plane_index=value.metadata.source_provenance.source_alias_plane_index(
-            source_aliases,
-            axis_size,
-        ),
-        axis_size=axis_size,
-    )
-
-
-def preserve_declared_image_payload_axis(
-    projector: RuntimePlaneAxisProjector,
-    output_value: Any,
-    *,
-    source_payload: Any = None,
-) -> RuntimePlaneAxisValueProjection | None:
-    """Preserve the plane axis declared by the output, else by its source."""
-
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-    def declared_axis(value: Any) -> type[RuntimePlaneAxis]:
-        plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
-        if plane_axis.leads_data:
-            return plane_axis
-        projection = RuntimeSliceProjection.preserved_context_for_value(value)
-        return NoPlaneAxis if projection is None else projection.axis
-
-    if declared_axis(output_value).leads_data:
-        owner = output_value
-    elif declared_axis(source_payload).leads_data:
-        owner = source_payload
-    else:
-        return None
-    return preserved_image_plane_projection(owner, projector)
 
 
 def project_image_mask_to_data_domain(
@@ -2179,6 +2322,23 @@ class ImagePayloadSliceProjector:
             f"got mask {mask_array.shape!r} for slice "
             f"{array_geometry(data_slice).shape!r}."
         )
+
+
+def unstack_image_payload_context(
+    payload: Any,
+    slices: Sequence[Any],
+    *,
+    default_plane_axis: type[RuntimePlaneAxis] = NoPlaneAxis,
+) -> list[Any]:
+    """Attach one source plane of payload context to each unstacked image slice."""
+    mask = payload.mask
+    metadata = payload.metadata
+    if mask is None and not metadata.has_values:
+        return [metadata.payload_with(image_slice) for image_slice in slices]
+    if metadata.plane_axis.unstacked and default_plane_axis.leads_data:
+        metadata = replace(metadata, plane_axis=default_plane_axis)
+    projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
+    return projector.payloads_for_slices(slices)
 
 
 @dataclass(slots=True)

@@ -10,12 +10,13 @@ from pathlib import Path
 from inspect import signature
 from math import isfinite
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar, get_type_hints
+from typing import Any, ClassVar, Generic, Self, TypeVar, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect.validation import validate_annotation_value
 from python_introspect import to_jsonable
 
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
@@ -60,8 +61,6 @@ SourceProvenanceInitValues = tuple[
 SourceImageProvenanceAliasValueT = TypeVar("SourceImageProvenanceAliasValueT")
 SourceImageProvenancePlaneValueT = TypeVar("SourceImageProvenancePlaneValueT")
 
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 def normalize_source_path(source_path: str | None) -> str | None:

@@ -5,15 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Hashable, TYPE_CHECKING
+from typing import Hashable
 
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.function_patterns import FunctionGroupKey
 from openhcs.core.source_binding_selection import SourceCandidatePath
 from openhcs.core.axes import Axis, GroupingDeclaration
 
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 DiscoveredPatternCollection = (
     Sequence[SourceCandidatePath]

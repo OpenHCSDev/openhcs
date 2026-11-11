@@ -6,19 +6,18 @@ from collections import defaultdict, deque
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar, Self, TYPE_CHECKING
+from typing import ClassVar, Self
 
 import numpy as np
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source_image_provenance import (
     SourceImageProvenanceFields,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
 SpatialGraphFeatureValue = str | int | float | bool | None
 SpatialCoordinate = tuple[float, ...]

@@ -12,15 +12,14 @@ from objectstate import ScopeKey
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 from urllib.parse import quote, unquote
 
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
+from openhcs.core.input_workspace import InputWorkspacePreparationResult
 
-if TYPE_CHECKING:
-    from openhcs.core.input_workspace import InputWorkspacePreparationResult
 
 
 @dataclass(frozen=True, slots=True)

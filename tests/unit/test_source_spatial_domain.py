@@ -4,10 +4,8 @@ import pytest
 from openhcs.interop.cellprofiler.object_label_variants import (
     UneditedLabels,
 )
-from openhcs.core.aligned_image_payload import (
-    ObjectLabelPayloadSourceSpatialDomainAdapter,
-)
 from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayloadSourceSpatialDomainAdapter,
     ObjectLabelRepresentation,
 )
 from openhcs.core.runtime_image_values import (

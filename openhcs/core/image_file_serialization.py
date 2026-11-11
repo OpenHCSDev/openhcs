@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from functools import lru_cache
 from hashlib import md5
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
+from typing import Any, Callable, ClassVar, Sequence
 
 import numpy as np
 from arraybridge import MemoryType, detect_memory_type
@@ -23,6 +23,7 @@ from openhcs.core.result_file_formats import (
 from openhcs.core.processing_preparation import (
     CompilerPreparedAutoRegisterFamily,
     PersistentNumbaKernelPreparation,
+    PreparationOperation,
 )
 from openhcs.core.image_quantization_numba import quantize_image_uint8
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
@@ -35,8 +36,6 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.core.processing_preparation import PreparationOperation
 
 logger = logging.getLogger(__name__)
 

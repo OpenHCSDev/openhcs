@@ -11,9 +11,10 @@ import copyreg
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, Mapping
+from typing import ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
+from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import (
     ExecutingContext,
     ProcessingContext,
@@ -29,8 +30,6 @@ from openhcs.core.progress.types import (
 from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
-if TYPE_CHECKING:
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
 
 
 class RuntimeExecutionTransportSerialization:

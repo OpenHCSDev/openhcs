@@ -16,13 +16,14 @@ from dataclasses import replace as dataclass_replace
 from functools import lru_cache
 from itertools import chain
 from types import MappingProxyType
-from typing import Any, ClassVar, TYPE_CHECKING, TypeAlias, cast
+from typing import Any, ClassVar, TypeAlias, cast
 
 from metaclass_registry import AutoRegisterMeta
 from openhcs.core.alias_property import AliasProperty
 import numpy as np
 
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
+from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -138,8 +139,6 @@ def measurement_table_axis_values(
     }
 
 
-if TYPE_CHECKING:
-    from openhcs.core.measurement_dialect import MeasurementDialect
 
 
 MeasurementFeatureNameProjection: TypeAlias = Callable[

@@ -12,7 +12,6 @@ from abc import ABC
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     List,
@@ -24,6 +23,7 @@ from typing import (
 )
 
 from openhcs.constants.constants import Backend
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
@@ -54,8 +54,6 @@ from openhcs.core.dataset_sources.interfaces import (
 )
 from openhcs.core.axes import Axis, AxisFamily
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ExecutingContext
 
 logger = logging.getLogger(__name__)
 

@@ -91,10 +91,11 @@ from openhcs.core.runtime_artifact_queries import (
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_image_values import (
-    ImagePayloadSliceProjector,
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    ImagePayloadSliceProjector,
     MaskedImagePayload,
+    RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_measurements import (
@@ -144,10 +145,7 @@ from openhcs.core.runtime_spatial_grid import (
     SpatialGridOrdering,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_slice_projection import (
-    RuntimeSliceProjection,
-    RuntimeSliceProjectionDeclarationError,
-)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
 )

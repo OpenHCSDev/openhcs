@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_ty
 
 from objectstate import DataclassFieldAccess
 
+from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import CompilingContext
 from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -33,9 +35,7 @@ from openhcs.core.vfs_protocol import (
 from openhcs.core.axes import AxisFamily, Ungrouped
 
 if TYPE_CHECKING:
-    from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph
-    from openhcs.core.artifacts.plans import ArtifactSpecRef
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 

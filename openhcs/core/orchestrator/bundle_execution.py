@@ -80,6 +80,7 @@ from openhcs.core.runtime_stores import (
     replace_runtime_artifact_payload,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
@@ -102,7 +103,6 @@ from openhcs.core.progress.types import (
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.source_matching import SourceImageSetIdentityPolicy
     from openhcs.runtime.viewer_protocol import (
         ViewerControlResponse,
         ViewerSettleProgress,

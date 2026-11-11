@@ -91,10 +91,10 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
     stack_image_payloads,
-    unstack_image_payload_context,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
+    unstack_image_payload_context,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,

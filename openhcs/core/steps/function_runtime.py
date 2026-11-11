@@ -82,10 +82,7 @@ from openhcs.core.runtime_adapters import (
 from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValueSet,
 )
-from openhcs.core.runtime_slice_projection import (
-    RuntimeSliceProjection,
-    RuntimeSliceProjectionDeclarationError,
-)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
 )
@@ -115,6 +112,7 @@ from openhcs.core.source_bindings import (
 from openhcs.core.runtime_image_values import (
     ImagePayload,
     ImagePayloadMetadata,
+    RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_array_values import RuntimeArrayData

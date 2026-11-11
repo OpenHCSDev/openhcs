@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Callable, TypeAlias, cast
+from typing import Callable, TypeAlias, cast
 
 from objectstate import mark_ui_special_fields, semantic_values_equal
 from python_introspect import callable_declaration_kwargs
 
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ExecutingContext
 
 
 FunctionEntry: TypeAlias = Callable | tuple[Callable, dict]
