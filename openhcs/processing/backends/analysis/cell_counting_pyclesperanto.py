@@ -126,7 +126,7 @@ def count_cells_single_channel(
 
         # Detect cells using specified method (slice_img stays as cle array)
         result = _detect_cells_single_method(
-            slice_img, z_idx, detection_method.value, parameters
+            slice_img, z_idx, detection_method, parameters
         )
 
         results.append(result)
@@ -367,19 +367,19 @@ def _preprocess_image(image, gaussian_sigma: float, median_disk_size: int):
 
 
 def _detect_cells_single_method(
-    image: np.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
+    image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
     """Detect cells using specified method."""
 
-    if method == DetectionMethod.BLOB_LOG.value:
+    if method is DetectionMethod.BLOB_LOG:
         return _detect_cells_blob_log(image, slice_idx, params)
-    elif method == DetectionMethod.BLOB_DOG.value:
+    elif method is DetectionMethod.BLOB_DOG:
         return _detect_cells_blob_dog(image, slice_idx, params)
-    elif method == DetectionMethod.BLOB_DOH.value:
+    elif method is DetectionMethod.BLOB_DOH:
         return _detect_cells_blob_doh(image, slice_idx, params)
-    elif method == DetectionMethod.WATERSHED.value:
+    elif method is DetectionMethod.WATERSHED:
         return _detect_cells_watershed(image, slice_idx, params)
-    elif method == DetectionMethod.THRESHOLD.value:
+    elif method is DetectionMethod.THRESHOLD:
         return _detect_cells_threshold(image, slice_idx, params)
     else:
         raise ValueError(f"Unknown detection method: {method}")

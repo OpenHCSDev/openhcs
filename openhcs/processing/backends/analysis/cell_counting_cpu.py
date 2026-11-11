@@ -197,7 +197,7 @@ def count_cells_single_channel(
 
         # Detect cells using specified method
         result = _detect_cells_single_method(
-            slice_img, z_idx, detection_method.value, parameters
+            slice_img, z_idx, detection_method, parameters
         )
 
         results.append(result)
@@ -416,7 +416,7 @@ def count_cells_multi_channel(
             _detect_cells_single_method(
                 channel_slice,
                 0,
-                method.value,
+                method,
                 parameters,
             )
         )
@@ -431,7 +431,7 @@ def count_cells_multi_channel(
     coloc_result = _analyze_colocalization(
         chan_1_result,
         chan_2_result,
-        colocalization_method.value,
+        colocalization_method,
         max_distance,
         min_overlap_area,
         intensity_threshold,
@@ -468,7 +468,7 @@ def _preprocess_image(
 
 
 def _detect_cells_single_method(
-    image: np.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
+    image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
     """Detect cells using specified method."""
     try:
@@ -869,7 +869,7 @@ DetectionMethodHandler = Callable[
 ]
 
 
-DETECTION_METHODS: dict[str, DetectionMethodHandler] = detection_method_catalog(
+DETECTION_METHODS: dict[DetectionMethod, DetectionMethodHandler] = detection_method_catalog(
     blob_log=_detect_cells_blob_log,
     blob_dog=_detect_cells_blob_dog,
     blob_doh=_detect_cells_blob_doh,
@@ -881,7 +881,7 @@ DETECTION_METHODS: dict[str, DetectionMethodHandler] = detection_method_catalog(
 def _analyze_colocalization(
     chan_1_result: CellCountResult,
     chan_2_result: CellCountResult,
-    method: str,
+    method: ColocalizationMethod,
     max_distance: float,
     min_overlap_area: float,
     intensity_threshold: float,

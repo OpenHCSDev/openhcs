@@ -30,14 +30,14 @@ def detection_method_catalog(
     blob_doh: Callable[..., CellCountResult],
     watershed: Callable[..., CellCountResult],
     threshold: Callable[..., CellCountResult],
-) -> dict[str, Callable[..., CellCountResult]]:
+) -> dict[DetectionMethod, Callable[..., CellCountResult]]:
     """Build the detector catalog from the single detection enum authority."""
     return {
-        DetectionMethod.BLOB_LOG.value: blob_log,
-        DetectionMethod.BLOB_DOG.value: blob_dog,
-        DetectionMethod.BLOB_DOH.value: blob_doh,
-        DetectionMethod.WATERSHED.value: watershed,
-        DetectionMethod.THRESHOLD.value: threshold,
+        DetectionMethod.BLOB_LOG: blob_log,
+        DetectionMethod.BLOB_DOG: blob_dog,
+        DetectionMethod.BLOB_DOH: blob_doh,
+        DetectionMethod.WATERSHED: watershed,
+        DetectionMethod.THRESHOLD: threshold,
     }
 
 
@@ -56,13 +56,13 @@ def colocalization_analyzer_catalog(
     overlap_area: Callable[..., MultiChannelResult],
     intensity_correlation: Callable[..., MultiChannelResult],
     manders_coefficients: Callable[..., MultiChannelResult],
-) -> dict[str, Callable[..., MultiChannelResult]]:
+) -> dict[ColocalizationMethod, Callable[..., MultiChannelResult]]:
     """Build the analyzer catalog from the single colocalization enum authority."""
     return {
-        ColocalizationMethod.DISTANCE_BASED.value: distance_based,
-        ColocalizationMethod.OVERLAP_AREA.value: overlap_area,
-        ColocalizationMethod.INTENSITY_CORRELATION.value: intensity_correlation,
-        ColocalizationMethod.MANDERS_COEFFICIENTS.value: manders_coefficients,
+        ColocalizationMethod.DISTANCE_BASED: distance_based,
+        ColocalizationMethod.OVERLAP_AREA: overlap_area,
+        ColocalizationMethod.INTENSITY_CORRELATION: intensity_correlation,
+        ColocalizationMethod.MANDERS_COEFFICIENTS: manders_coefficients,
     }
 
 

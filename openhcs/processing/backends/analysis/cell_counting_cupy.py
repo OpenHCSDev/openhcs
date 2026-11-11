@@ -171,7 +171,7 @@ def count_cells_single_channel(
 
         # Detect cells using specified method
         result = _detect_cells_single_method(
-            slice_img, z_idx, detection_method.value, parameters
+            slice_img, z_idx, detection_method, parameters
         )
 
         results.append(result)
@@ -410,7 +410,7 @@ def _preprocess_image(
 
 
 def _detect_cells_single_method(
-    image: cp.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
+    image: cp.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
     """Detect cells using specified method."""
     try:
@@ -724,7 +724,7 @@ DetectionMethodHandler = Callable[
 ]
 
 
-DETECTION_METHODS: dict[str, DetectionMethodHandler] = detection_method_catalog(
+DETECTION_METHODS: dict[DetectionMethod, DetectionMethodHandler] = detection_method_catalog(
     blob_log=_detect_cells_blob_log,
     blob_dog=_detect_cells_blob_dog,
     blob_doh=_detect_cells_blob_doh,
