@@ -84,9 +84,9 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+from openhcs.core.pipeline.artifact_planning import MissingArtifactInputError
 from openhcs.core.pipeline.path_planner import (
     ArtifactPlanMaps,
-    MissingArtifactInputError,
     PathPlanner,
     PathPlannerComponentScopes,
     PathPlannerArtifactStage,

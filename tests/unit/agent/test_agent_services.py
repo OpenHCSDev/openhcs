@@ -3225,7 +3225,7 @@ def test_artifact_plan_inspection_projects_missing_artifact_input_guidance(
     monkeypatch,
     tmp_path: Path,
 ):
-    from openhcs.core.pipeline.path_planner import MissingArtifactInputError
+    from openhcs.core.pipeline.artifact_planning import MissingArtifactInputError
 
     service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
