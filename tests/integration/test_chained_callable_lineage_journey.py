@@ -34,10 +34,10 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,

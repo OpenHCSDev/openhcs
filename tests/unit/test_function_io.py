@@ -23,11 +23,11 @@ from openhcs.core.source_bindings import (
     PairByOrder,
     SourceArtifactRole,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextEquals,
 )
 from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import (
     get_all_image_paths,

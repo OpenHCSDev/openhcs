@@ -70,9 +70,9 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     from objectstate.lazy_factory import ensure_global_config_context
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.core.source_metadata import SourceFilterClause
     from openhcs.core.source_bindings import (
         SourceFileName,
-        SourceFilterClause,
         TextContains,
     )
     from openhcs.core.config import SourceBindingsConfig, LazySourceBindingsConfig

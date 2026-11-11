@@ -14,12 +14,12 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceDirectory,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContainsRegex,
     TextEquals,
 )
 from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.source_projection import SourceCandidate
 from openhcs.domains.microscopy.axes import Microscopy
 

@@ -57,10 +57,10 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     PairByOrder,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,

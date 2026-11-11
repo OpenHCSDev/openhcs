@@ -42,13 +42,12 @@ from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceFilterClause,
     SourceFileName,
     TextEquals,
     SourceSelector,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceFilterClause, SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,

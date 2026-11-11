@@ -4,8 +4,19 @@ from openhcs.processing.custom_functions import selected_channel_gaussian_v1, ro
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import NapariDimensionMode, PipelineConfig, LazyWellFilterConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig
-from openhcs.core.source_bindings import ComponentSelector, MetadataExtractionRule, MetadataSource, NamedSourceBinding, SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceSelector
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_bindings import (
+    ComponentSelector,
+    NamedSourceBinding,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import neurite_outgrowth_metaxpress, MetaXpressCellBodySettings, MetaXpressOutgrowthSettings, MetaXpressNuclearSettings
 

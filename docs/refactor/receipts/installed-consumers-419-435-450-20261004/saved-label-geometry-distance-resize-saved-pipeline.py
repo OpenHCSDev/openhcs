@@ -39,13 +39,15 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+)
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation

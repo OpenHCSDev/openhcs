@@ -127,11 +127,11 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_object_labels import object_label_dense_array
+    from openhcs.core.source_metadata import SourceFilterClause
     from openhcs.core.source_bindings import (
         ComponentSelector,
         NamedSourceBinding,
         SourceFileName,
-        SourceFilterClause,
         SourceSelector,
         TextContains,
     )

@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self
 from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
@@ -21,14 +21,21 @@ from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from polystore.formats import get_format_from_extension
 from python_introspect import FieldLabel, RegisteredClassChoices
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
-    SourceMetadataFields,
+    MetadataExtractionRule,
+    MetadataSource,
     ResolvedSourceMetadataRecord,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
+    normalize_source_binding_values,
     source_metadata_dict,
     source_metadata_scalar,
 )
@@ -51,7 +58,6 @@ if TYPE_CHECKING:
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
-SourceBindingValue = TypeVar("SourceBindingValue")
 
 
 class SourceBindingOrigin(ABC, metaclass=AutoRegisterMeta):
@@ -135,22 +141,6 @@ class SourceArtifactRole(SourceProjectionRole):
     name = "source_artifact"
 
 
-class MetadataSource(ABC, metaclass=AutoRegisterMeta):
-    """Which text of a source path metadata extraction rules search."""
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type[MetadataSource]]] = {}
-
-    name: ClassVar[str | None] = None
-    """Spelling in forms and on the wire."""
-
-    @staticmethod
-    @abstractmethod
-    def texts(file_path: str) -> tuple[str, ...]:
-        """The texts a rule's pattern is searched in, in order."""
-
-
 class FromFileName(MetadataSource):
     name = "file_name"
 
@@ -169,22 +159,6 @@ class FromFolderName(MetadataSource):
         if parent_path == parent.name:
             return (parent.name,)
         return (parent.name, parent_path)
-
-
-class SourceFilterSubject(ABC, metaclass=AutoRegisterMeta):
-    """Which part of a source path one filter clause inspects."""
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type[SourceFilterSubject]]] = {}
-
-    name: ClassVar[str | None] = None
-    """Spelling in forms and on the wire."""
-
-    @staticmethod
-    @abstractmethod
-    def text_of(file_path: str) -> str:
-        """The text of ``file_path`` this subject names."""
 
 
 class SourceFileName(SourceFilterSubject):
@@ -209,25 +183,6 @@ class SourceExtension(SourceFilterSubject):
     @staticmethod
     def text_of(file_path: str) -> str:
         return os.path.splitext(file_path)[1].lower()
-
-
-class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
-    """How one source filter clause matches a source path."""
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type[SourceFilterMatchType]]] = {}
-
-    name: ClassVar[str | None] = None
-    """Spelling in forms and on the wire."""
-
-    requires_value: ClassVar[bool]
-    """The clause carries a comparison operand."""
-
-    @classmethod
-    @abstractmethod
-    def matches(cls, file_path: str, text: str, value: str | None) -> bool:
-        """Whether ``file_path``, whose subject text is ``text``, matches."""
 
 
 class TextMatchType(SourceFilterMatchType):
@@ -371,53 +326,6 @@ class PathIsTif(PathMatchType):
     @staticmethod
     def holds_for(file_path: str) -> bool:
         return os.path.splitext(file_path)[1].lower() in {".tif", ".tiff"}
-
-
-@dataclass(frozen=True, slots=True)
-class SourceFilterClause:
-    """Typed filter clause applied before metadata extraction."""
-
-    subject: Annotated[
-        type[SourceFilterSubject], RegisteredClassChoices(SourceFilterSubject)
-    ]
-    """Part of the source path inspected by this clause."""
-
-    match_type: Annotated[
-        type[SourceFilterMatchType], RegisteredClassChoices(SourceFilterMatchType)
-    ]
-    """Comparison applied to the selected path text."""
-
-    value: str | None = None
-    """Comparison operand; omitted for path predicates such as ``PathIsImage``."""
-
-    any_group: int | None = None
-    """Optional OR-group identifier.
-
-    Clauses without a group must all match. Clauses sharing a non-negative group
-    are alternatives, and at least one clause in every declared group must match.
-    """
-
-    def __post_init__(self) -> None:
-        if self.any_group is not None:
-            if not isinstance(self.any_group, int) or self.any_group < 0:
-                raise ValueError(
-                    "SourceFilterClause.any_group must be a nonnegative integer."
-                )
-        if not self.match_type.requires_value:
-            object.__setattr__(self, "value", None)
-            return
-        if self.value is None:
-            raise ValueError(
-                f"SourceFilterClause.value is required for {self.match_type.name}."
-            )
-        object.__setattr__(self, "value", str(self.value))
-
-    def matches(self, file_path: str) -> bool:
-        """Whether one source path satisfies this clause."""
-
-        return self.match_type.matches(
-            file_path, self.subject.text_of(file_path), self.value
-        )
 
 
 def _normalized_optional_source_text(value: str | None) -> str | None:
@@ -670,63 +578,6 @@ def _materialized_http_source(uri: str, uri_path: str) -> Path:
     finally:
         temporary_path.unlink(missing_ok=True)
     return target
-
-
-def normalize_source_binding_values(
-    field_name: str,
-    values: tuple[SourceBindingValue, ...],
-    value_type: type[SourceBindingValue],
-) -> tuple[SourceBindingValue, ...]:
-    """Return a typed tuple for one source-binding field."""
-
-    normalized_values = tuple(values)
-    for value in normalized_values:
-        if not isinstance(value, value_type):
-            raise TypeError(
-                f"{field_name} must contain {value_type.__name__} "
-                f"values, got {type(value).__name__}."
-            )
-    return normalized_values
-
-
-@dataclass(frozen=True, slots=True)
-class MetadataExtractionRule:
-    """Regex-backed metadata extraction rule for source binding resolution."""
-
-    source: Annotated[type[MetadataSource], RegisteredClassChoices(MetadataSource)]
-    """Source-path text searched by the regular expression."""
-
-    pattern: str
-    """Regular expression containing one or more named metadata capture groups."""
-
-    filters: tuple[SourceFilterClause, ...] = ()
-    """Optional path clauses limiting which sources this extraction rule processes."""
-
-    def __post_init__(self) -> None:
-        if not self.pattern:
-            raise ValueError("MetadataExtractionRule.pattern cannot be empty.")
-        compiled_pattern = re.compile(str(self.pattern))
-        if not compiled_pattern.groupindex:
-            raise ValueError(
-                "MetadataExtractionRule.pattern must define at least one named "
-                "capture group."
-            )
-        object.__setattr__(self, "pattern", str(self.pattern))
-        object.__setattr__(
-            self,
-            "filters",
-            normalize_source_binding_values(
-                "MetadataExtractionRule.filters",
-                self.filters,
-                SourceFilterClause,
-            ),
-        )
-
-    @property
-    def capture_fields(self) -> tuple[str, ...]:
-        """Return named metadata fields in their regex declaration order."""
-
-        return tuple(re.compile(self.pattern).groupindex)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1564,6 +1415,47 @@ class SourceBindingDeclarationsMixin:
     bindings: tuple[NamedSourceBinding, ...] | None
     source_stack_components: tuple[type[Axis], ...]
     source_spatial_domain: SourceSpatialDomain
+
+    def image_set_identity_policy(
+        self,
+        *,
+        group_component: type[Axis] | None = None,
+    ) -> SourceImageSetIdentityPolicy:
+        """Return image-plane membership declared by source and group semantics.
+
+        Equal singleton coordinates across primary bindings constrain the field;
+        they do not declare another plane-member axis. Explicit stack/group axes
+        still declare membership, even when the current coordinates are equal.
+        A single binding has no cross-binding fixed-coordinate witness.
+        """
+
+        bindings = self.primary_plane_bindings
+        shared_components = frozenset(
+            component
+            for component in AxisFamily.active().axes
+            if len(bindings) > 1
+            for values in (
+                tuple(binding.component_values(component) for binding in bindings),
+            )
+            if len(values[0]) == 1 and all(value == values[0] for value in values[1:])
+        )
+        return SourceImageSetIdentityPolicy(
+            frozenset(
+                ComponentSet.collect(
+                    self.source_stack_components,
+                    (
+                        selector.component
+                        for binding in bindings
+                        for selector in (
+                            *binding.selector.components,
+                            *binding.component_identity,
+                        )
+                        if selector.component not in shared_components
+                    ),
+                    (group_component,),
+                )
+            )
+        )
 
     @property
     def binding_declarations(self) -> tuple[NamedSourceBinding, ...]:

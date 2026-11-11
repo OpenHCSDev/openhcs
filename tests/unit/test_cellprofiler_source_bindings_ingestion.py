@@ -14,17 +14,19 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.constants.constants import Backend
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
+)
 from openhcs.core.source_projection import SourceCandidate
 from openhcs.core.source_bindings import (
     ComponentSelector,
     FromFileName,
-    MetadataExtractionRule,
     NamedSourceBinding,
     PairByOrder,
     PathIsImage,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )

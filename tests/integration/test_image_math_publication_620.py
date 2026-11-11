@@ -22,11 +22,8 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_bindings import (
-    FromFileName,
-    MetadataExtractionRule,
-)
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_bindings import FromFileName
+from openhcs.core.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries,

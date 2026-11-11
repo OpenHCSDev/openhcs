@@ -3,8 +3,6 @@ import pytest
 from openhcs.core.source_bindings import (
     SourceDirectory,
     SourceFileName,
-    SourceFilterClause,
-    SourceFilterMatchType,
     TextContains,
     TextDoesNotEqual,
     TextEquals,
@@ -24,6 +22,10 @@ from openhcs.core.source_matching import (
     with_declared_source_metadata,
 )
 from openhcs.core.axes import Axis
+from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceFilterMatchType,
+)
 from openhcs.domains.microscopy.axes import Microscopy
 
 

@@ -741,9 +741,7 @@ class RuntimeArtifactInput:
             context_sources = () if producer_source is None else (producer_source,)
         if not context_sources:
             return SourceImageSetIdentityPolicy()
-        return SourceImageSetIdentityPolicy.from_source_bindings(
-            self.source_binding_plan.for_artifact_refs(context_sources)
-        )
+        return self.source_binding_plan.for_artifact_refs(context_sources).image_set_identity_policy()
 
 
 @dataclass(frozen=True, slots=True)

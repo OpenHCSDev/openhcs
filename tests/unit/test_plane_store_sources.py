@@ -33,10 +33,10 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextEquals,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_io import (
     save_materialized_data,
     update_metadata_for_zarr_conversion,

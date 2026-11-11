@@ -15,10 +15,12 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     NamedSourceBinding,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
-    SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

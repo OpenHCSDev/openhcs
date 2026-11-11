@@ -40,12 +40,12 @@ from openhcs.core.config import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceFilterClause,
     SourceFileName,
     TextEquals,
     SourceSelector,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NEURITE_MORPHOLOGY_OUTPUT,

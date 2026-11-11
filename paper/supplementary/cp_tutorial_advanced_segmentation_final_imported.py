@@ -34,23 +34,25 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
     SourceSetRole,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization_objects,

@@ -38,10 +38,10 @@ from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     ComponentSelector,
     FromFileName,
-    MetadataExtractionRule,
     NamedSourceBinding,
     SourceSelector,
 )
+from openhcs.core.source_metadata import MetadataExtractionRule
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.processing_contracts import (
     Pure3DContract,

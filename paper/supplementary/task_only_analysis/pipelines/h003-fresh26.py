@@ -2,8 +2,21 @@ from pathlib import Path
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents, Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import PipelineConfig, NapariDimensionMode, LazyProcessingConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyStepSourceBindingsConfig, LazyNapariStreamingConfig
-from openhcs.core.source_bindings import NamedSourceBinding, SourceSelector, SourceFilterClause, SourceFilterSubject, SourceFilterMatchType, ComponentSelector, SourceBindingOrigin, SourceBindingMatchPlan, SourceBindingMatchMethod
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceSelector,
+    ComponentSelector,
+    SourceBindingOrigin,
+    SourceBindingMatchPlan,
+    SourceBindingMatchMethod,
+)
+from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod

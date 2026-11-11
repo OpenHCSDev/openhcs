@@ -30,20 +30,20 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
-    MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )

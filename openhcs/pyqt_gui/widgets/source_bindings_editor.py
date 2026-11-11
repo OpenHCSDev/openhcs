@@ -57,7 +57,6 @@ from python_introspect import (
 
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    MetadataExtractionRule,
     MetadataSelector,
     FromFileName,
     NamedSourceBinding,
@@ -65,7 +64,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     PathIsImage,
     SourceFileName,
-    SourceFilterClause,
     SourceSetPairing,
     PairByMetadata,
     PairByOrder,
@@ -78,6 +76,10 @@ from openhcs.core.config import (
 from openhcs.core.source_bindings_preview import (
     SourceBindingsPreview,
     SourceInventory,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
 )
 
 SourceBindingsEditorRawValue = SourceBindingsConfig | LazyDataclass

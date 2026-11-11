@@ -2,8 +2,18 @@ from pathlib import Path
 from openhcs.constants.constants import AllComponents, Microscope, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig, LazyStepSourceBindingsConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyNapariStreamingConfig, LazyWellFilterConfig
-from openhcs.core.source_bindings import NamedSourceBinding, SourceSelector, SourceFilterClause, SourceFilterSubject, SourceFilterMatchType, ComponentSelector
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceSelector,
+    ComponentSelector,
+)
+from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import neurite_outgrowth_metaxpress_pixels, PixelCellBodySettings, PixelNuclearSettings, PixelOutgrowthSettings, NeuriteIllumination
 from zmqruntime.config import TransportMode

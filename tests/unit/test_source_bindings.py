@@ -13,7 +13,6 @@ from objectstate.object_state_registry import ObjectStateRegistry
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core import source_bindings as source_bindings_module
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import GroupLineageSourceRelation
@@ -34,7 +33,23 @@ from openhcs.core.source_binding_selection import (
     SourceIdentityResolutionContext,
     SourcePatternResolutionContext,
 )
+import urllib.request
+
 from openhcs.core.source_bindings import (
+    NegatedTextMatch,
+    PathIsImage,
+    PathIsTif,
+    SourceBindingOrigin,
+    SourceDirectory,
+    SourceExtension,
+    SourceProjectionRole,
+    SourceSetRole,
+    TextContainsRegex,
+    TextEndsWith,
+    TextEquals,
+    TextMatchType,
+    TextStartsWith,
+    resolve_source_file,
     BroadcastSource,
     CompiledSourceUniversePlan,
     ComponentSelector,
@@ -45,7 +60,6 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
     NamedSourceBinding,
     PairByMetadata,
@@ -55,7 +69,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
@@ -71,7 +84,12 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
     SourceFilterPathMetadata,
+    SourceFilterSubject,
     SourceVoxelSpacing,
 )
 from openhcs.core.source_projection import (
@@ -140,7 +158,7 @@ def test_source_image_set_policy_uses_binding_and_source_stack_declarations():
         source_stack_components=(Microscopy.ZIndex,),
     )
 
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(source_bindings)
+    policy = source_bindings.image_set_identity_policy()
 
     assert policy.plane_member_components == frozenset(
         (Microscopy.Channel, Microscopy.ZIndex)
@@ -230,7 +248,7 @@ def test_source_locations_resolve_local_and_http_sources_once(
         return io.BytesIO(remote_payload)
 
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg"))
-    monkeypatch.setattr(source_bindings_module.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     config = SourceBindingsConfig(
         image_plane_sources=(
             ImagePlaneSource(uri="local.tif"),
@@ -251,7 +269,7 @@ def test_source_locations_resolve_local_and_http_sources_once(
     assert requests == [remote_uri]
 
     monkeypatch.setattr(
-        source_bindings_module.urllib.request,
+        urllib.request,
         "urlopen",
         lambda *_args, **_kwargs: pytest.fail(
             "resolved HTTP source was downloaded twice"
@@ -280,7 +298,7 @@ def test_windows_drive_source_paths_are_local_not_uri_schemes(
     tmp_path: Path, location: str
 ) -> None:
     with pytest.raises(FileNotFoundError, match="Declared source file does not exist"):
-        source_bindings_module.resolve_source_file(location, tmp_path)
+        resolve_source_file(location, tmp_path)
     with pytest.raises(FileNotFoundError, match="Declared source file does not exist"):
         ImportedMetadataTable(location=location).resolved(tmp_path)
 
@@ -1060,9 +1078,7 @@ def test_narrow_step_binding_uses_exact_workspace_provenance_identity():
         bindings=(bindings[2],),
         match_plan=PairByOrder(),
         source_context=context,
-        identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
-            SourceBindingsConfig(bindings=bindings)
-        ),
+        identity_policy=SourceBindingsConfig(bindings=bindings).image_set_identity_policy(),
     )
 
     assert matched_set.members_for_binding(
@@ -1177,9 +1193,7 @@ def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
             ),
         },
     )
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(
-        SourceBindingsConfig(bindings=(primary, objects))
-    )
+    policy = SourceBindingsConfig(bindings=(primary, objects)).image_set_identity_policy()
     assert not policy.identity_components()
     matched = SourceBindingMatchedImageSet.from_plan(
         bindings=(primary, objects),
@@ -1241,9 +1255,7 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
             parser=SourceSchemaFilenameParser(),
             projection=projection,
         ),
-        identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
-            SourceBindingsConfig(bindings=(binding,))
-        ),
+        identity_policy=SourceBindingsConfig(bindings=(binding,)).image_set_identity_policy(),
     )
     provenance = SourceImageProvenance(
         source_image_provenance_planes=SourceImageProvenancePlanes(
@@ -1290,9 +1302,7 @@ def test_source_binding_members_canonicalize_declared_physical_spellings(aliases
         bindings=bindings,
         match_plan=PairByOrder(),
         source_context=context,
-        identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
-            SourceBindingsConfig(bindings=bindings)
-        ),
+        identity_policy=SourceBindingsConfig(bindings=bindings).image_set_identity_policy(),
     )
     for binding, virtual_path in zip(bindings[1:], virtual_paths[1:], strict=True):
         assert matched_set.members_for_binding(
@@ -1664,12 +1674,12 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
 
 
 SOURCE_BINDING_FAMILIES = (
-    source_bindings_module.SourceBindingOrigin,
-    source_bindings_module.SourceSetRole,
-    source_bindings_module.SourceProjectionRole,
-    source_bindings_module.MetadataSource,
-    source_bindings_module.SourceFilterSubject,
-    source_bindings_module.SourceFilterMatchType,
+    SourceBindingOrigin,
+    SourceSetRole,
+    SourceProjectionRole,
+    MetadataSource,
+    SourceFilterSubject,
+    SourceFilterMatchType,
 )
 
 
@@ -1686,35 +1696,34 @@ def test_source_binding_kinds_travel_as_their_registry_names(family):
 
 
 def test_source_filter_match_types_answer_the_path_table():
-    sb = source_bindings_module
     path = "/plate/A01/VitraChannel1ILLUM.tif"
     expected = {
-        sb.TextContains: ("ILLUM", True),
-        sb.TextContainsRegex: (r"Channel\d", True),
-        sb.TextEquals: ("VitraChannel1ILLUM.tif", True),
-        sb.TextStartsWith: ("Vitra", True),
-        sb.TextEndsWith: (".npy", False),
-        sb.PathIsImage: (None, True),
-        sb.PathIsTif: (None, True),
+        TextContains: ("ILLUM", True),
+        TextContainsRegex: (r"Channel\d", True),
+        TextEquals: ("VitraChannel1ILLUM.tif", True),
+        TextStartsWith: ("Vitra", True),
+        TextEndsWith: (".npy", False),
+        PathIsImage: (None, True),
+        PathIsTif: (None, True),
     }
     for match_type, (value, holds) in expected.items():
-        clause = sb.SourceFilterClause(sb.SourceFileName, match_type, value)
+        clause = SourceFilterClause(SourceFileName, match_type, value)
         assert clause.matches(path) is holds, match_type
-        if issubclass(match_type, sb.TextMatchType):
-            negated = sb.SourceFilterClause(
-                sb.SourceFileName, match_type.negation(), value
+        if issubclass(match_type, TextMatchType):
+            negated = SourceFilterClause(
+                SourceFileName, match_type.negation(), value
             )
             assert negated.matches(path) is not holds, match_type.negation()
     text_matches = {
         member
-        for member in sb.SourceFilterMatchType.__registry__.values()
-        if issubclass(member, sb.TextMatchType)
+        for member in SourceFilterMatchType.__registry__.values()
+        if issubclass(member, TextMatchType)
     }
     negations = {
-        member for member in text_matches if issubclass(member, sb.NegatedTextMatch)
+        member for member in text_matches if issubclass(member, NegatedTextMatch)
     }
     assert {positive.negation() for positive in text_matches - negations} == negations
-    assert sb.SourceDirectory.text_of(path) == "/plate/A01"
-    assert sb.SourceExtension.text_of(path) == ".tif"
+    assert SourceDirectory.text_of(path) == "/plate/A01"
+    assert SourceExtension.text_of(path) == ".tif"
     assert FromFileName.texts(path) == ("VitraChannel1ILLUM.tif",)
     assert FromFolderName.texts(path) == ("A01", "/plate/A01")

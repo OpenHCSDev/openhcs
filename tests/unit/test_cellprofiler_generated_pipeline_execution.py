@@ -58,10 +58,10 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting

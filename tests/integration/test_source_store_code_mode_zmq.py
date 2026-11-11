@@ -36,11 +36,10 @@ from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextEquals,
 )
-from openhcs.core.source_metadata import SourceMetadataFields
+from openhcs.core.source_metadata import SourceFilterClause, SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.plane_stores import (
     PlaneStoreUnavailableError,

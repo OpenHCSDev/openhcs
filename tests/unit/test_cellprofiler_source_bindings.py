@@ -21,7 +21,11 @@ from openhcs.core.config import (
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -44,7 +48,6 @@ from openhcs.core.source_bindings import (
     SourceArtifactRole,
     SourceBindingDeclarationsMixin,
     SourceFileName,
-    SourceFilterClause,
     TextContains,
     TextContainsRegex,
     TextDoesNotContain,

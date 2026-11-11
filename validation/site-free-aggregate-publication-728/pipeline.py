@@ -16,10 +16,10 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
-    NamedSourceBinding,
 )
 from openhcs.core.steps import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu

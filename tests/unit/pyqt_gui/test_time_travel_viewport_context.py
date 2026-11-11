@@ -6,9 +6,9 @@ from objectstate import ObjectState, ObjectStateRegistry
 from openhcs.core.config import PipelineConfig
 from openhcs.core.source_bindings import (
     SourceFileName,
-    SourceFilterClause,
     TextEquals,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
     SourceBindingsEditorWidget,
 )

@@ -50,9 +50,7 @@ def _bindings(*, stack=(), selectors=False):
 
 @pytest.mark.parametrize("selectors", (False, True))
 def test_shared_binding_coordinates_remain_field_axes(selectors):
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(
-        _bindings(selectors=selectors)
-    )
+    policy = _bindings(selectors=selectors).image_set_identity_policy()
 
     assert policy.plane_member_components == frozenset((Microscopy.Channel,))
 
@@ -62,12 +60,8 @@ def test_shared_binding_coordinates_remain_field_axes(selectors):
 )
 def test_explicit_stack_and_group_axes_override_shared_coordinates(component):
     for policy in (
-        SourceImageSetIdentityPolicy.from_source_bindings(
-            _bindings(stack=(component,))
-        ),
-        SourceImageSetIdentityPolicy.from_source_bindings(
-            _bindings(), group_component=component
-        ),
+        _bindings(stack=(component,)).image_set_identity_policy(),
+        _bindings().image_set_identity_policy(group_component=component),
     ):
         assert policy.plane_member_components == frozenset(
             (Microscopy.Channel, component)
@@ -84,7 +78,7 @@ def test_explicit_stack_and_group_axes_override_shared_coordinates(component):
     ),
 )
 def test_numbering_combines_channels_but_preserves_independent_fields(component):
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(_bindings())
+    policy = _bindings().image_set_identity_policy()
     numbering = CellProfilerImageSetNumbering(policy)
     scope = RuntimeExecutionAxisScope.from_raw(
         "A01", component=Microscopy.Channel, value="1"
@@ -132,13 +126,13 @@ def test_component_assignment_owns_identity_over_physical_selector():
             for channel, physical_site in (("1", "7"), ("2", "8"))
         )
     )
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(declarations)
+    policy = declarations.image_set_identity_policy()
 
     assert policy.plane_member_components == frozenset((Microscopy.Channel,))
 
 
 def test_path_identity_stays_distinct_without_semantic_field_coordinates():
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(_bindings())
+    policy = _bindings().image_set_identity_policy()
 
     assert SourceImageSetIdentity.from_metadata(
         {}, fallback_source_path="/synthetic/one.tif", policy=policy

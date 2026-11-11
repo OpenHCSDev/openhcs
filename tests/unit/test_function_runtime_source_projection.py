@@ -80,7 +80,6 @@ from openhcs.core.source_bindings import (
     SourceArtifactRole,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
@@ -89,7 +88,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_metadata import SourceFilterPathMetadata
+from openhcs.core.source_metadata import SourceFilterClause, SourceFilterPathMetadata
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,

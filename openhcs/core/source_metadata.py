@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
+import re
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -10,15 +11,181 @@ from functools import lru_cache
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
-from typing import NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    ClassVar,
+    NoReturn,
+    Self,
+    TypeAlias,
+    TypeVar,
+)
 
+from metaclass_registry import AutoRegisterMeta
+from python_introspect import RegisteredClassChoices
 from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.axes import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
 
+SourceBindingValue = TypeVar("SourceBindingValue")
+
+
+class MetadataSource(ABC, metaclass=AutoRegisterMeta):
+    """Which text of a source path metadata extraction rules search."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[MetadataSource]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    @staticmethod
+    @abstractmethod
+    def texts(file_path: str) -> tuple[str, ...]:
+        """The texts a rule's pattern is searched in, in order."""
+
+
+class SourceFilterSubject(ABC, metaclass=AutoRegisterMeta):
+    """Which part of a source path one filter clause inspects."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[SourceFilterSubject]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    @staticmethod
+    @abstractmethod
+    def text_of(file_path: str) -> str:
+        """The text of ``file_path`` this subject names."""
+
+
+class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
+    """How one source filter clause matches a source path."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[SourceFilterMatchType]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    requires_value: ClassVar[bool]
+    """The clause carries a comparison operand."""
+
+    @classmethod
+    @abstractmethod
+    def matches(cls, file_path: str, text: str, value: str | None) -> bool:
+        """Whether ``file_path``, whose subject text is ``text``, matches."""
+
+
+@dataclass(frozen=True, slots=True)
+class SourceFilterClause:
+    """Typed filter clause applied before metadata extraction."""
+
+    subject: Annotated[
+        type[SourceFilterSubject], RegisteredClassChoices(SourceFilterSubject)
+    ]
+    """Part of the source path inspected by this clause."""
+
+    match_type: Annotated[
+        type[SourceFilterMatchType], RegisteredClassChoices(SourceFilterMatchType)
+    ]
+    """Comparison applied to the selected path text."""
+
+    value: str | None = None
+    """Comparison operand; omitted for path predicates such as ``PathIsImage``."""
+
+    any_group: int | None = None
+    """Optional OR-group identifier.
+
+    Clauses without a group must all match. Clauses sharing a non-negative group
+    are alternatives, and at least one clause in every declared group must match.
+    """
+
+    def __post_init__(self) -> None:
+        if self.any_group is not None:
+            if not isinstance(self.any_group, int) or self.any_group < 0:
+                raise ValueError(
+                    "SourceFilterClause.any_group must be a nonnegative integer."
+                )
+        if not self.match_type.requires_value:
+            object.__setattr__(self, "value", None)
+            return
+        if self.value is None:
+            raise ValueError(
+                f"SourceFilterClause.value is required for {self.match_type.name}."
+            )
+        object.__setattr__(self, "value", str(self.value))
+
+    def matches(self, file_path: str) -> bool:
+        """Whether one source path satisfies this clause."""
+
+        return self.match_type.matches(
+            file_path, self.subject.text_of(file_path), self.value
+        )
+
+
+def normalize_source_binding_values(
+    field_name: str,
+    values: tuple[SourceBindingValue, ...],
+    value_type: type[SourceBindingValue],
+) -> tuple[SourceBindingValue, ...]:
+    """Return a typed tuple for one source-binding field."""
+
+    normalized_values = tuple(values)
+    for value in normalized_values:
+        if not isinstance(value, value_type):
+            raise TypeError(
+                f"{field_name} must contain {value_type.__name__} "
+                f"values, got {type(value).__name__}."
+            )
+    return normalized_values
+
+
+@dataclass(frozen=True, slots=True)
+class MetadataExtractionRule:
+    """Regex-backed metadata extraction rule for source binding resolution."""
+
+    source: Annotated[type[MetadataSource], RegisteredClassChoices(MetadataSource)]
+    """Source-path text searched by the regular expression."""
+
+    pattern: str
+    """Regular expression containing one or more named metadata capture groups."""
+
+    filters: tuple[SourceFilterClause, ...] = ()
+    """Optional path clauses limiting which sources this extraction rule processes."""
+
+    def __post_init__(self) -> None:
+        if not self.pattern:
+            raise ValueError("MetadataExtractionRule.pattern cannot be empty.")
+        compiled_pattern = re.compile(str(self.pattern))
+        if not compiled_pattern.groupindex:
+            raise ValueError(
+                "MetadataExtractionRule.pattern must define at least one named "
+                "capture group."
+            )
+        object.__setattr__(self, "pattern", str(self.pattern))
+        object.__setattr__(
+            self,
+            "filters",
+            normalize_source_binding_values(
+                "MetadataExtractionRule.filters",
+                self.filters,
+                SourceFilterClause,
+            ),
+        )
+
+    @property
+    def capture_fields(self) -> tuple[str, ...]:
+        """Return named metadata fields in their regex declaration order."""
+
+        return tuple(re.compile(self.pattern).groupindex)
+
 if TYPE_CHECKING:
-    from openhcs.core.source_bindings import MetadataExtractionRule
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 

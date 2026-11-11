@@ -41,7 +41,6 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
     FromFileName,
     FromPipelineStart,
@@ -50,10 +49,13 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
-    SourceFilterClause,
     PathIsImage,
     SourceFileName,
     SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource

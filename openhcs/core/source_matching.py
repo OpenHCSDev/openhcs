@@ -10,25 +10,21 @@ from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.component_set import ComponentSet
-from openhcs.core.source_bindings import (
-    MetadataExtractionRule,
-    SourceBindingDeclarationsMixin,
-    SourceFilterClause,
-)
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     SOURCE_FILTER_PATHS_METADATA_FIELD,
     DeclaredSourceMetadata,
+    MetadataExtractionRule,
+    SourceFilterClause,
     SourceFilterPathMetadata,
-    SourceMetadataMapping,
     SourceMetadataFields,
+    SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
     normalized_path_metadata_value,
-    source_metadata_field_identity,
     source_metadata_component,
     source_metadata_dict,
+    source_metadata_field_identity,
     source_metadata_scalar,
 )
 from openhcs.core.source_path_identity import source_path_identity_key
@@ -146,65 +142,6 @@ class SourceImageSetIdentityPolicy:
         """Whether a component identifies the image set, not a plane within it."""
         return component not in self.plane_member_components
 
-    def including_source_bindings(
-        self,
-        source_bindings: SourceBindingDeclarationsMixin,
-    ) -> "SourceImageSetIdentityPolicy":
-        """Include plane-member components declared by source bindings."""
-
-        declared = type(self).from_source_bindings(source_bindings)
-        return type(self)(
-            self.plane_member_components | declared.plane_member_components
-        )
-
-    @classmethod
-    def from_source_bindings(
-        cls,
-        source_bindings: SourceBindingDeclarationsMixin,
-        *,
-        group_component: type[Axis] | None = None,
-    ) -> "SourceImageSetIdentityPolicy":
-        """Return image-plane membership declared by source and group semantics.
-
-        Equal singleton coordinates across primary bindings constrain the field;
-        they do not declare another plane-member axis. Explicit stack/group axes
-        still declare membership, even when the current coordinates are equal.
-        A single binding has no cross-binding fixed-coordinate witness.
-        """
-
-        if not isinstance(source_bindings, SourceBindingDeclarationsMixin):
-            raise TypeError(
-                "SourceImageSetIdentityPolicy.from_source_bindings requires "
-                "SourceBindingDeclarationsMixin."
-            )
-        bindings = source_bindings.primary_plane_bindings
-        shared_components = frozenset(
-            component
-            for component in AxisFamily.active().axes
-            if len(bindings) > 1
-            for values in (
-                tuple(binding.component_values(component) for binding in bindings),
-            )
-            if len(values[0]) == 1 and all(value == values[0] for value in values[1:])
-        )
-        return cls(
-            frozenset(
-                ComponentSet.collect(
-                    source_bindings.source_stack_components,
-                    (
-                        selector.component
-                        for binding in bindings
-                        for selector in (
-                            *binding.selector.components,
-                            *binding.component_identity,
-                        )
-                        if selector.component not in shared_components
-                    ),
-                    (group_component,),
-                )
-            )
-        )
-
     @classmethod
     def from_pipeline_config(
         cls,
@@ -226,10 +163,7 @@ class SourceImageSetIdentityPolicy:
         source_bindings = resolve_lazy_configurations_for_serialization(
             pipeline_config.source_bindings_config
         )
-        return cls.from_source_bindings(
-            source_bindings,
-            group_component=group_component,
-        )
+        return source_bindings.image_set_identity_policy(group_component=group_component)
 
 
 @dataclass(frozen=True, slots=True)

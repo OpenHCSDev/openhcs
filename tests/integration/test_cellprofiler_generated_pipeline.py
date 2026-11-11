@@ -55,6 +55,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.runtime_object_labels import (
@@ -76,7 +77,6 @@ from openhcs.core.source_bindings import (
     FromPipelineStart,
     NamedSourceBinding,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )

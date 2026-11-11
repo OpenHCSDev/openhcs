@@ -5,9 +5,7 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
@@ -15,9 +13,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchPlan,
     SourceBindingOrigin,
     LazySourceBindingsConfig,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 
@@ -123,7 +118,15 @@ source_bindings_config = LazySourceBindingsConfig(
 
 from dataclasses import replace
 from pathlib import Path
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig, LazyProcessingConfig, LazyNapariStreamingConfig, LazyStepMaterializationConfig, NapariDimensionMode, NapariVariableSizeHandling)
 from openhcs.constants.constants import VariableComponents, GroupBy
 from openhcs.constants.input_source import InputSource

@@ -620,12 +620,12 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
 
 
 def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
+    from openhcs.core.source_metadata import SourceFilterClause
     from openhcs.core.source_bindings import (
         CompiledSourceBindingPlan,
         ComponentSelector,
         NamedSourceBinding,
         SourceFileName,
-        SourceFilterClause,
         SourceSelector,
         TextContains,
     )

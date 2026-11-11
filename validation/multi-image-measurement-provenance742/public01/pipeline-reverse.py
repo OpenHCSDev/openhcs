@@ -38,12 +38,12 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 from openhcs.core.source_metadata import (
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )

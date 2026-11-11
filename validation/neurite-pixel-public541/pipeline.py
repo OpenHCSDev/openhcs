@@ -13,12 +13,12 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     PipelineConfig,
 )
-from openhcs.core.source_bindings import (
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
-    NamedSourceBinding,
+    SourceVoxelSpacing,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     PixelCellBodySettings,

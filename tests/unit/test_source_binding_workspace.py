@@ -15,11 +15,13 @@ from openhcs.processing.backends.cellprofiler.infrastructure import relative_vox
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
+    SOURCE_VOXEL_SPACING_FIELD,
+    SOURCE_VOXEL_SPACING_UNIT_FIELD,
+    MetadataExtractionRule,
+    SourceFilterClause,
     SourceMetadataFields,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
-    SOURCE_VOXEL_SPACING_FIELD,
-    SOURCE_VOXEL_SPACING_UNIT_FIELD,
 )
 from openhcs.core.dataset_sources.interfaces import PixelSizeMetadataArtifactProvider
 from openhcs.core.source_bindings import (
@@ -30,7 +32,6 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     NamedSourceBinding,
     PairByMetadata,
     PairByOrder,
@@ -40,7 +41,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
     TextEndsWith,
