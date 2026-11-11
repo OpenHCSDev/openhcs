@@ -13,7 +13,6 @@ from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
-from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +70,8 @@ class StepExecutionObservation:
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
     ) -> StepExecutionObservation:
+        from openhcs.core.util.post_execute import PostExecuteHook
+
         locations: dict = {}
         paths: list = []
         hook_observations: list = []
