@@ -6,6 +6,7 @@ GPU-accelerated phase correlation with subpixel accuracy.
 from __future__ import annotations
 
 
+from enum import Enum
 from typing import TYPE_CHECKING, List, Tuple
 
 from openhcs.utils.import_utils import optional_import_placeholder
@@ -16,6 +17,63 @@ if TYPE_CHECKING:
 
 # Import CuPy as an optional dependency
 cp = optional_import_placeholder("cupy")
+
+
+class TileDirection(Enum):
+    HORIZONTAL = "horizontal"
+    VERTICAL = "vertical"
+
+    def expected_displacement(self, tile_h: int, tile_w: int, overlap_h: int, overlap_w: int) -> float:
+        if self is TileDirection.HORIZONTAL:
+            return tile_w - overlap_w
+        return tile_h - overlap_h
+
+    def to_tile_displacement(
+        self, dy: float, dx: float, expected: float,
+    ) -> Tuple[float, float]:
+        if self is TileDirection.HORIZONTAL:
+            return dy, expected + dx
+        return expected + dy, dx
+
+    def validate_magnitude(
+        self,
+        tile_dx: float,
+        tile_dy: float,
+        expected_dx: float,
+        expected_dy: float,
+        tolerance_factor: float = 2.0,
+        tolerance_percent: float = 0.1,
+    ) -> bool:
+        if self is TileDirection.HORIZONTAL:
+            primary_error = abs(tile_dx - expected_dx)
+            drift = abs(tile_dy)
+            ref = expected_dx
+        else:
+            primary_error = abs(tile_dy - expected_dy)
+            drift = abs(tile_dx)
+            ref = expected_dy
+        threshold = tolerance_factor * ref * tolerance_percent
+        return primary_error <= threshold and drift <= threshold
+
+    def directional_interpretations(
+        self, peak_y: float, peak_x: float, h: int, w: int,
+    ) -> list[Tuple[float, float]]:
+        interpretations: list[Tuple[float, float]] = []
+        if self is TileDirection.HORIZONTAL:
+            for y_sign in [1, -1]:
+                for x_offset in [0, w]:
+                    for y_offset in [0, h]:
+                        interp_x = (peak_x + x_offset) % w
+                        interp_y = (peak_y * y_sign + y_offset) % h
+                        interpretations.append((interp_y, interp_x))
+        else:
+            for x_sign in [1, -1]:
+                for x_offset in [0, w]:
+                    for y_offset in [0, h]:
+                        interp_x = (peak_x * x_sign + x_offset) % w
+                        interp_y = (peak_y + y_offset) % h
+                        interpretations.append((interp_y, interp_x))
+        return interpretations
 
 
 def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
@@ -209,7 +267,7 @@ def phase_correlation_gpu_only(
 def phase_correlation_nist_gpu(
     image1: cp.ndarray,
     image2: cp.ndarray,
-    direction: str,
+    direction: TileDirection,
     n_peaks: int = 2,
     use_nist_normalization: bool = True,
 ) -> Tuple[float, float, float]:
@@ -331,49 +389,16 @@ def _find_multiple_peaks_gpu(
 
 
 def _test_fft_interpretations(
-    correlation_matrix: cp.ndarray, peak_y: int, peak_x: int, direction: str
+    correlation_matrix: cp.ndarray, peak_y: int, peak_x: int, direction: TileDirection,
 ) -> List[Tuple[int, int]]:
-    """
-    Generate FFT periodicity interpretations with directional constraints.
-
-    Args:
-        correlation_matrix: Phase correlation matrix
-        peak_y, peak_x: Peak coordinates
-        direction: 'horizontal' or 'vertical' for directional constraints
-
-    Returns:
-        List of (y, x) interpretation coordinates
-    """
     h, w = correlation_matrix.shape
-    interpretations = []
-
-    # NIST Algorithm 5: Test 16 interpretations with directional constraints
-    if direction == "horizontal":
-        # Left-right pairs: test (x, ±y) with 4 FFT possibilities
-        for y_sign in [1, -1]:
-            for x_offset in [0, w]:  # FFT periodicity in x
-                for y_offset in [0, h]:  # FFT periodicity in y
-                    interp_x = (peak_x + x_offset) % w
-                    interp_y = (peak_y * y_sign + y_offset) % h
-                    interpretations.append((interp_y, interp_x))
-
-    elif direction == "vertical":
-        # Up-down pairs: test (±x, y) with 4 FFT possibilities
-        for x_sign in [1, -1]:
-            for x_offset in [0, w]:  # FFT periodicity in x
-                for y_offset in [0, h]:  # FFT periodicity in y
-                    interp_x = (peak_x * x_sign + x_offset) % w
-                    interp_y = (peak_y + y_offset) % h
-                    interpretations.append((interp_y, interp_x))
-
-    # Remove duplicates while preserving order
+    interpretations = direction.directional_interpretations(peak_y, peak_x, h, w)
     seen = set()
     unique_interpretations = []
     for interp in interpretations:
         if interp not in seen:
             seen.add(interp)
             unique_interpretations.append(interp)
-
     return unique_interpretations
 
 
