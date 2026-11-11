@@ -1,3 +1,4 @@
+import dataclasses
 """Viewer endpoint discovery across the local IPC directory.
 
 Detached viewer processes outlive the desktop application that spawned them,
@@ -38,16 +39,7 @@ class ViewerEndpointRecord:
     detail: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        return {
-            "port": self.port,
-            "control_port": self.control_port,
-            "socket_path": self.socket_path,
-            "viewer_type": self.viewer_type,
-            "title": self.title,
-            "layer_count": self.layer_count,
-            "owned": self.owned,
-            "detail": self.detail,
-        }
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 def viewer_ipc_directory() -> Path:
