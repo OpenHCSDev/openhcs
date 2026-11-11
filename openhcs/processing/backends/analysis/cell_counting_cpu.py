@@ -77,7 +77,7 @@ class CellCountMeasurementRow:
     def from_result(cls, result: CellCountResult) -> CellCountMeasurementRow:
         return cls(
             slice_index=result.slice_index,
-            method=result.method,
+            method=result.method.value,
             cell_count=result.cell_count,
             cell_positions=result.cell_positions,
             cell_areas=result.cell_areas,
@@ -531,7 +531,7 @@ def _detect_cells_blob_log(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_log", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_LOG, *filtered_data, params
     )
 
 
@@ -583,7 +583,7 @@ def _detect_cells_blob_dog(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_dog", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOG, *filtered_data, params
     )
 
 
@@ -636,7 +636,7 @@ def _detect_cells_blob_doh(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_doh", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOH, *filtered_data, params
     )
 
 
@@ -792,7 +792,7 @@ def _detect_cells_watershed(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        "watershed",
+        DetectionMethod.WATERSHED,
         positions,
         areas,
         intensities,
@@ -853,7 +853,7 @@ def _detect_cells_threshold(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        "threshold",
+        DetectionMethod.THRESHOLD,
         positions,
         areas,
         intensities,
