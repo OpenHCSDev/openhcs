@@ -153,7 +153,7 @@ class AnalysisResultDirectory:
         """Resolve a file through the source bindings this directory's metadata declares."""
         if self.source_projection is None:
             return None
-        from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
+        from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 
         return self.source_projection.source_projection_for(
             VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)

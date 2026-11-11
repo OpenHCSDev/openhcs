@@ -41,10 +41,10 @@ from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
 )
 from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,
 )
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamImagePayloadMetadataProjector,

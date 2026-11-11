@@ -85,7 +85,6 @@ from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
 )
 from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,
 )
@@ -125,6 +124,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,

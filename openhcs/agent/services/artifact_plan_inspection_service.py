@@ -34,10 +34,8 @@ from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.pipeline.artifact_planning import MissingArtifactInputError
 from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressQueue
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjection,
-)
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
