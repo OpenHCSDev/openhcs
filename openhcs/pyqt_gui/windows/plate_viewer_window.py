@@ -314,7 +314,8 @@ class PlateViewerWindow(BaseFormDialog):
         try:
             metadata_handler = self.orchestrator.microscope_handler.metadata_handler
             plate_path = self.orchestrator.dataset_root
-            document = metadata_handler.build_metadata_view_document(
+            from openhcs.core.dataset_sources.openhcs_format import build_metadata_view_document
+            document = build_metadata_view_document(metadata_handler,
                 plate_path,
                 self.orchestrator.microscope_handler,
             )

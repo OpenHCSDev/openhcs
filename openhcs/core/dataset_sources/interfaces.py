@@ -679,50 +679,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
                 result[component.name] = dict(values)
         return result
 
-    def build_metadata_view_document(
-        self,
-        dataset_root: Union[str, Path],
-        microscope_handler: ViewerMicroscopeHandlerABC,
-    ) -> MetadataViewDocument:
-        """Project this handler's metadata into the standard read-only UI document."""
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
-
-        component_values = self.component_value_set(dataset_root)
-        grid_dims = self.get_metadata_grid_dimensions(dataset_root)
-        pixel_size = self.get_metadata_pixel_size(dataset_root)
-        image_files = self.get_image_files(dataset_root)
-
-        parser = microscope_handler.parser
-        if parser is None:
-            raise ValueError(
-                f"{microscope_handler.__class__.__name__} cannot build metadata view without a parser."
-            )
-
-        metadata = OpenHCSMetadata.from_component_value_set(
-            component_values=component_values,
-            microscope_handler_name=microscope_handler.source_name,
-            source_filename_parser_name=parser.__class__.__name__,
-            grid_dimensions=list(grid_dims),
-            pixel_size=pixel_size,
-            image_files=image_files,
-            available_backends={"disk": True},
-            source_diagnostics=[
-                dict(diagnostic) for diagnostic in self.source_diagnostics(dataset_root)
-            ]
-            or None,
-            main=None,
-        )
-        title = f"Metadata - {microscope_handler.source_name}"
-        return MetadataViewDocument(
-            title=title,
-            entries=(
-                MetadataViewEntry(
-                    name=microscope_handler.source_name,
-                    object_instance=metadata,
-                    summary=f"Image files: {len(metadata.image_files)} (hidden)",
-                ),
-            ),
-        )
 
 
 class DiskImageFileListingMetadataHandler(MetadataHandler):
