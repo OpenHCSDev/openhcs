@@ -30,6 +30,7 @@ from openhcs.core.source.source_matching import (
 from openhcs.core.source.source_metadata import SourceMetadataFields
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     IncompleteFunctionOutputFilenameIdentityError,
@@ -966,8 +967,6 @@ class RuntimeArtifactMaterialization:
         context: "ExecutingContext",
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
-        from openhcs.core.util.post_execute import PostExecuteHook
-
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
             return StepExecutionObservation.empty()
@@ -1191,8 +1190,6 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        from openhcs.core.util.post_execute import PostExecuteHook
-
         return StepExecutionObservation(
             MappingProxyType({address: locations}),
             paths,

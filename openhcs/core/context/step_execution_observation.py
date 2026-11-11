@@ -13,6 +13,7 @@ from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
+from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 @dataclass(frozen=True, slots=True)
@@ -106,8 +107,6 @@ class StepExecutionObservation:
                 target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
                 for target, entries in source_projections.items()
             }
-
-        from openhcs.core.util.post_execute import PostExecuteHook
 
         return cls(
             MappingProxyType(locations),
