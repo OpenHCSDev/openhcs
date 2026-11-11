@@ -64,15 +64,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
 )
 
+from openhcs.core.callable.function_patterns import (
+    FunctionInvocationKey,
+    NormalizedFunctionItem,
+)
+
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.measurement_rows import (
         CellProfilerObjectLocationMeasurementRows,
-    )
-    from collections.abc import Callable
-
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
     )
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.payload.runtime_tabular_values import ColumnarRows
