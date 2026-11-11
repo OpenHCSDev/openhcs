@@ -5,8 +5,8 @@ semantics.  The default implementation is independent NumPy/SciPy/skimage code;
 the optional Centrosome provider is allowed for matching legacy morphology
 behavior when explicitly requested.
 """
-
 from __future__ import annotations
+
 from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING

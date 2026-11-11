@@ -10,8 +10,8 @@ Doctrinal Clauses:
 - Clause 88 — No Inferred Capabilities
 - Clause 368 — Visualization Must Be Observer-Only
 """
-
 from __future__ import annotations
+
 
 import logging
 from pathlib import Path

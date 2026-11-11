@@ -5,8 +5,8 @@ compiled ``ArtifactPlan`` is where one produced or consumed artifact is stored.
 A function output goes to an ``OutputTarget``: a compiled ``ArtifactOutputPlan``
 or the invocation's main image flow (``MainFlowTarget``).
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping

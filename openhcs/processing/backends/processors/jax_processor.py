@@ -3,8 +3,8 @@
 Shared operations are written once in ``image_stack_operations``; this module
 registers them for JAX and holds the JAX-specific algorithms.
 """
-
 from __future__ import annotations
+
 
 from typing import List, Optional, Tuple
 

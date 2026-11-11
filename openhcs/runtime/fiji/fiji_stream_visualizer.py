@@ -5,8 +5,8 @@ Manages Fiji viewer instances for real-time visualization via ZMQ.
 Uses FijiViewerServer (inherits from ZMQServer) for PyImageJ-based display.
 Follows same architecture as NapariStreamVisualizer.
 """
-
 from __future__ import annotations
+
 
 import logging
 from pathlib import Path

@@ -8,8 +8,8 @@ factors a saved absolute path (``Path('/data/a/../b.tif')`` saves as
 has the identity it was saved with. Filters match a path's POSIX spelling of
 that form.
 """
-
 from __future__ import annotations
+
 
 from functools import lru_cache
 from os import PathLike

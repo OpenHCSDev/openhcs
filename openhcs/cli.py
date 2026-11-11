@@ -4,8 +4,8 @@ The default command remains the desktop GUI. Named commands provide stable
 package-level entry points for installers such as the MCP Registry without
 importing GUI or agent runtimes until they are selected.
 """
-
 from __future__ import annotations
+
 
 import sys
 from collections.abc import Callable, Sequence

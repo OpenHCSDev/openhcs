@@ -1,8 +1,8 @@
 """
 CPU implementation of image assembly functions with fixed blending.
 """
-
 from __future__ import annotations
+
 
 import logging
 from typing import TYPE_CHECKING, List, Tuple, Union

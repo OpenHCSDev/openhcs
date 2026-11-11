@@ -12,8 +12,8 @@ Doctrinal Clauses:
 - Clause 245 — Plan Context Supremacy
 - Clause 503 — Cognitive Load Transfer
 """
-
 from __future__ import annotations
+
 
 import logging
 from typing import Any, Mapping

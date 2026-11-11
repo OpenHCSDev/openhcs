@@ -4,8 +4,8 @@ The widget holds no session state: rows, selection, pending work, compiled
 artifacts and execution state are read from the :class:`Session`; buttons are
 the :class:`DatasetListView` operations; changes arrive as session events.
 """
-
 from __future__ import annotations
+
 
 from formbridge.services.window_code_document import use_external_code_editor
 import logging

@@ -7,8 +7,8 @@ fields; its :class:`RowQualifierFormat` renders their values into a feature-name
 suffix (``_3_00_256``, ``_2of4``) and recognizes that suffix again when parsing
 a feature name.
 """
-
 from __future__ import annotations
+
 
 import math
 from abc import ABC, abstractmethod

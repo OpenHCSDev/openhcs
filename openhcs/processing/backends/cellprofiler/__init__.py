@@ -3,8 +3,8 @@
 The package exposes declaration-owned implementation callables lazily. Module
 ownership remains exclusively on the registered ``CellProfilerModule`` class.
 """
-
 from __future__ import annotations
+
 
 import sys
 from collections.abc import Callable

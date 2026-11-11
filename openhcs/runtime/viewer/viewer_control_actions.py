@@ -8,8 +8,8 @@ root, so a viewer cannot forget shutdown, clear-state, process-launch or
 settle. Messages no leaf registers answer ERROR through one shared
 :class:`UnknownControlAction`. Pong capabilities derive from the registry.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping

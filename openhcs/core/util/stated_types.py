@@ -4,8 +4,8 @@ OpenHCS builds a form control, an MCP parameter description and an array
 conversion from a declared type. ``Any`` gives them nothing to build, so it is
 refused where the declaration is consumed, naming the field or parameter.
 """
-
 from __future__ import annotations
+
 
 import ast
 import inspect

@@ -4,8 +4,8 @@ A view's state is derived on demand from ObjectState and the session's runtime
 state; no client caches it. A renderer binds one button per entry of the
 view's ``operations`` and asks the operation whether it is available.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

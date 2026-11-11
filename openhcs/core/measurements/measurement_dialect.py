@@ -8,8 +8,8 @@ feature names. :class:`PlainMeasurementDialect` is the kernel's own spelling.
 A domain declares its dialect by subclassing and naming its axis family; an
 interop format (CellProfiler) declares its dialect in its own package.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping

@@ -4,8 +4,8 @@ Each stage invokes one session operation, then follows the session's events
 (``openhcs_session_events`` blocks until something happens) and reads the
 dataset row until the stage is over. Nothing here polls on a timer.
 """
-
 from __future__ import annotations
+
 
 import time
 from abc import ABC, abstractmethod

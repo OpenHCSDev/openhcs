@@ -6,8 +6,8 @@ its slot family), and its lifecycle implementation. Config keys, titles and
 step-plan keys are derived from the wire name. ``ViewerType`` is the boundary
 view of the registry for wire and form fields.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from enum import Enum

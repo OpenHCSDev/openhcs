@@ -5,8 +5,8 @@ through MCP, builds the registered loose Opera Phenix neurite preset, executes
 the rendered public pipeline through MCP, and validates the live Napari window
 through MCP before shutting down only its owned local endpoints.
 """
-
 from __future__ import annotations
+
 
 import argparse
 import copy

@@ -7,8 +7,8 @@ Two separate families that domains extend:
 - :class:`SourceMetadataEnricher` adds metadata embedded in one physical file
   to a candidate whose axes are already bound; it never discovers stores.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from dataclasses import replace

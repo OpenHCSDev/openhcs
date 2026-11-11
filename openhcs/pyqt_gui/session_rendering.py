@@ -8,8 +8,8 @@
   :class:`OperationPresenter` family and prompts for the requests of prompted
   operations through the :class:`RequestPrompter` family.
 """
-
 from __future__ import annotations
+
 
 import logging
 from abc import ABC, abstractmethod

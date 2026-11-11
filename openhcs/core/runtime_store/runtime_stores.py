@@ -21,7 +21,6 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     ComponentGroupScope,
@@ -44,6 +43,11 @@ from openhcs.core.source.source_matching import (
 )
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes.axis_declarations import Axis, PartitionAxis
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.artifacts.kinds import ArtifactType
 
 
 

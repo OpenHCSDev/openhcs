@@ -3,8 +3,8 @@ Pipeline path planning - actually reduced duplication.
 
 This version ACTUALLY eliminates duplication instead of adding abstraction theater.
 """
-
 from __future__ import annotations
+
 
 import logging
 from collections import defaultdict

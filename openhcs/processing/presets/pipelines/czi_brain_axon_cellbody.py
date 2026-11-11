@@ -14,8 +14,8 @@ independent because processes in a tissue section need not belong to a soma in
 the crop.  Both analyses stream their meaningful outputs to Napari and
 materialize their typed artifacts.
 """
-
 from __future__ import annotations
+
 
 import json
 import os

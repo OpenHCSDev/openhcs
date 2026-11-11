@@ -7,8 +7,8 @@ This module registers OpenHCS-specific providers with pyqt-reactive:
 - Server scan provider
 - Window factory for launching PyQt windows
 """
-
 from __future__ import annotations
+
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace

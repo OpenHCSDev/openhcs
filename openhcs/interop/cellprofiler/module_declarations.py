@@ -2,8 +2,8 @@
 
 This file owns the registered CellProfiler module catalog and discovery boundary.
 """
-
 from __future__ import annotations
+
 
 import importlib
 import inspect

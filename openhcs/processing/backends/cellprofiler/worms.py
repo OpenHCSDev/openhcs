@@ -6,8 +6,8 @@ This module untangles overlapping worms using a trained worm model.
 It takes a binary image and labels the worms, untangling them and
 associating all of a worm's pieces together.
 """
-
 from __future__ import annotations
+
 
 import inspect
 

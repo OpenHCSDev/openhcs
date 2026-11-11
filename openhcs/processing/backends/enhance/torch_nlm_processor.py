@@ -15,8 +15,8 @@ Doctrinal Clauses:
 - Clause 88 — No Inferred Capabilities: Explicit PyTorch and torch_nlm dependency
 - Clause 273 — Memory Backend Restrictions: GPU-only implementation
 """
-
 from __future__ import annotations
+
 
 import logging
 from enum import Enum

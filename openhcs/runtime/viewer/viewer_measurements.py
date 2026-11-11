@@ -3,8 +3,8 @@
 Pixel centres use source-native (y,x) coordinates. World geometry is the actual
 Napari data_to_world transform, not a claim of verified physical calibration.
 """
-
 from __future__ import annotations
+
 
 from collections.abc import Callable
 from dataclasses import dataclass

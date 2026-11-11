@@ -5,8 +5,8 @@ preview a reader builds for it, and picks what a browser does when the file is
 opened. The registry key (``name``) is the spelling used in metadata tables and
 agent DTOs.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from pathlib import Path

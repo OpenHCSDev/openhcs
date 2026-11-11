@@ -5,8 +5,8 @@ separate process-local projection owned by ``CustomFunctionRuntimeRegistry``;
 this module coordinates source reconciliation and delegates exact canonical
 lookup to the registry declaration without copying catalog state.
 """
-
 from __future__ import annotations
+
 
 import ast
 import logging

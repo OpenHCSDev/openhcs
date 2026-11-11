@@ -3,8 +3,8 @@ GPU JIT Kernels for Borůvka's MST Algorithm
 
 All CUDA kernels for parallel MST construction using CuPy JIT.
 """
-
 from __future__ import annotations
+
 
 from typing import TYPE_CHECKING
 

@@ -6,8 +6,8 @@ this package (the kernel's own members) and then the modules the active axis
 family lists in ``extension_modules`` (the domain's members). The kernel never
 names a domain module.
 """
-
 from __future__ import annotations
+
 
 from importlib import import_module
 from typing import Any, Iterable

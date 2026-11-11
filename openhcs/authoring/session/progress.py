@@ -4,8 +4,8 @@ Progress messages arrive on the execution client's thread. Each one marks
 the projection dirty; the session's main thread rebuilds it at most once per
 ``interval_seconds`` and publishes the result as session events.
 """
-
 from __future__ import annotations
+
 
 import logging
 import threading

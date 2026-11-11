@@ -4,8 +4,8 @@ One provider serves any widget whose buttons are session operations: the
 catalog, availability, labels and invocation all come from the operation
 classes, so a new operation is a bridge action with no provider code.
 """
-
 from __future__ import annotations
+
 
 import hashlib
 from collections.abc import Callable

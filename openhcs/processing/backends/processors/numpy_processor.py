@@ -4,8 +4,8 @@ Shared operations are written once in ``image_stack_operations``; this module
 registers them for NumPy and holds the operations whose NumPy algorithm
 (scikit-image, the numba composite kernel) differs from other backends.
 """
-
 from __future__ import annotations
+
 
 from enum import Enum
 from typing import Annotated, List, Optional, Tuple

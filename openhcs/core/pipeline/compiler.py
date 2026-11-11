@@ -3,8 +3,8 @@
 ObjectState owns saved inheritance and provenance resolution. The resolved
 pipeline retains those admission facts; live UI states remain in their registry.
 """
-
 from __future__ import annotations
+
 
 from objectstate import ScopeKey
 import logging

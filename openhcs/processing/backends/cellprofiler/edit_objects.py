@@ -7,8 +7,8 @@ manual editing of objects. In OpenHCS batch processing context, this is converte
 to a pass-through that optionally applies renumbering. For actual manual editing,
 use the interactive napari-based tools in OpenHCS.
 """
-
 from __future__ import annotations
+
 
 import numpy as np
 from dataclasses import dataclass

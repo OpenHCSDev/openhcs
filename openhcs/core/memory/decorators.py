@@ -4,8 +4,8 @@ The underlying memory conversion behavior belongs to arraybridge. OpenHCS adds
 compiler/runtime metadata preservation at this boundary so memory declarations
 and callable preparation contracts compose predictably.
 """
-
 from __future__ import annotations
+
 
 from collections.abc import Callable
 import functools

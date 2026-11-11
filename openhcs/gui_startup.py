@@ -5,8 +5,8 @@ pyqt-reactive's standard-library-only process-launch policy at module load time.
 The progress window runs in a small child process so it can be visible while
 the main process imports and constructs the real Qt application.
 """
-
 from __future__ import annotations
+
 
 import ctypes
 import json

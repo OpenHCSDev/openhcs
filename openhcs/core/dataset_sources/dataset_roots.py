@@ -6,8 +6,8 @@ example a database id). A rule prepares the storage that serves the dataset
 and says where outputs go. Identifiers no domain rule claims are local
 directories.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping

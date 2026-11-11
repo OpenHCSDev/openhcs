@@ -5,8 +5,8 @@ keeps its actual type/function identity and is addressed under the source's
 canonical callable. The namespace retains the original exec globals, not a
 helper registry or a copy of declaration metadata.
 """
-
 from __future__ import annotations
+
 
 import hashlib
 from collections.abc import Callable, Iterator

@@ -6,8 +6,8 @@ outputs they save; after every partition succeeds it runs once over the
 combined observations. Domains register hooks from their ``extension_modules``;
 the kernel calls only this family.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
@@ -25,10 +25,12 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeExecutionObservation,
 )
-from openhcs.core.steps.function_artifact_materialization import (
-    MaterializedRuntimeArtifact,
-    RuntimeArtifactMaterialization,
-)
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
+    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization, MaterializedRuntimeArtifact
 
 
 

@@ -4,8 +4,8 @@ Reference: "N2V2 - Fixing Noise2Void Checkerboard Artifacts with Modified
 Sampling Strategies and a Tweaked Network Architecture",
 https://arxiv.org/abs/2211.08512.
 """
-
 from __future__ import annotations
+
 
 import logging
 from typing import List, Optional

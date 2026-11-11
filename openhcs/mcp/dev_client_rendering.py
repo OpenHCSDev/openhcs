@@ -5,8 +5,8 @@ it presents. The base decodes the framed tool batch once, renders the decoded
 payload through the renderer registered for its type, and appends the payload's
 warnings and the batch diagnostics. Renderers read DTO attributes only.
 """
-
 from __future__ import annotations
+
 
 import argparse
 from abc import ABC

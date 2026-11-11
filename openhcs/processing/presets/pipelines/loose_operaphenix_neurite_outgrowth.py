@@ -13,8 +13,8 @@ well. Step checkpoint and viewer filters are intentionally unset so they inherit
 that same scope; path-planning filter zero suppresses the ordinary final image
 copy while typed measurements and object labels remain materialized.
 """
-
 from __future__ import annotations
+
 
 import os
 import shutil

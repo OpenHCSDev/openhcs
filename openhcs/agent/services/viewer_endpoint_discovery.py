@@ -7,8 +7,8 @@ sweeps the OpenHCS IPC directory for viewer data sockets, probes each control
 endpoint, and classifies every live viewer as owned or foreign so callers can
 report or close them explicitly.
 """
-
 from __future__ import annotations
+
 import dataclasses
 
 import re

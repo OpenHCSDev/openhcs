@@ -5,8 +5,8 @@ OpenHCS PyQt6 GUI Launcher
 Launch script for the OpenHCS PyQt6 GUI application.
 Provides command-line interface and application initialization.
 """
-
 from __future__ import annotations
+
 
 import argparse
 import importlib.util

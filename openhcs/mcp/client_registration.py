@@ -4,8 +4,8 @@ The native installers provide one stable launcher command.  This module projects
 that command into each detected client's authoritative local configuration
 surface without exposing the installer's versioned environment layout.
 """
-
 from __future__ import annotations
+
 
 import argparse
 import json

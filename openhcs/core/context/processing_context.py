@@ -7,8 +7,8 @@ what bundles and workers carry. ``CompiledContext.executing`` starts one
 execution: an ``ExecutingContext`` holds the compiled facts plus the runtime
 stores, caches and debug sink of that execution only.
 """
-
 from __future__ import annotations
+
 
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager

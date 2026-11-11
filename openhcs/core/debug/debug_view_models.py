@@ -7,8 +7,8 @@ live in ``openhcs.core.debug.debug_views`` and register into these families, so 
 consumers (agent DTOs, MCP clients) do not pay the runtime import cost. On the
 wire a section and a table name their declaration by its registry key.
 """
-
 from __future__ import annotations
+
 
 import json
 from abc import ABC, abstractmethod

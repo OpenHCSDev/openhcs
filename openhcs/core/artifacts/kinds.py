@@ -5,8 +5,8 @@ It never switches on a payload's type: each payload answers through its own
 methods (``contextualized_output``, ``stored_slices``, ``match_alignment``), and
 a kind with one nominal payload type declares it once.
 """
-
 from __future__ import annotations
+
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect

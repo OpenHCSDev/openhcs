@@ -8,8 +8,8 @@ comes from the payload's plane declaration. Whatever nothing declares is an
 :class:`UndeclaredAxisSpec`. Kernel code asks for dimensions by role, never by
 position or name.
 """
-
 from __future__ import annotations
+
 import dataclasses
 
 from abc import ABC, abstractmethod

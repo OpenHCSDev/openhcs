@@ -3,8 +3,8 @@
 This module centralizes metadata extraction from processing callables so the
 compiler has one source of truth for memory and artifact declarations.
 """
-
 from __future__ import annotations
+
 
 import dataclasses
 import inspect

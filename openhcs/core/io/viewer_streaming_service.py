@@ -4,8 +4,8 @@ Eliminates duplication between Napari and Fiji streaming code by parametrizing
 on viewer_type. Callers provide UI or agent callbacks; all heavy operations run
 in background threads.
 """
-
 from __future__ import annotations
+
 
 import logging
 import re

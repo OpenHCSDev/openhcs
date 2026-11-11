@@ -6,8 +6,8 @@ source or installed environment changes. This module owns the recoverable
 boundary: detect process-generation drift and identify the stable command that
 the client can reconnect through to select the current installation.
 """
-
 from __future__ import annotations
+
 
 from abc import ABC
 from collections.abc import Mapping, Sequence

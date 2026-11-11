@@ -9,8 +9,8 @@ it asks the active family by role (``AxisFamily.active().with_role(StackAxis)``)
 Strings exist only at external boundaries (wire payloads, filenames, metadata,
 MCP), spelled by ``Axis.name`` and decoded by ``AxisFamily.named``.
 """
-
 from __future__ import annotations
+
 
 import importlib
 import os

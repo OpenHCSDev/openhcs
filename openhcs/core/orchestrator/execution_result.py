@@ -4,8 +4,8 @@ Execution result types for pipeline orchestration.
 This module defines typed execution results to replace dict-based results,
 following OpenHCS standards for explicit contracts and type safety.
 """
-
 from __future__ import annotations
+
 
 import copyreg
 from abc import ABC, abstractmethod
