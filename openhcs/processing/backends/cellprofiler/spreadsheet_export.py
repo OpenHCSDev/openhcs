@@ -38,6 +38,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     is_structural_missing_measurement_cell,
     MeasurementRowsAxisProjection,
     WideMeasurementRowAccumulator,
+    shared_measurement_row_axis_domain,
 )
 from openhcs.core.pipeline.function_contracts import (
     execution_scope,
@@ -742,7 +743,7 @@ def _record_measurement_tables(artifact_batch: RuntimeArtifactBatch):
                 record, CELLPROFILER_MEASUREMENT_DIALECT
             )
         )
-        MeasurementTable.shared_row_axis_domain(
+        shared_measurement_row_axis_domain(
             spec.name,
             tuple(table for _record, table in record_tables),
             MeasurementRowAxisField.SLICE_INDEX,

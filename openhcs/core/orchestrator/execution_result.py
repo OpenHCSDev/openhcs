@@ -28,7 +28,7 @@ from openhcs.core.progress.types import (
     ProgressStatus,
 )
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 
 
 

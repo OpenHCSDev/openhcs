@@ -57,7 +57,7 @@ from openhcs.core.source.source_projection import (
     SourceProjection,
     SourceProjectionMetadataSerializer,
 )
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
     MaterializedRuntimeArtifact,

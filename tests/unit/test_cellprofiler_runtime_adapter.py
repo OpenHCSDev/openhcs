@@ -51,6 +51,7 @@ from openhcs.core.measurements.measurement_feature_queries import (
     measurement_values_for_feature,
 )
 from openhcs.core.measurements.measurement_row_materialization import (
+    join_measurement_tables,
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
@@ -300,7 +301,7 @@ def _output_measurements(
     )
     tables = tuple(record.data for record in records)
     assert all(isinstance(table, MeasurementTable) for table in tables)
-    return MeasurementTable.join(name, tables)
+    return join_measurement_tables(name, tables)
 
 
 def _output_relationship(

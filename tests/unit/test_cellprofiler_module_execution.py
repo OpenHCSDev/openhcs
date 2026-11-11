@@ -82,6 +82,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
+    join_measurement_tables,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, object_label_input_execution_mode_from_callable, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_store.runtime_artifact_queries import (
@@ -9649,7 +9650,7 @@ def test_measurement_tables_compose_provenance_after_object_rows_clear_source() 
         ),
     )
 
-    combined = MeasurementTable.join("Locations", tables)
+    combined = join_measurement_tables("Locations", tables)
 
     assert all(table.source_image_name is None for table in tables)
     assert tuple(

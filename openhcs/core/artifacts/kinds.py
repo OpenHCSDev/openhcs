@@ -54,7 +54,7 @@ from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_image_values import owned_runtime_value, as_runtime_value
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
-from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
+from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, join_measurement_tables, join_measurement_tables_artifact, measurement_rows_with_source_provenance
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
 
@@ -1299,7 +1299,7 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         """Concatenate exact producer-group measurement tables."""
 
 
-        return MeasurementTable.join(
+        return join_measurement_tables(
             values[0].name, tuple(value.data for value in values)
         )
 
@@ -1340,7 +1340,7 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
             return records
         group_plan = output_plan.for_group(group_key)
         tables = tuple(cast(MeasurementTable, record.data) for record in records)
-        table = MeasurementTable.join_artifact(output_plan.name, tables)
+        table = join_measurement_tables_artifact(output_plan.name, tables)
         value = RuntimeValue.normalize_for_execution_scope(
             group_plan,
             table,

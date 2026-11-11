@@ -25,6 +25,7 @@ from openhcs.core.callable.function_patterns import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.measurements.measurement_row_materialization import (
+    joined_measurement_source_provenance,
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
@@ -533,7 +534,7 @@ def test_quality_control_measurements_keep_distinct_site_image_identities() -> N
         object_name=None,
         source_image_name=None,
         source_metadata=ImagePayloadMetadata(
-            source_provenance=MeasurementTable.joined_source_provenance("quality_metrics", tables),
+            source_provenance=joined_measurement_source_provenance("quality_metrics", tables),
         ),
     )
 

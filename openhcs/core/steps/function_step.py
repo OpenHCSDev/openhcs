@@ -10,7 +10,8 @@ from objectstate import mark_ui_special_fields, semantic_values_equal
 from python_introspect import callable_declaration_kwargs
 
 from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
+from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 
 

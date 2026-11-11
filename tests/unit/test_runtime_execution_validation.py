@@ -60,7 +60,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions
