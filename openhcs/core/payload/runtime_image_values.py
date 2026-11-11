@@ -47,6 +47,10 @@ from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
+_registered_stack_image_payloads = None
+_registered_RuntimeSliceProjection = None
+
+
 class RuntimeSliceProjectionDeclarationError(ValueError):
     """Raised when runtime-slice behavior has no complete nominal declaration."""
 
@@ -1061,15 +1065,13 @@ class ImagePayloadMetadata(
         if source_plane_selection == complete_source_axis:
             return self.attach_to(payload)
 
-        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
-
         projected_planes = tuple(
             payload.value_for_slice(axis_projection.selected_plane(plane_index))
             for plane_index in source_plane_selection
         )
         if len(projected_planes) == 1:
             return projected_planes[0]
-        return stack_image_payloads(
+        return _registered_stack_image_payloads(
             projected_planes,
             metadata_mode=self.plane_axis,
         )
@@ -1512,9 +1514,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         output memory domain; it is used when no runtime-slice axis is declared.
         A context of None lets the runtime derive it from the step's outputs.
         """
-        from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
-
-        projection = RuntimeSliceProjection.preserved_context_for_value(self)
+        projection = _registered_RuntimeSliceProjection.preserved_context_for_value(self)
         if projection is not None:
             return tuple(
                 (self.value_for_slice(projection.selected_plane(index)), None)

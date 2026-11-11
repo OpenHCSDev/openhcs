@@ -2030,3 +2030,10 @@ def aligned_image_stack_kwargs(
         reference_payload=reference_payload,
     )
     return {name: resolver.resolve(value) for name, value in kwargs.items()}
+
+
+import openhcs.core.payload.runtime_image_values as _riv
+import openhcs.core.payload.runtime_slice_alignment as _rsa
+
+_riv._registered_stack_image_payloads = stack_image_payloads
+_rsa._registered_stack_image_payloads = stack_image_payloads
