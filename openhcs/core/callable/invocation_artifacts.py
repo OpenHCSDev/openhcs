@@ -105,19 +105,6 @@ class ArtifactDeclarationStepContext:
                 ArtifactSpecCollection(collection.specs),
             )
         producers = tuple(self.available_artifact_producers)
-        if producers:
-            from openhcs.core.pipeline.artifact_planning import ArtifactProducer
-
-            invalid = tuple(
-                producer
-                for producer in producers
-                if not isinstance(producer, ArtifactProducer)
-            )
-            if invalid:
-                raise TypeError(
-                    "ArtifactDeclarationStepContext.available_artifact_producers "
-                    "must contain ArtifactProducer values."
-                )
         object.__setattr__(self, "available_artifact_producers", producers)
 
     def with_source_declarations(
