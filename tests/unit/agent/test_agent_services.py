@@ -100,7 +100,7 @@ from openhcs.core.config_document import ConfigDocumentCodec
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import ProgressExecutionContext, ProgressIdentity
+from openhcs.core.progress.types import ProgressExecutionContext, ProgressIdentity
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceSelector,

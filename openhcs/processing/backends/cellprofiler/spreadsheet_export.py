@@ -100,12 +100,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.core.materialization import (
-    CsvOptions,
-    FileBundleOptions,
-    MaterializationSpec,
-    WriteMode,
-)
+from openhcs.core.materialization.options import CsvOptions, FileBundleOptions
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.constants import WriteMode
 
 from openhcs.core.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 

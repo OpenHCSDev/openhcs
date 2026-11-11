@@ -143,9 +143,8 @@ The dataclass owns the row schema, including the empty-row case.
        RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
    from openhcs.core.processing_contracts import Pure2DContract
-   from openhcs.core.materialization import (
-       CsvOptions, MaterializationSpec, ROIOptions,
-   )
+   from openhcs.core.materialization.core import MaterializationSpec
+   from openhcs.core.materialization.options import CsvOptions, ROIOptions
 
    class FixtureFeature(RuntimeMeasurementFeature):
        PIXEL_COUNT = "pixel_count"
@@ -297,9 +296,8 @@ This declaration block is for an operation that already produces labels and
    from openhcs.core.runtime_measurements import (
        ObjectCoreMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
-   from openhcs.core.materialization import (
-       CsvOptions, MaterializationSpec, PointROIOptions,
-   )
+   from openhcs.core.materialization.core import MaterializationSpec
+   from openhcs.core.materialization.options import CsvOptions, PointROIOptions
 
    class CentreFeatureOwner(RuntimeMeasurementFeatureOwner):
        @classmethod
@@ -514,7 +512,8 @@ runtime axis, not biological object counts or an inferred well identity:
    )
    from openhcs.core.runtime_measurements import MeasurementTable
    from openhcs.core.runtime_stores import RuntimeArtifactBatch
-   from openhcs.core.materialization import CsvOptions, MaterializationSpec
+   from openhcs.core.materialization.core import MaterializationSpec
+   from openhcs.core.materialization.options import CsvOptions
 
    @dataclass(frozen=True)
    class PlateSummaryRow:

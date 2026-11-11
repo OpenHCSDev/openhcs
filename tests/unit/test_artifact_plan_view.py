@@ -39,7 +39,7 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputProjectionKey,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_artifact_values import ArtifactKey
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation

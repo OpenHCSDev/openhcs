@@ -26,11 +26,8 @@ from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFiel
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-)
+from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName
+from openhcs.core.materialization.core import MaterializationSpec
 
 # The OpenHCS requirement markers decide where this distribution is installed;
 # the function catalog leaves this module out wherever they exclude it.

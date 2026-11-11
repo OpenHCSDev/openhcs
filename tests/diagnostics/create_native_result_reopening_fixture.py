@@ -18,11 +18,8 @@ from openhcs.core.runtime_object_label_building import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    ROIOptions,
-    materialize,
-)
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.options import ROIOptions
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 

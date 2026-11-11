@@ -136,7 +136,7 @@ class ZMQCompilationRequest:
         return compilation
 
     def compile_fresh(self) -> ZMQCompilationResult:
-        from openhcs.core.progress import set_progress_queue
+        from openhcs.core.progress.types import set_progress_queue
 
         if self.resolved_config is None:
             raise ValueError("Fresh compilation requires resolved configuration.")

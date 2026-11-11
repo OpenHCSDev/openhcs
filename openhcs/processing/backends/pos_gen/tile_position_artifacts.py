@@ -7,11 +7,8 @@ rounding, grid inference, or changing the positions consumed by assemblers.
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.core.materialization import (
-    JsonOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-)
+from openhcs.core.materialization.options import JsonOptions, NameByArtifactName
+from openhcs.core.materialization.core import MaterializationSpec
 
 TILE_POSITIONS_OUTPUT = ArtifactSpec.output(
     "positions",

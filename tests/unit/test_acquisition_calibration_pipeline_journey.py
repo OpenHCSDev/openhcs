@@ -1,6 +1,6 @@
 """Acquisition calibration survives real preparation, Gaussian and persistence."""
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import json
 from multiprocessing import SimpleQueue
 
@@ -16,7 +16,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur

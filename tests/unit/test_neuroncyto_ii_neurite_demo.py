@@ -1,4 +1,4 @@
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import time
 import zipfile
 from copy import copy
@@ -20,7 +20,7 @@ from openhcs.core.config import (
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.source_workspace_projection import (
     WorkspaceSourceProjections,
 )

@@ -32,11 +32,8 @@ from types import SimpleNamespace
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.dataset_sources.plane_stores import PlaneStoreUnavailableError
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    ROIOptions,
-    materialize,
-)
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.options import ROIOptions
 from tests.unit.test_bioformats_java_adapter import (
     FakeBioFormatsContext,
     FakeBioFormatsMetadata,

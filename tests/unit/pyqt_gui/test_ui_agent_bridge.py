@@ -132,7 +132,7 @@ from openhcs.core.execution_state import (
 )
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.pipeline_document import PipelineDocument
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     RuntimeProjectionBuilder,
     RuntimeProjectionSource,

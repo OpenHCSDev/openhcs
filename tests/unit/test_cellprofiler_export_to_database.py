@@ -49,7 +49,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     validate_dataset_scoped_contexts,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue

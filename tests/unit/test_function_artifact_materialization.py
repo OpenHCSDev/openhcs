@@ -152,18 +152,8 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
-from openhcs.core.materialization import (
-    CsvOptions,
-    FileBundleOptions,
-    JsonOptions,
-    PointROIOptions,
-    ROIOptions,
-    TextOptions,
-    csv_only,
-    json_only,
-    roi_zip,
-    tiff_stack,
-)
+from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, JsonOptions, PointROIOptions, ROIOptions, TextOptions
+from openhcs.core.materialization.presets import csv_only, json_only, roi_zip, tiff_stack
 from openhcs.core.materialization.core import (
     MaterializationSpec,
     materialization_outputs,

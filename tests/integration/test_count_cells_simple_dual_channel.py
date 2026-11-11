@@ -184,7 +184,8 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
         """
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization import CsvOptions, MaterializationSpec, ROIOptions
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions, ROIOptions
 
 import numpy as np
 

@@ -12,7 +12,7 @@ from openhcs.constants import (
 )
 from openhcs.constants.constants import MemoryType as RawConstantsMemoryType
 from openhcs.core.memory import MemoryType as RuntimeMemoryType
-from openhcs.core.pipeline import MemoryType as PipelineMemoryType
+from openhcs.constants.constants import MemoryType as PipelineMemoryType
 
 from arraybridge import MemoryType as ArrayBridgeMemoryType
 from arraybridge.types import (

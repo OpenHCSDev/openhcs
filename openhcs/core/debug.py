@@ -42,13 +42,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.progress import (
-    ProgressContextPayload,
-    ProgressEvent,
-    ProgressExecutionContext,
-    ProgressStatus,
-    emit_event,
-)
+from openhcs.core.progress.types import ProgressContextPayload, ProgressEvent, ProgressExecutionContext, ProgressStatus, emit_event
 from openhcs.core.progress.types import (
     ErrorProgressStatus,
     PatternGroupProgressPhase,

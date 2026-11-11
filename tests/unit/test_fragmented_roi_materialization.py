@@ -17,12 +17,8 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    MaterializationSpec,
-    ROIOptions,
-    materialization_outputs,
-)
+from openhcs.core.materialization.options import ImageFileOptions, ROIOptions
+from openhcs.core.materialization.core import MaterializationSpec, materialization_outputs
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 

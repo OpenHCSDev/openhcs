@@ -39,7 +39,8 @@ from openhcs.processing.backends.analysis.skeletonize_and_save import (
     SkeletonizationResult,
     skeletonize_and_save,
 )
-from openhcs.core.materialization import CsvOptions, ROIOptions, materialize
+from openhcs.core.materialization.options import CsvOptions, ROIOptions
+from openhcs.core.materialization.core import materialize
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 

@@ -32,12 +32,8 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization import (
-    CsvOptions,
-    MaterializationSpec,
-    ROIOptions,
-    TiffStackOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, ROIOptions, TiffStackOptions
+from openhcs.core.materialization.core import MaterializationSpec
 
 logger = logging.getLogger(__name__)
 

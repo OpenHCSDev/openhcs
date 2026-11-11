@@ -1,6 +1,6 @@
 """An image reduction must replace the routed source planes in main flow."""
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 
 import numpy as np
@@ -17,7 +17,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.analysis.multi_template_matching import (

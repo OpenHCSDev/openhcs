@@ -1,6 +1,6 @@
 import pytest
 
-from openhcs.core.progress import ProgressEvent, ProgressPhase
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.progress.runtime_tree import RuntimeExecutionTopology
 from openhcs.core.progress.types import (
     InitProgressPhase,

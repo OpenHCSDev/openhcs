@@ -133,7 +133,7 @@ from openhcs.constants.constants import (
     OrchestratorState,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import registry
+from openhcs.core.progress.registry import registry
 from openhcs.core.progress.debug_projection import (
     DebugRuntimeProjection,
     RuntimeProjectionBundle,

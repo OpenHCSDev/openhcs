@@ -1,7 +1,7 @@
 """Structural, synthetic-only checks of embedded acquisition tile placement."""
 
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import json
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -527,7 +527,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     ObjectStateRegistry.clear()
     import queue
 
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress.types import set_progress_queue
 
     progress = queue.Queue()
     set_progress_queue(progress)

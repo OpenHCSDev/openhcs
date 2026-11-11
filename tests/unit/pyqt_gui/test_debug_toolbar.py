@@ -26,7 +26,7 @@ from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
 from openhcs.core.execution_state import ManagerExecutionState, ExecutionFailed
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget

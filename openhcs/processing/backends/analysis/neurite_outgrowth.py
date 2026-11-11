@@ -62,15 +62,8 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphNode,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.materialization import (
-    CsvOptions,
-    ImageFileOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-    ROIOptions,
-    SpatialGraphROIOptions,
-    SWCOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions, SpatialGraphROIOptions, SWCOptions
+from openhcs.core.materialization.core import MaterializationSpec
 
 from ..cellprofiler.feature_enhancement import (
     EnhanceMethod,

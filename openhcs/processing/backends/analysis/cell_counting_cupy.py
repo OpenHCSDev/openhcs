@@ -27,11 +27,8 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     colocalization_analyzer_catalog,
     detection_method_catalog,
 )
-from openhcs.core.materialization import (
-    CsvOptions,
-    JsonOptions,
-    MaterializationSpec,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.utils.import_utils import optional_import_placeholder
 
 cp = optional_import_placeholder("cupy")

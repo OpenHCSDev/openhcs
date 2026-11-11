@@ -421,7 +421,7 @@ def test_czi_contributor_samples_only_declared_crop_planes(
 
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress.types import set_progress_queue
 
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())

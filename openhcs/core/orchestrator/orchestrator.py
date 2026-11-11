@@ -48,7 +48,7 @@ from openhcs.core.debug import (
     DebugExecutionPolicy,
     NoOpDebugExecutionPolicy,
 )
-from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress.types import ProgressExecutionContext, ProgressQueue
 from python_introspect import project_dataclass
 from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
 from openhcs.runtime.viewer_protocol import ViewerPersistenceMode

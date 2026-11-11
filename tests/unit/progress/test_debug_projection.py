@@ -10,7 +10,7 @@ from openhcs.core.debug import (
     DebugSnapshot,
     DebugTerminalSummary,
 )
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     DebugProgressRecord,
     RuntimeProjectionBuilder,

@@ -60,14 +60,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.core.materialization import (
-    ExecutionAxisMaterializationRelativePathScope,
-    ImageFileOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-    NameBySourceIdentity,
-    WriteMode,
-)
+from openhcs.core.materialization.path_scopes import ExecutionAxisMaterializationRelativePathScope
+from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName, NameBySourceIdentity
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.constants import WriteMode
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:

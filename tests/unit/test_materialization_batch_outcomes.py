@@ -33,13 +33,8 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.materialization import (
-    CsvOptions,
-    JsonOptions,
-    MaterializationSpec,
-    SavedMaterializationOutputs,
-    prepare_materialization,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions
+from openhcs.core.materialization.core import MaterializationSpec, SavedMaterializationOutputs, prepare_materialization
 from openhcs.core.materialization.core import _WRITERS_BY_OPTIONS
 from tests.materialization_plans import output_plan as materialization_output_plan
 from tests.context_support import (

@@ -97,25 +97,9 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.materialization import (
-    CsvOptions,
-    ImageFileOptions,
-    JsonOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-    NameBySourceIdentity,
-    PointROIOptions,
-    ROIOptions,
-    TiffStackOptions,
-    csv_only,
-    json_materializer,
-    json_only,
-    materialize,
-    materialization_outputs,
-    tabular_field_names_from_materialization,
-    text_only,
-    tiff_stack,
-)
+from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, JsonOptions, NameByArtifactName, NameBySourceIdentity, PointROIOptions, ROIOptions, TiffStackOptions
+from openhcs.core.materialization.core import MaterializationSpec, materialize, materialization_outputs, tabular_field_names_from_materialization
+from openhcs.core.materialization.presets import csv_only, json_materializer, json_only, text_only, tiff_stack
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     analysis_file_path_is_included,
 )
@@ -2573,7 +2557,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     from openhcs.core.virtual_workspace_metadata import (
         VirtualWorkspaceSourceProjectionEntries,
     )
-    from openhcs.core.materialization import prepare_materialization
+    from openhcs.core.materialization.core import prepare_materialization
     import tifffile
 
     pixels = np.arange(3 * 4 * 5, dtype=np.uint16).reshape(3, 4, 5)

@@ -67,14 +67,10 @@ from openhcs.processing.backends.cellprofiler.save_images import (
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.core.materialization import (
-    ExecutionAxisMaterializationRelativePathScope,
-    ImageFileOptions,
-    MaterializationSpec,
-    NameBySourceIdentity,
-    WriteMode,
-    materialize,
-)
+from openhcs.core.materialization.path_scopes import ExecutionAxisMaterializationRelativePathScope
+from openhcs.core.materialization.options import ImageFileOptions, NameBySourceIdentity
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.constants import WriteMode
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 from openhcs.domains.microscopy.axes import Microscopy

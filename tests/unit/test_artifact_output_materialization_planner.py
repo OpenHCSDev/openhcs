@@ -15,14 +15,8 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactOutputMaterializationPlanner,
 )
 from openhcs.core.runtime_exports import RuntimeExportExpectation
-from openhcs.core.materialization import (
-    CsvOptions,
-    ImageFileOptions,
-    NameByArtifactName,
-    MaterializationSpec,
-    ROIOptions,
-    materialize,
-)
+from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
+from openhcs.core.materialization.core import MaterializationSpec, materialize
 from tests.materialization_plans import output_plan as materialization_output_plan
 
 

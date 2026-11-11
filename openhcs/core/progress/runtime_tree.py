@@ -9,7 +9,7 @@ from typing import Callable, ClassVar, Dict, List, Mapping, Optional, Sequence
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.progress import ProgressStream, ProgressEvent
+from openhcs.core.progress.types import ProgressStream, ProgressEvent
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     SubjectRuntimeIdentity,

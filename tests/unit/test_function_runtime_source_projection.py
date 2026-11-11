@@ -2155,7 +2155,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress.types import set_progress_queue
     from openhcs.core.config import LazyStepSourceBindingsConfig
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionRequest,
@@ -3242,7 +3242,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
         PipelineConfig,
     )
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress.types import set_progress_queue
     from openhcs.core.config import (
         LazySourceBindingsConfig,
         LazyStepSourceBindingsConfig,

@@ -37,7 +37,7 @@ from openhcs.core.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
     VariableComponentStackRequirement,
 )
-from openhcs.core.materialization import MaterializationSpec
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import AxisRole
 
 F = TypeVar("F", bound=Callable)

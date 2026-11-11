@@ -62,14 +62,8 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
     neurite_outgrowth_metaxpress_pixels,
 )
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    ImageFileOptions,
-    ROIOptions,
-    SpatialGraphROIOptions,
-    SWCOptions,
-    materialize,
-)
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.options import ImageFileOptions, ROIOptions, SpatialGraphROIOptions, SWCOptions
 from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
     PrimaryObjectDiagnosticPlanes,
 )

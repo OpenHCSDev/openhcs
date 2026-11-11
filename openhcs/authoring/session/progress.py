@@ -28,7 +28,7 @@ from openhcs.authoring.session.progress_notifications import (
     LiveMeasurementAvailableNotification,
     RuntimeArtifactAvailableNotification,
 )
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     RuntimeProjectionBuilder,
     RuntimeProjectionBundle,

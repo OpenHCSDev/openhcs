@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QTreeWidgetItem
 from formbridge.services.zmq_server_info import ExecutionServerInfo
 from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_tree import RuntimeTreeNode, RuntimeTreeProjection
 
 from .presentation_models import summarize_execution_server

@@ -59,7 +59,7 @@ from openhcs.core.debug import (
     DebugWarmReplayArtifactReusePlan,
     debug_event_sink_from_context,
 )
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan

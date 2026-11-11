@@ -60,13 +60,7 @@ from openhcs.core.orchestrator.worker_lanes import (
 from openhcs.core.pipeline.funcstep_contract_validator import (
     FuncStepContractValidator,
 )
-from openhcs.core.progress import (
-    ProgressExecutionContext,
-    ProgressPhase,
-    ProgressQueue,
-    ProgressStatus,
-    set_progress_queue,
-)
+from openhcs.core.progress.types import ProgressExecutionContext, ProgressPhase, ProgressQueue, ProgressStatus, set_progress_queue
 from openhcs.core.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,

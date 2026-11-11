@@ -2,7 +2,7 @@ from dataclasses import fields, replace as dataclass_replace
 
 from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
-from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase, ProgressStatus
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     SubjectRuntimeState,

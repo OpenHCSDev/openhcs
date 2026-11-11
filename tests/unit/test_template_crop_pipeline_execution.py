@@ -1,6 +1,6 @@
 """Real compiler, runtime and TIFF persistence for native stack cropping."""
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 
 import cv2
@@ -17,7 +17,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.multi_template_matching import (
     OpenCVTemplateMatchMethod,

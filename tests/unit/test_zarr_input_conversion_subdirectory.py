@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import json
 import queue
 from pathlib import Path
@@ -19,7 +19,7 @@ from openhcs.core.config import (
     VFSConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import AxisFamily
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator

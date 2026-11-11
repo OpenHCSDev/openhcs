@@ -18,7 +18,7 @@ from openhcs.core.orchestrator.bundle_execution import (
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 
 logger = logging.getLogger(__name__)

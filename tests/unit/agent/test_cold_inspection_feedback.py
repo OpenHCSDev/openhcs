@@ -17,7 +17,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     AgentProgressQueue, CompileInspectionGatewayABC, ArtifactPlanInspectionService,
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.server import build_server
 

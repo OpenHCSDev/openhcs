@@ -42,11 +42,8 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    PointROIOptions,
-    materialize,
-)
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.options import PointROIOptions
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from openhcs.mcp.context import OpenHCSAgentContext

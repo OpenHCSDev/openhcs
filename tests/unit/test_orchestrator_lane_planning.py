@@ -69,7 +69,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,

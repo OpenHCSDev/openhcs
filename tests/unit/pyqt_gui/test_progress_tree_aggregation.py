@@ -4,7 +4,7 @@ from formbridge.services.zmq_server_info import BaseServerInfo
 from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 from zmqruntime.messages import PongResponse
 
-from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase, ProgressStatus
 from openhcs.core.progress.projection import CompiledSubjectRuntimeState
 from openhcs.pyqt_gui.widgets.shared.server_browser.progress_projection import (
     ExecutionProgressProjection,

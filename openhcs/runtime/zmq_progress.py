@@ -7,11 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import Self
 
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressExecutionContext,
-    ProgressQueue,
-)
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext, ProgressQueue
 from openhcs.core.progress.types import (
     CompileProgressPhase,
     FailedProgressStatus,

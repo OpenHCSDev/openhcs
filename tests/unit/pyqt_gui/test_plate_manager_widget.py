@@ -73,7 +73,7 @@ from openhcs.core.execution_state import (
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
