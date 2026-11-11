@@ -35,12 +35,9 @@ from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
-
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 @dataclass(frozen=True, slots=True)
 class ModuleSettingRowRecord:
     """Concrete CellProfiler setting row identity and value."""

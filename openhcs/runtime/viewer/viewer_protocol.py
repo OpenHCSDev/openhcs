@@ -105,9 +105,7 @@ from openhcs.runtime.viewer.viewer_controls import (
 )
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
-if TYPE_CHECKING:
-    from openhcs.runtime.napari.napari_streaming_handlers import NapariNativeWindowPresentation
-
+from openhcs.runtime.napari.napari_streaming_handlers import NapariNativeWindowPresentation
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
 NaturalTextKey: TypeAlias = tuple[NaturalTokenKey, ...]

@@ -20,9 +20,7 @@ from typing import TYPE_CHECKING
 
 import openhcs
 
-if TYPE_CHECKING:
-    from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
-
+from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 logger = logging.getLogger(__name__)
 
 _registry_lock = threading.RLock()

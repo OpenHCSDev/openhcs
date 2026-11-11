@@ -108,11 +108,8 @@ from openhcs.core.materialization.constants import WriteMode
 
 from openhcs.core.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 _METADATA_TEMPLATE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _CELLPROFILER_METADATA_TEMPLATE = re.compile(r"\\g<(?P<name>[A-Za-z_][A-Za-z0-9_]*)>")
 _EnumT = TypeVar("_EnumT", bound=Enum)

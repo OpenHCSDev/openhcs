@@ -14,10 +14,7 @@ from mcp.server.stdio import stdio_server
 
 from openhcs.mcp.execution import McpTransportExecutor
 
-if TYPE_CHECKING:
-    from mcp.server.fastmcp import FastMCP
-
-
+from mcp.server.fastmcp import FastMCP
 class McpStdioTransport:
     """Reserve protocol channels and isolate application standard I/O.
 

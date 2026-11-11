@@ -100,12 +100,9 @@ from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class IdentifyTertiaryObjectsModule(
     ObjectLabelDrivenPrimaryImageInputPolicy,
     PairedPrimarySecondaryObjectInputPolicy,

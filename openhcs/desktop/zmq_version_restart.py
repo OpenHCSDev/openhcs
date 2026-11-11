@@ -13,16 +13,12 @@ from openhcs.core.execution.execution_state import ManagerExecutionState
 from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import DesktopUpdateError
 
-if TYPE_CHECKING:
-    from zmqruntime import EndpointApplicationCompatibility
-
-    from openhcs.pyqt_gui.main import OpenHCSMainWindow
-    from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-    from openhcs.authoring.session.execution_client import (
-        ZMQClientService,
-    )
-
-
+from zmqruntime import EndpointApplicationCompatibility
+from openhcs.pyqt_gui.main import OpenHCSMainWindow
+from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
+from openhcs.authoring.session.execution_client import (
+ZMQClientService,
+)
 class ZMQVersionRestartDialogPresenter:
     """Present the decision required by one endpoint version mismatch."""
 

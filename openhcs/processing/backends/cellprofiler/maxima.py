@@ -45,11 +45,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class ExcludeMode(Enum):
     THRESHOLD = "threshold"
     MASK = "mask"

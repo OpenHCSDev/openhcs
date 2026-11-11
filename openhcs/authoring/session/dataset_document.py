@@ -25,10 +25,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
 )
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
-
+from openhcs.authoring.session.session import Session
 @dataclass(frozen=True, kw_only=True, slots=True)
 class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
     """Which datasets a document covers, and what applying it may change."""

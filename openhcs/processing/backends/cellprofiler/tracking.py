@@ -117,15 +117,12 @@ from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-    from openhcs.core.steps.function_runtime import RuntimeCallableArgument
-
-
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
+from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy, NumbaNumpyDefaultBackend):
     """TrackObjects emits object rows and image-level tracking counts together."""
 

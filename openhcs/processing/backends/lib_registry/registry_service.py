@@ -41,10 +41,8 @@ from .unified_registry import (
     LibraryRegistryBase,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_declarations import CallableImportIdentity
-    from openhcs.core.callable.function_reference import RegistryFunctionReference
-
+from openhcs.core.callable.callable_declarations import CallableImportIdentity
+from openhcs.core.callable.function_reference import RegistryFunctionReference
 logger = logging.getLogger(__name__)
 
 

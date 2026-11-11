@@ -12,8 +12,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ExecutingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from dataclasses import dataclass, field
 
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope

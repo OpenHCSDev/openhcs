@@ -100,9 +100,7 @@ from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementsWindow
 from openhcs.pyqt_gui.windows.plate_viewer_window import PlateViewerWindow
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.config import UIConfig
-
+from openhcs.pyqt_gui.config import UIConfig
 logger = logging.getLogger(__name__)
 
 

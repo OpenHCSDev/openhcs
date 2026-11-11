@@ -7,10 +7,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-if TYPE_CHECKING:
-    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
-
-
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 class ZMQRuntimeObservationExportScope(ABC, metaclass=AutoRegisterMeta):
     """Amount of runtime evidence requested from an ordinary execution.
 

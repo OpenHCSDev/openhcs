@@ -17,10 +17,7 @@ from openhcs.runtime.viewer.viewer_protocol import (
 )
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import FijiStreamingConfig
-
-
+from openhcs.core.config.pipeline_config import FijiStreamingConfig
 @dataclass(frozen=True, slots=True)
 class FijiMacroExecutionRequest:
     """Exact file-group and variable ABI for one managed ImageJ macro run."""

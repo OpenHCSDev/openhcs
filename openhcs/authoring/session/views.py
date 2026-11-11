@@ -53,10 +53,7 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
-
+from openhcs.authoring.session.session import Session
 class SessionView(ABC, metaclass=AutoRegisterMeta):
     """One frozen state a client renders, and the operations it offers."""
 

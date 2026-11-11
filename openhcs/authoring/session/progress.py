@@ -38,9 +38,7 @@ from openhcs.core.progress.live_measurements import LiveMeasurementPayloadError
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactPayloadError
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 

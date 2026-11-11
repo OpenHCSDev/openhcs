@@ -70,14 +70,11 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.core.materialization.options import FileBundleOptions
 from openhcs.core.materialization.core import MaterializationSpec
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-
-
+from openhcs.core.callable.function_patterns import (
+FunctionInvocationKey,
+NormalizedFunctionItem,
+)
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 def _parse_sqlite_database_type(value: str) -> Literal["sqlite"]:
     if value.strip().casefold() != "sqlite":
         raise ValueError(f"OpenHCS ExportToDatabase supports SQLite, got {value!r}.")

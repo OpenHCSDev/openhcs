@@ -95,10 +95,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class DisplayMode(Enum):
     TEXT = "text"
     COLOR = "color"

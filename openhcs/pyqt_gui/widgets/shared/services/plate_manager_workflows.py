@@ -16,10 +16,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
-
+from openhcs.authoring.session.session import Session
 @dataclass(frozen=True, slots=True)
 class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
     """Applies an edited dataset document to the session."""

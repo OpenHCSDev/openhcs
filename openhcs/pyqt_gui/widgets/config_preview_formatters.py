@@ -6,10 +6,7 @@ from typing import TYPE_CHECKING
 
 from formbridge.utils.preview_formatters import check_enabled_field, resolve_preview_label
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import PartitionFilterConfig
-
-
+from openhcs.core.config.pipeline_config import PartitionFilterConfig
 def format_partition_filter_config(
     config: PartitionFilterConfig,
     _config_attr: str,

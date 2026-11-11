@@ -96,10 +96,7 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
 class IntensityChoice(Enum, NativeNumpyBackend):
     """CellProfiler CorrectIlluminationCalculate intensity source."""
 

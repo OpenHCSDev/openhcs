@@ -36,10 +36,7 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.runtime.fiji.fiji_macro_runtime import FijiMacroExecutionRequest
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 @composed_image_payload
 @numpy(contract=FlexibleContract)
 def run_imagej_macro(

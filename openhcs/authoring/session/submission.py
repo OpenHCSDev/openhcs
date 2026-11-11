@@ -30,12 +30,8 @@ from openhcs.constants.constants import OrchestratorExecFailed
 from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
-if TYPE_CHECKING:
-    from zmqruntime.messages import PongResponse
-
-    from openhcs.authoring.session.session import Session
-
-
+from zmqruntime.messages import PongResponse
+from openhcs.authoring.session.session import Session
 @dataclass(frozen=True, slots=True)
 class SubmittedExecution:
     """What the session submitted for one ordinary execution."""

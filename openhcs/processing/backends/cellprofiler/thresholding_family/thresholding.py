@@ -145,17 +145,15 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.axes.axis_declarations import Axis, StackAxis
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.specs import ArtifactSpecCollection
-    from openhcs.core.artifacts.relations import ArtifactSpecRelation
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 CELLPROFILER_BASIC_THRESHOLD_SMOOTHING_SCALE = 1.3488
 SCIPY_CONSTANT_BOUNDARY_MODE = "constant"
 CELLPROFILER_THRESHOLD_SMOOTHING_TRUNCATE_SIGMAS = 4.0

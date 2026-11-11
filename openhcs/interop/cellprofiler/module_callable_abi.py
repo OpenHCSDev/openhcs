@@ -30,31 +30,28 @@ from openhcs.core.pipeline.annotation_checks import (
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
 from openhcs.core.axes.axis_declarations import Axis
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
-    from openhcs.core.payload.runtime_array_values import RuntimeArrayData
-    from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-        RuntimeInputBindingRequest,
-    )
-    from openhcs.interop.cellprofiler.runtime.invocation import (
-        CellProfilerImageRequest,
-    )
-    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-    from openhcs.interop.cellprofiler.runtime.output_contexts import (
-        CellProfilerObjectLabelOutputSourceContext,
-    )
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-    from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-    from collections.abc import Callable
-    from openhcs.core.steps.function_runtime import (
-        RuntimeCallableArgument,
-        RuntimeCallableKwargs,
-        RuntimeFunctionOutput,
-    )
-
-
+from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+RuntimeInputBindingRequest,
+)
+from openhcs.interop.cellprofiler.runtime.invocation import (
+CellProfilerImageRequest,
+)
+from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
+from openhcs.interop.cellprofiler.runtime.output_contexts import (
+CellProfilerObjectLabelOutputSourceContext,
+)
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
+from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
+from collections.abc import Callable
+from openhcs.core.steps.function_runtime import (
+RuntimeCallableArgument,
+RuntimeCallableKwargs,
+RuntimeFunctionOutput,
+)
 def _callable_return_slot_variants(annotation: Any) -> tuple[tuple[Any, ...], ...]:
     """Return statically declared positional return-slot variants."""
 

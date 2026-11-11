@@ -38,13 +38,11 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_reference import FunctionReference
-    from openhcs.runtime.zmq.zmq_execution_client import (
-        FunctionCatalogExecutionClient,
-        ZMQExecutionClient,
-    )
-
+from openhcs.core.callable.function_reference import FunctionReference
+from openhcs.runtime.zmq.zmq_execution_client import (
+FunctionCatalogExecutionClient,
+ZMQExecutionClient,
+)
 logger = logging.getLogger(__name__)
 
 

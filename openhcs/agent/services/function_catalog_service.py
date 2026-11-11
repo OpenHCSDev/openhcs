@@ -67,9 +67,7 @@ from openhcs.interop.cellprofiler.setting_names import setting_names
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_reference import FunctionReference
-
+from openhcs.core.callable.function_reference import FunctionReference
 MAX_FUNCTION_DETAIL_DOC_CHARS = 50000
 
 

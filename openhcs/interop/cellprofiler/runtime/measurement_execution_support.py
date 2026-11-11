@@ -48,13 +48,11 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-    from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import (
-        CellProfilerObjectMeasurementRowPolicy,
-        ObjectMeasurementInvocation,
-    )
-
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import (
+CellProfilerObjectMeasurementRowPolicy,
+ObjectMeasurementInvocation,
+)
 ObjectMeasurementBatchExecutor = Callable[
     [
         Callable[..., RuntimeFunctionOutput],

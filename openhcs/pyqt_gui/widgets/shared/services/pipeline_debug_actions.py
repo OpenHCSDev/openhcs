@@ -23,14 +23,11 @@ from openhcs.core.debug.debug_runtime import (
     ToggleDebugCommand,
 )
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
-    from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
-    from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
-        PipelineEditorDebugWorkflow,
-    )
-
-
+from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
+from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
+from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
+PipelineEditorDebugWorkflow,
+)
 @dataclass(frozen=True, slots=True)
 class DebugActionDisabledReason:
     """Agent/UI facing disabled reason for one debug action."""

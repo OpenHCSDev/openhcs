@@ -74,12 +74,9 @@ from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
     ObjectLabelDrivenPrimaryImageInputPolicy,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import NormalizedFunctionItem
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
-
+from openhcs.core.callable.function_patterns import NormalizedFunctionItem
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 @dataclass(frozen=True, slots=True)
 class ClassifiedImageOutput:
     """One active classified-image output owned by a single rule group."""

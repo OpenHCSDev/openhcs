@@ -25,9 +25,7 @@ from openhcs.core.execution.execution_state import ExecutionFailed
 from openhcs.constants.constants import OrchestratorCompileFailed, OrchestratorCompiled
 from openhcs.runtime.zmq.zmq_execution_signature import TransportValue
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 

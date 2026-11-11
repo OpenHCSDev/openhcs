@@ -20,11 +20,8 @@ from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 STRUCTURING_ELEMENT_SETTING_NAME = "Structuring element"
 DEFAULT_STRUCTURING_ELEMENT_SETTING = "disk,3"
 

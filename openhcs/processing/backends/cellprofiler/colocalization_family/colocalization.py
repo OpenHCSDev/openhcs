@@ -155,13 +155,10 @@ from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-
-
+from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
 @dataclass(frozen=True, slots=True)
 class ColocalizationThresholdMaskGroup:
     """One saved threshold-mask group from the serialized module settings."""

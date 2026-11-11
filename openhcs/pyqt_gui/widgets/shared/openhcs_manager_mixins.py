@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-if TYPE_CHECKING:
-    from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
-    from pyqt_reactive.widgets.shared.responsive_groupbox_title import (
-        ResponsiveGroupBoxTitle,
-    )
-
-
+from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
+from pyqt_reactive.widgets.shared.responsive_groupbox_title import (
+ResponsiveGroupBoxTitle,
+)
 class OpenHCSSingleRowActionManagerMixin:
     """Manager widgets whose button bar is rendered as one row."""
 

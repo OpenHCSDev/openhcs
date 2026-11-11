@@ -24,10 +24,7 @@ from formbridge.bridge.registry import (
 from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
-
+from openhcs.authoring.session.session import Session
 @dataclass(frozen=True, slots=True)
 class OpenHCSUiBridgeCompositionRoot:
     """Build a UI bridge service from registered provider sets."""

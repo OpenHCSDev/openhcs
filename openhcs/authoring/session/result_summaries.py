@@ -11,9 +11,7 @@ from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     consolidate_multi_plate_summaries,
 )
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 

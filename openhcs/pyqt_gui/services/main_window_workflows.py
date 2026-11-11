@@ -39,13 +39,11 @@ from openhcs.pyqt_gui.services.window_config import (
     WindowSpec,
 )
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.config import AgentUiBridgeConfig
-    from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-    from formbridge.bridge.server import UiBridgeControlServer
-    from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-
+from openhcs.pyqt_gui.config import AgentUiBridgeConfig
+from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
+from formbridge.bridge.server import UiBridgeControlServer
+from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 logger = logging.getLogger(__name__)
 
 

@@ -1108,7 +1108,6 @@ class StepPartitionFilterConfig(PartitionFilterConfig):
 
     # Override defaults for step-level configurations
     # partition_filter: Optional[Union[List[str], str, int]] = 1
-    pass
 
 
 @abbreviation("mat")
@@ -1227,24 +1226,20 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     @abstractmethod
     def port(self) -> TcpPort:
         """Port for streaming communication. Each streamer type has its own default."""
-        pass
 
 
     @classmethod
     @abstractmethod
     def port_from_config(cls, config) -> Optional[int]:
         """Read this streaming config type's port from an ObjectState-backed config."""
-        pass
 
     @abstractmethod
     def viewer_surface(self, source):
         """Return viewer transport/display/source surface for this source identity."""
-        pass
 
     @abstractmethod
     def streaming_viewer_surface(self, context):
         """Return viewer transport/display/source surface for a processing context."""
-        pass
 
     @abstractmethod
     def create_visualizer(
@@ -1254,7 +1249,6 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
         transport_config=None,
     ):
         """Create and return the appropriate visualizer for this streaming config."""
-        pass
 
     @classmethod
     def supported_config_keys(cls) -> tuple[str, ...]:

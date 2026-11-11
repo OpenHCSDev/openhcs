@@ -18,19 +18,16 @@ logger = logging.getLogger(__name__)
 class OperaPhenixXmlError(Exception):
     """Base exception for Opera Phenix XML parsing errors."""
 
-    pass
 
 
 class OperaPhenixXmlParseError(OperaPhenixXmlError):
     """Exception raised when parsing the XML file fails."""
 
-    pass
 
 
 class OperaPhenixXmlContentError(OperaPhenixXmlError):
     """Exception raised when the XML content is invalid or missing required elements."""
 
-    pass
 
 
 class OperaPhenixXmlParser:

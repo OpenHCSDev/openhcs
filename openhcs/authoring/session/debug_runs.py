@@ -21,9 +21,7 @@ from openhcs.core.debug.debug_runtime import (
 from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.core.debug.debug_runtime import WarmArtifactReplay
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 
