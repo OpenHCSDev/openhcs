@@ -1010,7 +1010,7 @@ class LocalWatershedSeedStrategy(WatershedSeedStrategy, NumbaNumpyDefaultBackend
         return markers.astype(np.int32, copy=False)
 
 
-class RegionalWatershedSeedStrategy(WatershedSeedStrategy):
+class RegionalWatershedSeedStrategy(WatershedSeedStrategy, NativeNumpyBackend):
     strategy_key = WatershedSeedMethod.REGIONAL
 
     def markers(
@@ -1031,7 +1031,7 @@ class RegionalWatershedSeedStrategy(WatershedSeedStrategy):
         return markers.astype(np.int32, copy=False)
 
 
-class ConnectedComponentsWatershedSeedStrategy(WatershedSeedStrategy):
+class ConnectedComponentsWatershedSeedStrategy(WatershedSeedStrategy, CentrosomeNumpyBackend):
     strategy_key = WatershedSeedMethod.CONNECTED_COMPONENTS
 
     def markers(
@@ -1607,19 +1607,11 @@ class LegacyWatershedBackendStrategy(
 class NumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory reference legacy watershed backend."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
     prefer_fast = False
 
 
-class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendStrategy):
+class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendStrategy, NativeNumpyBackend):
     """Centrosome provider using the absorbed CellProfiler reference semantics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = CentrosomeBackendProvider
-    is_default_backend = False
-
 
 class NumbaNumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory legacy watershed backend with required Numba acceleration."""
@@ -1655,11 +1647,6 @@ class MahotasCellProfiler4DistanceMarkerBackendStrategy(
     CellProfiler4DistanceMarkerBackendStrategy
 ):
     """Reference CellProfiler 4 marker backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def distance_markers(
         self,
         distance: np.ndarray,

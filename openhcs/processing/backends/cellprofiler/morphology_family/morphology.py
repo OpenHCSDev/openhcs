@@ -95,7 +95,7 @@ class CombineObjectsMethod(Enum, NumbaNumpyDefaultBackend):
     SEGMENT = "segment"
 
 
-class MaskObjectsOverlapHandling(Enum):
+class MaskObjectsOverlapHandling(Enum, NativeNumpyBackend):
     """CellProfiler MaskObjects overlap handling mode."""
 
     MASK = "keep_overlapping_region"
@@ -104,7 +104,7 @@ class MaskObjectsOverlapHandling(Enum):
     REMOVE_PERCENTAGE = "remove_depending_on_overlap"
 
 
-class MaskObjectsNumberingChoice(Enum):
+class MaskObjectsNumberingChoice(Enum, CentrosomeNumpyBackend):
     """CellProfiler MaskObjects output label numbering mode."""
 
     RENUMBER = "renumber"
@@ -2054,11 +2054,6 @@ class MorphologyBackendStrategy(
 
 class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     """Independent NumPy/SciPy/skimage morphology backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def connected_components(
         self, mask: np.ndarray, *, connectivity: int = 2
     ) -> tuple[np.ndarray, int]:
@@ -2281,11 +2276,6 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
 
 class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Compatibility provider backed by absorbed NumPy morphology semantics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = CentrosomeBackendProvider
-    is_default_backend = False
-
 
 class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Numba-accelerated NumPy morphology backend."""

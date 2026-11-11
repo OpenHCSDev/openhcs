@@ -55,6 +55,7 @@ from openhcs.interop.cellprofiler.module_measurement_features import (
     ShapeDescriptorFeature,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    NativeNumpyBackend,
     BackendProvider,
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
@@ -168,7 +169,7 @@ class IndexedObjectZernikeDescriptor:
         return None
 
 
-class ZernikeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfile):
+class ZernikeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfile, NativeNumpyBackend):
     """Zernike descriptor sparse tolerance owned by CellProfiler Zernike support."""
 
     profile_key = "cellprofiler_zernike_descriptor"
@@ -1107,8 +1108,6 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
 class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
     """CellProfiler-source Zernike backend for parity-sensitive measurements."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def shape_zernike_moments(

@@ -178,7 +178,7 @@ class CellProfilerThresholdAssignment(Enum, NumbaNumpyDefaultBackend):
     BACKGROUND = "Background"
 
 
-class CellProfilerAveragingMethod(Enum):
+class CellProfilerAveragingMethod(Enum, NativeNumpyBackend):
     """Closed CP robust-background center estimators."""
 
     MEAN = "Mean"
@@ -229,7 +229,7 @@ class CellProfilerThresholdMethod(CellProfilerEnumAttributeMixin, Enum):
         return GlobalThresholdSourceSelection(threshold_image, method_parameters)
 
 
-class CellProfilerOtsuMethod(Enum):
+class CellProfilerOtsuMethod(Enum, CentrosomeNumpyBackend):
     """Closed CP Otsu class-count selector."""
 
     TWO_CLASS = "Two classes"
@@ -886,11 +886,6 @@ class ThresholdDiagnosticsBackendStrategy(
 
 class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrategy, NumbaNumpyDefaultBackend):
     """Independent NumPy implementation of CellProfiler threshold diagnostics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def weighted_variance(
         self, image: np.ndarray, mask: np.ndarray, binary_image: np.ndarray
     ) -> float:
@@ -1501,11 +1496,6 @@ class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
     NumbaNumpyThresholdPrimitiveBackendStrategy
 ):
     """Compatibility provider backed by absorbed threshold primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = CentrosomeBackendProvider
-    is_default_backend = False
-
 
 def threshold_primitives(
     *, backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION
