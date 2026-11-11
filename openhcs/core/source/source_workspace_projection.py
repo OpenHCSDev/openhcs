@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from openhcs.core.dataset_sources.interfaces import MetadataHandler
 
-_registered_openhcs_metadata_handler_type = None
 
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
@@ -881,9 +880,8 @@ class WorkspaceSourceProjections:
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
-        OpenHCSMetadataHandler = _registered_openhcs_metadata_handler_type
-        if OpenHCSMetadataHandler is None:
-            return (self.metadata_handler,)
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)
         metadata_path = self.dataset_root / OpenHCSMetadataHandler.METADATA_FILENAME

@@ -52,7 +52,6 @@ from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
-_registered_RuntimeSliceProjection = None
 
 
 class RuntimeSliceProjectionDeclarationError(ValueError):
@@ -1559,7 +1558,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         output memory domain; it is used when no runtime-slice axis is declared.
         A context of None lets the runtime derive it from the step's outputs.
         """
-        projection = _registered_RuntimeSliceProjection.preserved_context_for_value(self)
+        from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+
+        projection = RuntimeSliceProjection.preserved_context_for_value(self)
         if projection is not None:
             return tuple(
                 (self.value_for_slice(projection.selected_plane(index)), None)

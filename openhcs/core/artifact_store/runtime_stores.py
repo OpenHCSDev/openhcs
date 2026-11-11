@@ -1272,7 +1272,3 @@ def _validate_overwrite(
         )
 
 
-import openhcs.core.artifacts.kinds as _ak
-
-_ak._registered_RuntimeArtifactLocation = RuntimeArtifactLocation
-_ak._registered_StoredRuntimeValue = StoredRuntimeValue

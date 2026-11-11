@@ -2762,6 +2762,3 @@ def join_measurement_tables_artifact(
     )
 
 
-import openhcs.core.measurements.runtime_measurements as _rm
-
-_rm._registered_shared_measurement_row_axis_domain = shared_measurement_row_axis_domain

@@ -41,8 +41,6 @@ from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
 
-_registered_RuntimeArtifactLocation = None
-_registered_StoredRuntimeValue = None
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -1331,8 +1329,7 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         from openhcs.constants.constants import Backend
 
         RuntimeValue = ArtifactType._runtime_value_type
-        RuntimeArtifactLocation = _registered_RuntimeArtifactLocation
-        StoredRuntimeValue = _registered_StoredRuntimeValue
+        from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
 
         if len(records) <= 1:
             return records
