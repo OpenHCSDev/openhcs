@@ -11,11 +11,11 @@ from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
-from openhcs.core.runtime_store.runtime_exports import (
+from openhcs.core.artifact_store.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
     runtime_export_failures,
@@ -28,7 +28,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     StoredRuntimeValue,

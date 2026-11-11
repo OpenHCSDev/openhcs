@@ -11,7 +11,7 @@ from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )
 from openhcs.core.measurements.measurement_dialect import RuntimeMeasurementLookupAliasCache
-from openhcs.core.runtime_store.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
+from openhcs.core.artifact_store.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
 from openhcs.processing.backends.cellprofiler.granularity import (
     GranularityImageSeriesCache,
 )

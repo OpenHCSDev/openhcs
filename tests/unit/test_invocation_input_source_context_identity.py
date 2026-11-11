@@ -27,8 +27,8 @@ from openhcs.core.callable.invocation_artifacts import unnamed_main_flow_artifac
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,

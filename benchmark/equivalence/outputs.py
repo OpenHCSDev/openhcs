@@ -20,10 +20,10 @@ from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
 )
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.source.source_bindings import (
     SourceArtifactRole,
 )

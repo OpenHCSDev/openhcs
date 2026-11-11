@@ -367,7 +367,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
     from openhcs.core.artifacts.kinds import SpecialArtifactType
     from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
     from openhcs.core.measurements.runtime_measurements import MeasurementTable
-    from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+    from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 
     monkeypatch.setattr(
         custom_manager, "get_data_file_path",

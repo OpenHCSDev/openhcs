@@ -13,13 +13,13 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeExecutionObservation,
 )
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionExpectation,
     RuntimeArtifactExecutionObservation,
     runtime_artifact_execution_failures,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.runtime_util.environment_provenance import RuntimeEnvironmentSnapshot
 

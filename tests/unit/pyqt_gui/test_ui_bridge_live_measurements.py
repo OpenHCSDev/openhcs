@@ -17,8 +17,8 @@ from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
     LiveMeasurementTablePreview,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
 )

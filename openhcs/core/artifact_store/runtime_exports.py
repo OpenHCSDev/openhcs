@@ -15,7 +15,7 @@ from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 

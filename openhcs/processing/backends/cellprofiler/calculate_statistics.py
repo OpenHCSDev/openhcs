@@ -30,7 +30,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementTableAxisProjection
+from openhcs.core.artifact_store.runtime_artifact_queries import MeasurementTableAxisProjection
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,

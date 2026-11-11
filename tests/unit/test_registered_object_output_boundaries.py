@@ -8,7 +8,7 @@ from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
+from openhcs.core.artifact_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,

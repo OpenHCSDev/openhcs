@@ -30,7 +30,7 @@ from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshotCachePayload,
     runtime_measurement_equivalence,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,

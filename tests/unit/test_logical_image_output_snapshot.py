@@ -19,10 +19,10 @@ from benchmark.equivalence.comparison import runtime_image_differences
 from benchmark.equivalence.images import RuntimeImageSnapshot
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.payload.runtime_image_values import ImageMaskDomain, ImagePayloadMetadata
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source.source_projection import (

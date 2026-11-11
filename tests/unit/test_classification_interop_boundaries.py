@@ -36,7 +36,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
@@ -46,7 +46,7 @@ from openhcs.core.measurements.runtime_measurements import (
 )
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelSet
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     PriorMeasurementArtifactInputModule,
 )

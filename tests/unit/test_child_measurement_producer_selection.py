@@ -126,8 +126,8 @@ def test_disabled_parent_means_add_no_measurement_inputs():
     assert contract.artifact_inputs.of_artifact_type(MeasurementsArtifactType) == ()
 
 
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput, RuntimeValueStore
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactInput, RuntimeValueStore
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,

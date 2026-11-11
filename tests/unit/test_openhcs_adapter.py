@@ -45,11 +45,11 @@ from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config.config_document import ConfigDocumentCodec
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.callable.function_step_transport import PipelineStepsDocument
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
 )
-from openhcs.core.runtime_store.runtime_exports import (
+from openhcs.core.artifact_store.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
 )

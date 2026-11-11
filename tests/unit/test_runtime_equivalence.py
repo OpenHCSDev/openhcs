@@ -46,7 +46,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementRowOwnership,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
@@ -71,11 +71,11 @@ from benchmark.equivalence.runtime import (
 from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence as _runtime_reference_artifact_equivalence,
 )
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
     runtime_records_by_axis,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
@@ -118,7 +118,7 @@ from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValu
 from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,

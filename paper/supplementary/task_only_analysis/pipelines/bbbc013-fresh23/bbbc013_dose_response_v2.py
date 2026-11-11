@@ -8,7 +8,7 @@ from openhcs.core.callable.callable_declarations import FunctionStepExecutionSco
 from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
 @dataclass(frozen=True)

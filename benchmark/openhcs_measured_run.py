@@ -30,7 +30,7 @@ from benchmark.contracts.run_artifacts import (
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.file_digest import sha256_file
 from openhcs.core.execution.execution_state import ExecutionOutputSummary
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION

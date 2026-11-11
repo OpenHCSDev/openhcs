@@ -16,10 +16,10 @@ from openhcs.core.measurements.measurement_feature_queries import MeasurementFea
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )

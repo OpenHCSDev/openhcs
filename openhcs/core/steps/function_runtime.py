@@ -46,12 +46,12 @@ from openhcs.core.payload.aligned_image_payload import (
 from openhcs.core.memory import (
     unstack_runtime_slices,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactInput,
     RuntimeArtifactLocation,
     replace_runtime_artifact_payload,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_output_matching import (
     split_runtime_output,
 )

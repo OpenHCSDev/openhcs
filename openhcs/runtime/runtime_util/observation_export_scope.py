@@ -87,7 +87,7 @@ class ExportRuntimeOutcomes(ZMQRuntimeObservationExportScope):
     def export(
         *, execution_bundle, execution_results, output_roots, server_environment, execution_id
     ):
-        from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+        from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
         from openhcs.runtime.zmq.zmq_execution_observation import (
             ZMQRuntimeExecutionOutcomeExport,
         )

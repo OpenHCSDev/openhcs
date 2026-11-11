@@ -68,7 +68,7 @@ from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
-from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
 from openhcs.core.source.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,

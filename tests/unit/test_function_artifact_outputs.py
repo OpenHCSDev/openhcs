@@ -49,7 +49,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField, MeasurementTable
 from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.callable.runtime_adapters import (

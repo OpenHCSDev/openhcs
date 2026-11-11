@@ -25,11 +25,11 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.axes.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
 from openhcs.core.execution.compiled_step_plan import RuntimeArtifactMaterializationPlan
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload, ImagePayloadMetadata,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_image_provenance import (

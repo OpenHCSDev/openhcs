@@ -80,7 +80,7 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticMeasurementsArtifactOutputMaterializationStrategy,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.payload.runtime_image_values import (
@@ -108,7 +108,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,

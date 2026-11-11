@@ -13,7 +13,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest

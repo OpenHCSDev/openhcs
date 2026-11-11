@@ -12,7 +12,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.runtime_store.runtime_exports import (
+from openhcs.core.artifact_store.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
     runtime_export_failures,

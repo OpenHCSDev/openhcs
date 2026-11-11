@@ -101,7 +101,7 @@ from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.execution.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,

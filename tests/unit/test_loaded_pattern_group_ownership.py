@@ -381,7 +381,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     )
     from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
     from openhcs.core.callable.runtime_adapters import runtime_adapter
-    from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+    from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
     from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
     request, _, payload = _fixture()

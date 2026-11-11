@@ -21,7 +21,7 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,

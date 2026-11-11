@@ -26,7 +26,7 @@ from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
 from openhcs.core.callable.callable_contract import CallableContract
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows
@@ -42,7 +42,7 @@ from openhcs.core.measurements.runtime_measurements import MeasurementScope, Mea
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.object_labels.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from openhcs.core.progress.types import ProgressContextPayload
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress
 
 
 class RuntimeArtifactPayloadError(ValueError):

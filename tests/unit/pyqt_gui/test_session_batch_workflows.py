@@ -42,8 +42,8 @@ from openhcs.core.progress.live_measurements import (
     LiveMeasurementTablePreview,
 )
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
-from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder

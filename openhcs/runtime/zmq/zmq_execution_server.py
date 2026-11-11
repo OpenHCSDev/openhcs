@@ -33,7 +33,7 @@ from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
-from openhcs.core.runtime_store.runtime_execution_validation import runtime_output_roots
+from openhcs.core.artifact_store.runtime_execution_validation import runtime_output_roots
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.runtime_util.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.runtime_util.import_authority import ImportRootEndpoint

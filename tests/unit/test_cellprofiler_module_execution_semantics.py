@@ -36,7 +36,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     object_label_dense_array,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,

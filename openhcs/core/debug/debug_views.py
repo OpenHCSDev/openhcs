@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openhcs.core.debug.debug_runtime import DebugSnapshot
 from openhcs.core.debug.debug_view_models import AvailableEmptySection, AvailableEmptyTable, DebugViewModel, DebugViewSectionDeclarationBase, DebugViewTableProjectionDeclarationBase, ReportedEmptySection
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
 
 
 class SummaryDebugViewSection(AvailableEmptySection, DebugViewSectionDeclarationBase):

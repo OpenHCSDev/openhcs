@@ -117,12 +117,12 @@ from openhcs.core.source.source_bindings import (
 from openhcs.core.steps.function_runtime import (
     PatternGroupData,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
     ErrorProgressStatus,

@@ -13,7 +13,7 @@ from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_native_shard_equivalence,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.payload.runtime_tabular_values import FieldSpec

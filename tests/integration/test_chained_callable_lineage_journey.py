@@ -29,7 +29,7 @@ from openhcs.core.orchestrator.execution_result import (
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactQuery
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
