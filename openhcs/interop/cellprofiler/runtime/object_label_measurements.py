@@ -67,7 +67,7 @@ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
 
     def measurement_tables(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         *,
         match_group: bool = True,
     ) -> tuple[MeasurementTable, ...]:
@@ -108,7 +108,7 @@ class RelationshipPlaneProjectionResolution:
         value: ObjectRelationship | RuntimeSliceAlignedValues[ObjectRelationship],
         *,
         label_plane_count: int,
-    ) -> "RelationshipPlaneProjectionResolution":
+    ) -> RelationshipPlaneProjectionResolution:
         """Project an explicitly composed relationship value onto label planes."""
         if isinstance(value, ObjectRelationship):
             return cls(
@@ -191,7 +191,7 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
 
     def measurement_query(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         *,
         label_domain: tuple[int, ...] | None = None,
     ) -> RuntimeObjectLabelMeasurementQuery:
@@ -210,7 +210,7 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
 
     def values(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
     ) -> tuple[np.ndarray, ...]:
         """Return object measurements aligned to this request's label planes."""
         label_domain = self.label_domain()
@@ -281,7 +281,7 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
 class RelationshipChildCountLabelMeasurement(ObjectLabelMeasurementSliceRequest):
     """Resolve label-aligned child-count vectors from relationship artifacts."""
 
-    adapter: "CellProfilerRuntimeAdapter"
+    adapter: CellProfilerRuntimeAdapter
     relationship_spec: ArtifactSpec
 
     @property

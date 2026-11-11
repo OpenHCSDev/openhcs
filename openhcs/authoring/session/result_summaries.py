@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def consolidate_batch_results(session: "Session") -> None:
+def consolidate_batch_results(session: Session) -> None:
     """Write one global summary over every completed dataset's summary."""
 
     config = session.global_config

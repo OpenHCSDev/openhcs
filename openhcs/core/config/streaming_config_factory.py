@@ -31,8 +31,8 @@ from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 class StreamingViewerSurface:
     """Viewer runtime, display, and source surface for one OpenHCS stream."""
 
-    runtime_config: "StreamingViewerRuntimeConfig"
-    display_config: "StreamingConfig"
+    runtime_config: StreamingViewerRuntimeConfig
+    display_config: StreamingConfig
     source: ViewerStreamSourceIdentity
 
     def viewer_stream_request(
@@ -96,7 +96,7 @@ class ViewerProcessLaunchConfig(WireMessage):
 
     def matches_existing_viewer(
         self,
-        active: "ViewerProcessLaunchConfig",
+        active: ViewerProcessLaunchConfig,
         *,
         owns_process: bool,
     ) -> bool:
@@ -114,7 +114,7 @@ class ViewerProcessLaunchConfig(WireMessage):
     def from_wire_mapping(
         cls,
         payload: Mapping[str, object],
-    ) -> "ViewerProcessLaunchConfig":
+    ) -> ViewerProcessLaunchConfig:
         """Rehydrate an exact launch declaration: every declared field is required."""
 
         missing = tuple(name.name for name in fields(cls) if name.name not in payload)
@@ -198,7 +198,7 @@ class StreamingConfigBehaviorMixin:
 
     def streaming_viewer_surface(
         self,
-        context: "ExecutingContext | None",
+        context: ExecutingContext | None,
     ) -> StreamingViewerSurface:
         if context is None:
             raise ValueError("Streaming viewer surface requires a ExecutingContext.")

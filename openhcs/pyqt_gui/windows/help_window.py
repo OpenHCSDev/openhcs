@@ -63,14 +63,14 @@ class KnowledgeDocumentSelection:
     def from_summary(
         cls,
         summary: KnowledgeBaseDocumentSummary,
-    ) -> "KnowledgeDocumentSelection":
+    ) -> KnowledgeDocumentSelection:
         return cls(document_id=summary.document_id)
 
     @classmethod
     def from_search_hit(
         cls,
         hit: KnowledgeBaseSearchHit,
-    ) -> "KnowledgeDocumentSelection":
+    ) -> KnowledgeDocumentSelection:
         return cls(
             document_id=hit.document.document_id,
             section_id=None if hit.section is None else hit.section.section_id,
@@ -85,7 +85,7 @@ class FunctionDocumentSelection:
     display_name: str
 
     @classmethod
-    def from_entry(cls, entry: FunctionCatalogEntry) -> "FunctionDocumentSelection":
+    def from_entry(cls, entry: FunctionCatalogEntry) -> FunctionDocumentSelection:
         return cls(
             function_id=entry.function_id,
             display_name=entry.name,

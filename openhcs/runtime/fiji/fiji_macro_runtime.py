@@ -55,7 +55,7 @@ class FijiMacroExecutionRequest:
         directory_variable: str,
         macro_variables: Mapping[str, str],
         input_images: tuple[np.ndarray, ...],
-    ) -> "FijiMacroExecutionRequest":
+    ) -> FijiMacroExecutionRequest:
         return cls(
             macro_path=Path(macro_path),
             input_filenames=input_filenames,
@@ -67,7 +67,7 @@ class FijiMacroExecutionRequest:
 
     def send(
         self,
-        config: "FijiStreamingConfig",
+        config: FijiStreamingConfig,
         *,
         timeout: float = 300.0,
     ) -> tuple[np.ndarray, ...]:

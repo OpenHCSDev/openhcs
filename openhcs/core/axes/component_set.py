@@ -26,14 +26,14 @@ class ComponentSet:
         self.components = tuple(normalized)
 
     @classmethod
-    def of(cls, components: Iterable[type[Axis]]) -> "ComponentSet":
+    def of(cls, components: Iterable[type[Axis]]) -> ComponentSet:
         return cls(tuple(components))
 
     @classmethod
     def collect(
         cls,
         *groups: Iterable[type[Axis] | None],
-    ) -> "ComponentSet":
+    ) -> ComponentSet:
         return cls(
             tuple(
                 component
@@ -44,11 +44,11 @@ class ComponentSet:
         )
 
     @classmethod
-    def default_variable(cls) -> "ComponentSet":
+    def default_variable(cls) -> ComponentSet:
         return cls(AxisFamily.active().default_variable())
 
     @classmethod
-    def default_group_by(cls) -> "ComponentSet":
+    def default_group_by(cls) -> ComponentSet:
         return cls(AxisFamily.active().default_group_by().grouping_axes())
 
     def __bool__(self) -> bool:
@@ -63,7 +63,7 @@ class ComponentSet:
     def as_tuple(self) -> tuple[type[Axis], ...]:
         return self.components
 
-    def variable(self) -> "ComponentSet":
+    def variable(self) -> ComponentSet:
         return ComponentSet(
             tuple(
                 component
@@ -72,7 +72,7 @@ class ComponentSet:
             )
         )
 
-    def excluding(self, *others: "ComponentSet") -> "ComponentSet":
+    def excluding(self, *others: ComponentSet) -> ComponentSet:
         excluded = frozenset(
             component for other in others for component in other.components
         )
@@ -82,7 +82,7 @@ class ComponentSet:
             )
         )
 
-    def intersection(self, other: "ComponentSet") -> "ComponentSet":
+    def intersection(self, other: ComponentSet) -> ComponentSet:
         return ComponentSet(
             tuple(component for component in self.components if component in other)
         )

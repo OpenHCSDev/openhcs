@@ -101,8 +101,8 @@ class RuntimeInvocationDomain(str, Enum):
     @classmethod
     def from_invocation(
         cls,
-        invocation: "CompiledFunctionInvocation",
-    ) -> "RuntimeInvocationDomain":
+        invocation: CompiledFunctionInvocation,
+    ) -> RuntimeInvocationDomain:
         stored_input_refs = frozenset(
             edge.spec.ref()
             for edge in invocation.artifact_input_edges
@@ -119,7 +119,7 @@ class RuntimeInvocationDomain(str, Enum):
     def from_invocations(
         cls,
         invocations: tuple["CompiledFunctionInvocation", ...],
-    ) -> "RuntimeInvocationDomain":
+    ) -> RuntimeInvocationDomain:
         if invocations and all(
             invocation.runtime_domain is cls.ARTIFACT_MANAGED
             for invocation in invocations
@@ -164,7 +164,7 @@ class FunctionInvocationKey:
     @classmethod
     def from_contract(
         cls, contract: CallableContract, group_key: FunctionGroupKey, position: int
-    ) -> "FunctionInvocationKey":
+    ) -> FunctionInvocationKey:
         return cls(
             function_name=contract.function_name,
             group_key=str(group_key),
@@ -243,7 +243,7 @@ class InvocationArtifactInputEdgePlan:
         invocation_sources: ArtifactSpecCollection,
         metadata_available: bool = False,
         source_binding_available: bool = False,
-    ) -> "InvocationArtifactInputEdgePlan":
+    ) -> InvocationArtifactInputEdgePlan:
         """Project one unstored source occurrence from its exact declarations."""
 
         main_flow_projection = cls.source_projection(
@@ -283,10 +283,10 @@ class InvocationArtifactInputEdgePlan:
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionCoreExecutor",
+        scope: FunctionCoreExecutor,
         primary_source_payload: object,
         *,
-        request: "RuntimeAdapterRequest | None" = None,
+        request: RuntimeAdapterRequest | None = None,
     ) -> object:
         """Admit pre-call input pixels through their exact compiled origin."""
         request = (
@@ -333,10 +333,10 @@ class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionCoreExecutor",
+        scope: FunctionCoreExecutor,
         primary_source_payload: object,
         *,
-        request: "RuntimeAdapterRequest | None" = None,
+        request: RuntimeAdapterRequest | None = None,
     ) -> object:
         return scope.invocation.artifact_parameter_value(self.spec)
 
@@ -439,7 +439,7 @@ class NormalizedFunctionPattern:
 
     def with_artifact_input_values(
         self, values_by_key: RuntimeKwargMap
-    ) -> "NormalizedFunctionPattern":
+    ) -> NormalizedFunctionPattern:
         """Inject this axis's metadata without rebuilding captured declarations."""
         return replace(
             self,
@@ -618,7 +618,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def with_device_assignment(
         self,
         assignment: FrameworkDeviceAssignment,
-    ) -> "CompiledFunctionInvocation":
+    ) -> CompiledFunctionInvocation:
         """Bind this immutable invocation at the compiler's placement boundary."""
         if self.contract.execution_scope is FunctionStepExecutionScope.PLATE:
             input_device_id = None
@@ -793,7 +793,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def with_artifact_input_edges(
         self,
         edges: Sequence[InvocationArtifactInputEdgePlan],
-    ) -> "CompiledFunctionInvocation":
+    ) -> CompiledFunctionInvocation:
         """Return this invocation with its exact compiled input-edge projections."""
 
         return replace(self, artifact_input_edges=tuple(edges))
@@ -885,12 +885,12 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def from_normalized_item(
         cls,
         item: NormalizedFunctionItem,
-        graph: "ArtifactGraph",
+        graph: ArtifactGraph,
         input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
-        path_resolver: "CompilationPathResolver | None",
-    ) -> "CompiledFunctionInvocation":
+        path_resolver: CompilationPathResolver | None,
+    ) -> CompiledFunctionInvocation:
         """Compile one graph-resolved item; the graph owns its contract and declarations."""
         artifact_selector = graph.invocation_declarations[item.key]
         artifact_input_plans = artifact_selector.select_plans(
@@ -1184,12 +1184,12 @@ class CompiledFunctionGroup:
         cls,
         normalized_group: NormalizedFunctionGroup,
         *,
-        graph: "ArtifactGraph",
+        graph: ArtifactGraph,
         input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
-        path_resolver: "CompilationPathResolver | None",
-    ) -> "CompiledFunctionGroup":
+        path_resolver: CompilationPathResolver | None,
+    ) -> CompiledFunctionGroup:
         """Compile an authored group through its graph-resolved invocations."""
         return cls(
             group_key=normalized_group.group_key,
@@ -1560,12 +1560,12 @@ def normalize_prepared_function_pattern(
 
 
 def compile_function_pattern(
-    graph: "ArtifactGraph",
+    graph: ArtifactGraph,
     input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
     output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
     *,
     runtime_parameter_bindings: Sequence[RuntimeParameterBinding] = (),
-    path_resolver: "CompilationPathResolver | None" = None,
+    path_resolver: CompilationPathResolver | None = None,
 ) -> CompiledFunctionPattern:
     """Compile a step's artifact graph into the runtime source of truth."""
     pattern = graph.pattern

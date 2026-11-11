@@ -202,7 +202,7 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
         filemanager: FileManager,
         pattern_format: str | None = None,
         source_bindings_config: SourceBindingsConfig | None = None,
-    ) -> "BioFormatsHandler":
+    ) -> BioFormatsHandler:
         return cls(
             filemanager,
             pattern_format=pattern_format,

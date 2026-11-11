@@ -71,7 +71,7 @@ class McpBootstrapFailurePayloadAuthority:
     """Authoritative projection for MCP bootstrap failure payloads."""
 
     @staticmethod
-    def from_failure(failure: "McpBootstrapFailure") -> McpBootstrapFailurePayload:
+    def from_failure(failure: McpBootstrapFailure) -> McpBootstrapFailurePayload:
         return McpBootstrapFailurePayload(
             schema_version=MCP_BOOTSTRAP_SCHEMA_VERSION,
             ok=False,
@@ -110,7 +110,7 @@ class McpBootstrapFailure:
         cls,
         exception: BaseException,
         phase: McpBootstrapFailurePhase,
-    ) -> "McpBootstrapFailure":
+    ) -> McpBootstrapFailure:
         return cls(
             phase=phase,
             exception_type=type(exception).__name__,
@@ -125,7 +125,7 @@ class McpBootstrapFailure:
 def build_bootstrap_failure_server(
     exception: BaseException,
     phase: McpBootstrapFailurePhase = McpBootstrapFailurePhase.BUILD_SERVER,
-) -> "FastMCP":
+) -> FastMCP:
     """Build a minimal MCP server that reports startup failure through health."""
     from mcp.server.fastmcp import FastMCP
 
@@ -146,10 +146,10 @@ def build_bootstrap_failure_server(
 
 
 def build_bootstrapped_server(
-    capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
     *,
-    main_thread_dispatcher: "McpMainThreadDispatcher | None" = None,
-) -> "FastMCP":
+    main_thread_dispatcher: McpMainThreadDispatcher | None = None,
+) -> FastMCP:
     """Build the full OpenHCS MCP server, or a fail-soft bootstrap server."""
     try:
         from openhcs.agent.capabilities import DesktopLocalCapabilitySurfaceProfile
@@ -177,7 +177,7 @@ MCP_SOCKET_IDLE_EXIT_ARGUMENT = "--idle-exit-seconds"
 
 
 def run_bootstrapped_server(
-    capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
     *,
     serve_transport: str = MCP_SERVE_TRANSPORT_STDIO,
     socket_path=None,
@@ -218,7 +218,7 @@ def run_bootstrapped_server(
 
 
 def _run_resident_socket_server(
-    capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
     *,
     socket_path=None,
     idle_exit_seconds: float | None = None,

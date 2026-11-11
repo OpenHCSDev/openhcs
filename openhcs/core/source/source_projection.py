@@ -73,7 +73,7 @@ class OpenHCSPlaneAddress:
         self,
         component: type[Axis],
         value: object,
-    ) -> "OpenHCSPlaneAddress":
+    ) -> OpenHCSPlaneAddress:
         """Return an address with one declared coordinate replaced."""
 
         self._components.value_for(component)
@@ -128,7 +128,7 @@ class OpenHCSPlaneAddress:
     def from_component_values(
         cls,
         component_values: Iterable[tuple[type[Axis], object]],
-    ) -> "OpenHCSPlaneAddress":
+    ) -> OpenHCSPlaneAddress:
         """Create an address from nominal OpenHCS component values."""
 
         return cls(component_values)
@@ -137,7 +137,7 @@ class OpenHCSPlaneAddress:
     def from_complete_source_metadata(
         cls,
         metadata: SourceMetadataMapping | None,
-    ) -> "OpenHCSPlaneAddress | None":
+    ) -> OpenHCSPlaneAddress | None:
         """Return one address only when every declared component is scalar."""
 
         if metadata is None:
@@ -171,7 +171,7 @@ class OpenHCSPlaneAddress:
         )
 
     @classmethod
-    def from_filename(cls, filename: str) -> "OpenHCSPlaneFilename | None":
+    def from_filename(cls, filename: str) -> OpenHCSPlaneFilename | None:
         family = AxisFamily.active()
         match = _plane_filename_pattern(family).match(Path(str(filename)).name)
         if match is None:
@@ -217,7 +217,7 @@ class SourceDatasetIdentity:
         object.__setattr__(self, "value", value)
 
     @classmethod
-    def for_root(cls, root: str | Path) -> "SourceDatasetIdentity":
+    def for_root(cls, root: str | Path) -> SourceDatasetIdentity:
         """Return the exact collection identity for one submitted source root."""
 
         return cls(absolute_source_path(root).as_uri())
@@ -264,7 +264,7 @@ class SourcePlaneStoreIdentity:
 
     def is_strictly_subsumed_by(
         self,
-        other: "SourcePlaneStoreIdentity",
+        other: SourcePlaneStoreIdentity,
     ) -> bool:
         """Return whether another store proves ownership of every container path."""
 
@@ -451,7 +451,7 @@ class SourcePlaneDataset:
     def aggregate(
         cls,
         datasets: tuple["SourcePlaneDataset", ...],
-    ) -> "SourcePlaneDataset":
+    ) -> SourcePlaneDataset:
         """Aggregate stores that declare one identical dataset identity."""
 
         if not datasets:

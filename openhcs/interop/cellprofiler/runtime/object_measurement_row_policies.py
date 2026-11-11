@@ -123,7 +123,7 @@ class CellProfilerObjectMeasurementRowPolicy(
     @classmethod
     def complete_table_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
         rows: ColumnarRows,
     ) -> ColumnarRows:
         """Complete raw table rows over the module's declared object domain."""
@@ -144,7 +144,7 @@ class CellProfilerObjectMeasurementRowPolicy(
     @classmethod
     def measurement_record_source_image_name(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
         rows: ColumnarRows,
     ) -> str | None:
         """Apply the row policy's table-level image ownership to direct records."""
@@ -527,7 +527,7 @@ class CellProfilerObjectMeasurementRowPolicy(
         self,
         *,
         label_payload: RuntimeCallableArgument,
-        projection: "ObjectMeasurementRowIdentityProjectionResult",
+        projection: ObjectMeasurementRowIdentityProjectionResult,
         object_identity: MeasurementObjectRowIdentity,
         object_id_field: str,
         axis_fields: Sequence[str],
@@ -671,7 +671,7 @@ class CellProfilerObjectMeasurementRowPolicy(
         self,
         rows: ColumnarRows,
         *,
-        schema: "ObjectMeasurementRowCompletionSchema",
+        schema: ObjectMeasurementRowCompletionSchema,
         object_identity: MeasurementObjectRowIdentity,
         label_payload: RuntimeCallableArgument,
     ) -> ColumnarRows | None:
@@ -713,7 +713,7 @@ class CellProfilerObjectMeasurementRowPolicy(
         rows: ColumnarRows,
         *,
         label_payload: RuntimeCallableArgument,
-    ) -> "ObjectMeasurementRowCompletionSchema":
+    ) -> ObjectMeasurementRowCompletionSchema:
         """Return row-completion schema after policy-specific identity projection."""
         schema = ObjectMeasurementRowCompletionSchema.from_fields(rows.fields)
         identity_axis_fields = self.row_identity_axis_fields(
@@ -728,11 +728,11 @@ class CellProfilerObjectMeasurementRowPolicy(
     def project_completion_rows(
         self,
         rows: ColumnarRows,
-        schema: "ObjectMeasurementRowCompletionSchema",
+        schema: ObjectMeasurementRowCompletionSchema,
         object_identity: MeasurementObjectRowIdentity,
         *,
         label_payload: RuntimeCallableArgument,
-    ) -> "ObjectMeasurementRowIdentityProjectionResult":
+    ) -> ObjectMeasurementRowIdentityProjectionResult:
         """Project emitted rows into this policy's object identity domain."""
         del label_payload
         projection = MeasurementObjectRowIdentityProjectionStrategy.for_enum_member(
@@ -752,7 +752,7 @@ class CellProfilerObjectMeasurementRowPolicy(
 
     @staticmethod
     def projected_rows_have_no_object_ids(
-        projection: "ObjectMeasurementRowIdentityProjectionResult",
+        projection: ObjectMeasurementRowIdentityProjectionResult,
     ) -> bool:
         return bool(projection.rows.row_count()) and (
             not projection.row_keys.has_object_ids()
@@ -760,8 +760,8 @@ class CellProfilerObjectMeasurementRowPolicy(
 
     def completion_axis_keys(
         self,
-        schema: "ObjectMeasurementRowCompletionSchema",
-        projection: "ObjectMeasurementRowIdentityProjectionResult",
+        schema: ObjectMeasurementRowCompletionSchema,
+        projection: ObjectMeasurementRowIdentityProjectionResult,
         *,
         label_payload: RuntimeCallableArgument,
     ) -> tuple[tuple[RuntimeCallableArgument, ...], ...]:
@@ -840,11 +840,11 @@ class DeclaredDomainCompactMeasuredObjectMeasurementRowPolicy(
     def project_completion_rows(
         self,
         source_rows: ColumnarRows,
-        schema: "ObjectMeasurementRowCompletionSchema",
+        schema: ObjectMeasurementRowCompletionSchema,
         object_identity: MeasurementObjectRowIdentity,
         *,
         label_payload: RuntimeCallableArgument,
-    ) -> "ObjectMeasurementRowIdentityProjectionResult":
+    ) -> ObjectMeasurementRowIdentityProjectionResult:
         """Project label IDs to ordinals from the declared label domain."""
         if object_identity is not MeasurementObjectRowIdentity.ROW_ORDINAL:
             return super().project_completion_rows(

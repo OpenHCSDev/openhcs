@@ -53,7 +53,7 @@ class DebugRunRequest:
 class DebugRuns:
     """Owns debug compile reuse, debug submission, worker controls and export."""
 
-    def __init__(self, session: "Session") -> None:
+    def __init__(self, session: Session) -> None:
         self._session = session
         self._compile_artifacts: dict[str, str] = {}
 

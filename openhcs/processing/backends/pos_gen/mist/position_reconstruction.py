@@ -25,11 +25,11 @@ def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
 
 
 def rebuild_positions_from_mst_gpu(
-    initial_positions: "cp.ndarray",  # type: ignore
+    initial_positions: cp.ndarray,  # type: ignore
     mst_edges: dict,
     num_tiles: int,
     anchor_tile_index: int = 0,
-) -> "cp.ndarray":  # type: ignore
+) -> cp.ndarray:  # type: ignore
     """
     Rebuild tile positions from MST edges using GPU operations.
 
@@ -112,11 +112,11 @@ def rebuild_positions_from_mst_gpu(
 
 
 def build_mst_gpu(
-    connection_from: "cp.ndarray",  # type: ignore
-    connection_to: "cp.ndarray",  # type: ignore
-    connection_dx: "cp.ndarray",  # type: ignore
-    connection_dy: "cp.ndarray",  # type: ignore
-    connection_quality: "cp.ndarray",  # type: ignore
+    connection_from: cp.ndarray,  # type: ignore
+    connection_to: cp.ndarray,  # type: ignore
+    connection_dx: cp.ndarray,  # type: ignore
+    connection_dy: cp.ndarray,  # type: ignore
+    connection_quality: cp.ndarray,  # type: ignore
     num_tiles: int,
 ) -> dict:
     """

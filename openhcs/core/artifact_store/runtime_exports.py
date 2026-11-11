@@ -43,7 +43,7 @@ class RuntimeExportExpectation:
     def from_output_specs(
         cls,
         output_specs: Sequence[ArtifactSpec],
-    ) -> "RuntimeExportExpectation":
+    ) -> RuntimeExportExpectation:
         specs = tuple(output_specs)
         for spec in specs:
             if not isinstance(spec, ArtifactSpec):
@@ -138,7 +138,7 @@ class RuntimeExportObservation:
         output_root: Path,
         *,
         outputs: StepExecutionObservation = StepExecutionObservation.empty(),
-    ) -> "RuntimeExportObservation":
+    ) -> RuntimeExportObservation:
         """Build an export observation from one runtime output root."""
         return cls.from_output_roots((Path(output_root),), outputs=outputs)
 
@@ -148,7 +148,7 @@ class RuntimeExportObservation:
         output_roots: tuple[Path, ...],
         *,
         outputs: StepExecutionObservation = StepExecutionObservation.empty(),
-    ) -> "RuntimeExportObservation":
+    ) -> RuntimeExportObservation:
         """Build an export observation from compiled runtime output roots."""
         roots = tuple(dict.fromkeys(Path(root) for root in output_roots))
         return cls.from_output_paths(_output_files_from_roots(roots), outputs=outputs)
@@ -159,7 +159,7 @@ class RuntimeExportObservation:
         output_paths: Sequence[str | Path],
         *,
         outputs: StepExecutionObservation = StepExecutionObservation.empty(),
-    ) -> "RuntimeExportObservation":
+    ) -> RuntimeExportObservation:
         """Build an export observation from exact contract-owned output paths."""
 
         output_files = tuple(
@@ -204,7 +204,7 @@ class RuntimeExportObservation:
             outputs=outputs,
         )
 
-    def for_execution_axis(self, axis_id: str) -> "RuntimeExportObservation":
+    def for_execution_axis(self, axis_id: str) -> RuntimeExportObservation:
         """Select files from actual artifact scope or exporter-owned numbering."""
         scoped_paths = {
             Path(location.path)
@@ -238,7 +238,7 @@ class RuntimeExportObservation:
     def with_runtime_artifact_tables(
         self,
         runtime_records_by_axis: Mapping[str, tuple[StoredRuntimeValue, ...]],
-    ) -> "RuntimeExportObservation":
+    ) -> RuntimeExportObservation:
         """Return this observation scoped to table files owned by runtime artifacts."""
         table_outputs = tuple(
             dict.fromkeys(

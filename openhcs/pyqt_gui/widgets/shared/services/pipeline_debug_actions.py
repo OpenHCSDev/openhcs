@@ -171,31 +171,31 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return declaration
 
     @classmethod
-    def label_for(cls, context: "DebugSessionProjectionContext") -> str:
+    def label_for(cls, context: DebugSessionProjectionContext) -> str:
         del context
         return cls.label
 
     @classmethod
-    def tooltip_for(cls, context: "DebugSessionProjectionContext") -> str:
+    def tooltip_for(cls, context: DebugSessionProjectionContext) -> str:
         del context
         return cls.tooltip
 
     @classmethod
     def availability_override(
         cls,
-        context: "DebugSessionProjectionContext",
+        context: DebugSessionProjectionContext,
     ) -> DebugActionDisabledReason | None:
         del context
         return None
 
     @classmethod
     @abstractmethod
-    def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
+    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
         """Invoke this action through the nominal editor workflow."""
 
     @classmethod
     @abstractmethod
-    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
         """Emit this action's toolbar signal."""
 
 
@@ -209,11 +209,11 @@ class PipelineDebugCommandActionDeclaration(PipelineDebugActionDeclarationBase):
         return cls.require_identity()
 
     @classmethod
-    def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
+    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
         workflow.run_command(cls.command_type())
 
     @classmethod
-    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
         toolbar.command_requested.emit(DebugCommand(cls.command_type()))
 
 
@@ -225,11 +225,11 @@ class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase
     confirmation_required: ClassVar[bool] = False
 
     @classmethod
-    def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
+    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
         workflow.show_runtime_inspection()
 
     @classmethod
-    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
         toolbar.runtime_inspection_requested.emit()
 
 
@@ -239,7 +239,7 @@ class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
     tooltip = "Debug toolbar active. Use Debug, Step, Pause, Restart, or Inspect."
 
     @classmethod
-    def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
+    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
         workflow.show_status(cls.tooltip)
 
 
@@ -251,7 +251,7 @@ class StartOrContinueDebugAction(PipelineDebugCommandActionDeclaration):
     tooltip = "Start or continue debug execution for the selected plate"
 
     @classmethod
-    def label_for(cls, context: "DebugSessionProjectionContext") -> str:
+    def label_for(cls, context: DebugSessionProjectionContext) -> str:
         if context.active_session is not None:
             return "Continue"
         target = context.target
@@ -278,7 +278,7 @@ class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
     @classmethod
     def availability_override(
         cls,
-        context: "DebugSessionProjectionContext",
+        context: DebugSessionProjectionContext,
     ) -> DebugActionDisabledReason | None:
         if not context.pause_boundaries.has_pause_boundaries:
             return DebugActionDisabledReason(
@@ -328,7 +328,7 @@ class StopDebugSessionAction(PipelineDebugCommandActionDeclaration):
     enabled_during_pending_execution = True
 
     @classmethod
-    def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
+    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
         workflow.stop_command()
 
 

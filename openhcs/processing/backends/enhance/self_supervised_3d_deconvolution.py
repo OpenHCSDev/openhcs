@@ -34,12 +34,12 @@ class Deconvolution3DVolumeProjection:
     """Project 3D deconvolution inputs to [1, 1, D, H, W]."""
 
     original_ndim: int
-    volume: "torch.Tensor"
+    volume: torch.Tensor
 
     @classmethod
     def from_volume(
-        cls, image_volume: "torch.Tensor"
-    ) -> "Deconvolution3DVolumeProjection":
+        cls, image_volume: torch.Tensor
+    ) -> Deconvolution3DVolumeProjection:
         if image_volume.ndim == 3:
             return cls(
                 original_ndim=3,
@@ -51,7 +51,7 @@ class Deconvolution3DVolumeProjection:
             return cls(original_ndim=5, volume=image_volume.float())
         raise ValueError(f"Unsupported image_volume ndim: {image_volume.ndim}")
 
-    def restore(self, deconvolved: "torch.Tensor") -> "torch.Tensor":
+    def restore(self, deconvolved: torch.Tensor) -> torch.Tensor:
         if self.original_ndim == 3:
             return deconvolved.squeeze(0).squeeze(0)
         if self.original_ndim == 4:

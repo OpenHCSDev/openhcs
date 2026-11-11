@@ -300,7 +300,7 @@ class PipelineFunctionReferences:
             )
 
     @classmethod
-    def reference_step(cls, step: "AbstractStep") -> "AbstractStep":
+    def reference_step(cls, step: AbstractStep) -> AbstractStep:
         """Return a FunctionStep copy with referenced function specs."""
 
         if not isinstance(step, FunctionStep):

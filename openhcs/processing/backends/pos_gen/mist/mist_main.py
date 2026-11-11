@@ -131,8 +131,8 @@ def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
 
 
 def _global_optimization_gpu_only(
-    positions: "cp.ndarray",  # type: ignore
-    tile_grid: "cp.ndarray",  # type: ignore
+    positions: cp.ndarray,  # type: ignore
+    tile_grid: cp.ndarray,  # type: ignore
     num_rows: int,
     num_cols: int,
     expected_dx: float,
@@ -163,7 +163,7 @@ def _global_optimization_gpu_only(
     # NIST Algorithm 9: Stage model parameters
     overlap_uncertainty_percent: float = 3.0,  # NIST default: 3% overlap uncertainty (pou)
     outlier_threshold_multiplier: float = 1.5,  # NIST Algorithm 16: 1.5 × IQR for outlier detection
-) -> "cp.ndarray":  # type: ignore
+) -> cp.ndarray:  # type: ignore
     """
     GPU-only global optimization using simplified MST approach.
     """
@@ -563,7 +563,7 @@ def _global_optimization_gpu_only(
 @artifact_outputs("positions")
 @cupy_func
 def mist_compute_tile_positions(
-    image_stack: "cp.ndarray",  # type: ignore
+    image_stack: cp.ndarray,  # type: ignore
     grid_dimensions: Tuple[int, int],
     *,
     # === Core Algorithm Parameters ===

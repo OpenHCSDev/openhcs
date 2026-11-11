@@ -102,7 +102,7 @@ class CellProfilerMeasurementFeatureKind(ABC, metaclass=AutoRegisterMeta):
         return None
 
     @classmethod
-    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+    def feature(cls, object_name: str) -> CellProfilerMeasurementFeature:
         """Return the feature this convention names for ``object_name``."""
         raise TypeError(f"{cls.__name__} does not name features after object sets.")
 
@@ -121,7 +121,7 @@ class ObjectCountFeatureName(CellProfilerMeasurementFeatureKind):
         return feature_name[len(cls.prefix) :].strip() or None
 
     @classmethod
-    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+    def feature(cls, object_name: str) -> CellProfilerMeasurementFeature:
         normalized = object_name.strip()
         if not normalized:
             raise ValueError("Object-count feature requires a non-empty object name.")
@@ -140,7 +140,7 @@ class ChildCountFeatureName(CellProfilerMeasurementFeatureKind):
         return ChildCountFeatureDeclaration.from_feature_name(feature_name)
 
     @classmethod
-    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+    def feature(cls, object_name: str) -> CellProfilerMeasurementFeature:
         return CellProfilerMeasurementFeature(
             name=ChildCountFeatureDeclaration.feature_name(object_name),
             kind=cls,
@@ -163,7 +163,7 @@ class CellProfilerMeasurementFeature:
     object_name: str | None = None
 
     @classmethod
-    def parse(cls, feature_name: str | None) -> "CellProfilerMeasurementFeature | None":
+    def parse(cls, feature_name: str | None) -> CellProfilerMeasurementFeature | None:
         """Parse a CellProfiler feature name into its convention and object."""
         if feature_name is None:
             return None

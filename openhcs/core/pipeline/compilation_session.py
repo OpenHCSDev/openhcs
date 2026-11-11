@@ -35,13 +35,13 @@ class CompilationDatasetScope:
             )
 
     @classmethod
-    def from_context(cls, context: CompilingContext) -> "CompilationDatasetScope":
+    def from_context(cls, context: CompilingContext) -> CompilationDatasetScope:
         if context.dataset_root is None:
             raise ValueError("Compilation plate scope requires context.dataset_root.")
         return cls(Path(context.dataset_root))
 
     @classmethod
-    def from_path(cls, dataset_root: Path | str | None) -> "CompilationDatasetScope":
+    def from_path(cls, dataset_root: Path | str | None) -> CompilationDatasetScope:
         if dataset_root is None:
             raise ValueError("Compilation plate scope requires a plate path.")
         return cls(Path(dataset_root))
@@ -382,8 +382,8 @@ class CompilationSession:
 
     context: CompilingContext
     pipeline: ResolvedPipelineDefinition
-    orchestrator: "PipelineOrchestrator"
-    global_config: "GlobalPipelineConfig"
+    orchestrator: PipelineOrchestrator
+    global_config: GlobalPipelineConfig
     plans: MutableMapping[int, CompiledStepPlan]
     source_workspace_projection: VirtualWorkspaceSourceProjection
     path_resolver: CompilationPathResolver | None = None
@@ -401,14 +401,14 @@ class CompilationSession:
         *,
         context: CompilingContext,
         pipeline: ResolvedPipelineDefinition,
-        orchestrator: "PipelineOrchestrator",
-        global_config: "GlobalPipelineConfig",
+        orchestrator: PipelineOrchestrator,
+        global_config: GlobalPipelineConfig,
         source_workspace_projection: VirtualWorkspaceSourceProjection | None = None,
         path_resolver: CompilationPathResolver | None = None,
         metadata_writer: bool = False,
         dataset_root: Path | None = None,
         is_zmq_execution: bool = False,
-    ) -> "CompilationSession":
+    ) -> CompilationSession:
         if context.step_plans is None:
             raise ValueError("CompilationSession requires context.step_plans.")
         return cls(

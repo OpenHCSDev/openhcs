@@ -46,7 +46,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _get_all_overlapping_pairs_gpu(positions: "cp.ndarray", tile_shape: tuple) -> list:  # type: ignore
+def _get_all_overlapping_pairs_gpu(positions: cp.ndarray, tile_shape: tuple) -> list:  # type: ignore
     """
     GPU-accelerated detection of ALL overlapping tile pairs with edge directions.
 
@@ -167,7 +167,7 @@ def _get_all_overlapping_pairs_gpu(positions: "cp.ndarray", tile_shape: tuple) -
 
 def _create_batch_fixed_masks_gpu(
     tile_shape: tuple, all_edge_overlaps: list, margin_ratio: float = 0.1
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     VECTORIZED: Create all fixed blend masks at once for 2-3x speedup.
     Uses batch operations instead of individual mask creation.
@@ -222,7 +222,7 @@ def _create_batch_fixed_masks_gpu(
 
 def _create_batch_dynamic_masks_gpu(
     tile_shape: tuple, all_edge_overlaps: list, overlap_fraction: float = 1.0
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     VECTORIZED: Create all dynamic blend masks at once for 2-3x speedup.
     """
@@ -271,7 +271,7 @@ def _create_batch_dynamic_masks_gpu(
 
 def _create_dynamic_blend_mask_gpu(
     tile_shape: tuple, edge_overlaps: dict, overlap_fraction: float = 1.0
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     GPU version of dynamic blend mask using WORKING logic from CPU version.
     CRITICAL: Uses endpoint=False and same logic as working CPU version.
@@ -320,12 +320,12 @@ def _create_dynamic_blend_mask_gpu(
 @artifact_inputs("positions")  # The input name is "positions"
 @cupy_func(contract=VolumetricToSliceContract)
 def assemble_stack_cupy(
-    image_tiles: "cp.ndarray",  # type: ignore
+    image_tiles: cp.ndarray,  # type: ignore
     positions: Union[List[Tuple[float, float]], "cp.ndarray"],  # type: ignore
     blend_method: TileBlendMethod = TileBlendMethod.FIXED,
     fixed_margin_ratio: float = 0.1,
     overlap_blend_fraction: float = 1.0,
-) -> "cp.ndarray":  # type: ignore
+) -> cp.ndarray:  # type: ignore
     """
     GPU-accelerated assembly using WORKING logic from CPU version.
 

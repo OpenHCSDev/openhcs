@@ -71,12 +71,12 @@ class SessionView(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def state_of(cls, session: "Session") -> object: ...
+    def state_of(cls, session: Session) -> object: ...
 
     @classmethod
     def available_operations(
         cls,
-        session: "Session",
+        session: Session,
         selection: tuple[str, ...],
     ) -> tuple[type[SessionOperation], ...]:
         """Operations (as each slot resolves now) available for ``selection``."""
@@ -149,7 +149,7 @@ def output_relations(
 class DatasetActivity:
     """One row's work, read from the session's runtime state."""
 
-    session: "Session"
+    session: Session
     scope_id: str
 
     @property
@@ -238,7 +238,7 @@ class DatasetListView(SessionView):
     )
 
     @classmethod
-    def state_of(cls, session: "Session") -> DatasetListState:
+    def state_of(cls, session: Session) -> DatasetListState:
         rows = tuple(session.dataset_rows())
         relations = output_relations(rows, session.global_config.path_planning_config)
         selected = set(session.selected_scope_ids)
@@ -260,7 +260,7 @@ class DatasetListView(SessionView):
 
     @staticmethod
     def row_state(
-        session: "Session",
+        session: Session,
         row: DatasetRow,
         relation: OutputRelation,
         selected: bool,
@@ -358,7 +358,7 @@ class PipelineStepsView(SessionView):
     @classmethod
     def state_of(
         cls,
-        session: "Session",
+        session: Session,
         scope_id: str,
         selected_step_scope_ids: tuple[str, ...] = (),
     ) -> PipelineStepsState:

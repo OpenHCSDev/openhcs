@@ -124,7 +124,7 @@ class RuntimeArtifactExecutionExpectation:
     def from_executed_contexts(
         cls,
         executed_contexts: Mapping[str, ExecutingContext],
-    ) -> "RuntimeArtifactExecutionExpectation":
+    ) -> RuntimeArtifactExecutionExpectation:
         """Derive execution expectations from compiler-owned output plans."""
         output_specs = tuple(
             dict.fromkeys(
@@ -294,7 +294,7 @@ class RuntimeArtifactExecutionObservation:
         execution_contexts: Mapping[str, ExecutingContext],
         *,
         runtime_observations: Sequence[RuntimeExecutionObservation],
-    ) -> "RuntimeArtifactExecutionObservation":
+    ) -> RuntimeArtifactExecutionObservation:
         identity_policies = frozenset(
             context.source_image_set_identity_policy
             for context in execution_contexts.values()

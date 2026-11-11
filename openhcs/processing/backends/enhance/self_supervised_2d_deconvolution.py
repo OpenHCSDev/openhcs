@@ -34,10 +34,10 @@ class Deconvolution2DImageProjection:
     """Project 2D deconvolution inputs to [1, 1, H, W]."""
 
     original_ndim: int
-    image: "torch.Tensor"
+    image: torch.Tensor
 
     @classmethod
-    def from_image(cls, image: "torch.Tensor") -> "Deconvolution2DImageProjection":
+    def from_image(cls, image: torch.Tensor) -> Deconvolution2DImageProjection:
         if image.ndim == 2:
             return cls(original_ndim=2, image=image.unsqueeze(0).unsqueeze(0).float())
         if image.ndim == 3:
@@ -46,7 +46,7 @@ class Deconvolution2DImageProjection:
             return cls(original_ndim=4, image=image.float())
         raise ValueError(f"Unsupported image ndim: {image.ndim}")
 
-    def restore(self, deconvolved: "torch.Tensor") -> "torch.Tensor":
+    def restore(self, deconvolved: torch.Tensor) -> torch.Tensor:
         if self.original_ndim == 2:
             return deconvolved.squeeze(0).squeeze(0)
         if self.original_ndim == 3:

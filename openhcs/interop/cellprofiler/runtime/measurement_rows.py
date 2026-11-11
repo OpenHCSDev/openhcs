@@ -239,7 +239,7 @@ class CellProfilerResultMeasurementRows(ABC):
         cls,
         module_type: type[object],
         request: object,
-    ) -> "CellProfilerResultMeasurementRows":
+    ) -> CellProfilerResultMeasurementRows:
         """Bind one module-owned projector to its exact runtime request."""
 
     @abstractmethod

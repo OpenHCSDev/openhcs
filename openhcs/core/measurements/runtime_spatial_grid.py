@@ -34,7 +34,7 @@ class SpatialGridAxis:
     origin: float
     locations: tuple[float, ...] | None = None
 
-    def normalized(self, count: int, field_name: str) -> "SpatialGridAxis":
+    def normalized(self, count: int, field_name: str) -> SpatialGridAxis:
         """Return this axis with explicit center locations for every index."""
         spacing = float(self.spacing)
         origin = float(self.origin)
@@ -335,9 +335,9 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
 
     def measurement_table(
         self,
-        dialect: "MeasurementDialect",
+        dialect: MeasurementDialect,
         slice_indices: tuple[int, ...] | None = None,
-    ) -> "MeasurementTable":
+    ) -> MeasurementTable:
         """Expose this grid's current geometry as image measurements."""
 
         row = {

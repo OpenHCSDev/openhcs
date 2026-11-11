@@ -282,7 +282,7 @@ class StreamComponentMessageExtraPayload(ViewerComponentMetadataPayload):
         *,
         component_axis_semantics: ViewerComponentAxisSemantics,
         component_names_metadata: StreamComponentNameMetadata,
-    ) -> "StreamComponentMessageExtraPayload":
+    ) -> StreamComponentMessageExtraPayload:
         return cls(
             component_names_metadata=component_names_metadata,
             component_value_domain=component_axis_semantics.to_wire_mapping(),
@@ -300,7 +300,7 @@ class StreamViewerComponentMetadataProjector:
         cls,
         component_order: Iterable[str],
         item_fields: Mapping[str, ViewerWireValue],
-    ) -> "StreamViewerComponentMetadataProjector":
+    ) -> StreamViewerComponentMetadataProjector:
         """Exclude components represented by a payload-local plane axis."""
 
         plane_component_values = item_fields.get(
@@ -407,7 +407,7 @@ class StreamSourceComponentMetadataItems:
     def from_values(
         cls,
         values: Iterable[StreamComponentMetadata],
-    ) -> "StreamSourceComponentMetadataItems":
+    ) -> StreamSourceComponentMetadataItems:
         return cls(tuple(values))
 
     @classmethod
@@ -416,7 +416,7 @@ class StreamSourceComponentMetadataItems:
         metadata: ImagePayloadMetadata,
         *,
         fallback_source_identity: SourceImageIdentity | None = None,
-    ) -> "StreamSourceComponentMetadataItems":
+    ) -> StreamSourceComponentMetadataItems:
         """Observe exact retained planes, not only their common scalar address.
 
         These are domain observations, not one route address per emitted image.
@@ -442,7 +442,7 @@ class StreamSourceComponentMetadataItems:
         identities: Iterable[SourceImageIdentity],
         *,
         fallback_source_identity: SourceImageIdentity | None = None,
-    ) -> "StreamSourceComponentMetadataItems":
+    ) -> StreamSourceComponentMetadataItems:
         return cls.from_values(
             (
                 identity.with_missing_from(fallback_source_identity)
@@ -492,7 +492,7 @@ class StreamSourceComponentMetadataItems:
 
     def include_observed_values(
         self,
-        name_map: "StreamComponentNameMap",
+        name_map: StreamComponentNameMap,
         component_order: tuple[str, ...],
     ) -> None:
         for metadata in self.values:
@@ -539,7 +539,7 @@ class StreamMetadataRoot:
         cls,
         source: ViewerStreamSourceIdentity,
         root: Path,
-    ) -> "StreamMetadataRoot":
+    ) -> StreamMetadataRoot:
         source.microscope_handler.metadata_handler.find_metadata_file(root)
         return cls(source=source, root=root)
 
@@ -573,7 +573,7 @@ class StreamMetadataRootAuthority:
     candidate_roots: tuple[Path, ...]
 
     @classmethod
-    def from_context(cls, context: ExecutingContext) -> "StreamMetadataRootAuthority":
+    def from_context(cls, context: ExecutingContext) -> StreamMetadataRootAuthority:
         roots = []
         for value in (
             context.dataset_root,
@@ -596,7 +596,7 @@ class StreamMetadataRootAuthority:
     def from_source_identity(
         cls,
         source: ViewerStreamSourceIdentity,
-    ) -> "StreamMetadataRootAuthority":
+    ) -> StreamMetadataRootAuthority:
         roots = ()
         if source.plate_path is not None:
             roots = (Path(source.plate_path),)
@@ -638,7 +638,7 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
         context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
-    ) -> "StreamComponentDomainProvider":
+    ) -> StreamComponentDomainProvider:
         for provider_type in cls.__registry__.values():
             if provider_type.supports(component):
                 return provider_type.build_for_component(
@@ -657,7 +657,7 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
         context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
-    ) -> "StreamComponentDomainProvider":
+    ) -> StreamComponentDomainProvider:
         del context
         return cls(
             component=component,
@@ -695,7 +695,7 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
         context: ExecutingContext,
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
-    ) -> "StreamExecutionAxisDomainProvider":
+    ) -> StreamExecutionAxisDomainProvider:
         if context.execution_runtime is None:
             raise RuntimeError(
                 "Streaming component domain requires ExecutingContext.execution_runtime "
@@ -752,7 +752,7 @@ class StreamComponentDomainProviders:
         context: ExecutingContext,
         layout: ViewerComponentLayout,
         metadata_roots: tuple[StreamMetadataRoot, ...],
-    ) -> "StreamComponentDomainProviders":
+    ) -> StreamComponentDomainProviders:
         return cls(
             tuple(
                 StreamComponentDomainProvider.for_component(
@@ -792,7 +792,7 @@ class StreamComponentMessageExtraAuthority:
         *,
         context: ExecutingContext,
         source_metadata_items: StreamSourceComponentMetadataItems,
-    ) -> "StreamComponentMessageExtraAuthority":
+    ) -> StreamComponentMessageExtraAuthority:
         viewer_surface = cls._scope_to_complete_components(
             viewer_surface,
             source_metadata_items,
@@ -816,7 +816,7 @@ class StreamComponentMessageExtraAuthority:
         viewer_surface: StreamingViewerSurface,
         *,
         source_metadata_items: StreamSourceComponentMetadataItems,
-    ) -> "StreamComponentMessageExtraAuthority":
+    ) -> StreamComponentMessageExtraAuthority:
         viewer_surface = cls._scope_to_complete_components(
             viewer_surface,
             source_metadata_items,

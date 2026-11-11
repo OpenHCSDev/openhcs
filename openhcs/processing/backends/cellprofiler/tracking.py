@@ -131,7 +131,7 @@ class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPol
 
     explicit_row_ownership_required = True
 
-    def row_is_object_scoped(self, row: "RuntimeCallableArgument") -> bool:
+    def row_is_object_scoped(self, row: RuntimeCallableArgument) -> bool:
         row_mapping = measurement_row_mapping(row)
         return measurement_row_has_object_identity(row_mapping)
 
@@ -300,7 +300,7 @@ class TrackObjectsModule(
     @classmethod
     def measurement_record_source_image_name(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
         rows: ColumnarRows,
     ) -> None:
         """Keep mixed tracking rows independent of the current image channel."""
@@ -311,7 +311,7 @@ class TrackObjectsModule(
     @classmethod
     def complete_table_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
         rows: ColumnarRows,
     ) -> ColumnarRows:
         """Leave the empty raw-row branch to the nominal typed projector."""
@@ -379,7 +379,7 @@ class TrackObjectsModule(
         artifact_type: type[ArtifactType],
         output_position: int,
         block_position: int,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> str:
         """Preserve the callable-owned default identity for the retained image."""
 
@@ -516,7 +516,7 @@ class TrackObjectsModule(
         )
 
     @classmethod
-    def tracking_method(cls, module: "ModuleBlock") -> "TrackingMethod":
+    def tracking_method(cls, module: ModuleBlock) -> TrackingMethod:
         """Return the nominal tracking method declared by one module."""
 
         method = coerce_cellprofiler_enum(
@@ -529,7 +529,7 @@ class TrackObjectsModule(
     @classmethod
     def tracked_object_input(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         artifact_inputs: ArtifactSpecCollection,
     ) -> ArtifactSpec:
         """Return the tracked object artifact from its setting-owned role."""
@@ -595,9 +595,9 @@ class TrackObjectsModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
-        bound: "BoundModuleSettings",
-    ) -> "BoundModuleSettings":
+        module: ModuleBlock,
+        bound: BoundModuleSettings,
+    ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         tracking_method = cls.tracking_method(module)
         kwargs["tracking_method"] = tracking_method
@@ -874,7 +874,7 @@ class TrackObjectsResult(RuntimeOutputBundle):
         parent_relationship: DirectedObjectRelationshipPayload,
         save_color_coded_image: bool,
         display_mode: TrackingDisplayMode,
-    ) -> "TrackObjectsResult":
+    ) -> TrackObjectsResult:
         """Assemble the image and measurement ABI from completed tracking frames."""
         _apply_final_age_measurements(frame_results)
         object_measurements = []
@@ -1185,7 +1185,7 @@ class TrackObjectsMethodStrategy(
             )
 
     @classmethod
-    def for_method(cls, method: TrackingMethod) -> "TrackObjectsMethodStrategy":
+    def for_method(cls, method: TrackingMethod) -> TrackObjectsMethodStrategy:
         return cls.for_enum_member(method)
 
     def track(

@@ -62,7 +62,7 @@ class DatasetPipelineRequest:
     def with_config_params(
         self,
         config_params: dict[str, TransportValue] | None,
-    ) -> "DatasetPipelineRequest":
+    ) -> DatasetPipelineRequest:
         return replace(self, config_params=config_params)
 
     def submission(
@@ -107,7 +107,7 @@ class CompiledDataset:
 
 
 async def submit_compile(
-    client: "ZMQExecutionClient",
+    client: ZMQExecutionClient,
     request: DatasetPipelineRequest,
 ) -> str:
     """Submit one compile job; return its execution id."""
@@ -132,7 +132,7 @@ async def submit_compile(
 
 
 async def wait_for_compile(
-    client: "ZMQExecutionClient",
+    client: ZMQExecutionClient,
     *,
     execution_id: str,
     scope_id: str,

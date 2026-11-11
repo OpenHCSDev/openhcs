@@ -136,7 +136,7 @@ class ViewerPayloadComponentProjection:
     def from_summary(
         cls,
         payload_summary: ViewerPayloadSummary,
-    ) -> "ViewerPayloadComponentProjection":
+    ) -> ViewerPayloadComponentProjection:
         return cls(
             components=payload_summary.coordinate_components(),
             aggregate_values=payload_summary.aggregate_values,
@@ -189,7 +189,7 @@ class ViewerLayerPayloadCoordinateSet:
         *,
         projection: ViewerLayerAxisProjection,
         payload_summaries: Sequence[ViewerPayloadSummary],
-    ) -> "ViewerLayerPayloadCoordinateSet":
+    ) -> ViewerLayerPayloadCoordinateSet:
         indices: list[ComponentIndex] = []
         invalid_payload_count = 0
         for payload_summary in payload_summaries:
@@ -260,7 +260,7 @@ class ViewerLayerValidationProjection:
     def from_layer(
         cls,
         layer: ViewerWindowLayerState,
-    ) -> "ViewerLayerValidationProjection":
+    ) -> ViewerLayerValidationProjection:
         return cls(
             projection=ViewerLayerAxisProjection(
                 projected_axis_components=layer.stack_axes,
@@ -336,7 +336,7 @@ class ViewerLayerCoordinateCoverage:
     def from_layer(
         cls,
         layer: ViewerWindowLayerState,
-    ) -> "ViewerLayerCoordinateCoverage":
+    ) -> ViewerLayerCoordinateCoverage:
         projection = ViewerLayerValidationProjection.from_layer(layer)
         expected_indices = projection.expected_indices
         payload_coordinates = ViewerLayerPayloadCoordinateSet.from_layer_projection(
@@ -370,7 +370,7 @@ class ViewerWindowValidationTotals(ViewerWindowValidationCounters):
         *,
         state: ViewerWindowStateResult,
         layer_summaries: Sequence[ViewerWindowLayerValidationSummary],
-    ) -> "ViewerWindowValidationTotals":
+    ) -> ViewerWindowValidationTotals:
         return cls(
             mounted_layer_count=sum(1 for layer in state.layers if layer.mounted),
             pending_update_count=sum(
@@ -641,8 +641,8 @@ class ViewerExpectedLayerCountEvidence:
     @classmethod
     def from_context(
         cls,
-        context: "ViewerWindowValidationWarningContext",
-    ) -> "ViewerExpectedLayerCountEvidence":
+        context: ViewerWindowValidationWarningContext,
+    ) -> ViewerExpectedLayerCountEvidence:
         return cls(
             expected_layer_count=context.validation_policy.expected_layer_count,
             observed_layer_count=context.observed_layer_count,

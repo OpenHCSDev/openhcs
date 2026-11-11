@@ -118,7 +118,7 @@ class MaximaInputStrategy(
     exclude_mode_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_exclude_mode(cls, exclude_mode: ExcludeMode) -> "MaximaInputStrategy":
+    def for_exclude_mode(cls, exclude_mode: ExcludeMode) -> MaximaInputStrategy:
         return cls.for_enum_member(exclude_mode)
 
     @abstractmethod
@@ -259,7 +259,7 @@ class FindMaximaModule(
     )
 
     @classmethod
-    def _exclude_mode(cls, module: "ModuleBlock") -> ExcludeMode:
+    def _exclude_mode(cls, module: ModuleBlock) -> ExcludeMode:
         values = setting_values(module, cls.exclude_mode_setting)
         if len(values) > 1:
             raise ValueError(
@@ -273,9 +273,9 @@ class FindMaximaModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Select the declared threshold, mask-image, or object input domain."""
 
@@ -296,7 +296,7 @@ class FindMaximaModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract,
         source_bindings,

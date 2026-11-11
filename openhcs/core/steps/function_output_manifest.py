@@ -54,7 +54,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     image_metadata: ImagePayloadMetadata | None = None
     main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis
 
-    def published(self) -> "ProducedOutputSemantics":
+    def published(self) -> ProducedOutputSemantics:
         """Fix the saved slot while retaining live provenance and storage aliases."""
         if isinstance(self.component_values, DurableSourceMetadata):
             return self
@@ -78,7 +78,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             tokens.add(self.without_filename_qualifier().filename(parser))
         return frozenset(tokens)
 
-    def passed_through(self, plan: CompiledStepPlan) -> "ProducedOutputSemantics":
+    def passed_through(self, plan: CompiledStepPlan) -> ProducedOutputSemantics:
         """Retain the image domain and physical identity under the next producer."""
         return replace(
             self,
@@ -205,7 +205,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         output_context: AlignedImageSliceContext | None = None,
         image_metadata: ImagePayloadMetadata | None = None,
         main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis,
-    ) -> "ProducedOutputSemantics":
+    ) -> ProducedOutputSemantics:
         output_path_text = str(output_path)
         if output_context is None:
             output_context = AlignedImageSliceContext.anonymous_main_flow()
@@ -233,7 +233,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         parser: FilenameParser,
         *,
         output_context: AlignedImageSliceContext | None = None,
-    ) -> "ProducedOutputSemantics":
+    ) -> ProducedOutputSemantics:
         """Return producer lineage for an existing image path passed through a step."""
         path = Path(path)
         if output_context is None:

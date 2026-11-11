@@ -636,8 +636,8 @@ class ClassifyObjectsSingleMeasurementModule(
 
     @classmethod
     def _classification_kwargs(
-        cls, module: "ModuleBlock", binder: "SettingsBinder"
-    ) -> "RuntimeCallableKwargs":
+        cls, module: ModuleBlock, binder: SettingsBinder
+    ) -> RuntimeCallableKwargs:
         return ClassificationMethod.from_module(cls, module).bind_settings(cls, module, binder)
 
     @classmethod
@@ -680,7 +680,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def indexed_setting_value(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         setting_name: str | SettingNameFamily,
         *,
         default: str,
@@ -696,10 +696,10 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del contract, source_bindings
         return ClassificationMethod.from_module(cls, module).require_callable(cls)
@@ -783,7 +783,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def _single_rule_setting_records(
         cls,
-        rule: "SingleMeasurementClassificationRule",
+        rule: SingleMeasurementClassificationRule,
     ) -> tuple[ModuleSetting, ...]:
         feature_name = rule.measurement_feature
         bin_choice = rule.bin_choice
@@ -861,8 +861,8 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def _typed_setting_value(
         cls,
-        module: "ModuleBlock",
-        binder: "SettingsBinder",
+        module: ModuleBlock,
+        binder: SettingsBinder,
         setting_name: str | SettingNameFamily,
         *,
         default: str,
@@ -878,7 +878,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def _required_indexed_setting_value(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         setting_name: str | SettingNameFamily,
         *,
         default: str,
@@ -892,17 +892,17 @@ class ClassifyObjectsSingleMeasurementModule(
         return value
 
     @staticmethod
-    def _bin_choice(value: str) -> "ClassificationBinChoice":
+    def _bin_choice(value: str) -> ClassificationBinChoice:
         return coerce_cellprofiler_enum(ClassificationBinChoice, value)
 
     @staticmethod
-    def _threshold_method(value: str) -> "ClassificationThresholdMethod":
+    def _threshold_method(value: str) -> ClassificationThresholdMethod:
         return coerce_cellprofiler_enum(ClassificationThresholdMethod, value)
 
     @classmethod
     def _single_measurement_kwargs(
-        cls, module: "ModuleBlock", binder: "SettingsBinder"
-    ) -> "RuntimeCallableKwargs":
+        cls, module: ModuleBlock, binder: SettingsBinder
+    ) -> RuntimeCallableKwargs:
         measurement_features = setting_values(
             module, cls.single_measurement_feature_setting
         )
@@ -919,8 +919,8 @@ class ClassifyObjectsSingleMeasurementModule(
 
     @classmethod
     def _single_measurement_rule(
-        cls, module: "ModuleBlock", binder: "SettingsBinder", value_index: int
-    ) -> "SingleMeasurementClassificationRule":
+        cls, module: ModuleBlock, binder: SettingsBinder, value_index: int
+    ) -> SingleMeasurementClassificationRule:
         bin_names = cls.indexed_setting_value(
             module,
             cls.bin_names_setting,
@@ -1012,7 +1012,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def _single_measurement_retained_image_name(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         value_index: int,
     ) -> str | None:
         retain_values = setting_values(module, cls.retain_image_setting)
@@ -1036,8 +1036,8 @@ class ClassifyObjectsSingleMeasurementModule(
 
     @classmethod
     def _two_measurement_kwargs(
-        cls, module: "ModuleBlock", binder: "SettingsBinder"
-    ) -> "RuntimeCallableKwargs":
+        cls, module: ModuleBlock, binder: SettingsBinder
+    ) -> RuntimeCallableKwargs:
         return {
             "measurement1_feature": cls._required_indexed_setting_value(
                 module,
@@ -1117,7 +1117,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def classified_image_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple[ClassifiedImageOutput, ...]:
         """Return every active repeated classified-image row in rule order."""
 
@@ -1125,7 +1125,7 @@ class ClassifyObjectsSingleMeasurementModule(
 
     @classmethod
     def _single_measurement_classified_image_outputs(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple[ClassifiedImageOutput, ...]:
         records = module.iter_settings()
         if records:
@@ -1192,7 +1192,7 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def _two_measurement_classified_image_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple[ClassifiedImageOutput, ...]:
         records = module.iter_settings()
         if records:
@@ -1400,7 +1400,7 @@ class ClassificationMethod(Enum):
     def __new__(
         cls, absorbed_value: str, behavior: _ClassificationMethodBehavior,
         *cellprofiler_literals: str,
-    ) -> "ClassificationMethod":
+    ) -> ClassificationMethod:
         member = enum_member_with_payload(
             cls,
             absorbed_value,
@@ -1505,7 +1505,7 @@ class ClassificationThresholdMethod(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "ClassificationThresholdMethod":
+    ) -> ClassificationThresholdMethod:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -1523,7 +1523,7 @@ class ClassificationBinChoice(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "ClassificationBinChoice":
+    ) -> ClassificationBinChoice:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -1574,7 +1574,7 @@ class ClassificationThresholdStrategy(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_method(
         cls, method: ClassificationThresholdMethod
-    ) -> "ClassificationThresholdStrategy":
+    ) -> ClassificationThresholdStrategy:
         return cls.__registry__[method]()
 
     def threshold(self, values: np.ndarray, custom_value: float) -> float:
@@ -1647,7 +1647,7 @@ class ClassificationResult:
     slice_index: Annotated[int, MeasurementRowAxisField.SLICE_INDEX] = 0
 
     @classmethod
-    def empty(cls, *, total_objects: int = 0) -> "ClassificationResult":
+    def empty(cls, *, total_objects: int = 0) -> ClassificationResult:
         """Return an empty classification result row."""
         return cls(
             total_objects=total_objects,
@@ -1658,7 +1658,7 @@ class ClassificationResult:
     @classmethod
     def columnar(
         cls,
-        results: "ClassificationResult | tuple[ClassificationResult, ...]",
+        results: ClassificationResult | tuple[ClassificationResult, ...],
     ) -> DataclassMeasurementColumnarRows:
         """Return exact raw classification fields for runtime aggregation."""
 
@@ -1673,7 +1673,7 @@ class ClassificationMeasurementVector:
     values: np.ndarray
 
     @classmethod
-    def from_value(cls, values: np.ndarray) -> "ClassificationMeasurementVector":
+    def from_value(cls, values: np.ndarray) -> ClassificationMeasurementVector:
         return cls(np.asarray(values, dtype=np.float64).reshape(-1))
 
     def aligned_to_labels(self, label_ids: np.ndarray) -> np.ndarray:

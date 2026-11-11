@@ -164,10 +164,10 @@ class IdentifyTertiaryObjectsModule(
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         inputs = ArtifactSpecCollection(
@@ -787,7 +787,7 @@ class SecondaryObjectLabels:
         discard_edge_objects: bool,
         primary_labels: np.ndarray,
         morphology: MorphologyBackendStrategy,
-    ) -> "SecondaryObjectLabels":
+    ) -> SecondaryObjectLabels:
         small_removed = labels
         if fill_holes and small_removed.max() > 0:
             small_removed = morphology.fill_labeled_holes(
@@ -1497,7 +1497,7 @@ class IdentifySecondaryObjectsModule(
         return secondary_outputs[0].name
 
     @classmethod
-    def replacement_primary_output_active(cls, module: "ModuleBlock") -> bool:
+    def replacement_primary_output_active(cls, module: ModuleBlock) -> bool:
         """Return the one declaration-owned replacement-primary condition."""
 
         discard_edge_value = cls.setting_value(
@@ -1534,7 +1534,7 @@ class IdentifySecondaryObjectsModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract,
         source_bindings,
@@ -1604,10 +1604,10 @@ class IdentifySecondaryObjectsModule(
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         inputs = ArtifactSpecCollection(
@@ -1828,7 +1828,7 @@ class TertiaryObjectInputs:
     @classmethod
     def from_labels(
         cls, primary_labels: ObjectLabelValue, secondary_labels: ObjectLabelValue
-    ) -> "TertiaryObjectInputs":
+    ) -> TertiaryObjectInputs:
         if not isinstance(primary_labels, ObjectLabelValue) or not isinstance(
             secondary_labels, ObjectLabelValue
         ):

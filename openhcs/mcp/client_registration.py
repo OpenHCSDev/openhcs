@@ -114,7 +114,7 @@ class ClientRegistrationEnvironment:
     process_runner: ProcessRunner
 
     @classmethod
-    def current(cls) -> "ClientRegistrationEnvironment":
+    def current(cls) -> ClientRegistrationEnvironment:
         """Capture the current user's client-registration environment."""
         return cls(
             home=Path.home(),
@@ -274,7 +274,7 @@ class ClientRegistrationResult:
         *,
         required: bool,
         detected: bool,
-    ) -> "ClientRegistrationResult":
+    ) -> ClientRegistrationResult:
         """Attach the owning target identity to a leaf mutation."""
         return cls(
             target_id=target.require_target_id(),
@@ -297,7 +297,7 @@ class ClientRegistrationResult:
         detected: bool,
         message: str,
         config_path: Path | None = None,
-    ) -> "ClientRegistrationResult":
+    ) -> ClientRegistrationResult:
         """Construct a failure result at an orchestration boundary."""
         return cls(
             target_id=target_id,
@@ -336,7 +336,7 @@ class ClientRegistrationReport:
         cls,
         results: Sequence[ClientRegistrationResult],
         skill_sync: Sequence[ClientSkillSyncResult] = (),
-    ) -> "ClientRegistrationReport":
+    ) -> ClientRegistrationReport:
         """Summarize all attempted registrations without erasing successes."""
         frozen_results = tuple(results)
         frozen_skill_sync = tuple(skill_sync)

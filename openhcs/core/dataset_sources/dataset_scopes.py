@@ -59,11 +59,11 @@ class DatasetScope:
 
         return ScopeKey(self.scope_id).contains(scope_id)
 
-    def prepare_input_workspace(self) -> "InputWorkspacePreparationResult | None":
+    def prepare_input_workspace(self) -> InputWorkspacePreparationResult | None:
         return self.kind.prepare_input_workspace(self)
 
     @classmethod
-    def parse(cls, scope_id: str) -> "DatasetScope":
+    def parse(cls, scope_id: str) -> DatasetScope:
         """Parse a scope id through the kind whose marker it carries."""
 
         for kind in DatasetScopeKind.__registry__.values():
@@ -72,7 +72,7 @@ class DatasetScope:
         return PlainDatasetScope.parse(scope_id)
 
     @classmethod
-    def of_root(cls, root: Path | str) -> "DatasetScope":
+    def of_root(cls, root: Path | str) -> DatasetScope:
         return PlainDatasetScope.parse(str(Path(root)))
 
 
@@ -121,7 +121,7 @@ class DatasetScopeKind(ABC, metaclass=AutoRegisterMeta):
     def prepare_input_workspace(
         cls,
         scope: DatasetScope,
-    ) -> "InputWorkspacePreparationResult | None":
+    ) -> InputWorkspacePreparationResult | None:
         """The input workspace initialization binds (none for a plain root)."""
 
         del scope
@@ -185,7 +185,7 @@ class PreparedWorkspaceScope(DatasetScopeKind):
     def prepare_input_workspace(
         cls,
         scope: DatasetScope,
-    ) -> "InputWorkspacePreparationResult":
+    ) -> InputWorkspacePreparationResult:
 
         return InputWorkspacePreparationResult(
             original_source_root=scope.root,

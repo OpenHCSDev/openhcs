@@ -117,7 +117,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def measurement_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projector: RuntimePlaneAxisProjector,
     ) -> RuntimePlaneAxisValueProjection:
         """Resolve the runtime row projection represented by label semantics."""
@@ -126,7 +126,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
         """Return exact measurement-row axis values represented by labels."""
@@ -134,7 +134,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def required_measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
         """Return row-axis values required by nonempty declared label planes."""
@@ -164,7 +164,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def measurement_planes(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> tuple["ObjectLabelValue", ...]:
         """Return label values in the same order as measurement axis values."""
@@ -172,7 +172,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def declared_measurement_planes(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
     ) -> tuple["ObjectLabelValue", ...]:
         """Project labels through their own declared plane-domain semantics."""
         return cls.measurement_planes(labels, cls.value_projection(labels))
@@ -180,7 +180,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def declared_measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
     ) -> tuple[int, ...]:
         """Return local row-axis values for every declared measurement plane."""
         return tuple(range(len(cls.declared_measurement_planes(labels))))
@@ -189,8 +189,8 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def measurement_reference_source_provenance(
         cls,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
+        labels: ObjectLabelValue,
+    ) -> SourceImageProvenance:
         """Return source lineage in this domain's image-reference topology."""
 
     @classmethod
@@ -205,7 +205,7 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def value_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
     ) -> RuntimePlaneAxisValueProjection | None:
         """Return the exact runtime plane projection declared by a label value."""
 
@@ -284,7 +284,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projector: RuntimePlaneAxisProjector,
     ) -> RuntimePlaneAxisValueProjection:
         projection = RuntimePlaneAxisValueProjection.require_from_projector(
@@ -302,7 +302,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
         if projection.selects_one_plane:
@@ -312,7 +312,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def required_measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
         """Payload-scoped measurements need no per-plane row coordinate."""
@@ -323,7 +323,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_planes(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> tuple["ObjectLabelValue", ...]:
         del projection
@@ -332,8 +332,8 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_reference_source_provenance(
         cls,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
+        labels: ObjectLabelValue,
+    ) -> SourceImageProvenance:
         """Keep volume planes as contributors to one payload-scoped image."""
 
         return labels.source_provenance.with_runtime_planes_as_contributors()
@@ -349,7 +349,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     @classmethod
     def value_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
     ) -> None:
         del labels
         return None
@@ -457,7 +457,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projector: RuntimePlaneAxisProjector,
     ) -> RuntimePlaneAxisValueProjection:
         return RuntimePlaneAxisValueProjection.require_from_projector(
@@ -469,7 +469,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_axis_values(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...]:
         return projection.selected_planes()
@@ -477,7 +477,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_planes(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> tuple["ObjectLabelValue", ...]:
         if projection is None:
@@ -519,8 +519,8 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     @classmethod
     def measurement_reference_source_provenance(
         cls,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
+        labels: ObjectLabelValue,
+    ) -> SourceImageProvenance:
         """Preserve the projectable source planes declared by plane scope."""
 
         return labels.source_provenance
@@ -539,7 +539,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     @classmethod
     def value_projection(
         cls,
-        labels: "ObjectLabelValue",
+        labels: ObjectLabelValue,
     ) -> RuntimePlaneAxisValueProjection:
         plane_axis = cls.value_plane_axis(labels.plane_axis)
         return RuntimePlaneAxisValueProjection.preserve(
@@ -604,7 +604,7 @@ class ObjectLabelDomain:
         declared_object_count: int | None = None,
         declared_object_ids: DeclaredObjectIds = (),
         declared_object_id_domains: tuple[tuple[int, ...], ...] = (),
-    ) -> "ObjectLabelDomain":
+    ) -> ObjectLabelDomain:
         """Return a normalized object-label domain declaration."""
         return cls(
             declared_object_count=declared_object_count,
@@ -633,7 +633,7 @@ class ObjectLabelDomain:
             )
         return object_ids
 
-    def with_scope(self, scope: type[ObjectLabelDomainScope]) -> "ObjectLabelDomain":
+    def with_scope(self, scope: type[ObjectLabelDomainScope]) -> ObjectLabelDomain:
         """Return this object-label declaration with the requested domain scope."""
         normalized_scope = ObjectLabelDomainScope.require_member(scope)
         if (
@@ -662,7 +662,7 @@ class ObjectLabelDomain:
             scope=normalized_scope,
         )
 
-    def project_slice(self, slice_index: int, slice_count: int) -> "ObjectLabelDomain":
+    def project_slice(self, slice_index: int, slice_count: int) -> ObjectLabelDomain:
         """Return the object-label domain carried by one PURE_2D slice."""
         normalized_index = int(slice_index)
         normalized_count = int(slice_count)
@@ -688,7 +688,7 @@ class ObjectLabelDomain:
             )
         return self.project_planes((normalized_index,))
 
-    def project_planes(self, plane_indices: Iterable[int]) -> "ObjectLabelDomain":
+    def project_planes(self, plane_indices: Iterable[int]) -> ObjectLabelDomain:
         """Return the object-label domain carried by selected plane indexes."""
         normalized_indices = tuple((int(index) for index in plane_indices))
         if self.scope.ids_span_payload:
@@ -744,7 +744,7 @@ class ObjectLabelDomainMetadataStrategy(
     __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @classmethod
-    def for_value(cls, value: object) -> "ObjectLabelDomainMetadataStrategy":
+    def for_value(cls, value: object) -> ObjectLabelDomainMetadataStrategy:
         return cls.require_nominal_value(
             value,
             context="Object-label domain metadata",
@@ -778,7 +778,7 @@ class ObjectLabelIdDomainStrategy(
     __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @classmethod
-    def for_value(cls, labels: Any) -> "ObjectLabelIdDomainStrategy":
+    def for_value(cls, labels: Any) -> ObjectLabelIdDomainStrategy:
         strategy = cls.for_nominal_value(labels)
         if strategy is None:
             raise TypeError(
@@ -823,7 +823,7 @@ class DenseIntegerObjectLabelIdDomain:
     max_label: int
 
     @classmethod
-    def from_array(cls, labels: np.ndarray) -> "DenseIntegerObjectLabelIdDomain | None":
+    def from_array(cls, labels: np.ndarray) -> DenseIntegerObjectLabelIdDomain | None:
         if not (
             np.issubdtype(labels.dtype, np.integer)
             or np.issubdtype(labels.dtype, np.bool_)
@@ -868,7 +868,7 @@ class ConsecutiveObjectLabelIdProjection:
     @classmethod
     def from_dense_array(
         cls, labels: np.ndarray
-    ) -> "ConsecutiveObjectLabelIdProjection":
+    ) -> ConsecutiveObjectLabelIdProjection:
         label_array = np.asarray(labels)
         positive_ids = np.unique(label_array[label_array > 0])
         return cls(positive_ids.astype(np.int64, copy=False))
@@ -939,7 +939,7 @@ class DenseObjectLabelConsecutiveRelabelingStrategy(
     @classmethod
     def for_labels(
         cls, labels: object
-    ) -> "DenseObjectLabelConsecutiveRelabelingStrategy":
+    ) -> DenseObjectLabelConsecutiveRelabelingStrategy:
         return cls.require_nominal_value(
             labels,
             context="Dense object-label consecutive relabeling",

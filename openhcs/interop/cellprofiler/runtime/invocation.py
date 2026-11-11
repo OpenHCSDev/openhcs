@@ -330,7 +330,7 @@ class CellProfilerSourceImagePair:
         cls,
         source_image_name: str | None,
         source_aliases: tuple[str, ...],
-    ) -> "CellProfilerSourceImagePair | None":
+    ) -> CellProfilerSourceImagePair | None:
         """Return the primary source pair implied by source identity fields."""
         del source_image_name
         match source_aliases:
@@ -352,7 +352,7 @@ class CellProfilerSourceImagePair:
         second_index: int,
         first_name: str,
         second_name: str,
-    ) -> "CellProfilerSourceImagePair":
+    ) -> CellProfilerSourceImagePair:
         """Build a source pair from endpoint indexes and display names."""
         return cls(
             first=CellProfilerSourceImageEndpoint(first_index, first_name),
@@ -450,7 +450,7 @@ class CellProfilerMeasurementImage(
     def with_alignment_image(
         self,
         image: RuntimeCallableArgument,
-    ) -> "CellProfilerMeasurementImage":
+    ) -> CellProfilerMeasurementImage:
         """Return this source with image data and plane proof projected together."""
 
         plane_projection = self.plane_projection

@@ -1964,7 +1964,7 @@ class MaterializationInput:
         cls,
         value: MaterializationValue,
         options: SourceOptions,
-    ) -> "MaterializationInput":
+    ) -> MaterializationInput:
         """Preserve intrinsic images while projecting ordinary runtime planes."""
         unprojected = cls.from_value(value, options)
         items = []

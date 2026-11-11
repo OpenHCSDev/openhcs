@@ -288,7 +288,7 @@ class ProgressEvent(TaskProgress):
         *,
         worker_assignments: dict[str, list[str]],
         partition_values: list[str],
-    ) -> "ProgressEvent":
+    ) -> ProgressEvent:
         """Return this event with execution topology attached."""
         return dataclass_replace(
             self,
@@ -347,7 +347,7 @@ class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
             ) from error
 
     @staticmethod
-    def context_of(*payloads: "ProgressContextPayload | None") -> dict[str, Any] | None:
+    def context_of(*payloads: ProgressContextPayload | None) -> dict[str, Any] | None:
         """The event context carrying these payloads."""
 
         context = {

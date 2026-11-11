@@ -53,7 +53,7 @@ class AgentPathRootSet:
     roots: tuple[Path, ...]
 
     @classmethod
-    def from_paths(cls, paths: tuple[Path, ...]) -> "AgentPathRootSet":
+    def from_paths(cls, paths: tuple[Path, ...]) -> AgentPathRootSet:
         resolved: list[Path] = []
         seen: set[Path] = set()
         for path in paths:
@@ -67,8 +67,8 @@ class AgentPathRootSet:
     def from_environment(
         cls,
         name: str,
-        fallback: "AgentPathRootSet",
-    ) -> "AgentPathRootSet":
+        fallback: AgentPathRootSet,
+    ) -> AgentPathRootSet:
         raw = os.environ.get(name)
         if not raw:
             return fallback
@@ -115,14 +115,14 @@ class AgentPathPolicy(UiBridgeOutputPathPolicy):
         *,
         readable_roots: tuple[Path, ...],
         writable_roots: tuple[Path, ...],
-    ) -> "AgentPathPolicy":
+    ) -> AgentPathPolicy:
         return cls(
             AgentPathRootSet.from_paths(readable_roots),
             AgentPathRootSet.from_paths(writable_roots),
         )
 
     @classmethod
-    def default(cls) -> "AgentPathPolicy":
+    def default(cls) -> AgentPathPolicy:
         package_root = AgentPathLocationAuthority.package_root()
         source_checkout_root = AgentPathLocationAuthority.source_checkout_root()
         temporary_root = AgentPathLocationAuthority.temporary_root()
@@ -141,7 +141,7 @@ class AgentPathPolicy(UiBridgeOutputPathPolicy):
         )
 
     @classmethod
-    def from_environment(cls) -> "AgentPathPolicy":
+    def from_environment(cls) -> AgentPathPolicy:
         default = cls.default()
         readable = AgentPathRootSet.from_environment(
             cls.readable_roots_environment_key,

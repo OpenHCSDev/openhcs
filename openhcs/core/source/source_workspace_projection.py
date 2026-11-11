@@ -60,7 +60,7 @@ class VirtualWorkspaceSourceProjection:
     @classmethod
     def empty(
         cls, dataset_root: Path | None = None
-    ) -> "VirtualWorkspaceSourceProjection":
+    ) -> VirtualWorkspaceSourceProjection:
         workspace_root = None
         if dataset_root is not None:
             workspace_root = str(dataset_root)
@@ -76,7 +76,7 @@ class VirtualWorkspaceSourceProjection:
         cls,
         dataset_root: Path,
         metadata: OpenHCSMetadataPayload,
-    ) -> "VirtualWorkspaceSourceProjection":
+    ) -> VirtualWorkspaceSourceProjection:
         builder = VirtualWorkspaceSourceProjectionBuilder(dataset_root)
         for subdirectory in OpenHCSMetadataSubdirectories(metadata).values():
             builder.ingest_subdirectory(subdirectory)
@@ -87,7 +87,7 @@ class VirtualWorkspaceSourceProjection:
         cls,
         dataset_root: Path,
         metadata: OpenHCSMetadataPayload,
-    ) -> "VirtualWorkspaceSourceProjection | None":
+    ) -> VirtualWorkspaceSourceProjection | None:
         subdirectories = OpenHCSMetadataSubdirectories(metadata)
         if not subdirectories.has_workspace_mapping():
             return None
@@ -159,7 +159,7 @@ class VirtualWorkspaceSourceProjection:
     def resolved_source_path_for(
         self,
         lookup: VirtualWorkspacePathLookup,
-        filemanager: "FileManagerLike",
+        filemanager: FileManagerLike,
     ) -> str:
         """Resolve one mapped source through its declared storage backend."""
 
@@ -496,7 +496,7 @@ class VirtualWorkspaceSourceProjection:
         self,
         *,
         axis_id: str | None,
-    ) -> "VirtualWorkspaceSourceProjection":
+    ) -> VirtualWorkspaceSourceProjection:
         """Return a projection view restricted to one multiprocessing axis."""
         if axis_id is None:
             return self
@@ -825,21 +825,21 @@ class WorkspaceSourceProjections:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
     dataset_root: Path
-    metadata_handler: "MetadataHandler"
-    filemanager: "FileManager"
+    metadata_handler: MetadataHandler
+    filemanager: FileManager
     cache: VirtualWorkspaceSourceProjectionCache | None = None
     source_bindings: SourceBindingsConfig | None = None
-    _workspace_metadata_handler: "OpenHCSMetadataHandler | None" = field(
+    _workspace_metadata_handler: OpenHCSMetadataHandler | None = field(
         default=None, init=False, compare=False, repr=False,
     )
 
     @classmethod
     def from_context(
         cls,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         *,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
-    ) -> "WorkspaceSourceProjections":
+    ) -> WorkspaceSourceProjections:
         return RuntimeWorkspaceSourceProjections(
             dataset_root=Path(context.dataset_root),
             metadata_handler=context.microscope_handler.metadata_handler,
@@ -854,11 +854,11 @@ class WorkspaceSourceProjections:
         cls,
         *,
         dataset_root: Path,
-        metadata_handler: "MetadataHandler",
-        filemanager: "FileManager",
+        metadata_handler: MetadataHandler,
+        filemanager: FileManager,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
         source_bindings: SourceBindingsConfig | None = None,
-    ) -> "WorkspaceSourceProjections":
+    ) -> WorkspaceSourceProjections:
         """Build projection authority from the dataset-level metadata owners."""
 
         return cls(
@@ -869,7 +869,7 @@ class WorkspaceSourceProjections:
             source_bindings=source_bindings,
         )
 
-    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
+    def is_bound_to_context(self, context: ExecutingContext) -> bool:
         """Compare actual owners, never identities of already-released objects."""
         if not (
             self.dataset_root == Path(context.dataset_root)
@@ -960,9 +960,9 @@ class RuntimeWorkspaceSourceProjections(
 ):
     """Read completed same-plate outputs from their execution observation owner."""
 
-    context: "ExecutingContext" = field(kw_only=True, compare=False, repr=False)
+    context: ExecutingContext = field(kw_only=True, compare=False, repr=False)
 
-    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
+    def is_bound_to_context(self, context: ExecutingContext) -> bool:
         return self.context is context and super(
             RuntimeWorkspaceSourceProjections, self
         ).is_bound_to_context(context)

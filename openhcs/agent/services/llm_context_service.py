@@ -76,7 +76,7 @@ class AuthoringContextSection(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         raise NotImplementedError
 
     @classmethod
@@ -95,14 +95,14 @@ class StaticAuthoringContextSection(AuthoringContextSection):
     content: ClassVar[str]
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return cls.content
 
 
 def render_authoring_context_sections(
     context: type[AuthoringContextDeclaration],
-    service: "AgentAuthoringContextService",
+    service: AgentAuthoringContextService,
 ) -> tuple[str, ...]:
     """Render one intent header, its matching sections, and bounded deepening links."""
     route = context.require_route()
@@ -152,7 +152,7 @@ class PipelineSystemModelSection(
     section_id = "pipeline_system_model"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== EXECUTION MENTAL MODEL ===
 - The public declaration is PipelineConfig plus an ordered list[FunctionStep]. FunctionStep.func accepts a callable, (callable, kwargs), a list chain, or a dictionary keyed by compiled group identity; nested lazy configs own processing, sources, materialization, data types, filters, and viewers.
@@ -172,7 +172,7 @@ class CellProfilerTranslationBridgeSection(
     section_id = "cellprofiler_translation_bridge"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         topic = CellProfilerTranslationArchitectureTopic()
         concept_lines = "\n".join(f"- {concept}" for concept in topic.concepts_text)
@@ -194,7 +194,7 @@ class RuntimeUiCoordinationSection(
     section_id = "runtime_ui_coordination"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         code_document_id = DatasetListCodeDocumentIdentity.require_value()
         state_surface_id = DatasetListStateSurfaceIdentity.require_value()
@@ -219,7 +219,7 @@ class StateCodeRoundtripSection(
     section_id = "state_code_roundtrip"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== OBJECTSTATE AND CODE ROUNDTRIP ===
 - ObjectState is the edit/provenance layer for config, pipelines, steps, and code surfaces. When code-document capabilities are exposed, read the current document before assuming UI text or raw None values. When capability discovery exposes the advanced field tools, {agent_capabilities.ui_list_object_state_scopes.name} and {agent_capabilities.ui_get_object_state_fields.name} provide finer inspection. Code-document editing can work without those advanced tools, but only when its own capabilities are exposed; if neither route is available, report the capability-profile boundary before attempting a UI edit.
@@ -236,7 +236,7 @@ class CustomFunctionRuntimeSection(
     section_id = "custom_function_runtime"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== CUSTOM FUNCTIONS AND RUNTIME OUTPUTS ===
 - Custom functions are registry functions used inside FunctionStep.func patterns: callable, (callable, kwargs), list chains, or component/group keyed patterns.
@@ -257,7 +257,7 @@ class SourceBindingWorkflowSection(
     section_id = "source_binding_workflow"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         from openhcs.core.dataset_sources.source import (
             DatasetSource,
@@ -301,7 +301,7 @@ class ExampleCorpusSection(AuthoringContextSection, ExampleCorpusContext):
     section_id = "example_corpus"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== EXAMPLE CORPUS FIRST ===
 - Search with {agent_capabilities.search_knowledge.name} for the biological task plus "OpenHCS Python" or "official30 recipe" before inventing source bindings or pipeline structure; follow the returned document_id and section_id rather than guessing a case name.
@@ -318,7 +318,7 @@ class PipelineRulesSection(
     section_id = "pipeline_rules"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== PIPELINE AUTHORING WORKFLOW ===
 - Search {agent_capabilities.search_functions.name} from the user's biological or processing intent, then call {agent_capabilities.describe_function.name} for each candidate before supplying non-default parameters. Do not start from an arbitrary function dump.
@@ -361,7 +361,7 @@ class ConfigSchemaHintsSection(AuthoringContextSection, PipelineAuthoringRulesCo
     section_id = "config_schema_hints"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         schemas = (
             service.config_service.describe_schema("global"),
             service.config_service.describe_schema("pipeline"),
@@ -437,7 +437,7 @@ class CustomFunctionRegistrationSection(
     section_id = "custom_function_registration"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         return f"""=== REGISTRATION WORKFLOW ===
 - Read the targeted custom-function and artifact-contract knowledge documents below before inventing decorators or payload types.
@@ -452,7 +452,7 @@ class FirstUseOrientationSection(
     section_id = "first_use_orientation"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         route_lines = []
         for declaration in AuthoringContextDeclaration.__registry__.values():
@@ -550,7 +550,7 @@ class DebuggingWorkflowSection(
     section_id = "debugging_workflow"
 
     @classmethod
-    def render(cls, service: "AgentAuthoringContextService") -> str:
+    def render(cls, service: AgentAuthoringContextService) -> str:
         del service
         debug_surface_id = (
             PipelineDebugSessionStateSurfaceIdentityDeclaration.require_value()

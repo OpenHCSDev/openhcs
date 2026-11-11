@@ -241,7 +241,7 @@ class ViewerWindowSnapshotRequest(
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
         frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
         observation_timeout_s: float | None = None,
-    ) -> "ViewerWindowSnapshotRequest":
+    ) -> ViewerWindowSnapshotRequest:
         if output_dir_path is None:
             output_dir_path = str(DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR)
         return cls(
@@ -263,7 +263,7 @@ class ViewerWindowSnapshotRequest(
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
         frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
         observation_timeout_s: float | None = None,
-    ) -> "ViewerWindowSnapshotRequest":
+    ) -> ViewerWindowSnapshotRequest:
         return cls.from_connection(
             connection=connection,
             timeout_ms=timeout_ms,
@@ -1091,7 +1091,7 @@ class ViewerWindowErrorResultFactory(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def from_error_context(
         cls: type[Self],
-        context: "ViewerWindowErrorContext",
+        context: ViewerWindowErrorContext,
     ) -> Self:
         """Build an error result from one viewer-window error context."""
 
@@ -1102,7 +1102,7 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
     @classmethod
     def from_error_context(
         cls: type[Self],
-        context: "ViewerWindowSnapshotErrorContext",
+        context: ViewerWindowSnapshotErrorContext,
     ) -> Self:
         return cls(
             schema_version=SCHEMA_VERSION,
@@ -1117,7 +1117,7 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
     def from_request_error(
         cls: type[Self],
         *,
-        request: "ViewerWindowSnapshotRequest",
+        request: ViewerWindowSnapshotRequest,
         error: AgentError,
         observation: WindowVisualObservation | None = None,
     ) -> Self:
@@ -1136,7 +1136,7 @@ class ViewerWindowObservedErrorResultMixin(ViewerWindowErrorResultFactory):
     @classmethod
     def from_error_context(
         cls: type[Self],
-        context: "ViewerWindowErrorContext",
+        context: ViewerWindowErrorContext,
     ) -> Self:
         return cls(
             schema_version=SCHEMA_VERSION,
@@ -1152,7 +1152,7 @@ class ViewerWindowValidationErrorResultMixin:
     @classmethod
     def from_error_context(
         cls: type[Self],
-        context: "ViewerWindowValidationErrorContext",
+        context: ViewerWindowValidationErrorContext,
     ) -> Self:
         return cls(
             schema_version=SCHEMA_VERSION,
@@ -1204,7 +1204,7 @@ class ViewerWindowStateResult(
     response: JsonObject = field(default_factory=dict)
 
     @classmethod
-    def from_mapping(cls, values: JsonObject) -> "ViewerWindowStateResult":
+    def from_mapping(cls, values: JsonObject) -> ViewerWindowStateResult:
         """Decode a canonical state resource through its declared wire fields."""
         return dataclass_from_mapping(cls, values)
 
@@ -1272,7 +1272,7 @@ class ViewerWindowStateResult(
             layer.producer_identities[0],
         )
 
-    def image_payload_record_for(self, path: str) -> "ViewerWindowPayloadRecord":
+    def image_payload_record_for(self, path: str) -> ViewerWindowPayloadRecord:
         """Return the payload record from one exact admitted image binding."""
         return self.image_payload_binding_for(path)[0]
 
@@ -1779,7 +1779,7 @@ class ViewerEndpointDiscoveryRequest(AgentCliRequest):
         return ()
 
     @classmethod
-    def from_fields(cls) -> "ViewerEndpointDiscoveryRequest":
+    def from_fields(cls) -> ViewerEndpointDiscoveryRequest:
         return cls()
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:

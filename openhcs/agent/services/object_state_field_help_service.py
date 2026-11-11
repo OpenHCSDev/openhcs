@@ -428,7 +428,7 @@ class ObjectStateFieldHelpService:
 
     def _function_detail(
         self,
-        reference: "_CallableValueReference",
+        reference: _CallableValueReference,
         max_description_chars: int,
     ) -> FunctionDetail | None:
         catalog = self.function_catalog_service
@@ -530,7 +530,7 @@ class _CallableValueReference:
     def from_mapping(
         cls,
         value: Mapping[object, object],
-    ) -> "_CallableValueReference | None":
+    ) -> _CallableValueReference | None:
         if value.get("kind") != "callable":
             return None
         import_path = value.get("import_path")
@@ -543,7 +543,7 @@ class _CallableValueReference:
     def from_sequence(
         cls,
         value: Sequence[object],
-    ) -> "_CallableValueReference | None":
+    ) -> _CallableValueReference | None:
         if len(value) != 2:
             return None
         first, second = value

@@ -524,50 +524,21 @@ def auto_summarize_column(
     # Create meaningful metric names based on column content
     if pd.api.types.is_numeric_dtype(clean_series):
         # Numeric data - focus on key metrics like MetaXpress
-        if "count" in column_name.lower() or "total" in column_name.lower():
-            # Count/total metrics
+        _lower = column_name.lower()
+        _is_summable = (
+            "count" in _lower
+            or "total" in _lower
+            or "area" in _lower
+            or "length" in _lower
+            or "distance" in _lower
+        )
+        if _is_summable:
             summary[
                 f"Total {column_name.replace('_', ' ').title()} ({clean_analysis})"
             ] = clean_series.sum()
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
-
-        elif "area" in column_name.lower():
-            # Area metrics
-            summary[
-                f"Total {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.sum()
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
-
-        elif "length" in column_name.lower() or "distance" in column_name.lower():
-            # Length/distance metrics
-            summary[
-                f"Total {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.sum()
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
-
-        elif "intensity" in column_name.lower():
-            # Intensity metrics
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
-
-        elif "confidence" in column_name.lower():
-            # Confidence metrics
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
-
-        else:
-            # Generic numeric metrics
-            summary[
-                f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
-            ] = clean_series.mean()
+        summary[
+            f"Mean {column_name.replace('_', ' ').title()} ({clean_analysis})"
+        ] = clean_series.mean()
 
     elif clean_series.dtype == bool or set(clean_series.unique()).issubset({0, 1}):
         # Boolean data

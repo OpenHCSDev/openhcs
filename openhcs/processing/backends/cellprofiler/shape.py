@@ -276,10 +276,10 @@ class MeasureObjectSizeShapeModule(
     @classmethod
     def project_measurement_record_rows(
         cls,
-        rows: "ColumnarRows",
+        rows: ColumnarRows,
         *,
         source_image_name: str | None,
-    ) -> "ColumnarRows":
+    ) -> ColumnarRows:
         """Project declared shape fields to their CellProfiler category."""
         del source_image_name
         declared_fields = frozenset(cls.measurement_all_field_names())
@@ -422,8 +422,8 @@ class MeasureObjectSizeShapeModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         """Retain the native upgrade default for pre-toggle shape modules."""
         bound = super().postprocess_bound_settings(module, bound)
         revision = module.variable_revision_number
@@ -554,7 +554,7 @@ class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
         rows: list[dict[str, object]],
         *,
         declared_field_names: tuple[str, ...],
-    ) -> "ShapeObjectMeasurementRows":
+    ) -> ShapeObjectMeasurementRows:
         row_tuple = tuple((MappingProxyType(dict(row)) for row in rows))
         declared_fields = frozenset(declared_field_names)
         if row_tuple and any(frozenset(row) != declared_fields for row in row_tuple):

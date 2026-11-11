@@ -18,12 +18,12 @@ from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataR
 class RuntimeSourceResolutionSnapshot:
     """A derived resolution view retaining its exact projection and parser owners."""
 
-    projection: "VirtualWorkspaceSourceProjection"
-    context: "SourcePatternResolutionContext"
+    projection: VirtualWorkspaceSourceProjection
+    context: SourcePatternResolutionContext
     path_resolutions: Mapping[str, "SourceCandidatePathResolution"]
     component_values: Mapping[str, tuple[Mapping["type[Axis]", str], ...]]
 
-    def context_for_matching(self) -> "SourcePatternResolutionContext":
+    def context_for_matching(self) -> SourcePatternResolutionContext:
         """Expose this admitted epoch through the existing matching context."""
         return replace(self.context, resolution_snapshot=self)
 
@@ -94,10 +94,10 @@ class RuntimeSourceResolutionSnapshot:
     def from_projection(
         cls,
         *,
-        parser: "FilenameParser",
-        projection: "VirtualWorkspaceSourceProjection",
+        parser: FilenameParser,
+        projection: VirtualWorkspaceSourceProjection,
         metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> "RuntimeSourceResolutionSnapshot":
+    ) -> RuntimeSourceResolutionSnapshot:
         """Resolve declared positions into one independently owned runtime view."""
 
         context = SourceIdentityResolutionContext.from_projection(
@@ -175,10 +175,10 @@ class RuntimeSourceBindingContextCache:
     def source_pattern_context(
         self,
         *,
-        parser: "FilenameParser",
-        projection: "VirtualWorkspaceSourceProjection",
+        parser: FilenameParser,
+        projection: VirtualWorkspaceSourceProjection,
         metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> "SourcePatternResolutionContext":
+    ) -> SourcePatternResolutionContext:
         """Own one normalized runtime snapshot for exact source declarations."""
         key = (id(projection), id(parser), parser.semantic_identity(), metadata_rules)
         cached = self.source_resolution_snapshots.get(key)
@@ -217,7 +217,7 @@ class RuntimeSourceBindingContextCache:
         matching_files: tuple[str, ...],
         source_backend: object,
         source_projection: object | None,
-    ) -> "SourceUniverseRuntimeState | None":
+    ) -> SourceUniverseRuntimeState | None:
         """Return cached source-universe state for one request identity."""
         return self.runtime_universe_state_by_request_identity.get(
             self.runtime_universe_state_key(
@@ -230,13 +230,13 @@ class RuntimeSourceBindingContextCache:
 
     def store_runtime_universe_state(
         self,
-        runtime_state: "SourceUniverseRuntimeState",
+        runtime_state: SourceUniverseRuntimeState,
         *,
         plan: Any,
         matching_files: tuple[str, ...],
         source_backend: object,
         source_projection: object | None,
-    ) -> "SourceUniverseRuntimeState":
+    ) -> SourceUniverseRuntimeState:
         """Cache source-universe state for one request identity."""
         self.runtime_universe_state_by_request_identity[
             self.runtime_universe_state_key(

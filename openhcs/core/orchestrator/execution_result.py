@@ -63,7 +63,7 @@ class RuntimeContextObservation:
         records: tuple[StoredRuntimeValue, ...],
         runtime_observation_mode: type[RuntimeObservationMode],
         outputs: StepExecutionObservation,
-    ) -> "RuntimeContextObservation":
+    ) -> RuntimeContextObservation:
         """Retain requested records beside the completed output projections."""
         return cls(
             context_key=context_key,
@@ -81,7 +81,7 @@ class RuntimeExecutionObservation:
     @classmethod
     def from_completed_outputs(
         cls, contexts: Mapping[str, ExecutingContext]
-    ) -> "RuntimeExecutionObservation":
+    ) -> RuntimeExecutionObservation:
         """Project saved facts independently of retained runtime pixel records."""
         return cls(contexts=tuple(
             RuntimeContextObservation(
@@ -106,15 +106,15 @@ class RuntimeObservationMode(ABC):
     """Which worker runtime records are returned to the parent; each mode keeps its own."""
 
     @staticmethod
-    def from_parent_requirement(required: bool) -> "type[RuntimeObservationMode]":
+    def from_parent_requirement(required: bool) -> type[RuntimeObservationMode]:
         """Select the mode implied by compiled parent-side execution needs."""
 
         return MergeAllRuntimeRecords if required else OmitRuntimeRecords
 
     @staticmethod
     def for_compiled_bundle(
-        bundle: "CompiledExecutionBundle",
-    ) -> "type[RuntimeObservationMode]":
+        bundle: CompiledExecutionBundle,
+    ) -> type[RuntimeObservationMode]:
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
@@ -125,7 +125,7 @@ class RuntimeObservationMode(ABC):
     def including_parent_requirement(
         cls,
         required: bool,
-    ) -> "type[RuntimeObservationMode]":
+    ) -> type[RuntimeObservationMode]:
         """Return this mode strengthened by an additional retention requirement."""
 
         return MergeAllRuntimeRecords if required else cls
@@ -211,7 +211,7 @@ class ExecutionResult(ABC):
         """Return this outcome as one line of text."""
         return type(self).__name__
 
-    def without_runtime_observation(self) -> "ExecutionResult":
+    def without_runtime_observation(self) -> ExecutionResult:
         """Return this outcome without the worker runtime records it carries."""
         return replace(self, runtime_observation=RuntimeExecutionObservation())
 
@@ -241,7 +241,7 @@ class ExecutionStopped(ExecutionResult):
         self,
         context_key: str,
         runtime_observation: RuntimeExecutionObservation,
-    ) -> "ExecutionStopped":
+    ) -> ExecutionStopped:
         """Attribute this stop to one compiled context with the axis's records."""
         return replace(
             self,

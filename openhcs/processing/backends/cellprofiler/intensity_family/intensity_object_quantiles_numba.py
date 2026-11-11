@@ -65,7 +65,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
     object_labels: np.ndarray
 
     @classmethod
-    def empty(cls, object_labels: np.ndarray) -> "ObjectIntensityArrays":
+    def empty(cls, object_labels: np.ndarray) -> ObjectIntensityArrays:
         """Build an empty measurement array set for a declared object domain."""
         empty = np.zeros(0, dtype=float)
         return cls(
@@ -108,7 +108,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
     def with_max_intensity_positions(
         self,
         positions: tuple[np.ndarray, ...],
-    ) -> "ObjectIntensityArrays":
+    ) -> ObjectIntensityArrays:
         """Return these measurements with CP-native max-location coordinates."""
         if len(positions) == 2:
             max_intensity_y, max_intensity_x = positions
@@ -130,7 +130,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
     def with_unmeasured_object_semantics(
         self,
         measured_counts: np.ndarray,
-    ) -> "ObjectIntensityArrays":
+    ) -> ObjectIntensityArrays:
         """Apply CellProfiler's NaN semantics to objects with no valid pixels."""
 
         unmeasured = np.asarray(measured_counts) <= 0
@@ -159,7 +159,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
         object_labels: np.ndarray,
         scan_result: ObjectIntensity3DScanResult,
         quantile_result: ObjectIntensity3DQuantileResult,
-    ) -> "ObjectIntensityArrays":
+    ) -> ObjectIntensityArrays:
         """Build dense intensity arrays from the 3-D scan kernel ABI."""
         lower, median, upper, mad = quantile_result
         return cls(
@@ -195,7 +195,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
         scan_result: ObjectIntensity3DScanResult,
         quantile_result: ObjectIntensity3DQuantileResult,
         image_index: int,
-    ) -> "ObjectIntensityArrays":
+    ) -> ObjectIntensityArrays:
         """Build one image's arrays from image-major 3-D batch kernel output."""
         return cls.from_3d_scan_result(
             object_labels=object_labels,
@@ -220,7 +220,7 @@ class ObjectIntensityForegroundIndex:
         cls,
         labels: np.ndarray,
         label_to_index: np.ndarray,
-    ) -> "ObjectIntensityForegroundIndex":
+    ) -> ObjectIntensityForegroundIndex:
         label_array = np.ascontiguousarray(labels, dtype=np.int32)
         if label_array.ndim != 3:
             raise ValueError(

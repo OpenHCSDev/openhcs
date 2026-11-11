@@ -105,18 +105,18 @@ class McpSocketTransport:
         self._listener: socket.socket | None = None
         self.execution = McpTransportExecutor()
 
-    def serve(self, server: "FastMCP") -> None:
+    def serve(self, server: FastMCP) -> None:
         try:
             self.execution.run(self._serve_off_main, server)
         finally:
             self.execution.close()
 
-    async def _serve_off_main(self, server: "FastMCP") -> None:
+    async def _serve_off_main(self, server: FastMCP) -> None:
         import asyncio
 
         await asyncio.to_thread(self._serve, server)
 
-    def _serve(self, server: "FastMCP") -> None:
+    def _serve(self, server: FastMCP) -> None:
         """Accept client connections and serve one MCP session per connection."""
 
         directory = self.socket_path.parent
@@ -165,12 +165,12 @@ class McpSocketTransport:
             self._stop.set()
             self._log("stopped")
 
-    def _serve_connection(self, server: "FastMCP", connection: socket.socket) -> None:
+    def _serve_connection(self, server: FastMCP, connection: socket.socket) -> None:
         import anyio
 
         anyio.run(self._run_session, server, connection)
 
-    async def _run_session(self, server: "FastMCP", connection: socket.socket) -> None:
+    async def _run_session(self, server: FastMCP, connection: socket.socket) -> None:
         import anyio
         from mcp.server.stdio import stdio_server
 

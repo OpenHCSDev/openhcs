@@ -34,7 +34,7 @@ class DenseObjectLabelAggregation:
         payload: object,
         *,
         dtype: object = np.int32,
-    ) -> "DenseObjectLabelAggregation":
+    ) -> DenseObjectLabelAggregation:
         """Build reductions from any nominal object-label payload."""
         labels = object_label_dense_array(payload, dtype=dtype)
         if labels.size:

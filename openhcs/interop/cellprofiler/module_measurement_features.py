@@ -707,8 +707,8 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
     @classmethod
     def relationship_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "RelationshipMeasurementRows":
+        request: CellProfilerOutputRecordRequest,
+    ) -> RelationshipMeasurementRows:
         """Return the relationship-row projector owned by this module declaration."""
         from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
             RelationshipMeasurementRows,
@@ -719,8 +719,8 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
     @classmethod
     def relationship_distance_measurements_apply(
         cls,
-        callable_contract: "CallableContract",
-        relationship_spec: "ArtifactSpec",
+        callable_contract: CallableContract,
+        relationship_spec: ArtifactSpec,
     ) -> bool:
         """Return whether this relationship output owns distance measurement rows."""
         del callable_contract, relationship_spec

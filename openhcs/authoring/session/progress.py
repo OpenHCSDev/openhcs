@@ -61,7 +61,7 @@ def execution_server_status_text(projection: ExecutionRuntimeProjection) -> str:
 class ExecutionProgress:
     """Owns progress registration, the runtime projection and server status."""
 
-    def __init__(self, session: "Session", *, interval_seconds: float) -> None:
+    def __init__(self, session: Session, *, interval_seconds: float) -> None:
         self._session = session
         self._interval_seconds = interval_seconds
         self._builder = RuntimeProjectionBuilder()

@@ -46,7 +46,7 @@ class ViewerShapePayloadProjection(str, Enum):
         cls,
         value: str,
         projected_fields: tuple[ViewerWireField, ...] | None,
-    ) -> "ViewerShapePayloadProjection":
+    ) -> ViewerShapePayloadProjection:
         member = str.__new__(cls, value)
         member._value_ = value
         member.projected_fields = projected_fields

@@ -894,7 +894,7 @@ class OpenHCSMetadata:
         available_backends: Dict[str, bool],
         source_diagnostics: Optional[List[Dict[str, Any]]] = None,
         main: Optional[bool] = None,
-    ) -> "OpenHCSMetadata":
+    ) -> OpenHCSMetadata:
         """Construct persisted metadata from per-axis value labels."""
 
         def serialized_values(
@@ -1039,7 +1039,7 @@ def _optional_metadata_field(
 class OpenHCSMetadataGenerationRequest:
     """Request for writing one OpenHCS metadata subdirectory."""
 
-    context: "ExecutingContext"
+    context: ExecutingContext
     output_dir: str
     write_backend: str
     is_main: bool
@@ -1072,7 +1072,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
 
     def create_metadata(
         self,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         output_dir: str,
         write_backend: str,
         is_main: bool = False,
@@ -1312,7 +1312,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     def create(
         cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
         source_bindings_config=None,
-    ) -> "OpenHCSDatasetSource":
+    ) -> OpenHCSDatasetSource:
         """Keep the prepared source while applying the declared source bindings."""
 
         handler = super().create(
@@ -1506,7 +1506,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
             return self.compatible_backends
 
     def get_primary_backend(
-        self, dataset_root: Union[str, Path], filemanager: "FileManager"
+        self, dataset_root: Union[str, Path], filemanager: FileManager
     ) -> str:
         """
         Get the primary backend name for OpenHCS plates.
@@ -1708,10 +1708,10 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
 
 
 def build_metadata_view_document(
-    handler: "MetadataHandler",
+    handler: MetadataHandler,
     dataset_root: object,
     microscope_handler: object,
-) -> "MetadataViewDocument":
+) -> MetadataViewDocument:
     """Build a metadata view document from a handler and microscope handler."""
 
     component_values = handler.component_value_set(dataset_root)

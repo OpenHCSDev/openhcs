@@ -25,7 +25,7 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
     """Applies an edited dataset document to the session."""
 
     workflow_key = "plate_manager"
-    session: "Session"
+    session: Session
     scope: DatasetDocumentScope = field(default_factory=AllDatasetDocumentScope)
 
     def migration_namespace(self, code: str, error: Exception) -> dict | None:

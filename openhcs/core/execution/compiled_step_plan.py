@@ -65,7 +65,7 @@ class FrameworkDeviceAssignment:
     def from_mapping(
         cls,
         device_ids: Mapping[MemoryType, int],
-    ) -> "FrameworkDeviceAssignment":
+    ) -> FrameworkDeviceAssignment:
         return cls(
             tuple(
                 FrameworkDeviceBinding(memory_type, device_id)
@@ -80,7 +80,7 @@ class FrameworkDeviceAssignment:
     def merge(
         cls,
         assignments: Sequence["FrameworkDeviceAssignment"],
-    ) -> "FrameworkDeviceAssignment":
+    ) -> FrameworkDeviceAssignment:
         """Merge compatible compiled assignments into one cleanup footprint."""
 
         device_ids: dict[MemoryType, int] = {}
@@ -98,7 +98,7 @@ class FrameworkDeviceAssignment:
     def select(
         self,
         memory_types: frozenset[MemoryType],
-    ) -> "FrameworkDeviceAssignment":
+    ) -> FrameworkDeviceAssignment:
         """Return the exact subset required by one compiled step."""
 
         selected = tuple(
@@ -200,7 +200,7 @@ class SequentialRuntimeFilterPlan:
     filters: tuple[SequentialRuntimeFilter, ...] = ()
 
     @classmethod
-    def disabled(cls) -> "SequentialRuntimeFilterPlan":
+    def disabled(cls) -> SequentialRuntimeFilterPlan:
         return cls()
 
     @property
@@ -216,7 +216,7 @@ class RuntimeArtifactMaterializationPlan:
     persistent_backend: str | None = None
 
     @classmethod
-    def disabled(cls) -> "RuntimeArtifactMaterializationPlan":
+    def disabled(cls) -> RuntimeArtifactMaterializationPlan:
         return cls()
 
     @property
@@ -418,7 +418,7 @@ class CompiledStepPlan:
             and self.main_input_dependency.predecessor_step_index() is None
         )
 
-    def require_function_execution_ready(self) -> "CompiledStepPlan":
+    def require_function_execution_ready(self) -> CompiledStepPlan:
         """Validate the compiler-owned fields required by FunctionStep runtime."""
         if not self.axis_id:
             raise ValueError(

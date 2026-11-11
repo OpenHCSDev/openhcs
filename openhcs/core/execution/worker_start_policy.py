@@ -20,7 +20,7 @@ class WorkerStartStepFacts:
     def from_compiled_step_plan(
         cls,
         step_plan: CompiledStepPlan,
-    ) -> "WorkerStartStepFacts":
+    ) -> WorkerStartStepFacts:
         return cls(
             requires_gpu=step_plan.requires_gpu,
         )
@@ -40,7 +40,7 @@ class WorkerStartExecutionFacts:
     def from_compiled_contexts(
         cls,
         compiled_contexts: Mapping[str, ProcessingContext] | None,
-    ) -> "WorkerStartExecutionFacts":
+    ) -> WorkerStartExecutionFacts:
         if not compiled_contexts:
             return cls()
 
@@ -58,7 +58,7 @@ class WorkerStartPlatform:
     name: str
 
     @classmethod
-    def current(cls) -> "WorkerStartPlatform":
+    def current(cls) -> WorkerStartPlatform:
         return cls(name=sys.platform)
 
     @property

@@ -142,7 +142,7 @@ class ViewerSettlePhase(ABC, metaclass=AutoRegisterMeta):
     """Completion reported when there were no updates to settle."""
 
     @classmethod
-    def validate(cls, progress: "ViewerSettleProgress") -> None:
+    def validate(cls, progress: ViewerSettleProgress) -> None:
         """Reject progress this phase cannot report."""
 
 
@@ -157,7 +157,7 @@ class SettlementComplete(ViewerSettlePhase):
     idle_completion_percent = 100.0
 
     @classmethod
-    def validate(cls, progress: "ViewerSettleProgress") -> None:
+    def validate(cls, progress: ViewerSettleProgress) -> None:
         if progress.intake_item_active:
             raise ValueError("Completed settlement cannot have active intake.")
         if (
@@ -744,7 +744,7 @@ class ViewerSettleProgress(WireView):
         self.phase.validate(self)
 
     @classmethod
-    def complete(cls, total_update_count: int = 0) -> "ViewerSettleProgress":
+    def complete(cls, total_update_count: int = 0) -> ViewerSettleProgress:
         """Return terminal successful settlement progress."""
 
         return cls(
@@ -891,7 +891,7 @@ class ViewerProcessPlatform(Enum):
         system_name: str | None,
         qpa_platform: QtPlatformName | None,
         always_set: Mapping[str, str],
-    ) -> "ViewerProcessPlatform":
+    ) -> ViewerProcessPlatform:
         member = object.__new__(cls)
         member._value_ = value
         member.system_name = system_name
@@ -900,7 +900,7 @@ class ViewerProcessPlatform(Enum):
         return member
 
     @classmethod
-    def current(cls) -> "ViewerProcessPlatform":
+    def current(cls) -> ViewerProcessPlatform:
         if sys.platform == cls.WINDOWS.value:
             return cls.WINDOWS
         system_name = platform.system()
@@ -909,7 +909,7 @@ class ViewerProcessPlatform(Enum):
                 return platform_family
         return cls.OTHER
 
-    def qt_environment_policy(self) -> "ViewerQtPlatformEnvironmentPolicy":
+    def qt_environment_policy(self) -> ViewerQtPlatformEnvironmentPolicy:
         return ViewerQtPlatformEnvironmentPolicy(
             qpa_platform=self.qpa_platform,
             always_set=self.always_set,
@@ -958,7 +958,7 @@ class ViewerLaunchContext:
         )
 
     @classmethod
-    def inherited_graphical_session(cls) -> "ViewerLaunchContext":
+    def inherited_graphical_session(cls) -> ViewerLaunchContext:
         """Declare that the launching process already owns a GUI session."""
         return cls(InheritedGraphicalSession)
 
@@ -966,7 +966,7 @@ class ViewerLaunchContext:
     def projected_graphical_session(
         cls,
         environment: Mapping[str, str],
-    ) -> "ViewerLaunchContext":
+    ) -> ViewerLaunchContext:
         """Carry a graphical environment already validated by its owner."""
 
         environment_overlay = dict(environment)
@@ -982,7 +982,7 @@ class ViewerLaunchContext:
         )
 
     @classmethod
-    def headless(cls) -> "ViewerLaunchContext":
+    def headless(cls) -> ViewerLaunchContext:
         """Declare that no authoritative graphical session is available."""
         return cls(HeadlessSession)
 
@@ -1033,7 +1033,7 @@ class FijiPayloadKind(Enum):
         self.uses_shared_memory = uses_shared_memory
 
     @classmethod
-    def from_payload(cls, payload: str | None) -> "FijiPayloadKind | None":
+    def from_payload(cls, payload: str | None) -> FijiPayloadKind | None:
         if payload is None:
             return None
         wire_value = str(payload)
@@ -1211,11 +1211,11 @@ class DetachedViewerPythonExpression:
     source: str
 
     @classmethod
-    def literal(cls, value: ViewerLaunchLiteral) -> "DetachedViewerPythonExpression":
+    def literal(cls, value: ViewerLaunchLiteral) -> DetachedViewerPythonExpression:
         return cls(repr(value))
 
     @classmethod
-    def symbol(cls, name: str) -> "DetachedViewerPythonExpression":
+    def symbol(cls, name: str) -> DetachedViewerPythonExpression:
         if not name.isidentifier():
             raise ValueError(
                 f"Detached viewer symbol is not a valid identifier: {name!r}"
@@ -1233,7 +1233,7 @@ class DetachedViewerPythonArguments:
     def from_literals(
         cls,
         *values: ViewerLaunchLiteral,
-    ) -> "DetachedViewerPythonArguments":
+    ) -> DetachedViewerPythonArguments:
         return cls(
             tuple(DetachedViewerPythonExpression.literal(value) for value in values)
         )
@@ -1241,7 +1241,7 @@ class DetachedViewerPythonArguments:
     def append(
         self,
         *expressions: DetachedViewerPythonExpression,
-    ) -> "DetachedViewerPythonArguments":
+    ) -> DetachedViewerPythonArguments:
         return type(self)((*self.expressions, *expressions))
 
     def render(self) -> str:
@@ -1543,14 +1543,14 @@ class ViewerControlPingMode(Enum):
         value: str,
         timeout_ms: int,
         require_ready: bool,
-    ) -> "ViewerControlPingMode":
+    ) -> ViewerControlPingMode:
         member = object.__new__(cls)
         member._value_ = value
         member.timeout_ms = timeout_ms
         member.require_ready = require_ready
         return member
 
-    def policy(self) -> "ViewerControlPingPolicy":
+    def policy(self) -> ViewerControlPingPolicy:
         return ViewerControlPingPolicy(
             timeout_ms=self.timeout_ms,
             require_ready=self.require_ready,
@@ -1567,11 +1567,11 @@ class ViewerLifecycle(ABC):
 
     @classmethod
     @abstractmethod
-    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+    def is_running(cls, viewer: ManagedViewerLifecycleMixin) -> bool:
         """Whether the viewer still runs; stops the viewer when it does not."""
 
     @classmethod
-    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+    def rollback_failed_bootstrap(cls, viewer: ManagedViewerLifecycleMixin) -> None:
         """Discard only resources owned by an incomplete bootstrap attempt."""
 
         from zmqruntime import ViewerStateManager
@@ -1593,7 +1593,7 @@ class ViewerStopped(ViewerLifecycle):
     active = False
 
     @classmethod
-    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+    def is_running(cls, viewer: ManagedViewerLifecycleMixin) -> bool:
         return False
 
 
@@ -1601,7 +1601,7 @@ class ViewerConnectedExternal(ViewerLifecycle):
     """Connected to a viewer some other process launched."""
 
     @classmethod
-    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+    def is_running(cls, viewer: ManagedViewerLifecycleMixin) -> bool:
         if viewer.check_connected_viewer():
             return True
         logging.getLogger(type(viewer).__module__).debug(
@@ -1613,7 +1613,7 @@ class ViewerConnectedExternal(ViewerLifecycle):
         return False
 
     @classmethod
-    def rollback_failed_bootstrap(cls, viewer: "ManagedViewerLifecycleMixin") -> None:
+    def rollback_failed_bootstrap(cls, viewer: ManagedViewerLifecycleMixin) -> None:
         viewer.cleanup_viewer_client()
         viewer.lifecycle = ViewerStopped
 
@@ -1624,7 +1624,7 @@ class ViewerOwnedProcess(ViewerLifecycle):
     owns_process = True
 
     @classmethod
-    def is_running(cls, viewer: "ManagedViewerLifecycleMixin") -> bool:
+    def is_running(cls, viewer: ManagedViewerLifecycleMixin) -> bool:
         log = logging.getLogger(type(viewer).__module__)
         try:
             alive = viewer.process_alive()
@@ -1668,7 +1668,7 @@ class ViewerControlPingRequest:
         *,
         mode: ViewerControlPingMode,
         endpoint: ViewerRuntimeEndpoint,
-    ) -> "ViewerControlPingRequest":
+    ) -> ViewerControlPingRequest:
         policy = mode.policy()
         return cls(
             endpoint=endpoint,

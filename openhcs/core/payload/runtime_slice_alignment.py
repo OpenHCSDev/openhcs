@@ -44,13 +44,13 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
 
     def map_slices(
         self, transform: Callable[[SliceValueT], MappedValueT],
-    ) -> "RuntimeSliceAlignedValues[MappedValueT]":
+    ) -> RuntimeSliceAlignedValues[MappedValueT]:
         """Apply ``transform`` to each slice's value, keeping slice alignment."""
         return RuntimeSliceAlignedValues(tuple(transform(value) for value in self.values))
 
     def map_indexed_slices(
         self, transform: Callable[[int, SliceValueT], MappedValueT],
-    ) -> "RuntimeSliceAlignedValues[MappedValueT]":
+    ) -> RuntimeSliceAlignedValues[MappedValueT]:
         """Apply ``transform`` to each slice's index and value, keeping alignment."""
         return RuntimeSliceAlignedValues(
             tuple(transform(index, value) for index, value in enumerate(self.values))
@@ -111,7 +111,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             )
         return self
 
-    def aligned_value(self, resolver: "AlignedImageStackKwargResolver") -> Any:
+    def aligned_value(self, resolver: AlignedImageStackKwargResolver) -> Any:
         return self.value_for_aligned_slice(
             resolver.projection_axis.require_plane_index(),
             resolver.projection_axis.axis_size,
@@ -125,7 +125,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
 
     def project_declared_source(
         self, source_image_name: str,
-    ) -> "RuntimeSliceAlignedValues[Any]":
+    ) -> RuntimeSliceAlignedValues[Any]:
         """Project each slice's image to one declared source image."""
         return self.map_slices(
             lambda value: value.project_declared_source(source_image_name)
@@ -180,7 +180,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
 
     def object_label_output(
         self, source: Any, plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> "RuntimeSliceAlignedValues[Any]":
+    ) -> RuntimeSliceAlignedValues[Any]:
         """Build object labels for each slice from that slice of ``source``."""
         projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
             plane_projection,

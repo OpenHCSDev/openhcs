@@ -81,7 +81,7 @@ class CodeDocumentExecutionResult(PlateManagerOrchestratorCodePayload):
     def from_payload(
         cls,
         payload: PlateManagerOrchestratorCodePayload,
-    ) -> "CodeDocumentExecutionResult":
+    ) -> CodeDocumentExecutionResult:
         return cls(
             plate_paths=payload.plate_paths,
             pipeline_data=payload.pipeline_data,
@@ -535,7 +535,7 @@ class OpenHCSUiAgentBridgeService(UiAgentBridgeService):
     def __init__(
         self,
         *,
-        session: "Session | None" = None,
+        session: Session | None = None,
         dispatcher: MainThreadDispatcher | None = None,
         **kwargs,
     ) -> None:

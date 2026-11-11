@@ -107,7 +107,7 @@ class RelateObjectsDistanceMethod(Enum):
         label: str,
         calculates_centroid_distance: bool,
         calculates_minimum_distance: bool,
-    ) -> "RelateObjectsDistanceMethod":
+    ) -> RelateObjectsDistanceMethod:
         obj = object.__new__(cls)
         obj._value_ = label
         return obj
@@ -228,7 +228,7 @@ class RelateObjectsModule(
             feature_name: str,
             *,
             parent_object_name: str,
-        ) -> "RelateObjectsModule.DistanceMeasurementFeature | None":
+        ) -> RelateObjectsModule.DistanceMeasurementFeature | None:
             """Resolve a raw or parent-qualified name to its declaration."""
 
             normalized_feature_name = normalize_runtime_identifier(feature_name)
@@ -323,9 +323,9 @@ class RelateObjectsModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Expose optional distance parents and saved-child output exactly."""
 
@@ -354,7 +354,7 @@ class RelateObjectsModule(
     @classmethod
     def distance_method(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> RelateObjectsDistanceMethod:
         """Return the nominal distance method declared by one module."""
 
@@ -364,7 +364,7 @@ class RelateObjectsModule(
         )
 
     @classmethod
-    def other_parent_distances_enabled(cls, module: "ModuleBlock") -> bool:
+    def other_parent_distances_enabled(cls, module: ModuleBlock) -> bool:
         """Return whether repeated step-parent distance inputs are active."""
 
         requested = parse_cellprofiler_bool(
@@ -386,7 +386,7 @@ class RelateObjectsModule(
     @classmethod
     def relationship_distance_measurements_apply(
         cls,
-        callable_contract: "CallableContract",
+        callable_contract: CallableContract,
         relationship_spec: ArtifactSpec,
     ) -> bool:
         """Return whether this is the explicit parent-to-child result."""
@@ -420,10 +420,10 @@ class RelateObjectsModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         """Select the callable whose return ABI matches saved-child topology."""
 
@@ -439,7 +439,7 @@ class RelateObjectsModule(
     @classmethod
     def relationship_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ArtifactSpec]:
         """Return the main relationship endpoints from their setting-owned roles."""
@@ -458,7 +458,7 @@ class RelateObjectsModule(
     @classmethod
     def other_parent_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Return active repeated parents in their declared setting order."""
@@ -555,9 +555,9 @@ class RelateObjectsModule(
     @classmethod
     def prior_child_measurement_artifact_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
         child_input: ArtifactSpec,
     ) -> tuple[ArtifactSpec, ...]:
         """Return prior measurement outputs declared against the child objects."""
@@ -993,7 +993,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
     @staticmethod
     def other_parent_relationship_inputs(
-        callable_contract: "CallableContract",
+        callable_contract: CallableContract,
         *,
         main_parent_spec: ArtifactSpec,
         child_spec: ArtifactSpec,

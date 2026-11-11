@@ -62,7 +62,7 @@ class DebugArtifactActionsModel:
     viewer_types: tuple[ViewerType, ...]
 
     @classmethod
-    def from_snapshot(cls, snapshot: DebugSnapshot) -> "DebugArtifactActionsModel":
+    def from_snapshot(cls, snapshot: DebugSnapshot) -> DebugArtifactActionsModel:
         return cls(
             artifact_refs=(
                 snapshot.output_artifact_refs

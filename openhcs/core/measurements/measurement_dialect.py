@@ -63,7 +63,7 @@ class SourceNameEncoding(ABC):
     @abstractmethod
     def encode(
         cls,
-        dialect: "MeasurementDialect",
+        dialect: MeasurementDialect,
         feature_name: str,
         source_name: str,
         qualifiers: tuple[str, ...],
@@ -189,7 +189,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
     # -- selection ------------------------------------------------------------
 
     @classmethod
-    def shared(cls) -> "MeasurementDialect":
+    def shared(cls) -> MeasurementDialect:
         """Return this dialect's process-wide instance."""
         dialect = MeasurementDialect._shared_instances.get(cls)
         if dialect is None:
@@ -198,7 +198,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         return dialect
 
     @classmethod
-    def for_family(cls, family: type[AxisFamily]) -> "MeasurementDialect":
+    def for_family(cls, family: type[AxisFamily]) -> MeasurementDialect:
         """Return the dialect declared for a family, or the kernel's plain dialect."""
         declared = tuple(
             dialect_type
@@ -226,7 +226,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         return _unqualified_sample_names(tuple(MeasurementDialect.__registry__.values()))
 
     @classmethod
-    def for_active_family(cls) -> "MeasurementDialect":
+    def for_active_family(cls) -> MeasurementDialect:
         return cls.for_family(AxisFamily.active())
 
     @staticmethod
@@ -332,7 +332,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
 
     def query_object_name(
         self,
-        lookup: "RuntimeMeasurementFeatureLookup",
+        lookup: RuntimeMeasurementFeatureLookup,
         object_name: str | None,
     ) -> str | None:
         """Row object constraint for one feature lookup."""
@@ -609,7 +609,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         """Return ordered semantic fallback fields for one lookup token."""
         return self.alternative_feature_part_aliases().get(self.feature_parts(parts), ())
 
-    def feature_lookup(self, feature_name: str) -> "RuntimeMeasurementFeatureLookup":
+    def feature_lookup(self, feature_name: str) -> RuntimeMeasurementFeatureLookup:
         """Return the lookup identity for one external feature name."""
         return RuntimeMeasurementFeatureLookup(feature_name, self)
 

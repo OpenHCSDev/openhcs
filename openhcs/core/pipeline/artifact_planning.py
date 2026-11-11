@@ -210,7 +210,7 @@ class ArtifactGraph:
 
     def resolve_main_input_dependency(
         self,
-        step: "AbstractStep",
+        step: AbstractStep,
         step_index: int,
         *,
         execution_scope: FunctionStepExecutionScope,
@@ -330,7 +330,7 @@ class ArtifactGraph:
         config: StepSourceBindingsConfig,
         dependency: StepInputDependency,
         context: ArtifactDeclarationStepContext,
-    ) -> "ArtifactGraph":
+    ) -> ArtifactGraph:
         """Capture fixed source routing once per graph."""
         binding_plan = config.compiled_plan_for_contracts(
             () if self.pattern is None else (
@@ -472,7 +472,7 @@ class ArtifactGraph:
         )
 
     @classmethod
-    def empty(cls) -> "ArtifactGraph":
+    def empty(cls) -> ArtifactGraph:
         return cls()
 
     def validate_invocation_declarations(self) -> None:
@@ -556,7 +556,7 @@ class ArtifactGraph:
     def with_output_groups(
         self,
         output_groups: Mapping[ArtifactSpecRef, Iterable[Optional[str]]],
-    ) -> "ArtifactGraph":
+    ) -> ArtifactGraph:
         """Return a graph with compiler-resolved output scopes."""
         declared_outputs = self.outputs
         for output_ref in output_groups:

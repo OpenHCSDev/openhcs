@@ -237,7 +237,7 @@ class WorkflowPollSkipReason(str, Enum):
         cls,
         value: str,
         poll_status: type[WorkflowPollSummaryStatus],
-    ) -> "WorkflowPollSkipReason":
+    ) -> WorkflowPollSkipReason:
         member = str.__new__(cls, value)
         member._value_ = value
         member.poll_status = poll_status
@@ -364,7 +364,7 @@ class McpDevServerIdentity:
     module: str
 
     @classmethod
-    def from_spec(cls, server_spec: McpDevServerSpec) -> "McpDevServerIdentity":
+    def from_spec(cls, server_spec: McpDevServerSpec) -> McpDevServerIdentity:
         return cls(
             command=server_spec.python_executable,
             module=server_spec.module_name,
@@ -379,7 +379,7 @@ class McpDevTransportCause:
     message: str
 
     @classmethod
-    def from_exception(cls, exception: BaseException) -> "McpDevTransportCause":
+    def from_exception(cls, exception: BaseException) -> McpDevTransportCause:
         return cls(
             exception_type=type(exception).__name__,
             message=str(exception),
@@ -405,7 +405,7 @@ class McpDevTransportFailure:
         exception: BaseException,
         *,
         server_stderr_tail: str | None = None,
-    ) -> "McpDevTransportFailure":
+    ) -> McpDevTransportFailure:
         causes = tuple(
             McpDevTransportCause.from_exception(cause)
             for cause in _transport_failure_leaf_causes(exception)
@@ -441,7 +441,7 @@ class McpDevToolResult:
     mcp_error: bool
     payloads: tuple[object, ...]
 
-    def decoded_for_rendering(self) -> "McpDevToolResult":
+    def decoded_for_rendering(self) -> McpDevToolResult:
         """Decode declared producer contracts once, independent of presentation."""
         try:
             capability = get_agent_capability(self.tool)
@@ -522,7 +522,7 @@ class McpDevToolResult:
         cls,
         tool_name: str,
         result: Mapping[str, JsonValue],
-    ) -> "McpDevToolResult":
+    ) -> McpDevToolResult:
         return cls(
             tool=tool_name,
             mcp_error=result.get("isError") is True,
@@ -556,7 +556,7 @@ class WorkflowStatePollPolicy:
     operation: type[DatasetWorkflowOperation]
 
     @classmethod
-    def from_workflow_text(cls, workflow: str) -> "WorkflowStatePollPolicy":
+    def from_workflow_text(cls, workflow: str) -> WorkflowStatePollPolicy:
         operation = SessionOperation.named(UiSelectedPlateWorkflowKind(workflow).value)
         if not issubclass(operation, DatasetWorkflowOperation):
             raise TypeError(f"{workflow!r} is not a dataset workflow step.")
@@ -637,7 +637,7 @@ class WorkflowPollBaseline:
     def from_result(
         cls,
         result: McpDevToolResult,
-    ) -> "WorkflowPollBaseline | None":
+    ) -> WorkflowPollBaseline | None:
         state = plate_manager_state(result)
         if state is None:
             return None
@@ -701,8 +701,8 @@ class McpDevToolBatchResponse(McpDevResponse):
     @classmethod
     def for_rendering(
         cls,
-        response: "McpDevToolBatchResponse | JsonObject",
-    ) -> "McpDevToolBatchResponse":
+        response: McpDevToolBatchResponse | JsonObject,
+    ) -> McpDevToolBatchResponse:
         """Decode the external framing and selected DTOs once at view ingress."""
         framed = (
             response
@@ -731,7 +731,7 @@ class McpDevToolBatchResponse(McpDevResponse):
         cls,
         server_spec: McpDevServerSpec,
         results: tuple[McpDevToolResult, ...],
-    ) -> "McpDevToolBatchResponse":
+    ) -> McpDevToolBatchResponse:
         return cls(
             server=McpDevServerIdentity.from_spec(server_spec),
             results=results,
@@ -763,7 +763,7 @@ class McpDevToolListResponse(McpDevResponse):
         cls,
         server_spec: McpDevServerSpec,
         tools: tuple[McpDevToolMetadata, ...],
-    ) -> "McpDevToolListResponse":
+    ) -> McpDevToolListResponse:
         return cls(
             server=McpDevServerIdentity.from_spec(server_spec),
             tool_count=len(tools),
@@ -788,7 +788,7 @@ class ViewerConnectionArguments(McpTimeoutValidatedArguments, McpToolArgumentRec
         args: argparse.Namespace,
         *,
         allow_positional_value_after_port_option: bool = False,
-    ) -> "ViewerConnectionArguments":
+    ) -> ViewerConnectionArguments:
         return cls(
             port=viewer_port_argument(
                 args,
@@ -835,7 +835,7 @@ class UiConnectionArguments(McpTimeoutValidatedArguments, McpToolArgumentRecord)
         args: argparse.Namespace,
         *,
         timeout_ms: int | None,
-    ) -> "UiConnectionArguments":
+    ) -> UiConnectionArguments:
         return cls(
             host=args.host,
             port=args.port,
@@ -1077,7 +1077,7 @@ def _content_payloads(result: Mapping[str, JsonValue]) -> tuple[JsonValue, ...]:
 
 
 async def call_mcp_tool(
-    session: "McpDevStdioSession",
+    session: McpDevStdioSession,
     call: McpDevToolCall,
     timeout_seconds: float,
 ) -> McpDevToolResult:
@@ -1202,7 +1202,7 @@ class McpDevStdioSession:
         self.request_id = 0
         self._stdout_buffer = bytearray()
 
-    async def __aenter__(self) -> "McpDevStdioSession":
+    async def __aenter__(self) -> McpDevStdioSession:
         self.process = await asyncio.create_subprocess_exec(
             self.server_spec.python_executable,
             *self.server_spec.process_args(),
@@ -1456,7 +1456,7 @@ class McpDevSocketSession(McpDevStdioSession):
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
 
-    async def __aenter__(self) -> "McpDevSocketSession":
+    async def __aenter__(self) -> McpDevSocketSession:
         self._reader, self._writer = await asyncio.open_unix_connection(
             str(self.socket_path)
         )

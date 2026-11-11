@@ -222,7 +222,7 @@ class CellProfilerSourceImageType(Enum):
     )
 
     @classmethod
-    def from_literal(cls, value: str) -> "CellProfilerSourceImageType":
+    def from_literal(cls, value: str) -> CellProfilerSourceImageType:
         normalized = value.strip().casefold()
         for member in cls:
             if member.value == normalized:

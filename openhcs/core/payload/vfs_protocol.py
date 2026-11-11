@@ -114,7 +114,7 @@ class DatasetPathDeclaration(ABC):
         """Validate the resolved target without creating it."""
 
     @classmethod
-    def from_annotation(cls, annotation: Any) -> "DatasetPathDeclaration | None":
+    def from_annotation(cls, annotation: Any) -> DatasetPathDeclaration | None:
         """Return the sole declaration carried by one structured annotation."""
 
         declarations = cls._from_annotation(annotation)

@@ -197,7 +197,7 @@ class FieldSpec:
             ) from exc
 
     @classmethod
-    def from_annotation(cls, name: str, annotation: object) -> "FieldSpec":
+    def from_annotation(cls, name: str, annotation: object) -> FieldSpec:
         """Build one field declaration from a resolved type annotation."""
         return cls(
             name=name,

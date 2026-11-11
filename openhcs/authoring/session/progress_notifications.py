@@ -28,7 +28,7 @@ class DebugSnapshotAvailableNotification:
         event: ProgressEvent,
         *,
         zmq_client,
-    ) -> "DebugSnapshotAvailableNotification | None":
+    ) -> DebugSnapshotAvailableNotification | None:
         record = DebugProgressRecord.from_progress_event(event)
         if record is None or record.snapshot_id is None:
             return None
@@ -73,7 +73,7 @@ class LiveMeasurementAvailableNotification:
     def from_progress_event(
         cls,
         event: ProgressEvent,
-    ) -> "LiveMeasurementAvailableNotification | None":
+    ) -> LiveMeasurementAvailableNotification | None:
         payload = LiveMeasurementProgressPayload.from_context(event.context)
         return None if payload is None else cls(event=event, payload=payload)
 
@@ -89,6 +89,6 @@ class RuntimeArtifactAvailableNotification:
     def from_progress_event(
         cls,
         event: ProgressEvent,
-    ) -> "RuntimeArtifactAvailableNotification | None":
+    ) -> RuntimeArtifactAvailableNotification | None:
         payload = RuntimeArtifactProgressPayload.from_context(event.context)
         return None if payload is None else cls(event=event, payload=payload)

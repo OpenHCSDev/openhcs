@@ -102,7 +102,7 @@ class CompilingContext(ProcessingContext):
         axis_id: str | None = None,
         filemanager: FileManager | None = None,
         tiff_config: TiffConfig | None = None,
-        post_execute_hooks: "tuple[PostExecuteHook, ...]" = (),
+        post_execute_hooks: tuple[PostExecuteHook, ...] = (),
         output_dataset_root: str | None = None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
@@ -125,7 +125,7 @@ class CompilingContext(ProcessingContext):
         self.pipeline_sequential_combinations = None
         self.current_sequential_combination = None
 
-    def freeze(self) -> "CompiledContext":
+    def freeze(self) -> CompiledContext:
         """Return the immutable compiled context once every fact is set."""
 
         if not self.axis_id:
@@ -154,14 +154,14 @@ class CompiledContext(ProcessingContext):
 
     def with_step_plans(
         self, step_plans: dict[int, CompiledStepPlan]
-    ) -> "CompiledContext":
+    ) -> CompiledContext:
         """Return this compiled context with its step plans replaced."""
         return CompiledContext(self.compiled_facts() | {"step_plans": step_plans})
 
     def executing(
         self,
-        execution_runtime: "WorkerLaneExecutionContext | None" = None,
-    ) -> "ExecutingContext":
+        execution_runtime: WorkerLaneExecutionContext | None = None,
+    ) -> ExecutingContext:
         """Start one execution of this compiled context."""
         return ExecutingContext(self, execution_runtime)
 
@@ -176,7 +176,7 @@ class ExecutingContext(CompiledContext):
     def __init__(
         self,
         compiled: CompiledContext,
-        execution_runtime: "WorkerLaneExecutionContext | None" = None,
+        execution_runtime: WorkerLaneExecutionContext | None = None,
     ):
 
         CompiledContext.__init__(self, compiled.compiled_facts())
@@ -220,7 +220,7 @@ class ExecutingContext(CompiledContext):
         return len(self.execution_runtime.execution_axis_values)
 
     def record_completed_step_outputs(
-        self, observation: "StepExecutionObservation"
+        self, observation: StepExecutionObservation
     ) -> None:
         """Own completed persisted facts across step cleanup and worker transfer."""
 
@@ -261,7 +261,7 @@ class ExecutingContext(CompiledContext):
         return cast(_RuntimeStepValue, value)
 
     def record_runtime_step_outputs(
-        self, observation: "StepExecutionObservation"
+        self, observation: StepExecutionObservation
     ) -> None:
         """Retain exporter-owned output facts within the active step only."""
 
@@ -281,7 +281,7 @@ class ExecutingContext(CompiledContext):
         )
 
     @property
-    def runtime_step_outputs(self) -> "StepExecutionObservation | None":
+    def runtime_step_outputs(self) -> StepExecutionObservation | None:
         """Return derived output facts admitted during the active step."""
 
         if self._runtime_step_values is None:

@@ -138,11 +138,11 @@ class PipelineOrchestrator:
         execution_bundle: CompiledExecutionBundle,
         *,
         dataset_root: Union[str, Path],
-        pipeline_config: "PipelineConfig",
+        pipeline_config: PipelineConfig,
         selected_pipeline_path: Union[str, Path, None] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
         transport_config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
-    ) -> "PipelineOrchestrator":
+    ) -> PipelineOrchestrator:
         """Create fresh runtime services around an admitted compiled domain."""
         contexts = tuple(execution_bundle.runtime_contexts.values())
         if not contexts:
@@ -417,7 +417,7 @@ class PipelineOrchestrator:
         workspace_path: Optional[Union[str, Path]] = None,
         *,
         resolved_config: GlobalPipelineConfig | None = None,
-    ) -> "PipelineOrchestrator":
+    ) -> PipelineOrchestrator:
         """
         Initializes all required components for the orchestrator.
         Must be called before other processing methods.
@@ -499,7 +499,7 @@ class PipelineOrchestrator:
     def adopt_compiled_execution(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> "PipelineOrchestrator":
+    ) -> PipelineOrchestrator:
         """Bind an admitted compiled source domain to this fresh runtime owner."""
         if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
@@ -757,7 +757,7 @@ class PipelineOrchestrator:
         log_file_base: Optional[str] = None,
         runtime_observation_mode: type[RuntimeObservationMode] | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
-        prepared_worker_runner: "PreparedForkWorkerLaneRunner | None" = None,
+        prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None,
     ) -> Dict[str, ExecutionResult]:
         """Run the compiled bundle's contexts through the worker lanes.
 
@@ -960,7 +960,7 @@ class PipelineOrchestrator:
         else:
             self.apply_pipeline_config(value)
 
-    def apply_pipeline_config(self, pipeline_config: "PipelineConfig") -> None:
+    def apply_pipeline_config(self, pipeline_config: PipelineConfig) -> None:
         """
         Replace the declaration and invalidate changed source bindings.
 

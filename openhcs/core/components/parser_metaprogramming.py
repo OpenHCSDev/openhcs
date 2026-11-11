@@ -46,7 +46,7 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
         components: AxisValues[FilenameParseValue],
         *,
         extension: str,
-    ) -> "FilenameParseResult":
+    ) -> FilenameParseResult:
         """Bind canonical component values to one filename extension."""
 
         return cls(components.declared_values(), extension=extension)
@@ -57,7 +57,7 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
         component_values: Mapping[str, FilenameParseValue],
         *,
         extension: str,
-    ) -> "FilenameParseResult":
+    ) -> FilenameParseResult:
         """Create a nominal result at an explicit keyword or wire boundary."""
 
         return cls.from_components(
@@ -81,7 +81,7 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
         self,
         component: type[Axis],
         value: FilenameParseValue,
-    ) -> "FilenameParseResult":
+    ) -> FilenameParseResult:
         """Return a result with one nominal component value replaced."""
 
         return type(self).from_components(
@@ -92,7 +92,7 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
     def with_values(
         self,
         replacements: Iterable[tuple[type[Axis], FilenameParseValue]],
-    ) -> "FilenameParseResult":
+    ) -> FilenameParseResult:
         """Return a result with nominally declared component replacements."""
 
         components = self.components

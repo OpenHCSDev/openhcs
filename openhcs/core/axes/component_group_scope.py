@@ -38,7 +38,7 @@ class ComponentGroupScope(ABC):
     def of(
         group_keys: Iterable[Hashable | None],
         component: type[Axis] | None = None,
-    ) -> "ComponentGroupScope":
+    ) -> ComponentGroupScope:
         """Read a scope from its raw spelling: group keys plus a component."""
 
         keys = tuple(
@@ -91,7 +91,7 @@ class ComponentGroupScope(ABC):
     @staticmethod
     def union_compatible(
         scopes: Sequence[ComponentGroupScope],
-    ) -> "ComponentGroupScope | None":
+    ) -> ComponentGroupScope | None:
         """Union scopes of one component; None when their components differ."""
 
         if not scopes:
@@ -108,7 +108,7 @@ class ComponentGroupScope(ABC):
 
     def missing_from(
         self,
-        producer_scope: "ComponentGroupScope",
+        producer_scope: ComponentGroupScope,
     ) -> list[ComponentGroupKey]:
         """Return this scope's keys the producer does not plan."""
         return [key for key in self.keys if key not in producer_scope.keys]
@@ -126,7 +126,7 @@ class ComponentGroupScope(ABC):
     def as_grouped(self) -> tuple[GroupedScope, ...]:
         """Return this scope when it groups by a component, else nothing."""
 
-    def require_grouped(self, owner: str) -> "GroupedScope":
+    def require_grouped(self, owner: str) -> GroupedScope:
         raise ValueError(f"{owner} component scopes cannot be ungrouped.")
 
     def groups_by(self, component: type[Axis] | None) -> bool:
@@ -151,7 +151,7 @@ class ComponentGroupScope(ABC):
         """Return whether one concrete invocation belongs to this scope."""
 
     @abstractmethod
-    def contains_scope(self, required: "ComponentGroupScope") -> bool:
+    def contains_scope(self, required: ComponentGroupScope) -> bool:
         """Return whether every invocation in ``required`` is available here."""
 
     def lies_within_keys(self, keys: tuple[str, ...]) -> bool:
@@ -172,11 +172,11 @@ class ComponentGroupScope(ABC):
         """Select one coordinate from this compiled scope for an invocation."""
         return self.resolve_runtime_key(runtime_key)
 
-    def selectable_from(self, producer_scope: "ComponentGroupScope") -> bool:
+    def selectable_from(self, producer_scope: ComponentGroupScope) -> bool:
         """Whether a consumer may select this scope from ``producer_scope``."""
         return producer_scope.contains_scope(self)
 
-    def owned_by(self, invocation_scope: "ComponentGroupScope") -> bool:
+    def owned_by(self, invocation_scope: ComponentGroupScope) -> bool:
         """Whether ``invocation_scope`` supplies the keys this scope selects."""
         return True
 
@@ -184,11 +184,11 @@ class ComponentGroupScope(ABC):
         """Whether a source of this scope can feed group ``key`` of ``component``."""
         return True
 
-    def shared_invocation_scope(self) -> "ComponentGroupScope":
+    def shared_invocation_scope(self) -> ComponentGroupScope:
         """Scope of one callable applied across every group of this scope."""
         return self
 
-    def excludes(self, other: "ComponentGroupScope") -> bool:
+    def excludes(self, other: ComponentGroupScope) -> bool:
         """Whether two compiled scopes of one component share no coordinate."""
         return False
 
@@ -214,9 +214,9 @@ class ComponentGroupScope(ABC):
 
     def output_lineage_scope(
         self,
-        consumer_scope: "ComponentGroupScope",
+        consumer_scope: ComponentGroupScope,
         consumer_variable_components: ComponentSet,
-    ) -> "ComponentGroupScope":
+    ) -> ComponentGroupScope:
         """Propagate this source scope through one consumer invocation."""
         return consumer_scope
 
@@ -263,7 +263,7 @@ class GroupedScope(ComponentGroupScope):
     def as_grouped(self) -> tuple[GroupedScope, ...]:
         return (self,)
 
-    def require_grouped(self, owner: str) -> "GroupedScope":
+    def require_grouped(self, owner: str) -> GroupedScope:
         return self
 
     def groups_by(self, component: type[Axis] | None) -> bool:
@@ -439,11 +439,11 @@ class RuntimeExecutionAxisScope:
     @classmethod
     def from_context(
         cls,
-        context: "ProcessingContext",
+        context: ProcessingContext,
         *,
         component: type[Axis] | str | None = None,
         value: SourceMetadataScalar = None,
-    ) -> "RuntimeExecutionAxisScope":
+    ) -> RuntimeExecutionAxisScope:
         axis_id = context.axis_id
         if not axis_id:
             raise RuntimeError(
@@ -465,7 +465,7 @@ class RuntimeExecutionAxisScope:
         fixed_component_values: Iterable[
             tuple[type[Axis], SourceMetadataScalar]
         ] = (),
-    ) -> "RuntimeExecutionAxisScope":
+    ) -> RuntimeExecutionAxisScope:
         if not axis_id:
             raise ValueError("RuntimeExecutionAxisScope.axis_id cannot be empty.")
         resolved_component = (
@@ -599,8 +599,8 @@ class RuntimeExecutionAxisScope:
 
     def join_execution_cohort(
         self,
-        other: "RuntimeExecutionAxisScope",
-    ) -> "RuntimeExecutionAxisScope | None":
+        other: RuntimeExecutionAxisScope,
+    ) -> RuntimeExecutionAxisScope | None:
         """Join complete producer coordinates within one consumer execution group.
 
         An absent fixed coordinate leaves that axis unconstrained. Shared
@@ -662,7 +662,7 @@ class RuntimeExecutionAxisScope:
 
     def for_output_scope(
         self, output_scope: ComponentGroupScope
-    ) -> "RuntimeExecutionAxisScope":
+    ) -> RuntimeExecutionAxisScope:
         """Project this execution identity onto an output's single group key."""
 
         key = output_scope.single_key()
@@ -674,7 +674,7 @@ class RuntimeExecutionAxisScope:
         self,
         component: type[Axis] | None,
         value: SourceMetadataScalar,
-    ) -> "RuntimeExecutionAxisScope":
+    ) -> RuntimeExecutionAxisScope:
         """Project this execution identity onto one artifact group coordinate."""
 
         resolved_component = (
@@ -764,7 +764,7 @@ class RuntimeExecutionAxisScope:
             if not issubclass(component, PartitionAxis)
         )
 
-    def source_axis_metadata_scope(self) -> "SourceAxisMetadataScope":
+    def source_axis_metadata_scope(self) -> SourceAxisMetadataScope:
         """Return metadata constraints for this runtime axis."""
 
 
@@ -784,10 +784,10 @@ class RuntimeExecutionAxisScope:
 
     def source_image_set_identity(
         self,
-        policy: "SourceImageSetIdentityPolicy",
+        policy: SourceImageSetIdentityPolicy,
         *,
         components: ComponentSet,
-    ) -> "SourceImageSetIdentity":
+    ) -> SourceImageSetIdentity:
         """Project typed coordinates through declared image-set membership."""
 
 

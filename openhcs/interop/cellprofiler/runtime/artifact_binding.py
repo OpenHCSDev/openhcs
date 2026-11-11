@@ -182,7 +182,7 @@ class RuntimeInputBindingRequest:
     def with_object_inputs(
         self,
         object_inputs: tuple[ArtifactSpec, ...],
-    ) -> "RuntimeInputBindingRequest":
+    ) -> RuntimeInputBindingRequest:
         """Restrict object binding to an exact compiled input subset."""
 
         return replace(self, selected_object_inputs=object_inputs)

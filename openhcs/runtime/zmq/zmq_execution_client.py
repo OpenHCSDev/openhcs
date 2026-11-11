@@ -297,7 +297,7 @@ class OpenHCSExecutionSubmission:
         global_pipeline_config: GlobalPipelineConfig,
         config_boundary: ZMQConfigParamsBoundary,
         compile_control: ZMQExecutionCompileControl,
-    ) -> "OpenHCSExecutionSubmission":
+    ) -> OpenHCSExecutionSubmission:
         submission = cls.__new__(cls)
         submission._set_parts(
             identity=identity,
@@ -357,7 +357,7 @@ class OpenHCSExecutionSubmission:
 
     def with_config_params(
         self, config_params: ZMQParams
-    ) -> "OpenHCSExecutionSubmission":
+    ) -> OpenHCSExecutionSubmission:
         return self._from_parts(
             identity=self.identity,
             pipeline_document=self.pipeline_document,
@@ -381,7 +381,7 @@ class OpenHCSExecutionSubmission:
             compile_control=self.compile_control,
         )
 
-    def compile_request(self) -> "OpenHCSExecutionSubmission":
+    def compile_request(self) -> OpenHCSExecutionSubmission:
         return self._from_parts(
             identity=self.identity,
             pipeline_document=self.pipeline_document,
@@ -392,7 +392,7 @@ class OpenHCSExecutionSubmission:
 
     def with_compile_artifact_id(
         self, compile_artifact_id: str
-    ) -> "OpenHCSExecutionSubmission":
+    ) -> OpenHCSExecutionSubmission:
         """Execute the same declared pipeline using its completed compile artifact."""
         return self._from_parts(
             identity=self.identity,
@@ -530,7 +530,7 @@ class ZMQExecutionRequestBuilder:
     def from_task(
         cls,
         task: OpenHCSExecutionSubmission,
-    ) -> "ZMQExecutionRequestBuilder":
+    ) -> ZMQExecutionRequestBuilder:
         return cls(
             identity=task.identity,
             compile_control=task.compile_control,
@@ -592,7 +592,7 @@ class ZMQConfigParamsBoundary:
     def from_optional(
         cls,
         params: ZMQParams | None,
-    ) -> "ZMQConfigParamsBoundary":
+    ) -> ZMQConfigParamsBoundary:
         if params is None:
             return cls(params={})
         return cls(params=params)
@@ -600,7 +600,7 @@ class ZMQConfigParamsBoundary:
     def with_updates(
         self,
         updates: ZMQParams,
-    ) -> "ZMQConfigParamsBoundary":
+    ) -> ZMQConfigParamsBoundary:
         if self.params is None:
             merged_params: dict[str, ZMQValue] = {}
         else:
@@ -624,7 +624,7 @@ class ZMQConfigProjection:
     def from_task(
         cls,
         task: OpenHCSExecutionSubmission,
-    ) -> "ZMQConfigProjection":
+    ) -> ZMQConfigProjection:
         config_source = _pycodify_config_source(task.global_pipeline_config)
         return cls(
             params_boundary=(

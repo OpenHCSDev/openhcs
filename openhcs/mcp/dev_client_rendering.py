@@ -80,7 +80,7 @@ class McpDevOutputRenderOptions:
         del parser
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "McpDevOutputRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> McpDevOutputRenderOptions:
         """Construct renderer options from its declared CLI arguments."""
         del args
         return cls()
@@ -95,7 +95,7 @@ class AuthoringContextRenderOptions(McpDevOutputRenderOptions):
         parser.add_argument("--max-chars", type=int, default=cls().max_chars)
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "AuthoringContextRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> AuthoringContextRenderOptions:
         return cls(max_chars=args.max_chars)
 
 
@@ -118,7 +118,7 @@ class CodeDocumentRenderOptions(McpDevOutputRenderOptions):
         )
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "CodeDocumentRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> CodeDocumentRenderOptions:
         return cls(
             include_source=not args.no_source,
             max_source_chars=args.max_source_chars,
@@ -149,7 +149,7 @@ class UiActionCatalogRenderOptions(McpDevOutputRenderOptions):
         )
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "UiActionCatalogRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> UiActionCatalogRenderOptions:
         return cls(widget_id=args.widget_id)
 
 
@@ -160,7 +160,7 @@ class ViewerImageSampleRenderOptions(McpDevOutputRenderOptions):
     @classmethod
     def from_cli_args(
         cls, args: argparse.Namespace
-    ) -> "ViewerImageSampleRenderOptions":
+    ) -> ViewerImageSampleRenderOptions:
         return cls(include_array_values_requested=args.include_array_values)
 
 
@@ -183,7 +183,7 @@ class CatalogRenderOptions(McpDevOutputRenderOptions):
         )
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "CatalogRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> CatalogRenderOptions:
         return cls(contains=args.contains, limit=args.limit)
 
     def select(
@@ -222,7 +222,7 @@ class WidgetTreeRenderOptions(McpDevOutputRenderOptions):
         )
 
     @classmethod
-    def from_cli_args(cls, args: argparse.Namespace) -> "WidgetTreeRenderOptions":
+    def from_cli_args(cls, args: argparse.Namespace) -> WidgetTreeRenderOptions:
         return cls(
             outline_root_class=args.outline_root_class,
             include_technical_widgets=args.include_technical_widgets,

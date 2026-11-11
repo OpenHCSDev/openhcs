@@ -105,7 +105,7 @@ class SourceImageSetIdentityPolicy:
     def from_plane_member_fields(
         cls,
         fields: frozenset[str],
-    ) -> "SourceImageSetIdentityPolicy":
+    ) -> SourceImageSetIdentityPolicy:
         """Return the exact image-plane membership declared by the step stack."""
 
         plane_member_components: set[type[Axis]] = set()
@@ -126,8 +126,8 @@ class SourceImageSetIdentityPolicy:
     @classmethod
     def from_pipeline_config(
         cls,
-        pipeline_config: "PipelineConfig",
-    ) -> "SourceImageSetIdentityPolicy":
+        pipeline_config: PipelineConfig,
+    ) -> SourceImageSetIdentityPolicy:
         """Compile plate-wide image-set identity from resolved source semantics."""
 
         from objectstate.lazy_factory import (
@@ -182,7 +182,7 @@ class SourceImageSetIdentity:
         *,
         fallback_source_path: str,
         policy: SourceImageSetIdentityPolicy,
-    ) -> "SourceImageSetIdentity":
+    ) -> SourceImageSetIdentity:
         """Return the source image-set identity represented by one image plane."""
         ordered_components = cls.components_from_metadata(metadata, policy=policy)
         if ordered_components:
@@ -502,7 +502,7 @@ class SourceAxisMetadataScope:
             tuple[str | None, SourceAxisMetadataValue],
             ...,
         ],
-    ) -> "SourceAxisMetadataScope":
+    ) -> SourceAxisMetadataScope:
         """Return a source-axis scope with one value per semantic component."""
         normalized: dict[str | None, str] = {}
         for component, value in component_values:
@@ -538,7 +538,7 @@ class SourceAxisMetadataScope:
             if metadata is not None and self.matches_metadata(metadata)
         )
 
-    def multiprocessing_axis_scope(self) -> "SourceAxisMetadataScope":
+    def multiprocessing_axis_scope(self) -> SourceAxisMetadataScope:
         """Return the stable worker-axis partition of this runtime scope."""
 
         multiprocessing_axis = AxisFamily.active().require(AxisFamily.active().partition_axis())

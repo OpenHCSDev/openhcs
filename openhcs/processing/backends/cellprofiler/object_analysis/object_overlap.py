@@ -134,8 +134,8 @@ class OverlapMeasurementRows(ModuleOwnedResultMeasurementRows):
     def for_request(
         cls,
         module_type: type[object],
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "OverlapMeasurementRows":
+        request: CellProfilerOutputRecordRequest,
+    ) -> OverlapMeasurementRows:
         if not issubclass(module_type, _OverlapMeasurementModule):
             raise TypeError(
                 f"{cls.__name__} requires an overlap module owner, got "
@@ -733,8 +733,8 @@ class _OverlapMeasurementModule:
         cls,
         module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         """Select the callable whose result schema matches EMD topology."""
         del contract, source_bindings
@@ -799,7 +799,7 @@ class MeasureImageOverlapModule(
     @classmethod
     def measurement_qualifiers(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
     ) -> tuple[str, ...]:
         image_inputs = tuple(
             spec
@@ -845,7 +845,7 @@ class MeasureObjectOverlapModule(
     @classmethod
     def measurement_qualifiers(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
     ) -> tuple[str, ...]:
         object_inputs = tuple(
             spec

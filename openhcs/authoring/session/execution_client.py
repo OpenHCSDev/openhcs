@@ -34,7 +34,7 @@ class ZMQClientService:
 
     def __init__(
         self,
-        config: "OpenHCSZMQConfig",
+        config: OpenHCSZMQConfig,
         *,
         status_callback: EndpointStartupStatusCallback | None = None,
         compatibility_callback: (
@@ -52,7 +52,7 @@ class ZMQClientService:
     def config(self) -> OpenHCSZMQConfig:
         return self._config
 
-    def set_config(self, config: "OpenHCSZMQConfig") -> None:
+    def set_config(self, config: OpenHCSZMQConfig) -> None:
         if config == self.config:
             return
         self._cancel_connection_attempt()
@@ -74,7 +74,7 @@ class ZMQClientService:
         progress_callback=None,
         persistent: bool | None = None,
         timeout: float | None = None,
-    ) -> "ZMQExecutionClient":
+    ) -> ZMQExecutionClient:
         """Create a client and connect to the execution server."""
         client = await self._connect(
             policy=EndpointConnectionPolicy.ATTACH_OR_START,
@@ -91,7 +91,7 @@ class ZMQClientService:
         progress_callback=None,
         persistent: bool | None = None,
         timeout: float | None = None,
-    ) -> "ZMQExecutionClient | None":
+    ) -> ZMQExecutionClient | None:
         """Attach to a ready execution server without starting one."""
 
         return await self._connect(
@@ -108,7 +108,7 @@ class ZMQClientService:
         progress_callback=None,
         persistent: bool | None = None,
         timeout: float | None = None,
-    ) -> "ZMQExecutionClient | None":
+    ) -> ZMQExecutionClient | None:
         async with self._client_ownership():
             return await self._connect_unlocked(
                 policy=policy,
@@ -143,7 +143,7 @@ class ZMQClientService:
         progress_callback=None,
         persistent: bool | None = None,
         timeout: float | None = None,
-    ) -> "ZMQExecutionClient | None":
+    ) -> ZMQExecutionClient | None:
         from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
         config = self.config
@@ -211,7 +211,7 @@ class ZMQClientService:
         progress_callback=None,
         persistent: bool | None = None,
         timeout: float | None = None,
-    ) -> "ZMQExecutionClient":
+    ) -> ZMQExecutionClient:
         """Replace the configured endpoint and establish a fresh connection."""
 
         from zmqruntime import EndpointShutdownMode
@@ -314,7 +314,7 @@ class ZMQClientService:
     def has_client(self) -> bool:
         return self.zmq_client is not None
 
-    def require_client(self) -> "ZMQExecutionClient":
+    def require_client(self) -> ZMQExecutionClient:
         session = self._session
         if session is None:
             raise RuntimeError("ZMQ client is not connected")

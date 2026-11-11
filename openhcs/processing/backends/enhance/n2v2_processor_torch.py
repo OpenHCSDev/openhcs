@@ -310,7 +310,7 @@ def process_large_slice(
 
 @torch_func
 def n2v2_denoise_torch(
-    image: "torch.Tensor",
+    image: torch.Tensor,
     model_path: Optional[PlateInputFile] = None,
     *,
     random_seed: int = 42,

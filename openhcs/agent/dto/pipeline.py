@@ -56,7 +56,7 @@ class FunctionStepAddRequest:
         enabled: bool = True,
         debug_pause: bool = False,
         index: int | None = None,
-    ) -> "FunctionStepAddRequest":
+    ) -> FunctionStepAddRequest:
         return cls(
             pipeline_id=pipeline_id,
             function_id=function_id,

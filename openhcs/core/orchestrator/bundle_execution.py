@@ -164,7 +164,7 @@ class ValidatedBundleExecution(ProgressExecutionContext):
 
 
 def execute_bundle_request(
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     request: BundleExecutionRequest,
 ) -> BundleExecutionResults:
     """Execute compiled contexts through the runtime worker lanes."""
@@ -336,7 +336,7 @@ def execute_bundle_request(
 
 
 def validate_bundle_execution(
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     request: BundleExecutionRequest,
 ) -> ValidatedBundleExecution | None:
     """Validate execute-compiled-bundle invariants before worker setup."""
@@ -645,7 +645,7 @@ class _DatasetStepProgressHeartbeat:
     def __post_init__(self) -> None:
         self._stop_event = threading.Event()
 
-    def __enter__(self) -> "_DatasetStepProgressHeartbeat":
+    def __enter__(self) -> _DatasetStepProgressHeartbeat:
         self._emit(StepStartedProgressPhase, StartedProgressStatus)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -819,7 +819,7 @@ def _dataset_artifact_batch(
     contract: CallableContract,
     records_by_axis: Mapping[str, tuple[StoredRuntimeValue, ...]],
     source_binding_plan: CompiledSourceBindingPlan,
-    source_image_set_identity_policy: "SourceImageSetIdentityPolicy",
+    source_image_set_identity_policy: SourceImageSetIdentityPolicy,
 ) -> RuntimeArtifactBatch:
     selected: OrderedDict[
         str,
@@ -909,7 +909,7 @@ def actual_max_workers(
 
 def bootstrap_execution_visualizers(
     *,
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     compiled_contexts: Dict[str, CompiledContext],
     visualizer: ExecutionVisualizerABC | None,
     progress_queue: ProgressQueue,
@@ -946,7 +946,7 @@ def bootstrap_execution_visualizers(
 
 def iter_required_visualizers(
     *,
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     compiled_contexts: Dict[str, CompiledContext],
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
@@ -1014,7 +1014,7 @@ def emit_launching_viewer(
 
 def wait_until_visualizers_ready(
     *,
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     visualizers: list[ExecutionVisualizerABC],
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
@@ -1081,7 +1081,7 @@ class ViewerSettlementProgressObserver:
     progress_context: ProgressExecutionContext
     viewer_port: int
     heartbeat_interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS
-    _last_progress: "ViewerSettleProgress | None" = field(
+    _last_progress: ViewerSettleProgress | None = field(
         default=None,
         init=False,
         repr=False,
@@ -1096,7 +1096,7 @@ class ViewerSettlementProgressObserver:
         if self.heartbeat_interval_seconds <= 0:
             raise ValueError("Viewer settlement heartbeat interval must be positive.")
 
-    def __call__(self, progress: "ViewerSettleProgress") -> None:
+    def __call__(self, progress: ViewerSettleProgress) -> None:
         observed_at = time.monotonic()
         if progress == self._last_progress and not progress.heartbeat_due(
             observed_at - self._last_emitted_at, self.heartbeat_interval_seconds
@@ -1198,7 +1198,7 @@ def stop_execution_visualizers(visualizers: list[ExecutionVisualizerABC]) -> Non
 
 
 def project_execution_state(
-    orchestrator: "PipelineOrchestrator",
+    orchestrator: PipelineOrchestrator,
     execution_results: BundleExecutionResults,
 ) -> None:
     """Project worker-lane results back into orchestrator lifecycle state."""

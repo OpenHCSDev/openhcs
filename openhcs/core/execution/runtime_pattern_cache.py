@@ -34,7 +34,7 @@ class RuntimePatternDiscoveryCacheKey:
         source_files: Sequence[str],
         group_by: type[GroupingDeclaration] | None,
         variable_components: Sequence[type[Axis]],
-    ) -> "RuntimePatternDiscoveryCacheKey":
+    ) -> RuntimePatternDiscoveryCacheKey:
         if not axis_id:
             raise ValueError("Runtime pattern cache axis_id cannot be empty.")
         if not source_files:
@@ -60,7 +60,7 @@ class FrozenAxisPatternCollection:
     def from_collection(
         cls,
         collection: DiscoveredPatternCollection,
-    ) -> "FrozenAxisPatternCollection":
+    ) -> FrozenAxisPatternCollection:
         if isinstance(collection, Mapping):
             return cls(
                 grouped_patterns=tuple(
@@ -92,7 +92,7 @@ class FrozenPatternDiscoveryResult:
     def from_patterns_by_axis(
         cls,
         patterns_by_axis: Mapping[str, DiscoveredPatternCollection],
-    ) -> "FrozenPatternDiscoveryResult":
+    ) -> FrozenPatternDiscoveryResult:
         return cls(
             tuple(
                 (
@@ -125,7 +125,7 @@ class RuntimePatternDiscoveryCache:
     ] = field(default_factory=dict)
 
     def metadata_for_filename(
-        self, parser: "FilenameParser", filename: str,
+        self, parser: FilenameParser, filename: str,
     ) -> FilenameParseResult | None:
         """Own each filename result under its actual parser semantics."""
         semantics = parser.semantic_identity()
@@ -142,7 +142,7 @@ class RuntimePatternDiscoveryCache:
 
     def files_for_component(
         self,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         files: Sequence[str],
         component: type[Axis],
         value: object,

@@ -164,7 +164,7 @@ class RuntimeProjectionSourceIdentityRequest:
     def plane_metadata(
         self,
         context: RuntimePlaneAxisValueProjection,
-    ) -> "RuntimeProjectionPlaneMetadata | None":
+    ) -> RuntimeProjectionPlaneMetadata | None:
         """Return plane identity derived from this request's declared axis."""
         return RuntimeProjectionPlaneMetadata(
             plane_indices=(context.require_plane_index(),),
@@ -232,7 +232,7 @@ class RuntimeProjectionSourceIdentityRequirement(ABC):
     @abstractmethod
     def validate_stack_value(
         cls,
-        value: "RuntimeProjectionData",
+        value: RuntimeProjectionData,
         slice_count: int,
         *,
         source_description: str,
@@ -282,7 +282,7 @@ class OptionalSourceIdentity(RuntimeProjectionSourceIdentityRequirement):
     @classmethod
     def validate_stack_value(
         cls,
-        value: "RuntimeProjectionData",
+        value: RuntimeProjectionData,
         slice_count: int,
         *,
         source_description: str,
@@ -296,7 +296,7 @@ class RequiredSourceComponentMetadata(RuntimeProjectionSourceIdentityRequirement
     @classmethod
     def validate_stack_value(
         cls,
-        value: "RuntimeProjectionData",
+        value: RuntimeProjectionData,
         slice_count: int,
         *,
         source_description: str,

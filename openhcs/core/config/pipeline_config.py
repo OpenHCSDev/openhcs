@@ -119,7 +119,7 @@ class MaterializationBackend(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: "ClassVar[dict[str, type[MaterializationBackend]]]" = {}
+    __registry__: ClassVar[dict[str, type[MaterializationBackend]]] = {}
 
     name: ClassVar[str | None] = None
     backend: ClassVar[Backend]
@@ -158,7 +158,7 @@ class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: "ClassVar[dict[str, type[PartitionFilterMode]]]" = {}
+    __registry__: ClassVar[dict[str, type[PartitionFilterMode]]] = {}
 
     name: ClassVar[str | None] = None
     preview_prefix: ClassVar[str]
@@ -426,7 +426,7 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     """
 
     @classmethod
-    def partition_filter_inheritance_branch(cls) -> "type[PartitionFilterConfig]":
+    def partition_filter_inheritance_branch(cls) -> type[PartitionFilterConfig]:
         """Return the nominal MRO branch that may supply inherited filters."""
         return cls
 
@@ -528,12 +528,12 @@ class DtypeConfig(
     """
 
     @classmethod
-    def default_value(cls) -> "DtypeConfig":
+    def default_value(cls) -> DtypeConfig:
         """Return the inheritable OpenHCS callable default."""
         return cls()
 
     @classmethod
-    def annotation_type(cls) -> "type[DtypeConfig]":
+    def annotation_type(cls) -> type[DtypeConfig]:
         """Expose the inheritable config type on callable signatures."""
         return cls
 
@@ -932,8 +932,8 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
 
     def compiled_plan_for_contracts(
         self,
-        contracts: "Iterable[CallableContract]",
-        main_input_dependency: "StepInputDependency",
+        contracts: Iterable[CallableContract],
+        main_input_dependency: StepInputDependency,
         available_artifacts: ArtifactSpecCollection,
     ) -> CompiledSourceBindingPlan:
         """Compile only the bindings the step's callables consume."""
@@ -966,7 +966,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
             return CompiledSourceBindingPlan()
         return self.compiled_plan(selected_bindings=bindings)
 
-    def resolve_defaults(self) -> "SourceBindingsConfig":
+    def resolve_defaults(self) -> SourceBindingsConfig:
         """Return concrete source-binding defaults from eager or lazy config values."""
         from objectstate import get_base_type_for_lazy
 
@@ -1278,13 +1278,13 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     def config_type_for_viewer(
         cls,
         viewer_type: ViewerType,
-    ) -> "type[StreamingConfig]":
+    ) -> type[StreamingConfig]:
         """Return the registered config declaration for one viewer."""
 
         return cls.__registry__[ViewerFamily.named(viewer_type)]
 
     @classmethod
-    def config_type_for_key(cls, config_key: str) -> "type[StreamingConfig]":
+    def config_type_for_key(cls, config_key: str) -> type[StreamingConfig]:
         """Return the registered streaming config type for an ObjectState field key."""
         return cls.__registry__[ViewerFamily.for_config_key(config_key)]
 

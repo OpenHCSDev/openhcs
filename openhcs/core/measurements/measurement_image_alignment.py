@@ -52,7 +52,7 @@ class MeasurementImageAlignmentSource(ABC):
     def with_alignment_image(
         self,
         image: RuntimeArrayData | AlignedImageStack,
-    ) -> "MeasurementImageAlignmentSource":
+    ) -> MeasurementImageAlignmentSource:
         """Return this source with projected image data and identical provenance."""
 
     def alignment_request(
@@ -62,7 +62,7 @@ class MeasurementImageAlignmentSource(ABC):
         label_payload: ObjectLabelValue | None = None,
         plane_projector: RuntimePlaneAxisProjector | None = None,
         align_image_to_labels: bool = True,
-    ) -> "MeasurementImageLabelAlignmentRequest":
+    ) -> MeasurementImageLabelAlignmentRequest:
         """Return a request carrying only label/projector-local alignment facts."""
         return MeasurementImageLabelAlignmentRequest(
             source=self,
@@ -78,7 +78,7 @@ class MeasurementImageAlignmentSource(ABC):
         *,
         plane_projector: RuntimePlaneAxisProjector | None = None,
         align_image_to_labels: bool = True,
-    ) -> "MeasurementImageLabelAlignmentRequest":
+    ) -> MeasurementImageLabelAlignmentRequest:
         """Return a measurement-label alignment request from an object-label payload."""
         return self.alignment_request(
             labels=label_payload,
@@ -128,7 +128,7 @@ class MeasurementImageLabelAlignmentRequest:
             )
         return self.image_data
 
-    def with_source_projected_image(self) -> "MeasurementImageLabelAlignmentRequest":
+    def with_source_projected_image(self) -> MeasurementImageLabelAlignmentRequest:
         """Return this request with only the measurement image source-projected."""
         projection = RuntimePlaneAxisValueProjection.from_projector(
             self.plane_projector,
@@ -164,7 +164,7 @@ class MeasurementImageLabelAlignmentRequest:
             source=self.source.with_alignment_image(projected_image),
         )
 
-    def with_source_projected_labels(self) -> "MeasurementImageLabelAlignmentRequest":
+    def with_source_projected_labels(self) -> MeasurementImageLabelAlignmentRequest:
         """Project labels only through their declared axis and runtime context."""
         if self.label_payload is None:
             return self
@@ -301,11 +301,11 @@ class MeasurementImageLabelAlignmentRequest:
             label_payload=request.label_payload,
         )
 
-    def aligned(self) -> "MeasurementImageLabelAlignmentRequest":
+    def aligned(self) -> MeasurementImageLabelAlignmentRequest:
         """Return projected image and labels from one coupled alignment pass."""
         return self.with_source_projected_labels()._with_aligned_source()
 
-    def _with_aligned_source(self) -> "MeasurementImageLabelAlignmentRequest":
+    def _with_aligned_source(self) -> MeasurementImageLabelAlignmentRequest:
         """Align an already projected request without repeating label projection."""
         request, image = self.reference_domain.reference_image(self)
         label_payload = request.label_payload
@@ -510,7 +510,7 @@ class PreparedMeasurementObjectLabels:
         *,
         plane_projector: RuntimePlaneAxisProjector | None = None,
         align_image_to_labels: bool = True,
-    ) -> "PreparedMeasurementObjectLabels":
+    ) -> PreparedMeasurementObjectLabels:
         """Prepare labels from one measurement-image source and payload."""
         return cls.from_request(
             request=source.object_label_alignment_request(
@@ -524,7 +524,7 @@ class PreparedMeasurementObjectLabels:
     def from_request(
         cls,
         request: MeasurementImageLabelAlignmentRequest,
-    ) -> "PreparedMeasurementObjectLabels":
+    ) -> PreparedMeasurementObjectLabels:
         """Prepare image, dense labels, and completion payload in one pass."""
         if request.label_payload is None:
             raise TypeError(

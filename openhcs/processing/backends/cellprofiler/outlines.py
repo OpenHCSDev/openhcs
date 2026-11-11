@@ -129,8 +129,8 @@ class OverlayObjectsModule(
         cls,
         default: type[ImagePayloadExecutionMode],
         *,
-        image: "RuntimeArrayData",
-        kwargs: "RuntimeCallableKwargs",
+        image: RuntimeArrayData,
+        kwargs: RuntimeCallableKwargs,
         variable_components: tuple[type[Axis], ...],
     ) -> type[ImagePayloadExecutionMode]:
         """Preserve one payload-scoped object volume as one invocation."""
@@ -251,7 +251,7 @@ class OverlayOutlinesModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bound: BoundModuleSettings,
     ) -> BoundModuleSettings:
         rows = cls.outline_rows(module)
@@ -452,13 +452,13 @@ class OverlayOutlinesModule(
         )
 
     @classmethod
-    def uses_blank_image(cls, module: "ModuleBlock") -> bool:
+    def uses_blank_image(cls, module: ModuleBlock) -> bool:
         return parse_cellprofiler_bool(
             required_setting_value(module, cls.blank_image_binding.setting_name)
         )
 
     @classmethod
-    def base_image_name(cls, module: "ModuleBlock") -> str | None:
+    def base_image_name(cls, module: ModuleBlock) -> str | None:
         if cls.uses_blank_image(module):
             return None
         return required_setting_value(module, cls.base_image_setting)
@@ -494,7 +494,7 @@ class OverlayOutlinesModule(
 
     @classmethod
     def outline_rows(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["OverlayOutlinesModule.OutlineRow", ...]:
         rows = (
             cls._ordered_outline_rows(module)
@@ -510,7 +510,7 @@ class OverlayOutlinesModule(
     @classmethod
     def _object_outline_rows(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple["OverlayOutlinesModule.OutlineRow", ...]:
         """Return the CP3 object/color row schema in declared column order."""
 
@@ -534,7 +534,7 @@ class OverlayOutlinesModule(
 
     @classmethod
     def _ordered_outline_rows(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["OverlayOutlinesModule.OutlineRow", ...]:
         image_blocks = repeating_setting_blocks(
             module.iter_settings(), start_name=cls.outline_image_setting
@@ -551,7 +551,7 @@ class OverlayOutlinesModule(
     @classmethod
     def _outline_rows_from_columns(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple["OverlayOutlinesModule.OutlineRow", ...]:
         source_kinds = cls._source_kinds(module)
         colors = cls._outline_colors(module, len(source_kinds))
@@ -590,8 +590,8 @@ class OverlayOutlinesModule(
 
     @classmethod
     def _outline_row_from_block(
-        cls, module: "ModuleBlock", block: Sequence["ModuleSetting"]
-    ) -> "OverlayOutlinesModule.OutlineRow":
+        cls, module: ModuleBlock, block: Sequence["ModuleSetting"]
+    ) -> OverlayOutlinesModule.OutlineRow:
         return cls._outline_row_from_fields(
             module,
             image_name=normalized_symbol_name(
@@ -610,13 +610,13 @@ class OverlayOutlinesModule(
     @classmethod
     def _outline_row_from_fields(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         image_name: str | None,
         objects_name: str | None,
         source_kind: OutlineSourceKind,
         color: str,
-    ) -> "OverlayOutlinesModule.OutlineRow":
+    ) -> OverlayOutlinesModule.OutlineRow:
         row = cls.OutlineRow(
             source_kind=source_kind,
             image_name=image_name,
@@ -628,7 +628,7 @@ class OverlayOutlinesModule(
 
     @classmethod
     def _validate_outline_row(
-        cls, module: "ModuleBlock", row: "OverlayOutlinesModule.OutlineRow"
+        cls, module: ModuleBlock, row: OverlayOutlinesModule.OutlineRow
     ) -> None:
         if row.input_is_image:
             if row.image_name is None:
@@ -780,7 +780,7 @@ class OverlayOutlineRuntimeRow:
     @classmethod
     def from_literals(
         cls, source_kind: OutlineSourceKind | str, color: str | Sequence[float]
-    ) -> "OverlayOutlineRuntimeRow":
+    ) -> OverlayOutlineRuntimeRow:
         return cls(
             source_kind=coerce_cellprofiler_enum(OutlineSourceKind, source_kind),
             color=coerce_rgb_color(color),

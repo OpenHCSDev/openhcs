@@ -1405,10 +1405,10 @@ class PatternGroupData(PatternGroupExecutionScope):
     @classmethod
     def from_loaded_group(
         cls,
-        request: "PatternGroupExecutionRequest",
+        request: PatternGroupExecutionRequest,
         matching_files: list[str],
         main_data_stack: RuntimeArrayData,
-    ) -> "PatternGroupData":
+    ) -> PatternGroupData:
         ArtifactInputPlan.require_exact_map(
             request.execution_plan.artifact_inputs,
             boundary="Component artifact input",
@@ -1578,7 +1578,7 @@ class FunctionCoreExecutor:
         main_data_arg: RuntimeArrayData,
         source_memory_type: str,
         declared_source_bindings: CompiledSourceBindingPlan,
-    ) -> "FunctionCoreExecutor | None":
+    ) -> FunctionCoreExecutor | None:
         """Admit the selected compiled edges and outputs for this live invocation."""
         group_key = invocation.key.runtime_group_key(group_data.component_value)
         active_source_bindings = group_data.active_main_flow_source_binding_plan(

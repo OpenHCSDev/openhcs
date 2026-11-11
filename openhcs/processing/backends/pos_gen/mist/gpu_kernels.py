@@ -149,10 +149,10 @@ def _union_components_kernel(
 
 
 def launch_reset_flatten_kernel(
-    parent: "cp.ndarray",  # type: ignore
-    rank: "cp.ndarray",  # type: ignore
-    cheapest_edge_idx: "cp.ndarray",  # type: ignore
-    cheapest_edge_weight_int: "cp.ndarray",  # type: ignore
+    parent: cp.ndarray,  # type: ignore
+    rank: cp.ndarray,  # type: ignore
+    cheapest_edge_idx: cp.ndarray,  # type: ignore
+    cheapest_edge_weight_int: cp.ndarray,  # type: ignore
     num_nodes: int,
 ) -> None:
     """
@@ -169,12 +169,12 @@ def launch_reset_flatten_kernel(
 
 
 def launch_find_minimum_edges_kernel(
-    edges_from: "cp.ndarray",  # type: ignore
-    edges_to: "cp.ndarray",  # type: ignore
-    edges_quality: "cp.ndarray",  # type: ignore
-    parent: "cp.ndarray",  # type: ignore
-    cheapest_edge_idx: "cp.ndarray",  # type: ignore
-    cheapest_edge_weight_int: "cp.ndarray",  # type: ignore
+    edges_from: cp.ndarray,  # type: ignore
+    edges_to: cp.ndarray,  # type: ignore
+    edges_quality: cp.ndarray,  # type: ignore
+    parent: cp.ndarray,  # type: ignore
+    cheapest_edge_idx: cp.ndarray,  # type: ignore
+    cheapest_edge_weight_int: cp.ndarray,  # type: ignore
     num_edges: int,
 ) -> None:
     """
@@ -199,18 +199,18 @@ def launch_find_minimum_edges_kernel(
 
 
 def launch_union_components_kernel(
-    cheapest_edge_idx: "cp.ndarray",  # type: ignore
-    edges_from: "cp.ndarray",  # type: ignore
-    edges_to: "cp.ndarray",  # type: ignore
-    edges_dx: "cp.ndarray",  # type: ignore
-    edges_dy: "cp.ndarray",  # type: ignore
-    parent: "cp.ndarray",  # type: ignore
-    rank: "cp.ndarray",  # type: ignore
-    mst_from: "cp.ndarray",  # type: ignore
-    mst_to: "cp.ndarray",  # type: ignore
-    mst_dx: "cp.ndarray",  # type: ignore
-    mst_dy: "cp.ndarray",  # type: ignore
-    mst_count: "cp.ndarray",  # type: ignore
+    cheapest_edge_idx: cp.ndarray,  # type: ignore
+    edges_from: cp.ndarray,  # type: ignore
+    edges_to: cp.ndarray,  # type: ignore
+    edges_dx: cp.ndarray,  # type: ignore
+    edges_dy: cp.ndarray,  # type: ignore
+    parent: cp.ndarray,  # type: ignore
+    rank: cp.ndarray,  # type: ignore
+    mst_from: cp.ndarray,  # type: ignore
+    mst_to: cp.ndarray,  # type: ignore
+    mst_dx: cp.ndarray,  # type: ignore
+    mst_dy: cp.ndarray,  # type: ignore
+    mst_count: cp.ndarray,  # type: ignore
     num_nodes: int,
 ) -> None:
     """
@@ -241,7 +241,7 @@ def launch_union_components_kernel(
     )
 
 
-def gpu_component_count(parent: "cp.ndarray") -> "cp.ndarray":  # type: ignore
+def gpu_component_count(parent: cp.ndarray) -> cp.ndarray:  # type: ignore
     """
     Count number of distinct components in flattened union-find - pure GPU.
     Returns GPU array, no CPU sync.

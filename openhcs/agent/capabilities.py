@@ -413,7 +413,7 @@ class LocalCapabilitySurfaceProfile(ABC, metaclass=AutoRegisterMeta):
     distribution_base_extras: ClassVar[tuple[str, ...]] = ("mcp",)
 
     @classmethod
-    def for_name(cls, name: str) -> "LocalCapabilitySurfaceProfile":
+    def for_name(cls, name: str) -> LocalCapabilitySurfaceProfile:
         try:
             return cls.__registry__[name]()
         except KeyError as exc:
@@ -571,7 +571,7 @@ class AgentCapabilityExposition:
         target_context: CapabilityTargetContext | None = None,
         visibility: CapabilityVisibility | None = None,
         role: CapabilityRole | None = None,
-    ) -> "AgentCapabilityExposition":
+    ) -> AgentCapabilityExposition:
         """Return a typed refinement owned by an inherited capability family."""
         return AgentCapabilityExposition(
             workflow_group=(

@@ -123,7 +123,7 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
         relationship_type: str = "parent_child",
         source_runtime_slice_offset: int = 0,
         target_runtime_slice_offset: int = 0,
-    ) -> "ObjectRelationshipDeclaration":
+    ) -> ObjectRelationshipDeclaration:
         """Declare canonical parent-to-child object lineage."""
 
         return cls(
@@ -189,7 +189,7 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
     def for_plan_type(
         self,
         plan_type: type[ArtifactPlan],
-    ) -> "ObjectRelationshipDeclaration":
+    ) -> ObjectRelationshipDeclaration:
         """Project endpoint identities with the relationship artifact role."""
 
         return replace(
@@ -290,7 +290,7 @@ class ObjectRelationship(
     def runtime_slice_count(self) -> int | None:
         return self.payload.slice_count
 
-    def project_runtime_slice(self, slice_index: int) -> "ObjectRelationship":
+    def project_runtime_slice(self, slice_index: int) -> ObjectRelationship:
         """Return only relationship rows belonging to one runtime slice."""
         source_provenance = self.source_provenance.for_source_plane(slice_index)
         return ObjectRelationship(
@@ -428,7 +428,7 @@ class DirectedObjectRelationshipPayload(
 
     def with_runtime_slice_identity(
         self, *, slice_index: int, slice_count: int
-    ) -> "DirectedObjectRelationshipPayload":
+    ) -> DirectedObjectRelationshipPayload:
         return type(self)(
             source_ids=self.source_ids,
             target_ids=self.target_ids,
@@ -467,7 +467,7 @@ class DirectedObjectRelationshipPayload(
 
     def project_runtime_slice(
         self, slice_index: int
-    ) -> "DirectedObjectRelationshipPayload":
+    ) -> DirectedObjectRelationshipPayload:
         if not self.slice_indices:
             if (
                 self.slice_count is not None
@@ -908,7 +908,7 @@ class ObjectInstanceKey:
         object_id: int,
         *,
         slice_index_field: MeasurementRowAxisField = MeasurementRowAxisField.SLICE_INDEX,
-    ) -> "ObjectInstanceKey":
+    ) -> ObjectInstanceKey:
         """Build object identity from the row's runtime slice axis."""
         raw_slice_index = row.get(slice_index_field.value)
         if raw_slice_index is not None and str(raw_slice_index).strip() != "":
@@ -941,7 +941,7 @@ class ObjectInstanceRelationship:
         *,
         slice_indices: Iterable[int] = (),
         slice_count: int | None = None,
-    ) -> "ObjectInstanceRelationship":
+    ) -> ObjectInstanceRelationship:
         """Build typed relationship identity from id columns plus optional slices."""
         source_id_tuple = tuple((int(value) for value in source_ids))
         target_id_tuple = tuple((int(value) for value in target_ids))
@@ -1110,7 +1110,7 @@ class ObjectLabelInstanceDomains:
     @classmethod
     def from_named_plane_domains(
         cls, named_plane_domains: Iterable[tuple[str, tuple[tuple[int, ...], ...]]]
-    ) -> "ObjectLabelInstanceDomains":
+    ) -> ObjectLabelInstanceDomains:
         """Build domains from per-plane object-id domains."""
         domains: dict[str, dict[ObjectInstanceKey, None]] = {}
         for object_name, plane_domains in named_plane_domains:

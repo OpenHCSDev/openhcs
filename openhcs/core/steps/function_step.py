@@ -37,7 +37,7 @@ class FunctionStep(AbstractStep):
 
     def process(
         self,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         step_index: int,
     ) -> StepExecutionObservation:
         return FunctionStepExecutor.execute(context, step_index)
@@ -46,7 +46,7 @@ class FunctionStep(AbstractStep):
         """Return the declaration function spec, or None after compile stripping."""
         return self.__dict__.get("func")
 
-    def with_function_spec(self, func: FunctionSpec) -> "FunctionStep":
+    def with_function_spec(self, func: FunctionSpec) -> FunctionStep:
         """Return a shallow declaration copy with a replacement function spec."""
         from copy import copy
 

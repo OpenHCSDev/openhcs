@@ -18,10 +18,10 @@ from .types import ProgressStream, ProgressEvent
 class ProgressRegistry:
     """Per-process singleton registry for OpenHCS progress events."""
 
-    _instance: "ProgressRegistry | None" = None
+    _instance: ProgressRegistry | None = None
     _instance_lock = threading.Lock()
 
-    def __new__(cls) -> "ProgressRegistry":
+    def __new__(cls) -> ProgressRegistry:
         if cls._instance is None:
             with cls._instance_lock:
                 if cls._instance is None:

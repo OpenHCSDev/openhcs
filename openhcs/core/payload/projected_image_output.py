@@ -90,7 +90,7 @@ class SelectedPlaneImageOutput(SourcePlaneSelectionImageOutput):
     data: RuntimeArrayData
     source_indices: tuple[int, ...]
 
-    def with_data(self, data: RuntimeArrayData) -> "SelectedPlaneImageOutput":
+    def with_data(self, data: RuntimeArrayData) -> SelectedPlaneImageOutput:
         return replace(self, data=data)
 
     def selected_source_plane_indices(self) -> tuple[int, ...]:

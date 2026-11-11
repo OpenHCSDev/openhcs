@@ -126,7 +126,7 @@ class IndexedObjectZernikeDescriptor:
         family: ObjectZernikeDescriptorFeature | None = None,
         family_names: Sequence[str] | None = None,
         allow_source_qualified: bool = False,
-    ) -> "IndexedObjectZernikeDescriptor | None":
+    ) -> IndexedObjectZernikeDescriptor | None:
         normalized_parts = tuple(
             part
             for part in normalize_runtime_identifier(feature_name).split("_")
@@ -519,7 +519,7 @@ class ZernikeIntensityDebugArrayTrace:
     digest: bytes
 
     @classmethod
-    def from_array(cls, array: np.ndarray) -> "ZernikeIntensityDebugArrayTrace":
+    def from_array(cls, array: np.ndarray) -> ZernikeIntensityDebugArrayTrace:
         dtype, shape, digest = _array_content_key(array)
         return cls(shape=shape, dtype=dtype, digest=digest)
 
@@ -563,7 +563,7 @@ class ZernikeIntensityDebugTrace:
         pixel_values: np.ndarray,
         magnitudes: np.ndarray,
         phases: np.ndarray,
-    ) -> "ZernikeIntensityDebugTrace":
+    ) -> ZernikeIntensityDebugTrace:
         return cls(
             backend_provider=backend_provider,
             image=ZernikeIntensityDebugArrayTrace.from_array(image),
@@ -683,7 +683,7 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
         source_image_name: str,
         slice_index: int | None = None,
         object_row_identity: MeasurementObjectRowIdentity | None = None,
-    ) -> "ObjectIntensityZernikeMeasurementColumnarRows":
+    ) -> ObjectIntensityZernikeMeasurementColumnarRows:
         return cls(
             object_ids=(),
             zernike_indexes=(),

@@ -61,7 +61,7 @@ class SyntheticPlateGenerationProfile:
     supported_formats: tuple[SyntheticPlateFormat, ...]
 
     @classmethod
-    def default(cls) -> "SyntheticPlateGenerationProfile":
+    def default(cls) -> SyntheticPlateGenerationProfile:
         return cls(
             default_request=SyntheticPlateGenerationParameters(),
             bounds=SyntheticPlateGenerationBounds(),

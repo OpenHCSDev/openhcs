@@ -192,7 +192,7 @@ class WormLabelOutputStrategy(
     @classmethod
     def for_overlap_style(
         cls, overlap_style: OverlapStyle
-    ) -> "WormLabelOutputStrategy":
+    ) -> WormLabelOutputStrategy:
         return cls.for_enum_member(overlap_style)
 
     @abstractmethod
@@ -410,7 +410,7 @@ class UntangleWormsModule(
         cls,
         module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Return object and outline outputs active for the overlap style."""
 
@@ -479,7 +479,7 @@ class UntangleWormsModule(
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binder: SettingsBinder,
     ) -> BoundModuleSettings:
@@ -530,7 +530,7 @@ class UntangleWormsModule(
 
     @classmethod
     def measurement_record_rows(
-        cls, request: "CellProfilerOutputRecordRequest"
+        cls, request: CellProfilerOutputRecordRequest
     ) -> ColumnarRows:
         rows = measurement_table_rows(request.output_value)
         object_name_field = MeasurementRowAxisField.OBJECT_NAME.value
@@ -567,7 +567,7 @@ class UntangleWormsModule(
     @classmethod
     def training_parameter_kwargs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binder: SettingsBinder,
     ) -> dict[str, float | int | tuple[Any, ...]]:
@@ -994,12 +994,12 @@ class StraightenWormsModule(
         output_image_name: str
 
     @classmethod
-    def input_objects_name(cls, module: "ModuleBlock") -> str:
+    def input_objects_name(cls, module: ModuleBlock) -> str:
         return required_setting_value(module, cls.input_objects_binding.setting_name)
 
     @classmethod
     def image_bindings(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["StraightenWormsModule.ImageBinding", ...]:
         blocks = repeating_setting_blocks(
             module.iter_settings(), start_name=cls.input_image_binding.setting_name
@@ -1017,7 +1017,7 @@ class StraightenWormsModule(
         cls,
         module: ModuleBlock,
         block: Sequence[ModuleSetting],
-    ) -> "StraightenWormsModule.ImageBinding":
+    ) -> StraightenWormsModule.ImageBinding:
         input_name = normalized_symbol_name(
             block_setting_value(block, cls.input_image_binding.setting_name)
         )
@@ -1036,7 +1036,7 @@ class StraightenWormsModule(
         cls,
         object_input: ArtifactSpec,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> ArtifactSpec | None:
         """Select the measurement artifact related to one exact object output."""
 
@@ -1491,7 +1491,7 @@ class LineSegments:
     @classmethod
     def from_endpoints(
         cls, y0: np.ndarray, x0: np.ndarray, y1: np.ndarray, x1: np.ndarray
-    ) -> "LineSegments":
+    ) -> LineSegments:
         return cls(y0=y0, x0=x0, y1=y1, x1=x1)
 
     def points(self) -> tuple[np.ndarray, np.ndarray]:
@@ -1622,7 +1622,7 @@ class WormControlPointGeometry:
         cumulative_lengths: np.ndarray,
         *,
         num_control_points: int,
-    ) -> "WormControlPointGeometry":
+    ) -> WormControlPointGeometry:
         """Sample one path once for all downstream worm geometry consumers."""
 
         if len(path_coords) < 2:
@@ -2358,7 +2358,7 @@ class WormGraphPath:
     segments: tuple[int, ...]
     branch_areas: tuple[int, ...]
 
-    def to_pixel_coords(self, graph: "WormGraph") -> np.ndarray:
+    def to_pixel_coords(self, graph: WormGraph) -> np.ndarray:
         if len(self.segments) == 1:
             return graph.segments[self.segments[0]][0]
         direction = graph.incidence_directions[self.branch_areas[0], self.segments[0]]
@@ -2504,7 +2504,7 @@ class WormSegmentTrace:
     segment_count: int
 
     @classmethod
-    def from_segments(cls, segments: np.ndarray) -> "WormSegmentTrace":
+    def from_segments(cls, segments: np.ndarray) -> WormSegmentTrace:
         segment_labels, segment_count = label(segments, structure=eight_connectivity())
         if segment_count == 0:
             empty_i = np.zeros(0, dtype=int)

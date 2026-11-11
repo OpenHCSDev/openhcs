@@ -121,7 +121,7 @@ class DistanceMethod(Enum, NumbaNumpyDefaultBackend):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "DistanceMethod":
+    ) -> DistanceMethod:
         obj = object.__new__(cls)
         obj._value_ = absorbed_value
         obj.cellprofiler_literals = (absorbed_value, *cellprofiler_literals)
@@ -169,7 +169,7 @@ class NeighborDistancePlanner(
     method: ClassVar[DistanceMethod | None] = None
 
     @classmethod
-    def for_method(cls, method: DistanceMethod) -> "NeighborDistancePlanner":
+    def for_method(cls, method: DistanceMethod) -> NeighborDistancePlanner:
         if not isinstance(method, DistanceMethod):
             raise TypeError(
                 "Neighbor distance planning requires a DistanceMethod, "
@@ -356,7 +356,7 @@ def variant_numbers_for_final_labels(
     final_labels: np.ndarray,
     variant_labels: np.ndarray,
     *,
-    neighbor_backend: "NeighborTopologyBackendStrategy | None" = None,
+    neighbor_backend: NeighborTopologyBackendStrategy | None = None,
 ) -> np.ndarray:
     """Map each final object ID to the corresponding variant object ID."""
     backend = neighbor_backend or neighbor_topology_backend()
@@ -1571,8 +1571,8 @@ class MeasureObjectNeighborsModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         colormaps = module.get_setting_values(cls.colormap_setting)
         colormap_values = RepeatedSettingSequence(colormaps, default="Default")
         unmapped_kwargs = dict(bound.unmapped_kwargs)
@@ -1733,7 +1733,7 @@ class MeasureObjectNeighborsModule(
         return values[0] if values else None
 
     @classmethod
-    def _module_flag(cls, module: "ModuleBlock", setting_name) -> bool:
+    def _module_flag(cls, module: ModuleBlock, setting_name) -> bool:
         value = optional_setting_value(module, setting_name)
         return False if value is None else parse_cellprofiler_bool(value)
 

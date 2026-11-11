@@ -29,7 +29,7 @@ torch = optional_import_placeholder("torch")
 OPERATIONS = ArrayOperations.for_memory(MemoryType.TORCH)
 
 
-def _integer_limits(dtype: "torch.dtype") -> Optional["torch.iinfo"]:
+def _integer_limits(dtype: torch.dtype) -> Optional["torch.iinfo"]:
     """``torch.iinfo`` for the clamped integer dtypes, else ``None``."""
     if OPERATIONS.dtype_name(dtype) not in operations.CLAMPED_INTEGER_DTYPES:
         return None
@@ -38,7 +38,7 @@ def _integer_limits(dtype: "torch.dtype") -> Optional["torch.iinfo"]:
 
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Create a 2D weight mask that linearly ramps from 0 at the edges to 1 in the center.
 
@@ -55,7 +55,7 @@ def create_linear_weight_mask(
     )
 
 
-def _gaussian_blur(image: "torch.Tensor", sigma: float) -> "torch.Tensor":
+def _gaussian_blur(image: torch.Tensor, sigma: float) -> torch.Tensor:
     """
     Apply Gaussian blur to a 2D image.
 
@@ -97,8 +97,8 @@ def _gaussian_blur(image: "torch.Tensor", sigma: float) -> "torch.Tensor":
 
 @torch_func
 def sharpen(
-    image: "torch.Tensor", radius: float = 1.0, amount: float = 1.0
-) -> "torch.Tensor":
+    image: torch.Tensor, radius: float = 1.0, amount: float = 1.0
+) -> torch.Tensor:
     """
     Sharpen a 3D image using unsharp masking.
 
@@ -153,12 +153,12 @@ def sharpen(
 
 @torch_func
 def percentile_normalize(
-    image: "torch.Tensor",
+    image: torch.Tensor,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Normalize a 3D image using percentile-based contrast stretching.
 
@@ -234,12 +234,12 @@ def percentile_normalize(
 
 @torch_func
 def stack_percentile_normalize(
-    stack: "torch.Tensor",
+    stack: torch.Tensor,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Normalize a stack using global percentile-based contrast stretching.
 
@@ -311,8 +311,8 @@ def stack_percentile_normalize(
 
 @torch_func
 def create_composite(
-    stack: "torch.Tensor", weights: Optional[List[float]] = None
-) -> "torch.Tensor":
+    stack: torch.Tensor, weights: Optional[List[float]] = None
+) -> torch.Tensor:
     """
     Create a composite image from a 3D stack of 2D images.
 
@@ -376,7 +376,7 @@ def create_composite(
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
 @torch_func
-def apply_mask(image: "torch.Tensor", mask: "torch.Tensor") -> "torch.Tensor":
+def apply_mask(image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
     Apply a mask to a 3D image while maintaining 3D structure.
 
@@ -396,7 +396,7 @@ def apply_mask(image: "torch.Tensor", mask: "torch.Tensor") -> "torch.Tensor":
 @torch_func
 def create_weight_mask(
     shape: Tuple[int, int], margin_ratio: float = 0.1
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Create a weight mask for blending images.
 
@@ -411,7 +411,7 @@ def create_weight_mask(
 
 
 @torch_func
-def max_projection(stack: "torch.Tensor") -> "torch.Tensor":
+def max_projection(stack: torch.Tensor) -> torch.Tensor:
     """
     Create a maximum intensity projection from a Z-stack.
 
@@ -425,7 +425,7 @@ def max_projection(stack: "torch.Tensor") -> "torch.Tensor":
 
 
 @torch_func
-def mean_projection(stack: "torch.Tensor") -> "torch.Tensor":
+def mean_projection(stack: torch.Tensor) -> torch.Tensor:
     """
     Create a mean intensity projection from a Z-stack.
 
@@ -440,11 +440,11 @@ def mean_projection(stack: "torch.Tensor") -> "torch.Tensor":
 
 @torch_func
 def stack_equalize_histogram(
-    stack: "torch.Tensor",
+    stack: torch.Tensor,
     bins: int = 65536,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Apply histogram equalization to an entire stack.
 
@@ -528,9 +528,9 @@ def stack_equalize_histogram(
 
 @torch_func
 def create_projection(
-    stack: "torch.Tensor",
+    stack: torch.Tensor,
     method: StackProjectionMethod = StackProjectionMethod.MAX,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Create a projection from a stack using the specified method.
 
@@ -546,8 +546,8 @@ def create_projection(
 
 @torch_func
 def tophat(
-    image: "torch.Tensor", selem_radius: int = 50, downsample_factor: int = 4
-) -> "torch.Tensor":
+    image: torch.Tensor, selem_radius: int = 50, downsample_factor: int = 4
+) -> torch.Tensor:
     """
     Apply white top-hat filter to a 3D image for background removal.
 

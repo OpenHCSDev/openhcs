@@ -115,7 +115,7 @@ class PlateInspectionText:
 class PlateInspectionFileManagerFactory:
     """Create the FileManager expected by microscope handlers."""
 
-    def create(self) -> "FileManager":
+    def create(self) -> FileManager:
         from polystore.base import ensure_storage_registry, storage_registry
         from polystore.filemanager import FileManager
 
@@ -128,9 +128,9 @@ class PlateInspectionContext:
     """Resolved plate IO context shared by inspection, sampling, and streaming."""
 
     plate_path: Path
-    filemanager: "FileManager"
-    handler: "DatasetSource"
-    parser: "FilenameParser | None"
+    filemanager: FileManager
+    handler: DatasetSource
+    parser: FilenameParser | None
     warnings: tuple[AgentWarning, ...] = ()
 
     @property
@@ -154,9 +154,9 @@ class PlateInspectionHandlerCandidateProjection:
         cls,
         *,
         requested_source_format: str,
-        selected_handler: "DatasetSource",
+        selected_handler: DatasetSource,
         plate_path: Path,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         max_files_to_parse: int,
     ) -> tuple[PlateInspectionHandlerCandidate, ...]:
         from openhcs.core.dataset_sources.source import (
@@ -220,7 +220,7 @@ class PlateInspectionHandlerCandidateProjection:
         handler_type: type["DatasetSource"],
         source_paths: tuple[str, ...],
         plate_path: Path,
-        filemanager: "FileManager",
+        filemanager: FileManager,
     ) -> PlateInspectionHandlerCandidate | None:
         try:
             handler = handler_type.create(filemanager=filemanager)
@@ -360,7 +360,7 @@ class PlateInspectionComponentEntrySet:
     def empty(
         cls,
         component: type[Axis],
-    ) -> "PlateInspectionComponentEntrySet":
+    ) -> PlateInspectionComponentEntrySet:
         return cls(component=component)
 
     @classmethod
@@ -368,7 +368,7 @@ class PlateInspectionComponentEntrySet:
         cls,
         component: type[Axis],
         keys: tuple[str, ...],
-    ) -> "PlateInspectionComponentEntrySet":
+    ) -> PlateInspectionComponentEntrySet:
         return cls(
             component=component,
             values=tuple(
@@ -386,7 +386,7 @@ class PlateInspectionComponentEntrySet:
         cls,
         component: type[Axis],
         values: Mapping[str, str | None] | None,
-    ) -> "PlateInspectionComponentEntrySet":
+    ) -> PlateInspectionComponentEntrySet:
         if values is None:
             return cls.empty(component)
         return cls(
@@ -422,7 +422,7 @@ class PlateInspectionComponentCollection:
     entries: tuple[PlateInspectionComponentEntrySet, ...]
 
     @classmethod
-    def empty(cls) -> "PlateInspectionComponentCollection":
+    def empty(cls) -> PlateInspectionComponentCollection:
         return cls(
             tuple(
                 PlateInspectionComponentEntrySet.empty(component)
@@ -445,7 +445,7 @@ class PlateInspectionComponentMetadataAccess:
 
     def collect(
         self,
-        metadata_handler: "MetadataHandler",
+        metadata_handler: MetadataHandler,
         plate_path: Path,
     ) -> PlateInspectionComponentCollection:
         return PlateInspectionMetadataComponentProjection.from_value_set(
@@ -458,7 +458,7 @@ class PlateInspectionMetadataComponentProjection:
 
     @staticmethod
     def from_value_set(
-        component_values: "MetadataComponentValueSet",
+        component_values: MetadataComponentValueSet,
     ) -> PlateInspectionComponentCollection:
         return PlateInspectionComponentCollection(
             tuple(
@@ -479,7 +479,7 @@ class PlateInspectionMutableParsedComponents:
         default_factory=lambda: {component: set() for component in AxisFamily.active().axes}
     )
 
-    def add_parsed_filename_values(self, parsed: "FilenameParseResult") -> None:
+    def add_parsed_filename_values(self, parsed: FilenameParseResult) -> None:
         for component in AxisFamily.active().axes:
             self._add_optional(
                 self.values[component],
@@ -487,7 +487,7 @@ class PlateInspectionMutableParsedComponents:
             )
 
     @staticmethod
-    def _add_optional(target: set[str], value: "FilenameParseValue") -> None:
+    def _add_optional(target: set[str], value: FilenameParseValue) -> None:
         if value is not None:
             target.add(str(value))
 
@@ -522,7 +522,7 @@ class PlateInspectionFilenameParser:
     def parse(
         self,
         *,
-        parser: "FilenameParserCapability | None",
+        parser: FilenameParserCapability | None,
         image_files: tuple[str, ...],
         bounds: PlateInspectionBounds,
     ) -> PlateInspectionParsedFileSet:
@@ -665,7 +665,7 @@ class PlateInspectionParseCoverage:
     def from_summary(
         cls,
         summary: PlateInspectionParseSummary,
-    ) -> "PlateInspectionParseCoverage":
+    ) -> PlateInspectionParseCoverage:
         return cls(
             attempted_file_count=summary.attempted_file_count,
             parsed_file_count=summary.parsed_file_count,
@@ -768,7 +768,7 @@ class PlateInspectionWorkflowAdvicePolicy:
     @classmethod
     def for_handler(
         cls,
-        handler: "DatasetSource",
+        handler: DatasetSource,
         *,
         format_specific_candidates: tuple[PlateInspectionHandlerCandidate, ...] = (),
         requested_source_format: str = AutoDetectedSource.source_name,
@@ -1510,7 +1510,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _has_disk_image_files(
-        filemanager: "FileManager",
+        filemanager: FileManager,
         plate_path: Path,
     ) -> bool | None:
         try:
@@ -1868,8 +1868,8 @@ class PlateInspectionService:
     def _create_handler(
         request: PlatePathInspectionRequest,
         plate_path: Path,
-        filemanager: "FileManager",
-    ) -> "DatasetSource":
+        filemanager: FileManager,
+    ) -> DatasetSource:
         from openhcs.core.dataset_sources.source import DatasetSourceChoice
 
         EndpointStartupStatus(
@@ -1889,7 +1889,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _metadata_file_path(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> str | None:
@@ -1907,7 +1907,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _grid_dimensions(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[int, int] | None:
@@ -1925,7 +1925,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _pixel_size(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> float | None:
@@ -1942,7 +1942,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _available_backends(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[str, ...]:
@@ -1961,10 +1961,10 @@ class PlateInspectionService:
 
     def _plate_file_inventory_for_query(
         self,
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
-        parser: "FilenameParser | None",
-        filemanager: "FileManager",
+        parser: FilenameParser | None,
+        filemanager: FileManager,
         query_kind: PlateFileKind | None,
         warnings: list[AgentWarning],
         *,
@@ -2034,9 +2034,9 @@ class PlateInspectionService:
 
     @staticmethod
     def _image_inventory(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         warnings: list[AgentWarning],
     ) -> PlateImageInventory:
         try:
@@ -2057,9 +2057,9 @@ class PlateInspectionService:
 
     def _result_file_inventory(
         self,
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
-        parser: "FilenameParser | None",
+        parser: FilenameParser | None,
         warnings: list[AgentWarning],
         *,
         warn_on_recovered_listing_failure: bool = True,
@@ -2175,11 +2175,11 @@ class PlateInspectionService:
 
     @staticmethod
     def _parser(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         warnings: list[AgentWarning],
         *,
         warn: bool = True,
-    ) -> "FilenameParser | None":
+    ) -> FilenameParser | None:
         try:
             return handler.parser
         except Exception as exc:
@@ -2195,7 +2195,7 @@ class PlateInspectionService:
 
     def _metadata_values(
         self,
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> PlateInspectionComponentCollection:
@@ -2212,7 +2212,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _source_diagnostics(
-        handler: "DatasetSource",
+        handler: DatasetSource,
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[JsonObject, ...]:

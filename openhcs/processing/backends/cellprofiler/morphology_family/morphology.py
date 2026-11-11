@@ -126,7 +126,7 @@ class ImageStructuringElementModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: BoundModuleSettings
+        cls, module: ModuleBlock, bound: BoundModuleSettings
     ) -> BoundModuleSettings:
         setting = cls.declared_structuring_element_setting(module)
         footprint = build_structuring_element(
@@ -294,10 +294,10 @@ class ZStackFunctionVariantModule:
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del module, contract
         function_name = (
@@ -473,7 +473,7 @@ class MaskObjectsModule(
 
     @classmethod
     def ignored_settings_for(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple[str | "SettingNameFamily", ...]:
         ignored = tuple(cls.ignored_settings)
         if cls.setting_value(module, cls.outline_retention_setting) == "No":
@@ -567,7 +567,7 @@ class ResizeObjectsModule(
     )
 
     @classmethod
-    def uses_volumetric_resize(cls, module: "ModuleBlock") -> bool:
+    def uses_volumetric_resize(cls, module: ModuleBlock) -> bool:
         """Return whether this declaration changes the input label-stack depth."""
 
         return any(
@@ -575,7 +575,7 @@ class ResizeObjectsModule(
         )
 
     @classmethod
-    def changes_stack_depth(cls, module: "ModuleBlock") -> bool:
+    def changes_stack_depth(cls, module: ModuleBlock) -> bool:
         """Return whether the declared resize changes the object stack depth."""
 
         method = cellprofiler_enum_from_literal(
@@ -594,10 +594,10 @@ class ResizeObjectsModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del contract, source_bindings
         function_name = (
@@ -821,7 +821,7 @@ class FillObjectsModeStrategy(
     strategy_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_mode(cls, mode: FillMode) -> "FillObjectsModeStrategy":
+    def for_mode(cls, mode: FillMode) -> FillObjectsModeStrategy:
         return cls.for_enum_member(mode)
 
     @abstractmethod
@@ -1116,7 +1116,7 @@ def _bridge(image: np.ndarray, iterations: int = 1) -> np.ndarray:
 
 
 def _convex_hull(
-    image: np.ndarray, morphology: "MorphologyBackendStrategy"
+    image: np.ndarray, morphology: MorphologyBackendStrategy
 ) -> np.ndarray:
     binary = _ensure_binary(image)
     if not np.any(binary):
@@ -1674,7 +1674,7 @@ class ConnectedComponentConnectivity(ABC, metaclass=AutoRegisterMeta):
     structure_builder: ClassVar[ConnectivityStructureBuilder | None] = None
 
     @classmethod
-    def for_connectivity(cls, connectivity: int) -> "ConnectedComponentConnectivity":
+    def for_connectivity(cls, connectivity: int) -> ConnectedComponentConnectivity:
         strategy_type = cls.__registry__.get(connectivity)
         if strategy_type is None:
             raise ValueError(
@@ -1752,7 +1752,7 @@ class DeclumpingMaximaGeometry:
         low_res_maxima: bool,
         automatic_suppression: bool,
         maxima_suppression_size: float,
-    ) -> "DeclumpingMaximaGeometry":
+    ) -> DeclumpingMaximaGeometry:
         if min_diameter > 10 and low_res_maxima:
             image_resize_factor = 10.0 / float(min_diameter)
             if automatic_suppression:
@@ -1864,7 +1864,7 @@ class MorphologyBackendStrategy(
         *,
         backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
         prefer_centrosome: bool = False,
-    ) -> "MorphologyBackendStrategy":
+    ) -> MorphologyBackendStrategy:
         if prefer_centrosome:
             if backend_provider not in (
                 DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -1883,7 +1883,7 @@ class MorphologyBackendStrategy(
         *,
         backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
         prefer_centrosome: bool = False,
-    ) -> "MorphologyBackendStrategy":
+    ) -> MorphologyBackendStrategy:
         if prefer_centrosome:
             if backend_provider not in (
                 DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -3513,7 +3513,7 @@ class FootprintOffsetTable:
     @classmethod
     def from_footprint(
         cls, footprint: np.ndarray, *, dimension_policy: FootprintOffsetDimensionPolicy
-    ) -> "FootprintOffsetTable":
+    ) -> FootprintOffsetTable:
         footprint_array = np.asarray(footprint, dtype=bool)
         dimension_policy.validate(footprint_array)
         center = np.asarray(footprint_array.shape, dtype=np.int64) // 2
@@ -4389,7 +4389,7 @@ class ExpandShrinkOperationStrategy(
     ] = ()
 
     @classmethod
-    def for_mode(cls, mode: ExpandShrinkMode) -> "ExpandShrinkOperationStrategy":
+    def for_mode(cls, mode: ExpandShrinkMode) -> ExpandShrinkOperationStrategy:
         return cls.for_enum_member(mode)
 
     @classmethod
@@ -4847,7 +4847,7 @@ class MaskObjectsOverlapHandlingStrategy(
     @classmethod
     def for_choice(
         cls, overlap_handling: MaskObjectsOverlapHandling
-    ) -> "MaskObjectsOverlapHandlingStrategy":
+    ) -> MaskObjectsOverlapHandlingStrategy:
         return cls.for_enum_member(overlap_handling)
 
     @abstractmethod
@@ -4983,7 +4983,7 @@ class MaskObjectsNumberingStrategy(
     @classmethod
     def for_choice(
         cls, numbering: MaskObjectsNumberingChoice
-    ) -> "MaskObjectsNumberingStrategy":
+    ) -> MaskObjectsNumberingStrategy:
         return cls.for_enum_member(numbering)
 
     @abstractmethod
@@ -5256,7 +5256,7 @@ class CombineObjectsStrategy(
     method: ClassVar[CombineObjectsMethod | None] = None
 
     @classmethod
-    def for_method(cls, method: CombineObjectsMethod) -> "CombineObjectsStrategy":
+    def for_method(cls, method: CombineObjectsMethod) -> CombineObjectsStrategy:
         return cls.for_enum_member(method)
 
     @abstractmethod
@@ -5541,7 +5541,7 @@ class SplitOrMergeOperationStrategy(
     @classmethod
     def for_operation(
         cls, operation: SplitOrMergeOperation
-    ) -> "SplitOrMergeOperationStrategy":
+    ) -> SplitOrMergeOperationStrategy:
         return cls.for_enum_member(operation)
 
     @abstractmethod
@@ -5588,7 +5588,7 @@ class SplitOrMergeMergeMethodStrategy(
     @classmethod
     def for_method(
         cls, method: SplitOrMergeMergeMethod
-    ) -> "SplitOrMergeMergeMethodStrategy":
+    ) -> SplitOrMergeMergeMethodStrategy:
         return cls.for_enum_member(method)
 
     @abstractmethod
@@ -6266,7 +6266,7 @@ class MidpointPreservationPolicy:
         return scipy.ndimage.distance_transform_edt(binary)
 
     @classmethod
-    def for_footprint(cls, footprint: np.ndarray) -> "MidpointPreservationPolicy":
+    def for_footprint(cls, footprint: np.ndarray) -> MidpointPreservationPolicy:
         if SimpleDiskMidpointPreservationPolicy.matches(footprint):
             return SimpleDiskMidpointPreservationPolicy()
         return cls()
@@ -6835,7 +6835,7 @@ class SplitOrMergeObjectsModule(
 
     @classmethod
     def input_topology(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> type[SplitOrMergeInputTopology]:
         return SplitOrMergeInputTopology.from_values(
             operation=coerce_cellprofiler_enum(
@@ -6915,10 +6915,10 @@ class SplitOrMergeObjectsModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del contract, source_bindings
         return cls.require_callable(cls.input_topology(module).function_name)

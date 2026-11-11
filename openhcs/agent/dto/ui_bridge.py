@@ -237,7 +237,7 @@ class UiSelectedPlateWorkflowRequest(
         observed_selection_revision_token: str | None = None,
         request_token: str | None = None,
         require_confirmation: bool = False,
-    ) -> "UiSelectedPlateWorkflowRequest":
+    ) -> UiSelectedPlateWorkflowRequest:
         selected_scope_ids = SelectedScopeIdsArgument.from_optional_iterable(
             target_scope_ids
         )

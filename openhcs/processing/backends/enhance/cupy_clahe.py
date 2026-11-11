@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 
 @cupy_func
 def clahe_2d(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     clip_limit: float = 2.0,
     tile_grid_size: tuple = None,
     nbins: int = None,
     adaptive_bins: bool = True,
     adaptive_tiles: bool = True,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Apply vectorized CLAHE independently to every plane in a CuPy stack.
 
     Args:
@@ -78,8 +78,8 @@ def clahe_2d(
 
 
 def _clahe_2d_vectorized(
-    image: "cp.ndarray", clip_limit: float, tile_grid_size: tuple, nbins: int
-) -> "cp.ndarray":
+    image: cp.ndarray, clip_limit: float, tile_grid_size: tuple, nbins: int
+) -> cp.ndarray:
     """
     Vectorized CLAHE implementation for 2D images.
     """
@@ -156,7 +156,7 @@ def _clahe_2d_vectorized(
 
 
 def _compute_tile_cdfs_2d(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     tile_rows: int,
     tile_cols: int,
     tile_height: int,
@@ -165,7 +165,7 @@ def _compute_tile_cdfs_2d(
     clip_limit: int,
     min_val: float,
     max_val: float,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Compute CDFs for all tiles efficiently."""
 
     tile_cdfs = cp.zeros((tile_rows, tile_cols, nbins), dtype=cp.float32)
@@ -203,8 +203,8 @@ def _compute_tile_cdfs_2d(
 
 
 def _apply_vectorized_interpolation_2d(
-    image: "cp.ndarray",
-    tile_cdfs: "cp.ndarray",
+    image: cp.ndarray,
+    tile_cdfs: cp.ndarray,
     tile_rows: int,
     tile_cols: int,
     tile_height: int,
@@ -212,7 +212,7 @@ def _apply_vectorized_interpolation_2d(
     nbins: int,
     min_val: float,
     max_val: float,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Vectorized bilinear interpolation."""
 
     height, width = image.shape
@@ -280,7 +280,7 @@ def _apply_vectorized_interpolation_2d(
     return result
 
 
-def _clip_histogram_optimized(hist: "cp.ndarray", clip_limit: int) -> "cp.ndarray":
+def _clip_histogram_optimized(hist: cp.ndarray, clip_limit: int) -> cp.ndarray:
     """Optimized histogram clipping."""
     if clip_limit <= 0:
         return hist
@@ -326,14 +326,14 @@ def _clip_histogram_optimized(hist: "cp.ndarray", clip_limit: int) -> "cp.ndarra
 
 @cupy_func
 def clahe_3d(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     clip_limit: float = 2.0,
     tile_grid_size_3d: tuple = None,
     nbins: int = None,
     adaptive_bins: bool = True,
     adaptive_tiles: bool = True,
     memory_efficient: bool = True,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Optimized 3D CLAHE with vectorized trilinear interpolation.
 
@@ -388,8 +388,8 @@ def clahe_3d(
 
 
 def _clahe_3d_vectorized(
-    stack: "cp.ndarray", clip_limit: float, tile_grid_size_3d: tuple, nbins: int
-) -> "cp.ndarray":
+    stack: cp.ndarray, clip_limit: float, tile_grid_size_3d: tuple, nbins: int
+) -> cp.ndarray:
     """
     Full vectorized 3D CLAHE implementation.
     """
@@ -479,7 +479,7 @@ def _clahe_3d_vectorized(
 
 
 def _compute_tile_cdfs_3d(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     tile_z: int,
     tile_y: int,
     tile_x: int,
@@ -490,7 +490,7 @@ def _compute_tile_cdfs_3d(
     clip_limit: int,
     min_val: float,
     max_val: float,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Compute CDFs for all 3D tiles efficiently."""
 
     tile_cdfs = cp.zeros((tile_z, tile_y, tile_x, nbins), dtype=cp.float32)
@@ -532,8 +532,8 @@ def _compute_tile_cdfs_3d(
 
 
 def _apply_vectorized_trilinear_interpolation(
-    stack: "cp.ndarray",
-    tile_cdfs: "cp.ndarray",
+    stack: cp.ndarray,
+    tile_cdfs: cp.ndarray,
     tile_z: int,
     tile_y: int,
     tile_x: int,
@@ -543,7 +543,7 @@ def _apply_vectorized_trilinear_interpolation(
     nbins: int,
     min_val: float,
     max_val: float,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Vectorized trilinear interpolation for 3D CLAHE."""
 
     depth, height, width = stack.shape
@@ -642,12 +642,12 @@ def _apply_vectorized_trilinear_interpolation(
 
 
 def _clahe_3d_chunked(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     clip_limit: float,
     tile_grid_size_3d: tuple,
     nbins: int,
     chunk_size: int = 128,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Memory-efficient chunked processing for very large 3D volumes.
 
@@ -689,8 +689,8 @@ def _clahe_3d_chunked(
 
 
 def _fill_3d_boundaries(
-    full_result: "cp.ndarray",
-    cropped_result: "cp.ndarray",
+    full_result: cp.ndarray,
+    cropped_result: cp.ndarray,
     crop_depth: int,
     crop_height: int,
     crop_width: int,

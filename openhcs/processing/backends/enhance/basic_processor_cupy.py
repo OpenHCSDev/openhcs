@@ -71,8 +71,8 @@ def _validate_cupy_array(array: Any, name: str = "input") -> None:
 
 
 def _low_rank_approximation(
-    matrix: "cp.ndarray", rank: int = 3, max_memory_gb: float = 1.0
-) -> "cp.ndarray":
+    matrix: cp.ndarray, rank: int = 3, max_memory_gb: float = 1.0
+) -> cp.ndarray:
     """
     Compute a low-rank approximation of a matrix using SVD with memory optimization.
 
@@ -122,8 +122,8 @@ def _low_rank_approximation(
 
 
 def _chunked_low_rank_approximation(
-    matrix: "cp.ndarray", rank: int, max_memory_gb: float
-) -> "cp.ndarray":
+    matrix: cp.ndarray, rank: int, max_memory_gb: float
+) -> cp.ndarray:
     """
     Compute low-rank approximation using adaptive dynamic chunking.
 
@@ -268,7 +268,7 @@ def _chunked_low_rank_approximation(
     return low_rank
 
 
-def _soft_threshold(matrix: "cp.ndarray", threshold: float) -> "cp.ndarray":
+def _soft_threshold(matrix: cp.ndarray, threshold: float) -> cp.ndarray:
     """
     Apply soft thresholding (shrinkage operator) to a matrix.
 
@@ -284,7 +284,7 @@ def _soft_threshold(matrix: "cp.ndarray", threshold: float) -> "cp.ndarray":
 
 @cupy_func
 def basic_flatfield_correction_cupy(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     *,
     max_iters: int = 50,
     lambda_sparse: float = 0.01,
@@ -295,7 +295,7 @@ def basic_flatfield_correction_cupy(
     normalize_output: bool = True,
     verbose: bool = False,
     max_memory_gb: float = 1.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Perform BaSiC-style illumination correction on a 3D image stack using CuPy.
 
@@ -413,7 +413,7 @@ def basic_flatfield_correction_cupy(
 
 
 def _gpu_flatfield_correction(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     max_iters: int,
     lambda_sparse: float,
     lambda_lowrank: float,
@@ -429,7 +429,7 @@ def _gpu_flatfield_correction(
     y: int,
     x: int,
     orig_dtype,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """GPU-based flatfield correction implementation."""
 
     if estimated_peak_memory > max_memory_gb * 2:
@@ -585,7 +585,7 @@ def _gpu_flatfield_correction(
 
 
 def basic_flatfield_correction_batch_cupy(
-    image_batch: "cp.ndarray",
+    image_batch: cp.ndarray,
     *,
     batch_dim: int = 0,
     max_iters: int = 50,
@@ -597,7 +597,7 @@ def basic_flatfield_correction_batch_cupy(
     normalize_output: bool = True,
     verbose: bool = False,
     max_memory_gb: float = 1.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply BaSiC flatfield correction to a batch of 3D image stacks.
 
@@ -670,7 +670,7 @@ def basic_flatfield_correction_batch_cupy(
 
 
 def _cpu_fallback_flatfield_correction(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     max_iters: int,
     lambda_sparse: float,
     lambda_lowrank: float,
@@ -679,7 +679,7 @@ def _cpu_fallback_flatfield_correction(
     correction_mode: FlatfieldCorrectionMode,
     normalize_output: bool,
     verbose: bool,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """CPU fallback for flatfield correction when GPU runs out of memory."""
 
     try:

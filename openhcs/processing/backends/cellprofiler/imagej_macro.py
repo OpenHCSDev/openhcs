@@ -184,7 +184,7 @@ class RunImagejMacroModule(
         image_name: str
 
     @classmethod
-    def input_groups(cls, module: "ModuleBlock") -> tuple[InputGroup, ...]:
+    def input_groups(cls, module: ModuleBlock) -> tuple[InputGroup, ...]:
         image_names = setting_values(module, cls.input_image_setting)
         filenames = setting_values(module, cls.input_filename_setting)
         if not image_names or len(image_names) != len(filenames):
@@ -198,7 +198,7 @@ class RunImagejMacroModule(
         )
 
     @classmethod
-    def output_groups(cls, module: "ModuleBlock") -> tuple[OutputGroup, ...]:
+    def output_groups(cls, module: ModuleBlock) -> tuple[OutputGroup, ...]:
         filenames = setting_values(module, cls.output_filename_setting)
         image_names = setting_values(module, cls.output_image_setting)
         if not image_names or len(image_names) != len(filenames):
@@ -212,7 +212,7 @@ class RunImagejMacroModule(
         )
 
     @classmethod
-    def macro_variables(cls, module: "ModuleBlock") -> dict[str, str]:
+    def macro_variables(cls, module: ModuleBlock) -> dict[str, str]:
         names = setting_values(module, cls.macro_variable_name_setting)
         values = setting_values(module, cls.macro_variable_value_setting)
         if len(names) != len(values):
@@ -225,7 +225,7 @@ class RunImagejMacroModule(
     @classmethod
     def validate_hidden_counts(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         input_count: int,
         output_count: int,
@@ -250,7 +250,7 @@ class RunImagejMacroModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bound: BoundModuleSettings,
     ) -> BoundModuleSettings:
         input_groups = cls.input_groups(module)

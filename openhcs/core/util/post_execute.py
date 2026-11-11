@@ -34,14 +34,14 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def bind(cls, global_config: "GlobalPipelineConfig") -> "PostExecuteHook":
+    def bind(cls, global_config: GlobalPipelineConfig) -> PostExecuteHook:
         """This hook configured for one compilation."""
 
     def observe_saved_outputs(
         self,
-        context: "ExecutingContext",
-        plan: "CompiledStepPlan",
-        saved: "MaterializedRuntimeArtifact",
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        saved: MaterializedRuntimeArtifact,
     ) -> object | None:
         """What this hook needs from outputs a step just saved (``None``: nothing)."""
         del context, plan, saved
@@ -49,9 +49,9 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     def observe_reused_outputs(
         self,
-        context: "ExecutingContext",
-        plan: "CompiledStepPlan",
-        materialization: "RuntimeArtifactMaterialization",
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        materialization: RuntimeArtifactMaterialization,
         outputs: tuple["Output", ...],
     ) -> object | None:
         """What this hook needs from historical outputs a step reused."""
@@ -79,7 +79,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     # -- the family as the kernel uses it -------------------------------------
 
     @staticmethod
-    def bind_all(global_config: "GlobalPipelineConfig") -> tuple["PostExecuteHook", ...]:
+    def bind_all(global_config: GlobalPipelineConfig) -> tuple["PostExecuteHook", ...]:
         return tuple(
             hook_type.bind(global_config)
             for hook_type in PostExecuteHook.__registry__.values()
@@ -87,9 +87,9 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def observe_saved(
-        context: "ExecutingContext",
-        plan: "CompiledStepPlan",
-        saved: "MaterializedRuntimeArtifact",
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        saved: MaterializedRuntimeArtifact,
     ) -> HookObservations:
         return _observations(
             (hook, hook.observe_saved_outputs(context, plan, saved))
@@ -98,9 +98,9 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def observe_reused(
-        context: "ExecutingContext",
-        plan: "CompiledStepPlan",
-        materialization: "RuntimeArtifactMaterialization",
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
+        materialization: RuntimeArtifactMaterialization,
         outputs: tuple["Output", ...],
     ) -> HookObservations:
         return _observations(
@@ -123,7 +123,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     def run_all(
         executed_contexts: Mapping[str, "ExecutingContext"],
         execution_results: Mapping[str, "ExecutionResult"],
-        dataset_runtime_observation: "RuntimeExecutionObservation",
+        dataset_runtime_observation: RuntimeExecutionObservation,
     ) -> None:
         """Run every bound hook over the observations of this execution."""
         context_observations = tuple(

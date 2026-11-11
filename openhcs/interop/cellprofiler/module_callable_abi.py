@@ -99,7 +99,7 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def executes_per_image_measurements(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        func: Callable[..., RuntimeFunctionOutput],
         object_inputs: tuple[ArtifactSpec, ...],
         *,
         callable_contract: CallableContract,
@@ -113,8 +113,8 @@ class CellProfilerModuleCallableABI:
         cls,
         default: type[ImagePayloadExecutionMode],
         *,
-        image: "RuntimeCallableArgument",
-        kwargs: "RuntimeCallableKwargs",
+        image: RuntimeCallableArgument,
+        kwargs: RuntimeCallableKwargs,
         variable_components: tuple[type[Axis], ...],
     ) -> type[ImagePayloadExecutionMode]:
         """Return the default runtime image execution mode."""
@@ -125,8 +125,8 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def source_payload(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "RuntimeCallableArgument | None":
+        request: CellProfilerOutputRecordRequest,
+    ) -> RuntimeCallableArgument | None:
         """Return the default image-output source payload."""
 
         del cls
@@ -135,8 +135,8 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def output_value(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "RuntimeCallableArgument":
+        request: CellProfilerOutputRecordRequest,
+    ) -> RuntimeCallableArgument:
         """Return the default image-output value."""
 
         del cls
@@ -145,8 +145,8 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def source_context(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "CellProfilerObjectLabelOutputSourceContext":
+        request: CellProfilerOutputRecordRequest,
+    ) -> CellProfilerObjectLabelOutputSourceContext:
         """Return the default object-label output source context."""
 
         from openhcs.interop.cellprofiler.runtime.output_contexts import (
@@ -205,7 +205,7 @@ class CellProfilerModuleCallableABI:
         )
 
     @classmethod
-    def primary_image_domain_input_binding(cls) -> "SettingToKeywordBinding":
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
         """Return the exact artifact binding that owns the invocation image domain."""
 
         raise TypeError(
@@ -216,9 +216,9 @@ class CellProfilerModuleCallableABI:
     def invocation_runtime_kwargs(
         cls,
         *,
-        image_request: "CellProfilerImageRequest",
-        runtime_kwargs: "RuntimeCallableKwargs",
-    ) -> "RuntimeCallableKwargs":
+        image_request: CellProfilerImageRequest,
+        runtime_kwargs: RuntimeCallableKwargs,
+    ) -> RuntimeCallableKwargs:
         """Return runtime kwargs after generic input binding."""
 
         del (
@@ -231,9 +231,9 @@ class CellProfilerModuleCallableABI:
     def project_invocation_image_request(
         cls,
         *,
-        image_request: "CellProfilerImageRequest",
-        runtime_kwargs: "RuntimeCallableKwargs",
-    ) -> "CellProfilerImageRequest":
+        image_request: CellProfilerImageRequest,
+        runtime_kwargs: RuntimeCallableKwargs,
+    ) -> CellProfilerImageRequest:
         """Project the invocation image through the module's declared input domain."""
 
         del cls, runtime_kwargs
@@ -242,10 +242,10 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def object_measurement_invocation_kwargs(
         cls,
-        runtime_kwargs: "RuntimeCallableKwargs",
+        runtime_kwargs: RuntimeCallableKwargs,
         *,
         include_image_measurements: bool,
-    ) -> "RuntimeCallableKwargs":
+    ) -> RuntimeCallableKwargs:
         """Project kwargs for one object-input measurement invocation."""
 
         del cls, include_image_measurements
@@ -253,8 +253,8 @@ class CellProfilerModuleCallableABI:
 
     @classmethod
     def shared_object_measurement_runtime_kwargs(
-        cls, adapter: "CellProfilerRuntimeAdapter"
-    ) -> "RuntimeCallableKwargs":
+        cls, adapter: CellProfilerRuntimeAdapter
+    ) -> RuntimeCallableKwargs:
         """Project runtime-owned values shared by this module's object calls."""
         del cls, adapter
         return {}
@@ -262,7 +262,7 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def validate_callable_artifact_abi(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        func: Callable[..., RuntimeFunctionOutput],
         contract: CallableContract,
     ) -> None:
         """Validate one raw callable ABI against its callable artifact declarations."""
@@ -374,9 +374,9 @@ class CellProfilerModuleCallableABI:
     def binding_current_image(
         cls,
         *,
-        current_image: "RuntimeArrayData",
-        primary_image: "RuntimeArrayData | None",
-    ) -> "RuntimeArrayData":
+        current_image: RuntimeArrayData,
+        primary_image: RuntimeArrayData | None,
+    ) -> RuntimeArrayData:
         """Return source image context used to bind special inputs."""
 
         del cls
@@ -385,8 +385,8 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def bind_runtime_inputs(
         cls,
-        request: "RuntimeInputBindingRequest",
-    ) -> "dict[str, RuntimeCallableArgument]":
+        request: RuntimeInputBindingRequest,
+    ) -> dict[str, RuntimeCallableArgument]:
         """Bind exact compiler-owned artifact input parameters."""
 
         return request.bind_parameters()

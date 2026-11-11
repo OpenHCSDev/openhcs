@@ -284,7 +284,7 @@ class PlateInspectionBounds:
     def tool_arguments(self) -> dict[str, JsonValue]:
         return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
-    def normalized(self) -> "PlateInspectionBounds":
+    def normalized(self) -> PlateInspectionBounds:
         return PlateInspectionBounds(
             max_sample_files=self._bounded(
                 self.max_sample_files,
@@ -334,7 +334,7 @@ class PlatePathInspectionRequest(DatasetTarget):
             PlateInspectionDefaults.DEFAULT_MAX_PARSE_FAILURE_SAMPLES
         ),
         max_files_to_parse: int = PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE,
-    ) -> "PlatePathInspectionRequest":
+    ) -> PlatePathInspectionRequest:
         return cls(
             plate_path=plate_path,
             source_format=source_format,
@@ -392,7 +392,7 @@ class PlateImageSampleRequest(DatasetTarget):
         ),
         include_array_values: bool = True,
         max_array_elements: int = 4096,
-    ) -> "PlateImageSampleRequest":
+    ) -> PlateImageSampleRequest:
         return cls(
             plate_path=plate_path,
             image_path=image_path,
@@ -447,7 +447,7 @@ class PlateFileQueryRequest(DatasetTarget):
         include_previews: bool = True,
         max_preview_lines: int = 8,
         max_preview_bytes: int = 64 * 1024,
-    ) -> "PlateFileQueryRequest":
+    ) -> PlateFileQueryRequest:
         return cls(
             plate_path=plate_path,
             result_directory=result_directory,
@@ -523,7 +523,7 @@ class PlateFileStreamRequest(DatasetTarget):
         persistent: bool = True,
         fresh_viewer: bool = False,
         source_receipt: AgentResourceRef | None = None,
-    ) -> "PlateFileStreamRequest":
+    ) -> PlateFileStreamRequest:
         return cls(
             plate_path=plate_path,
             result_directory=result_directory,
@@ -593,7 +593,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
             PlateInspectionDefaults.DEFAULT_MAX_PARSE_FAILURE_SAMPLES
         ),
         max_files_to_parse: int = PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE,
-    ) -> "SelectedPlateImageInspectionRequest":
+    ) -> SelectedPlateImageInspectionRequest:
         return cls(
             source_format=source_format,
             pattern_format=pattern_format,
@@ -655,7 +655,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         include_previews: bool = True,
         max_preview_lines: int = 8,
         max_preview_bytes: int = 64 * 1024,
-    ) -> "SelectedPlateFileQueryRequest":
+    ) -> SelectedPlateFileQueryRequest:
         return cls(
             source_format=source_format,
             pattern_format=pattern_format,
@@ -735,7 +735,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
         ),
         include_array_values: bool = True,
         max_array_elements: int = 4096,
-    ) -> "SelectedPlateImageSampleRequest":
+    ) -> SelectedPlateImageSampleRequest:
         return cls(
             image_path=image_path,
             source_format=source_format,
@@ -815,7 +815,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         fresh_viewer: bool = False,
-    ) -> "SelectedPlateFileStreamRequest":
+    ) -> SelectedPlateFileStreamRequest:
         return cls(
             file_paths=tuple(file_paths or ()),
             source_format=source_format,
@@ -946,7 +946,7 @@ class SyntheticPlateGenerationRequest:
         sample_file_limit: int = (
             SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.sample_file_limit
         ),
-    ) -> "SyntheticPlateGenerationRequest":
+    ) -> SyntheticPlateGenerationRequest:
         return cls(
             output_dir=output_dir,
             grid_rows=grid_rows,
@@ -1025,7 +1025,7 @@ class PlateInspectionResultFileRecordSummary:
     full_path: str
     file_format: str
     metadata: JsonObject = field(default_factory=dict)
-    preview: "PlateInspectionResultFilePreview | None" = None
+    preview: PlateInspectionResultFilePreview | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1059,7 +1059,7 @@ class PlateFileQueryRecordSummary:
     relative_path: str | None = None
     full_path: str | None = None
     file_format: str | None = None
-    preview: "PlateInspectionResultFilePreview | None" = None
+    preview: PlateInspectionResultFilePreview | None = None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)

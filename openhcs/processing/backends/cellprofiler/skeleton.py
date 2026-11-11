@@ -496,7 +496,7 @@ class MeasureObjectSkeletonModule(
     )
 
     @classmethod
-    def retain_branchpoint_image(cls, module: "ModuleBlock") -> bool:
+    def retain_branchpoint_image(cls, module: ModuleBlock) -> bool:
         return parse_cellprofiler_bool(
             required_setting_value(module, cls.retain_branchpoint_image_setting)
         )
@@ -550,7 +550,7 @@ class MeasureObjectSkeletonModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract,
         source_bindings,

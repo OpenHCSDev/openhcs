@@ -181,7 +181,7 @@ class PlateManagerWidget(
         service_adapter,
         session: Session,
         color_scheme: Optional[ColorScheme] = None,
-        gui_config: "UIConfig | None" = None,
+        gui_config: UIConfig | None = None,
         parent=None,
     ):
         if gui_config is None:
@@ -201,7 +201,7 @@ class PlateManagerWidget(
 
     # -- configuration --------------------------------------------------------
 
-    def set_ui_config(self, config: "UIConfig") -> None:
+    def set_ui_config(self, config: UIConfig) -> None:
         self._ui_config = config
         self.session.set_transport_config(config.zmq)
         self.session.progress.set_interval(config.progress.update_interval_ms / 1000)

@@ -234,9 +234,9 @@ class WatershedModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Return only image roles active for this Watershed configuration."""
 
@@ -271,7 +271,7 @@ class WatershedModule(
     @classmethod
     def _setting_row_value(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         setting_name: str | SettingNameFamily,
     ) -> str | None:
         values = setting_values(module, setting_name)
@@ -285,7 +285,7 @@ class WatershedModule(
     @classmethod
     def _setting_row_symbol_names(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         setting_name: str | SettingNameFamily,
     ) -> tuple[str, ...]:
         value = cls._setting_row_value(module, setting_name)
@@ -329,7 +329,7 @@ class WatershedModule(
     @classmethod
     def _output_object_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         artifact_inputs: ArtifactSpecCollection,
     ):
@@ -343,10 +343,10 @@ class WatershedModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del cls, contract, source_bindings
         module_revision = module.variable_revision_number
@@ -359,8 +359,8 @@ class WatershedModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)
         structuring_element_setting = "Structuring element for seed dilation"
@@ -546,7 +546,7 @@ class WatershedInputTopology:
         cls,
         watershed_method: WatershedMethod = WatershedMethod.DISTANCE,
         declump_method: WatershedDeclumpMethod = WatershedDeclumpMethod.SHAPE,
-    ) -> "WatershedInputTopology":
+    ) -> WatershedInputTopology:
         return cls(
             watershed_method=watershed_method,
             declump_method=declump_method,
@@ -566,7 +566,7 @@ class WatershedInputTopology:
     def special_inputs(
         self,
         values: tuple[object, ...],
-    ) -> "WatershedSpecialInputs":
+    ) -> WatershedSpecialInputs:
         """Assign ordered auxiliary images to this topology's exact roles."""
 
         required_count = int(self.requires_markers) + int(self.requires_intensity_image)
@@ -910,7 +910,7 @@ class WatershedParameters:
         gaussian_sigma: float,
         structuring_element: StructuringElement,
         structuring_element_size: int,
-    ) -> "WatershedParameters":
+    ) -> WatershedParameters:
         """Return the single normalized parameter contract for watershed execution."""
         structuring_element_array = adapt_structuring_element_rank(
             build_structuring_element(
@@ -1591,7 +1591,7 @@ class LegacyWatershedBackendStrategy(
         markers: np.ndarray,
         mask: np.ndarray,
         connectivity: int | np.ndarray = 1,
-    ) -> "LegacyWatershedRequest":
+    ) -> LegacyWatershedRequest:
         """Build a validated legacy watershed request for this backend family."""
         return LegacyWatershedRequest.from_inputs(
             image,
@@ -1918,7 +1918,7 @@ class LegacyWatershedRequest:
         mask: np.ndarray,
         connectivity: int | np.ndarray,
         prefer_fast: bool,
-    ) -> "LegacyWatershedRequest":
+    ) -> LegacyWatershedRequest:
         image_array = np.asarray(image, dtype=np.float64)
         mask_array = np.asarray(mask, dtype=bool)
         marker_array = np.asarray(markers) * mask_array
@@ -1934,7 +1934,7 @@ class LegacyWatershedRequest:
             prefer_fast=prefer_fast,
         )
 
-    def plane(self, plane_index: int) -> "LegacyWatershedRequest":
+    def plane(self, plane_index: int) -> LegacyWatershedRequest:
         image_planes = self.image.reshape((-1, *self.image.shape[-2:]))
         marker_planes = self.markers.reshape((-1, *self.markers.shape[-2:]))
         mask_planes = self.mask.reshape((-1, *self.mask.shape[-2:]))

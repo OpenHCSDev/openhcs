@@ -218,7 +218,7 @@ class MeasureImageIntensityModule(
 
     @classmethod
     def ignored_settings_for(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple[str | "SettingNameFamily", ...]:
         from openhcs.interop.cellprofiler.setting_names import is_blank_symbol_name
 
@@ -231,9 +231,9 @@ class MeasureImageIntensityModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Declare masked-image topology only when an object set is selected."""
 
@@ -562,7 +562,7 @@ class ImageIntensityMeasurement(MeasurementFeatureRecord):
     @classmethod
     def from_pixels(
         cls, pixels: np.ndarray, *, percentile_spec: ImageIntensityPercentileSpec
-    ) -> "ImageIntensityMeasurement":
+    ) -> ImageIntensityMeasurement:
         """Build the authoritative image-intensity measurement row."""
         pixels = pixels[np.isfinite(pixels)]
         pixel_count = pixels.size
@@ -619,7 +619,7 @@ class ObjectIntensityMeasurement(ObjectIntensityFeatureValues[float]):
     @classmethod
     def from_backend_arrays(
         cls, arrays: ObjectIntensityArrays, *, index: int, label: int, slice_index: int
-    ) -> "ObjectIntensityMeasurement":
+    ) -> ObjectIntensityMeasurement:
         """Materialize one CellProfiler object-intensity row from backend arrays."""
         return cls(
             slice_index=slice_index,
@@ -686,7 +686,7 @@ class ObjectIntensityMeasurementRows(
         slice_index: int,
         object_domain: tuple[int, ...] | None = None,
         object_row_identity: MeasurementObjectRowIdentity | None = None,
-    ) -> "ObjectIntensityMeasurementRows":
+    ) -> ObjectIntensityMeasurementRows:
         axis_context = ObjectIntensityMeasurementAxisContext(
             slice_index=slice_index,
             object_domain=object_domain,
@@ -791,7 +791,7 @@ class ObjectIntensityPreparedLabels:
     @classmethod
     def from_source(
         cls, labels: ObjectIntensityLabelInput, dense_labels: np.ndarray
-    ) -> "ObjectIntensityPreparedLabels":
+    ) -> ObjectIntensityPreparedLabels:
         label_array = np.ascontiguousarray(dense_labels, dtype=np.int32)
         projection = ConsecutiveObjectLabelIdProjection.from_dense_array(label_array)
         relabeled_labels = np.ascontiguousarray(
@@ -820,7 +820,7 @@ class ObjectIntensityPreparedLabels:
     @classmethod
     def from_measurement(
         cls, *, image: object, labels: ObjectIntensityLabelInput, slice_index: int
-    ) -> "ObjectIntensityPreparedLabels":
+    ) -> ObjectIntensityPreparedLabels:
         del image, slice_index
         return cls.from_source(
             labels,
@@ -838,7 +838,7 @@ class ObjectIntensityPreparedLabels:
 
     def with_relabeled_labels(
         self, relabeled_labels: np.ndarray
-    ) -> "ObjectIntensityPreparedLabels":
+    ) -> ObjectIntensityPreparedLabels:
         relabeled = np.ascontiguousarray(relabeled_labels, dtype=np.int32)
         foreground_index = (
             ObjectIntensityForegroundIndex.from_3d_labels(
@@ -891,7 +891,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
         object_domain: tuple[int, ...] | None = None,
         object_row_identity: MeasurementObjectRowIdentity | None = None,
         prepared_labels: ObjectIntensityPreparedLabels | None = None,
-    ) -> "ObjectIntensityMeasurementContext":
+    ) -> ObjectIntensityMeasurementContext:
         return cls(
             labels=labels,
             backend_provider=CellProfilerBackendSelection.from_input(
@@ -906,7 +906,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
     @classmethod
     def from_runtime_request(
         cls, request: ObjectIntensityRuntimeRequest
-    ) -> "ObjectIntensityMeasurementContext":
+    ) -> ObjectIntensityMeasurementContext:
         kwargs = request.kwargs
         if "labels" not in kwargs:
             raise ValueError("Object-intensity runtime kwargs are missing 'labels'.")
@@ -1702,7 +1702,7 @@ class RescaleIntensityContext:
         dest_low: float,
         dest_high: float,
         divisor_value: float,
-    ) -> "RescaleIntensityContext":
+    ) -> RescaleIntensityContext:
         source_data = np.asarray(ImagePayload.of(image).data)
         return cls(
             data=source_data.astype(np.float32, copy=False),
@@ -1766,7 +1766,7 @@ class RescaleMethodRunner(ABC, metaclass=AutoRegisterMeta):
     rescale_method: ClassVar[RescaleMethod | None] = None
 
     @classmethod
-    def for_method(cls, method: RescaleMethod) -> "RescaleMethodRunner":
+    def for_method(cls, method: RescaleMethod) -> RescaleMethodRunner:
         return cls.__registry__[method]()
 
     @abstractmethod

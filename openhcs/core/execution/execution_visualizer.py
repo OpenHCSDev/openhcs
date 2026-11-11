@@ -18,7 +18,7 @@ class ExecutionVisualizerABC(ABC):
 
     @property
     @abstractmethod
-    def persistence_mode(self) -> "ViewerPersistenceMode":
+    def persistence_mode(self) -> ViewerPersistenceMode:
         """Return the declaration-owned lifecycle mode for this viewer."""
 
     @property
@@ -40,7 +40,7 @@ class ExecutionVisualizerABC(ABC):
         """Drain queued viewer updates before execution completes."""
 
     @abstractmethod
-    def read_viewer_state(self, timeout: float = 30.0) -> "ViewerControlResponse":
+    def read_viewer_state(self, timeout: float = 30.0) -> ViewerControlResponse:
         """Read typed viewer state while the settled endpoint is still active."""
 
     @abstractmethod

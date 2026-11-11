@@ -424,7 +424,7 @@ class HomogeneousObjectNameMeasurementRecordMixin:
     @classmethod
     def measurement_record_object_name(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
         rows: ColumnarRows,
     ) -> str | None:
         """Use row ownership when all rows declare the same object set."""
@@ -462,7 +462,7 @@ class CalculateMathRoundingMethod(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "CalculateMathRoundingMethod":
+    ) -> CalculateMathRoundingMethod:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -480,8 +480,8 @@ class CalculateMathRoundingMethod(Enum):
 
     @classmethod
     def from_cellprofiler_literal(
-        cls, value: "CalculateMathRoundingMethod | str"
-    ) -> "CalculateMathRoundingMethod":
+        cls, value: CalculateMathRoundingMethod | str
+    ) -> CalculateMathRoundingMethod:
         """Return the rounding mode named by a CellProfiler setting literal."""
         return coerce_cellprofiler_enum(cls, value)
 
@@ -666,7 +666,7 @@ class CalculateMathModule(
     @classmethod
     def operand_object_names(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple[str | None, str | None]:
         """Return object identities selected by the two operand rows."""
 
@@ -881,7 +881,7 @@ class MathCalculationRequest:
 
     def for_operand_values(
         self, *, operand1_value: MathOperandSliceValue, operand2_value: MathOperandSliceValue
-    ) -> "MathCalculationRequest":
+    ) -> MathCalculationRequest:
         """Return this request with replacement operand values."""
         return replace(
             self,
@@ -977,7 +977,7 @@ class MathOperationStrategy(
     operation_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_operation(cls, operation: MathOperation) -> "MathOperationStrategy":
+    def for_operation(cls, operation: MathOperation) -> MathOperationStrategy:
         return cls.for_enum_member(operation)
 
     @abstractmethod
@@ -1037,7 +1037,7 @@ class RoundingStrategy(
     rounding_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_rounding(cls, rounding: RoundingMethod) -> "RoundingStrategy":
+    def for_rounding(cls, rounding: RoundingMethod) -> RoundingStrategy:
         return cls.for_enum_member(rounding)
 
     @abstractmethod

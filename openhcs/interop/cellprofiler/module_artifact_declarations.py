@@ -101,10 +101,10 @@ class ArtifactExportModule(CellProfilerModule):
     @classmethod
     def finalize_artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         artifact_outputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
@@ -133,7 +133,7 @@ class PerObjectMeasurementExecutionModule(PlaneRuntimeArtifactModule):
     @classmethod
     def validate_callable_artifact_abi(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        func: Callable[..., RuntimeFunctionOutput],
         contract: CallableContract,
     ) -> None:
         """Require the one measurement sink used by per-object execution."""
@@ -176,10 +176,10 @@ class PerObjectMeasurementExecutionModule(PlaneRuntimeArtifactModule):
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract: CallableContract,
-        source_bindings: "StepSourceBindingsConfig",
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., Any]:
         """Select the object callable when the contract declares object inputs."""
         if cls.function_variants and contract.artifact_inputs.of_artifact_type(
@@ -217,9 +217,9 @@ class SourceSetupCellProfilerModule(NonExecutableCellProfilerModule, ABC):
     @abstractmethod
     def contribute_source_bindings(
         cls,
-        module: "ModuleBlock",
-        config: "SourceBindingsConfig",
-    ) -> "SourceBindingsConfig":
+        module: ModuleBlock,
+        config: SourceBindingsConfig,
+    ) -> SourceBindingsConfig:
         """Return source declarations contributed by this setup module."""
 
 
@@ -227,7 +227,7 @@ class InteractiveCellProfilerModule(NonExecutableCellProfilerModule, ABC):
     """Nominal root for artifact modules requiring desktop interaction."""
 
     @classmethod
-    def validate_pipeline_import(cls, module: "ModuleBlock") -> None:
+    def validate_pipeline_import(cls, module: ModuleBlock) -> None:
         """Reject headless import instead of silently omitting interaction."""
 
         del module
@@ -244,9 +244,9 @@ class ObjectArtifactInputModule(CellProfilerModule):
     @classmethod
     def measurement_record_source_metadata(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-        rows: "ColumnarRows",
-    ) -> "ImagePayloadMetadata":
+        request: CellProfilerOutputRecordRequest,
+        rows: ColumnarRows,
+    ) -> ImagePayloadMetadata:
         """Compose image-feature ownership with exact object-input provenance."""
 
         object_inputs = ArtifactSpecCollection(
@@ -276,7 +276,7 @@ class ObjectArtifactOutputModule(
     @classmethod
     def measurement_object_output_specs_for_request(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
     ) -> tuple[ArtifactSpec, ...]:
         """Resolve exact measured object outputs from the compiled measurement spec."""
 
@@ -304,10 +304,10 @@ class ObjectArtifactOutputModule(
     @classmethod
     def finalize_artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         artifact_outputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
@@ -385,8 +385,8 @@ class ObjectArtifactOutputModule(
     @classmethod
     def measurement_record_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-    ) -> "ColumnarRows":
+        request: CellProfilerOutputRecordRequest,
+    ) -> ColumnarRows:
         """Emit canonical count and location rows for declared object outputs."""
         from openhcs.core.measurements.measurement_row_materialization import (
             ConcatenatedColumnarRows,
@@ -441,9 +441,9 @@ class ObjectArtifactOutputModule(
     @classmethod
     def complete_table_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-        rows: "ColumnarRows",
-    ) -> "ColumnarRows":
+        request: CellProfilerOutputRecordRequest,
+        rows: ColumnarRows,
+    ) -> ColumnarRows:
         """Object outputs derive measurements from labels, not backend summaries."""
         from openhcs.core.measurements.measurement_row_materialization import (
             MeasurementSparseColumnarRows,
@@ -462,8 +462,8 @@ class ObjectArtifactOutputModule(
     @classmethod
     def measurement_record_object_name(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-        rows: "ColumnarRows",
+        request: CellProfilerOutputRecordRequest,
+        rows: ColumnarRows,
     ) -> None:
         """Keep count rows image-scoped while location rows declare their owner."""
         del request, rows
@@ -472,9 +472,9 @@ class ObjectArtifactOutputModule(
     @classmethod
     def measurement_record_source_metadata(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-        rows: "ColumnarRows",
-    ) -> "ImagePayloadMetadata":
+        request: CellProfilerOutputRecordRequest,
+        rows: ColumnarRows,
+    ) -> ImagePayloadMetadata:
         """Compose inherited ownership with exact object-output provenance."""
 
         object_outputs = cls.measurement_object_output_specs_for_request(request)
@@ -519,7 +519,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
     @classmethod
     def prior_measurement_feature_names(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple[str, ...]:
         """Return ordered feature names that require prior measurement rows."""
 
@@ -543,7 +543,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
         *,
         feature_name: str,
         direct_inputs: ArtifactSpecCollection,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[frozenset[ArtifactSpecRef], frozenset[ArtifactSpecRef]]:
         """Return object and source refs constraining one selected feature."""
 
@@ -611,9 +611,9 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
     @classmethod
     def prior_measurement_artifact_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
         direct_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Select prior measurement artifacts by their declared lineage."""
@@ -692,10 +692,10 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         direct_inputs = ArtifactSpecCollection(
@@ -723,10 +723,10 @@ class MeasurementArtifactOutputModule(CellProfilerModule):
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpecRelation, ...]:
         """Preserve all dependencies while inheriting the invocation domain."""
@@ -759,10 +759,10 @@ class MeasurementArtifactOutputModule(CellProfilerModule):
     @classmethod
     def artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         inherited_outputs = super().artifact_contract_outputs(
@@ -881,10 +881,10 @@ class SourceQualifiedWideMeasurementRowsModule(
     @classmethod
     def project_measurement_record_rows(
         cls,
-        rows: "ColumnarRows",
+        rows: ColumnarRows,
         *,
         source_image_name: str | None,
-    ) -> "ColumnarRows":
+    ) -> ColumnarRows:
         """Project wide raw fields to exact source-qualified CP features."""
         from types import MappingProxyType
 
@@ -973,10 +973,10 @@ class ParentChildLineageArtifactOutputModule(
     @classmethod
     def finalize_artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         artifact_outputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
@@ -1030,9 +1030,9 @@ class ParentChildLineageArtifactOutputModule(
     @classmethod
     def complete_table_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
-        rows: "ColumnarRows",
-    ) -> "ColumnarRows":
+        request: CellProfilerOutputRecordRequest,
+        rows: ColumnarRows,
+    ) -> ColumnarRows:
         """Relationship rows replace the internal relationship summary carrier."""
 
         del rows
@@ -1048,9 +1048,9 @@ class ParentChildLineageArtifactOutputModule(
     @classmethod
     def parent_child_relationship_output_artifact(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
         parent: ArtifactSpec,
         child: ArtifactSpec,
         lineage_source: ArtifactSpec,
@@ -1087,12 +1087,12 @@ class ObjectLineageTransformContractModule(
     @classmethod
     def artifact_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         output_position: int,
     ) -> tuple[ArtifactSpecRelation, ...]:
@@ -1126,10 +1126,10 @@ class ObjectLineageTransformContractModule(
     @classmethod
     def artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         outputs = ArtifactSpecCollection(
@@ -1209,10 +1209,10 @@ class ImageMeasurementInputModule(
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Bind measured object sets to exactly the selected input image contexts."""
@@ -1240,7 +1240,7 @@ class ImageMeasurementInputModule(
         cls,
         callable_contract: CallableContract,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> type[InputSource]:
         """Keep original measurement images alongside produced image subjects."""
         produced_refs = frozenset(
@@ -1261,10 +1261,10 @@ class ImageMeasurementInputModule(
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpecRelation, ...]:
         """Declare exact image subjects for image-scoped measurements."""
@@ -1291,7 +1291,7 @@ class ImageMeasurementInputModule(
     @classmethod
     def executes_per_image_measurements(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        func: Callable[..., RuntimeFunctionOutput],
         object_inputs: tuple[ArtifactSpec, ...],
         *,
         callable_contract: CallableContract,
@@ -1316,10 +1316,10 @@ class ObjectMeasurementArtifactOutputModule(MeasurementArtifactOutputModule):
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpecRelation, ...]:
         """Declare exact object subjects for object-scoped measurements."""
@@ -1363,8 +1363,8 @@ class ObjectMeasurementInputModule(
         cls,
         blocks: tuple["ModuleBlock", ...],
         *,
-        invocation: "NormalizedFunctionItem",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple["ModuleBlock", ...]:
         """Require selection intent before reconstructing multiple object subjects."""
 
@@ -1410,10 +1410,10 @@ class ScopedMeasurementModule(
     @classmethod
     def object_measurement_invocation_kwargs(
         cls,
-        runtime_kwargs: "RuntimeCallableKwargs",
+        runtime_kwargs: RuntimeCallableKwargs,
         *,
         include_image_measurements: bool,
-    ) -> "RuntimeCallableKwargs":
+    ) -> RuntimeCallableKwargs:
         """Emit image-scope rows once while measuring every declared object set."""
 
         from openhcs.interop.cellprofiler.measurement_scope import (
@@ -1444,8 +1444,8 @@ class ScopedMeasurementModule(
 
     @classmethod
     def measurement_scope(
-        cls, module: "ModuleBlock"
-    ) -> "CellProfilerMeasurementTargetScope":
+        cls, module: ModuleBlock
+    ) -> CellProfilerMeasurementTargetScope:
         """Return the declaration-owned typed scope from the parsed setting."""
 
         from openhcs.interop.cellprofiler.measurement_scope import (
@@ -1470,9 +1470,9 @@ class ScopedMeasurementModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Declare object inputs only for scopes that measure objects."""
 

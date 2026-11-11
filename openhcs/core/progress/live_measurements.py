@@ -67,7 +67,7 @@ class LiveMeasurementTablePreview:
         row_limit: int = DEFAULT_LIVE_MEASUREMENT_ROW_LIMIT,
         column_limit: int = DEFAULT_LIVE_MEASUREMENT_COLUMN_LIMIT,
         materialized_locations: Sequence[RuntimeArtifactLocation] = (),
-    ) -> "LiveMeasurementTablePreview | None":
+    ) -> LiveMeasurementTablePreview | None:
         if record.key.artifact_type is not MeasurementsArtifactType:
             return None
 
@@ -119,7 +119,7 @@ class LiveMeasurementProgressPayload(ProgressContextPayload):
             RuntimeArtifactAddress,
             tuple[RuntimeArtifactLocation, ...],
         ] = NO_MATERIALIZED_ARTIFACT_LOCATIONS,
-    ) -> "LiveMeasurementProgressPayload | None":
+    ) -> LiveMeasurementProgressPayload | None:
         previews = tuple(
             preview
             for record in records

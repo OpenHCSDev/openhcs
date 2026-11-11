@@ -59,7 +59,7 @@ class RelationshipMeasurementRows:
     @classmethod
     def for_request(
         cls, request: CellProfilerOutputRecordRequest
-    ) -> "RelationshipMeasurementRows":
+    ) -> RelationshipMeasurementRows:
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
         module_type = CellProfilerModule.require_callable_contract_owner(

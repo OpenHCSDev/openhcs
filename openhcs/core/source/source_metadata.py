@@ -591,9 +591,9 @@ class SourceMetadataRecord(SourceMetadataFields):
     def resolve(
         self,
         path: str,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         metadata_rules: tuple["MetadataExtractionRule", ...],
-    ) -> "SourceMetadataRecord | None":
+    ) -> SourceMetadataRecord | None:
         """Resolve fields through their declared metadata lifetime."""
 
     def __eq__(self, other: object) -> bool:
@@ -747,7 +747,7 @@ class ResolvedSourceMetadataRecord(OwnedSourceMetadataFields, SourceMetadataReco
     def resolve(
         self,
         path: str,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         metadata_rules: tuple["MetadataExtractionRule", ...],
     ) -> SourceMetadataRecord | None:
         return self if self.fields else None
@@ -850,7 +850,7 @@ class DeclaredSourceMetadata:
     def from_mapping(
         cls,
         metadata: Mapping[str, SourceMetadataScalar],
-    ) -> "DeclaredSourceMetadata":
+    ) -> DeclaredSourceMetadata:
         return cls(
             tuple(
                 (str(key), source_metadata_scalar(value))
@@ -864,7 +864,7 @@ class DeclaredSourceMetadata:
         value: SourceMetadataValue,
         *,
         path: str,
-    ) -> "DeclaredSourceMetadata":
+    ) -> DeclaredSourceMetadata:
         if not isinstance(value, Mapping):
             raise RuntimeError(
                 f"{DECLARED_SOURCE_METADATA_FIELD} for {path!r} must be a mapping, "
@@ -941,7 +941,7 @@ class SourceFilterPathMetadata:
     def from_paths(
         cls,
         paths: tuple[str, ...],
-    ) -> "SourceFilterPathMetadata":
+    ) -> SourceFilterPathMetadata:
         return cls(tuple(dict.fromkeys(str(path) for path in paths if str(path))))
 
     @classmethod
@@ -950,7 +950,7 @@ class SourceFilterPathMetadata:
         value: SourceMetadataValue,
         *,
         path: str,
-    ) -> "SourceFilterPathMetadata":
+    ) -> SourceFilterPathMetadata:
         if not isinstance(value, Mapping):
             raise RuntimeError(
                 f"{SOURCE_FILTER_PATHS_METADATA_FIELD} for {path!r} must be a mapping, "
@@ -1011,10 +1011,10 @@ class SourceVoxelSpacingUnit(StrEnum):
         member._physical_coordinates = physical_coordinates
         return member
 
-    def physical_pixel_size(self, spacing: "SourceVoxelSpacing") -> float | None:
+    def physical_pixel_size(self, spacing: SourceVoxelSpacing) -> float | None:
         return self._physical_projection(spacing)
 
-    def physical_coordinates(self, spacing: "SourceVoxelSpacing") -> tuple[float, ...] | None:
+    def physical_coordinates(self, spacing: SourceVoxelSpacing) -> tuple[float, ...] | None:
         """Project coordinates only when this declaration establishes physical units."""
         return self._physical_coordinates(spacing)
 
@@ -1058,8 +1058,8 @@ class SourceVoxelSpacing:
 
     @classmethod
     def coerce(
-        cls, value: "SourceVoxelSpacing | Sequence[float]"
-    ) -> "SourceVoxelSpacing":
+        cls, value: SourceVoxelSpacing | Sequence[float]
+    ) -> SourceVoxelSpacing:
         """Retain nominal spacing or validate authored coordinate values."""
         return value if isinstance(value, cls) else cls(tuple(value))
 
@@ -1071,7 +1071,7 @@ class SourceVoxelSpacing:
     def from_source_metadata(
         cls,
         metadata: SourceMetadataMapping | None,
-    ) -> "SourceVoxelSpacing":
+    ) -> SourceVoxelSpacing:
         if metadata is None:
             return cls()
         value = metadata.get(SOURCE_VOXEL_SPACING_FIELD)
@@ -1114,7 +1114,7 @@ class SourceVoxelSpacing:
         return values[0] if len(unique) == 1 and None not in unique else None
 
     @classmethod
-    def common(cls, spacings: Iterable["SourceVoxelSpacing"]) -> "SourceVoxelSpacing":
+    def common(cls, spacings: Iterable["SourceVoxelSpacing"]) -> SourceVoxelSpacing:
         """Return a shared declared frame; absent/conflicting sources imply none.
 
         Numeric metadata compatibility values never establish a source frame.
@@ -1180,8 +1180,8 @@ class SourceVoxelSpacing:
 
     def with_missing_from(
         self,
-        fallback: "SourceVoxelSpacing",
-    ) -> "SourceVoxelSpacing":
+        fallback: SourceVoxelSpacing,
+    ) -> SourceVoxelSpacing:
         if self.has_values:
             return self
         return fallback

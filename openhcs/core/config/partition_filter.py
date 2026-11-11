@@ -37,7 +37,7 @@ class PartitionFilter(ABC, metaclass=AutoRegisterMeta):
     spelled_as: ClassVar[type | None] = None
 
     @classmethod
-    def decode(cls, value: PartitionFilterValue) -> "PartitionFilter":
+    def decode(cls, value: PartitionFilterValue) -> PartitionFilter:
         member = cls.__registry__.get(type(value))
         if member is None:
             raise ValueError(f"Unsupported partition filter type: {type(value)}")
@@ -45,7 +45,7 @@ class PartitionFilter(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def from_value(cls, value: PartitionFilterValue) -> "PartitionFilter":
+    def from_value(cls, value: PartitionFilterValue) -> PartitionFilter:
         """Decode one configured value of this member's spelling."""
 
     @abstractmethod
@@ -62,7 +62,7 @@ class PartitionValueList(PartitionFilter):
     values: tuple[str, ...]
 
     @classmethod
-    def from_value(cls, value: list) -> "PartitionValueList":
+    def from_value(cls, value: list) -> PartitionValueList:
         return cls(tuple(value))
 
     def matches(self, available_values: Sequence[str], *, strict: bool) -> Set[str]:
@@ -88,7 +88,7 @@ class LeadingPartitionCount(PartitionFilter):
     count: int
 
     @classmethod
-    def from_value(cls, value: int) -> "LeadingPartitionCount":
+    def from_value(cls, value: int) -> LeadingPartitionCount:
         if value < 0:
             raise ValueError(f"Max count must be non-negative, got: {value}")
         return cls(value)

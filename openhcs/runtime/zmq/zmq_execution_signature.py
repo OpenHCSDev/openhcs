@@ -222,13 +222,13 @@ class ZMQExecutionCompileControl:
     def from_execute_request(
         cls,
         request: ExecuteRequest,
-    ) -> "ZMQExecutionCompileControl":
+    ) -> ZMQExecutionCompileControl:
         return cls(
             compile_artifact_id=request.compile_artifact_id,
             compile_only=request.compile_only,
         )
 
-    def as_compile_request(self) -> "ZMQExecutionCompileControl":
+    def as_compile_request(self) -> ZMQExecutionCompileControl:
         return ZMQExecutionCompileControl(
             compile_artifact_id=self.compile_artifact_id,
             compile_only=True,
@@ -236,7 +236,7 @@ class ZMQExecutionCompileControl:
 
     def as_execution_request(
         self, compile_artifact_id: str
-    ) -> "ZMQExecutionCompileControl":
+    ) -> ZMQExecutionCompileControl:
         if not compile_artifact_id:
             raise ValueError("compile_artifact_id cannot be empty")
         return ZMQExecutionCompileControl(compile_artifact_id=compile_artifact_id)
@@ -257,7 +257,7 @@ class ZMQExecutionConfigTransport:
     def from_execute_request(
         cls,
         request: ExecuteRequest,
-    ) -> "ZMQExecutionConfigTransport":
+    ) -> ZMQExecutionConfigTransport:
         return cls(
             config_params=request.config_params,
             config_code=request.config_code,
@@ -284,7 +284,7 @@ class ZMQExecutionRequestPayload:
     def from_execute_request(
         cls,
         request: ExecuteRequest,
-    ) -> "ZMQExecutionRequestPayload":
+    ) -> ZMQExecutionRequestPayload:
         return cls(
             identity=ZMQExecutionIdentity(
                 subject_id=request.subject_id,

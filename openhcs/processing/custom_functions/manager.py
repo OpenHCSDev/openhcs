@@ -579,7 +579,7 @@ class CustomFunctionManager:
     def _prepare_source(
         self,
         code: str,
-    ) -> "FunctionMetadata":
+    ) -> FunctionMetadata:
         """Validate and project one source without mutating runtime or disk state."""
 
         from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
@@ -649,7 +649,7 @@ class CustomFunctionManager:
     def _prepare_snapshot(
         self,
         snapshot: CustomFunctionSourceSnapshot,
-    ) -> "FunctionMetadata":
+    ) -> FunctionMetadata:
         """Prepare one persisted source once; its file name must be its function name."""
         metadata = CustomFunctionRuntimeRegistry.prepare_source_once(
             snapshot.source, lambda: self._prepare_source(snapshot.code)

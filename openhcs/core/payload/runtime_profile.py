@@ -35,7 +35,7 @@ class RuntimeProfileTimer:
     started_at: float
 
     @classmethod
-    def start(cls) -> "RuntimeProfileTimer":
+    def start(cls) -> RuntimeProfileTimer:
         """Start a timer under the current profile sink state."""
         if RuntimeProfileLogger.enabled():
             return cls(enabled=True, started_at=time.perf_counter())

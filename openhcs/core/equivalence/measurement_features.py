@@ -60,7 +60,7 @@ class RuntimeMeasurementFeatureSemanticProfile(
         cls,
         key: RuntimeMeasurementFeatureKey,
         policy: RuntimeEquivalencePolicy,
-    ) -> "RuntimeMeasurementFeatureSemanticProfile":
+    ) -> RuntimeMeasurementFeatureSemanticProfile:
         """Return the most-derived semantic profile for ``key``."""
         return cls._for_feature_key_payload(
             key.to_cache_payload(),
@@ -73,7 +73,7 @@ class RuntimeMeasurementFeatureSemanticProfile(
         cls,
         key_payload: object,
         dialect: MeasurementDialect,
-    ) -> "RuntimeMeasurementFeatureSemanticProfile":
+    ) -> RuntimeMeasurementFeatureSemanticProfile:
         """Return cached most-derived semantic profile for one key/dialect pair."""
         key = RuntimeMeasurementFeatureKey.from_cache_payload(key_payload)
         context = RuntimeMeasurementFeatureSemanticContext(

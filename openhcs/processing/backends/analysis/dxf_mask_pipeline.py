@@ -42,7 +42,7 @@ class DXFMaskStackProjection:
     registration_stack: object
 
     @classmethod
-    def from_stack(cls, image_stack) -> "DXFMaskStackProjection":
+    def from_stack(cls, image_stack) -> DXFMaskStackProjection:
         if image_stack.ndim == 4:
             z, channels, height, width = image_stack.shape
             if channels > 1:
@@ -90,7 +90,7 @@ if HAS_TORCH:  # Keep nn.Module definition conditional on PyTorch availability
             self.conv3 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
             self.conv4 = nn.Conv2d(32, 2, kernel_size=3, padding=1)
 
-        def forward(self, x: "torch.Tensor") -> "torch.Tensor":  # x shape: [B, 2, H, W]
+        def forward(self, x: torch.Tensor) -> torch.Tensor:  # x shape: [B, 2, H, W]
             x = F.relu(self.conv1(x))
             x = F.relu(self.conv2(x))
             x = F.relu(self.conv3(x))
@@ -98,8 +98,8 @@ if HAS_TORCH:  # Keep nn.Module definition conditional on PyTorch availability
             return x
 
     def _rasterize_polygons_slice_torch(
-        polygons_gpu: List["torch.Tensor"], H: int, W: int, device: "torch.device"
-    ) -> "torch.Tensor":
+        polygons_gpu: List["torch.Tensor"], H: int, W: int, device: torch.device
+    ) -> torch.Tensor:
         """
         Simplified GPU rasterization for a single slice using point-in-polygon.
         WARNING: This implementation is basic and slow for many/complex polygons.
@@ -204,8 +204,8 @@ if HAS_TORCH:  # Keep nn.Module definition conditional on PyTorch availability
         return mask_slice
 
     def _apply_displacement_field_torch(
-        data_slice: "torch.Tensor", displacement_field: "torch.Tensor"
-    ) -> "torch.Tensor":
+        data_slice: torch.Tensor, displacement_field: torch.Tensor
+    ) -> torch.Tensor:
         H_data, W_data = data_slice.shape[-2:]
 
         grid_y, grid_x = torch.meshgrid(
@@ -243,8 +243,8 @@ if HAS_TORCH:  # Keep nn.Module definition conditional on PyTorch availability
         return warped_slice.squeeze(0)  # [C,H,W] or [H,W]
 
     def _smooth_field_z_torch(
-        displacement_field_stack: "torch.Tensor", sigma_z: float
-    ) -> "torch.Tensor":
+        displacement_field_stack: torch.Tensor, sigma_z: float
+    ) -> torch.Tensor:
         if sigma_z <= 0:
             return displacement_field_stack
         Z, C, H, W = displacement_field_stack.shape  # [Z, 2, H, W]

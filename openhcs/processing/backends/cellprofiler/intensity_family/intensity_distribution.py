@@ -204,7 +204,7 @@ class IntensityDistributionSettingSchema(Enum, NativeNumpyBackend):
         bin_group_count_index: int,
         heatmap_group_count_index: int,
         records_image_group_count: bool,
-    ) -> "IntensityDistributionSettingSchema":
+    ) -> IntensityDistributionSettingSchema:
         member = object.__new__(cls)
         member._value_ = revision
         member.bin_group_count_index = bin_group_count_index
@@ -218,7 +218,7 @@ class IntensityDistributionSettingSchema(Enum, NativeNumpyBackend):
     @classmethod
     def imported_module(
         cls, module: ModuleBlock
-    ) -> "IntensityDistributionSettingSchema | None":
+    ) -> IntensityDistributionSettingSchema | None:
         """Return the exact serialized schema for an imported module."""
         revision = module.variable_revision_number
         return None if revision is None else cls(revision)
@@ -276,7 +276,7 @@ class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceIndexedValue):
 
     def project_runtime_slice(
         self, slice_index: int
-    ) -> "IntensityDistributionHeatmapRuntimeOutput":
+    ) -> IntensityDistributionHeatmapRuntimeOutput:
         """Project the heatmap object-label domain through its declared axis."""
         return replace(
             self, object_labels=self.object_labels.for_runtime_slice(slice_index)
@@ -296,7 +296,7 @@ class IntensityDistributionCenterChoice(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "IntensityDistributionCenterChoice":
+    ) -> IntensityDistributionCenterChoice:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -314,7 +314,7 @@ class IntensityDistributionZernikeMode(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "IntensityDistributionZernikeMode":
+    ) -> IntensityDistributionZernikeMode:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -977,7 +977,7 @@ class RadialDistributionArrays:
     n_bins: int
 
     @classmethod
-    def empty(cls, *, bin_count: int, wants_scaled: bool) -> "RadialDistributionArrays":
+    def empty(cls, *, bin_count: int, wants_scaled: bool) -> RadialDistributionArrays:
         n_bins = int(bin_count) if wants_scaled else int(bin_count) + 1
         return cls(
             fraction_at_distance=np.zeros((0, int(bin_count) + 1), dtype=float),
@@ -996,7 +996,7 @@ class RadialDistributionArrays:
         radial_cv_by_bin: np.ndarray,
         object_has_pixels: np.ndarray,
         n_bins: int,
-    ) -> "RadialDistributionArrays":
+    ) -> RadialDistributionArrays:
         return cls(
             fraction_at_distance=fraction_at_distance,
             mean_pixel_fraction=mean_pixel_fraction,
@@ -1176,7 +1176,7 @@ class RadialLabelGeometryCacheKey:
     digest: bytes
 
     @classmethod
-    def from_labels(cls, labels: np.ndarray) -> "RadialLabelGeometryCacheKey":
+    def from_labels(cls, labels: np.ndarray) -> RadialLabelGeometryCacheKey:
         label_array = np.ascontiguousarray(labels, dtype=np.int32)
         digest = hashlib.sha1(label_array.view(np.uint8)).digest()
         return cls(
@@ -1213,7 +1213,7 @@ class IntensityDistributionSliceInput:
         labels: ObjectLabelValue,
         slice_index: int,
         object_domain: tuple[int, ...] | None = None,
-    ) -> "IntensityDistributionSliceInput":
+    ) -> IntensityDistributionSliceInput:
         image_array = np.asarray(image)
         label_array = np.asarray(object_label_dense_array(labels, dtype=np.int32))
         if image_array.ndim != 2 or label_array.ndim != 2:
@@ -1282,7 +1282,7 @@ class RadialDistributionMeasureRequest:
         bin_count: int,
         wants_scaled: bool,
         maximum_radius: int,
-    ) -> "RadialDistributionMeasureRequest":
+    ) -> RadialDistributionMeasureRequest:
         """Project a measurement request from the shared label geometry."""
         return cls(
             image=image,
@@ -1377,7 +1377,7 @@ class IntensityDistributionMeasurementRequest:
     maximum_radius: int
     wants_zernikes: ZernikeMode
     zernike_degree: int
-    radial_backend: "RadialDistributionBackendStrategy"
+    radial_backend: RadialDistributionBackendStrategy
     zernike_backend_provider: BackendProviderInput
     profiler: IntensityDistributionProfiler
 
@@ -1464,7 +1464,7 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
         *,
         source_image_name: str,
         slice_index: int | None = None,
-    ) -> "ObjectIntensityDistributionMeasurementColumnarRows":
+    ) -> ObjectIntensityDistributionMeasurementColumnarRows:
         return cls(
             radial_arrays=RadialDistributionArrays.empty(
                 bin_count=0, wants_scaled=True
@@ -2520,7 +2520,7 @@ def _intensity_distribution_heatmap(
     image: RuntimeArrayData,
     request: IntensityDistributionHeatmapRuntimeOutput,
     *,
-    radial_backend: "RadialDistributionBackendStrategy",
+    radial_backend: RadialDistributionBackendStrategy,
 ) -> RuntimeArrayData:
     """Render one CellProfiler radial-distribution heatmap."""
 

@@ -50,7 +50,7 @@ class CellProfilerImageSetNumbering:
 
     def observe_export_paths(
         self,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         paths: Sequence[str],
     ) -> None:
         """Bind actual exporter numbering to its relative bundle paths."""

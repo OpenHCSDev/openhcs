@@ -66,7 +66,7 @@ class PathPlannerComponentScopes:
     scopes: Mapping[type[Axis], ComponentGroupScope]
 
     @classmethod
-    def empty(cls) -> "PathPlannerComponentScopes":
+    def empty(cls) -> PathPlannerComponentScopes:
         return cls({})
 
     def scope_for_group_by(
@@ -83,7 +83,7 @@ class PathPlannerComponentScopes:
         step: AbstractStep,
         execution_scope: ComponentGroupScope,
         compiled_pattern: CompiledFunctionPattern | None,
-    ) -> "PathPlannerComponentScopes":
+    ) -> PathPlannerComponentScopes:
         if not isinstance(step, FunctionStep):
             return self
         if compiled_pattern is None:
@@ -1444,10 +1444,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     source_step_id=sid,
                     source_step_scope_id=self.planner.plans[sid].step_scope_id,
                 )
-            elif source_bindings.binding_for_artifact_ref(input_spec.ref()) is not None:
-                continue
             elif (
-                self.planner.artifact_context.main_flow_artifacts.by_ref(input_ref)
+                source_bindings.binding_for_artifact_ref(input_spec.ref()) is not None
+                or self.planner.artifact_context.main_flow_artifacts.by_ref(input_ref)
                 is not None
             ):
                 continue

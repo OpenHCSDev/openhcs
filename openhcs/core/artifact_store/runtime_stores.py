@@ -58,7 +58,7 @@ class RuntimeArtifactLocation:
                 raise ValueError("Saved table row count must be a nonnegative integer.")
 
     @classmethod
-    def from_output(cls, output: "Output", backend: str) -> "RuntimeArtifactLocation":
+    def from_output(cls, output: Output, backend: str) -> RuntimeArtifactLocation:
         """Retain writer-owned file facts after its physical values are released."""
         shape = output.table_shape()
         return cls(
@@ -88,7 +88,7 @@ class RuntimeStoreObservationCursor:
 class RuntimeArtifactQueryTarget:
     """Nominal runtime-artifact address matched after semantic key fields."""
 
-    def matches(self, record: "StoredRuntimeValue") -> bool:
+    def matches(self, record: StoredRuntimeValue) -> bool:
         raise NotImplementedError
 
 
@@ -98,7 +98,7 @@ class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
 
     location: RuntimeArtifactLocation
 
-    def matches(self, record: "StoredRuntimeValue") -> bool:
+    def matches(self, record: StoredRuntimeValue) -> bool:
         return record.location == self.location
 
 
@@ -118,7 +118,7 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
             self, "input_plan", self.input_plan.runtime_query_snapshot()
         )
 
-    def matches(self, record: "StoredRuntimeValue") -> bool:
+    def matches(self, record: StoredRuntimeValue) -> bool:
         scope = record.key.scope
         producer_scope = self.input_plan.group_scope
         if scope.component is not producer_scope.component or scope.value_text is None:
@@ -187,7 +187,7 @@ class RuntimeArtifactQuery:
         axis_id: str,
         backend: str,
         group_key: str | None = None,
-    ) -> "RuntimeArtifactQuery":
+    ) -> RuntimeArtifactQuery:
         """Build the runtime-store query for one compiled artifact input."""
         if group_key is None and not input_plan.group_scope.has_compiled_keys:
             return cls(
@@ -216,7 +216,7 @@ class RuntimeArtifactQuery:
         axis_id: str,
         backend: str,
         group_key: str | None,
-    ) -> "RuntimeArtifactQuery":
+    ) -> RuntimeArtifactQuery:
         """Build the exact runtime-store query for one compiled artifact output."""
         resolved_plan = output_plan.for_invocation_group(group_key)
         return cls(
@@ -242,7 +242,7 @@ class RuntimeArtifactQuery:
                 f"got {type(self.target).__name__}."
             )
 
-    def matches(self, record: "StoredRuntimeValue") -> bool:
+    def matches(self, record: StoredRuntimeValue) -> bool:
         key = record.key
         if key.name != self.name:
             return False
@@ -295,7 +295,7 @@ class RuntimeArtifactInput:
 
     def records(
         self,
-        store: "RuntimeValueStore",
+        store: RuntimeValueStore,
     ) -> tuple[StoredRuntimeValue, ...]:
         """Resolve records selected by the compiled producer/consumer scopes."""
 
@@ -334,7 +334,7 @@ class RuntimeArtifactInput:
 
     def candidate_execution_scopes(
         self,
-        store: "RuntimeValueStore",
+        store: RuntimeValueStore,
         execution_scope: ComponentGroupScope,
         *,
         variable_components: ComponentSet,
@@ -439,7 +439,7 @@ class RuntimeArtifactInput:
 
     def all_records(
         self,
-        store: "RuntimeValueStore",
+        store: RuntimeValueStore,
     ) -> tuple[StoredRuntimeValue, ...]:
         """Resolve every producer group explicitly declared by this plan."""
 
@@ -498,13 +498,13 @@ class RuntimeArtifactInput:
 
     def projected_values(
         self,
-        store: "RuntimeValueStore",
+        store: RuntimeValueStore,
     ) -> tuple[RuntimeValue, ...]:
         """Return exact producer values projected into this consumer scope."""
 
         return tuple(self._axis_value(record) for record in self.records(store))
 
-    def resolve_value(self, store: "RuntimeValueStore") -> Any:
+    def resolve_value(self, store: RuntimeValueStore) -> Any:
         """Resolve this compiled input to its invocation value."""
 
         return self._compose(self.projected_values(store))
@@ -619,7 +619,7 @@ class RuntimeArtifactInput:
 
     def _records(
         self,
-        store: "RuntimeValueStore",
+        store: RuntimeValueStore,
         producer_scope: ComponentGroupScope,
         group_key: str | None,
     ) -> tuple[StoredRuntimeValue, ...]:
@@ -881,7 +881,7 @@ class RuntimeArtifactAddress:
     value_type: str | None = None
 
     @classmethod
-    def from_record(cls, record: StoredRuntimeValue) -> "RuntimeArtifactAddress":
+    def from_record(cls, record: StoredRuntimeValue) -> RuntimeArtifactAddress:
         return cls(
             key=record.key,
             location=record.location,

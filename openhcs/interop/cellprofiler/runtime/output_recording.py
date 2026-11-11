@@ -88,7 +88,7 @@ class CellProfilerOutputRecorder(
     def for_artifact_type(
         cls,
         artifact_type: ArtifactTypeValue,
-    ) -> "CellProfilerOutputRecorder":
+    ) -> CellProfilerOutputRecorder:
         return cls.for_context(
             ArtifactType.coerce(artifact_type),
             error_subject="CellProfiler output recorder",
@@ -98,7 +98,7 @@ class CellProfilerOutputRecorder(
     def for_main_flow_outputs(
         cls,
         outputs: tuple[RuntimeMatchedOutput, ...],
-    ) -> "CellProfilerOutputRecorder":
+    ) -> CellProfilerOutputRecorder:
         """Select one nominal strategy from the complete exact output set."""
 
         artifact_types = frozenset(

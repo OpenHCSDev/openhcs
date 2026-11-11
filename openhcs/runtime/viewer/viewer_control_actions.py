@@ -46,7 +46,7 @@ class ViewerServerPort(ABC):
 
     control_actions: ClassVar[type["ViewerControlAction"]]
     viewer_display_name: ClassVar[str]
-    process_launch: "ViewerProcessLaunchConfig"
+    process_launch: ViewerProcessLaunchConfig
 
     def _create_pong_response(self):
         """Advertise the lifecycle actions this viewer's registry handles."""
@@ -144,13 +144,13 @@ class ViewerControlAction(ABC):
         return frozenset(cls._registry)
 
     @classmethod
-    def for_message_type(cls, message_type: object) -> "ViewerControlAction":
+    def for_message_type(cls, message_type: object) -> ViewerControlAction:
         if isinstance(message_type, str) and message_type in cls._registry:
             return cls._registry[message_type]()
         return cls._unknown()
 
     @classmethod
-    def for_message(cls, message: Mapping[str, object]) -> "ViewerControlAction":
+    def for_message(cls, message: Mapping[str, object]) -> ViewerControlAction:
         return cls.for_message_type(message.get(ViewerControlResponseField.TYPE.value))
 
     @classmethod

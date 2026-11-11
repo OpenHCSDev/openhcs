@@ -89,7 +89,7 @@ class ProjectionStrategy(
     @classmethod
     def for_projection_type(
         cls, projection_type: ProjectionType
-    ) -> "ProjectionStrategy":
+    ) -> ProjectionStrategy:
         return cls.for_enum_member(projection_type)
 
     @abstractmethod

@@ -28,7 +28,7 @@ class DatasetRow:
     scope: DatasetScope
 
     @classmethod
-    def of(cls, scope_id: str) -> "DatasetRow":
+    def of(cls, scope_id: str) -> DatasetRow:
         return cls(DatasetScope.parse(scope_id))
 
     @property

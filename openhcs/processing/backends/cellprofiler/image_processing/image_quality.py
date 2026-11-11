@@ -129,7 +129,7 @@ class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
         self,
         *,
         otsu_class_count: CellProfilerOtsuMethod,
-        otsu_objective: "ImageQualityOtsuObjective",
+        otsu_objective: ImageQualityOtsuObjective,
         assign_middle_to_foreground: CellProfilerThresholdAssignment,
     ) -> str | None:
         """Return the exact native descriptor for this threshold configuration."""
@@ -645,9 +645,9 @@ class MeasureImageQualityModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
-        bound: "BoundModuleSettings",
-    ) -> "BoundModuleSettings":
+        module: ModuleBlock,
+        bound: BoundModuleSettings,
+    ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         selected_images = cls._selected_image_names(module)
         parameter_name = cls.image_measurement_binding.require_parameter_name()
@@ -668,7 +668,7 @@ class MeasureImageQualityModule(
         )
 
     @classmethod
-    def _selected_image_names(cls, module: "ModuleBlock") -> tuple[str, ...]:
+    def _selected_image_names(cls, module: ModuleBlock) -> tuple[str, ...]:
         return tuple(
             image_name
             for value in setting_values(
@@ -805,7 +805,7 @@ class ImageQualityThresholdStrategy(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_method(
         cls, method: ImageQualityThresholdMethod
-    ) -> "ImageQualityThresholdStrategy":
+    ) -> ImageQualityThresholdStrategy:
         strategy_type = cls.__registry__.get(method)
         if strategy_type is None:
             raise NotImplementedError(f"Threshold method {method} not supported.")

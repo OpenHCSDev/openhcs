@@ -28,13 +28,13 @@ class StepAxisFilterSet:
     ]
 
     @classmethod
-    def empty(cls) -> "StepAxisFilterSet":
+    def empty(cls) -> StepAxisFilterSet:
         return cls({})
 
     def __len__(self) -> int:
         return len(self.resolutions_by_config_type)
 
-    def allows(self, config: "PartitionFilterConfig", axis_id: str | None) -> bool:
+    def allows(self, config: PartitionFilterConfig, axis_id: str | None) -> bool:
         resolution = self.resolution_for(config)
         if resolution is None:
             return True
@@ -48,7 +48,7 @@ class StepAxisFilterSet:
 
     def resolution_for(
         self,
-        config: "PartitionFilterConfig",
+        config: PartitionFilterConfig,
     ) -> StepAxisFilterResolution | None:
         from objectstate import get_base_type_for_lazy
 
@@ -75,7 +75,7 @@ def step_axis_allows_config(
     step_axis_filters: StepAxisFilterMap,
     *,
     step_index: int,
-    config: "PartitionFilterConfig",
+    config: PartitionFilterConfig,
     axis_id: str | None,
 ) -> bool:
     """Return whether one resolved step config applies to the runtime axis."""

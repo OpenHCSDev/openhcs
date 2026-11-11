@@ -65,7 +65,7 @@ class RuntimeTreeNodeDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return node_percent
 
     @classmethod
-    def info_for(cls, node: "RuntimeTreeNode") -> str:
+    def info_for(cls, node: RuntimeTreeNode) -> str:
         if cls.preserve_existing_info and node.info:
             return node.info
         return f"{node.percent:.1f}%"
@@ -206,7 +206,7 @@ class RuntimeTreeNode:
         runtime_state: type[SubjectRuntimeState] | None = None,
         percent: float = 0.0,
         children: Optional[List["RuntimeTreeNode"]] = None,
-    ) -> "RuntimeTreeNode":
+    ) -> RuntimeTreeNode:
         return cls(
             node_id=identity.node_id,
             node_type=declaration.to_abi_node_type(),
@@ -247,7 +247,7 @@ class RuntimeExecutionTopology:
     def from_events(
         cls,
         executions: Mapping[str, Sequence[ProgressEvent]],
-    ) -> "RuntimeExecutionTopology":
+    ) -> RuntimeExecutionTopology:
         """Derive current topology from the retained event snapshot."""
 
         known_partition_values: dict[tuple[str, str], tuple[str, ...]] = {}

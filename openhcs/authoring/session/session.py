@@ -270,7 +270,7 @@ class Renderer(ABC):
         self,
         operation: type["SessionOperation"],
         request: object,
-    ) -> "AgentError | None":
+    ) -> AgentError | None:
         """Why the renderer cannot present ``operation`` now (default: it can)."""
 
         del operation, request
@@ -305,9 +305,9 @@ class FinishedExecution:
     """One ordinary execution: what was submitted and the server's record of it."""
 
     scope_id: str
-    request: "ZMQExecutionRequestBuilder"
+    request: ZMQExecutionRequestBuilder
     record: ExecutionRecord
-    endpoint: "PongResponse | None"
+    endpoint: PongResponse | None
 
 
 class Session:
@@ -992,7 +992,7 @@ class Session:
 
     # -- execution server -----------------------------------------------------
 
-    async def connect_client(self) -> "ZMQExecutionClient":
+    async def connect_client(self) -> ZMQExecutionClient:
         return await self.client.connect(
             progress_callback=self.progress.on_progress,
             persistent=self.client.config.persistent,

@@ -107,7 +107,7 @@ class CellProfilerObjectTableMode(str, Enum):
         return self._cellprofiler_literal
 
     @classmethod
-    def from_cellprofiler(cls, value: str) -> "CellProfilerObjectTableMode":
+    def from_cellprofiler(cls, value: str) -> CellProfilerObjectTableMode:
         """Parse a public enum value or CellProfiler UI literal."""
 
         normalized = value.strip().casefold()
@@ -205,8 +205,6 @@ def _source_image_projection_values(
     source_dtype, height, width = header.require_image_geometry()
     if np.issubdtype(source_dtype, np.integer):
         scaling = float(np.iinfo(source_dtype).max)
-    elif np.issubdtype(source_dtype, np.bool_):
-        scaling = 1.0
     else:
         scaling = 1.0
     values_by_field = {
@@ -319,7 +317,7 @@ class CellProfilerDatabaseExportSettings:
     @classmethod
     def from_export_parameters(
         cls, parameters: Mapping[str, Any]
-    ) -> "CellProfilerDatabaseExportSettings":
+    ) -> CellProfilerDatabaseExportSettings:
         """Bind the public export controls to the declared settings schema."""
         values = {
             field.name: parameters[field.name]

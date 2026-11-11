@@ -26,7 +26,7 @@ class AliasProperty(Generic[ValueT]):
     @overload
     def __get__(
         self, instance: None, owner: type[object] | None = None
-    ) -> "AliasProperty[ValueT]": ...
+    ) -> AliasProperty[ValueT]: ...
 
     @overload
     def __get__(

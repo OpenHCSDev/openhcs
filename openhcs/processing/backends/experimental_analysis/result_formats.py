@@ -34,7 +34,7 @@ class ExperimentalResultFormatStrategy(metaclass=AutoRegisterMeta):
     scope_name: ClassVar[str | None] = None
 
     @classmethod
-    def for_scope(cls, scope: object) -> "ExperimentalResultFormatStrategy":
+    def for_scope(cls, scope: object) -> ExperimentalResultFormatStrategy:
         """Return the format for the scope a workbook declares."""
         format_type = cls.__registry__.get(scope)
         if format_type is None:

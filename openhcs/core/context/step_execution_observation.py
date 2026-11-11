@@ -26,7 +26,7 @@ class StepExecutionObservation:
     ]
 
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
-    hook_observations: "HookObservations" = field(default_factory=dict)
+    hook_observations: HookObservations = field(default_factory=dict)
     """What each post-execute hook observed, keyed by hook name."""
     sample_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
         default_factory=dict
@@ -64,13 +64,13 @@ class StepExecutionObservation:
         )
 
     @classmethod
-    def empty(cls) -> "StepExecutionObservation":
+    def empty(cls) -> StepExecutionObservation:
         return cls(MappingProxyType({}))
 
     @classmethod
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
-    ) -> "StepExecutionObservation":
+    ) -> StepExecutionObservation:
         locations: dict = {}
         paths: list = []
         hook_observations: list = []

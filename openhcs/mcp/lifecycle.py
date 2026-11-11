@@ -112,7 +112,7 @@ class McpInstallationPointerSnapshot:
     content_sha256: str | None
 
     @classmethod
-    def from_path(cls, pointer_path: Path) -> "McpInstallationPointerSnapshot":
+    def from_path(cls, pointer_path: Path) -> McpInstallationPointerSnapshot:
         for _attempt in range(2):
             try:
                 stat_result = pointer_path.lstat()
@@ -251,7 +251,7 @@ class McpProcessLifecycle:
         *,
         fallback_restart_command: Sequence[str],
         environment: Mapping[str, str] | None = None,
-    ) -> "McpProcessLifecycle":
+    ) -> McpProcessLifecycle:
         current_environment = os.environ if environment is None else environment
         normalized_fallback = tuple(fallback_restart_command)
         if not normalized_fallback or any(

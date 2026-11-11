@@ -207,7 +207,7 @@ class ImageFileRevision:
     changed_ns: int
 
     @classmethod
-    def from_path(cls, path: Path) -> "ImageFileRevision":
+    def from_path(cls, path: Path) -> ImageFileRevision:
         stat = path.stat()
         return cls(
             path=path,
@@ -271,7 +271,7 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
         )
 
     @classmethod
-    def require_path(cls, path: str | Path) -> "ImageFileFormat":
+    def require_path(cls, path: str | Path) -> ImageFileFormat:
         matches = tuple(
             format_type
             for format_type in cls.__registry__.values()
@@ -686,7 +686,7 @@ class ImagePayloadUint8Strategy(
         """Native NumPy conversions require no compiled numerical substrate."""
 
     @classmethod
-    def for_dtype(cls, dtype: Any) -> "ImagePayloadUint8Strategy":
+    def for_dtype(cls, dtype: Any) -> ImagePayloadUint8Strategy:
         normalized = np.dtype(dtype)
         strategy_types = cls.strategy_types_for_nominal_type(normalized.type)
         if strategy_types:

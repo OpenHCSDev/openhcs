@@ -35,7 +35,7 @@ class FunctionStepScopeToken:
     index: int
 
     @classmethod
-    def from_segment(cls, segment: str) -> "FunctionStepScopeToken | None":
+    def from_segment(cls, segment: str) -> FunctionStepScopeToken | None:
         match = _FUNCTION_STEP_TOKEN_PATTERN.fullmatch(segment)
         if match is None:
             return None
@@ -75,7 +75,7 @@ class StepEditorScope:
         )
 
     @classmethod
-    def parse(cls, scope_id: str) -> "StepEditorScope":
+    def parse(cls, scope_id: str) -> StepEditorScope:
         segments = ScopeKey(scope_id).parts
         step_ref = cls._step_token_ref(segments)
         if step_ref is None:
@@ -113,7 +113,7 @@ class StepEditorScope:
     @staticmethod
     def _step_token_ref(
         segments: tuple[str, ...],
-    ) -> "tuple[int, FunctionStepScopeToken] | None":
+    ) -> tuple[int, FunctionStepScopeToken] | None:
         for index, segment in enumerate(segments):
             step_token = FunctionStepScopeToken.from_segment(segment)
             if step_token is not None and index > 0:
