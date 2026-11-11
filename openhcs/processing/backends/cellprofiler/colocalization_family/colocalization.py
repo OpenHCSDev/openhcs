@@ -119,7 +119,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_float,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -199,7 +199,7 @@ ColocalizationThresholdMaskGroupsInput = Annotated[
 
 
 @dataclass(frozen=True)
-class ColocalizationThresholdMaskSourceRelation(SourceStackLineageSourceRelation):
+class ColocalizationThresholdMaskSourceRelation(SourceStackLineageSourceRelation, NumbaNumpyDefaultBackend):
     """Declare the exact source image and threshold for a saved mask."""
 
     relation_key: ClassVar[str] = "colocalization_threshold_mask_source"
@@ -1300,11 +1300,6 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
     ColocalizationCostesBackendStrategy
 ):
     """Numba implementation of Costes threshold searches."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def linear_costes(
         self,
         first_pixels: np.ndarray,

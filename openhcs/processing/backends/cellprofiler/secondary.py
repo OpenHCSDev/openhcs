@@ -267,7 +267,7 @@ class IdentifyTertiaryObjectsModule(
         return tuple(outputs)
 
 
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -479,7 +479,7 @@ class SecondarySegmentationStrategy(
         """Segment secondary objects when primary labels are present."""
 
 
-class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy):
+class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy, NumbaNumpyDefaultBackend):
     method = SecondaryMethod.DISTANCE_N
 
     def _segment_non_empty(self, request: SecondarySegmentationRequest) -> np.ndarray:
@@ -679,11 +679,6 @@ class SecondaryPropagationBackendStrategy(
 
 class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy):
     """Numba implementation of regularized secondary-label propagation."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
         labels = np.array([[1, 0, 0], [0, 0, 2], [0, 0, 0]], dtype=np.int32)

@@ -37,7 +37,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     LabelsObjectInputPolicy,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
     )
 
 
-class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
+class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker, NumbaNumpyDefaultBackend):
     """Shape feature that is zero, not missing, for an empty label below the
     largest measured label."""
 
@@ -1381,11 +1381,6 @@ class ShapeMeasurementBackendStrategy(
 
 class NumbaNumpyShapeMeasurementBackendStrategy(ShapeMeasurementBackendStrategy):
     """Default NumPy shape backend built from Numba leaves."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_3d_shape_measurements(self) -> None:
         """Derive binary Lewiner geometry and warm both supported input layouts."""
         if ShapeMeasurementBackendStrategy._unit_surface_triangles is None:

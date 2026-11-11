@@ -47,7 +47,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
     NumbaBackendProvider,
@@ -694,13 +694,8 @@ class ObjectOutlineBackendStrategy(
         """Return a labeled inner outline image."""
 
 
-class NumbaNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy):
+class NumbaNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy, NumbaNumpyDefaultBackend):
     """Numba-accelerated NumPy object outline primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)
         self.outline(labels)

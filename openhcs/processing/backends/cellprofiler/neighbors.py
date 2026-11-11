@@ -87,7 +87,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -115,7 +115,7 @@ def _profile_elapsed(label: str, start: float, **fields: object) -> float:
     return now
 
 
-class DistanceMethod(Enum):
+class DistanceMethod(Enum, NumbaNumpyDefaultBackend):
     """CellProfiler MeasureObjectNeighbors distance method."""
 
     def __new__(
@@ -493,11 +493,6 @@ class NeighborTopologyBackendStrategy(
 
 class NumbaNumpyNeighborTopologyBackendStrategy(NeighborTopologyBackendStrategy):
     """Numba-accelerated NumPy backend for neighbor topology."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         working = np.array([[0, 1, 1], [0, 0, 2], [3, 0, 0]], dtype=np.int32)
         neighbor = np.array([[0, 1, 0], [2, 2, 0], [0, 3, 3]], dtype=np.int32)

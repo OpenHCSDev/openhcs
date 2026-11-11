@@ -90,7 +90,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -146,7 +146,7 @@ from openhcs.core.pipeline.function_contracts import (
 )
 
 
-class IntensityDistributionHeatmapMeasurement(Enum):
+class IntensityDistributionHeatmapMeasurement(Enum, NumbaNumpyDefaultBackend):
     """CellProfiler heatmap value families."""
 
     FRACTION_AT_DISTANCE = "Fraction at Distance"
@@ -1978,11 +1978,6 @@ class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStra
 
 class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
     """Numba-accelerated NumPy radial-distribution backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         labels = np.zeros((8, 8), dtype=np.int32)
         labels[2:6, 2:6] = 1

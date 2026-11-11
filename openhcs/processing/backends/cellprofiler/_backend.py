@@ -441,6 +441,19 @@ def _prepare_cellprofiler_backend_family_cached(
         strategy_cls().prepare_backend()
 
 
+class NumbaNumpyDefaultBackend:
+    """Mixin declaring the Numba+NumPy default backend configuration.
+
+    Compose this with a concrete ``*BackendStrategy`` to declare all three
+    shared class variables in one base list instead of restating them in
+    every subclass.
+    """
+
+    memory_type: ClassVar[MemoryType] = MemoryType.NUMPY
+    backend_provider: ClassVar[type[BackendProvider]] = NumbaBackendProvider
+    is_default_backend: ClassVar[bool] = True
+
+
 __all__ = [
     "DEFAULT_CELLPROFILER_BACKEND_SELECTION",
     "BackendProvider",
@@ -456,6 +469,7 @@ __all__ = [
     "DefaultBackendSelection",
     "LegacyFastBackendProvider",
     "NativeBackendProvider",
+    "NumbaNumpyDefaultBackend",
     "NumbaBackendProvider",
     "OpencvBackendProvider",
     "PyclesperantoBackendProvider",

@@ -86,7 +86,7 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 
-class CombineObjectsMethod(Enum):
+class CombineObjectsMethod(Enum, NumbaNumpyDefaultBackend):
     """Overlap policies exposed by CombineObjects settings."""
 
     MERGE = "merge"
@@ -728,7 +728,7 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
     branchpoints as _branchpoints,
     endpoints as _endpoints,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -2289,11 +2289,6 @@ class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
 
 class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Numba-accelerated NumPy morphology backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         super().prepare_backend()
         mask = np.array(
