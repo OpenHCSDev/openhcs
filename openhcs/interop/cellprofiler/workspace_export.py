@@ -6,7 +6,7 @@ from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NA
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, TYPE_CHECKING
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -24,10 +24,6 @@ from openhcs.interop.cellprofiler.cellprofiler_literals import (
 from openhcs.interop.cellprofiler.setting_names import optional_setting_value
 from openhcs.interop.cellprofiler.settings_binder import parse_cellprofiler_bool
 
-if TYPE_CHECKING:
-    from openhcs.processing.backends.cellprofiler.export_to_database import (
-        ExportToDatabaseModule,
-    )
 
 
 @dataclass(frozen=True)
