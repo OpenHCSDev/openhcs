@@ -559,6 +559,10 @@ class ObjectLabelValue(
 
     payload_shape: ClassVar[type[PayloadShape]] = ArrayPayloadShape
     variant_data: ObjectLabelVariantData
+
+    def validate_admitted(self) -> None:
+        """Override in subclasses that need admission validation."""
+        pass
     representation: ObjectLabelRepresentation
     domain: ObjectLabelDomain
     plane_axis: type[RuntimePlaneAxis]
@@ -1341,6 +1345,11 @@ class ObjectLabelDataDomainMetadataStrategy(ObjectLabelDomainMetadataStrategy):
 class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
     """Native OpenHCS object-label value."""
 
+    def validate_admitted(self) -> None:
+        self.require_name()
+        if self.source_image_name == "":
+            raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
+
     name: str
     dimensions: tuple[str, ...] = ()
     source_image_name: str | None = None
@@ -1397,10 +1406,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
             )
             plane_axis = payload.domain.scope.value_plane_axis(payload.plane_axis)
             variants = variants.in_representation(payload.representation)
-            if isinstance(payload, ObjectLabelSet):
-                payload.require_name()
-                if payload.source_image_name == "":
-                    raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
+            payload.validate_admitted()
             variants.validate_representation(
                 representation=ObjectLabelRepresentation(payload.representation),
                 value_label=type(payload).__name__,
