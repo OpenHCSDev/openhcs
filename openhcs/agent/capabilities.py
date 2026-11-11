@@ -143,6 +143,8 @@ from openhcs.agent.dto.pipeline import (
 from openhcs.agent.dto.plate import (
     PlateFileQueryRequest,
     PlateFileQueryResult,
+    RunRecordReadRequest,
+    RunRecordReadResult,
     PlateFileStreamRequest,
     PlateFileStreamResult,
     PlateImageSampleRequest,
@@ -2349,6 +2351,46 @@ class QueryPlateFilesCapability(MainThreadProgressCapability, PlatePathCapabilit
     invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.plate_inspection_service,
         method=lambda service, request: service.query_files(request),
+    )
+
+
+class ReadRunRecordCapability(PlatePathCapability):
+    name = "openhcs_read_run_record"
+    cli_command = "read-run-record"
+    title = "Read run record"
+    description = (
+        "Read-only: what produced an output dataset. Pass an output dataset root "
+        "(the directory holding openhcs_metadata.json) to get every run record "
+        "by record id, or one output file inside a dataset to get the producer "
+        "identity stored for that file, the producing step and the record of "
+        "that run. A file the dataset does not list is an error, never a guess "
+        "from its name. Each record lists what every step ran: each function "
+        "with its identity (registry key, defining and imported library "
+        "versions, sha256 of a custom function's source), every parameter with "
+        "its value and source (pipeline, function_default, run_time), declared "
+        "files with content hashes, and devices. Pass include_full_record=true "
+        "to add the complete stored record: pipeline and global config "
+        "documents, resolved configuration with the owner of every value, "
+        "custom source texts and all installed distributions."
+    )
+    exposition = PlatePathCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.INSPECTION,
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    service = "run_record"
+    data_exposure = (
+        "local_output_path",
+        "pipeline_source",
+        "resolved_configuration",
+        "custom_function_source",
+        "installed_distribution_versions",
+    )
+    security_requirements = ("AgentPathPolicy readable root",)
+    input_contract = RunRecordReadRequest
+    output_contract = RunRecordReadResult
+    invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.run_record_service,
+        method=lambda service, request: service.read(request),
     )
 
 

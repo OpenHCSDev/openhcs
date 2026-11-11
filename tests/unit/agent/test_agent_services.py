@@ -130,6 +130,7 @@ from openhcs.core.progress.types import (
 from tests.context_support import (
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 def sample_processing_function(image, sigma: float = 1.0):
@@ -302,6 +303,7 @@ def _compile_inspection_result(
             transport_contexts=runtime_contexts,
             worker_assignments=worker_assignments,
             runtime_environment=runtime_environment,
+            run_declaration=minimal_run_declaration(),
         ),
         source_workspace_projection=source_workspace_projection,
     )

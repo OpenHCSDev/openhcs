@@ -9,10 +9,13 @@ from enum import Enum
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
+from polystore.streaming.identity import StreamProducerIdentity
 from zmqruntime.config import TransportMode
 
 from formbridge.contracts import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
+    AgentCliArgumentSpec,
+    AgentDataclassCliRequest,
     AgentError,
     AgentResultEnvelope,
     AgentResourceRef,
@@ -23,6 +26,7 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
+from openhcs.core.run_record import RunRecord, StepCalls
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -1339,3 +1343,71 @@ class SelectedPlateFileStreamResult(AgentResultEnvelope):
     selected_plate: JsonObject = field(default_factory=dict)
     target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     stream: PlateFileStreamResult | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RunRecordReadRequest(AgentDataclassCliRequest):
+    """Read what produced an output dataset, or one output file inside one.
+
+    ``path`` is an output dataset root (the directory that holds the OpenHCS
+    metadata document) or one output file below such a root.
+    ``include_full_record`` adds the complete stored record to each entry: the
+    pipeline and global config documents, the resolved configuration with the
+    owner of every value, custom function source texts and every installed
+    distribution.
+    """
+
+    path: str
+    include_full_record: bool = False
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        return (
+            AgentCliArgumentSpec(
+                field_name="path",
+                positional=True,
+                help="Output dataset root, or one output file inside one.",
+            ),
+            *super(RunRecordReadRequest, cls).agent_cli_argument_specs(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RunRecordEntry:
+    """One stored run record, addressed by the sha256 of its stored JSON.
+
+    ``steps`` says what each step ran: every function with its identity (a
+    custom function by the sha256 of its source), every parameter with its
+    value and source, and every declared file with its content hash.
+    ``record`` is the complete record, present when the request asked for it.
+    """
+
+    record_id: str
+    steps: tuple[StepCalls, ...]
+    record: RunRecord | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProducedFileEntry:
+    """One output file with the producer identity stored for it and its producing step."""
+
+    path: str
+    record_id: str
+    producer: StreamProducerIdentity
+    step: StepCalls
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class RunRecordReadResult(AgentResultEnvelope):
+    """Run records read from one output dataset.
+
+    For a dataset root ``records`` holds every record and ``produced_files`` is
+    empty; for an output file ``produced_files`` holds that file and
+    ``records`` holds the one record of the run that wrote it.
+    """
+
+    path: str
+    records: tuple[RunRecordEntry, ...] = ()
+    produced_files: tuple[ProducedFileEntry, ...] = ()
+    errors: tuple[AgentError, ...] = ()
+    warnings: tuple[AgentWarning, ...] = ()

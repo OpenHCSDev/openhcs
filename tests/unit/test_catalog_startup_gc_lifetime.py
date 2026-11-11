@@ -23,10 +23,15 @@ def test_startup_freeze_preserves_job_gc_and_releases_source_cycles():
             CustomFunctionSource, CustomFunctionSourceNamespace,
         )
         bindings = {"__name__": "startup_lifetime_control"}
-        exec("def captured_source(): pass", bindings)
+        code = "def captured_source(): pass"
+        exec(code, bindings)
         function = bindings["captured_source"]
         namespace = CustomFunctionSourceNamespace(
-            CustomFunctionSource("captured_source", "lifetime-control"), bindings,
+            CustomFunctionSource(
+                "captured_source", CustomFunctionSource.content_digest(code.encode())
+            ),
+            bindings,
+            code,
         )
         namespace.bind(function)
         captured = weakref.ref(function)

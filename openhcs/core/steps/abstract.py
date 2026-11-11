@@ -10,11 +10,12 @@ import abc
 import inspect
 from pathlib import Path
 from collections.abc import Mapping
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Iterable, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
+from polystore.streaming.identity import StreamProducerIdentity
 
 
 # Import LazyStepMaterializationConfig for type hints
@@ -65,6 +66,11 @@ class StepExecutionObservation:
         "OpenHCSMetadataTarget", "VirtualWorkspaceSourceProjectionEntries"
     ] = field(default_factory=dict)
 
+    producer_by_saved_path: Mapping[Path, StreamProducerIdentity] = field(
+        default_factory=dict
+    )
+    """The producer identity its writer stated for each saved file."""
+
     def __post_init__(self) -> None:
         projections = dict(self.source_projection_entries_by_target)
         if projections:
@@ -93,13 +99,7 @@ class StepExecutionObservation:
     @property
     def is_empty(self) -> bool:
         """Whether this completed output carrier has no facts to transport."""
-        return not (
-            self.materialized_locations_by_address
-            or self.runtime_export_paths
-            or self.hook_observations
-            or self.sample_numbers_by_export_path
-            or self.source_projection_entries_by_target
-        )
+        return not any(getattr(self, carried.name) for carried in fields(self))
 
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
@@ -124,7 +124,14 @@ class StepExecutionObservation:
         hook_observations = []
         sample_numbers = {}
         source_projections = {}
+        producers = {}
         for observation in observations:
+            for path, producer in observation.producer_by_saved_path.items():
+                if producers.setdefault(path, producer) != producer:
+                    raise ValueError(
+                        f"Saved file {path} has two producers: "
+                        f"{producers[path]} and {producer}."
+                    )
             for (
                 address,
                 values,
@@ -163,6 +170,7 @@ class StepExecutionObservation:
                     for target, entries in source_projections.items()
                 }
             ),
+            MappingProxyType(producers),
         )
 
 
@@ -266,6 +274,11 @@ class AbstractStep(abc.ABC):
             for name, value in vars(self).items()
             if not name.startswith("_")
         }
+
+    def configuration_parameters(self) -> dict[str, object]:
+        """The values that configure this step, apart from what it computes."""
+
+        return self.declaration_parameters()
 
     def same_declaration(self, other: object) -> bool:
         """Return whether another step is the same complete declaration."""

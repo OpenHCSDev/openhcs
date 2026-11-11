@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
 from python_introspect import (
     JsonObject,
 )
@@ -35,10 +34,7 @@ from formbridge.bridge.dto import (
     UiMutationRequestTokenCarrier,
     UiStateSurfaceEnvelope,
 )
-if TYPE_CHECKING:
-    from openhcs.core.progress.live_measurements import (
-        LiveMeasurementTablePreview,
-    )
+from openhcs.core.progress.live_measurements import LiveMeasurementTablePreview
 
 
 def _dataset_workflow_enum() -> type[Enum]:

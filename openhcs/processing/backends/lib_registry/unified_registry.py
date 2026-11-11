@@ -137,6 +137,17 @@ class FunctionMetadata:
     def require_current_declaration(self) -> None:
         """Validate declaration lifetimes specialized by metadata owners."""
 
+    def identity(self) -> "FunctionIdentity":
+        """Where this function comes from and at which version."""
+        from openhcs.core.function_identity import FunctionIdentity
+
+        import_identity = self.import_identity
+        return FunctionIdentity.of_module_export(
+            key=self.composite_key,
+            module=import_identity.module_name,
+            name=import_identity.function_name,
+        )
+
     @property
     def display_name(self) -> str:
         """Human-readable function name for catalogs and selectors."""

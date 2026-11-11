@@ -56,6 +56,7 @@ from openhcs.core.source_projection import (
     SourceProjection,
     SourceProjectionMetadataSerializer,
 )
+from openhcs.core.run_record import ProducedFiles
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
@@ -122,6 +123,9 @@ def finalize_function_step_outputs(
         projection_entries = OpenHCSMetadataTarget.observe_for_step(
             context, plan, artifact_materializations=materializations
         )
+        producers = ProducedFiles.stated_by_step(
+            context, plan, artifact_materializations=materializations
+        )
     else:
         _profile_finalization_phase(
             "finalize_memory_outputs",
@@ -150,11 +154,19 @@ def finalize_function_step_outputs(
             ),
             plan,
         )
+        producers = _profile_finalization_phase(
+            "finalize_saved_path_producers",
+            lambda: ProducedFiles.stated_by_step(
+                context, plan, artifact_materializations=materializations
+            ),
+            plan,
+        )
     return replace(
         StepExecutionObservation.combine(
             item.observation(plan, context) for item in materializations
         ),
         source_projection_entries_by_target=projection_entries,
+        producer_by_saved_path=producers,
     )
 
 

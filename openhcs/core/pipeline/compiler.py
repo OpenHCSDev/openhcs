@@ -56,6 +56,7 @@ from openhcs.core.axis_filter import (
     StepAxisFilterSet,
 )
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+from openhcs.core.run_record import RunDeclaration
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
     CompilationDatasetScope,
@@ -1534,17 +1535,16 @@ class PipelineCompiler:
                 axis_filter,
                 effective_config,
             )
+            run_declaration = RunDeclaration.before_step_resolution(
+                orchestrator, pipeline_definition
+            )
             if not axis_values_to_process:
                 logger.warning("No axis values found to process based on filter.")
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return CompiledExecutionBundle.with_nothing_to_run(
+                    pipeline_definition,
+                    effective_config,
+                    server_mode=is_zmq_execution,
+                    run_declaration=run_declaration,
                 )
 
             logger.info(
@@ -1554,19 +1554,16 @@ class PipelineCompiler:
             pipeline_inputs = PipelineCompiler._resolve_pipeline_once(
                 orchestrator, pipeline_definition
             )
+            run_declaration = run_declaration.with_resolved_steps(pipeline_inputs)
             if not pipeline_definition:
                 logger.warning(
                     "All steps were disabled. Pipeline is empty after filtering."
                 )
-                return CompiledExecutionBundle.from_runtime_contexts(
-                    pipeline_definition=pipeline_definition,
-                    runtime_contexts={},
-                    worker_assignments={},
-                    runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-                        effective_config,
-                        compiled_contexts={},
-                        server_mode=is_zmq_execution,
-                    ),
+                return CompiledExecutionBundle.with_nothing_to_run(
+                    pipeline_definition,
+                    effective_config,
+                    server_mode=is_zmq_execution,
+                    run_declaration=run_declaration,
                 )
             path_resolver = CompilationPathResolver(
                 dataset_scope=CompilationDatasetScope.from_path(orchestrator.dataset_root),
@@ -1654,6 +1651,7 @@ class PipelineCompiler:
                 runtime_contexts=compiled_contexts,
                 worker_assignments=worker_assignments,
                 runtime_environment=runtime_environment,
+                run_declaration=run_declaration,
             )
             PipelineCompiler._write_compilation_debug_bundle_if_configured(
                 effective_config,

@@ -56,6 +56,7 @@ from tests.context_support import (
     compiled_context,
     executing_context,
 )
+from tests.run_records import minimal_run_declaration
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -91,6 +92,7 @@ def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch
         runtime_contexts={"A01": runtime_context},
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
 
     assert resolver_calls == [{"A01": runtime_context}]
@@ -113,6 +115,7 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
         transport_contexts={},
         worker_assignments={},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
 
     assert bundle.axis_ids == ("A01", "B01")
@@ -152,6 +155,7 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
         transport_contexts={"A01": context},
         worker_assignments={},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
 
     assert RuntimeObservationMode.for_compiled_bundle(bundle) is expected_mode
@@ -201,6 +205,7 @@ def test_consolidation_does_not_require_parent_payload_records(
         transport_contexts={"A01": context},
         worker_assignments={},
         runtime_environment=_runtime_environment(),
+        run_declaration=minimal_run_declaration(),
     )
 
     assert bundle.requires_parent_runtime_observation is False

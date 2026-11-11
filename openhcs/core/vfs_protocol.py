@@ -7,7 +7,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Any, get_args, get_origin
+from typing import Annotated, Any, ClassVar, get_args, get_origin
+
+from polystore.file_content import FileContent, UnhashedFileContent
 
 
 class FileManagerLike(ABC):
@@ -34,6 +36,10 @@ class FileManagerLike(ABC):
     @abstractmethod
     def is_dir(self, path: str | Path, backend: str) -> bool:
         """Return whether a path is a directory in the selected backend."""
+
+    @abstractmethod
+    def file_content(self, file_path: str | Path, backend: str) -> FileContent:
+        """Say what bytes a file holds, or why the backend cannot hash it."""
 
     @abstractmethod
     def load(self, file_path: str | Path, backend: str, **kwargs: object) -> object:
@@ -103,6 +109,9 @@ class FileManagerLike(ABC):
 class DatasetPathDeclaration(ABC):
     """Nominal declaration for a path resolved against one compilation plate."""
 
+    plain_name: ClassVar[str]
+    """What this kind of path is, for a reader of a run's record."""
+
     @abstractmethod
     def validate_target(
         self,
@@ -112,6 +121,16 @@ class DatasetPathDeclaration(ABC):
         backend: str,
     ) -> None:
         """Validate the resolved target without creating it."""
+
+    @abstractmethod
+    def content_at_run_start(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> FileContent:
+        """Identify the bytes a run will read here, or say why there are none to hash."""
 
     @classmethod
     def from_annotation(cls, annotation: Any) -> "DatasetPathDeclaration | None":
@@ -146,6 +165,17 @@ class DatasetPathDeclaration(ABC):
 class PlateInputFileDeclaration(DatasetPathDeclaration):
     """Existing plate-relative input file."""
 
+    plain_name: ClassVar[str] = "input file"
+
+    def content_at_run_start(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> FileContent:
+        return filemanager.file_content(target, backend)
+
     def validate_target(
         self,
         target: Path,
@@ -162,6 +192,20 @@ class PlateInputFileDeclaration(DatasetPathDeclaration):
 @dataclass(frozen=True, slots=True)
 class PlateInputDirectoryDeclaration(DatasetPathDeclaration):
     """Existing plate-relative input directory."""
+
+    plain_name: ClassVar[str] = "input directory"
+
+    def content_at_run_start(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> FileContent:
+        del target, filemanager, backend
+        return UnhashedFileContent(
+            "A declared input directory is recorded by path; its files are not hashed."
+        )
 
     def validate_target(
         self,
@@ -184,6 +228,20 @@ class PlateInputDirectoryDeclaration(DatasetPathDeclaration):
 class PlateOutputFileDeclaration(DatasetPathDeclaration):
     """Plate-relative output file whose writer owns creation."""
 
+    plain_name: ClassVar[str] = "output file"
+
+    def content_at_run_start(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> FileContent:
+        del target, filemanager, backend
+        return UnhashedFileContent(
+            "This run writes the file; it has no content when the run starts."
+        )
+
     def validate_target(
         self,
         target: Path,
@@ -197,6 +255,20 @@ class PlateOutputFileDeclaration(DatasetPathDeclaration):
 @dataclass(frozen=True, slots=True)
 class PlateOutputDirectoryDeclaration(DatasetPathDeclaration):
     """Plate-relative output directory whose writer owns creation."""
+
+    plain_name: ClassVar[str] = "output directory"
+
+    def content_at_run_start(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> FileContent:
+        del target, filemanager, backend
+        return UnhashedFileContent(
+            "This run writes the directory; it has no content when the run starts."
+        )
 
     def validate_target(
         self,

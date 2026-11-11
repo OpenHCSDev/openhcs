@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -36,6 +37,42 @@ class OpenHCSCallableFormatter(SourceFormatter):
 
     def format(self, value, context: FormatContext) -> SourceFragment:
         return to_source(self.reference_for(value), context)
+
+
+class RangeFormatter(SourceFormatter):
+    """A ``range`` (for example a signature default) is written as its own call."""
+
+    priority = 50
+
+    def can_format(self, value) -> bool:
+        return isinstance(value, range)
+
+    def format(self, value: range, context: FormatContext) -> SourceFragment:
+        return SourceFragment(repr(value), frozenset())
+
+
+class ModuleExportedCallableFormatter(SourceFormatter):
+    """A callable object its module exports under its own name, by import.
+
+    NumPy's dispatchers (``numpy.sum`` as a signature default) are callable
+    objects, not functions; they load back as themselves from their module.
+    """
+
+    priority = 20
+
+    def can_format(self, value) -> bool:
+        if not callable(value):
+            return False
+        module = sys.modules.get(getattr(value, "__module__", None) or "")
+        name = getattr(value, "__qualname__", None)
+        return (
+            module is not None
+            and isinstance(name, str)
+            and getattr(module, name, None) is value
+        )
+
+    def format(self, value, context: FormatContext) -> SourceFragment:
+        return imported_name(value.__module__, value.__qualname__, context)
 
 
 class MaterializationSpecFormatter(SourceFormatter):
@@ -118,6 +155,48 @@ def _exported_callable_parameter_exclusions(func) -> set[str]:
     if callable(raw_func):
         excluded.update(parameter_exclusions(raw_func))
     return excluded.difference(contract.overridable_runtime_parameter_names)
+
+
+def _signature_defaults(func) -> dict[str, object]:
+    """The parameters this function takes from its signature when a pattern leaves them out.
+
+    A parameter the platform supplies when it calls the function (an artifact
+    input, a value bound from the step's configuration) is not one of them:
+    writing its signature default would replace the supplied value.
+    """
+
+    public_func = _public_pattern_callable(func)
+    supplied_when_called = {
+        *_exported_callable_parameter_exclusions(public_func),
+        *CallableContract.from_callable(public_func).runtime_owned_parameter_names,
+    }
+    return {
+        name: parameter.default
+        for name, parameter in inspect.signature(public_func).parameters.items()
+        if parameter.default is not inspect.Parameter.empty
+        and name not in supplied_when_called
+    }
+
+
+def with_every_parameter_written(pattern):
+    """Write each function of a pattern with every parameter it has a value for.
+
+    A pattern that leaves a parameter out runs with the signature default of
+    the installed function; the complete document states that value.
+    """
+
+    if _is_pattern_tuple(pattern):
+        func, args = pattern
+        return (func, {**_signature_defaults(func), **args})
+    if isinstance(pattern, list):
+        return [with_every_parameter_written(item) for item in pattern]
+    if isinstance(pattern, dict):
+        return {
+            key: with_every_parameter_written(item) for key, item in pattern.items()
+        }
+    if _public_pattern_callable(pattern) is not None:
+        return (pattern, _signature_defaults(pattern))
+    return pattern
 
 
 class FunctionPatternTupleFormatter(SourceFormatter):
