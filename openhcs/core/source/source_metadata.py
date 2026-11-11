@@ -12,7 +12,6 @@ from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING,
     Annotated,
     ClassVar,
     NoReturn,

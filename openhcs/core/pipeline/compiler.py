@@ -16,7 +16,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    TYPE_CHECKING,
 )
 
 import dill as pickle

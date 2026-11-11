@@ -17,7 +17,6 @@ from pathlib import Path
 from threading import Lock
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
     Mapping,
