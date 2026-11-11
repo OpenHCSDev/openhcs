@@ -37,7 +37,7 @@ OPERATIONS = ArrayOperations.for_memory(MemoryType.CUPY)
 @cupy_func
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Create a 2D weight mask that linearly ramps from 0 at the edges to 1 in the center.
 
@@ -56,8 +56,8 @@ def create_linear_weight_mask(
 
 @cupy_func
 def sharpen(
-    image: "cp.ndarray", radius: float = 1.0, amount: float = 1.0
-) -> "cp.ndarray":
+    image: cp.ndarray, radius: float = 1.0, amount: float = 1.0
+) -> cp.ndarray:
     """
     Sharpen a 3D image using unsharp masking - GPU PARALLELIZED.
 
@@ -117,13 +117,13 @@ def sharpen(
 
 @cupy_func
 def percentile_normalize(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = None,
     target_max: float = None,
     preserve_dtype: bool = True,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Normalize a 3D image using percentile-based contrast stretching.
 
@@ -150,13 +150,13 @@ def percentile_normalize(
 
 @cupy_func
 def stack_percentile_normalize(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = None,
     target_max: float = None,
     preserve_dtype: bool = True,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Normalize a stack using global percentile-based contrast stretching.
 
@@ -182,8 +182,8 @@ def stack_percentile_normalize(
 
 @cupy_func
 def create_composite(
-    stack: "cp.ndarray", weights: Optional[List[float]] = None
-) -> "cp.ndarray":
+    stack: cp.ndarray, weights: Optional[List[float]] = None
+) -> cp.ndarray:
     """
     Create a composite image from a 3D stack where each slice is a channel.
 
@@ -199,7 +199,7 @@ def create_composite(
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
 @cupy_func
-def apply_mask(image: "cp.ndarray", mask: "cp.ndarray") -> "cp.ndarray":
+def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
     """
     Apply a mask to a 3D image.
 
@@ -219,7 +219,7 @@ def apply_mask(image: "cp.ndarray", mask: "cp.ndarray") -> "cp.ndarray":
 @cupy_func
 def create_weight_mask(
     shape: Tuple[int, int], margin_ratio: float = 0.1
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Create a weight mask for blending images.
 
@@ -234,7 +234,7 @@ def create_weight_mask(
 
 
 @cupy_func
-def max_projection(stack: "cp.ndarray") -> "cp.ndarray":
+def max_projection(stack: cp.ndarray) -> cp.ndarray:
     """
     Create a maximum intensity projection from a Z-stack.
 
@@ -248,7 +248,7 @@ def max_projection(stack: "cp.ndarray") -> "cp.ndarray":
 
 
 @cupy_func
-def mean_projection(stack: "cp.ndarray") -> "cp.ndarray":
+def mean_projection(stack: cp.ndarray) -> cp.ndarray:
     """
     Create a mean intensity projection from a Z-stack.
 
@@ -263,10 +263,10 @@ def mean_projection(stack: "cp.ndarray") -> "cp.ndarray":
 
 @cupy_func
 def spatial_bin_2d(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     bin_size: int = 2,
     method: SpatialBinMethod = SpatialBinMethod.MEAN,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply 2D spatial binning to each slice in the stack - GPU accelerated.
 
@@ -286,10 +286,10 @@ def spatial_bin_2d(
 
 @cupy_func
 def spatial_bin_3d(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     bin_size: int = 2,
     method: SpatialBinMethod = SpatialBinMethod.MEAN,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply 3D spatial binning to the entire stack - GPU accelerated.
 
@@ -309,11 +309,11 @@ def spatial_bin_3d(
 
 @cupy_func
 def stack_equalize_histogram(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     bins: int = 65536,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply histogram equalization to an entire stack.
 
@@ -336,9 +336,9 @@ def stack_equalize_histogram(
 
 @cupy_func
 def create_projection(
-    stack: "cp.ndarray",
+    stack: cp.ndarray,
     method: StackProjectionMethod = StackProjectionMethod.MAX,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Create a projection from a stack using the specified method.
 
@@ -354,14 +354,14 @@ def create_projection(
 
 @cupy_func
 def crop(
-    input_image: "cp.ndarray",
+    input_image: cp.ndarray,
     start_x: int = 0,
     start_y: int = 0,
     start_z: int = 0,
     width: int = 1,
     height: int = 1,
     depth: int = 1,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Crop a given substack out of a given image stack.
 
@@ -394,7 +394,7 @@ def crop(
     )
 
 
-def _create_disk_cupy(radius: int) -> "cp.ndarray":
+def _create_disk_cupy(radius: int) -> cp.ndarray:
     """Create a disk structuring element using CuPy - MATCH NUMPY EXACTLY"""
     y, x = cp.ogrid[-radius : radius + 1, -radius : radius + 1]
     mask = x * x + y * y <= radius * radius
@@ -402,11 +402,11 @@ def _create_disk_cupy(radius: int) -> "cp.ndarray":
 
 
 def _resize_cupy_better_match(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     output_shape: tuple,
     anti_aliasing: bool = True,
     preserve_range: bool = True,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Resize image using CuPy to better match scikit-image's transform.resize behavior.
 
@@ -456,12 +456,12 @@ def _resize_cupy_better_match(
 
 @cupy_func
 def tophat(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     selem_radius: int = 50,
     downsample_factor: int = 4,
     downsample_anti_aliasing: bool = True,
     upsample_anti_aliasing: bool = False,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply white top-hat filter to a 3D image for background removal.
 
@@ -585,10 +585,10 @@ def _get_sobel_2d_kernel():
 
 @cupy_func
 def sobel_2d_vectorized(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     mode: SobelKernelBoundaryMode = SobelKernelBoundaryMode.REFLECT,
     cval: float = 0.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply 2D Sobel edge detection to all slices simultaneously - TRUE GPU PARALLELIZED.
 
@@ -619,10 +619,10 @@ def sobel_2d_vectorized(
 
 @cupy_func
 def sobel_3d_voxel(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.REFLECT,
     cval: float = 0.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Apply true 3D voxel Sobel edge detection including Z-axis gradients - GPU PARALLELIZED.
 
@@ -642,11 +642,11 @@ def sobel_3d_voxel(
 
 
 def _sobel_3d_voxel(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     *,
     mode: str,
     cval: float,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """Apply the 3-D Sobel implementation at its library string boundary."""
     from cupyx.scipy import ndimage
 
@@ -674,7 +674,7 @@ def _sobel_3d_voxel(
 
 @cupy_func
 def sobel_components(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     include_z: bool = False,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.REFLECT,
     cval: float = 0.0,
@@ -727,8 +727,8 @@ class CupyEdgeMagnitudeStrategy(
 
     @abstractmethod
     def apply(
-        self, image: "cp.ndarray", *, mode: SobelKernelBoundaryMode, cval: float
-    ) -> "cp.ndarray":
+        self, image: cp.ndarray, *, mode: SobelKernelBoundaryMode, cval: float
+    ) -> cp.ndarray:
         raise NotImplementedError
 
 
@@ -736,8 +736,8 @@ class CupySlice2DEdgeMagnitudeStrategy(CupyEdgeMagnitudeStrategy):
     method = EdgeMagnitudeMethod.SLICE_2D
 
     def apply(
-        self, image: "cp.ndarray", *, mode: SobelKernelBoundaryMode, cval: float
-    ) -> "cp.ndarray":
+        self, image: cp.ndarray, *, mode: SobelKernelBoundaryMode, cval: float
+    ) -> cp.ndarray:
         return sobel_2d_vectorized(image, mode=mode, cval=cval)
 
 
@@ -745,18 +745,18 @@ class CupyVolume3DEdgeMagnitudeStrategy(CupyEdgeMagnitudeStrategy):
     method = EdgeMagnitudeMethod.VOLUME_3D
 
     def apply(
-        self, image: "cp.ndarray", *, mode: SobelKernelBoundaryMode, cval: float
-    ) -> "cp.ndarray":
+        self, image: cp.ndarray, *, mode: SobelKernelBoundaryMode, cval: float
+    ) -> cp.ndarray:
         return _sobel_3d_voxel(image, mode=mode.value, cval=cval)
 
 
 @cupy_func
 def edge_magnitude(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     method: EdgeMagnitudeMethod = EdgeMagnitudeMethod.SLICE_2D,
     mode: SobelKernelBoundaryMode = SobelKernelBoundaryMode.REFLECT,
     cval: float = 0.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Compute edge magnitude using specified method - GPU PARALLELIZED.
 
@@ -791,13 +791,13 @@ def edge_magnitude(
 )
 @cupy_func
 def sobel(
-    image: "cp.ndarray",
+    image: cp.ndarray,
     mask: Optional["cp.ndarray"] = None,
     *,
     axis: Optional[int] = None,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.REFLECT,
     cval: float = 0.0,
-) -> "cp.ndarray":
+) -> cp.ndarray:
     """
     Find edges in an image using the Sobel filter (CuCIM backend).
 

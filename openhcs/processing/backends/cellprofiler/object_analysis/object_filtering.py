@@ -185,7 +185,7 @@ class FilterObjectsRuntimeInputPlan:
     @classmethod
     def from_request(
         cls, request: RuntimeInputBindingRequest
-    ) -> "FilterObjectsRuntimeInputPlan":
+    ) -> FilterObjectsRuntimeInputPlan:
         declared_inputs = request.declared_inputs
         object_inputs = declared_inputs.of_artifact_type(ObjectLabelsArtifactType)
         raw_measurement_features = request.kwargs.get(
@@ -630,7 +630,7 @@ class FilterObjectsModule(
     @classmethod
     def topology_parameter_value(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         binding: SettingToKeywordBinding,
     ) -> object:
         """Resolve one topology value from its setting or public callable default."""
@@ -655,7 +655,7 @@ class FilterObjectsModule(
         return parameter.default
 
     @classmethod
-    def additional_object_count(cls, module: "ModuleBlock") -> int:
+    def additional_object_count(cls, module: ModuleBlock) -> int:
         """Return the exact public additional-object topology cardinality."""
 
         values = setting_values(
@@ -687,7 +687,7 @@ class FilterObjectsModule(
         return count
 
     @classmethod
-    def emits_removed_objects(cls, module: "ModuleBlock") -> bool:
+    def emits_removed_objects(cls, module: ModuleBlock) -> bool:
         """Return whether the public invocation declares a removed-object output."""
 
         value = cls.topology_parameter_value(
@@ -702,7 +702,7 @@ class FilterObjectsModule(
         return value
 
     @classmethod
-    def removed_object_name(cls, module: "ModuleBlock") -> str | None:
+    def removed_object_name(cls, module: ModuleBlock) -> str | None:
         """Return the declared complementary output name when enabled."""
 
         if not cls.emits_removed_objects(module):
@@ -718,7 +718,7 @@ class FilterObjectsModule(
         value: str
         setting_name: str | SettingNameFamily
 
-        def validate(self, module: "ModuleBlock") -> None:
+        def validate(self, module: ModuleBlock) -> None:
             if normalized_symbol_name(self.value) is not None:
                 return
             raise ValueError(
@@ -737,8 +737,8 @@ class FilterObjectsModule(
         """One additional object set relabeled using the primary filter mask."""
 
         def validated(
-            self, module: "ModuleBlock"
-        ) -> "FilterObjectsModule.AdditionalObjectRow":
+            self, module: ModuleBlock
+        ) -> FilterObjectsModule.AdditionalObjectRow:
             FilterObjectsModule.SymbolRequirement(
                 self.input_object_name, FilterObjectsModule.additional_input_setting
             ).validate(module)
@@ -759,8 +759,8 @@ class FilterObjectsModule(
 
         @classmethod
         def from_block(
-            cls, module: "ModuleBlock", block: Sequence["ModuleSetting"]
-        ) -> "FilterObjectsModule.MeasurementRule":
+            cls, module: ModuleBlock, block: Sequence["ModuleSetting"]
+        ) -> FilterObjectsModule.MeasurementRule:
             return cls(
                 feature_name=block_setting_value(
                     block, FilterObjectsModule.measurement_setting
@@ -784,8 +784,8 @@ class FilterObjectsModule(
             ).validated(module)
 
         def validated(
-            self, module: "ModuleBlock"
-        ) -> "FilterObjectsModule.MeasurementRule":
+            self, module: ModuleBlock
+        ) -> FilterObjectsModule.MeasurementRule:
             if self.feature_name.strip():
                 return self
             raise ValueError(
@@ -836,10 +836,10 @@ class FilterObjectsModule(
 
         def output_artifact_specs(
             self,
-            module: "ModuleBlock",
+            module: ModuleBlock,
             measurement_artifact_name: str,
             artifact_inputs: ArtifactSpecCollection,
-            step_context: "ArtifactDeclarationStepContext",
+            step_context: ArtifactDeclarationStepContext,
         ) -> tuple[ArtifactSpec, ...]:
             object_sources = tuple(
                 (
@@ -917,7 +917,7 @@ class FilterObjectsModule(
             )
 
     @classmethod
-    def _filter_kwargs(cls, module: "ModuleBlock") -> "RuntimeCallableKwargs":
+    def _filter_kwargs(cls, module: ModuleBlock) -> RuntimeCallableKwargs:
         """Return absorbed-function kwargs for a typed FilterObjects plan."""
         plan = cls.plan(module)
         measurement_rules = cls.measurement_rules(module)
@@ -1022,7 +1022,7 @@ class FilterObjectsModule(
         )
 
     @classmethod
-    def plan(cls, module: "ModuleBlock") -> "FilterObjectsModule.Plan":
+    def plan(cls, module: ModuleBlock) -> FilterObjectsModule.Plan:
         """Return the typed FilterObjects compile/runtime plan."""
         filter_method = cls.filter_method(module)
         plan = cls.Plan(
@@ -1056,7 +1056,7 @@ class FilterObjectsModule(
         return plan
 
     @classmethod
-    def filter_method(cls, module: "ModuleBlock") -> "FilterMethod":
+    def filter_method(cls, module: ModuleBlock) -> FilterMethod:
         """Return the nominal filtering method declared by one module."""
 
         return coerce_cellprofiler_enum(
@@ -1066,7 +1066,7 @@ class FilterObjectsModule(
 
     @classmethod
     def additional_rows(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["FilterObjectsModule.AdditionalObjectRow", ...]:
         """Return ordered additional relabel rows from parsed settings."""
         row_count = cls.additional_object_count(module)
@@ -1090,7 +1090,7 @@ class FilterObjectsModule(
 
     @classmethod
     def measurement_rules(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["FilterObjectsModule.MeasurementRule", ...]:
         """Return ordered measurement limit rules from parsed settings."""
         if module.iter_settings():
@@ -1127,14 +1127,14 @@ class FilterObjectsModule(
         )
 
     @classmethod
-    def child_count_object_names(cls, module: "ModuleBlock") -> tuple[str, ...]:
+    def child_count_object_names(cls, module: ModuleBlock) -> tuple[str, ...]:
         """Return child object names needed by Children_<object>_Count rules."""
         return CellProfilerMeasurementFeature.child_count_object_names(
             tuple((rule.feature_name for rule in cls.measurement_rules(module)))
         )
 
     @classmethod
-    def mode_value(cls, module: "ModuleBlock") -> "FilterMode":
+    def mode_value(cls, module: ModuleBlock) -> FilterMode:
         value = optional_setting_value(module, cls.mode_setting)
         if value is None:
             return FilterMode.MEASUREMENTS
@@ -1288,7 +1288,7 @@ class FilterObjectsMeasurementLimitWindow:
         max_value: float | None,
         use_minimum: bool,
         use_maximum: bool,
-    ) -> "FilterObjectsMeasurementLimitWindow":
+    ) -> FilterObjectsMeasurementLimitWindow:
         object_ids = tuple(range(1, len(values) + 1))
         return cls(
             ObjectLabelMeasurementValues.from_label_indexed_values(object_ids, values),
@@ -1322,7 +1322,7 @@ class FilterObjectsStats:
     @classmethod
     def from_counts(
         cls, *, objects_pre_filter: int, objects_post_filter: int, slice_index: int = 0
-    ) -> "FilterObjectsStats":
+    ) -> FilterObjectsStats:
         return cls(
             slice_index=slice_index,
             objects_pre_filter=objects_pre_filter,
@@ -1341,7 +1341,7 @@ class FilterObjectsRelabeledPlane:
     @classmethod
     def from_ordered_parent_ids(
         cls, labels: np.ndarray, *, parent_ids_by_child: Sequence[int]
-    ) -> "FilterObjectsRelabeledPlane":
+    ) -> FilterObjectsRelabeledPlane:
         """Relabel ``labels`` in child order and retain the exact parent mapping."""
         label_array = np.asarray(labels, dtype=np.int32)
         max_label = int(label_array.max()) if label_array.size else 0
@@ -1363,7 +1363,7 @@ class FilterObjectsRelabeledPlane:
     @classmethod
     def from_retained_mask(
         cls, labels: np.ndarray, retained_mask: np.ndarray
-    ) -> "FilterObjectsRelabeledPlane":
+    ) -> FilterObjectsRelabeledPlane:
         """Relabel source IDs overlapping retained primary objects."""
         label_array = np.asarray(labels, dtype=np.int32)
         source_ids = np.unique(label_array[np.asarray(retained_mask, dtype=bool)])
@@ -1517,7 +1517,7 @@ class FilterSelectionKey:
         cls,
         mode: FilterMode,
         method: FilterMethod,
-    ) -> "FilterSelectionKey":
+    ) -> FilterSelectionKey:
         """Return the single selection identity defined by the public mode."""
 
         if mode is FilterMode.BORDER:
@@ -1536,7 +1536,7 @@ class FilterSelectionStrategy(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_mode_and_method(
         cls, mode: FilterMode, method: FilterMethod
-    ) -> "FilterSelectionStrategy":
+    ) -> FilterSelectionStrategy:
         requested_key = FilterSelectionKey.from_mode_and_method(mode, method)
         strategy_type = cls.__registry__.get(requested_key.label)
         if strategy_type is not None:
@@ -1695,7 +1695,7 @@ class PerObjectAssignmentStrategy(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_assignment(
         cls, assignment: PerObjectAssignment
-    ) -> "PerObjectAssignmentStrategy":
+    ) -> PerObjectAssignmentStrategy:
         strategy_type = cls.__registry__.get(assignment.value)
         if strategy_type is None:
             raise ValueError(

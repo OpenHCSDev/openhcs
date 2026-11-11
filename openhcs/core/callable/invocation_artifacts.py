@@ -28,7 +28,7 @@ PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
 
 def unnamed_main_flow_artifact_name(
     step_index: int,
-    invocation_key: "FunctionInvocationKey",
+    invocation_key: FunctionInvocationKey,
 ) -> str:
     """Return the deterministic compiler-only identity for unnamed main flow."""
 
@@ -67,7 +67,7 @@ class ArtifactDeclarationStepContext:
     available_artifact_producers: tuple["ArtifactProducer", ...] = ()
 
     @classmethod
-    def empty(cls) -> "ArtifactDeclarationStepContext":
+    def empty(cls) -> ArtifactDeclarationStepContext:
         """Return a context for provider paths that are not step-aware."""
         return cls()
 
@@ -111,7 +111,7 @@ class ArtifactDeclarationStepContext:
         source_specs: Iterable[ArtifactSpec],
         *,
         source_groups: tuple[str | None, ...] = (),
-    ) -> "ArtifactDeclarationStepContext":
+    ) -> ArtifactDeclarationStepContext:
         """Return this context after adding source declarations for the step."""
 
         declared_sources = ArtifactSpecCollection(source_specs)
@@ -155,7 +155,7 @@ class ArtifactDeclarationStepContext:
     def available_artifact_producer_for(
         self,
         spec: ArtifactSpec,
-    ) -> "ArtifactProducer | None":
+    ) -> ArtifactProducer | None:
         """Return the exact active producer for an artifact declaration."""
 
         if not isinstance(spec, ArtifactSpec):
@@ -183,7 +183,7 @@ class ArtifactDeclarationStepContext:
         group_by: type[GroupingDeclaration],
         input_source: type[InputSource],
         source_groups: tuple[str | None, ...] = (),
-    ) -> "ArtifactDeclarationStepContext":
+    ) -> ArtifactDeclarationStepContext:
         """Apply one resolved step's source scope and declared source artifacts."""
 
         scoped = replace(
@@ -199,10 +199,10 @@ class ArtifactDeclarationStepContext:
 
     def advance_artifact_graph(
         self,
-        graph: "ArtifactGraph",
+        graph: ArtifactGraph,
         *,
         main_flow_artifacts: ArtifactSpecCollection,
-    ) -> "ArtifactDeclarationStepContext":
+    ) -> ArtifactDeclarationStepContext:
         """Return the forward declaration context after one artifact graph."""
         if not isinstance(main_flow_artifacts, ArtifactSpecCollection):
             raise TypeError(
@@ -232,7 +232,7 @@ class ArtifactDeclarationStepContext:
 
 
 def callable_contract_artifact_declarations(
-    invocation: "NormalizedFunctionItem",
+    invocation: NormalizedFunctionItem,
     step_context: ArtifactDeclarationStepContext,
 ) -> ArtifactPlanKeySelector:
     """Return the nominal artifact-plan selector for one invocation contract."""
@@ -252,9 +252,9 @@ class InvocationContractProvider(ABC):
     @abstractmethod
     def __call__(
         self,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
-    ) -> "InvocationContractPlan | None":
+    ) -> InvocationContractPlan | None:
         """Return a compile-only callable contract plan for this invocation."""
 
 
@@ -262,7 +262,7 @@ class InvocationContractProvider(ABC):
 class InvocationContractPlan:
     """Compile-time replacement contract plus kwargs consumed by planning."""
 
-    contract: "CallableContract"
+    contract: CallableContract
     consumed_kwarg_names: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -280,7 +280,7 @@ class InvocationContractPlan:
 
     def consume_authored_kwargs(
         self,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> tuple[tuple[object, object], ...]:
         """Remove compile-only kwargs after proving the user authored them."""
@@ -309,13 +309,13 @@ class InvocationContractProviderFactory(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "__name__"
 
     @classmethod
-    def compile_time_parameter_names(cls, contract: "CallableContract") -> tuple[str, ...]:
+    def compile_time_parameter_names(cls, contract: CallableContract) -> tuple[str, ...]:
         """Declare authored parameters consumed outside the public callable ABI."""
         return ()
 
     @classmethod
     def normalize_authoring_kwargs(
-        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+        cls, contract: CallableContract, kwargs: Mapping[str, object],
     ) -> Mapping[str, object] | None:
         """Project declaration defaults, or leave an unowned callable unclaimed."""
         return None
@@ -324,7 +324,7 @@ class InvocationContractProviderFactory(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def provider_for_pipeline(
         cls,
-        pipeline: "ResolvedPipelineDefinition",
+        pipeline: ResolvedPipelineDefinition,
     ) -> InvocationContractProvider | None:
         """Admit contracts from the saved pipeline declaration."""
 
@@ -336,7 +336,7 @@ class MainFlowArtifactContractProvider(
 
     def __call__(
         self,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> InvocationContractPlan | None:
         contract = invocation.contract
@@ -372,7 +372,7 @@ class MainFlowArtifactContractProvider(
 
     @classmethod
     def provider_for_pipeline(
-        cls, pipeline: "ResolvedPipelineDefinition"
+        cls, pipeline: ResolvedPipelineDefinition
     ) -> InvocationContractProvider:
         return cls()
 
@@ -408,7 +408,7 @@ class CompositeInvocationContractProvider:
 
     def __call__(
         self,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> InvocationContractPlan | None:
         claims = tuple(
@@ -424,7 +424,7 @@ class PipelineInvocationContractProviderAuthority:
     """Resolve all registered compile-time invocation-contract providers."""
 
     @classmethod
-    def compile_time_parameter_names(cls, contract: "CallableContract") -> tuple[str, ...]:
+    def compile_time_parameter_names(cls, contract: CallableContract) -> tuple[str, ...]:
         """Derive admission from the original provider declarations, not a roster."""
         return tuple(dict.fromkeys(
             name
@@ -434,7 +434,7 @@ class PipelineInvocationContractProviderAuthority:
 
     @classmethod
     def normalize_authoring_kwargs(
-        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+        cls, contract: CallableContract, kwargs: Mapping[str, object],
     ) -> dict[str, object]:
         """Require one declaration owner for an authored invocation projection."""
         claims = tuple(
@@ -451,7 +451,7 @@ class PipelineInvocationContractProviderAuthority:
     @classmethod
     def provider_for_pipeline(
         cls,
-        pipeline: "ResolvedPipelineDefinition",
+        pipeline: ResolvedPipelineDefinition,
     ) -> InvocationContractProvider:
         providers: list[InvocationContractProvider] = []
 

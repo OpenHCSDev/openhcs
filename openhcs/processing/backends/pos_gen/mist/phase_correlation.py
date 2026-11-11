@@ -25,7 +25,7 @@ def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
 
 
 def constrained_hill_climbing(
-    correlation_surface: "cp.ndarray",  # type: ignore
+    correlation_surface: cp.ndarray,  # type: ignore
     initial_peak: Tuple[int, int],
     max_shift: int,
 ) -> Tuple[float, float]:
@@ -99,8 +99,8 @@ def constrained_hill_climbing(
 
 
 def phase_correlation_gpu_only(
-    image1: "cp.ndarray",  # type: ignore
-    image2: "cp.ndarray",  # type: ignore
+    image1: cp.ndarray,  # type: ignore
+    image2: cp.ndarray,  # type: ignore
     *,
     window: bool = True,
     subpixel: bool = True,
@@ -207,8 +207,8 @@ def phase_correlation_gpu_only(
 
 
 def phase_correlation_nist_gpu(
-    image1: "cp.ndarray",
-    image2: "cp.ndarray",
+    image1: cp.ndarray,
+    image2: cp.ndarray,
     direction: str,
     n_peaks: int = 2,
     use_nist_normalization: bool = True,
@@ -285,7 +285,7 @@ def phase_correlation_nist_gpu(
 
 
 def _find_multiple_peaks_gpu(
-    correlation_matrix: "cp.ndarray", n_peaks: int = 2, min_distance: int = 5
+    correlation_matrix: cp.ndarray, n_peaks: int = 2, min_distance: int = 5
 ) -> List[Tuple[int, int, float]]:
     """
     GPU-optimized multi-peak detection with minimum distance constraint.
@@ -331,7 +331,7 @@ def _find_multiple_peaks_gpu(
 
 
 def _test_fft_interpretations(
-    correlation_matrix: "cp.ndarray", peak_y: int, peak_x: int, direction: str
+    correlation_matrix: cp.ndarray, peak_y: int, peak_x: int, direction: str
 ) -> List[Tuple[int, int]]:
     """
     Generate FFT periodicity interpretations with directional constraints.
@@ -378,7 +378,7 @@ def _test_fft_interpretations(
 
 
 def _compute_interpretation_quality(
-    region1: "cp.ndarray", region2: "cp.ndarray", dy: float, dx: float
+    region1: cp.ndarray, region2: cp.ndarray, dy: float, dx: float
 ) -> float:
     """
     Compute quality for a specific displacement interpretation.

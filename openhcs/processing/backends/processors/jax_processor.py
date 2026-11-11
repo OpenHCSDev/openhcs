@@ -31,7 +31,7 @@ OPERATIONS = ArrayOperations.for_memory(MemoryType.JAX)
 @jax_func
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Create a 2D weight mask that linearly ramps from 0 at the edges to 1 in the center.
 
@@ -49,7 +49,7 @@ def create_linear_weight_mask(
 
 
 @jax_func
-def _gaussian_kernel(sigma: float, kernel_size: int) -> "jnp.ndarray":
+def _gaussian_kernel(sigma: float, kernel_size: int) -> jnp.ndarray:
     """
     Create a 2D Gaussian kernel.
 
@@ -76,7 +76,7 @@ def _gaussian_kernel(sigma: float, kernel_size: int) -> "jnp.ndarray":
 
 
 @jax_func
-def _gaussian_blur(image: "jnp.ndarray", sigma: float) -> "jnp.ndarray":
+def _gaussian_blur(image: jnp.ndarray, sigma: float) -> jnp.ndarray:
     """
     Apply Gaussian blur to a 2D image.
 
@@ -122,8 +122,8 @@ def _gaussian_blur(image: "jnp.ndarray", sigma: float) -> "jnp.ndarray":
 
 @jax_func
 def sharpen(
-    image: "jnp.ndarray", radius: float = 1.0, amount: float = 1.0
-) -> "jnp.ndarray":
+    image: jnp.ndarray, radius: float = 1.0, amount: float = 1.0
+) -> jnp.ndarray:
     """
     Sharpen a 3D image using unsharp masking.
 
@@ -180,12 +180,12 @@ def sharpen(
 
 @jax_func
 def percentile_normalize(
-    image: "jnp.ndarray",
+    image: jnp.ndarray,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Normalize a 3D image using percentile-based contrast stretching.
 
@@ -256,12 +256,12 @@ def percentile_normalize(
 
 @jax_func
 def stack_percentile_normalize(
-    stack: "jnp.ndarray",
+    stack: jnp.ndarray,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Normalize a stack using global percentile-based contrast stretching.
 
@@ -300,8 +300,8 @@ def stack_percentile_normalize(
 
 @jax_func
 def create_composite(
-    stack: "jnp.ndarray", weights: Optional[List[float]] = None
-) -> "jnp.ndarray":
+    stack: jnp.ndarray, weights: Optional[List[float]] = None
+) -> jnp.ndarray:
     """
     Create a composite image from a 3D stack where each slice is a channel.
 
@@ -317,7 +317,7 @@ def create_composite(
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
 @jax_func
-def apply_mask(image: "jnp.ndarray", mask: "jnp.ndarray") -> "jnp.ndarray":
+def apply_mask(image: jnp.ndarray, mask: jnp.ndarray) -> jnp.ndarray:
     """
     Apply a mask to a 3D image.
 
@@ -337,7 +337,7 @@ def apply_mask(image: "jnp.ndarray", mask: "jnp.ndarray") -> "jnp.ndarray":
 @jax_func
 def create_weight_mask(
     shape: Tuple[int, int], margin_ratio: float = 0.1
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Create a weight mask for blending images.
 
@@ -352,7 +352,7 @@ def create_weight_mask(
 
 
 @jax_func
-def max_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
+def max_projection(stack: jnp.ndarray) -> jnp.ndarray:
     """
     Create a maximum intensity projection from a Z-stack.
 
@@ -366,7 +366,7 @@ def max_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
 
 
 @jax_func
-def mean_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
+def mean_projection(stack: jnp.ndarray) -> jnp.ndarray:
     """
     Create a mean intensity projection from a Z-stack.
 
@@ -381,11 +381,11 @@ def mean_projection(stack: "jnp.ndarray") -> "jnp.ndarray":
 
 @jax_func
 def stack_equalize_histogram(
-    stack: "jnp.ndarray",
+    stack: jnp.ndarray,
     bins: int = 65536,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Apply histogram equalization to an entire stack.
 
@@ -453,9 +453,9 @@ def stack_equalize_histogram(
 
 @jax_func
 def create_projection(
-    stack: "jnp.ndarray",
+    stack: jnp.ndarray,
     method: StackProjectionMethod = StackProjectionMethod.MAX,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Create a projection from a stack using the specified method.
 
@@ -471,8 +471,8 @@ def create_projection(
 
 @jax_func
 def tophat(
-    image: "jnp.ndarray", selem_radius: int = 50, downsample_factor: int = 4
-) -> "jnp.ndarray":
+    image: jnp.ndarray, selem_radius: int = 50, downsample_factor: int = 4
+) -> jnp.ndarray:
     """
     Apply white top-hat filter to a 3D image for background removal.
 

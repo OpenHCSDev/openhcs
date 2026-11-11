@@ -6,6 +6,8 @@ explicit contract declarations, allowing them to skip runtime testing
 while producing the same FunctionMetadata format as external libraries.
 """
 
+from __future__ import annotations
+
 import ast
 import importlib
 import importlib.abc
@@ -240,7 +242,7 @@ def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
 
 
 def _registered_wrapper(
-    registry: "OpenHCSRegistry",
+    registry: OpenHCSRegistry,
     func: Callable[..., Any],
     wrap: Callable[[], Callable[..., Any]],
 ) -> Callable[..., Any]:

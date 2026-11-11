@@ -158,7 +158,7 @@ class PairedPrimarySecondaryObjectInputPolicy(TwoObjectLabelInputPolicy):
     larger_objects_binding: ClassVar["SettingToKeywordBinding"]
 
     @classmethod
-    def primary_image_domain_input_binding(cls) -> "SettingToKeywordBinding":
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
         """Use the larger-object input as the paired-label invocation domain."""
 
         return cls.larger_objects_binding
@@ -205,7 +205,7 @@ class LabelsObjectInputPolicy(SingleObjectLabelInputPolicy):
     input_objects_binding: ClassVar["SettingToKeywordBinding"]
 
     @classmethod
-    def primary_image_domain_input_binding(cls) -> "SettingToKeywordBinding":
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
         """Use the conventional input-object binding as the invocation domain."""
 
         return cls.input_objects_binding

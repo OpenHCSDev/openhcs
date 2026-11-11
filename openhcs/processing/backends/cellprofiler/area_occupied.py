@@ -117,7 +117,7 @@ class OperandChoice(Enum):
     OBJECTS = "objects"
 
     @classmethod
-    def from_literal(cls, value: "OperandChoice | str") -> "OperandChoice":
+    def from_literal(cls, value: OperandChoice | str) -> OperandChoice:
         return coerce_cellprofiler_enum(cls, value)
 
 
@@ -210,7 +210,7 @@ class AreaOccupiedRuntimeInputPolicy(
     @classmethod
     def bind_runtime_inputs(
         cls,
-        request: "RuntimeInputBindingRequest",
+        request: RuntimeInputBindingRequest,
     ) -> dict[str, object]:
         bound = super().bind_runtime_inputs(request)
         rows = cls._runtime_rows(request)
@@ -222,7 +222,7 @@ class AreaOccupiedRuntimeInputPolicy(
     @classmethod
     def _runtime_rows(
         cls,
-        request: "RuntimeInputBindingRequest",
+        request: RuntimeInputBindingRequest,
     ) -> tuple[AreaOccupiedRow, ...]:
         operand_parameter_name = cls.operand_choices_binding.require_parameter_name()
         operand_literals = (
@@ -245,7 +245,7 @@ class AreaOccupiedRuntimeInputPolicy(
     @classmethod
     def _row_sources(
         cls,
-        request: "RuntimeInputBindingRequest",
+        request: RuntimeInputBindingRequest,
         operands: tuple[OperandChoice, ...],
     ) -> tuple[ArtifactSpec, ...]:
         image_inputs = iter(request.primary_image_inputs)
@@ -399,7 +399,7 @@ class MeasureImageAreaOccupiedBinaryModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bound: BoundModuleSettings,
     ) -> BoundModuleSettings:
         rows = cls.measurement_rows(module)
@@ -548,7 +548,7 @@ class MeasureImageAreaOccupiedBinaryModule(
         )
 
     @classmethod
-    def measurement_rows(cls, module: "ModuleBlock") -> tuple[AreaOccupiedRow, ...]:
+    def measurement_rows(cls, module: ModuleBlock) -> tuple[AreaOccupiedRow, ...]:
         rows: list[AreaOccupiedRow] = []
         for block in repeating_setting_blocks(
             module.iter_settings(), start_name=cls.mode_setting
@@ -558,7 +558,7 @@ class MeasureImageAreaOccupiedBinaryModule(
 
     @classmethod
     def _expanded_rows_from_block(
-        cls, module: "ModuleBlock", block: Sequence["ModuleSetting"]
+        cls, module: ModuleBlock, block: Sequence["ModuleSetting"]
     ) -> tuple[AreaOccupiedRow, ...]:
         operand = cls._operand_from_literal(
             block_setting_value(block, cls.mode_setting)
@@ -622,7 +622,7 @@ class MeasureImageAreaOccupiedBinaryModule(
     @classmethod
     def _input_name_for_operand(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         operand: OperandChoice,
         *,
         binary_image_name: str | None,
@@ -643,7 +643,7 @@ class MeasureImageAreaOccupiedBinaryModule(
     @classmethod
     def _expanded_input_names(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         operand: OperandChoice,
         *,
         input_name: str,
@@ -715,7 +715,7 @@ class AreaOccupiedMeasurement(MeasurementFeatureRecord):
         total_area: float,
         slice_index: int = 0,
         source_image_name: str | None = None,
-    ) -> "AreaOccupiedMeasurement":
+    ) -> AreaOccupiedMeasurement:
         return cls(
             slice_index=slice_index,
             area_occupied=area_occupied,
@@ -931,7 +931,7 @@ class VolumeOccupiedMeasurement:
     @classmethod
     def from_volume(
         cls, *, volume_occupied: float, surface_area: float, total_volume: float
-    ) -> "VolumeOccupiedMeasurement":
+    ) -> VolumeOccupiedMeasurement:
         return cls(
             slice_index=0,
             volume_occupied=volume_occupied,

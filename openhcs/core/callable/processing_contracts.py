@@ -180,7 +180,7 @@ class RuntimeCallablePolicy:
 
     def contract_invocation(
         self,
-        contract: "CallableContract",
+        contract: CallableContract,
         func: Callable[..., Any],
         image: Any,
         kwargs: Mapping[str, Any],
@@ -219,7 +219,7 @@ class Pure2DSliceResultBatch:
     auxiliary_groups: tuple[list[Any], ...] = ()
 
     @classmethod
-    def from_results(cls, results: Iterable[Any]) -> "Pure2DSliceResultBatch":
+    def from_results(cls, results: Iterable[Any]) -> Pure2DSliceResultBatch:
         collected = [runtime_output_tuple(result) for result in results]
         if not collected:
             raise ValueError("PURE_2D execution cannot aggregate zero slice results.")
@@ -363,7 +363,7 @@ class Pure2DInputSlicer(Pure2DRegisteredStrategyFamily, metaclass=AutoRegisterMe
         return Pure2DInputSlicer
 
     @classmethod
-    def strategy_for_value(cls, value: Any) -> "Pure2DInputSlicer":
+    def strategy_for_value(cls, value: Any) -> Pure2DInputSlicer:
         """Select the nearest registered slicer for a PURE_2D input value."""
         slicer = cls.nearest_registered_strategy(
             Pure2DInputSlicer,
@@ -835,7 +835,7 @@ class ContractCall(ABC):
 
     @property
     @abstractmethod
-    def callable_contract(self) -> "CallableContract":
+    def callable_contract(self) -> CallableContract:
         """The compiled callable contract of ``func``."""
 
     @property
@@ -906,7 +906,7 @@ class ContractCall(ABC):
 
     @abstractmethod
     def aggregate_slices(
-        self, split: PlaneSplit, batch: "Pure2DSliceResultBatch",
+        self, split: PlaneSplit, batch: Pure2DSliceResultBatch,
     ) -> Any:
         """Restack per-plane results."""
 
@@ -1022,7 +1022,7 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def main_flow_call_argument(
-        cls, callable_contract: "CallableContract", source_payload: Any,
+        cls, callable_contract: CallableContract, source_payload: Any,
     ) -> Any:
         """Expose the raw ABI when this contract needs no earlier plane slicing."""
         return callable_contract.runtime_main_flow_call_argument(source_payload)
@@ -1131,7 +1131,7 @@ class Pure2DContract(ProcessingContract):
 
     @classmethod
     def main_flow_call_argument(
-        cls, callable_contract: "CallableContract", source_payload: Any,
+        cls, callable_contract: CallableContract, source_payload: Any,
     ) -> Any:
         """Retain plane context only for the declared contract execution wrapper."""
         if callable_contract.raw_processing_function is not None:
@@ -1279,7 +1279,7 @@ class LibraryContractCall(ContractCall):
         self._callable_contract = CallableContract.from_callable(func)
 
     @property
-    def callable_contract(self) -> "CallableContract":
+    def callable_contract(self) -> CallableContract:
         return self._callable_contract
 
     @property
@@ -1405,7 +1405,7 @@ class LibraryContractCall(ContractCall):
         )
 
     def aggregate_slices(
-        self, split: PlaneSplit, batch: "Pure2DSliceResultBatch",
+        self, split: PlaneSplit, batch: Pure2DSliceResultBatch,
     ) -> Any:
         stacked_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
             batch.main_outputs,

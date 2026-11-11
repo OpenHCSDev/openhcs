@@ -81,7 +81,7 @@ class ZMQCompilationRequest:
     execution_id: str
     subject_id: str
     pipeline_steps: list[AbstractStep]
-    orchestrator: "PipelineOrchestrator"
+    orchestrator: PipelineOrchestrator
     resolved_config: GlobalPipelineConfig | None
     partition_values: list[str]
     compile_artifact_id: str | None

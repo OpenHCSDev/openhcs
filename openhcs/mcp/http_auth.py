@@ -54,7 +54,7 @@ class McpHttpAuthenticationMode(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def from_oauth_policy(
-        oauth: "McpHttpOAuthSettings | None",
+        oauth: McpHttpOAuthSettings | None,
     ) -> type[McpHttpAuthenticationMode]:
         """Derive the mode from the materialized variant policy."""
         if oauth is None:
@@ -264,7 +264,7 @@ class McpHttpResourceServerSettings:
         return path or "/mcp"
 
     @classmethod
-    def from_environment(cls) -> "McpHttpResourceServerSettings":
+    def from_environment(cls) -> McpHttpResourceServerSettings:
         allow_insecure = (
             os.environ.get("OPENHCS_MCP_HTTP_ALLOW_INSECURE_LOOPBACK") == "1"
         )

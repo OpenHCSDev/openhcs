@@ -131,7 +131,7 @@ class CellProfilerImageAggregateStatistic(str, Enum):
     def for_field_name(
         cls,
         field_name: str,
-    ) -> "CellProfilerImageAggregateStatistic | None":
+    ) -> CellProfilerImageAggregateStatistic | None:
         """Return the declared aggregate statistic owning an external field."""
 
         return next(
@@ -365,7 +365,7 @@ class CellProfilerDatabaseColumnDialect:
         self,
         source_names: Sequence[str],
         maximum_length: int,
-    ) -> "CellProfilerDatabaseColumnDialect":
+    ) -> CellProfilerDatabaseColumnDialect:
         """Bind this dialect to the complete raw schema name mapping."""
 
         return replace(
@@ -488,7 +488,7 @@ class CellProfilerDatabaseColumnDialect:
         return f"{self.table_prefix}Per_Image"
 
     @classmethod
-    def from_image_table(cls, table_name: str) -> "CellProfilerDatabaseColumnDialect":
+    def from_image_table(cls, table_name: str) -> CellProfilerDatabaseColumnDialect:
         """Invert an exact CPA image-table name into its database dialect."""
 
         declared_table = cls._required(table_name, "image table name")

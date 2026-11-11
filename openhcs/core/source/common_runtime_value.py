@@ -19,7 +19,7 @@ class CommonRuntimeValue:
         values: Iterable[Any],
         *,
         ignore_none: bool = False,
-    ) -> "CommonRuntimeValue":
+    ) -> CommonRuntimeValue:
         unique_values: list[Any] = []
         for value in values:
             if ignore_none and value is None:

@@ -20,11 +20,11 @@ class FocusSharpnessMethod(Enum):
     GRADIENT = "gradient"
 
 
-def _laplacian_sharpness(image_stack: "torch.Tensor") -> "torch.Tensor":
+def _laplacian_sharpness(image_stack: torch.Tensor) -> torch.Tensor:
     return torch.abs(laplacian(image_stack.unsqueeze(1))).squeeze(1)
 
 
-def _gradient_sharpness(image_stack: "torch.Tensor") -> "torch.Tensor":
+def _gradient_sharpness(image_stack: torch.Tensor) -> torch.Tensor:
     gx, gy = torch.gradient(image_stack, dim=(1, 2))
     return torch.sqrt(gx**2 + gy**2)
 
@@ -42,17 +42,17 @@ class LaplacianImageProjection:
     """Project supported 2D/3D/4D inputs to conv2d image layout."""
 
     original_ndim: int
-    image: "torch.Tensor"
+    image: torch.Tensor
 
     @classmethod
-    def from_image(cls, image: "torch.Tensor") -> "LaplacianImageProjection":
+    def from_image(cls, image: torch.Tensor) -> LaplacianImageProjection:
         if image.ndim == 2:
             return cls(original_ndim=2, image=image.unsqueeze(0).unsqueeze(0))
         if image.ndim in (3, 4):
             return cls(original_ndim=image.ndim, image=image)
         raise ValueError(f"Unsupported image dimension for laplacian: {image.ndim}")
 
-    def restore(self, laplacian_img: "torch.Tensor") -> "torch.Tensor":
+    def restore(self, laplacian_img: torch.Tensor) -> torch.Tensor:
         if self.original_ndim == 2:
             return laplacian_img.squeeze(0).squeeze(0)
         if self.original_ndim == 3 and self.image.shape[1] == 1:
@@ -67,10 +67,10 @@ class FocusStackProjection:
     z: int
     height: int
     width: int
-    image_stack: "torch.Tensor"
+    image_stack: torch.Tensor
 
     @classmethod
-    def from_stack(cls, image_stack: "torch.Tensor") -> "FocusStackProjection":
+    def from_stack(cls, image_stack: torch.Tensor) -> FocusStackProjection:
         if image_stack.ndim != 3 or image_stack.device.type != "cuda":
             raise ValueError(
                 f"Input must be 3D tensor [Z,H,W]. Got {image_stack.ndim}D"
@@ -79,7 +79,7 @@ class FocusStackProjection:
         return cls(z=z, height=height, width=width, image_stack=image_stack)
 
 
-def laplacian(image: "torch.Tensor") -> "torch.Tensor":
+def laplacian(image: torch.Tensor) -> torch.Tensor:
     """Applies a 2D Laplacian filter."""
     # Input image is expected to be [N, C, H, W] or [C, H, W] or [H, W]
     # Kernel is [out_channels, in_channels/groups, kH, kW]
@@ -99,12 +99,12 @@ def laplacian(image: "torch.Tensor") -> "torch.Tensor":
 
 @torch_decorator
 def focus_stack_max_sharpness(
-    image_stack: "torch.Tensor",
+    image_stack: torch.Tensor,
     method: FocusSharpnessMethod = FocusSharpnessMethod.LAPLACIAN,
     patch_size: Optional[int] = None,
     stride: Optional[int] = None,
     normalize_sharpness: bool = False,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     GPU-accelerated focus stacking using PyTorch. Selects sharpest regions from a Z-stack.
 

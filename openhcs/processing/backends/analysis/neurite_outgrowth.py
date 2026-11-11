@@ -6,6 +6,8 @@ The opinionated implementation composes the existing CellProfiler-compatible
 segmentation leaves and measures the final soma-rooted neurite topology.
 """
 
+from __future__ import annotations
+
 import heapq
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict, deque
@@ -241,10 +243,10 @@ class CellProfilerNeuriteEngineProfile:
         *,
         neurite_channel_index: int,
         illumination: NeuriteIllumination,
-        cell_body: "MetaXpressCellBodySettings",
-        outgrowth: "MetaXpressOutgrowthSettings",
+        cell_body: MetaXpressCellBodySettings,
+        outgrowth: MetaXpressOutgrowthSettings,
         use_nuclear_stain: bool,
-        nuclear_stain: "MetaXpressNuclearSettings",
+        nuclear_stain: MetaXpressNuclearSettings,
         coordinate_spacing: SourceVoxelSpacing,
     ) -> tuple:
         """One recipe with isotropic XY metrics supplied by the callable declaration."""
@@ -1450,7 +1452,7 @@ class _ResolvedCrossing:
     def arm_paths(self) -> tuple[int, ...]:
         return tuple(sorted({path for path, _ in self.arms}))
 
-    def shifted(self, *, path_offset: int, node_offset: int) -> "_ResolvedCrossing":
+    def shifted(self, *, path_offset: int, node_offset: int) -> _ResolvedCrossing:
         return _ResolvedCrossing(
             self.node + node_offset,
             tuple((path + path_offset, endpoint) for path, endpoint in self.arms),
@@ -1619,7 +1621,7 @@ class _TopologyResult:
         cell_body_labels: np.ndarray,
         branch_support: np.ndarray,
         outgrowth_width_px: float,
-    ) -> "_TopologyResult":
+    ) -> _TopologyResult:
         """Prune short outward trees without changing soma or crossing identity.
 
         Leaf elimination orients pendant trees toward their existing soma roots
@@ -2192,7 +2194,7 @@ class NeuriteTopologyClass(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def render(
-        cls, topology: "_TopologyResult", cell_body_labels: np.ndarray,
+        cls, topology: _TopologyResult, cell_body_labels: np.ndarray,
     ) -> np.ndarray:
         plane = np.zeros(cell_body_labels.shape, dtype=np.uint8)
         for value, member in sorted(cls.__registry__.items()):
@@ -2202,7 +2204,7 @@ class NeuriteTopologyClass(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     @abstractmethod
-    def pixels(topology: "_TopologyResult", cell_body_labels: np.ndarray) -> np.ndarray:
+    def pixels(topology: _TopologyResult, cell_body_labels: np.ndarray) -> np.ndarray:
         """Return the (N, 2) pixels this class marks."""
 
 

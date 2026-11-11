@@ -424,7 +424,7 @@ class MeasurementProjectedColumnarRows(ColumnarRows):
         row_indices: Sequence[int] | None = None,
         declared_object_measurement_domain_covered: bool,
         object_row_identity: MeasurementObjectRowIdentity | None,
-    ) -> "MeasurementProjectedColumnarRows":
+    ) -> MeasurementProjectedColumnarRows:
         """Project declared columns without reconstructing row mappings."""
         fields = rows.fields
         if row_indices is None:
@@ -602,7 +602,7 @@ class MeasurementSparseColumnarRows(ColumnarRows):
         declared_object_measurement_domain_covered: bool = False,
         missing_cell: object = MEASUREMENT_SPARSE_CELL,
         object_row_identity: MeasurementObjectRowIdentity | None = None,
-    ) -> "MeasurementSparseColumnarRows":
+    ) -> MeasurementSparseColumnarRows:
         """Return a sparse columnar view over heterogeneous measurement rows."""
         row_mappings = coalesced_sparse_measurement_row_mappings(
             tuple(measurement_row_mapping(row) for row in rows),
@@ -650,7 +650,7 @@ class MeasurementSparseColumnarRows(ColumnarRows):
         missing_cell: object = MEASUREMENT_SPARSE_CELL,
         identity_fields: Sequence[str] | None = None,
         values_equal: Callable[[object, object], bool] | None = None,
-    ) -> "MeasurementSparseColumnarRows":
+    ) -> MeasurementSparseColumnarRows:
         """Return sparse rows coalesced across columnar batches."""
         fields = FieldSpec.merge_exact(
             (batch.fields for batch in batches),
@@ -1436,7 +1436,7 @@ class MeasurementRowsAxisProjection(
     def from_rows(
         cls,
         rows: Sequence[object] | ColumnarRows,
-    ) -> "MeasurementRowsAxisProjection":
+    ) -> MeasurementRowsAxisProjection:
         projection_type = cls.strategy_types_for_nominal_value(rows)[0]
         return cast(MeasurementRowsAxisProjection, projection_type(rows=rows))
 
@@ -1882,7 +1882,7 @@ class MeasurementRowQualifier:
         *,
         field_name: str,
         value: str | None,
-    ) -> "MeasurementRowQualifier | None":
+    ) -> MeasurementRowQualifier | None:
         if value is None:
             return None
         normalized = value.strip()
@@ -2063,7 +2063,7 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
         cls,
         row_batches: tuple[ColumnarRows, ...],
         fields: tuple[FieldSpec, ...],
-    ) -> "ConcatenatedColumnarRowColumns":
+    ) -> ConcatenatedColumnarRowColumns:
         return cls(
             row_batches=row_batches,
             column_names=tuple(field_spec.name for field_spec in fields),

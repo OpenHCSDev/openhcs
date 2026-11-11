@@ -129,7 +129,7 @@ class LiveOverviewBridgeProviderSet(UiBridgeProviderSetABC):
         )
 
     @classmethod
-    def for_main_window(cls, main_window) -> "LiveOverviewBridgeProviderSet":
+    def for_main_window(cls, main_window) -> LiveOverviewBridgeProviderSet:
         del main_window
         return cls()
 

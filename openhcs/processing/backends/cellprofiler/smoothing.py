@@ -238,11 +238,11 @@ class SmoothingStrategy(ABC, metaclass=AutoRegisterMeta):
     strategy_key: ClassVar[SmoothingStrategyKey | None] = None
 
     @classmethod
-    def for_request(cls, request: SmoothingRequest) -> "SmoothingStrategy":
+    def for_request(cls, request: SmoothingRequest) -> SmoothingStrategy:
         return cls.for_key(request.strategy_key)
 
     @classmethod
-    def for_key(cls, strategy_key: SmoothingStrategyKey) -> "SmoothingStrategy":
+    def for_key(cls, strategy_key: SmoothingStrategyKey) -> SmoothingStrategy:
         strategy_type = cls.__registry__.get(strategy_key.label)
         if strategy_type is None:
             raise NotImplementedError(

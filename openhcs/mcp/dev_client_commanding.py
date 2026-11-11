@@ -82,7 +82,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         return (*explicit_specs, *generated_mcp_dev_command_specs())
 
     @classmethod
-    def for_name(cls, command_name: str) -> "McpDevCommandSpec":
+    def for_name(cls, command_name: str) -> McpDevCommandSpec:
         command_spec_type = cls.__registry__.get(command_name)
         if command_spec_type is not None:
             return command_spec_type()
@@ -274,7 +274,7 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
     def for_capability_name(
         cls,
         tool_name: str,
-    ) -> "CapabilityBackedCommandSpec | None":
+    ) -> CapabilityBackedCommandSpec | None:
         try:
             capability = get_agent_capability(tool_name)
         except KeyError:

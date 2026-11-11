@@ -35,7 +35,7 @@ tree_util = jax.tree_util if jax else None
 logger = logging.getLogger(__name__)
 
 
-def _validate_jax_array(image: "jnp.ndarray") -> None:
+def _validate_jax_array(image: jnp.ndarray) -> None:
     """Validate that input is a JAX array (2D or 3D)."""
     if jax is None or jnp is None:
         raise ImportError("JAX is required for JAX NLM functions")
@@ -47,7 +47,7 @@ def _validate_jax_array(image: "jnp.ndarray") -> None:
         raise ValueError(f"Input must be a 2D or 3D array, got {image.ndim}D array")
 
 
-def _rescale_to_unit_range(image: "jnp.ndarray") -> "jnp.ndarray":
+def _rescale_to_unit_range(image: jnp.ndarray) -> jnp.ndarray:
     """
     Rescale image so that the minimum value across the entire stack is 0
     and the maximum value is 1.
@@ -105,12 +105,12 @@ def _vmap_2d(f, y_ixs, x_ixs):
     else lambda f: f
 )
 def _nlm_core(
-    img: "jnp.ndarray",
+    img: jnp.ndarray,
     search_window_radius: int,
     filter_radius: int,
     h: float,
     sigma: float,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Core non-local means implementation based on Buades et al.
 
@@ -200,31 +200,31 @@ def _nlm_core(
     return out
 
 
-def _use_whole_image(image: "jnp.ndarray") -> "jnp.ndarray":
+def _use_whole_image(image: jnp.ndarray) -> jnp.ndarray:
     return image
 
 
-def _use_first_plane(image: "jnp.ndarray") -> "jnp.ndarray":
+def _use_first_plane(image: jnp.ndarray) -> jnp.ndarray:
     return image[0]
 
 
 def _denoise_2d(
-    image: "jnp.ndarray",
+    image: jnp.ndarray,
     search_window_radius: int,
     filter_radius: int,
     h: float,
     sigma: float,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     return _nlm_core(image, search_window_radius, filter_radius, h, sigma)
 
 
 def _reject_unsupported_3d(
-    image: "jnp.ndarray",
+    image: jnp.ndarray,
     search_window_radius: int,
     filter_radius: int,
     h: float,
     sigma: float,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     del image, search_window_radius, filter_radius, h, sigma
     raise NotImplementedError(
         "3D non-local means processing is not yet implemented for JAX backend. "
@@ -246,23 +246,23 @@ class JaxNlmInputDimensionality(Enum):
         return member
 
     @classmethod
-    def from_ndim(cls, ndim: int) -> "JaxNlmInputDimensionality":
+    def from_ndim(cls, ndim: int) -> JaxNlmInputDimensionality:
         try:
             return cls(ndim)
         except ValueError as exc:
             raise ValueError(f"Unexpected input dimensions: {ndim}D") from exc
 
-    def estimation_slice(self, image_normalized: "jnp.ndarray") -> "jnp.ndarray":
+    def estimation_slice(self, image_normalized: jnp.ndarray) -> jnp.ndarray:
         return self._estimation_selector(image_normalized)
 
     def denoise(
         self,
-        image_normalized: "jnp.ndarray",
+        image_normalized: jnp.ndarray,
         search_window_radius: int,
         filter_radius: int,
         h: float,
         sigma: float,
-    ) -> "jnp.ndarray":
+    ) -> jnp.ndarray:
         return self._denoiser(
             image_normalized,
             search_window_radius,
@@ -274,13 +274,13 @@ class JaxNlmInputDimensionality(Enum):
 
 @jax_func
 def non_local_means_denoise_jax(
-    image: "jnp.ndarray",
+    image: jnp.ndarray,
     *,
     search_window_radius: int = 7,
     filter_radius: int = 1,
     h: Optional[float] = None,
     sigma: Optional[float] = None,
-) -> "jnp.ndarray":
+) -> jnp.ndarray:
     """
     Apply Non-Local Means denoising to image(s) using JAX.
 

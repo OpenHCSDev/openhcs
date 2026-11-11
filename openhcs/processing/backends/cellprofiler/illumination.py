@@ -344,8 +344,8 @@ class CorrectIlluminationApplyModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         repeated_kwargs: dict[str, Any] = {}
         method_values = setting_values(module, cls.method_setting)
         if len(method_values) > 1:
@@ -371,7 +371,7 @@ class CorrectIlluminationApplyModule(
 
     @staticmethod
     def _repeated_bool_setting(
-        module: "ModuleBlock", setting_name: str, parameter_name: str
+        module: ModuleBlock, setting_name: str, parameter_name: str
     ) -> dict[str, tuple[bool, ...]]:
         values = setting_values(module, setting_name)
         if len(values) <= 1:
@@ -548,7 +548,7 @@ class CorrectIlluminationCalculateModule(
         cls,
         module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         bindings = super().active_artifact_bindings(
             module,
@@ -739,7 +739,7 @@ class IlluminationCalculationRequest:
         )
         return project_image_mask_to_data_domain(output_mask, illumination)
 
-    def for_stack_slice(self, slice_index: int) -> "IlluminationCalculationRequest":
+    def for_stack_slice(self, slice_index: int) -> IlluminationCalculationRequest:
         return replace(
             self,
             image_data=np.asarray(self.image_data[slice_index]),
@@ -1460,7 +1460,7 @@ class RankMedianProfilerPhase:
     started_at: float
 
     @classmethod
-    def start(cls, radius: int) -> "RankMedianProfilerPhase":
+    def start(cls, radius: int) -> RankMedianProfilerPhase:
         return cls(radius=radius, started_at=time.perf_counter())
 
     def log(self, event_name: str, **fields: object) -> None:
@@ -2019,7 +2019,7 @@ class CellProfilerMaskedGreyMorphology:
     @classmethod
     def for_convex_hull(
         cls, morphology: MorphologyBackendStrategy
-    ) -> "CellProfilerMaskedGreyMorphology":
+    ) -> CellProfilerMaskedGreyMorphology:
         """Build CP's radius-2 disk morphology for convex-hull smoothing."""
         return cls(np.asarray(morphology.disk_footprint(2), dtype=bool))
 

@@ -43,7 +43,7 @@ class StructuringElementSetting:
             )
 
     @classmethod
-    def from_cellprofiler_value(cls, value: Any) -> "StructuringElementSetting":
+    def from_cellprofiler_value(cls, value: Any) -> StructuringElementSetting:
         if isinstance(value, str):
             parts = tuple(part.strip() for part in value.split(","))
         elif isinstance(value, (list, tuple)):

@@ -110,8 +110,8 @@ class DefineGridCycleScope(str, Enum):
 
     @classmethod
     def from_setting(
-        cls, value: object, *, default: "DefineGridCycleScope" = EACH_CYCLE
-    ) -> "DefineGridCycleScope":
+        cls, value: object, *, default: DefineGridCycleScope = EACH_CYCLE
+    ) -> DefineGridCycleScope:
         if value is None:
             return default
         if isinstance(value, cls):
@@ -445,8 +445,8 @@ class DefineGridManualModule(
 
         @classmethod
         def from_literal(
-            cls, value: "DefineGridManualModule.DefinitionMethod | str"
-        ) -> "DefineGridManualModule.DefinitionMethod":
+            cls, value: DefineGridManualModule.DefinitionMethod | str
+        ) -> DefineGridManualModule.DefinitionMethod:
             return cellprofiler_enum_from_literal(cls, value)
 
     definition_method_default = DefinitionMethod.manual
@@ -527,10 +527,10 @@ class DefineGridManualModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del contract, source_bindings
         return cls.require_callable(DefineGridVariant.from_module(module).function_name)
@@ -538,9 +538,9 @@ class DefineGridManualModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None",
+        module: ModuleBlock | None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Expose the selected variant input and optional rendered grid."""
 
@@ -569,12 +569,12 @@ class DefineGridManualModule(
     @classmethod
     def artifact_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         output_position: int,
     ) -> tuple[ArtifactSpecRelation, ...]:
@@ -664,7 +664,7 @@ class IdentifyObjectsInGridModule(
     @classmethod
     def invocation_domain_inputs(
         cls,
-        contract: "CallableContract",
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Guided shapes execute in their declared guiding-object domain."""
@@ -684,9 +684,9 @@ class IdentifyObjectsInGridModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Declare the guide role required by the module's explicit shape."""
 
@@ -711,10 +711,10 @@ class IdentifyObjectsInGridModule(
     @classmethod
     def artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Anchor unguided grid labels in the current main-flow image domain."""
 
@@ -1077,7 +1077,7 @@ class GridDefinition:
         x_origin: float,
         y_origin: float,
         ordering: SpatialGridOrdering = SpatialGridOrdering.BY_ROWS,
-    ) -> "GridDefinition":
+    ) -> GridDefinition:
         """Build executable grid geometry from a runtime grid or direct kwargs."""
         return cls.from_runtime_request(
             GridRuntimeDefinitionRequest(
@@ -1096,7 +1096,7 @@ class GridDefinition:
     @classmethod
     def from_runtime_request(
         cls, request: GridRuntimeDefinitionRequest
-    ) -> "GridDefinition":
+    ) -> GridDefinition:
         """Build executable grid geometry from one runtime request record."""
         spatial_grid = request.spatial_grid()
         height, width = (
@@ -1346,7 +1346,7 @@ class IdentifyObjectsInGridRequest(GridShapeContext):
         diameter_choice: DiameterChoice,
         circle_diameter: int,
         guiding_labels: np.ndarray | None = None,
-    ) -> "IdentifyObjectsInGridRequest":
+    ) -> IdentifyObjectsInGridRequest:
         """Bind CP/runtime inputs into one nominal executable request."""
         return cls(
             image=image,

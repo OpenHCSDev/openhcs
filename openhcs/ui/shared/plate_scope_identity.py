@@ -21,7 +21,7 @@ class PipelineScopeIdentity:
     plate_scope: str
 
     @classmethod
-    def from_plate_scope(cls, plate_scope: str) -> "PipelineScopeIdentity":
+    def from_plate_scope(cls, plate_scope: str) -> PipelineScopeIdentity:
         if not plate_scope:
             raise ValueError("Pipeline scope requires a non-empty plate scope.")
         return cls(
@@ -30,7 +30,7 @@ class PipelineScopeIdentity:
         )
 
     @classmethod
-    def from_scope_id(cls, scope_id: str) -> "PipelineScopeIdentity":
+    def from_scope_id(cls, scope_id: str) -> PipelineScopeIdentity:
         if not cls.matches(scope_id):
             raise ValueError(f"Invalid pipeline scope id: {scope_id!r}")
         return cls(scope_id=scope_id, plate_scope=ScopeKey(scope_id).parent)

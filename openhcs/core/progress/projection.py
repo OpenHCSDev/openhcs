@@ -62,12 +62,12 @@ class SubjectRuntimeState(ABC, metaclass=AutoRegisterMeta):
         return generic_percent
 
     @classmethod
-    def status_label_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+    def status_label_for_subject(cls, subject: SubjectRuntimeProjection) -> str:
         del subject
         return cls.status_label
 
     @classmethod
-    def formatted_status_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+    def formatted_status_for_subject(cls, subject: SubjectRuntimeProjection) -> str:
         label = cls.status_label_for_subject(subject)
         if not label:
             return ""
@@ -135,7 +135,7 @@ class QueuedSubjectRuntimeState(
     is_active = True
 
     @classmethod
-    def formatted_status_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+    def formatted_status_for_subject(cls, subject: SubjectRuntimeProjection) -> str:
         status = super().formatted_status_for_subject(subject)
         if subject.queue_position is None:
             return status
@@ -227,7 +227,7 @@ class FailedSubjectRuntimeState(
         return sum(axis.percent for axis in axis_progress) / len(axis_progress)
 
     @classmethod
-    def status_label_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+    def status_label_for_subject(cls, subject: SubjectRuntimeProjection) -> str:
         if subject.state_stream is CompileProgressStream:
             return "❌ Compile Failed"
         return cls.status_label
@@ -245,7 +245,7 @@ class AxisRuntimeProjection:
     def from_generic_axis(
         cls,
         generic_axis: GenericAxisProjection,
-    ) -> "AxisRuntimeProjection":
+    ) -> AxisRuntimeProjection:
         return cls(
             axis_id=generic_axis.axis_id,
             percent=generic_axis.percent,
@@ -264,7 +264,7 @@ class SubjectRuntimeIdentity:
     def from_generic_subject(
         cls,
         generic_subject: GenericSubjectProjection[type[SubjectRuntimeState]],
-    ) -> "SubjectRuntimeIdentity":
+    ) -> SubjectRuntimeIdentity:
         return cls(
             execution_id=generic_subject.execution_id,
             subject_id=generic_subject.subject_id,
@@ -287,7 +287,7 @@ class SubjectRuntimeProjection:
         generic_subject: GenericSubjectProjection[type[SubjectRuntimeState]],
         *,
         state_stream: type[ProgressStream] | None = None,
-    ) -> "SubjectRuntimeProjection":
+    ) -> SubjectRuntimeProjection:
         axis_progress = tuple(
             AxisRuntimeProjection.from_generic_axis(axis)
             for axis in generic_subject.axis_progress
@@ -354,7 +354,7 @@ class ExecutionRuntimeProjection:
         events_by_identity: (
             Mapping[SubjectRuntimeIdentity, Sequence[ProgressEvent]] | None
         ) = None,
-    ) -> "ExecutionRuntimeProjection":
+    ) -> ExecutionRuntimeProjection:
         projection = cls()
 
         for generic_subject in generic_projection.subjects:

@@ -6,6 +6,8 @@ in a way that allows functions to be registered even if their
 dependencies are not available at registration time.
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from metaclass_registry import import_module_preserving_root_logging
@@ -20,7 +22,7 @@ class _ModulePlaceholder:
     def __bool__(self) -> bool:
         return False
 
-    def __getattr__(self, name: str) -> "_ModulePlaceholder":
+    def __getattr__(self, name: str) -> _ModulePlaceholder:
         return _ModulePlaceholder(f"{self._module_name}.{name}")
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

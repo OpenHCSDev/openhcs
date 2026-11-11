@@ -687,9 +687,7 @@ class AxisFilteredMeasurementColumnarRows(MeasurementColumnarRowsView):
                 axis_mask = self.projection.mask(axis_values)
         else:
             axis_mask = self.axis_mask
-        if self.projection.field_name not in columns:
-            self._columns = columns
-        elif bool(np.all(axis_mask)):
+        if self.projection.field_name not in columns or bool(np.all(axis_mask)):
             self._columns = columns
         else:
             self._columns = {

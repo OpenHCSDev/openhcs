@@ -99,7 +99,7 @@ class CellCountResult:
         confidences: list[float],
         parameters: dict[str, Any],
         binary_mask: Any | None = None,
-    ) -> "CellCountResult":
+    ) -> CellCountResult:
         """Build a count result from parallel detection measurement vectors."""
         return cls(
             slice_index=slice_index,
@@ -174,7 +174,7 @@ class AreaFilterRequest:
         *,
         min_area: float,
         max_area: float,
-    ) -> "AreaFilterRequest":
+    ) -> AreaFilterRequest:
         return cls(
             positions=positions,
             areas=areas,
@@ -503,7 +503,7 @@ class WatershedThresholdMethodStrategy(
     def for_method_value(
         cls,
         method: str,
-    ) -> "WatershedThresholdMethodStrategy":
+    ) -> WatershedThresholdMethodStrategy:
         try:
             return cls.for_enum_member(ThresholdMethod(method))
         except ValueError:

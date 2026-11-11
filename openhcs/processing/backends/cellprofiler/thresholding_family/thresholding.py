@@ -212,8 +212,8 @@ class CellProfilerThresholdMethod(CellProfilerEnumAttributeMixin, Enum):
         log_transform: bool,
         image: np.ndarray,
         threshold_image: np.ndarray,
-        method_parameters: "GlobalThresholdMethodParameters",
-    ) -> "GlobalThresholdSourceSelection":
+        method_parameters: GlobalThresholdMethodParameters,
+    ) -> GlobalThresholdSourceSelection:
         """Return the source image and kwargs for global threshold estimation."""
         if self._uses_raw_global_threshold_source:
             return GlobalThresholdSourceSelection(np.asarray(image), method_parameters)
@@ -246,8 +246,8 @@ class CellProfilerThresholdScope(Enum):
     @classmethod
     def from_module(
         cls,
-        module: "ModuleBlock",
-    ) -> "CellProfilerThresholdScope | None":
+        module: ModuleBlock,
+    ) -> CellProfilerThresholdScope | None:
         """Return the threshold scope declared by one CellProfiler module."""
 
         value = CellProfilerModuleSettings.setting_value(module, "Threshold strategy")
@@ -290,7 +290,7 @@ class RobustBackgroundCenterStrategy(
     @classmethod
     def for_averaging_method(
         cls, averaging_method: CellProfilerAveragingMethod
-    ) -> "RobustBackgroundCenterStrategy":
+    ) -> RobustBackgroundCenterStrategy:
         return cls.for_enum_member(averaging_method)
 
     def center(self, values: np.ndarray) -> float:
@@ -394,7 +394,7 @@ class RobustBackgroundSpreadStrategy(
     @classmethod
     def for_variance_method(
         cls, variance_method: CellProfilerVarianceMethod
-    ) -> "RobustBackgroundSpreadStrategy":
+    ) -> RobustBackgroundSpreadStrategy:
         return cls.for_enum_member(variance_method)
 
     @abstractmethod
@@ -902,7 +902,7 @@ class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrate
 class ThresholdDiagnosticRequest:
     """Typed inputs for one CellProfiler threshold diagnostic measurement."""
 
-    backend: "NumbaNumpyThresholdDiagnosticsBackendStrategy"
+    backend: NumbaNumpyThresholdDiagnosticsBackendStrategy
     domain: type[ThresholdDiagnosticDomain]
     image: np.ndarray
     mask: np.ndarray | None
@@ -913,12 +913,12 @@ class ThresholdDiagnosticRequest:
     def from_inputs(
         cls,
         *,
-        backend: "NumbaNumpyThresholdDiagnosticsBackendStrategy",
+        backend: NumbaNumpyThresholdDiagnosticsBackendStrategy,
         image: np.ndarray,
         mask: np.ndarray | None,
         binary_image: np.ndarray,
         proven_unit_interval_scale: int | None,
-    ) -> "ThresholdDiagnosticRequest":
+    ) -> ThresholdDiagnosticRequest:
         image_array = np.asarray(image)
         binary_array = np.asarray(binary_image, dtype=np.bool_)
         if binary_array.shape != image_array.shape:
@@ -1537,7 +1537,7 @@ class CellProfilerThresholdResult:
         self,
         *,
         slice_index: int,
-    ) -> "ThresholdMeasurementFeatureRecord":
+    ) -> ThresholdMeasurementFeatureRecord:
         """Return the exact nominal measurement row for this threshold scope."""
 
         return ThresholdMethodRowSelectionPolicy.for_enum_member(
@@ -1917,7 +1917,7 @@ class GlobalThresholdMethodStrategy(
     @classmethod
     def for_method(
         cls, method: CellProfilerThresholdMethod
-    ) -> "GlobalThresholdMethodStrategy":
+    ) -> GlobalThresholdMethodStrategy:
         try:
             return cls.for_enum_member(method)
         except KeyError as exc:
@@ -2857,14 +2857,14 @@ class LegacyCellProfilerThresholdVersionAuthority(ABC):
     setting_name: ClassVar[str] = "Threshold setting version"
 
     @classmethod
-    def version_for(cls, module: "ModuleBlock") -> int | None:
+    def version_for(cls, module: ModuleBlock) -> int | None:
         value = CellProfilerModuleSettings.setting_value(module, cls.setting_name)
         if value is None:
             return None
         return MeasurementScalarLiteral(value).integer_value
 
     @classmethod
-    def is_legacy_v10_or_older(cls, module: "ModuleBlock") -> bool:
+    def is_legacy_v10_or_older(cls, module: ModuleBlock) -> bool:
         version = cls.version_for(module)
         return version is not None and version <= 10
 
@@ -2962,7 +2962,7 @@ class ThresholdSettingsModule(CellProfilerModule):
     @classmethod
     def threshold_measurement_row_type(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> type[ThresholdMeasurementFeatureRecord]:
         """Declare the exact threshold row schema selected by module settings."""
 
@@ -2979,10 +2979,10 @@ class ThresholdSettingsModule(CellProfilerModule):
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         bound = cls._bind_declared_settings(module, binder=binder)
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)
@@ -2997,8 +2997,8 @@ class ThresholdSettingsModule(CellProfilerModule):
     @classmethod
     def bind_threshold_settings(
         cls,
-        module: "ModuleBlock",
-        binder: "SettingsBinder",
+        module: ModuleBlock,
+        binder: SettingsBinder,
         kwargs: dict[str, Any],
         unmapped_kwargs: dict[str, Any],
     ) -> None:
@@ -3034,8 +3034,8 @@ class ThresholdSettingsModule(CellProfilerModule):
     @classmethod
     def bind_threshold_bounds(
         cls,
-        module: "ModuleBlock",
-        binder: "SettingsBinder",
+        module: ModuleBlock,
+        binder: SettingsBinder,
         kwargs: dict[str, Any],
         unmapped_kwargs: dict[str, Any],
     ) -> None:
@@ -3053,7 +3053,7 @@ class ThresholdSettingsModule(CellProfilerModule):
 
     @classmethod
     def upgrade_legacy_threshold_kwargs(
-        cls, module: "ModuleBlock", kwargs: dict[str, Any]
+        cls, module: ModuleBlock, kwargs: dict[str, Any]
     ) -> None:
         if not LegacyCellProfilerThresholdVersionAuthority.is_legacy_v10_or_older(
             module
@@ -3072,7 +3072,7 @@ class ThresholdSettingsModule(CellProfilerModule):
 
     @classmethod
     def legacy_log_transform_default(
-        cls, module: "ModuleBlock", kwargs: Mapping[str, Any]
+        cls, module: ModuleBlock, kwargs: Mapping[str, Any]
     ) -> bool | None:
         if not LegacyCellProfilerThresholdVersionAuthority.is_legacy_v10_or_older(
             module
@@ -3166,7 +3166,7 @@ class ThresholdMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule):
     @classmethod
     def threshold_measurement_rows(
         cls,
-        request: "CellProfilerOutputRecordRequest",
+        request: CellProfilerOutputRecordRequest,
     ) -> ColumnarRows:
         """Return the exact row carrier emitted by this threshold module."""
         from openhcs.interop.cellprofiler.runtime.measurement_rows import (
@@ -3231,11 +3231,11 @@ class ThresholdModule(
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
-        artifact_inputs: "ArtifactSpecCollection",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
+        artifact_inputs: ArtifactSpecCollection,
     ) -> tuple["ArtifactSpecRelation", ...]:
         """Declare that Threshold measurements are qualified by its image output."""
 
@@ -3281,7 +3281,7 @@ class ThresholdModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: BoundModuleSettings
+        cls, module: ModuleBlock, bound: BoundModuleSettings
     ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         for source_name, target_name in cls.threshold_parameter_aliases.items():

@@ -177,14 +177,14 @@ class FunctionOutputIdentity:
             metadata["extension"] = self.extension
         return metadata
 
-    def with_filename_qualifier(self, qualifier: str) -> "FunctionOutputIdentity":
+    def with_filename_qualifier(self, qualifier: str) -> FunctionOutputIdentity:
         """Return this identity qualified by a declared output surface name."""
         return replace(
             self,
             filename_qualifier=self._normalize_filename_qualifier(qualifier),
         )
 
-    def without_filename_qualifier(self) -> "FunctionOutputIdentity":
+    def without_filename_qualifier(self) -> FunctionOutputIdentity:
         """Return this identity without its output-surface filename qualifier."""
         return replace(self, filename_qualifier=None)
 

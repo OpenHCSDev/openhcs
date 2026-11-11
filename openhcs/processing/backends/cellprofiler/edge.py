@@ -149,7 +149,7 @@ class EdgeEnhancementRequest:
         low_threshold: float,
         manual_threshold: float,
         threshold_adjustment_factor: float,
-    ) -> "EdgeEnhancementRequest":
+    ) -> EdgeEnhancementRequest:
         resolved_provider = CellProfilerBackendSelection.from_input(
             backend_provider
         ).provider_or(method.default_backend_provider)
@@ -200,7 +200,7 @@ class EdgeEnhancementStrategy(
         """Leave preparation empty for implementations without persistent kernels."""
 
     @classmethod
-    def for_request(cls, request: EdgeEnhancementRequest) -> "EdgeEnhancementStrategy":
+    def for_request(cls, request: EdgeEnhancementRequest) -> EdgeEnhancementStrategy:
         strategy_type = cls.__registry__.get(request.strategy_key.label)
         if strategy_type is None:
             strategy_type = cls.__registry__.get(request.fallback_strategy_key.label)

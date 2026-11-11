@@ -1444,10 +1444,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     source_step_id=sid,
                     source_step_scope_id=self.planner.plans[sid].step_scope_id,
                 )
-            elif source_bindings.binding_for_artifact_ref(input_spec.ref()) is not None:
-                continue
             elif (
-                self.planner.artifact_context.main_flow_artifacts.by_ref(input_ref)
+                source_bindings.binding_for_artifact_ref(input_spec.ref()) is not None
+                or self.planner.artifact_context.main_flow_artifacts.by_ref(input_ref)
                 is not None
             ):
                 continue

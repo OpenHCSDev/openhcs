@@ -127,7 +127,7 @@ class AxonBranchResult:
         cls,
         object_label: int,
         row: Mapping[str, object],
-    ) -> "AxonBranchResult":
+    ) -> AxonBranchResult:
         values: dict[str, object] = {"object_label": object_label}
         for row_field in fields(cls):
             if row_field.name == "object_label":

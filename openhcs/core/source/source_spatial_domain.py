@@ -56,7 +56,7 @@ class SpatialShapeYX:
         value: Sequence[int],
         *,
         field_name: str,
-    ) -> "SpatialShapeYX":
+    ) -> SpatialShapeYX:
         height, width = _spatial_shape_pair(value, field_name)
         return cls(height=height, width=width)
 
@@ -65,7 +65,7 @@ class SpatialShapeYX:
         cls,
         data: Mapping[str, Any],
         field_name: str,
-    ) -> "SpatialShapeYX | None":
+    ) -> SpatialShapeYX | None:
         if field_name not in data or data[field_name] is None:
             return None
         return cls.from_sequence(data[field_name], field_name=field_name)
@@ -101,7 +101,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
     def with_undeclared_shape_from(
         self, local_shape_yx: Callable[[], tuple[int, int] | None]
-    ) -> "SourceSpatialDomain":
+    ) -> SourceSpatialDomain:
         """Declare the source shape from the array when none is declared.
 
         ``local_shape_yx`` is called only when this domain declares no shape.
@@ -127,7 +127,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         return owner
 
     @classmethod
-    def from_mapping(cls, values: Mapping[str, Any]) -> "SourceSpatialDomain":
+    def from_mapping(cls, values: Mapping[str, Any]) -> SourceSpatialDomain:
         """Decode the declared spatial domain, retaining its intrinsic rank."""
         payload = dict(values)
         dimensions = payload.pop("spatial_dimensions")
@@ -143,16 +143,16 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
             "spatial_dimensions": self.spatial_rank,
         }
 
-    def for_intrinsic_plane(self) -> "SourceSpatialDomain":
+    def for_intrinsic_plane(self) -> SourceSpatialDomain:
         """An ordinary source plane retains its XY placement owner."""
         return self
 
     def with_source_cohort(
         self,
-        domain: "SourceSpatialDomain",
+        domain: SourceSpatialDomain,
         *,
         depth: int,
-    ) -> "SourceSpatialDomain":
+    ) -> SourceSpatialDomain:
         """Ordinary source stacks retain their existing spatial domain."""
         return domain
 
@@ -181,7 +181,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         source_label: str,
         fill_value: FillValue = 0,
         value_name: str = "Dense array",
-    ) -> "SourceSpatialDomain":
+    ) -> SourceSpatialDomain:
         """Build a source-spatial domain from viewer-wire metadata."""
         source_payload = ViewerSourceSpatialDomainPayload.from_wire_mapping(
             payload,
@@ -201,7 +201,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
             source_shape_yx=self.source_shape_yx,
         ).to_wire_mapping()
 
-    def with_missing_from(self, fallback: "SourceSpatialDomain") -> Self:
+    def with_missing_from(self, fallback: SourceSpatialDomain) -> Self:
         """Fill missing spatial placement values from another source domain."""
         owner = fallback if fallback.spatial_rank > self.spatial_rank else self
         return replace(
@@ -238,7 +238,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
     def with_native_image_context(
         self,
-        native_domain: "SourceSpatialDomain",
+        native_domain: SourceSpatialDomain,
         *,
         image_shape_yx: tuple[int, int] | None,
     ) -> Self:
@@ -259,7 +259,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         expand_varying_domains: bool = False,
         fill_value: FillValue = 0,
         value_name: str = "Dense array",
-    ) -> "SourceSpatialDomain":
+    ) -> SourceSpatialDomain:
         """Return the shared source-spatial domain represented by many values."""
         domains_tuple = tuple(domains)
         if not domains_tuple:
@@ -408,7 +408,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
     def as_materialized_source_domain(
         self,
-        target_domain: "SourceSpatialDomain",
+        target_domain: SourceSpatialDomain,
     ) -> Self:
         """Return this domain after its value is expanded to source-image XY."""
         source_shape = self.source_shape_yx or target_domain.source_shape_yx
@@ -477,7 +477,7 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
         domain: SourceSpatialDomain,
         *,
         depth: int,
-    ) -> "VolumeSourceSpatialDomain":
+    ) -> VolumeSourceSpatialDomain:
         if domain.spatial_rank >= self.spatial_rank:
             return domain
         return replace(
@@ -518,7 +518,7 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
         cls,
         domains: Iterable[SourceSpatialDomain],
         **kwargs: Any,
-    ) -> "VolumeSourceSpatialDomain":
+    ) -> VolumeSourceSpatialDomain:
         values = tuple(domains)
         domain = super(VolumeSourceSpatialDomain, cls).common_from_domains(
             values, **kwargs
@@ -584,7 +584,7 @@ class SourceSpatialDomainAlias(Generic[SourceSpatialAliasValueT]):
 
     def __get__(
         self,
-        instance: "SourceSpatialDomainFields | None",
+        instance: SourceSpatialDomainFields | None,
         _owner: type["SourceSpatialDomainFields"],
     ) -> SourceSpatialAliasValueT | Self:
         if instance is None:
@@ -593,7 +593,7 @@ class SourceSpatialDomainAlias(Generic[SourceSpatialAliasValueT]):
 
     def __set__(
         self,
-        instance: "SourceSpatialDomainFields",
+        instance: SourceSpatialDomainFields,
         value: SourceSpatialAliasValueT,
     ) -> None:
         instance.source_spatial_domain = self.setter(
@@ -640,7 +640,7 @@ class SpatiallyPlacedValue(ABC):
         self,
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
-    ) -> "SourceSpatialDomainAdapter":
+    ) -> SourceSpatialDomainAdapter:
         """Return the adapter that places this value in its source domain."""
 
 
@@ -653,7 +653,7 @@ class SourceSpatialDomainAdapter(ABC):
         value: Any,
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
-    ) -> "SourceSpatialDomainAdapter | None":
+    ) -> SourceSpatialDomainAdapter | None:
         """Return the placement adapter of a spatially placed value."""
         if not isinstance(value, SpatiallyPlacedValue):
             return None
@@ -675,7 +675,7 @@ class SourceSpatialDomainAdapter(ABC):
     @abstractmethod
     def value_in_payload_domain(
         self,
-        target: "SourceSpatialDomainAdapter",
+        target: SourceSpatialDomainAdapter,
     ) -> Any:
         """Project this value into ``target`` while preserving its carrier type."""
 

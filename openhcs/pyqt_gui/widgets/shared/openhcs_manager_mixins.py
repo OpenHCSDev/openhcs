@@ -21,7 +21,7 @@ class OpenHCSSingleRowActionManagerMixin:
     def install_context_help_button(
         self,
         *,
-        title_layout: "ResponsiveGroupBoxTitle",
+        title_layout: ResponsiveGroupBoxTitle,
         object_name: str,
     ):
         """Place the managed knowledge-browser action beside the manager title."""

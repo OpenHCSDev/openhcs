@@ -206,7 +206,7 @@ class ColumnarMeasurementTableSchema:
     source_masks_by_candidates: dict[tuple[str, ...], Any]
 
     @classmethod
-    def from_table(cls, table: MeasurementTable) -> "ColumnarMeasurementTableSchema":
+    def from_table(cls, table: MeasurementTable) -> ColumnarMeasurementTableSchema:
         rows = table.rows
         columns = tuple(str(column) for column in rows.columns)
         normalized_columns = {
@@ -573,7 +573,7 @@ class ColumnarMeasurementTableSchema:
     def _project_feature_indexes(
         self,
         table: MeasurementTable,
-        query: "MeasurementFeatureQuery",
+        query: MeasurementFeatureQuery,
         row_indices: Any,
         values: Any,
         projections: Mapping[int | None, Any | None],
@@ -638,7 +638,7 @@ class ColumnarMeasurementTableSchema:
             by_axis[axis] = indexes
         return by_axis
 
-    def matching_feature_column(self, query: "MeasurementFeatureQuery") -> str | None:
+    def matching_feature_column(self, query: MeasurementFeatureQuery) -> str | None:
         """Return the column matching a measurement feature query."""
         if self.feature_name_values is not None:
             feature_mask = self.feature_mask(query.field_candidates)
@@ -838,7 +838,7 @@ class MeasurementFeatureQuery:
     def table_may_carry_feature(
         self,
         table: MeasurementTable,
-        schema: "ColumnarMeasurementTableSchema | None" = None,
+        schema: ColumnarMeasurementTableSchema | None = None,
     ) -> bool:
         """Return whether table ownership and feature schema can satisfy this query."""
         if not self.table_source_matches_feature(table):
@@ -1138,7 +1138,7 @@ class MeasurementFeatureValueIndex:
         cls,
         measurement_tables: tuple[MeasurementTable, ...],
         query: MeasurementFeatureQuery,
-    ) -> "MeasurementFeatureValueIndex":
+    ) -> MeasurementFeatureValueIndex:
         index = cls()
         for table in measurement_tables:
             index = index.merged(cls.from_table(table, query))
@@ -1149,7 +1149,7 @@ class MeasurementFeatureValueIndex:
         cls,
         table: MeasurementTable,
         query: MeasurementFeatureQuery,
-    ) -> "MeasurementFeatureValueIndex":
+    ) -> MeasurementFeatureValueIndex:
         columnar_index = cls.from_columnar_table(table, query)
         return cls() if columnar_index is None else columnar_index
 
@@ -1158,7 +1158,7 @@ class MeasurementFeatureValueIndex:
         cls,
         table: MeasurementTable,
         query: MeasurementFeatureQuery,
-    ) -> "MeasurementFeatureValueIndex | None":
+    ) -> MeasurementFeatureValueIndex | None:
         """Return a feature vector directly from columnar rows when possible."""
         object_key = query.query_object_name
         indexes = cls.from_columnar_table_by_object(
@@ -1202,7 +1202,7 @@ class MeasurementFeatureValueIndex:
         query: MeasurementFeatureQuery,
         *,
         object_id_field: str | None,
-    ) -> "MeasurementFeatureValueIndex":
+    ) -> MeasurementFeatureValueIndex:
         index = cls()
         for row in rows:
             row_mapping = measurement_row_mapping(row)
@@ -1236,8 +1236,8 @@ class MeasurementFeatureValueIndex:
         self.values_by_label[object_label] = numeric_value
 
     def merged(
-        self, other: "MeasurementFeatureValueIndex"
-    ) -> "MeasurementFeatureValueIndex":
+        self, other: MeasurementFeatureValueIndex
+    ) -> MeasurementFeatureValueIndex:
         values_by_label = dict(self.values_by_label)
         values_by_label.update(other.values_by_label)
         return MeasurementFeatureValueIndex(

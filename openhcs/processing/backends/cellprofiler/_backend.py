@@ -57,7 +57,7 @@ class CellProfilerBackendRegistrySnapshot:
         cls,
         strategy_family: type["CellProfilerBackendStrategyMixin"],
         memory_type: MemoryType,
-    ) -> "CellProfilerBackendRegistrySnapshot":
+    ) -> CellProfilerBackendRegistrySnapshot:
         registry = strategy_family.__registry__
         return cls(strategy_family, memory_type, tuple(sorted(registry)))
 
@@ -108,7 +108,7 @@ class CellProfilerBackendSelection(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def from_input(
         cls,
-        backend_provider: "BackendProviderSelectionInput" = None,
+        backend_provider: BackendProviderSelectionInput = None,
     ) -> type["CellProfilerBackendSelection"]:
         """Resolve a function argument: a choice, a selection class, or None."""
         if backend_provider is None:

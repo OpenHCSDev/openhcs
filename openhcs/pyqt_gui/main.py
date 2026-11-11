@@ -4,6 +4,8 @@ OpenHCS PyQt6 Main Window
 Main application window using WindowManager for clean window abstraction.
 """
 
+from __future__ import annotations
+
 import logging
 from concurrent.futures import Future
 from collections.abc import Callable
@@ -977,7 +979,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
     def _observe_zmq_startup_status(
         self,
-        status: "EndpointStartupStatus",
+        status: EndpointStartupStatus,
     ) -> None:
         """Commit startup activity into endpoint authority and request a fresh scan."""
 
@@ -1087,7 +1089,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
         WindowFactory.create_window_for_scope("")
 
-    def _on_object_state_unregistered(self, scope_id: str, state: "ObjectState"):
+    def _on_object_state_unregistered(self, scope_id: str, state: ObjectState):
         """Handle ObjectState unregistration by closing associated windows.
 
         When time-travel removes a step/config (unregisters its ObjectState),

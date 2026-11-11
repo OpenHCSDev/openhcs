@@ -398,7 +398,7 @@ class VirtualWorkspaceMapping:
     def from_subdirectory(
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
-    ) -> "VirtualWorkspaceMapping":
+    ) -> VirtualWorkspaceMapping:
         mapping = subdirectory.get(FIELDS.WORKSPACE_MAPPING)
         if mapping is None:
             return cls(MappingProxyType({}))
@@ -464,7 +464,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     def from_projection_paths(
         cls,
         projection_paths: Sequence[tuple[SourceProjection, str]],
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Admit a producer's typed updates in persisted path order."""
         SourceProjectionSet(
             tuple(projection for projection, _path in projection_paths)
@@ -492,7 +492,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     def merged_with_subdirectory(
         self,
         subdirectory: OpenHCSSubdirectoryPayload,
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Admit current durable records, retaining the actual typed replacements."""
         records = self._records_by_path(subdirectory)
         return self._accept_retained_records(records)
@@ -500,7 +500,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     def _accept_retained_records(
         self,
         records: Mapping[str, JsonValue],
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         entries: dict[str, SourceProjection] = {}
         for path, record in records.items():
             virtual_path, projection = (
@@ -526,7 +526,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     def merge_into_subdirectory(
         self,
         subdirectory: dict[str, Any],
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Merge producer fields without normalizing opaque retained wire fields."""
         records = self._records_by_path(subdirectory)
         admitted = self._accept_retained_records(records)
@@ -549,7 +549,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         saved_image_paths: Sequence[str],
         reconcile_directory: str | None,
         accepted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Publish current path views while retaining admitted durable records.
 
         Step snapshots cannot prune another axis's publication. Only completed
@@ -614,7 +614,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     def from_subdirectory(
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
-    ) -> "VirtualWorkspaceSourceProjectionEntries":
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         records = subdirectory.get("source_projection")
         if records is None:
             return cls(MappingProxyType({}))
@@ -820,7 +820,7 @@ class VirtualWorkspaceSourceMetadataEntries:
     def from_subdirectory(
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
-    ) -> "VirtualWorkspaceSourceMetadataEntries":
+    ) -> VirtualWorkspaceSourceMetadataEntries:
         source_metadata = subdirectory.get(FIELDS.SOURCE_METADATA)
         if source_metadata is None:
             return cls(MappingProxyType({}))
@@ -862,7 +862,7 @@ class VirtualWorkspaceChannelLabels:
     def from_subdirectory(
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
-    ) -> "VirtualWorkspaceChannelLabels":
+    ) -> VirtualWorkspaceChannelLabels:
         entries: dict[str, str] = {}
         for colour_axis in AxisFamily.active().with_role(ColourAxis):
             labels = subdirectory.get(colour_axis.metadata_collection_field)

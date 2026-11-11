@@ -174,7 +174,7 @@ class CallableSignature(inspect.Signature):
         )
 
     @classmethod
-    def from_signature(cls, signature: inspect.Signature) -> "CallableSignature":
+    def from_signature(cls, signature: inspect.Signature) -> CallableSignature:
         """Reuse an admitted ABI or enrich a plain signature at its boundary."""
         return (
             signature
@@ -497,7 +497,7 @@ class CallableDeclaration:
             )
 
     @classmethod
-    def from_namespace(cls, namespace: CallableNamespace, owner: str) -> "CallableDeclaration":
+    def from_namespace(cls, namespace: CallableNamespace, owner: str) -> CallableDeclaration:
         """Read every declared field from a callable namespace."""
         return cls(**{
             name: kind.read(namespace.get(attribute), owner=f"{owner!r}.{attribute}")
@@ -506,7 +506,7 @@ class CallableDeclaration:
 
     def bound_to_callable(
         self, func: Callable[..., object], *, context_declared: bool,
-    ) -> "CallableDeclaration":
+    ) -> CallableDeclaration:
         """Resolve what the callable's signature decides for this declaration."""
         signature = self.callable_signature(func)
         if self.runtime_adapter is not None:
@@ -763,7 +763,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def from_callable(
         cls,
         func: Callable[..., object] | "FunctionReference",
-    ) -> "CallableContract":
+    ) -> CallableContract:
         """Build a contract from callable attributes once at compiler boundary."""
         assert _registered_batch_callable_family is not None
         RuntimeBatchCallableFamily = _registered_batch_callable_family
@@ -1093,7 +1093,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def resolve_declared_paths(
         self,
         kwargs: Mapping[str, object],
-        resolver: "CompilationPathResolver",
+        resolver: CompilationPathResolver,
     ) -> dict[str, object]:
         """Resolve only explicitly declared public path arguments."""
 
@@ -1114,7 +1114,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
             )
         return resolved
 
-    def require_processing_contract(self) -> "type[ProcessingContract]":
+    def require_processing_contract(self) -> type[ProcessingContract]:
         """Return the declared processing contract or fail at the contract boundary."""
         processing_contract = self.processing_contract
         if processing_contract is None:
@@ -1325,7 +1325,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
             return self.prepared_canonical_signature
         return self.resolve_signature(self.resolve_canonical_raw_callable())
 
-    def with_prepared_signature(self) -> "CallableContract":
+    def with_prepared_signature(self) -> CallableContract:
         """Snapshot each actual target independently after declaration preparation."""
         canonical = self.resolve_canonical_raw_callable()
         runtime = self.resolve_raw_runtime_callable()
@@ -1548,7 +1548,7 @@ class CallableRequestBinding:
         request_parameter: str,
         public_fields: tuple[str, ...],
         public_defaults: Mapping[str, Any],
-    ) -> "CallableRequestBinding":
+    ) -> CallableRequestBinding:
         """Build a binding declaration from a request dataclass."""
         _validate_request_public_fields(request_type, public_fields)
         return cls(
@@ -1709,7 +1709,7 @@ def _attach_optional_metadata(
 def attach_callable_contract_metadata(
     func: Any,
     *,
-    processing_contract: "type[ProcessingContract] | None" = None,
+    processing_contract: type[ProcessingContract] | None = None,
     raw_processing_function: Any | None = None,
     prepare: Any | None = None,
     runtime_image_execution_mode: type[ImagePayloadExecutionMode] | None = None,
@@ -1984,7 +1984,7 @@ class CallableProjection:
     namespace: CallableNamespace
 
     @classmethod
-    def from_callable(cls, func: Any) -> "CallableProjection":
+    def from_callable(cls, func: Any) -> CallableProjection:
         """Project a callable or compiler function reference into stable metadata."""
         if _is_function_reference(func):
             name = func.function_name
@@ -2017,7 +2017,7 @@ class CallableProjection:
             return self.func
         return _resolve_declared_callable(self.func)
 
-    def declared_contract(self) -> "CallableContract":
+    def declared_contract(self) -> CallableContract:
         """The contract read from the declaration alone, preparing nothing.
 
         A signature is read from the callable's annotations and preparation never
@@ -2027,7 +2027,7 @@ class CallableProjection:
         """
         return self.contract_of(self.declared_callable())
 
-    def contract_of(self, resolved: Any) -> "CallableContract":
+    def contract_of(self, resolved: Any) -> CallableContract:
         contract = CallableContract.from_callable(resolved)
         if contract.prepared_canonical_signature is None:
             contract = contract.with_prepared_signature()

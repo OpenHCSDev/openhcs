@@ -1378,7 +1378,7 @@ class BioFormatsContainerClaim:
         cls,
         entrypoint: Path,
         dataset: SourcePlaneDataset,
-    ) -> "BioFormatsContainerClaim":
+    ) -> BioFormatsContainerClaim:
         """Project one successful dataset onto its physical container claim."""
 
         return cls(

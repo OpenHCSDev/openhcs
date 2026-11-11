@@ -114,7 +114,7 @@ class RuntimeServerGatewayABC(ABC):
         command_type: str,
         *,
         timeout_ms: int,
-    ) -> "DebugPausedWorkerStatus":
+    ) -> DebugPausedWorkerStatus:
         """Send one debug-worker command and return the resulting status."""
         raise NotImplementedError
 
@@ -206,7 +206,7 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
         command_type: str,
         *,
         timeout_ms: int,
-    ) -> "DebugPausedWorkerStatus":
+    ) -> DebugPausedWorkerStatus:
         return (
             self._client(
                 connection,

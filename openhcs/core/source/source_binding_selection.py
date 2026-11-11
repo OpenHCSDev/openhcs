@@ -57,15 +57,15 @@ class DeclaredSourceMetadataRecord(SourceMetadataRecord):
     @classmethod
     def from_mapping(
         cls, metadata: SourceMetadataMapping
-    ) -> "DeclaredSourceMetadataRecord":
+    ) -> DeclaredSourceMetadataRecord:
         return cls(tuple((str(key), value) for key, value in metadata.items()))
 
     def resolve(
         self,
         path: str,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> "SourceMetadataRecord | None":
+    ) -> SourceMetadataRecord | None:
         """Fill parser and extraction-rule fields absent from declarations."""
         metadata: dict[str, SourceMetadataValue] = {}
         merge_source_metadata(metadata, self, path=path)
@@ -144,7 +144,7 @@ class SourceCandidatePathResolution:
 class SourcePatternResolutionContext:
     """Source paths and metadata available while filtering execution candidates."""
 
-    parser: "FilenameParser"
+    parser: FilenameParser
     source_paths_by_virtual_path: Mapping[str, str]
     source_metadata_by_path: Mapping[str, SourceMetadataRecord] = field(
         default_factory=dict
@@ -159,11 +159,11 @@ class SourcePatternResolutionContext:
     def from_sources(
         cls,
         *,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         source_paths_by_virtual_path: Mapping[str, str],
         source_metadata_by_path: Mapping[str, SourceMetadataMapping] | None = None,
         metadata_rules: tuple[MetadataExtractionRule, ...] = (),
-    ) -> "SourcePatternResolutionContext":
+    ) -> SourcePatternResolutionContext:
         if source_metadata_by_path is None:
             metadata_by_path: Mapping[str, SourceMetadataRecord] = {}
         else:
@@ -186,10 +186,10 @@ class SourcePatternResolutionContext:
     def from_projection(
         cls,
         *,
-        parser: "FilenameParser",
+        parser: FilenameParser,
         projection: VirtualWorkspaceSourceProjection,
         metadata_rules: tuple[MetadataExtractionRule, ...] = (),
-    ) -> "SourcePatternResolutionContext":
+    ) -> SourcePatternResolutionContext:
         return replace(
             cls.from_sources(
                 parser=parser,
@@ -574,7 +574,7 @@ class SourceAnchorPatternSelection:
         patterns: Sequence[SourceCandidatePath],
         *,
         reason: str = "source selectors resolved at anchor boundary",
-    ) -> "SourceAnchorPatternSelection":
+    ) -> SourceAnchorPatternSelection:
         return cls(patterns=tuple(patterns), reason=reason)
 
     @classmethod
@@ -583,7 +583,7 @@ class SourceAnchorPatternSelection:
         patterns: Sequence[SourceCandidatePath],
         *,
         reason: str,
-    ) -> "SourceAnchorPatternSelection":
+    ) -> SourceAnchorPatternSelection:
         return cls(patterns=tuple(patterns), reason=reason)
 
 
@@ -614,7 +614,7 @@ class SourceBindingMatchResolution:
     def matched(
         cls,
         binding: NamedSourceBinding,
-    ) -> "SourceBindingMatchResolution":
+    ) -> SourceBindingMatchResolution:
         return cls(
             binding=binding,
             reason="exactly one selector binding matched the anchor",
@@ -625,7 +625,7 @@ class SourceBindingMatchResolution:
         cls,
         *,
         reason: str,
-    ) -> "SourceBindingMatchResolution":
+    ) -> SourceBindingMatchResolution:
         return cls(
             binding=None,
             reason=reason,
@@ -659,7 +659,7 @@ class SourceBoundAnchorPatternPolicy(
     def for_plan(
         cls,
         plan: CompiledSourceBindingPlan,
-    ) -> "SourceBoundAnchorPatternPolicy":
+    ) -> SourceBoundAnchorPatternPolicy:
         policy_types = cls.strategy_types_for_nominal_value(plan.match_plan)
         if not policy_types:
             raise TypeError(
@@ -1100,7 +1100,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         match_plan: SourceSetPairing,
         source_context: SourcePatternResolutionContext,
         identity_policy: SourceImageSetIdentityPolicy,
-    ) -> "SourceBindingMatchedImageSet":
+    ) -> SourceBindingMatchedImageSet:
         return cls(
             parser=source_context.parser,
             source_paths_by_virtual_path=source_context.source_paths_by_virtual_path,
@@ -1452,7 +1452,7 @@ class SourceFileUniverse:
 
     def load_images(
         self,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         *,
         zarr_config: Mapping[str, object] | None = None,
     ) -> list[ImagePayload]:
@@ -1512,7 +1512,7 @@ class SourceUniverseRuntimeState:
     def with_source_metadata(
         self,
         source_metadata_by_path: Mapping[str, SourceMetadataMapping],
-    ) -> "SourceUniverseRuntimeState":
+    ) -> SourceUniverseRuntimeState:
         if self.source_metadata_by_path is source_metadata_by_path:
             return self
         if not self.source_metadata_by_path:
@@ -1541,8 +1541,8 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 
     origin: ClassVar[type[SourceBindingOrigin] | None] = None
     """The binding origin whose source universe this request resolves."""
-    context: "ExecutingContext"
-    plan: "CompiledStepPlan"
+    context: ExecutingContext
+    plan: CompiledStepPlan
     matching_files: tuple[str, ...]
     source_backend: Backend
     source_projection: VirtualWorkspaceSourceProjection | None
@@ -1551,11 +1551,11 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     def from_context(
         cls,
         *,
-        context: "ExecutingContext",
-        plan: "CompiledStepPlan",
+        context: ExecutingContext,
+        plan: CompiledStepPlan,
         matching_files: Sequence[str],
         source_projection: VirtualWorkspaceSourceProjection | None,
-    ) -> "SourceUniverseRequest":
+    ) -> SourceUniverseRequest:
         if not isinstance(plan, CompiledStepPlan):
             raise TypeError(
                 "SourceUniverseRequest requires CompiledStepPlan, got "
@@ -1722,8 +1722,8 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def from_request(
         cls,
-        request: "SourceUniverseRequest",
-    ) -> "SourceUniverseRequest":
+        request: SourceUniverseRequest,
+    ) -> SourceUniverseRequest:
         """Build a registered source-universe role from its parent request."""
         return cls(
             context=request.context,
@@ -1736,7 +1736,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def runtime_state(
         cls,
-        request: "SourceUniverseRequest",
+        request: SourceUniverseRequest,
     ) -> SourceUniverseRuntimeState:
         """Resolve every registered source-universe request into runtime state."""
         state = SourceUniverseRuntimeState()

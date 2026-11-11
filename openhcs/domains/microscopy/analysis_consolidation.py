@@ -250,7 +250,7 @@ class AnalysisConsolidationHook(PostExecuteHook):
     plate_metadata_config: PlateMetadataConfig
 
     @classmethod
-    def bind(cls, global_config) -> "AnalysisConsolidationHook":
+    def bind(cls, global_config) -> AnalysisConsolidationHook:
         return cls(
             analysis_consolidation_config=global_config.analysis_consolidation_config,
             plate_metadata_config=global_config.plate_metadata_config,

@@ -33,7 +33,7 @@ class CompiledWorkerStartPlan:
         *,
         server_mode: bool,
         execution_facts: WorkerStartExecutionFacts,
-    ) -> "CompiledWorkerStartPlan":
+    ) -> CompiledWorkerStartPlan:
         decision = resolve_worker_start_context(
             requested,
             server_mode=server_mode,
@@ -80,7 +80,7 @@ class CompiledRuntimeEnvironmentPlan:
         *,
         compiled_contexts: Mapping[str, CompiledContext] | None,
         server_mode: bool,
-    ) -> "CompiledRuntimeEnvironmentPlan":
+    ) -> CompiledRuntimeEnvironmentPlan:
         execution_facts = WorkerStartExecutionFacts.from_compiled_contexts(
             compiled_contexts
         )
@@ -103,7 +103,7 @@ class CompiledRuntimeEnvironmentPlan:
         *,
         use_threading: bool,
         configured_num_workers: int,
-    ) -> "CompiledRuntimeEnvironmentPlan":
+    ) -> CompiledRuntimeEnvironmentPlan:
         """Return this compiled plan with worker-shape scalars replaced."""
 
         return replace(
@@ -162,7 +162,7 @@ class CompiledExecutionBundle:
         runtime_contexts: Mapping[str, CompiledContext],
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
-    ) -> "CompiledExecutionBundle":
+    ) -> CompiledExecutionBundle:
         transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
             resolve_lazy_configurations_for_serialization(dict(runtime_contexts.items()))
         )
@@ -183,7 +183,7 @@ class CompiledExecutionBundle:
         pipeline_definition: Sequence[AbstractStep],
         runtime_contexts: Mapping[str, CompiledContext],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
-    ) -> "CompiledExecutionBundle":
+    ) -> CompiledExecutionBundle:
         """Create a bundle before worker ownership has been assigned."""
 
         return cls.from_runtime_contexts(
@@ -197,7 +197,7 @@ class CompiledExecutionBundle:
         self,
         *,
         context_keys: Sequence[str] | None = None,
-    ) -> "CompiledExecutionBundle":
+    ) -> CompiledExecutionBundle:
         """Derive pickle-safe contexts while retaining shared declarations."""
         contexts = (
             self.transport_contexts

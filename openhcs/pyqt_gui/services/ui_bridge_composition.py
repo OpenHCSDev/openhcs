@@ -33,10 +33,10 @@ class OpenHCSUiBridgeCompositionRoot:
     """Build a UI bridge service from registered provider sets."""
 
     provider_set: UiBridgeProviderSetABC
-    session: "Session"
+    session: Session
 
     @classmethod
-    def for_main_window(cls, main_window) -> "OpenHCSUiBridgeCompositionRoot":
+    def for_main_window(cls, main_window) -> OpenHCSUiBridgeCompositionRoot:
         return cls(
             CompositeUiBridgeProviderSet(
                 tuple(

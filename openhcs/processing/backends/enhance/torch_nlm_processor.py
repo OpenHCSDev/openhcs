@@ -39,11 +39,11 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _denoise_2d(image: "torch.Tensor", **kwargs) -> "torch.Tensor":
+def _denoise_2d(image: torch.Tensor, **kwargs) -> torch.Tensor:
     return nlm2d(image, **kwargs)
 
 
-def _denoise_3d(image: "torch.Tensor", **kwargs) -> "torch.Tensor":
+def _denoise_3d(image: torch.Tensor, **kwargs) -> torch.Tensor:
     return nlm3d(image, **kwargs)
 
 
@@ -60,7 +60,7 @@ class TorchNlmInputDimensionality(Enum):
         return member
 
     @classmethod
-    def from_ndim(cls, ndim: int) -> "TorchNlmInputDimensionality":
+    def from_ndim(cls, ndim: int) -> TorchNlmInputDimensionality:
         try:
             return cls(ndim)
         except ValueError as exc:
@@ -68,11 +68,11 @@ class TorchNlmInputDimensionality(Enum):
                 f"Input must be a 2D image or 3D volume, got {ndim}D"
             ) from exc
 
-    def denoise(self, image: "torch.Tensor", **kwargs) -> "torch.Tensor":
+    def denoise(self, image: torch.Tensor, **kwargs) -> torch.Tensor:
         return self._denoiser(image, **kwargs)
 
 
-def _validate_image(image: "torch.Tensor") -> TorchNlmInputDimensionality:
+def _validate_image(image: torch.Tensor) -> TorchNlmInputDimensionality:
     """Validate a torch-nlm input and return its dimensionality declaration."""
     if torch is None:
         raise ImportError("PyTorch is required for torch_nlm functions")
@@ -85,13 +85,13 @@ def _validate_image(image: "torch.Tensor") -> TorchNlmInputDimensionality:
 
 @torch_func(slice_by_slice_default=True)
 def non_local_means_denoise_torch(
-    image: "torch.Tensor",
+    image: torch.Tensor,
     *,
     kernel_size: int = 11,
     std: float = 1.0,
     kernel_size_mean: int = 3,
     sub_filter_size: int = 32,
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """
     Apply Non-Local Means denoising to an image or volume using torch_nlm.
 

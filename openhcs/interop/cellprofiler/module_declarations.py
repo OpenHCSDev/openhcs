@@ -252,7 +252,7 @@ class CellProfilerModule(
     @classmethod
     def public_invocation_module_identity(
         cls,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         blocks: tuple["ModuleBlock", ...],
     ) -> object:
         """Return one public invocation's declaration-owned logical module identity."""
@@ -408,9 +408,9 @@ class CellProfilerModule(
     @classmethod
     def contribute_source_bindings(
         cls,
-        module: "ModuleBlock",
-        config: "SourceBindingsConfig",
-    ) -> "SourceBindingsConfig":
+        module: ModuleBlock,
+        config: SourceBindingsConfig,
+    ) -> SourceBindingsConfig:
         """Return source declarations contributed by one parsed setup module."""
         del cls, module
         return config
@@ -419,8 +419,8 @@ class CellProfilerModule(
     def source_bindings_for_modules(
         cls,
         modules: Iterable["ModuleBlock"],
-        config: "SourceBindingsConfig",
-    ) -> "SourceBindingsConfig":
+        config: SourceBindingsConfig,
+    ) -> SourceBindingsConfig:
         """Fold enabled modules into one public source-binding configuration."""
         from openhcs.core.config.pipeline_config import SourceBindingsConfig
 
@@ -449,7 +449,7 @@ class CellProfilerModule(
         return True
 
     @classmethod
-    def validate_pipeline_import(cls, module: "ModuleBlock") -> None:
+    def validate_pipeline_import(cls, module: ModuleBlock) -> None:
         """Validate whether one parsed module can enter a headless pipeline."""
 
         del cls, module
@@ -657,7 +657,7 @@ class CellProfilerModule(
 
     @classmethod
     def invocation_module_blocks(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["ModuleBlock", ...]:
         """Return module-owned public invocation blocks for one parsed module."""
         return (module,)
@@ -666,8 +666,8 @@ class CellProfilerModule(
     def module_blocks_for_invocation(
         cls,
         *,
-        invocation: "NormalizedFunctionItem",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[tuple["ModuleBlock", ...], tuple[str, ...]]:
         """Enumerate exact transient setting blocks for one public invocation.
 
@@ -860,10 +860,10 @@ class CellProfilerModule(
     def invocation_callable_contract(
         cls,
         *,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         numbered_module_blocks: tuple["ModuleBlock", ...],
         consumed_kwarg_names: tuple[str, ...],
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[CallableContract, tuple[str, ...]]:
         """Resolve one invocation's exact canonically numbered blocks."""
 
@@ -909,10 +909,10 @@ class CellProfilerModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract: CallableContract,
-        source_bindings: "StepSourceBindingsConfig",
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., Any]:
         """Return the canonical raw callable selected for one parsed module."""
         del module, contract, source_bindings

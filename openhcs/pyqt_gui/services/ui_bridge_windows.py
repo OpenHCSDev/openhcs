@@ -35,11 +35,11 @@ MAIN_WINDOW_ACTION_PROVIDER_IDENTITY = UiActionProviderIdentity.from_widget_decl
 class MainWindowBridgeProviderSet(UiBridgeProviderSetABC):
     """Provider set for main-window generic UI projections."""
 
-    main_window: "OpenHCSMainWindow"
+    main_window: OpenHCSMainWindow
     registry_key = MAIN_WINDOW_PROVIDER_ID
 
     @classmethod
-    def for_main_window(cls, main_window) -> "MainWindowBridgeProviderSet":
+    def for_main_window(cls, main_window) -> MainWindowBridgeProviderSet:
         return cls(main_window)
 
     def register(self, context: UiBridgeRegistrationContext) -> None:

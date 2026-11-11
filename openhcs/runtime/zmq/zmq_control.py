@@ -30,14 +30,14 @@ class ZMQControlRequestContext:
     """Server-owned resources available to registered control strategies."""
 
     compiled_artifacts: Mapping[str, "ZMQCompileArtifactRecord"]
-    function_catalog: "FunctionCatalogService | None" = None
-    function_catalog_preparation: "FunctionCatalogPreparation | None" = None
+    function_catalog: FunctionCatalogService | None = None
+    function_catalog_preparation: FunctionCatalogPreparation | None = None
 
     @classmethod
-    def empty(cls) -> "ZMQControlRequestContext":
+    def empty(cls) -> ZMQControlRequestContext:
         return cls(compiled_artifacts={})
 
-    def require_function_catalog(self) -> "FunctionCatalogService":
+    def require_function_catalog(self) -> FunctionCatalogService:
         """Return the catalog owned by the serving execution endpoint."""
 
         if self.function_catalog is None:
@@ -46,7 +46,7 @@ class ZMQControlRequestContext:
             )
         return self.function_catalog
 
-    def require_function_catalog_preparation(self) -> "FunctionCatalogPreparation":
+    def require_function_catalog_preparation(self) -> FunctionCatalogPreparation:
         """Return the preparation lifecycle owned by this execution endpoint."""
 
         if self.function_catalog_preparation is None:
@@ -208,7 +208,7 @@ class FunctionCatalogMessageStrategy(ZMQControlMessageStrategy):
     def handle_ready(
         self,
         message: dict,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: FunctionCatalogService,
     ) -> dict:
         """Handle one request after the endpoint catalog is ready."""
 
@@ -224,7 +224,7 @@ class FunctionCatalogReadMessageStrategy(FunctionCatalogMessageStrategy):
     def handle_ready(
         self,
         message: dict,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: FunctionCatalogService,
     ) -> dict:
         from openhcs.agent.dto.functions import FunctionCatalogControlResponse
 
@@ -248,7 +248,7 @@ class FunctionCatalogSearchMessageStrategy(FunctionCatalogMessageStrategy):
     def handle_ready(
         self,
         message: dict,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: FunctionCatalogService,
     ) -> dict:
         from openhcs.agent.dto.functions import FunctionCatalogControlResponse
 
@@ -275,7 +275,7 @@ class FunctionDetailReadMessageStrategy(FunctionCatalogMessageStrategy):
     def handle_ready(
         self,
         message: dict,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: FunctionCatalogService,
     ) -> dict:
         from openhcs.agent.dto.functions import FunctionDetailControlResponse
 
@@ -302,7 +302,7 @@ class FunctionReferenceReadMessageStrategy(FunctionCatalogMessageStrategy):
     def handle_ready(
         self,
         message: dict,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: FunctionCatalogService,
     ) -> dict:
         from openhcs.agent.dto.functions import FunctionReferenceControlResponse
 

@@ -51,13 +51,13 @@ class AxisSpec(ABC, metaclass=AutoRegisterMeta):
         return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
     @classmethod
-    def from_mapping(cls, values: Mapping[str, Any]) -> "AxisSpec":
+    def from_mapping(cls, values: Mapping[str, Any]) -> AxisSpec:
         payload = dict(values)
         spec_type = cls.__registry__[payload.pop("kind")]
         return spec_type.decode(payload)
 
     @classmethod
-    def decode(cls, values: Mapping[str, Any]) -> "AxisSpec":
+    def decode(cls, values: Mapping[str, Any]) -> AxisSpec:
         if values:
             raise ValueError(f"{cls.__name__} takes no fields; got {sorted(values)!r}.")
         return cls()
@@ -88,7 +88,7 @@ class FamilyAxisSpec(AxisSpec):
         return {"kind": self.spec_kind, "axis": self.axis.name}
 
     @classmethod
-    def decode(cls, values: Mapping[str, Any]) -> "FamilyAxisSpec":
+    def decode(cls, values: Mapping[str, Any]) -> FamilyAxisSpec:
         return cls(AxisFamily.active().named(str(values["axis"])))
 
 
@@ -202,11 +202,11 @@ class PayloadAxes:
         object.__setattr__(self, "declared", declared)
 
     @classmethod
-    def of(cls, *axes: tuple[AxisSpec, int]) -> "PayloadAxes":
+    def of(cls, *axes: tuple[AxisSpec, int]) -> PayloadAxes:
         return cls(tuple(PositionedAxis(spec, position) for spec, position in axes))
 
     @classmethod
-    def colour_samples(cls, position: int | None) -> "PayloadAxes":
+    def colour_samples(cls, position: int | None) -> PayloadAxes:
         """Declare a source file's colour-sample axis, as file formats report it.
 
         Image formats and source bindings spell an absent colour axis as None.
@@ -219,7 +219,7 @@ class PayloadAxes:
     def has_values(self) -> bool:
         return bool(self.declared)
 
-    def with_axis(self, spec: AxisSpec, position: int) -> "PayloadAxes":
+    def with_axis(self, spec: AxisSpec, position: int) -> PayloadAxes:
         """Declare ``spec`` at ``position``, replacing any axis with the same spec."""
         return type(self)(
             (
@@ -228,7 +228,7 @@ class PayloadAxes:
             )
         )
 
-    def without_role(self, role: type[AxisRole]) -> "PayloadAxes":
+    def without_role(self, role: type[AxisRole]) -> PayloadAxes:
         return type(self)(
             tuple(axis for axis in self.declared if not axis.spec.has_role(role))
         )
@@ -266,7 +266,7 @@ class PayloadAxes:
             resolved[index] = axis.spec
         return resolved
 
-    def after_leading_axis_removed(self) -> "PayloadAxes":
+    def after_leading_axis_removed(self) -> PayloadAxes:
         """Positions after a leading axis is removed; the removed axis is not declared here."""
         if any(axis.position == 0 for axis in self.declared):
             leading = next(axis for axis in self.declared if axis.position == 0)
@@ -281,13 +281,13 @@ class PayloadAxes:
             )
         )
 
-    def normalized_for(self, ndim: int) -> "PayloadAxes":
+    def normalized_for(self, ndim: int) -> PayloadAxes:
         """Positions as nonnegative indices for one concrete rank."""
         return type(self)(
             tuple(PositionedAxis(axis.spec, axis.index(ndim)) for axis in self.declared)
         )
 
-    def after_leading_axis_added(self, ndim: int) -> "PayloadAxes":
+    def after_leading_axis_added(self, ndim: int) -> PayloadAxes:
         """Positions after a new leading axis is stacked onto arrays of rank ``ndim``."""
         return type(self)(
             tuple(
@@ -298,7 +298,7 @@ class PayloadAxes:
     @classmethod
     def common_after_stacking(
         cls, members: Iterable[tuple["PayloadAxes", int]],
-    ) -> "PayloadAxes":
+    ) -> PayloadAxes:
         """Return the axes of a stack built from members, each with its rank."""
         normalized = tuple(
             axes.normalized_for(ndim) for axes, ndim in members if axes.has_values
@@ -319,7 +319,7 @@ class PayloadAxes:
         return [axis.to_mapping() for axis in self.declared]
 
     @classmethod
-    def from_mapping(cls, values: Iterable[Mapping[str, Any]]) -> "PayloadAxes":
+    def from_mapping(cls, values: Iterable[Mapping[str, Any]]) -> PayloadAxes:
         return cls(
             tuple(
                 PositionedAxis(

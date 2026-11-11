@@ -128,7 +128,7 @@ class MeasurementTable(
             "provenance; row fields and row ordering cannot declare its axis."
         )
 
-    def value_for_slice(self, context: Any) -> "MeasurementTable":
+    def value_for_slice(self, context: Any) -> MeasurementTable:
         """Select the rows of one runtime slice."""
 
         selects_slice_rows = (
@@ -200,7 +200,7 @@ class ObjectLabelMeasurementValues:
     @classmethod
     def from_label_indexed_values(
         cls, object_ids: Iterable[int], values: Any
-    ) -> "ObjectLabelMeasurementValues":
+    ) -> ObjectLabelMeasurementValues:
         """Bind dense label-indexed values where index ``label_id - 1``."""
         normalized_ids = ObjectLabelDomain._normalize_ids(
             tuple(object_ids), "ObjectLabelMeasurementValues.object_ids"
@@ -222,7 +222,7 @@ class ObjectLabelMeasurementValues:
     @classmethod
     def from_positional_values(
         cls, object_ids: Iterable[int], values: Any
-    ) -> "ObjectLabelMeasurementValues":
+    ) -> ObjectLabelMeasurementValues:
         """Bind values that are already ordered like ``object_ids``."""
         normalized_ids = ObjectLabelDomain._normalize_ids(
             tuple(object_ids), "ObjectLabelMeasurementValues.object_ids"
@@ -237,7 +237,7 @@ class ObjectLabelMeasurementValues:
     @classmethod
     def from_value_mapping(
         cls, object_ids: Iterable[int], values_by_object_id: Mapping[int, float]
-    ) -> "ObjectLabelMeasurementValues":
+    ) -> ObjectLabelMeasurementValues:
         """Bind sparse object-id keyed values to an explicit object domain."""
         normalized_ids = ObjectLabelDomain._normalize_ids(
             tuple(object_ids), "ObjectLabelMeasurementValues.object_ids"
@@ -325,7 +325,7 @@ class MeasurementScopeSelection:
         object.__setattr__(self, "scopes", scopes)
 
     @classmethod
-    def of(cls, *scopes: MeasurementScope | str) -> "MeasurementScopeSelection":
+    def of(cls, *scopes: MeasurementScope | str) -> MeasurementScopeSelection:
         """Return a selection for one or more measurement scopes."""
         return cls(
             frozenset(
@@ -1066,7 +1066,7 @@ class ObjectFeatureValueTable:
         measured_object_ids: Iterable[int],
         object_domain: Iterable[int],
         **kwargs: Any,
-    ) -> "ObjectFeatureValueTable":
+    ) -> ObjectFeatureValueTable:
         """Build a declared-domain table from measured feature arrays."""
         return cls(
             feature_values=feature_values,

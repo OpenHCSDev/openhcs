@@ -454,7 +454,7 @@ class CellProfilerLabelHull:
     @classmethod
     def from_labels(
         cls, labels: np.ndarray, label_ids: np.ndarray
-    ) -> "CellProfilerLabelHull":
+    ) -> CellProfilerLabelHull:
         """Group outline pixels in the caller's original label-ID domain."""
         indexes = np.asarray(label_ids, dtype=np.int32)
         _counts, offsets, rows, columns = _outline_points_by_label_numba(
@@ -465,7 +465,7 @@ class CellProfilerLabelHull:
     @classmethod
     def from_requested_positions(
         cls, labels: np.ndarray, requested_indexes: np.ndarray
-    ) -> "CellProfilerLabelHull":
+    ) -> CellProfilerLabelHull:
         """Project outlines onto CP's requested row ordinals without a new frame."""
         requested = np.asarray(requested_indexes, dtype=np.int32)
         positive_positions = np.flatnonzero(requested > 0)

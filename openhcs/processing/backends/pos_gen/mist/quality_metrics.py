@@ -25,7 +25,7 @@ def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
         raise TypeError(f"{name} must be a CuPy array, got {type(array)}")
 
 
-def compute_correlation_quality_gpu(region1: "cp.ndarray", region2: "cp.ndarray") -> float:  # type: ignore
+def compute_correlation_quality_gpu(region1: cp.ndarray, region2: cp.ndarray) -> float:  # type: ignore
     """GPU-only normalized cross-correlation quality metric."""
     # Validate input regions have same shape
     if region1.shape != region2.shape:
@@ -60,7 +60,7 @@ def compute_correlation_quality_gpu(region1: "cp.ndarray", region2: "cp.ndarray"
     return float(correlation)
 
 
-def compute_correlation_quality_gpu_aligned(region1: "cp.ndarray", region2: "cp.ndarray", dx: float, dy: float) -> float:  # type: ignore
+def compute_correlation_quality_gpu_aligned(region1: cp.ndarray, region2: cp.ndarray, dx: float, dy: float) -> float:  # type: ignore
     """
     GPU-only normalized cross-correlation quality metric after applying computed shift.
 
@@ -136,7 +136,7 @@ def compute_correlation_quality_gpu_aligned(region1: "cp.ndarray", region2: "cp.
     return compute_correlation_quality_gpu(aligned_region1, aligned_region2)
 
 
-def compute_adaptive_threshold(correlations: "cp.ndarray") -> float:  # type: ignore
+def compute_adaptive_threshold(correlations: cp.ndarray) -> float:  # type: ignore
     """
     Compute threshold using permutation test like ASHLAR.
 
@@ -169,7 +169,7 @@ def compute_adaptive_threshold(correlations: "cp.ndarray") -> float:  # type: ig
 
 
 def estimate_stage_parameters(
-    displacements: "cp.ndarray", expected_spacing: float  # type: ignore
+    displacements: cp.ndarray, expected_spacing: float  # type: ignore
 ) -> tuple[float, float]:
     """
     Estimate repeatability and backlash from measured displacements.
@@ -255,7 +255,7 @@ def validate_translation_consistency(
 
 
 def debug_phase_correlation_matrix(
-    correlation_matrix: "cp.ndarray",
+    correlation_matrix: cp.ndarray,
     peaks: List[Tuple[int, int, float]],
     save_path: str = None,
 ) -> None:

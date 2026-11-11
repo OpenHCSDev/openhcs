@@ -69,7 +69,7 @@ class ZarrBatchItemIdentity:
     def from_output(
         cls,
         output_identity: FunctionOutputIdentity,
-    ) -> "ZarrBatchItemIdentity":
+    ) -> ZarrBatchItemIdentity:
         return cls(
             component_values=FilenameParseResult(
                 (

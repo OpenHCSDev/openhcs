@@ -1,5 +1,7 @@
 """Nominal contracts shared by flat-field correction implementations."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
@@ -52,7 +54,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
                 "with every other source component fixed."
             )
 
-    def with_data(self, data: RuntimeArrayData) -> "FittedIlluminationFieldOutput":
+    def with_data(self, data: RuntimeArrayData) -> FittedIlluminationFieldOutput:
         return replace(self, data=data)
 
     def resolve_source_context(

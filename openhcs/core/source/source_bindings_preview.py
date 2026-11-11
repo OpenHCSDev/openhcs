@@ -42,7 +42,7 @@ class SourceInventory:
         source_backend: str,
         source_bindings: SourceBindingsConfig,
         step_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
-    ) -> "SourceInventory":
+    ) -> SourceInventory:
         config = _active_source_bindings(source_bindings, step_bindings)
         return cls(
             candidates=SourceBindingWorkspaceProjector(config).source_candidates(
@@ -62,7 +62,7 @@ class SourceInventory:
         backend: str,
         source_bindings: SourceBindingsConfig,
         step_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
-    ) -> "SourceInventory":
+    ) -> SourceInventory:
         paths = tuple(
             sorted(
                 str(path)
@@ -99,7 +99,7 @@ class SourceBindingPreviewRow:
         *,
         declaration_scope: str,
         sample_limit: int,
-    ) -> "SourceBindingPreviewRow":
+    ) -> SourceBindingPreviewRow:
         return cls(
             alias=binding.alias,
             declaration_scope=declaration_scope,
@@ -119,7 +119,7 @@ class SourceSetPreviewRow:
     metadata: tuple[tuple[str, SourceMetadataValue], ...]
 
     @classmethod
-    def from_record(cls, record: _SourceSet) -> "SourceSetPreviewRow":
+    def from_record(cls, record: _SourceSet) -> SourceSetPreviewRow:
         return cls(
             index=record.index,
             paths_by_alias=tuple(
@@ -171,7 +171,7 @@ class SourceBindingsPreview:
         step_bindings: StepSourceBindingsConfig,
         inventory: SourceInventory,
         sample_limit: int = 3,
-    ) -> "SourceBindingsPreview":
+    ) -> SourceBindingsPreview:
         config = _active_source_bindings(source_bindings, step_bindings)
         projector = SourceBindingWorkspaceProjector(config)
         matches: BindingMatches = tuple(

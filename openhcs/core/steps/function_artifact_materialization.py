@@ -96,9 +96,9 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
 
     def materialize_outputs(
         self,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
     ) -> tuple[MaterializedRuntimeArtifact, ...]:
         """Save each exact artifact batch once and return its successful outputs."""
         saved_materializations = []
@@ -181,8 +181,8 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
     def streaming_viewer_surfaces(
         self,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
-        materialization: "RuntimeArtifactMaterialization",
+        context: ExecutingContext,
+        materialization: RuntimeArtifactMaterialization,
     ) -> Mapping[str, StreamingViewerSurface]:
         """Capture enabled destinations for this artifact at the write boundary."""
         streams_artifact = (
@@ -210,7 +210,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
     @staticmethod
     def streamable_viewer_surfaces(
         *,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         streaming_viewer_surfaces: Mapping[str, StreamingViewerSurface],
         stream_output_paths: tuple[str, ...],
     ) -> Mapping[str, StreamingViewerSurface]:
@@ -226,14 +226,14 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
     def backend_kwargs(
         self,
         *,
-        materialization: "RuntimeArtifactMaterialization",
+        materialization: RuntimeArtifactMaterialization,
         outputs: tuple[Output, ...],
         persistent_backend_kwargs: BackendKwargs,
         streaming_viewer_surfaces: Mapping[str, StreamingViewerSurface],
         fallback_source_identity: SourceImageIdentity | None,
         producer_identity: StreamProducerIdentity,
-        context: "ExecutingContext",
-        filemanager: "FileManager",
+        context: ExecutingContext,
+        filemanager: FileManager,
         images_dir: str,
         stream_output_paths: tuple[str, ...],
     ) -> BackendKwargs:
@@ -296,7 +296,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         return result
 
     @abstractmethod
-    def persistent_backend_kwargs(self, context: "ExecutingContext") -> BackendKwargs:
+    def persistent_backend_kwargs(self, context: ExecutingContext) -> BackendKwargs:
         """Return persistent materialization backends owned by this policy."""
 
 
@@ -307,7 +307,7 @@ class PersistentArtifactMaterializationTargetPlan(ArtifactMaterializationTargetP
     target_key = "persistent"
     backend: str
 
-    def persistent_backend_kwargs(self, context: "ExecutingContext") -> BackendKwargs:
+    def persistent_backend_kwargs(self, context: ExecutingContext) -> BackendKwargs:
         return {
             self.backend: RawBackendKwargs(
                 tiff_config=(
@@ -322,7 +322,7 @@ class StreamingOnlyArtifactMaterializationTargetPlan(ArtifactMaterializationTarg
 
     target_key = "streaming_only"
 
-    def persistent_backend_kwargs(self, context: "ExecutingContext") -> BackendKwargs:
+    def persistent_backend_kwargs(self, context: ExecutingContext) -> BackendKwargs:
         return {}
 
 
@@ -542,7 +542,7 @@ class RuntimeArtifactMaterialization:
         cls,
         output_key: str,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         dict_key: str | None = None,
         artifact_path: str | None = None,
         record: StoredRuntimeValue | None = None,
@@ -725,7 +725,7 @@ class RuntimeArtifactMaterialization:
     @classmethod
     def _record_source_identity(
         cls,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         record: StoredRuntimeValue,
         materialization_spec: MaterializationSpec,
@@ -806,7 +806,7 @@ class RuntimeArtifactMaterialization:
 
     @staticmethod
     def source_identity_for_path(
-        context: "ExecutingContext",
+        context: ExecutingContext,
         path: str | Path,
     ) -> SourceImageIdentity | None:
         """Return microscope source identity for a source path when available."""
@@ -841,8 +841,8 @@ class RuntimeArtifactMaterialization:
         output_plan: ArtifactOutputPlan,
         record: StoredRuntimeValue,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
-    ) -> "RuntimeArtifactMaterialization":
+        context: ExecutingContext,
+    ) -> RuntimeArtifactMaterialization:
         """Build one materialization from an exact compiled output record."""
         spec = output_plan.materialization
         if not isinstance(spec, MaterializationSpec):
@@ -942,7 +942,7 @@ class RuntimeArtifactMaterialization:
     def outputs(
         self,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         *,
         output_path_filter: Callable[[Path], bool] | None = None,
     ) -> tuple[Output, ...]:
@@ -964,7 +964,7 @@ class RuntimeArtifactMaterialization:
     def reused_observation(
         self,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
         target = plan.runtime_artifact_materialization
@@ -998,7 +998,7 @@ class RuntimeArtifactMaterialization:
     def viewer_outputs(
         self,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
     ) -> tuple[Output, ...]:
         """Return exact writer outputs accepted by this step's viewer backends."""
         surfaces = (
@@ -1023,7 +1023,7 @@ class RuntimeArtifactMaterialization:
 
 def runtime_artifact_materializations(
     plan: CompiledStepPlan,
-    context: "ExecutingContext",
+    context: ExecutingContext,
 ) -> tuple[RuntimeArtifactMaterialization, ...]:
     """Derive actual materializations from compiled outputs and runtime values."""
 
@@ -1050,7 +1050,7 @@ def runtime_artifact_materializations(
 
 def runtime_artifact_materializations_from_records(
     plan: CompiledStepPlan,
-    context: "ExecutingContext",
+    context: ExecutingContext,
     records: tuple[StoredRuntimeValue, ...],
 ) -> tuple[RuntimeArtifactMaterialization, ...]:
     """Derive materializations from one caller-owned runtime observation."""
@@ -1086,7 +1086,7 @@ def runtime_artifact_materializations_from_records(
 
 def preview_reused_step_outputs(
     plan: CompiledStepPlan,
-    context: "ExecutingContext",
+    context: ExecutingContext,
     records: tuple[StoredRuntimeValue, ...],
 ) -> StepExecutionObservation:
     """Project explicitly reused historical outputs once, independently of new saves."""
@@ -1103,7 +1103,7 @@ def preview_reused_step_outputs(
 
 def planned_materialization_preview(
     *,
-    context: "ExecutingContext",
+    context: ExecutingContext,
     plan: CompiledStepPlan,
     output_key: str,
     output_plan: ArtifactOutputPlan,
@@ -1139,7 +1139,7 @@ def planned_materialization_preview(
 
 def _planned_materialization_path(
     *,
-    context: "ExecutingContext",
+    context: ExecutingContext,
     plan: CompiledStepPlan,
     output_key: str,
     output_plan: ArtifactOutputPlan,
@@ -1171,7 +1171,7 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
     def observation(
         self,
         plan: CompiledStepPlan,
-        context: "ExecutingContext",
+        context: ExecutingContext,
     ) -> StepExecutionObservation:
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:

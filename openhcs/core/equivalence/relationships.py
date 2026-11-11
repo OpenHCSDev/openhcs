@@ -29,7 +29,7 @@ class RelationshipAggregateFeatureKeyProjection:
     feature: RuntimeMeasurementFeatureKey
     dialect: MeasurementDialect
 
-    def resolution(self) -> "RelationshipAggregateFeatureResolution":
+    def resolution(self) -> RelationshipAggregateFeatureResolution:
         aggregate_identity = RuntimeAggregateFeatureIdentity.from_parts(
             tuple(part for part in self.feature.feature_name.split("_") if part),
             self.dialect,
@@ -59,7 +59,7 @@ class RelationshipAggregateFeatureResolution:
     """Relationship aggregate feature context with its owning semantics."""
 
     context: RelationshipAggregateFeatureContext | None
-    semantics: "RelationshipAggregateFeatureSemantics | None"
+    semantics: RelationshipAggregateFeatureSemantics | None
 
     @property
     def is_resolved(self) -> bool:

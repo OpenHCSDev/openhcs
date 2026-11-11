@@ -71,7 +71,7 @@ class ArchitectureTopicProjection(ABC, metaclass=AutoRegisterMeta):
         return tuple(projection_type() for projection_type in cls.projection_types())
 
     @classmethod
-    def for_topic_id(cls, topic_id: str) -> "ArchitectureTopicProjection":
+    def for_topic_id(cls, topic_id: str) -> ArchitectureTopicProjection:
         normalized = topic_id.casefold()
         for projection in cls.projection_instances():
             if normalized == projection.required_topic_id().casefold():

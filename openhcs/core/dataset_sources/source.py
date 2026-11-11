@@ -70,7 +70,7 @@ class SourceSelectionRole(ABC):
         return matches[0]
 
     @classmethod
-    def pipeline_config_for_source(cls, base: "PipelineConfig") -> "PipelineConfig":
+    def pipeline_config_for_source(cls, base: PipelineConfig) -> PipelineConfig:
         """Select this role's source without resolving other lazy fields."""
         return replace_raw(base, dataset_source=cls.require_registered_source())
 
@@ -176,9 +176,9 @@ class DatasetSourceChoice(ABC):
     def source_type_for(
         cls,
         root: Path,
-        filemanager: "FileManager",
-        source_bindings: "SourceBindingsConfig | None",
-    ) -> "type[DatasetSource]":
+        filemanager: FileManager,
+        source_bindings: SourceBindingsConfig | None,
+    ) -> type[DatasetSource]:
         """Return the source class that opens ``root``."""
 
     @classmethod
@@ -186,10 +186,10 @@ class DatasetSourceChoice(ABC):
         cls,
         root: str | Path,
         *,
-        filemanager: "FileManager",
+        filemanager: FileManager,
         pattern_format: str | None = None,
-        source_bindings_config: "SourceBindingsConfig | None" = None,
-    ) -> "DatasetSource":
+        source_bindings_config: SourceBindingsConfig | None = None,
+    ) -> DatasetSource:
         """Construct the selected source bound to ``root``."""
 
         from openhcs.core.dataset_sources.source import DeclaredFileSource
@@ -261,7 +261,7 @@ class DatasetSource(
         cls,
         root: Path,
         filemanager: FileManager,
-        source_bindings: "SourceBindingsConfig | None",
+        source_bindings: SourceBindingsConfig | None,
     ) -> type["DatasetSource"]:
         del root, filemanager, source_bindings
         return cls
@@ -323,7 +323,7 @@ class DatasetSource(
         cls,
         root: Path,
         filemanager: FileManager,
-        source_bindings: "SourceBindingsConfig | None",
+        source_bindings: SourceBindingsConfig | None,
     ) -> type["DatasetSource"] | None:
         """The first source in detection order that claims ``root``."""
 
@@ -341,7 +341,7 @@ class DatasetSource(
         filemanager: FileManager,
         pattern_format: Optional[str] = None,
         source_bindings_config: Optional["SourceBindingsConfig"] = None,
-    ) -> "DatasetSource":
+    ) -> DatasetSource:
         """Construct this source from factory inputs."""
         del source_bindings_config
         return cls(filemanager, pattern_format=pattern_format)
@@ -404,7 +404,7 @@ class DatasetSource(
         return self.compatible_backends
 
     def get_primary_backend(
-        self, dataset_root: Union[str, Path], filemanager: "FileManager"
+        self, dataset_root: Union[str, Path], filemanager: FileManager
     ) -> str:
         """The backend reads go through: a registered virtual workspace first."""
         if Backend.VIRTUAL_WORKSPACE.value in filemanager.registry:
@@ -530,7 +530,7 @@ class DatasetSource(
         extensions=None,
         group_by=None,
         variable_components=None,
-        pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
+        pattern_cache: RuntimePatternDiscoveryCache | None = None,
         partition_values: Sequence[str] | None = None,
     ):
         """Group the folder's files into patterns through the pattern engine."""
@@ -560,7 +560,7 @@ class DatasetSource(
         backend: str,
         variable_components=None,
         *,
-        pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
+        pattern_cache: RuntimePatternDiscoveryCache | None = None,
     ):
         """List the files one pattern matches through the pattern engine."""
         directory_path = Path(directory)
@@ -611,9 +611,9 @@ class AutoDetectedSource(DatasetSourceChoice):
     def source_type_for(
         cls,
         root: Path,
-        filemanager: "FileManager",
-        source_bindings: "SourceBindingsConfig | None",
-    ) -> "type[DatasetSource]":
+        filemanager: FileManager,
+        source_bindings: SourceBindingsConfig | None,
+    ) -> type[DatasetSource]:
         from openhcs.core.dataset_sources.source import DatasetSource, DeclaredFileSource
 
         detected = DatasetSource.detect_source_type(root, filemanager, source_bindings)

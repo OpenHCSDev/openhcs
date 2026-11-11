@@ -5,6 +5,8 @@ planes project the existing ObjectLabelPayload variants without changing their
 identity domain or reconstructing rejected objects.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import NamedTuple, Tuple, get_type_hints
@@ -41,7 +43,7 @@ class DiagnosticPlaneSource:
     validity_mask: np.ndarray
 
     @classmethod
-    def from_image(cls, image: object) -> "DiagnosticPlaneSource":
+    def from_image(cls, image: object) -> DiagnosticPlaneSource:
         source_mask = image.mask
         return cls(
             image.metadata,
@@ -167,7 +169,7 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
         initial_components: np.ndarray,
         declumping: DeclumpingEvidence,
         objects: ObjectLabelPayload,
-    ) -> "PrimaryObjectDiagnosticPlanes":
+    ) -> PrimaryObjectDiagnosticPlanes:
         source = DiagnosticPlaneSource.from_image(image)
         response, maxima, markers = declumping.planes(source)
         return cls(

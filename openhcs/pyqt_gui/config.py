@@ -6,6 +6,8 @@ following the same patterns as the core configuration system.
 Configuration is intended to be immutable and provided as Python objects.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -69,7 +71,7 @@ class GuiLogLevel(str, Enum):
         return tuple(level.value for level in cls)
 
     @classmethod
-    def from_text(cls, value: str) -> "GuiLogLevel":
+    def from_text(cls, value: str) -> GuiLogLevel:
         try:
             return cls(value.upper())
         except ValueError as error:
@@ -330,10 +332,10 @@ class PyQtGuiRuntimeContext:
     def with_pipeline_runtime(
         self,
         pipeline_runtime: GlobalPipelineConfig,
-    ) -> "PyQtGuiRuntimeContext":
+    ) -> PyQtGuiRuntimeContext:
         return replace(self, pipeline_runtime=pipeline_runtime)
 
-    def with_ui_config(self, ui_config: UIConfig) -> "PyQtGuiRuntimeContext":
+    def with_ui_config(self, ui_config: UIConfig) -> PyQtGuiRuntimeContext:
         return replace(self, ui_config=ui_config)
 
 

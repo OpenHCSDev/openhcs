@@ -22,8 +22,8 @@ class CompiledArtifactInvocationInspection:
     @classmethod
     def from_invocation(
         cls,
-        invocation: "CompiledFunctionInvocation",
-    ) -> "CompiledArtifactInvocationInspection":
+        invocation: CompiledFunctionInvocation,
+    ) -> CompiledArtifactInvocationInspection:
         output_specs = tuple(invocation.contract.artifact_outputs)
         output_plans = tuple(invocation.artifact_output_plans)
         if tuple(spec.ref() for spec in output_specs) != tuple(
@@ -59,8 +59,8 @@ class CompiledArtifactStepInspection:
         cls,
         *,
         context_id: str,
-        plan: "CompiledStepPlan",
-    ) -> "CompiledArtifactStepInspection":
+        plan: CompiledStepPlan,
+    ) -> CompiledArtifactStepInspection:
         pattern = plan.compiled_function_pattern
         return cls(
             context_id=context_id,
@@ -94,8 +94,8 @@ class CompiledArtifactInspection:
         *,
         compile_artifact_id: str,
         subject_id: str,
-        bundle: "CompiledExecutionBundle",
-    ) -> "CompiledArtifactInspection":
+        bundle: CompiledExecutionBundle,
+    ) -> CompiledArtifactInspection:
         if not compile_artifact_id:
             raise ValueError("compile_artifact_id cannot be empty.")
         if not subject_id:
@@ -148,7 +148,7 @@ class CompiledArtifactInspectionResponse:
     def from_control_response(
         cls,
         payload: Mapping[str, Any],
-    ) -> "CompiledArtifactInspectionResponse":
+    ) -> CompiledArtifactInspectionResponse:
         if payload.get("status") != "ok":
             raise RuntimeError(str(payload.get("error") or payload))
         inspection = payload["inspection"]

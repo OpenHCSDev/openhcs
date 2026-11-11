@@ -75,25 +75,25 @@ class OpenHCSAgentContext:
         self,
         *,
         path_policy: AgentPathPolicy | None = None,
-        architecture_service: "ArchitectureProjectionService | None" = None,
-        authoring_context_service: "AgentAuthoringContextService | None" = None,
-        config_service: "ConfigService | None" = None,
-        artifact_plan_service: "ArtifactPlanInspectionService | None" = None,
-        session: "Session | None" = None,
-        session_transport_config: "OpenHCSZMQConfig | None" = None,
-        function_catalog: "FunctionCatalogServiceABC | None" = None,
-        endpoint_function_catalog: "EndpointFunctionCatalogServiceABC | None" = None,
-        knowledge_base_service: "KnowledgeBaseService | None" = None,
-        object_state_field_help_service: "ObjectStateFieldHelpService | None" = None,
-        pipeline_service: "PipelineAuthoringService | None" = None,
-        plate_inspection_service: "PlateInspectionService | None" = None,
-        plate_streaming_service: "PlateStreamingService | None" = None,
-        runtime_server_service: "RuntimeServerService | None" = None,
-        viewer_endpoint_discovery_service: "ViewerEndpointDiscoveryService | None" = None,
-        selected_plate_service: "SelectedPlateService | None" = None,
-        synthetic_plate_service: "SyntheticPlateGenerationService | None" = None,
-        ui_bridge_service: "UiBridgeService | None" = None,
-        viewer_window_service: "ViewerWindowService | None" = None,
+        architecture_service: ArchitectureProjectionService | None = None,
+        authoring_context_service: AgentAuthoringContextService | None = None,
+        config_service: ConfigService | None = None,
+        artifact_plan_service: ArtifactPlanInspectionService | None = None,
+        session: Session | None = None,
+        session_transport_config: OpenHCSZMQConfig | None = None,
+        function_catalog: FunctionCatalogServiceABC | None = None,
+        endpoint_function_catalog: EndpointFunctionCatalogServiceABC | None = None,
+        knowledge_base_service: KnowledgeBaseService | None = None,
+        object_state_field_help_service: ObjectStateFieldHelpService | None = None,
+        pipeline_service: PipelineAuthoringService | None = None,
+        plate_inspection_service: PlateInspectionService | None = None,
+        plate_streaming_service: PlateStreamingService | None = None,
+        runtime_server_service: RuntimeServerService | None = None,
+        viewer_endpoint_discovery_service: ViewerEndpointDiscoveryService | None = None,
+        selected_plate_service: SelectedPlateService | None = None,
+        synthetic_plate_service: SyntheticPlateGenerationService | None = None,
+        ui_bridge_service: UiBridgeService | None = None,
+        viewer_window_service: ViewerWindowService | None = None,
     ) -> None:
         self.path_policy = path_policy or AgentPathPolicy.from_environment()
         self._architecture_service = architecture_service
@@ -101,7 +101,7 @@ class OpenHCSAgentContext:
         self._config_service = config_service
         self._artifact_plan_service = artifact_plan_service
         self._session = session
-        self._main_thread: "MainThread | None" = None
+        self._main_thread: MainThread | None = None
         self._session_transport_config = session_transport_config
         self._function_catalog = function_catalog
         self._endpoint_function_catalog = endpoint_function_catalog
@@ -118,7 +118,7 @@ class OpenHCSAgentContext:
         self._viewer_window_service = viewer_window_service
 
     @property
-    def viewer_endpoint_discovery_service(self) -> "ViewerEndpointDiscoveryService":
+    def viewer_endpoint_discovery_service(self) -> ViewerEndpointDiscoveryService:
         if self._viewer_endpoint_discovery_service is None:
             from openhcs.agent.services.viewer_endpoint_discovery import (
                 ViewerEndpointDiscoveryService,
@@ -128,13 +128,13 @@ class OpenHCSAgentContext:
         return self._viewer_endpoint_discovery_service
 
     @property
-    def function_catalog(self) -> "FunctionCatalogServiceABC":
+    def function_catalog(self) -> FunctionCatalogServiceABC:
         if self._function_catalog is None:
             self._function_catalog = self.endpoint_function_catalog
         return self._function_catalog
 
     @property
-    def endpoint_function_catalog(self) -> "EndpointFunctionCatalogServiceABC":
+    def endpoint_function_catalog(self) -> EndpointFunctionCatalogServiceABC:
         """Compose one typed endpoint authority for local catalog/control tools."""
         if self._endpoint_function_catalog is None:
             from openhcs.agent.services.endpoint_function_catalog_service import (
@@ -149,7 +149,7 @@ class OpenHCSAgentContext:
         return self._endpoint_function_catalog
 
     @property
-    def config_service(self) -> "ConfigService":
+    def config_service(self) -> ConfigService:
         if self._config_service is None:
             from openhcs.agent.services.config_service import ConfigService
 
@@ -157,7 +157,7 @@ class OpenHCSAgentContext:
         return self._config_service
 
     @property
-    def architecture_service(self) -> "ArchitectureProjectionService":
+    def architecture_service(self) -> ArchitectureProjectionService:
         if self._architecture_service is None:
             from openhcs.agent.services.architecture_projection_service import (
                 ArchitectureProjectionService,
@@ -167,7 +167,7 @@ class OpenHCSAgentContext:
         return self._architecture_service
 
     @property
-    def pipeline_service(self) -> "PipelineAuthoringService":
+    def pipeline_service(self) -> PipelineAuthoringService:
         if self._pipeline_service is None:
             from openhcs.agent.services.pipeline_authoring_service import (
                 PipelineAuthoringService,
@@ -180,7 +180,7 @@ class OpenHCSAgentContext:
         return self._pipeline_service
 
     @property
-    def authoring_context_service(self) -> "AgentAuthoringContextService":
+    def authoring_context_service(self) -> AgentAuthoringContextService:
         if self._authoring_context_service is None:
             from openhcs.agent.services.llm_context_service import (
                 AgentAuthoringContextService,
@@ -193,7 +193,7 @@ class OpenHCSAgentContext:
         return self._authoring_context_service
 
     @property
-    def knowledge_base_service(self) -> "KnowledgeBaseService":
+    def knowledge_base_service(self) -> KnowledgeBaseService:
         if self._knowledge_base_service is None:
             from openhcs.agent.services.knowledge_base_service import (
                 KnowledgeBaseService,
@@ -203,7 +203,7 @@ class OpenHCSAgentContext:
         return self._knowledge_base_service
 
     @property
-    def plate_inspection_service(self) -> "PlateInspectionService":
+    def plate_inspection_service(self) -> PlateInspectionService:
         if self._plate_inspection_service is None:
             from openhcs.agent.services.plate_inspection_service import (
                 PlateInspectionService,
@@ -213,7 +213,7 @@ class OpenHCSAgentContext:
         return self._plate_inspection_service
 
     @property
-    def plate_streaming_service(self) -> "PlateStreamingService":
+    def plate_streaming_service(self) -> PlateStreamingService:
         if self._plate_streaming_service is None:
             from openhcs.agent.services.plate_streaming_service import (
                 PlateStreamingService,
@@ -226,7 +226,7 @@ class OpenHCSAgentContext:
         return self._plate_streaming_service
 
     @property
-    def synthetic_plate_service(self) -> "SyntheticPlateGenerationService":
+    def synthetic_plate_service(self) -> SyntheticPlateGenerationService:
         if self._synthetic_plate_service is None:
             from openhcs.agent.services.synthetic_plate_service import (
                 SyntheticPlateGenerationService,
@@ -239,7 +239,7 @@ class OpenHCSAgentContext:
         return self._synthetic_plate_service
 
     @property
-    def artifact_plan_service(self) -> "ArtifactPlanInspectionService":
+    def artifact_plan_service(self) -> ArtifactPlanInspectionService:
         if self._artifact_plan_service is None:
             from openhcs.agent.services.artifact_plan_inspection_service import (
                 ArtifactPlanInspectionService,
@@ -251,13 +251,13 @@ class OpenHCSAgentContext:
             )
         return self._artifact_plan_service
 
-    def bind_main_thread(self, main_thread: "MainThread") -> None:
+    def bind_main_thread(self, main_thread: MainThread) -> None:
         """Where the session runs work that touches ObjectState (the MCP main thread)."""
 
         self._main_thread = main_thread
 
     @property
-    def session(self) -> "Session":
+    def session(self) -> Session:
         """The headless OpenHCS session every session tool acts on."""
 
         if self._session is None:
@@ -275,7 +275,7 @@ class OpenHCSAgentContext:
         return self._session
 
     @property
-    def runtime_server_service(self) -> "RuntimeServerService":
+    def runtime_server_service(self) -> RuntimeServerService:
         if self._runtime_server_service is None:
             from openhcs.agent.services.runtime_server_service import (
                 RuntimeServerService,
@@ -285,7 +285,7 @@ class OpenHCSAgentContext:
         return self._runtime_server_service
 
     @property
-    def ui_bridge_service(self) -> "UiBridgeService":
+    def ui_bridge_service(self) -> UiBridgeService:
         if self._ui_bridge_service is None:
             from openhcs.agent.services.ui_bridge_service import OpenHCSUiBridgeService
 
@@ -293,7 +293,7 @@ class OpenHCSAgentContext:
         return self._ui_bridge_service
 
     @property
-    def selected_plate_service(self) -> "SelectedPlateService":
+    def selected_plate_service(self) -> SelectedPlateService:
         if self._selected_plate_service is None:
             from openhcs.agent.services.selected_plate_service import (
                 SelectedPlateService,
@@ -307,7 +307,7 @@ class OpenHCSAgentContext:
         return self._selected_plate_service
 
     @property
-    def object_state_field_help_service(self) -> "ObjectStateFieldHelpService":
+    def object_state_field_help_service(self) -> ObjectStateFieldHelpService:
         if self._object_state_field_help_service is None:
             from openhcs.agent.services.object_state_field_help_service import (
                 ObjectStateFieldHelpService,
@@ -320,7 +320,7 @@ class OpenHCSAgentContext:
         return self._object_state_field_help_service
 
     @property
-    def viewer_window_service(self) -> "ViewerWindowService":
+    def viewer_window_service(self) -> ViewerWindowService:
         if self._viewer_window_service is None:
             from openhcs.agent.services.viewer_window_service import ViewerWindowService
 

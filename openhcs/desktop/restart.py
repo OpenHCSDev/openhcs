@@ -32,7 +32,7 @@ class DesktopSessionRestart:
         main_window,
         *,
         purpose: DesktopRestartPurpose = DesktopRestartPurpose.ZMQ_VERSION,
-    ) -> "DesktopSessionRestart":
+    ) -> DesktopSessionRestart:
         runtime = DesktopRestartEnvironment.current()
         return cls(
             runtime=runtime,

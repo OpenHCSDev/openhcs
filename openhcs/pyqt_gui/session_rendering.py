@@ -104,11 +104,11 @@ class OperationPresenter(ABC, metaclass=AutoRegisterMeta):
     operation: ClassVar[type[SessionOperation] | None] = None
 
     @abstractmethod
-    def present(self, renderer: "GuiRenderer", request: object) -> None: ...
+    def present(self, renderer: GuiRenderer, request: object) -> None: ...
 
     def unavailable_reason(
         self,
-        renderer: "GuiRenderer",
+        renderer: GuiRenderer,
         request: object,
     ) -> AgentError | None:
         del renderer, request
@@ -124,7 +124,7 @@ class RequestPrompter(ABC, metaclass=AutoRegisterMeta):
     operation: ClassVar[type[SessionOperation] | None] = None
 
     @abstractmethod
-    def prompt(self, renderer: "GuiRenderer") -> object | None:
+    def prompt(self, renderer: GuiRenderer) -> object | None:
         """The request, or ``None`` when the user cancels."""
 
 

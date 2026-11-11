@@ -30,7 +30,7 @@ class VariableComponentStackRequirement(ABC):
     def bind_to_callable(
         self,
         func: Callable[..., object],
-    ) -> "VariableComponentStackRequirement":
+    ) -> VariableComponentStackRequirement:
         """Bind callable-specific defaults when this requirement needs them."""
 
         del func
@@ -103,7 +103,7 @@ class SemanticControlVariableComponentStackRequirement(
     def bind_to_callable(
         self,
         func: Callable[..., object],
-    ) -> "SemanticControlVariableComponentStackRequirement":
+    ) -> SemanticControlVariableComponentStackRequirement:
         """Capture signature defaults before a callable becomes a reference."""
 
         parameters = inspect.signature(func).parameters

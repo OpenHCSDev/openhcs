@@ -84,7 +84,7 @@ class MetadataCache:
             return component_cache.get(key)
 
     def get_cached_metadata(
-        self, component: "type[Axis]"
+        self, component: type[Axis]
     ) -> Optional[Dict[str, Optional[str]]]:
         """Get all cached metadata for a component."""
         with self._lock:

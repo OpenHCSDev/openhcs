@@ -64,7 +64,7 @@ class InputArtifactsDebugViewSection(
     empty_subject = "input artifacts"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         return artifact_refs_snapshot_table(snapshot.input_artifact_refs)
 
 
@@ -77,7 +77,7 @@ class OutputArtifactsDebugViewSection(
     empty_subject = "output artifacts"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         return artifact_refs_snapshot_table(snapshot.output_artifact_refs)
 
 
@@ -90,7 +90,7 @@ class PreviewArtifactsDebugViewSection(
     empty_subject = "preview artifacts"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         return artifact_refs_snapshot_table(snapshot.preview_refs)
 
 
@@ -103,7 +103,7 @@ class InvocationParametersDebugViewSection(
     empty_subject = "invocation parameters"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         if not snapshot.invocation_parameters:
             return None
         return InvocationParametersDebugViewTable.table_for(
@@ -153,7 +153,7 @@ class MeasurementsDebugViewSection(
     empty_subject = "measurements"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         return artifact_refs_snapshot_table(snapshot.measurement_refs)
 
 
@@ -166,7 +166,7 @@ class RelationshipsDebugViewSection(
     empty_subject = "relationships"
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         return artifact_refs_snapshot_table(snapshot.relationship_refs)
 
 

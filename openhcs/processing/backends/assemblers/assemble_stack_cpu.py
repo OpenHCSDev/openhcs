@@ -29,7 +29,7 @@ from scipy.ndimage import affine_transform  # type: ignore
 logger = logging.getLogger(__name__)
 
 
-def _get_all_overlapping_pairs(positions: "np.ndarray", tile_shape: tuple) -> list:
+def _get_all_overlapping_pairs(positions: np.ndarray, tile_shape: tuple) -> list:
     """
     Find ALL overlapping tile pairs with edge directions.
     [Keep this exactly as it was - it works fine]
@@ -90,7 +90,7 @@ def _get_all_overlapping_pairs(positions: "np.ndarray", tile_shape: tuple) -> li
 
 def _create_fixed_blend_mask(
     tile_shape: tuple, edge_overlaps: dict, margin_ratio: float = 0.1
-) -> "np.ndarray":
+) -> np.ndarray:
     """
     Create blend mask with FIXED margin ratio using WORKING logic from old version.
     CRITICAL: Uses endpoint=False like the old working version.
@@ -126,7 +126,7 @@ def _create_fixed_blend_mask(
 
 def _create_dynamic_blend_mask(
     tile_shape: tuple, edge_overlaps: dict, overlap_fraction: float = 1.0
-) -> "np.ndarray":
+) -> np.ndarray:
     """
     Create blend mask based on actual overlap amounts using WORKING logic from old version.
     CRITICAL: Uses endpoint=False and same logic as old working version.
@@ -175,12 +175,12 @@ def _create_dynamic_blend_mask(
 @artifact_inputs("positions")
 @numpy_func(contract=VolumetricToSliceContract)
 def assemble_stack_cpu(
-    image_tiles: "np.ndarray",
+    image_tiles: np.ndarray,
     positions: Union[List[Tuple[float, float]], "np.ndarray"],
     blend_method: TileBlendMethod = TileBlendMethod.FIXED,
     fixed_margin_ratio: float = 0.1,
     overlap_blend_fraction: float = 1.0,
-) -> "np.ndarray":
+) -> np.ndarray:
     """
     Stitch/assemble overlapping image tiles with simple blending.
 

@@ -6,6 +6,8 @@ supporting both single-channel and multi-channel analysis with various detection
 methods and colocalization metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -72,7 +74,7 @@ class CellCountMeasurementRow:
     parameters_used: dict[str, Any]
 
     @classmethod
-    def from_result(cls, result: CellCountResult) -> "CellCountMeasurementRow":
+    def from_result(cls, result: CellCountResult) -> CellCountMeasurementRow:
         return cls(
             slice_index=result.slice_index,
             method=result.method,

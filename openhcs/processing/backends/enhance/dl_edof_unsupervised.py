@@ -25,7 +25,7 @@ nnModule = create_placeholder_class(
 
 
 # Helper for sharpness loss
-def laplacian_filter_torch(image_batch: "torch.Tensor") -> "torch.Tensor":
+def laplacian_filter_torch(image_batch: torch.Tensor) -> torch.Tensor:
     """
     Applies a Laplacian filter to a batch of 2D images.
     Input: (N, 1, H, W)
@@ -40,7 +40,7 @@ def laplacian_filter_torch(image_batch: "torch.Tensor") -> "torch.Tensor":
 
 
 def extract_patches_2d_from_3d_stack(
-    stack_3d: "torch.Tensor", patch_size: int, stride: int
+    stack_3d: torch.Tensor, patch_size: int, stride: int
 ) -> torch.Tensor:
     """
     Extracts 2D patches from a 3D stack.
@@ -116,7 +116,7 @@ class UNetLite(nnModule):
         self.conv_out = nn.Conv2d(ch1, 1, kernel_size=3, padding=1)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x: "torch.Tensor") -> "torch.Tensor":
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x1 = self.relu1(self.conv1(x))
         x2 = self.relu2(self.conv2(x1))
         x3 = self.relu3(self.upconv(x2))
@@ -124,14 +124,14 @@ class UNetLite(nnModule):
         return out
 
 
-def sharpness_loss_fn(fused_patch: "torch.Tensor") -> "torch.Tensor":
+def sharpness_loss_fn(fused_patch: torch.Tensor) -> torch.Tensor:
     laplacian_response = laplacian_filter_torch(fused_patch)
     return -torch.var(laplacian_response, dim=(-1, -2), unbiased=False).mean()
 
 
 def consistency_loss_fn(
-    fused_patch: "torch.Tensor", input_patch_stack: "torch.Tensor"
-) -> "torch.Tensor":
+    fused_patch: torch.Tensor, input_patch_stack: torch.Tensor
+) -> torch.Tensor:
     diff_sq = (fused_patch - input_patch_stack) ** 2
     min_diff_sq_over_z = torch.min(diff_sq, dim=1)[0]
     return torch.mean(min_diff_sq_over_z)
@@ -139,7 +139,7 @@ def consistency_loss_fn(
 
 @torch_func
 def dl_edof_unsupervised(
-    image_stack: "torch.Tensor",
+    image_stack: torch.Tensor,
     model_depth: Optional[int] = None,
     patch_size: Optional[int] = None,
     stride: Optional[int] = None,

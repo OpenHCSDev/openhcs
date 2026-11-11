@@ -106,7 +106,7 @@ class PipelineSourceArtifactPlanInspectionRequest:
         pipeline_source: str,
         axis_filter: list[str] | None = None,
         global_config_id: str | None = None,
-    ) -> "PipelineSourceArtifactPlanInspectionRequest":
+    ) -> PipelineSourceArtifactPlanInspectionRequest:
         return cls(
             plate_path=plate_path,
             pipeline_source=pipeline_source,
@@ -258,7 +258,7 @@ class RuntimeServerInfo(ExecutionConnectionFields):
         *,
         connection: ExecutionConnectionSpec,
         pong: PongResponse,
-    ) -> "RuntimeServerInfo":
+    ) -> RuntimeServerInfo:
         resolved_connection = replace(
             connection,
             port=pong.port,
@@ -335,7 +335,7 @@ class RuntimeServerScanRequest(AgentCliRequest):
         host: str = "localhost",
         transport_mode: str | None = None,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.server_scan_timeout_ms,
-    ) -> "RuntimeServerScanRequest":
+    ) -> RuntimeServerScanRequest:
         parsed_ports = cls.parse_port_values((*ports, *(port_groups or ())))
         return cls.from_fields(
             ports=list(parsed_ports) or None,
@@ -352,7 +352,7 @@ class RuntimeServerScanRequest(AgentCliRequest):
         host: str = "localhost",
         transport_mode: TransportMode | None = None,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.server_scan_timeout_ms,
-    ) -> "RuntimeServerScanRequest":
+    ) -> RuntimeServerScanRequest:
         return cls(
             ports=tuple(ports) if ports is not None else None,
             host=host,
@@ -400,7 +400,7 @@ class RuntimeServerInfoRequest(
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.server_info_timeout_ms,
-    ) -> "RuntimeServerInfoRequest":
+    ) -> RuntimeServerInfoRequest:
         return cls(
             connection=ExecutionConnectionSpec(
                 host=host,
@@ -557,7 +557,7 @@ class RuntimeServerExecutionStatusRequest(
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ) -> "RuntimeServerExecutionStatusRequest":
+    ) -> RuntimeServerExecutionStatusRequest:
         return cls(
             connection=ExecutionConnectionSpec(
                 host=host,
@@ -615,7 +615,7 @@ class RuntimeDebugInspectionRequest(
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ) -> "RuntimeDebugInspectionRequest":
+    ) -> RuntimeDebugInspectionRequest:
         return cls(
             connection=ExecutionConnectionSpec(
                 host=host,
@@ -679,7 +679,7 @@ class RuntimeDebugCommandRequest(
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ) -> "RuntimeDebugCommandRequest":
+    ) -> RuntimeDebugCommandRequest:
         return cls(
             connection=ExecutionConnectionSpec(
                 host=host,
@@ -772,7 +772,7 @@ class RuntimeDebugArtifactExportRequest(
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ) -> "RuntimeDebugArtifactExportRequest":
+    ) -> RuntimeDebugArtifactExportRequest:
         return cls(
             connection=ExecutionConnectionSpec(
                 host=host,

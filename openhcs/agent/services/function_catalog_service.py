@@ -223,17 +223,17 @@ class CatalogFilterText:
     tokens: tuple[str, ...] = ()
 
     @classmethod
-    def from_request(cls, value: str | None) -> "CatalogFilterText":
+    def from_request(cls, value: str | None) -> CatalogFilterText:
         if value is None:
             return cls.all_pass()
         return cls.from_text(value)
 
     @classmethod
-    def all_pass(cls) -> "CatalogFilterText":
+    def all_pass(cls) -> CatalogFilterText:
         return cls()
 
     @classmethod
-    def from_text(cls, value: str) -> "CatalogFilterText":
+    def from_text(cls, value: str) -> CatalogFilterText:
         text = _normalized_search_text(value)
         tokens = []
         seen = set()
@@ -262,7 +262,7 @@ class CatalogFilterText:
         entry: FunctionCatalogEntry,
         metadata: FunctionMetadata,
         parameters: tuple[FunctionParameterSpec, ...] = (),
-    ) -> "CatalogTextMatch":
+    ) -> CatalogTextMatch:
         if not self.text:
             return CatalogTextMatch(AllPass, 0)
         name_text = _normalized_search_text(entry.name)
@@ -704,7 +704,7 @@ class FunctionCatalogServiceABC(ABC):
         """Resolve one selected callable without materializing another catalog."""
 
     @abstractmethod
-    def reference(self, function_id: str) -> "FunctionReference":
+    def reference(self, function_id: str) -> FunctionReference:
         """Return a compiler reference without importing the callable locally."""
 
 
@@ -1085,7 +1085,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
     def resolve(self, function_id: str) -> Callable:
         return self._metadata(function_id).func
 
-    def reference(self, function_id: str) -> "FunctionReference":
+    def reference(self, function_id: str) -> FunctionReference:
         """Return the exact compiler reference owned by one catalog declaration."""
 
         from openhcs.core.callable.function_reference import FunctionReferenceTransportAuthority

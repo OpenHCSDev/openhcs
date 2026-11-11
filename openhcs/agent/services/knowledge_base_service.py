@@ -69,7 +69,7 @@ class _Official30CaseModuleInventory:
     @lru_cache(maxsize=64)
     def from_source(
         cls, case_name: str, cppipe_path: Path, source_mtime_ns: int
-    ) -> "_Official30CaseModuleInventory":
+    ) -> _Official30CaseModuleInventory:
         """Parse the declared source; cache identity includes its file revision."""
         del source_mtime_ns
         from openhcs.interop.cellprofiler.parser import CPPipeParser
@@ -291,7 +291,7 @@ class KnowledgeBaseSearchQuery:
     )
 
     @classmethod
-    def from_text(cls, raw: str) -> "KnowledgeBaseSearchQuery":
+    def from_text(cls, raw: str) -> KnowledgeBaseSearchQuery:
         normalized = raw.strip().casefold()
         terms = cls._terms_from_normalized_text(normalized)
         return cls(

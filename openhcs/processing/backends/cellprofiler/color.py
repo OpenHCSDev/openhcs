@@ -255,8 +255,8 @@ class ColorToGrayModule(
     class Plan:
         input_image_name: str
         output_image_names: tuple[str, ...]
-        mode: "ColorToGrayModule.ConversionMethod"
-        image_type: "ColorToGrayModule.ImageType"
+        mode: ColorToGrayModule.ConversionMethod
+        image_type: ColorToGrayModule.ImageType
         channel_indices: tuple[int, ...]
         contributions: tuple[float, ...]
 
@@ -272,9 +272,9 @@ class ColorToGrayModule(
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
+        binder: SettingsBinder,
     ) -> BoundModuleSettings:
         """Bind behavior and artifact identities from the same module rows."""
 
@@ -369,8 +369,8 @@ class ColorToGrayModule(
         cls,
         input_name: str,
         *,
-        mode: "ColorToGrayModule.ConversionMethod",
-        image_type: "ColorToGrayModule.ImageType",
+        mode: ColorToGrayModule.ConversionMethod,
+        image_type: ColorToGrayModule.ImageType,
         channel_indices: tuple[int, ...],
     ) -> tuple[str, ...]:
         """Return declaration-owned ColorToGray output names for sparse source."""
@@ -447,8 +447,8 @@ class ColorToGrayModule(
 
     @classmethod
     def plan(
-        cls, module: "ModuleBlock", binder: "SettingsBinder"
-    ) -> "ColorToGrayModule.Plan":
+        cls, module: ModuleBlock, binder: SettingsBinder
+    ) -> ColorToGrayModule.Plan:
         mode = cls.conversion_method(module)
         image_type = cls.image_type(module)
         channel_indices = cls.channel_indices(module, mode, image_type, binder)
@@ -462,16 +462,16 @@ class ColorToGrayModule(
         )
 
     @classmethod
-    def input_name(cls, module: "ModuleBlock") -> str:
+    def input_name(cls, module: ModuleBlock) -> str:
         return required_setting_value(module, cls.input_image_setting)
 
     @classmethod
     def output_image_names(
         cls,
-        module: "ModuleBlock",
-        mode: "ColorToGrayModule.ConversionMethod | None" = None,
-        image_type: "ColorToGrayModule.ImageType | None" = None,
-        binder: "SettingsBinder | None" = None,
+        module: ModuleBlock,
+        mode: ColorToGrayModule.ConversionMethod | None = None,
+        image_type: ColorToGrayModule.ImageType | None = None,
+        binder: SettingsBinder | None = None,
     ) -> tuple[str, ...]:
         if binder is None:
             from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
@@ -529,15 +529,15 @@ class ColorToGrayModule(
 
     @classmethod
     def conversion_method(
-        cls, module: "ModuleBlock"
-    ) -> "ColorToGrayModule.ConversionMethod":
+        cls, module: ModuleBlock
+    ) -> ColorToGrayModule.ConversionMethod:
         return coerce_cellprofiler_enum(
             cls.ConversionMethod,
             required_setting_value(module, cls.conversion_method_setting),
         )
 
     @classmethod
-    def image_type(cls, module: "ModuleBlock") -> "ColorToGrayModule.ImageType":
+    def image_type(cls, module: ModuleBlock) -> ColorToGrayModule.ImageType:
         return coerce_cellprofiler_enum(
             cls.ImageType, required_setting_value(module, cls.image_type_setting)
         )
@@ -545,10 +545,10 @@ class ColorToGrayModule(
     @classmethod
     def channel_indices(
         cls,
-        module: "ModuleBlock",
-        mode: "ColorToGrayModule.ConversionMethod",
-        image_type: "ColorToGrayModule.ImageType",
-        binder: "SettingsBinder",
+        module: ModuleBlock,
+        mode: ColorToGrayModule.ConversionMethod,
+        image_type: ColorToGrayModule.ImageType,
+        binder: SettingsBinder,
     ) -> tuple[int, ...]:
         if image_type is cls.ImageType.CHANNELS:
             channel_numbers = setting_values(module, cls.channel_number_setting)
@@ -575,10 +575,10 @@ class ColorToGrayModule(
     @classmethod
     def contributions(
         cls,
-        module: "ModuleBlock",
-        mode: "ColorToGrayModule.ConversionMethod",
+        module: ModuleBlock,
+        mode: ColorToGrayModule.ConversionMethod,
         channel_indices: tuple[int, ...],
-        binder: "SettingsBinder",
+        binder: SettingsBinder,
     ) -> tuple[float, ...]:
         if mode is cls.ConversionMethod.SPLIT:
             return tuple((1.0 for _index in channel_indices))
@@ -603,8 +603,8 @@ class ColorToGrayModule(
 
     @classmethod
     def fixed_image_type(
-        cls, image_type: "ColorToGrayModule.ImageType"
-    ) -> "ColorToGrayModule.FixedImageType":
+        cls, image_type: ColorToGrayModule.ImageType
+    ) -> ColorToGrayModule.FixedImageType:
         if image_type is cls.ImageType.RGB:
             return cls.rgb_fixed_image_type
         if image_type is cls.ImageType.HSV:
@@ -613,7 +613,7 @@ class ColorToGrayModule(
 
     @classmethod
     def flag_enabled(
-        cls, module: "ModuleBlock", binder: "SettingsBinder", setting_name: str
+        cls, module: ModuleBlock, binder: SettingsBinder, setting_name: str
     ) -> bool:
         return bool(
             binder.parse_value(
@@ -777,10 +777,10 @@ class GrayToColorModule(
     @classmethod
     def artifact_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         binding: SettingToKeywordBinding,
         name: str,
         artifact_inputs: ArtifactSpecCollection,
@@ -889,10 +889,10 @@ class GrayToColorModule(
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         """Bind indexed and repeated channel rows through this declaration."""
 
         bound = cls._bind_declared_settings(module, binder=binder)
@@ -1014,8 +1014,8 @@ class GrayToColorModule(
     @classmethod
     def base_kwargs(
         cls,
-        module: "ModuleBlock",
-        binder: "SettingsBinder",
+        module: ModuleBlock,
+        binder: SettingsBinder,
         scheme: GrayToColorModule.Scheme,
     ) -> dict[str, Any]:
         return {
@@ -1031,7 +1031,7 @@ class GrayToColorModule(
         }
 
     @classmethod
-    def rescale_default(cls, module: "ModuleBlock") -> str:
+    def rescale_default(cls, module: ModuleBlock) -> str:
         revision = module.variable_revision_number
         if revision is not None and revision <= 3:
             return cls.revision_3_upgraded_rescale_default
@@ -1039,7 +1039,7 @@ class GrayToColorModule(
 
     @classmethod
     def stack_channels(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["GrayToColorModule.StackChannel", ...]:
         channels: list[GrayToColorModule.StackChannel] = []
         image_name: str | None = None
@@ -1122,7 +1122,7 @@ class UnmixColorsModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bound: BoundModuleSettings,
     ) -> BoundModuleSettings:
         rows = cls.output_rows(module)
@@ -1141,7 +1141,7 @@ class UnmixColorsModule(
 
     @classmethod
     def output_rows(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["UnmixColorsModule.OutputRow", ...]:
         rows = tuple(
             (
@@ -1156,8 +1156,8 @@ class UnmixColorsModule(
 
     @classmethod
     def output_row_from_block(
-        cls, module: "ModuleBlock", block: tuple["ModuleSetting", ...]
-    ) -> "UnmixColorsModule.OutputRow":
+        cls, module: ModuleBlock, block: tuple["ModuleSetting", ...]
+    ) -> UnmixColorsModule.OutputRow:
         image_name = cls.symbol_name(
             block_setting_value(block, cls.output_image_setting)
         )
@@ -1190,7 +1190,7 @@ class UnmixColorsModule(
 
     @classmethod
     def validate_output_rows(
-        cls, module: "ModuleBlock", rows: tuple["UnmixColorsModule.OutputRow", ...]
+        cls, module: ModuleBlock, rows: tuple["UnmixColorsModule.OutputRow", ...]
     ) -> None:
         if not rows:
             raise ValueError(
@@ -1203,7 +1203,7 @@ class UnmixColorsModule(
             )
 
     @classmethod
-    def expected_output_count(cls, module: "ModuleBlock") -> int | None:
+    def expected_output_count(cls, module: ModuleBlock) -> int | None:
         value = optional_setting_value(module, cls.stain_count_setting)
         if value is None:
             return None
@@ -1225,7 +1225,7 @@ class CellProfilerColorFormat(ABC, metaclass=AutoRegisterMeta):
     format_key: ClassVar[str | None] = None
 
     @classmethod
-    def for_value(cls, value: str | Sequence[float]) -> "CellProfilerColorFormat":
+    def for_value(cls, value: str | Sequence[float]) -> CellProfilerColorFormat:
         for format_type in cls.__registry__.values():
             parser = format_type()
             if parser.matches(value):
@@ -1406,7 +1406,7 @@ class GrayToColorSchemeRunner(ABC, metaclass=AutoRegisterMeta):
     scheme_literal: ClassVar[str | None] = None
 
     @classmethod
-    def for_scheme(cls, scheme: GrayToColorModule.Scheme) -> "GrayToColorSchemeRunner":
+    def for_scheme(cls, scheme: GrayToColorModule.Scheme) -> GrayToColorSchemeRunner:
         runner_type = cls.__registry__.get(scheme.value)
         if runner_type is None:
             raise ValueError(f"Unsupported GrayToColor scheme: {scheme.value!r}")
@@ -2351,14 +2351,14 @@ class InvertForPrintingModule(
     )
 
     @classmethod
-    def input_mode(cls, module: "ModuleBlock") -> InvertInputMode:
+    def input_mode(cls, module: ModuleBlock) -> InvertInputMode:
         return coerce_cellprofiler_enum(
             InvertInputMode,
             required_setting_value(module, cls.input_mode_setting),
         )
 
     @classmethod
-    def output_mode(cls, module: "ModuleBlock") -> OutputMode:
+    def output_mode(cls, module: ModuleBlock) -> OutputMode:
         return coerce_cellprofiler_enum(
             OutputMode,
             required_setting_value(module, cls.output_mode_setting),
@@ -2430,7 +2430,7 @@ class InvertForPrintingModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract,
         source_bindings,

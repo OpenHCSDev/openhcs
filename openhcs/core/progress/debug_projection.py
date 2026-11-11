@@ -27,13 +27,13 @@ class DebugProgressRecord:
     def from_progress_event(
         cls,
         event: ProgressEvent,
-    ) -> "DebugProgressRecord | None":
+    ) -> DebugProgressRecord | None:
         context = DebugProgressContext.from_context(event.context)
         if context is None:
             return None
         return cls(event=event, context=context)
 
-    def with_snapshot(self, snapshot: DebugSnapshot | None) -> "DebugProgressRecord":
+    def with_snapshot(self, snapshot: DebugSnapshot | None) -> DebugProgressRecord:
         return replace(self, snapshot=snapshot)
 
     @property
@@ -125,7 +125,7 @@ class DebugRuntimeProjection:
     def empty(
         cls,
         runtime_projection: ExecutionRuntimeProjection | None = None,
-    ) -> "DebugRuntimeProjection":
+    ) -> DebugRuntimeProjection:
         return cls(
             runtime_projection=runtime_projection or ExecutionRuntimeProjection()
         )
@@ -265,7 +265,7 @@ class RuntimeProjectionBundle:
     debug: DebugRuntimeProjection
 
     @classmethod
-    def empty(cls) -> "RuntimeProjectionBundle":
+    def empty(cls) -> RuntimeProjectionBundle:
         execution = ExecutionRuntimeProjection()
         return cls(
             execution=execution,

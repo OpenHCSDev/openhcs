@@ -51,7 +51,7 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
         filemanager: FileManager,
         pattern_format: str | None = None,
         source_bindings_config: SourceBindingsConfig | None = None,
-    ) -> "SourceBindingsSource":
+    ) -> SourceBindingsSource:
         if source_bindings_config is None:
             raise ValueError(
                 "SourceBindingsSource requires SourceBindingsConfig declarations."

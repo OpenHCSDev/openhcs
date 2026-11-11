@@ -201,7 +201,7 @@ class McpSourceSnapshot:
     mtime_ns: int | None
 
     @classmethod
-    def from_path(cls, source_path: Path) -> "McpSourceSnapshot":
+    def from_path(cls, source_path: Path) -> McpSourceSnapshot:
         try:
             stat_result = source_path.stat()
         except FileNotFoundError:
@@ -631,7 +631,7 @@ class McpCapabilityBinder:
     @staticmethod
     def viewer_control(
         arguments: Mapping[str, JsonValue],
-    ) -> "McpViewerConnectionToolArgs":
+    ) -> McpViewerConnectionToolArgs:
         return McpViewerConnectionToolFields.from_tool_arguments(
             arguments
         ).to_control_args(McpViewerTimeoutPolicy)
@@ -983,7 +983,7 @@ class McpViewerConnectionToolFields:
     def to_control_args(
         self,
         timeout_policy: type[McpControlTimeoutPolicy] = McpViewerTimeoutPolicy,
-    ) -> "McpViewerConnectionToolArgs":
+    ) -> McpViewerConnectionToolArgs:
         return McpViewerConnectionToolArgs.from_fields(
             port=self.port,
             host=self.host,

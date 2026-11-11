@@ -19,6 +19,8 @@ Architecture:
 - Integrated caching system using existing cache_utils.py patterns
 """
 
+from __future__ import annotations
+
 import hashlib
 import importlib
 import inspect
@@ -121,7 +123,7 @@ class FunctionMetadata:
     name: str
     func: Callable
     contract: type[ProcessingContract]
-    registry: "LibraryRegistryBase"  # Reference to the registry that registered this function - REQUIRED
+    registry: LibraryRegistryBase  # Reference to the registry that registered this function - REQUIRED
     module: str = ""
     doc: str = ""
     tags: List[str] = field(default_factory=list)
@@ -142,10 +144,10 @@ class FunctionMetadata:
         cls,
         name: str,
         cached_data: dict,
-        func: "Callable",
-        contract: "type[ProcessingContract]",
-        registry: "LibraryRegistryBase",
-    ) -> "FunctionMetadata":
+        func: Callable,
+        contract: type[ProcessingContract],
+        registry: LibraryRegistryBase,
+    ) -> FunctionMetadata:
         """Reconstruct from a cache entry, deriving fields from the dataclass."""
         return cls(
             name=name,

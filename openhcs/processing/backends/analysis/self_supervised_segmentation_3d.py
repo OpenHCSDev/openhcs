@@ -31,7 +31,7 @@ class SegmentationVolumeProjection:
     volume: torch.Tensor
 
     @classmethod
-    def from_volume(cls, image_volume: torch.Tensor) -> "SegmentationVolumeProjection":
+    def from_volume(cls, image_volume: torch.Tensor) -> SegmentationVolumeProjection:
         volume = image_volume.float()
         if volume.ndim == 3:
             depth, height, width = volume.shape

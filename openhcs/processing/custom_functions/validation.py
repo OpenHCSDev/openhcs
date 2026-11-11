@@ -9,6 +9,8 @@ Security note: This module provides basic validation but does not sandbox
 exec(). Custom functions execute with full Python privileges.
 """
 
+from __future__ import annotations
+
 import ast
 import inspect
 import traceback
@@ -45,13 +47,13 @@ class ValidationError(Exception):
         return " | ".join(parts)
 
     @classmethod
-    def at_line(cls, message: str, code: str, line_number: int) -> "ValidationError":
+    def at_line(cls, message: str, code: str, line_number: int) -> ValidationError:
         """The error for one line of ``code`` (0 for none), quoting that line."""
         lines = code.splitlines()
         on_a_line = 0 < line_number <= len(lines)
         return cls(message, line_number, lines[line_number - 1].strip() if on_a_line else "")
 
-    def __copy__(self) -> "ValidationError":
+    def __copy__(self) -> ValidationError:
         """Copy declared values without reformatting an already formatted arg."""
         error = type(self)(self.message, self.line_number, self.code_snippet)
         error.__dict__.update(self.__dict__)

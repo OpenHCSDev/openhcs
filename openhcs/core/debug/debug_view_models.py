@@ -38,7 +38,7 @@ class DebugViewSectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return " ".join(cls.title_words)
 
     @classmethod
-    def section_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewSection | None":
+    def section_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewSection | None:
         table = cls.table_for_snapshot(snapshot)
         text = cls.text_for_snapshot(snapshot)
         if table is None and text is None:
@@ -52,15 +52,15 @@ class DebugViewSectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     def section(
         cls,
         *,
-        table: "DebugViewTable | None" = None,
+        table: DebugViewTable | None = None,
         text: str | None = None,
-    ) -> "DebugViewSection":
+    ) -> DebugViewSection:
         return DebugViewSection(
             kind=cls.name, title=cls.default_title(), table=table, text=text
         )
 
     @classmethod
-    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> "DebugViewTable | None":
+    def table_for_snapshot(cls, snapshot: DebugSnapshot) -> DebugViewTable | None:
         del snapshot
         return None
 
@@ -115,7 +115,7 @@ class DebugViewTableProjectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     supports_artifact_actions: ClassVar[bool] = False
 
     @classmethod
-    def table_for(cls, values: tuple[object, ...]) -> "DebugViewTable":
+    def table_for(cls, values: tuple[object, ...]) -> DebugViewTable:
         record_type = cls.value_type if cls.record_type is None else cls.record_type
         columns = tuple(declared.name for declared in fields(record_type))
         return DebugViewTable(

@@ -131,7 +131,7 @@ def cellprofiler_runtime_adapter_factory(
 def cellprofiler_runtime_callable_factory(
     registered_func: Callable[..., RuntimeFunctionOutput],
     callable_contract: CallableContract,
-) -> "CellProfilerModuleExecutor":
+) -> CellProfilerModuleExecutor:
     """Build the runtime adapter callable from one compiled contract."""
 
     del registered_func
@@ -758,7 +758,7 @@ class CellProfilerModuleExecutor:
         image: RuntimeCallableArgument,
         adapter: CellProfilerRuntimeAdapter,
         kwargs: RuntimeCallableKwargs,
-        image_request: "CellProfilerImageRequest | None",
+        image_request: CellProfilerImageRequest | None,
         image_inputs: tuple[ArtifactSpec, ...],
         module_type: type[CellProfilerModule],
         active_input_specs: tuple[ArtifactSpec, ...],
@@ -1255,7 +1255,7 @@ class CellProfilerModuleExecutor:
         *,
         module_type: type[CellProfilerModule],
         active_input_specs: tuple[ArtifactSpec, ...],
-    ) -> "CellProfilerImageRequest":
+    ) -> CellProfilerImageRequest:
         binding_request = adapter.request
         input_edges = tuple(binding_request.artifact_inputs.values())
         input_binding = RuntimeInputBindingRequest(
@@ -1439,12 +1439,12 @@ class CellProfilerModuleExecutor:
     def _invocation_request(
         self,
         *,
-        image_request: "CellProfilerImageRequest",
+        image_request: CellProfilerImageRequest,
         adapter: CellProfilerRuntimeAdapter,
         current_image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         module_type: type[CellProfilerModule],
-    ) -> "CellProfilerImageRequest":
+    ) -> CellProfilerImageRequest:
         profile_enabled = CellProfilerRuntimeProfileLogger.enabled()
         if profile_enabled:
             phase_started_at = time.perf_counter()

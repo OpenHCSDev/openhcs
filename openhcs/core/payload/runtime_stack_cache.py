@@ -18,7 +18,7 @@ class RuntimeImageStackCacheKey:
         paths: tuple[str, ...],
         *,
         memory_type: str,
-    ) -> "RuntimeImageStackCacheKey":
+    ) -> RuntimeImageStackCacheKey:
         if not paths:
             raise ValueError("Runtime image stack cache paths cannot be empty.")
         if not memory_type:

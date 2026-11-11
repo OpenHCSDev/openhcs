@@ -15,7 +15,7 @@ class VirtualWorkspacePathLookup:
         cls,
         virtual_path: str,
         full_virtual_path: str,
-    ) -> "VirtualWorkspacePathLookup":
+    ) -> VirtualWorkspacePathLookup:
         return cls(str(virtual_path), str(full_virtual_path))
 
     def candidates(self) -> tuple[str, str]:

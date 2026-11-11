@@ -298,10 +298,10 @@ class MeasureGranularityModule(
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         bound = cls._bind_declared_settings(module, binder=binder)
         for binding in cls.scalar_setting_bindings:
             values = setting_values(module, binding.setting_name)
@@ -445,11 +445,11 @@ class GranularitySamplingGrid:
     def array_shape(self) -> tuple[int, int]:
         return tuple(max(0, int(np.ceil(value))) for value in self.logical_shape)
 
-    def subsampled(self, factor: float) -> "GranularitySamplingGrid":
+    def subsampled(self, factor: float) -> GranularitySamplingGrid:
         return type(self)(tuple(value * float(factor) for value in self.logical_shape))
 
     def coordinate_scales_from(
-        self, source: "GranularitySamplingGrid"
+        self, source: GranularitySamplingGrid
     ) -> tuple[float, float]:
         return tuple(
             (source_size - 1.0) / (target_size - 1.0) if target_size > 1.0 else 0.0
@@ -486,7 +486,7 @@ class GranularitySamplingGrid:
     def sample_positions(
         self,
         image: np.ndarray,
-        source: "GranularitySamplingGrid",
+        source: GranularitySamplingGrid,
         rows: np.ndarray,
         columns: np.ndarray,
     ) -> np.ndarray:
@@ -501,7 +501,7 @@ class GranularitySamplingGrid:
         return ndi.map_coordinates(image, coordinates, order=1)
 
     def sample_grid(
-        self, image: np.ndarray, source: "GranularitySamplingGrid"
+        self, image: np.ndarray, source: GranularitySamplingGrid
     ) -> np.ndarray:
         """Sample another logical grid with CP endpoint coordinate scales."""
         return self.sample_pixels(
@@ -530,7 +530,7 @@ class GranularityBatchSettings:
     @classmethod
     def from_request(
         cls, request: RuntimeBatchInvocationRequest
-    ) -> "GranularityBatchSettings":
+    ) -> GranularityBatchSettings:
         return cls(**{
             f.name: f.type(request.kwargs[f.name])
             for f in dataclasses.fields(cls)
@@ -553,7 +553,7 @@ class GranularityBatchInvocation:
         cls,
         index: int,
         request: RuntimeBatchInvocationRequest,
-    ) -> "GranularityBatchInvocation | None":
+    ) -> GranularityBatchInvocation | None:
         if "labels" not in request.kwargs:
             return None
         image = np.asarray(request.image.data)
@@ -1396,7 +1396,7 @@ class GranularityLabelPixels:
         cls,
         labels: np.ndarray,
         object_ids: np.ndarray,
-    ) -> "GranularityLabelPixels":
+    ) -> GranularityLabelPixels:
         label_array = np.asarray(labels, dtype=np.int32)
         object_ids = np.asarray(object_ids, dtype=np.int32)
         grid = GranularitySamplingGrid(tuple(label_array.shape))

@@ -94,7 +94,7 @@ class SpatialGraphNode:
         coordinates: Sequence[float],
         radius: float = 1.0,
         features: Mapping[str, SpatialGraphFeatureValue],
-    ) -> "SpatialGraphNode":
+    ) -> SpatialGraphNode:
         """Build a node while preserving declared feature order."""
 
         return cls(
@@ -172,7 +172,7 @@ class SpatialGraphEdge:
         target: SpatialGraphNode,
         coordinates: Sequence[Sequence[float]] | np.ndarray,
         features: Mapping[str, SpatialGraphFeatureValue],
-    ) -> "SpatialGraphEdge":
+    ) -> SpatialGraphEdge:
         """Build an edge while preserving declared feature order."""
 
         return cls(

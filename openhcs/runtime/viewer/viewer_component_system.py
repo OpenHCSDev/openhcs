@@ -134,7 +134,7 @@ class ViewerDisplayConfigInput(ABC, metaclass=AutoRegisterMeta):
     DISPLAY_CONFIG_INPUT_KIND: ClassVar[str | None] = None
 
     @abstractmethod
-    def layout(self) -> "ViewerComponentLayout":
+    def layout(self) -> ViewerComponentLayout:
         """Return a normalized component layout."""
 
 
@@ -145,7 +145,7 @@ class ViewerMappingDisplayConfigInput(ViewerDisplayConfigInput):
     DISPLAY_CONFIG_INPUT_KIND = "mapping"
     mapping_display_config: Mapping[str, DisplayConfigMappingValue]
 
-    def layout(self) -> "ViewerComponentLayout":
+    def layout(self) -> ViewerComponentLayout:
         return ViewerComponentLayoutMappingParser.layout(self.mapping_display_config)
 
 
@@ -156,7 +156,7 @@ class ViewerObjectDisplayConfigInput(ViewerDisplayConfigInput):
     DISPLAY_CONFIG_INPUT_KIND = "object"
     object_display_config: ViewerDisplayConfigABC
 
-    def layout(self) -> "ViewerComponentLayout":
+    def layout(self) -> ViewerComponentLayout:
         return ViewerComponentLayout.from_parts(
             component_modes=self.object_display_config.component_modes(),
             component_order=self.object_display_config.COMPONENT_ORDER,
@@ -191,7 +191,7 @@ class ViewerComponentLayoutMappingParser:
     def layout(
         cls,
         mapping_display_config: Mapping[str, DisplayConfigMappingValue],
-    ) -> "ViewerComponentLayout":
+    ) -> ViewerComponentLayout:
         component_modes = cls._required_value(
             mapping_display_config,
             ViewerDisplayConfigWireField.COMPONENT_MODES,
@@ -245,7 +245,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
         component_modes: Mapping[str, DisplayModeValue],
         component_order: Sequence[DisplayComponentName],
         declared_axes: DeclaredAxes,
-    ) -> "ViewerComponentLayout":
+    ) -> ViewerComponentLayout:
         order = tuple(str(component) for component in component_order)
         modes = {
             str(component): cls._mode_value(mode)
@@ -260,7 +260,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
         return cls(component_modes=modes, component_order=order, declared_axes=declared_axes)
 
     @classmethod
-    def empty(cls) -> "ViewerComponentLayout":
+    def empty(cls) -> ViewerComponentLayout:
         return cls(component_modes={}, component_order=())
 
     @staticmethod
@@ -281,28 +281,28 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
     def names_with_role(self, role) -> tuple[str, ...]:
         return self.declared_axes.names_with_role(role)
 
-    def with_modes(self, component_modes: Mapping[str, DisplayModeValue]) -> "ViewerComponentLayout":
+    def with_modes(self, component_modes: Mapping[str, DisplayModeValue]) -> ViewerComponentLayout:
         return self.from_parts(
             component_modes=component_modes,
             component_order=self.component_order,
             declared_axes=self.declared_axes,
         )
 
-    def with_order(self, component_order: Sequence[str]) -> "ViewerComponentLayout":
+    def with_order(self, component_order: Sequence[str]) -> ViewerComponentLayout:
         return self.from_parts(
             component_modes=self.component_modes,
             component_order=component_order,
             declared_axes=self.declared_axes,
         )
 
-    def declared_layout(self) -> "ViewerComponentLayout":
+    def declared_layout(self) -> ViewerComponentLayout:
         """This layout addressing every declared axis it places."""
 
         return self.with_order(
             tuple(name for name in self.declared_axes.names() if name in self.component_modes)
         )
 
-    def normalizer(self) -> "ViewerComponentMetadataNormalizer":
+    def normalizer(self) -> ViewerComponentMetadataNormalizer:
         return ViewerComponentMetadataNormalizer(self.declared_axes)
 
     def group_window_sources(self, sources):
@@ -336,7 +336,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
     def with_shared_stack_axes(
         self,
         layouts: Sequence[ViewerComponentLayout],
-    ) -> "ViewerComponentLayout":
+    ) -> ViewerComponentLayout:
         """Derive shared native slots without changing any route's grouping.
 
         A component stacked by one participating declaration needs the same
@@ -387,14 +387,14 @@ class ViewerComponentValueDomainEntry:
         cls,
         component: str,
         values: Sequence[ComponentValue],
-    ) -> "ViewerComponentValueDomainEntry":
+    ) -> ViewerComponentValueDomainEntry:
         unique_values = sorted(set(values), key=ViewerComponentValueOrdering.key)
         return cls(component=component, values=tuple(unique_values))
 
     @classmethod
     def from_declared_values(
         cls, component: str, values: Sequence[ComponentValue]
-    ) -> "ViewerComponentValueDomainEntry":
+    ) -> ViewerComponentValueDomainEntry:
         """Preserve pixel-plane order, refusing ambiguous coordinate assignments."""
         ordered_values = tuple(values)
         if len(set(ordered_values)) != len(ordered_values):
@@ -411,7 +411,7 @@ class ViewerComponentValueDomainPayload:
     entries: tuple[ViewerComponentValueDomainEntry, ...]
 
     @classmethod
-    def empty(cls) -> "ViewerComponentValueDomainPayload":
+    def empty(cls) -> ViewerComponentValueDomainPayload:
         return cls(entries=())
 
     @classmethod
@@ -420,7 +420,7 @@ class ViewerComponentValueDomainPayload:
         *,
         component_layout: ViewerComponentLayout,
         metadata_items: Sequence[Mapping[str, ComponentValue] | None],
-    ) -> "ViewerComponentValueDomainPayload":
+    ) -> ViewerComponentValueDomainPayload:
         normalizer = component_layout.normalizer()
         values_by_component: dict[str, list[ComponentValue]] = {
             component: [] for component in component_layout.component_order
@@ -449,7 +449,7 @@ class ViewerComponentValueDomainPayload:
         *,
         declared_axes: DeclaredAxes,
         context: str,
-    ) -> "ViewerComponentValueDomainPayload":
+    ) -> ViewerComponentValueDomainPayload:
         """Decode observed values, sorted and without duplicates."""
         return cls(
             tuple(
@@ -469,7 +469,7 @@ class ViewerComponentValueDomainPayload:
         *,
         declared_axes: DeclaredAxes,
         context: str,
-    ) -> "ViewerComponentValueDomainPayload":
+    ) -> ViewerComponentValueDomainPayload:
         """Decode an explicitly ordered pixel-plane coordinate declaration."""
         return cls(
             tuple(
@@ -689,7 +689,7 @@ class ViewerBatchPayloadFields:
         display_config: ViewerDisplayConfigInput,
         *,
         context: str,
-    ) -> "ViewerComponentAxisSemantics":
+    ) -> ViewerComponentAxisSemantics:
         layout = display_config.layout()
         return ViewerComponentAxisSemantics(
             entries=ViewerComponentValueDomainPayload.from_wire_mapping(
@@ -713,7 +713,7 @@ class ViewerComponentValueNameStore:
         value_names: Mapping[ComponentWireValue, ComponentWireValue],
         *,
         context: str,
-    ) -> "ViewerComponentValueNameStore":
+    ) -> ViewerComponentValueNameStore:
         store = cls()
         store.merge_mapping(value_names, context=context)
         return store
@@ -730,7 +730,7 @@ class ViewerComponentValueNameStore:
                 context=context,
             )
 
-    def merge_store(self, value_names: "ViewerComponentValueNameStore") -> None:
+    def merge_store(self, value_names: ViewerComponentValueNameStore) -> None:
         self.names_by_value.update(value_names.names_by_value)
 
     def normalized_values(
@@ -775,7 +775,7 @@ class ViewerComponentNameMetadataStore:
                 context=context,
             )
 
-    def merge_store(self, incoming: "ViewerComponentNameMetadataStore") -> None:
+    def merge_store(self, incoming: ViewerComponentNameMetadataStore) -> None:
         for component, value_names in incoming.values.items():
             if component not in self.values:
                 self.values[component] = ViewerComponentValueNameStore()
@@ -819,7 +819,7 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
     declared_axes: DeclaredAxes = field(default_factory=DeclaredAxes)
 
     @classmethod
-    def empty(cls) -> "ViewerComponentNameMetadata":
+    def empty(cls) -> ViewerComponentNameMetadata:
         return cls()
 
     @classmethod
@@ -829,7 +829,7 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
         *,
         declared_axes: DeclaredAxes,
         context: str,
-    ) -> "ViewerComponentNameMetadata":
+    ) -> ViewerComponentNameMetadata:
         metadata = cls(declared_axes=declared_axes)
         metadata.store.merge_mapping(
             payload,
@@ -837,7 +837,7 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
         )
         return metadata
 
-    def merge(self, incoming: "ViewerComponentNameMetadata") -> None:
+    def merge(self, incoming: ViewerComponentNameMetadata) -> None:
         self.store.merge_store(incoming.store)
         self.declare(incoming.declared_axes)
 
@@ -924,14 +924,14 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
 
     layout: ViewerComponentLayout
 
-    def axis_projection_semantics(self) -> "ViewerComponentAxisSemantics":
+    def axis_projection_semantics(self) -> ViewerComponentAxisSemantics:
         """Derive the route-addressable axes from its declared value domain."""
         return self.for_display_layout(self.layout)
 
     def for_display_layout(
         self,
         layout: ViewerComponentLayout,
-    ) -> "ViewerComponentAxisSemantics":
+    ) -> ViewerComponentAxisSemantics:
         """Project this route's declared domain into shared display slots."""
         declared_components = self.component_values()
         component_order = tuple(
@@ -994,7 +994,7 @@ class ViewerComponentValueDomain:
     def for_axes(
         cls,
         axis_components: Sequence[str],
-    ) -> "ViewerComponentValueDomain":
+    ) -> ViewerComponentValueDomain:
         axes = tuple(axis_components)
         return cls(
             axis_components=axes,
@@ -1339,7 +1339,7 @@ class ViewerLayerAxisProjectionStep:
     """Projection decision for one component axis."""
 
     component: str
-    request: "ViewerLayerAxisProjectionRequest"
+    request: ViewerLayerAxisProjectionRequest
 
     def projected_axis(self) -> ViewerLayerAxisProjectedComponent | None:
         route_values = self.route_domain_values()
@@ -1432,7 +1432,7 @@ class ViewerLayerAxisProjectionRequest:
         route_component_values: ComponentValues,
         viewer_component_values: ComponentValues,
         declared_component_values: ComponentValues,
-    ) -> "ViewerLayerAxisProjectionRequest":
+    ) -> ViewerLayerAxisProjectionRequest:
         return cls(
             requested_components=tuple(projected_axis_components),
             route_component_coordinates=tuple(

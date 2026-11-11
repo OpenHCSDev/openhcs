@@ -1,5 +1,7 @@
 """IdentifyPrimaryObjects execution policy for CellProfiler-compatible backends."""
 
+from __future__ import annotations
+
 import logging
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
@@ -779,7 +781,7 @@ class IdentifyPrimaryObjectsModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: BoundModuleSettings
+        cls, module: ModuleBlock, bound: BoundModuleSettings
     ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)

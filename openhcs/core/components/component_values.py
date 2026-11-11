@@ -52,7 +52,7 @@ class AxisValues(
         component_values: Iterable[tuple[type[Axis], ComponentValueT]],
         *,
         missing_value: ComponentValueT,
-    ) -> "AxisValues[ComponentValueT]":
+    ) -> AxisValues[ComponentValueT]:
         """Complete a partial binding with one explicit absent value."""
 
         supplied_values = tuple(component_values)
@@ -72,7 +72,7 @@ class AxisValues(
         component_values: Mapping[str, ComponentValueT],
         *,
         missing_value: ComponentValueT,
-    ) -> "AxisValues[ComponentValueT]":
+    ) -> AxisValues[ComponentValueT]:
         """Read each declared axis's boundary name from ``component_values``."""
 
         family = AxisFamily.active()
@@ -111,7 +111,7 @@ class AxisValues(
         self,
         component: type[Axis],
         value: ComponentValueT,
-    ) -> "AxisValues[ComponentValueT]":
+    ) -> AxisValues[ComponentValueT]:
         """Return a value set with one axis replaced."""
 
         self.value_for(component)

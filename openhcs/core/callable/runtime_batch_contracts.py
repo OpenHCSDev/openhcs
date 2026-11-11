@@ -93,8 +93,8 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
         )
 
     def batch_executor_request(
-        self, *, processing_contract: "type[ProcessingContract]",
-    ) -> "RuntimeBatchInvocationRequest | None":
+        self, *, processing_contract: type[ProcessingContract],
+    ) -> RuntimeBatchInvocationRequest | None:
         """Return a request projected into the batch executor's image domain.
 
         A batch executor may inspect image pixels before it delegates the actual
@@ -317,7 +317,7 @@ class Pure2DSliceBatchExecutor(RuntimeBatchExecutor):
         return declared if callable(declared) else cls.default_executor()
 
     @classmethod
-    def default_executor(cls) -> "Pure2DSliceBatchExecutor":
+    def default_executor(cls) -> Pure2DSliceBatchExecutor:
         """Return the single-thread default pure-2D batch executor."""
         return SerialPure2DSliceBatchExecutor()
 

@@ -60,9 +60,9 @@ class ViewerFamily(ABC, metaclass=AutoRegisterMeta):
     def create_visualizer(
         cls,
         *,
-        filemanager: "FileManager",
-        runtime_config: "StreamingViewerRuntimeConfig",
-    ) -> "ExecutionVisualizerABC":
+        filemanager: FileManager,
+        runtime_config: StreamingViewerRuntimeConfig,
+    ) -> ExecutionVisualizerABC:
         return cls.visualizer_type()(
             filemanager=filemanager,
             runtime_config=runtime_config,
@@ -94,7 +94,7 @@ class ViewerFamily(ABC, metaclass=AutoRegisterMeta):
         raise ValueError(f"Unknown viewer streaming config key: {config_key!r}")
 
     @classmethod
-    def viewer_type(cls) -> "ViewerType":
+    def viewer_type(cls) -> ViewerType:
         """This viewer's boundary enum member."""
 
         return ViewerType(cls.wire_value)

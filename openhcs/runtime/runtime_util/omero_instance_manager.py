@@ -1,5 +1,7 @@
 """Connect to OMERO or manage the packaged local deployment."""
 
+from __future__ import annotations
+
 import logging
 import subprocess
 import time
@@ -60,7 +62,7 @@ class _OMEROConnectionSettings:
     password: str
 
     @classmethod
-    def from_compose(cls, compose_path: Path) -> "_OMEROConnectionSettings":
+    def from_compose(cls, compose_path: Path) -> _OMEROConnectionSettings:
         """Load the connection extension from a Compose declaration."""
 
         document = yaml.safe_load(compose_path.read_text(encoding="utf-8"))

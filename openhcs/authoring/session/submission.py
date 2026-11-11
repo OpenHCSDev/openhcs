@@ -42,7 +42,7 @@ class SubmittedExecution:
 
     scope_id: str
     request: ZMQExecutionRequestBuilder
-    endpoint: "PongResponse | None"
+    endpoint: PongResponse | None
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 class ExecutionSubmission:
     """Submits executions, records their ids and follows their status."""
 
-    def __init__(self, session: "Session") -> None:
+    def __init__(self, session: Session) -> None:
         self._session = session
         self._poller = ExecutionStatusPoller()
 

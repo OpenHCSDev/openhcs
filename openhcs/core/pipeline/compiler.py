@@ -88,7 +88,7 @@ from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 logger = logging.getLogger(__name__)
 
 
-def _step_scope_token(step: "AbstractStep", step_index: int) -> str:
+def _step_scope_token(step: AbstractStep, step_index: int) -> str:
     """Return the existing step scope token when available."""
     token = step._scope_token
     if isinstance(token, str) and token:
@@ -98,7 +98,7 @@ def _step_scope_token(step: "AbstractStep", step_index: int) -> str:
 
 def _compiler_step_scope_id(
     compilation_scope: str,
-    step: "AbstractStep",
+    step: AbstractStep,
     step_index: int,
 ) -> str:
     """Build a compiler scope id that preserves stable step tokens."""
@@ -131,8 +131,8 @@ FUNCTION_MEMORY_PLAN_REQUIREMENTS = (
 class AxisCompilationRequest:
     """Authoritative context record for axis-level compilation fanout."""
 
-    orchestrator: "PipelineOrchestrator"
-    global_config: "GlobalPipelineConfig"
+    orchestrator: PipelineOrchestrator
+    global_config: GlobalPipelineConfig
     pipeline: ResolvedPipelineDefinition
     path_resolver: CompilationPathResolver
     global_step_axis_filters: StepAxisFilterMap
@@ -174,7 +174,7 @@ class PipelineCompiler:
         context: CompilingContext,
         pipeline: ResolvedPipelineDefinition,
         orchestrator,
-        global_config: "GlobalPipelineConfig",
+        global_config: GlobalPipelineConfig,
         source_workspace_projection: VirtualWorkspaceSourceProjection,
         metadata_writer: bool = False,
         dataset_root: Optional[Path] = None,

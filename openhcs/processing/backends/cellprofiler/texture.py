@@ -188,10 +188,10 @@ class MeasureTextureModule(
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         bound = cls._bind_declared_settings(module, binder=binder)
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)
@@ -443,13 +443,13 @@ class HaralickFeatureVector:
     @classmethod
     def from_matrix(
         cls, feature_matrix: np.ndarray, direction: int
-    ) -> "HaralickFeatureVector":
+    ) -> HaralickFeatureVector:
         if direction >= feature_matrix.shape[0]:
             return cls.zeros()
         return cls(_clean_feature_vector(feature_matrix[direction, :]))
 
     @classmethod
-    def zeros(cls) -> "HaralickFeatureVector":
+    def zeros(cls) -> HaralickFeatureVector:
         return cls(np.zeros((len(F_HARALICK),), dtype=float))
 
 

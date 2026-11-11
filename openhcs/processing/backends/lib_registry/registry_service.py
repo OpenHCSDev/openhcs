@@ -5,6 +5,8 @@ Provides unified access to all registry implementations with automatic discovery
 Follows OpenHCS generic solution principle - automatically adapts to new registries.
 """
 
+from __future__ import annotations
+
 import gc
 import inspect
 import logging
@@ -425,7 +427,7 @@ class RegistryService:
     @classmethod
     def resolved_reference_for_callable(
         cls, func: Callable
-    ) -> "RegistryFunctionReference | None":
+    ) -> RegistryFunctionReference | None:
         """Recover the exact owner of a locally reconstructed registry wrapper."""
 
         with cls._registry_inventory_lock:
@@ -441,7 +443,7 @@ class RegistryService:
     @classmethod
     def resolve_function_reference(
         cls,
-        reference: "RegistryFunctionReference",
+        reference: RegistryFunctionReference,
     ) -> Callable:
         """Resolve one transported callable without preparing the global catalogue."""
 
@@ -531,7 +533,7 @@ class RegistryService:
 
     @staticmethod
     def _validate_reference_metadata(
-        reference: "RegistryFunctionReference",
+        reference: RegistryFunctionReference,
         metadata: FunctionMetadata,
     ) -> None:
         """Reject transported identity fields that contradict catalog authority."""

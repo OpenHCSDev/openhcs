@@ -88,7 +88,7 @@ class SparseIJVLabelRows(ColumnarRows):
 
     def value_for_slice(
         self, context: RuntimePlaneAxisValueProjection
-    ) -> "SparseIJVLabelRows":
+    ) -> SparseIJVLabelRows:
         if context.axis.one_plane_per_runtime_slice:
             return self.slice(context.require_plane_index())
         return self
@@ -116,14 +116,14 @@ class SparseIJVLabelRows(ColumnarRows):
         return 3 if self.has_slice_index else 2
 
     @classmethod
-    def from_label_slice(cls, labels: object) -> "SparseIJVLabelRows":
+    def from_label_slice(cls, labels: object) -> SparseIJVLabelRows:
         """Return sparse-IJV rows for one object-label slice payload."""
         if isinstance(labels, cls):
             return labels
         return cls(labels)
 
     @classmethod
-    def from_dense_labels(cls, labels: Any) -> "SparseIJVLabelRows":
+    def from_dense_labels(cls, labels: Any) -> SparseIJVLabelRows:
         label_array = np.asarray(labels)
         if label_array.ndim != 2:
             raise ValueError(
@@ -140,7 +140,7 @@ class SparseIJVLabelRows(ColumnarRows):
         )
 
     @classmethod
-    def from_dense_stack(cls, labels: Any) -> "SparseIJVLabelRows":
+    def from_dense_stack(cls, labels: Any) -> SparseIJVLabelRows:
         """Build sparse rows from a 2-D label image or runtime-slice stack."""
         label_array = np.asarray(labels)
         if label_array.ndim == 2:
@@ -159,7 +159,7 @@ class SparseIJVLabelRows(ColumnarRows):
     @classmethod
     def from_slices(
         cls, values: Sequence["SparseIJVLabelRows"]
-    ) -> "SparseIJVLabelRows":
+    ) -> SparseIJVLabelRows:
         arrays = []
         for slice_index, value in enumerate(values):
             array = value.as_yx_label_array()
@@ -195,7 +195,7 @@ class SparseIJVLabelRows(ColumnarRows):
             int(index) for index in np.unique(self.as_array()[:, self.slice_column])
         )
 
-    def slice(self, slice_index: int) -> "SparseIJVLabelRows":
+    def slice(self, slice_index: int) -> SparseIJVLabelRows:
         if not self.has_slice_index:
             if slice_index != 0:
                 return type(self)(np.zeros((0, 3), dtype=np.int32))

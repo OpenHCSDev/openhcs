@@ -31,11 +31,11 @@ def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
 
 
 def _validate_mst_inputs(
-    connection_from: "cp.ndarray",  # type: ignore
-    connection_to: "cp.ndarray",  # type: ignore
-    connection_dx: "cp.ndarray",  # type: ignore
-    connection_dy: "cp.ndarray",  # type: ignore
-    connection_quality: "cp.ndarray",  # type: ignore
+    connection_from: cp.ndarray,  # type: ignore
+    connection_to: cp.ndarray,  # type: ignore
+    connection_dx: cp.ndarray,  # type: ignore
+    connection_dy: cp.ndarray,  # type: ignore
+    connection_quality: cp.ndarray,  # type: ignore
     num_nodes: int,
 ) -> None:
     """Validate MST input arrays."""
@@ -72,11 +72,11 @@ def _validate_mst_inputs(
 
 
 def build_mst_gpu_boruvka(
-    connection_from: "cp.ndarray",  # type: ignore
-    connection_to: "cp.ndarray",  # type: ignore
-    connection_dx: "cp.ndarray",  # type: ignore
-    connection_dy: "cp.ndarray",  # type: ignore
-    connection_quality: "cp.ndarray",  # type: ignore
+    connection_from: cp.ndarray,  # type: ignore
+    connection_to: cp.ndarray,  # type: ignore
+    connection_dx: cp.ndarray,  # type: ignore
+    connection_dy: cp.ndarray,  # type: ignore
+    connection_quality: cp.ndarray,  # type: ignore
     num_nodes: int,
 ) -> dict:
     """

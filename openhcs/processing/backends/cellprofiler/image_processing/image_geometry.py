@@ -127,9 +127,9 @@ class MaskImageModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Return the image or object mask selected by this module."""
 
@@ -146,7 +146,7 @@ class MaskImageModule(
         return tuple(binding for binding in bindings if binding is not inactive)
 
     @classmethod
-    def _mask_source(cls, module: "ModuleBlock") -> MaskSource:
+    def _mask_source(cls, module: ModuleBlock) -> MaskSource:
         values = setting_values(module, cls.mask_source_setting)
         if len(values) > 1:
             raise ValueError(
@@ -338,8 +338,8 @@ class ResizeModule(CellProfilerModule, ValidatedHighConfidenceModule):
 
     @classmethod
     def _resize_kwargs(
-        cls, module: "ModuleBlock", binder: "SettingsBinder"
-    ) -> "RuntimeCallableKwargs":
+        cls, module: ModuleBlock, binder: SettingsBinder
+    ) -> RuntimeCallableKwargs:
         del binder
         kwargs: dict[str, Any] = {}
         resizing_method = optional_setting_value(module, cls.method_setting)
@@ -382,10 +382,10 @@ class ResizeModule(CellProfilerModule, ValidatedHighConfidenceModule):
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        contract: "CallableContract",
-        source_bindings: "StepSourceBindingsConfig",
+        contract: CallableContract,
+        source_bindings: StepSourceBindingsConfig,
     ) -> Callable[..., object]:
         del contract, source_bindings
         function_name = (
@@ -400,9 +400,9 @@ class ResizeModule(CellProfilerModule, ValidatedHighConfidenceModule):
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Declare the size-reference role selected by Resize behavior."""
 
@@ -565,8 +565,8 @@ class TileModule(CellProfilerModule, ValidatedHighConfidenceModule):
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         additional_names = setting_values(module, cls.additional_image_setting)
         if not additional_names:
             return bound
@@ -686,7 +686,7 @@ class TileSettings:
     auto_rows: bool
     auto_columns: bool
 
-    def geometry(self, image_count: int) -> "TileGeometry":
+    def geometry(self, image_count: int) -> TileGeometry:
         grid_rows, grid_columns = tile_grid_dimensions(
             image_count, self.rows, self.columns, self.auto_rows, self.auto_columns
         )
@@ -746,7 +746,7 @@ class ResizeGeometry:
         resizing_factors: tuple[float, ...],
         specific_shape: tuple[int, ...],
         interpolation: InterpolationMethod,
-    ) -> "ResizeGeometry":
+    ) -> ResizeGeometry:
         if resize_method is ResizeMethod.BY_FACTOR:
             output_shape = tuple(
                 (
@@ -772,7 +772,7 @@ class ResizeGeometry:
         resizing_factors: tuple[float, ...],
         specific_shape: tuple[int, ...],
         interpolation: InterpolationMethod,
-    ) -> "ResizeGeometry":
+    ) -> ResizeGeometry:
         resizing_factors, specific_shape = cls.effective_trailing_spatial_parameters(
             input_shape=input_shape,
             resizing_factors=resizing_factors,
@@ -898,7 +898,7 @@ class CellProfilerPlaneGeometry:
     shape: tuple[int, int]
 
     @classmethod
-    def from_image_plane(cls, image: Any) -> "CellProfilerPlaneGeometry":
+    def from_image_plane(cls, image: Any) -> CellProfilerPlaneGeometry:
         image = ImagePayload.of(image)
         image_array = np.asarray(image.data)
         metadata = image.metadata

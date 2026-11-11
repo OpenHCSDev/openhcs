@@ -81,14 +81,14 @@ class ArtifactPlanViewRow:
 
     def with_runtime_address(
         self, address: RuntimeArtifactAddress
-    ) -> "ArtifactPlanViewRow":
+    ) -> ArtifactPlanViewRow:
         return replace(
             self,
             runtime_location=f"{address.location.backend}:{address.location.path}",
             value_type="" if address.value_type is None else address.value_type,
         )
 
-    def with_debug_ref(self, ref: DebugArtifactRef) -> "ArtifactPlanViewRow":
+    def with_debug_ref(self, ref: DebugArtifactRef) -> ArtifactPlanViewRow:
         shape = "" if ref.shape is None else f" shape={ref.shape}"
         dtype = "" if ref.dtype is None else f" dtype={ref.dtype}"
         backend = "" if ref.storage_backend is None else f"{ref.storage_backend}:"
@@ -113,7 +113,7 @@ class ArtifactPlanViewModel:
         inspection: CompiledArtifactInspection | None,
         *,
         step_index: int | None,
-    ) -> "ArtifactPlanViewModel":
+    ) -> ArtifactPlanViewModel:
         if inspection is None or step_index is None:
             return cls(
                 subject_id=None if inspection is None else inspection.subject_id,
@@ -179,7 +179,7 @@ class ArtifactPlanViewModel:
     def with_runtime_notification(
         self,
         notification: RuntimeArtifactAvailableNotification,
-    ) -> "ArtifactPlanViewModel":
+    ) -> ArtifactPlanViewModel:
         if self.subject_id is None or notification.event.subject_id != self.subject_id:
             return self
         rows = self.rows
@@ -199,7 +199,7 @@ class ArtifactPlanViewModel:
             )
         return replace(self, rows=rows)
 
-    def with_debug_snapshot(self, snapshot: DebugSnapshot) -> "ArtifactPlanViewModel":
+    def with_debug_snapshot(self, snapshot: DebugSnapshot) -> ArtifactPlanViewModel:
         if self.step_index != snapshot.cursor.step_index:
             return self
         refs = (

@@ -215,7 +215,7 @@ class AlignModule(
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         invocation_key,
         step_context,
@@ -283,8 +283,8 @@ class AlignModule(
 
         @classmethod
         def from_literal(
-            cls, value: "AlignModule.AdditionalMode | str"
-        ) -> "AlignModule.AdditionalMode":
+            cls, value: AlignModule.AdditionalMode | str
+        ) -> AlignModule.AdditionalMode:
             return cellprofiler_enum_from_literal(cls, value)
 
     class CropMode(str, Enum):
@@ -294,8 +294,8 @@ class AlignModule(
 
         @classmethod
         def from_literal(
-            cls, value: "AlignModule.CropMode | str"
-        ) -> "AlignModule.CropMode":
+            cls, value: AlignModule.CropMode | str
+        ) -> AlignModule.CropMode:
             return cellprofiler_enum_from_literal(
                 cls,
                 value,
@@ -336,7 +336,7 @@ class AlignModule(
     @classmethod
     def postprocess_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bound: BoundModuleSettings,
     ) -> BoundModuleSettings:
         method_text = optional_setting_value(module, cls.method_setting)
@@ -354,7 +354,7 @@ class AlignModule(
         return bound.with_kwargs(kwargs)
 
     @classmethod
-    def image_input_names(cls, module: "ModuleBlock") -> tuple[str, ...]:
+    def image_input_names(cls, module: ModuleBlock) -> tuple[str, ...]:
         return (
             *(
                 required_setting_value(module, binding.setting_name)
@@ -364,7 +364,7 @@ class AlignModule(
         )
 
     @classmethod
-    def image_output_names(cls, module: "ModuleBlock") -> tuple[str, ...]:
+    def image_output_names(cls, module: ModuleBlock) -> tuple[str, ...]:
         return (
             *(
                 required_setting_value(module, binding.setting_name)
@@ -374,14 +374,14 @@ class AlignModule(
         )
 
     @classmethod
-    def crop_mode(cls, module: "ModuleBlock") -> "AlignModule.CropMode":
+    def crop_mode(cls, module: ModuleBlock) -> AlignModule.CropMode:
         return cls.CropMode.from_literal(
             optional_setting_value(module, cls.crop_mode_setting) or "No"
         )
 
     @classmethod
     def additional_alignment_modes(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple["AlignModule.AdditionalMode", ...]:
         additional_inputs = setting_values(module, cls.additional_input_setting)
         additional_outputs = setting_values(module, cls.additional_output_setting)
@@ -674,7 +674,7 @@ class AlignCropModeStrategy(
     crop_mode_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_crop_mode(cls, crop_mode: AlignModule.CropMode) -> "AlignCropModeStrategy":
+    def for_crop_mode(cls, crop_mode: AlignModule.CropMode) -> AlignCropModeStrategy:
         return cls.for_enum_member(crop_mode)
 
     @abstractmethod

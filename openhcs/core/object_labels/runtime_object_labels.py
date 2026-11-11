@@ -129,9 +129,9 @@ class ObjectLabelVariantData:
     @classmethod
     def compatible_replacement(
         cls,
-        source: "ObjectLabelValue",
+        source: ObjectLabelValue,
         labels: ObjectLabelData,
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Return replacement labels with source variants that still match."""
         source_variants = source.variant_data
         storage_authority = ObjectLabelStorageStrategy.for_value(source)
@@ -172,7 +172,7 @@ class ObjectLabelVariantData:
         labels = self.variant_labels(variant)
         return self.labels if labels is None else labels
 
-    def same_arrays_as(self, other: "ObjectLabelVariantData") -> bool:
+    def same_arrays_as(self, other: ObjectLabelVariantData) -> bool:
         """Return whether both carry the identical array for every variant."""
         return self.present_variants == other.present_variants and all(
             self.variant_labels(variant) is other.variant_labels(variant)
@@ -188,7 +188,7 @@ class ObjectLabelVariantData:
         """Return whether a variant has material data in any payload."""
         return any(variant in payload.present_variants for payload in payloads)
 
-    def with_labels(self, labels: ObjectLabelData) -> "ObjectLabelVariantData":
+    def with_labels(self, labels: ObjectLabelData) -> ObjectLabelVariantData:
         """Return these variants with replacement final labels."""
         return ObjectLabelVariantData(
             labels=labels,
@@ -201,7 +201,7 @@ class ObjectLabelVariantData:
     def project(
         self,
         projector: Callable[[ObjectLabelData], ObjectLabelData],
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Project every present variant through the same label operation."""
         return ObjectLabelVariantData(
             labels=projector(self.labels),
@@ -249,7 +249,7 @@ class ObjectLabelVariantData:
     def in_representation(
         self,
         representation: ObjectLabelRepresentation,
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Normalize every present variant through one declared representation."""
         return self.project(
             ObjectLabelSetReplacementStrategy.for_enum_member(
@@ -262,7 +262,7 @@ class ObjectLabelVariantData:
         *,
         slice_index: int,
         slice_count: int,
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Project every present variant onto one runtime slice."""
         return self.project_plane(
             plane_axis=RuntimeSlicePlaneAxis,
@@ -276,7 +276,7 @@ class ObjectLabelVariantData:
         plane_axis: type[RuntimePlaneAxis],
         plane_index: int,
         plane_count: int,
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Project every present variant onto one declared label plane."""
         return self.project(
             lambda labels: self.project_label_data_plane(
@@ -289,7 +289,7 @@ class ObjectLabelVariantData:
 
     def project_planes(
         self, plane_indices: tuple[int, ...], *, plane_count: int,
-    ) -> "ObjectLabelVariantData":
+    ) -> ObjectLabelVariantData:
         """Project each variant through the same ordered plane selection."""
         return self.project(
             lambda labels: object_label_project_planes(
@@ -650,7 +650,7 @@ class ObjectLabelValue(
         projection = self.runtime_slice_projection()
         return None if projection is None else projection.axis_size
 
-    def for_runtime_slice(self, slice_index: int) -> "ObjectLabelValue":
+    def for_runtime_slice(self, slice_index: int) -> ObjectLabelValue:
         """Return the labels of one runtime slice; other label values are unchanged."""
         projection = self.runtime_slice_projection()
         if projection is None:
@@ -675,7 +675,7 @@ class ObjectLabelValue(
 
     def value_for_slice(
         self, context: RuntimePlaneAxisValueProjection
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         if self.plane_axis is not context.axis:
             return self
         plane_count = self.declared_plane_count()
@@ -711,7 +711,7 @@ class ObjectLabelValue(
             projected = self.value_for_slice(resolver.projection_axis)
         return resolver.resolve_source_spatial_value(projected)
 
-    def project_declared_source(self, source_image_name: str) -> "ObjectLabelValue":
+    def project_declared_source(self, source_image_name: str) -> ObjectLabelValue:
         """Object labels keep their context; image-axis projection does not apply."""
         del source_image_name
         return self
@@ -779,7 +779,7 @@ class ObjectLabelValue(
         self,
         source: Any,
         plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Keep this label domain, filling missing source-image context from ``source``."""
         del plane_projection
         return self.with_source_image_context(source).with_parent_image_context(source)
@@ -861,7 +861,7 @@ class ObjectLabelValue(
 
     def with_variants(
         self,
-        variants: "ObjectLabelVariantData",
+        variants: ObjectLabelVariantData,
         *,
         representation: ObjectLabelRepresentation | None = None,
         domain: ObjectLabelDomain | None = None,
@@ -924,7 +924,7 @@ class ObjectLabelValue(
         labels: ObjectLabelData,
         *,
         variants: ObjectLabelVariants = MappingProxyType({}),
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Return this carrier's metadata with replacement labels."""
         return self.with_variants(ObjectLabelVariantData(labels, variants))
 
@@ -934,7 +934,7 @@ class ObjectLabelValue(
         plane_index: int,
         *,
         variants: ObjectLabelVariants = MappingProxyType({}),
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Return one selected label plane with projected domain metadata."""
         return self.with_variants(
             ObjectLabelVariantData(labels, variants),
@@ -998,7 +998,7 @@ class ObjectLabelValue(
         slice_count: int,
         label_plane_indices: tuple[int, ...] | None,
         source_plane_indices: tuple[int, ...] | None,
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Return this carrier projected onto one runtime slice."""
         if self.plane_axis.unstacked:
             return self
@@ -1048,7 +1048,7 @@ class ObjectLabelValue(
     def with_plane_projection(
         self,
         plane_indices: Sequence[int],
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Return the ordered subset of planes selected by component scope."""
         normalized_indices = tuple(int(index) for index in plane_indices)
         if not normalized_indices:
@@ -1222,7 +1222,7 @@ class ObjectLabelValue(
     def with_parent_image_context(
         self,
         image: runtime_array_values.RuntimeArrayData,
-    ) -> "ObjectLabelValue":
+    ) -> ObjectLabelValue:
         """Return this value with missing CellProfiler parent-image spacing filled."""
         parent_spacing = self.parent_image_source_voxel_spacing.with_missing_from(
             image.metadata.source_voxel_spacing
@@ -1332,7 +1332,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         default_factory=SourceVoxelSpacing
     )
 
-    def project_declared_source(self, source_image_name: str) -> "ObjectLabelSet":
+    def project_declared_source(self, source_image_name: str) -> ObjectLabelSet:
         """A named label set resolves only its own declared source name."""
         if self.name != source_image_name:
             raise ValueError(
@@ -1487,14 +1487,14 @@ class ObjectLabelStorageStrategy(
     """Single nominal authority for object-label storage behavior."""
 
     @classmethod
-    def for_value(cls, labels: object) -> "ObjectLabelStorageStrategy":
+    def for_value(cls, labels: object) -> ObjectLabelStorageStrategy:
         return cls.require_nominal_value(
             labels,
             context="Object-label storage",
         )
 
     @classmethod
-    def for_planes(cls, labels: Sequence[ObjectLabelData]) -> "ObjectLabelStorageStrategy":
+    def for_planes(cls, labels: Sequence[ObjectLabelData]) -> ObjectLabelStorageStrategy:
         """Admit one homogeneous semantic plane family before stacking."""
         if not labels:
             raise ValueError("Object-label plane stacking requires values.")

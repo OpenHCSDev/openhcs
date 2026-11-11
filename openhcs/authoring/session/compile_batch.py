@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class CompileBatch:
     """Compile-only batches and compile-before-execution."""
 
-    def __init__(self, session: "Session") -> None:
+    def __init__(self, session: Session) -> None:
         self._session = session
         self._engine = BatchSubmitWaitEngine[DatasetPipelineRequest]()
 

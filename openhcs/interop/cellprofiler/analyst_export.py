@@ -205,8 +205,6 @@ def _source_image_projection_values(
     source_dtype, height, width = header.require_image_geometry()
     if np.issubdtype(source_dtype, np.integer):
         scaling = float(np.iinfo(source_dtype).max)
-    elif np.issubdtype(source_dtype, np.bool_):
-        scaling = 1.0
     else:
         scaling = 1.0
     values_by_field = {

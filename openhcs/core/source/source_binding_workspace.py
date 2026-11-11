@@ -64,7 +64,7 @@ class _SourceSet:
         imported_metadata: SourceMetadataMapping,
         *,
         path: str,
-    ) -> "_SourceSet":
+    ) -> _SourceSet:
         """Apply one later declared imported-metadata stage to this source set."""
 
         metadata = dict(self.metadata)
@@ -92,7 +92,7 @@ class _ImportedMetadataIndex:
         table: ImportedMetadataTable,
         payload: object,
         source_bindings: SourceBindingsConfig,
-    ) -> "_ImportedMetadataIndex":
+    ) -> _ImportedMetadataIndex:
         if table.location is None:
             raise ValueError("Imported metadata table requires a declared location.")
         if not table.joins:
@@ -606,8 +606,8 @@ class SourceBindingWorkspaceProjector:
             )
 
     def accept_prepared_projection(
-        self, projection: "VirtualWorkspaceSourceProjection"
-    ) -> "VirtualWorkspaceSourceProjection":
+        self, projection: VirtualWorkspaceSourceProjection
+    ) -> VirtualWorkspaceSourceProjection:
         """Admit retained sources without rebuilding their paths or provenance."""
 
         if not self.source_bindings.source_filter_declarations:

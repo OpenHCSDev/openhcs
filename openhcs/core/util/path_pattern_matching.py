@@ -18,7 +18,7 @@ class PathPatternTemplateMatcher:
     def from_pattern(
         cls,
         pattern: str,
-    ) -> "PathPatternTemplateMatcher | None":
+    ) -> PathPatternTemplateMatcher | None:
         if "{" not in pattern or "}" not in pattern:
             return None
 

@@ -1,4 +1,6 @@
 # Torbi-accelerated version of hmm_axon.py
+from __future__ import annotations
+
 """
 OpenHCS-compatible neurite tracing using alvahmm RRS algorithm with torbi GPU acceleration.
 
@@ -458,7 +460,7 @@ def create_visualization_array(
 )
 @torch_func
 def trace_neurites_rrs_alva_torbi(
-    image_stack: "torch.Tensor",
+    image_stack: torch.Tensor,
     seeding_method: SeedingMethod = SeedingMethod.BLOB_DETECTION,
     return_trace_visualizations: bool = False,
     trace_visualization_mode: VisualizationMode = VisualizationMode.TRACE_ONLY,
@@ -472,7 +474,7 @@ def trace_neurites_rrs_alva_torbi(
     threshold: float = 0.02,
     normalize_image: bool = False,
     percentile: float = 99.9,
-) -> "Tuple[torch.Tensor, Dict[str, Any], List[np.ndarray]]":
+) -> Tuple[torch.Tensor, Dict[str, Any], List[np.ndarray]]:
     """
     Trace neurites using the alvahmm RRS algorithm with torbi GPU acceleration.
 

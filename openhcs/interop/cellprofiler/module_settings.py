@@ -120,7 +120,7 @@ class BoundModuleSettings:
         object.__setattr__(self, "unmapped_kwargs", dict(self.unmapped_kwargs))
         object.__setattr__(self, "setting_coverage", tuple(self.setting_coverage))
 
-    def with_kwargs(self, kwargs: Mapping[str, Any]) -> "BoundModuleSettings":
+    def with_kwargs(self, kwargs: Mapping[str, Any]) -> BoundModuleSettings:
         """Return this binding with additional generated function kwargs."""
         return BoundModuleSettings(
             {**self.kwargs, **kwargs},
@@ -131,7 +131,7 @@ class BoundModuleSettings:
     def with_consumed_settings(
         self,
         *settings: str | "SettingNameFamily",
-    ) -> "BoundModuleSettings":
+    ) -> BoundModuleSettings:
         """Remove rows explicitly consumed by an owning compound parser."""
 
         consumed_names = {
@@ -149,7 +149,7 @@ class BoundModuleSettings:
             self.setting_coverage,
         )
 
-    def with_replaced_kwargs(self, kwargs: Mapping[str, Any]) -> "BoundModuleSettings":
+    def with_replaced_kwargs(self, kwargs: Mapping[str, Any]) -> BoundModuleSettings:
         """Return this binding with the function kwargs replaced."""
         return BoundModuleSettings(
             kwargs,
@@ -204,7 +204,7 @@ class CellProfilerModuleSettings:
 
     @classmethod
     def compile_time_parameter_names(
-        cls, contract: "CallableContract",
+        cls, contract: CallableContract,
     ) -> tuple[str, ...]:
         """Derive compile-only kwargs from the exact setting/ABI declarations."""
         signature = inspect.signature(cls.require_callable(contract.function_name))
@@ -217,7 +217,7 @@ class CellProfilerModuleSettings:
 
     @classmethod
     def normalize_authoring_kwargs(
-        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+        cls, contract: CallableContract, kwargs: Mapping[str, object],
     ) -> dict[str, object]:
         """Keep authored choices and project defaults through declaration hooks."""
         if not any(
@@ -236,7 +236,7 @@ class CellProfilerModuleSettings:
 
     @classmethod
     def authoring_default_kwargs(
-        cls, module: "ModuleBlock", *, authored_kwargs: Mapping[str, object],
+        cls, module: ModuleBlock, *, authored_kwargs: Mapping[str, object],
     ) -> Mapping[str, object]:
         """Concrete declarations may derive defaults from their setting rows."""
         return {}
@@ -265,10 +265,10 @@ class CellProfilerModuleSettings:
     @classmethod
     def _bind_declared_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         """Bind rows using setting declarations inherited by this module class."""
         setting_bindings = cls.declared_setting_bindings()
         ignored_settings = tuple(cls.ignored_settings_for(module))
@@ -308,11 +308,11 @@ class CellProfilerModuleSettings:
     @classmethod
     def _finalize_bound_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-        bound: "BoundModuleSettings",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+        bound: BoundModuleSettings,
+    ) -> BoundModuleSettings:
         """Validate and annotate a binding result produced by this declaration."""
         del binder
         bound = bound.with_replaced_kwargs(
@@ -408,10 +408,10 @@ class CellProfilerModuleSettings:
     @classmethod
     def bind_settings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        binder: "SettingsBinder",
-    ) -> "BoundModuleSettings":
+        binder: SettingsBinder,
+    ) -> BoundModuleSettings:
         """Bind parsed module settings through this module declaration."""
         bound = cls._bind_declared_settings(module, binder=binder)
         return cls._finalize_bound_settings(
@@ -422,15 +422,15 @@ class CellProfilerModuleSettings:
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         """Apply module-local binding semantics after declared settings bind."""
         del module
         return bound
 
     @classmethod
     def ignored_settings_for(
-        cls, module: "ModuleBlock"
+        cls, module: ModuleBlock
     ) -> tuple[str | "SettingNameFamily", ...]:
         """Return settings consumed outside direct runtime kwargs."""
         del module
@@ -439,7 +439,7 @@ class CellProfilerModuleSettings:
     @classmethod
     def setting_value(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         setting_name: str | "SettingNameFamily",
         *,
         include_blank: bool = False,

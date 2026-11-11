@@ -108,7 +108,7 @@ class MeasurementImageOperandRow:
         table_name: str,
         row_mapping: Mapping[str, RuntimeCallableArgument],
         value: float,
-    ) -> "MeasurementImageOperandRow":
+    ) -> MeasurementImageOperandRow:
         return cls(
             row_mapping=row_mapping,
             value=value,
@@ -194,11 +194,11 @@ class MeasurementImageOperandVectorResolution:
     @classmethod
     def from_runtime_feature(
         cls,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         feature_name: str,
         *,
         group_key: str | None = None,
-    ) -> "MeasurementImageOperandVectorResolution":
+    ) -> MeasurementImageOperandVectorResolution:
         """Build an image-operand resolver from runtime measurement tables."""
         return cls(
             measurement_tables=cls.runtime_axis_scope_tables(
@@ -212,7 +212,7 @@ class MeasurementImageOperandVectorResolution:
     @classmethod
     def runtime_axis_scope_tables(
         cls,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         feature_name: str,
         *,
         group_key: str | None = None,
@@ -231,7 +231,7 @@ class MeasurementImageOperandVectorResolution:
 
     @staticmethod
     def runtime_feature_tables(
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         query: MeasurementFeatureQuery,
         *,
         group_key: str | None,
@@ -372,7 +372,7 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
         feature_name: str,
         labels: ObjectLabelValue | None = None,
         slice_index: int | None = None,
-    ) -> "CellProfilerObjectMeasurementVectorBinding":
+    ) -> CellProfilerObjectMeasurementVectorBinding:
         object_ref_is_spec = isinstance(object_ref, ArtifactSpec)
         object_spec = (
             object_ref
@@ -402,7 +402,7 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
 
     def values(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
     ) -> tuple[np.ndarray, ...]:
         del adapter
         return MeasurementLabelSliceFeatureQuery(
@@ -416,7 +416,7 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
 
     def measurement_tables(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         *,
         match_group: bool = True,
     ) -> tuple[MeasurementTable, ...]:
@@ -537,7 +537,7 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
 
     def query_runtime_batch_vectors(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         feature_name: str,
         bindings: tuple[CellProfilerObjectMeasurementVectorBinding, ...],
     ) -> Mapping[str, tuple[np.ndarray, ...]]:
@@ -594,7 +594,7 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
 
     def cache_runtime_batch_vectors(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
         vectors: Mapping[str, tuple[np.ndarray, ...]],
         bindings: tuple[CellProfilerObjectMeasurementVectorBinding, ...],
     ) -> None:
@@ -608,7 +608,7 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
 
     def cached_runtime_batch_vectors(
         self,
-        adapter: "CellProfilerRuntimeAdapter",
+        adapter: CellProfilerRuntimeAdapter,
     ) -> dict[str, tuple[np.ndarray, ...]]:
         store_cache = adapter.request.context.runtime_value_store.query_cache(
             RuntimeObjectLabelMeasurementQueryCache

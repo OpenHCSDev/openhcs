@@ -95,7 +95,7 @@ class SourceImageIdentity:
         )
 
     @classmethod
-    def from_mapping(cls, values: Mapping[str, object]) -> "SourceImageIdentity":
+    def from_mapping(cls, values: Mapping[str, object]) -> SourceImageIdentity:
         """Admit current wire facts, with independent nested metadata ownership."""
         if not isinstance(values, Mapping):
             raise TypeError("Source image identity must be a mapping.")
@@ -147,8 +147,8 @@ class SourceImageIdentity:
 
     def with_missing_from(
         self,
-        fallback: "SourceImageIdentity",
-    ) -> "SourceImageIdentity":
+        fallback: SourceImageIdentity,
+    ) -> SourceImageIdentity:
         return type(self)(
             path=self.path if self.path is not None else fallback.path,
             component_metadata=self.component_metadata_with_missing_from(fallback),
@@ -172,7 +172,7 @@ class SourceImageIdentity:
 
     def component_metadata_with_missing_from(
         self,
-        fallback: "SourceImageIdentity",
+        fallback: SourceImageIdentity,
     ) -> SourceComponentMetadata | None:
         """Fill missing address components and its declared file extension."""
         if self.component_metadata is None:
@@ -187,8 +187,8 @@ class SourceImageIdentity:
 
     def with_parsed_path_components(
         self,
-        parser: "FilenameParser",
-    ) -> "SourceImageIdentity":
+        parser: FilenameParser,
+    ) -> SourceImageIdentity:
         """Fill missing component metadata from this identity's source path."""
         if self.path is None:
             return self
@@ -227,7 +227,7 @@ class SourceImageProvenancePlane(ABC, metaclass=AutoRegisterMeta):
         cls,
         values: Mapping[str, object],
         identities: Sequence[Mapping[str, object]] | None = None,
-    ) -> "SourceImageProvenancePlane":
+    ) -> SourceImageProvenancePlane:
         """Decode nominal planes from current references or historic flat facts."""
         if not isinstance(values, Mapping):
             raise TypeError("Source provenance plane must be a mapping.")
@@ -336,8 +336,8 @@ class SourceImageProvenancePlane(ABC, metaclass=AutoRegisterMeta):
 
     def with_missing_from(
         self,
-        fallback: "SourceImageProvenancePlane",
-    ) -> "SourceImageProvenancePlane":
+        fallback: SourceImageProvenancePlane,
+    ) -> SourceImageProvenancePlane:
         return type(self)(
             self.source_identity.with_missing_from(fallback.source_identity),
             self.contributors or fallback.contributors,
@@ -367,8 +367,8 @@ class SourceImageProvenanceContributor(SourceImageProvenancePlane):
 
     def with_missing_from(
         self,
-        fallback: "SourceImageProvenancePlane",
-    ) -> "SourceImageProvenanceContributor":
+        fallback: SourceImageProvenancePlane,
+    ) -> SourceImageProvenanceContributor:
         """Fill this leaf contributor without importing fallback topology."""
 
         return type(self)(
@@ -426,7 +426,7 @@ class SourceImageProvenancePlanes:
         *,
         paths: SourceImageProvenancePlanePathValues = (),
         component_metadata: SourceImageProvenancePlaneMetadataValues = (),
-    ) -> "SourceImageProvenancePlanes":
+    ) -> SourceImageProvenancePlanes:
         count = max(len(paths), len(component_metadata), 0)
         return cls(
             tuple(
@@ -448,7 +448,7 @@ class SourceImageProvenancePlanes:
         fixed_components: SourceComponentMetadata,
         aggregate_components: Mapping[str, Sequence[SourceMetadataScalar]],
         plane_count: int,
-    ) -> "SourceImageProvenancePlanes":
+    ) -> SourceImageProvenancePlanes:
         """Expand one explicitly ordered varying coordinate into runtime planes.
 
         Neither filenames, page counts, nor plate cardinalities establish this
@@ -503,7 +503,7 @@ class SourceImageProvenancePlanes:
         *,
         paths: SourceImageProvenancePlanePathValues = (),
         component_metadata: SourceImageProvenancePlaneMetadataValues = (),
-    ) -> "SourceImageProvenancePlanes":
+    ) -> SourceImageProvenancePlanes:
         """Build non-projectable pixel contributors from scalar identities."""
         count = max(len(paths), len(component_metadata), 0)
         return cls(
@@ -519,7 +519,7 @@ class SourceImageProvenancePlanes:
         )
 
     @classmethod
-    def from_mapping(cls, values: object) -> "SourceImageProvenancePlanes":
+    def from_mapping(cls, values: object) -> SourceImageProvenancePlanes:
         """Admit factored current wire or the historic flat persisted sequence."""
         if isinstance(values, Mapping):
             if set(values) != {"identities", "planes"}:
@@ -718,14 +718,14 @@ class SourceImageProvenancePlanes:
             return self._runtime_planes[index]
         return RuntimeSourceImageProvenancePlane()
 
-    def select(self, indices: Sequence[int]) -> "SourceImageProvenancePlanes":
+    def select(self, indices: Sequence[int]) -> SourceImageProvenancePlanes:
         """Return provenance planes selected by source-plane index."""
         return type(self)(tuple(self.plane(int(index)) for index in indices))
 
     def as_contributors(
         self,
         source_image_names: Sequence[str] = (),
-    ) -> "SourceImageProvenancePlanes":
+    ) -> SourceImageProvenancePlanes:
         """Reclassify removed runtime planes as non-projectable contributors."""
         names = tuple(str(name) for name in source_image_names)
         contributors: list[SourceImageProvenanceContributor] = []
@@ -775,8 +775,8 @@ class SourceImageProvenancePlanes:
 
     def with_missing_from(
         self,
-        fallback: "SourceImageProvenancePlanes",
-    ) -> "SourceImageProvenancePlanes":
+        fallback: SourceImageProvenancePlanes,
+    ) -> SourceImageProvenancePlanes:
         if not self.planes:
             return fallback
         if not fallback.planes or len(self.planes) != len(fallback.planes):
@@ -959,11 +959,11 @@ class SourceImageProvenance:
     def from_init_values(
         cls,
         values: SourceProvenanceInitValues,
-    ) -> "SourceImageProvenance":
+    ) -> SourceImageProvenance:
         return cls(*values)
 
     @classmethod
-    def from_mapping(cls, values: Mapping[str, object]) -> "SourceImageProvenance":
+    def from_mapping(cls, values: Mapping[str, object]) -> SourceImageProvenance:
         """Decode constructor-owned facts, retaining nominal contributor records."""
         parameters = signature(cls).parameters
         unknown = set(values) - set(parameters)
@@ -1135,7 +1135,7 @@ class SourceImageProvenance:
             plane_index
         ).source_identity.component_metadata_with_missing_from(self.source_identity)
 
-    def for_source_plane(self, plane_index: int) -> "SourceImageProvenance":
+    def for_source_plane(self, plane_index: int) -> SourceImageProvenance:
         if self.source_plane_count == 0:
             return type(self)(
                 source_path=self.source_identity.path,
@@ -1158,7 +1158,7 @@ class SourceImageProvenance:
 
     def for_source_planes(
         self, plane_indices: Sequence[int]
-    ) -> "SourceImageProvenance":
+    ) -> SourceImageProvenance:
         """Return provenance represented by a grouped set of source planes."""
         normalized_indices = tuple(int(index) for index in plane_indices)
         if self.source_plane_count == 0:
@@ -1189,7 +1189,7 @@ class SourceImageProvenance:
             source_image_names=self.source_image_names_for_planes(normalized_indices),
         )
 
-    def for_source_image(self, source_image_name: str) -> "SourceImageProvenance":
+    def for_source_image(self, source_image_name: str) -> SourceImageProvenance:
         """Project one exact named source while preserving its runtime plane axis."""
 
         normalized_name = str(source_image_name).strip()
@@ -1419,7 +1419,7 @@ class SourceImageProvenance:
             return NotImplemented
         return self.equality_identity == other.equality_identity
 
-    def with_missing_from(self, fallback: "SourceImageProvenance") -> Self:
+    def with_missing_from(self, fallback: SourceImageProvenance) -> Self:
         source_identity = self.source_identity.with_missing_from(
             fallback.source_identity
         )
@@ -1622,7 +1622,7 @@ class SourcePlaneIndexedMetadata:
         metadata: SourceComponentMetadata,
         *,
         expected_plane_count: int,
-    ) -> "SourcePlaneIndexedMetadata | None":
+    ) -> SourcePlaneIndexedMetadata | None:
         index_value = source_metadata_value(metadata, SOURCE_PLANE_INDEX_FIELD)
         count_value = source_metadata_value(metadata, SOURCE_PLANE_COUNT_FIELD)
         if index_value is None and count_value is None:
@@ -1656,7 +1656,7 @@ class SourcePlaneIndexedMetadata:
     def from_declared_source_metadata(
         cls,
         metadata: SourceComponentMetadata,
-    ) -> "SourcePlaneIndexedMetadata | None":
+    ) -> SourcePlaneIndexedMetadata | None:
         """Return exact source-plane semantics declared by source metadata."""
         index_value = source_metadata_value(metadata, SOURCE_PLANE_INDEX_FIELD)
         count_value = source_metadata_value(metadata, SOURCE_PLANE_COUNT_FIELD)
@@ -1687,7 +1687,7 @@ class SourcePlaneIndexedMetadata:
         metadata: SourceComponentMetadata,
         *,
         source_plane_count: int,
-    ) -> "SourcePlaneIndexedMetadata | None":
+    ) -> SourcePlaneIndexedMetadata | None:
         index_value = source_metadata_value(metadata, SOURCE_PLANE_INDEX_FIELD)
         count_value = source_metadata_value(metadata, SOURCE_PLANE_COUNT_FIELD)
         if index_value is None and count_value is None:
@@ -1732,7 +1732,7 @@ class SourcePlaneIndexedMetadata:
         metadata: SourceComponentMetadata,
         *,
         source_plane_count: int,
-    ) -> "SourcePlaneIndexedMetadata | None":
+    ) -> SourcePlaneIndexedMetadata | None:
         indexed_metadata = cls.from_scalar_origin(
             metadata,
             source_plane_count=source_plane_count,
@@ -1954,7 +1954,7 @@ class SourceImageProvenanceRequirementPolicy(ABC, metaclass=AutoRegisterMeta):
     def for_requirement(
         cls,
         requirement: SourceImageProvenanceRequirement,
-    ) -> "SourceImageProvenanceRequirementPolicy":
+    ) -> SourceImageProvenanceRequirementPolicy:
         return cls.__registry__[requirement.satisfied]()
 
     def validate(self, requirement: SourceImageProvenanceRequirement) -> None:
@@ -2032,7 +2032,7 @@ class SourceImageProvenanceAlias(Generic[SourceImageProvenanceAliasValueT]):
 
     def __get__(
         self,
-        instance: "SourceImageProvenanceFields | None",
+        instance: SourceImageProvenanceFields | None,
         _owner: type["SourceImageProvenanceFields"],
     ) -> SourceImageProvenanceAliasValueT | Self:
         if instance is None:
@@ -2042,7 +2042,7 @@ class SourceImageProvenanceAlias(Generic[SourceImageProvenanceAliasValueT]):
 
     def __set__(
         self,
-        instance: "SourceImageProvenanceFields",
+        instance: SourceImageProvenanceFields,
         value: SourceImageProvenanceAliasValueT,
     ) -> None:
         instance.source_provenance = self.setter(instance.source_provenance, value)
@@ -2124,14 +2124,14 @@ class VariableComponentAxisProjection:
     axes: frozenset[str]
 
     @classmethod
-    def empty(cls) -> "VariableComponentAxisProjection":
+    def empty(cls) -> VariableComponentAxisProjection:
         return cls(frozenset())
 
     @classmethod
     def from_axes(
         cls,
         axes: Iterable[str],
-    ) -> "VariableComponentAxisProjection":
+    ) -> VariableComponentAxisProjection:
         return cls(frozenset(axes))
 
     @property

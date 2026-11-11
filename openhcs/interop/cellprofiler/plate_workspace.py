@@ -96,7 +96,7 @@ class CellProfilerPipelineFile:
     stage: type[CellProfilerPipelineStage]
 
     @classmethod
-    def from_path(cls, cppipe_path: Path) -> "CellProfilerPipelineFile":
+    def from_path(cls, cppipe_path: Path) -> CellProfilerPipelineFile:
         return cls(
             path=cppipe_path,
             stage=CellProfilerPipelineStage.of(cppipe_path),
@@ -131,7 +131,7 @@ class CellProfilerPlateWorkspacePreparer:
         cls,
         plate_root: Path | str,
         cppipe_path: Path | str | None = None,
-    ) -> "CellProfilerPlateWorkspacePreparer":
+    ) -> CellProfilerPlateWorkspacePreparer:
         return cls(
             plate_root=Path(plate_root),
             cppipe_path=None if cppipe_path is None else Path(cppipe_path),

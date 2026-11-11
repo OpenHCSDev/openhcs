@@ -142,7 +142,7 @@ class McpDevClient:
         self._session = await self._session_cm.__aenter__()
         self._session_started = True
 
-    def start(self) -> "McpDevClient":
+    def start(self) -> McpDevClient:
         """Start and initialize the owned stdio session."""
         if self._session_started or self._closed:
             raise RuntimeError("MCP dev client cannot be started in its current state.")
@@ -153,7 +153,7 @@ class McpDevClient:
             raise
         return self
 
-    def __enter__(self) -> "McpDevClient":
+    def __enter__(self) -> McpDevClient:
         return self.start()
 
     async def _execute_session(

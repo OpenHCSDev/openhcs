@@ -5,6 +5,8 @@ Provides functions for detecting runtime environment characteristics
 like headless mode, CI environments, and other context-specific settings.
 """
 
+from __future__ import annotations
+
 import os
 from collections.abc import Mapping, MutableMapping
 from pathlib import Path
@@ -32,7 +34,7 @@ class OpenHCSProcessEnvironment:
 
     @staticmethod
     def numba_cache_path(
-        platform_authority: "AgentRuntimePlatform",
+        platform_authority: AgentRuntimePlatform,
     ) -> Path:
         """Return the user-local cache path for compiled Numba artifacts."""
 

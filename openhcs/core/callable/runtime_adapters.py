@@ -50,8 +50,8 @@ class RuntimeImageExecutionContext:
 class RuntimeAdapterRequest:
     """Runtime data needed to build an invocation-scoped adapter."""
 
-    context: "ExecutingContext"
-    callable_contract: "CallableContract | None" = None
+    context: ExecutingContext
+    callable_contract: CallableContract | None = None
     source_payload: object | None = None
     artifact_inputs: Mapping[
         "InvocationArtifactInputProjectionKey",
@@ -67,7 +67,7 @@ class RuntimeAdapterRequest:
         default_factory=RuntimePlaneProjection.stack
     )
     variable_components: tuple[type[Axis], ...] = ()
-    execution_scope: "FunctionCoreExecutor | None" = None
+    execution_scope: FunctionCoreExecutor | None = None
 
     def __post_init__(self) -> None:
         for key, edge in self.artifact_inputs.items():
@@ -107,7 +107,7 @@ class RuntimeAdapterRequest:
             )
         return binding
 
-    def require_callable_contract(self) -> "CallableContract":
+    def require_callable_contract(self) -> CallableContract:
         """Return the exact compiled callable contract for this invocation."""
 
 
@@ -168,7 +168,7 @@ class RuntimeAdapterRequest:
     def require_artifact_input_edge(
         self,
         ref: ArtifactSpecRef,
-    ) -> "InvocationArtifactInputEdgePlan":
+    ) -> InvocationArtifactInputEdgePlan:
         """Return one exact runtime authority for a compiled input identity."""
 
         if not isinstance(ref, ArtifactSpecRef):
@@ -207,7 +207,7 @@ class RuntimeAdapterRequest:
         edge: InvocationArtifactInputEdgePlan,
         *,
         backend: str,
-    ) -> "RuntimeArtifactInput":
+    ) -> RuntimeArtifactInput:
         """Bind an exact compiled input to this request's declared source context."""
 
         return RuntimeArtifactInput(
@@ -244,7 +244,7 @@ class RuntimeAdapterSpec:
     runtime_callable_factory: RuntimeCallableFactory | None = None
 
     def invocation_domain_inputs(
-        self, contract: "CallableContract",
+        self, contract: CallableContract,
     ) -> ArtifactSpecCollection:
         """Use declared context inputs when the callable has no raw image ABI."""
         if contract.accepts_implicit_main_flow_input:
@@ -289,7 +289,7 @@ class RuntimeAdapterSpec:
     def executable_callable(
         self,
         resolved_callable: Callable[..., object],
-        contract: "CallableContract",
+        contract: CallableContract,
     ) -> Callable[..., object]:
         """Build the executable callable from one ordinarily resolved callable."""
         factory = self.runtime_callable_factory

@@ -40,7 +40,7 @@ class RuntimeValue:
 
     key: ArtifactKey
     data: Any
-    materialization_source_metadata: "ImagePayloadMetadata | None" = None
+    materialization_source_metadata: ImagePayloadMetadata | None = None
 
     @staticmethod
     def payload_of(value: Any) -> Any:
@@ -53,8 +53,8 @@ class RuntimeValue:
         data: Any,
         *,
         execution_scope: RuntimeExecutionAxisScope,
-        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> "RuntimeValue":
+        materialization_source_metadata: ImagePayloadMetadata | None = None,
+    ) -> RuntimeValue:
         """Construct a transient value from already-normalized data and identity."""
 
         if not isinstance(execution_scope, RuntimeExecutionAxisScope):
@@ -75,8 +75,8 @@ class RuntimeValue:
         data: Any,
         *,
         execution_scope: RuntimeExecutionAxisScope,
-        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> "RuntimeValue":
+        materialization_source_metadata: ImagePayloadMetadata | None = None,
+    ) -> RuntimeValue:
         """Derive transient runtime identity without declaring a stored location."""
         return RuntimeValue(
             key=ArtifactKey(
@@ -146,8 +146,8 @@ class RuntimeValue:
         value: Any,
         *,
         axis_id: str,
-        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> "RuntimeValue":
+        materialization_source_metadata: ImagePayloadMetadata | None = None,
+    ) -> RuntimeValue:
         """Normalize a raw artifact return exactly once through its compiled plan."""
 
         return RuntimeValue.normalize_for_execution_scope(
@@ -163,10 +163,10 @@ class RuntimeValue:
         value: Any,
         *,
         source_payload: object,
-        plane_projector: "RuntimePlaneAxisProjector | None",
+        plane_projector: RuntimePlaneAxisProjector | None,
         execution_scope: RuntimeExecutionAxisScope,
-        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> "RuntimeValue":
+        materialization_source_metadata: ImagePayloadMetadata | None = None,
+    ) -> RuntimeValue:
         """Admit current source context and raw output at one generic boundary."""
         contextualized = output_plan.artifact_type.contextualize_output_from_projector(
             source_payload,
@@ -187,8 +187,8 @@ class RuntimeValue:
         value: Any,
         *,
         execution_scope: RuntimeExecutionAxisScope,
-        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> "RuntimeValue":
+        materialization_source_metadata: ImagePayloadMetadata | None = None,
+    ) -> RuntimeValue:
         """Normalize one artifact against its exact runtime execution identity."""
 
         if not isinstance(execution_scope, RuntimeExecutionAxisScope):
@@ -242,7 +242,7 @@ class RuntimeValue:
         output_plan: ArtifactOutputPlan,
         *,
         axis_id: str,
-    ) -> "RuntimeValue":
+    ) -> RuntimeValue:
         """Validate this value against one compiled output without renormalizing it."""
 
         if self.key.name != output_plan.name:

@@ -47,7 +47,7 @@ class RuntimeMeasurementSubjectKey:
     @classmethod
     def from_subject(
         cls, subject: MeasurementSubject
-    ) -> "RuntimeMeasurementSubjectKey":
+    ) -> RuntimeMeasurementSubjectKey:
         """Build a comparison subject key from typed runtime semantics."""
         return cls(scope=subject.scope, name=subject.name)
 
@@ -55,7 +55,7 @@ class RuntimeMeasurementSubjectKey:
     def from_table_subject(
         cls,
         subject: MeasurementSubject,
-    ) -> "RuntimeMeasurementSubjectKey":
+    ) -> RuntimeMeasurementSubjectKey:
         """Build the measured table subject, keeping image sources as qualifiers."""
         subject_key = cls.from_subject(subject)
         if subject_key.scope is MeasurementScope.SAMPLE:
@@ -71,7 +71,7 @@ class RuntimeMeasurementSubjectKey:
         return (self.scope.value, self.name)
 
     @classmethod
-    def from_cache_payload(cls, payload: object) -> "RuntimeMeasurementSubjectKey":
+    def from_cache_payload(cls, payload: object) -> RuntimeMeasurementSubjectKey:
         """Rebuild a measurement subject from a semantic cache payload."""
         scope, name = payload  # type: ignore[misc]
         return cls(MeasurementScope(str(scope)), None if name is None else str(name))
@@ -79,7 +79,7 @@ class RuntimeMeasurementSubjectKey:
     def bind_row_source_identity(
         self,
         source_name: str | None,
-    ) -> "RuntimeMeasurementSourceQualification":
+    ) -> RuntimeMeasurementSourceQualification:
         """Bind row source identity to this subject before feature-key encoding."""
         return RuntimeMeasurementSourceQualification(self, source_name)
 
@@ -128,7 +128,7 @@ class RuntimeMeasurementSourcePair:
     def from_source_name(
         cls,
         source_name: str | None,
-    ) -> "RuntimeMeasurementSourcePair | None":
+    ) -> RuntimeMeasurementSourcePair | None:
         """Decode the canonical ordered source-pair identity."""
         normalized = normalize_runtime_source_name(source_name)
         if normalized is None:
@@ -208,7 +208,7 @@ class RuntimeMeasurementFeatureKey:
         measurement_dialect: MeasurementDialect,
         statistic: str = "value",
         qualifiers: tuple[str, ...] = (),
-    ) -> "RuntimeMeasurementFeatureKey":
+    ) -> RuntimeMeasurementFeatureKey:
         """Build a key through the dialect's declared source-name encoding."""
         source_qualified_feature = measurement_dialect.encode_source_qualified_feature(
             feature_name,
@@ -242,7 +242,7 @@ class RuntimeMeasurementFeatureKey:
         feature_name: str,
         statistic: str = MeasurementStatistic.VALUE.value,
         source_name: str | None = None,
-    ) -> "RuntimeMeasurementFeatureKey":
+    ) -> RuntimeMeasurementFeatureKey:
         """Build a key, folding image source identity into the image subject."""
         if subject.scope is MeasurementScope.SAMPLE and source_name is not None:
             return cls(
@@ -341,7 +341,7 @@ class RuntimeMeasurementFeatureKey:
         source_name: str,
         measurement_dialect: MeasurementDialect,
         feature_families: Iterable[str],
-    ) -> "RuntimeMeasurementFeatureKey":
+    ) -> RuntimeMeasurementFeatureKey:
         """Return this semantic feature encoded for ``source_name``."""
         feature_family = self.source_qualified_feature_family(
             measurement_dialect,
@@ -363,7 +363,7 @@ class RuntimeMeasurementFeatureKey:
         self,
         measurement_dialect: MeasurementDialect,
         feature_families: Iterable[str],
-    ) -> "RuntimeMeasurementFeatureKey | None":
+    ) -> RuntimeMeasurementFeatureKey | None:
         """Return this feature key with source-pair orientation reversed."""
         pair = self.source_pair(
             measurement_dialect,
@@ -389,7 +389,7 @@ class RuntimeMeasurementFeatureKey:
         )
 
     @classmethod
-    def from_cache_payload(cls, payload: object) -> "RuntimeMeasurementFeatureKey":
+    def from_cache_payload(cls, payload: object) -> RuntimeMeasurementFeatureKey:
         """Rebuild a measurement feature key from a semantic cache payload."""
         subject, feature_name, statistic, source_name = payload  # type: ignore[misc]
         return cls(
@@ -420,7 +420,7 @@ class RuntimeMeasurementNamePartsProjection:
         dialect: MeasurementDialect,
         *,
         known_source_names: tuple[str, ...] = (),
-    ) -> "RuntimeMeasurementNamePartsProjection":
+    ) -> RuntimeMeasurementNamePartsProjection:
         return cls(
             normalized_measurement_feature_name_parts(feature_name),
             dialect,
@@ -434,7 +434,7 @@ class RuntimeMeasurementNamePartsProjection:
             self.dialect,
         )
 
-    def strip_category_prefix_for_core(self) -> "RuntimeMeasurementNamePartsProjection":
+    def strip_category_prefix_for_core(self) -> RuntimeMeasurementNamePartsProjection:
         prefix = _core_strip_category_prefix_for_parts(
             self.parts,
             self.dialect,
@@ -538,7 +538,7 @@ class RuntimeAggregateFeatureIdentity:
         cls,
         parts: tuple[str, ...],
         dialect: MeasurementDialect,
-    ) -> "RuntimeAggregateFeatureIdentity | None":
+    ) -> RuntimeAggregateFeatureIdentity | None:
         """Parse an aggregate feature using the runtime measurement dialect."""
         if len(parts) < 3 or parts[0] not in _MEASUREMENT_AGGREGATE_PREFIXES:
             return None
@@ -709,7 +709,7 @@ class RuntimeMeasurementFeatureNameProjection:
         policy: RuntimeEquivalencePolicy,
         source_name: str | None,
         known_source_names: tuple[str, ...],
-    ) -> "RuntimeMeasurementFeatureNameProjection":
+    ) -> RuntimeMeasurementFeatureNameProjection:
         return cls(
             policy,
             source_name,

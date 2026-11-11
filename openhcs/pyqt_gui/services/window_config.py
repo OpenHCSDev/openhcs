@@ -4,6 +4,8 @@ Window Configuration - Declarative specs for application windows.
 Centralized window definitions replacing hardcoded creation code.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum, nonmember
 from collections.abc import Callable
@@ -23,7 +25,7 @@ class StartupWindowPresentation(Enum):
         cls,
         value: str,
         presenter: WindowPresentationLeaf,
-    ) -> "StartupWindowPresentation":
+    ) -> StartupWindowPresentation:
         member = object.__new__(cls)
         member._value_ = value
         member._presenter = presenter

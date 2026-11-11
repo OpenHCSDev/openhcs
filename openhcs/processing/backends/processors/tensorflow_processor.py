@@ -29,7 +29,7 @@ OPERATIONS = ArrayOperations.for_memory(MemoryType.TENSORFLOW)
 @tensorflow_func
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Create a 2D weight mask that linearly ramps from 0 at the edges to 1 in the center.
 
@@ -46,7 +46,7 @@ def create_linear_weight_mask(
     )
 
 
-def _gaussian_blur(image: "tf.Tensor", sigma: float) -> "tf.Tensor":
+def _gaussian_blur(image: tf.Tensor, sigma: float) -> tf.Tensor:
     """
     Apply Gaussian blur to a 2D image.
 
@@ -74,8 +74,8 @@ def _gaussian_blur(image: "tf.Tensor", sigma: float) -> "tf.Tensor":
 
 @tensorflow_func
 def sharpen(
-    image: "tf.Tensor", radius: float = 1.0, amount: float = 1.0
-) -> "tf.Tensor":
+    image: tf.Tensor, radius: float = 1.0, amount: float = 1.0
+) -> tf.Tensor:
     """
     Sharpen a 3D image using unsharp masking.
 
@@ -132,12 +132,12 @@ def sharpen(
 
 @tensorflow_func
 def percentile_normalize(
-    image: "tf.Tensor",
+    image: tf.Tensor,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Normalize a 3D image using percentile-based contrast stretching.
 
@@ -197,12 +197,12 @@ def percentile_normalize(
 
 @tensorflow_func
 def stack_percentile_normalize(
-    stack: "tf.Tensor",
+    stack: tf.Tensor,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: float = 0.0,
     target_max: float = 65535.0,
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Normalize a stack using global percentile-based contrast stretching.
 
@@ -262,7 +262,7 @@ def stack_percentile_normalize(
 @tensorflow_func
 def create_composite(
     images: List["tf.Tensor"], weights: Optional[List[float]] = None
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Create a composite image from multiple 3D arrays.
 
@@ -337,7 +337,7 @@ def create_composite(
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
 @tensorflow_func
-def apply_mask(image: "tf.Tensor", mask: "tf.Tensor") -> "tf.Tensor":
+def apply_mask(image: tf.Tensor, mask: tf.Tensor) -> tf.Tensor:
     """
     Apply a mask to a 3D image.
 
@@ -357,7 +357,7 @@ def apply_mask(image: "tf.Tensor", mask: "tf.Tensor") -> "tf.Tensor":
 @tensorflow_func
 def create_weight_mask(
     shape: Tuple[int, int], margin_ratio: float = 0.1
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Create a weight mask for blending images.
 
@@ -372,7 +372,7 @@ def create_weight_mask(
 
 
 @tensorflow_func
-def max_projection(stack: "tf.Tensor") -> "tf.Tensor":
+def max_projection(stack: tf.Tensor) -> tf.Tensor:
     """
     Create a maximum intensity projection from a Z-stack.
 
@@ -386,7 +386,7 @@ def max_projection(stack: "tf.Tensor") -> "tf.Tensor":
 
 
 @tensorflow_func
-def mean_projection(stack: "tf.Tensor") -> "tf.Tensor":
+def mean_projection(stack: tf.Tensor) -> tf.Tensor:
     """
     Create a mean intensity projection from a Z-stack.
 
@@ -401,11 +401,11 @@ def mean_projection(stack: "tf.Tensor") -> "tf.Tensor":
 
 @tensorflow_func
 def stack_equalize_histogram(
-    stack: "tf.Tensor",
+    stack: tf.Tensor,
     bins: int = 65536,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Apply histogram equalization to an entire stack.
 
@@ -473,9 +473,9 @@ def stack_equalize_histogram(
 
 @tensorflow_func
 def create_projection(
-    stack: "tf.Tensor",
+    stack: tf.Tensor,
     method: StackProjectionMethod = StackProjectionMethod.MAX,
-) -> "tf.Tensor":
+) -> tf.Tensor:
     """
     Create a projection from a stack using the specified method.
 
@@ -491,8 +491,8 @@ def create_projection(
 
 @tensorflow_func
 def tophat(
-    image: "tf.Tensor", selem_radius: int = 50, downsample_factor: int = 4
-) -> "tf.Tensor":
+    image: tf.Tensor, selem_radius: int = 50, downsample_factor: int = 4
+) -> tf.Tensor:
     """
     Apply white top-hat filter to a 3D image for background removal.
 

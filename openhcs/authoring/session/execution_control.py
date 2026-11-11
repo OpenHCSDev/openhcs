@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class ExecutionControl:
     """Owns cancellation, failure terminalization and client teardown."""
 
-    def __init__(self, session: "Session") -> None:
+    def __init__(self, session: Session) -> None:
         self._session = session
 
     def _shutdown_service(self) -> EndpointShutdownService:

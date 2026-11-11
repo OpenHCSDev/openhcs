@@ -62,7 +62,7 @@ class ImageMathOperation(Enum):
 
     def __new__(
         cls, absorbed_value: str, *cellprofiler_literals: str
-    ) -> "ImageMathOperation":
+    ) -> ImageMathOperation:
         return enum_member_with_payload(
             cls,
             absorbed_value,
@@ -98,7 +98,7 @@ class ImageMathOperation(Enum):
         }
 
     @classmethod
-    def from_cellprofiler_literal(cls, value: str) -> "ImageMathOperation":
+    def from_cellprofiler_literal(cls, value: str) -> ImageMathOperation:
         """Return the operation named by a CellProfiler setting literal."""
         matches = tuple(
             (
@@ -182,9 +182,9 @@ class ImageMathModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Expose only the image operands active for this module value."""
 
@@ -276,7 +276,7 @@ class ImageMathModule(
     @classmethod
     def _active_image_operand_bindings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> tuple[SettingToKeywordBinding, ...]:
         operation_value = optional_setting_value(module, cls.operation_setting)
         if operation_value is not None:
@@ -368,8 +368,8 @@ class ImageMathModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         operand_choices = tuple(
             normalize_cellprofiler_setting_name(value)
             for value in setting_values(module, cls.operand_choice_setting)
@@ -447,7 +447,7 @@ class ImageMathOperationStrategy(
         return all((pd.dtype == bool for pd in pixel_data if not np.isscalar(pd)))
 
     @classmethod
-    def for_operation(cls, value: MathOperation) -> "ImageMathOperationStrategy":
+    def for_operation(cls, value: MathOperation) -> ImageMathOperationStrategy:
         return cls.for_enum_member(value)
 
     def prepare_initial_output(
@@ -803,7 +803,7 @@ class ImageMathPreparedOperands:
         operation_strategy: ImageMathOperationStrategy,
         factors: tuple[float, ...],
         mask_policy: ImageMathMaskPolicy,
-    ) -> "ImageMathPreparedOperands":
+    ) -> ImageMathPreparedOperands:
         source_payloads = cls._source_payloads(image)
         if operation_strategy.single_image and len(source_payloads) != 1:
             raise ValueError(

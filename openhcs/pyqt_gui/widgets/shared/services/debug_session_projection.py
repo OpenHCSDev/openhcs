@@ -170,7 +170,7 @@ class DebugSessionPanelText:
     @classmethod
     def from_context(
         cls, context: DebugSessionProjectionContext
-    ) -> "DebugSessionPanelText":
+    ) -> DebugSessionPanelText:
         phase_declaration = context.phase
         cursor = None
         command_type = None

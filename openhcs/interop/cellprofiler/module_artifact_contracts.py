@@ -62,8 +62,8 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         cls,
         blocks: tuple["ModuleBlock", ...],
         *,
-        invocation: "NormalizedFunctionItem",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple["ModuleBlock", ...]:
         """Apply module-owned transformations after generic reconstruction."""
 
@@ -73,9 +73,9 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_bindings_for(
         cls,
-        module: "ModuleBlock | None",
+        module: ModuleBlock | None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
         plan_type: type[ArtifactInputPlan] | type[ArtifactOutputPlan] | None = None,
         artifact_type: type[ArtifactType] | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
@@ -112,9 +112,9 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None",
+        module: ModuleBlock | None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Return artifact bindings active for one exact module invocation."""
 
@@ -124,7 +124,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_names_for_binding(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         binding: SettingToKeywordBinding,
     ) -> tuple[str, ...]:
         """Return artifact identities selected by one exact binding."""
@@ -157,7 +157,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         step_context: ArtifactDeclarationStepContext,
         *,
         contract: CallableContract,
-        invocation_key: "FunctionInvocationKey",
+        invocation_key: FunctionInvocationKey,
     ) -> ArtifactDeclarationStepContext:
         """Advance declaration state using this module's main-flow semantics."""
 
@@ -213,10 +213,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def _artifact_context_for_group(
         cls,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
         *,
         group_key: str,
-    ) -> "ArtifactDeclarationStepContext":
+    ) -> ArtifactDeclarationStepContext:
         """Return the exact artifact scope represented by one invocation group."""
 
         del cls
@@ -271,9 +271,9 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     def _artifact_input_record_groups(
         cls,
         *,
-        module: "ModuleBlock",
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        module: ModuleBlock,
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[tuple["ModuleSetting", ...], ...]:
         """Reconstruct missing input identities from the scoped artifact context."""
 
@@ -304,10 +304,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_input_bindings_for_reconstruction(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Return active input bindings before generic ordered assignment."""
 
@@ -322,10 +322,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     def _artifact_input_record_groups_for_bindings(
         cls,
         *,
-        module: "ModuleBlock",
-        invocation_key: "FunctionInvocationKey",
+        module: ModuleBlock,
+        invocation_key: FunctionInvocationKey,
         bindings: tuple[SettingToKeywordBinding, ...],
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[tuple["ModuleSetting", ...], ...]:
         """Derive one artifact kind's missing setting rows from current flow."""
 
@@ -480,8 +480,8 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         cls,
         *,
         binding: SettingToKeywordBinding,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Return exact scoped input specs in their declared flow order."""
 
@@ -526,7 +526,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         cls,
         spec: ArtifactSpec,
         *,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple["ArtifactProducer", ...]:
         """Return producers owning this exact artifact identity."""
 
@@ -542,10 +542,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     def _derived_identity_setting_records(
         cls,
         *,
-        invocation: "NormalizedFunctionItem",
+        invocation: NormalizedFunctionItem,
         block_position: int,
         existing_records: tuple["ModuleSetting", ...],
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple["ModuleSetting", ...]:
         """Derive missing output identities from canonical output bindings."""
 
@@ -581,7 +581,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         artifact_type: type[ArtifactType],
         block_position: int,
         existing_records: tuple["ModuleSetting", ...],
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple["ModuleSetting", ...]:
         """Derive defaults for one MRO owner's declared output settings."""
 
@@ -620,7 +620,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     def _module_block_from_setting_records(
         cls,
         records: tuple["ModuleSetting", ...],
-    ) -> "ModuleBlock":
+    ) -> ModuleBlock:
         """Build the transient module value shared by declaration algorithms."""
 
         from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -639,7 +639,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         artifact_type: type[ArtifactType],
         output_position: int,
         block_position: int,
-        step_context: "ArtifactDeclarationStepContext",
+        step_context: ArtifactDeclarationStepContext,
     ) -> str:
         """Return a deterministic default identity for one module output."""
 
@@ -656,7 +656,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def canonical_numbered_module_output_artifact_name(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         artifact_type: type[ArtifactType],
         output_position: int,
@@ -685,10 +685,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def measurement_artifact_name(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> str:
         """Return a deterministic measurement identity for one public invocation."""
 
@@ -708,11 +708,11 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_inputs_from_bindings(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         bindings: tuple[SettingToKeywordBinding, ...],
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Resolve exact input bindings through the scoped artifact context."""
 
@@ -731,11 +731,11 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_inputs_for_binding(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Resolve one active binding through its nominal declaration owner."""
 
@@ -798,8 +798,8 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         modules: Iterable["ModuleBlock"],
         *,
         binding: SettingToKeywordBinding,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[tuple[ArtifactSpec, ...], ...]:
         """Resolve one binding without erasing reconstructed block occurrences."""
 
@@ -857,12 +857,12 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def require_available_artifact_input(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> ArtifactSpec:
         """Return one exact context-owned input artifact or fail."""
 
@@ -939,10 +939,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Construct input specs from active canonical artifact bindings."""
 
@@ -960,10 +960,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Resolve declarations that depend on the complete input collection."""
@@ -979,10 +979,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def finalize_artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         artifact_outputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
@@ -1000,10 +1000,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Construct output specs from active canonical artifact bindings."""
@@ -1037,12 +1037,12 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         output_position: int,
     ) -> tuple[ArtifactSpecRelation, ...]:
@@ -1079,12 +1079,12 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def artifact_output_spec(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         binding: SettingToKeywordBinding,
         name: str,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
         output_position: int,
     ) -> ArtifactSpec:
@@ -1107,10 +1107,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def measurement_output_relations(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpecRelation, ...]:
         """Terminate cooperative measurement-output relation declaration."""
@@ -1146,10 +1146,10 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def measurement_output_artifact(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> ArtifactSpec:
         """Declare the standard CellProfiler measurement output artifact."""
@@ -1173,9 +1173,9 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     def callable_contract(
         cls,
         *,
-        module: "ModuleBlock",
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        module: ModuleBlock,
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> CallableContract:
         """Resolve dynamic artifact names onto the canonical callable contract."""
         step_context = cls._artifact_context_for_group(

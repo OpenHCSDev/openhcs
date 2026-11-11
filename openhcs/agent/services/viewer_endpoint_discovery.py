@@ -205,7 +205,7 @@ def unowned_viewer_endpoints() -> tuple[ViewerEndpointRecord, ...]:
 class ViewerEndpointDiscoveryService:
     """Sweep authority for live viewer endpoints in the local IPC directory."""
 
-    def sweep(self) -> "ViewerEndpointDiscoveryResult":
+    def sweep(self) -> ViewerEndpointDiscoveryResult:
         from openhcs.agent.dto.viewer import ViewerEndpointDiscoveryResult
         from python_introspect import to_jsonable
 

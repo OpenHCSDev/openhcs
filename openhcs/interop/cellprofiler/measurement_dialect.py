@@ -286,7 +286,7 @@ class CellProfilerEquivalencePolicy(RuntimeEquivalencePolicy):
     @classmethod
     def for_policy(
         cls, policy: RuntimeEquivalencePolicy
-    ) -> "CellProfilerEquivalencePolicy":
+    ) -> CellProfilerEquivalencePolicy:
         """The CellProfiler tolerances a policy carries; a kernel policy is strict."""
         return policy if isinstance(policy, cls) else cls()
 

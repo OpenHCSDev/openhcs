@@ -66,19 +66,19 @@ class SessionOperation(
             raise ValueError(f"Unknown session operation: {operation_id!r}") from None
 
     @classmethod
-    def resolved(cls, session: "Session") -> type["SessionOperation"]:
+    def resolved(cls, session: Session) -> type["SessionOperation"]:
         """The operation a button bound to this one runs now (default: itself)."""
 
         del session
         return cls
 
     @classmethod
-    def button_label(cls, session: "Session") -> str:
+    def button_label(cls, session: Session) -> str:
         del session
         return cls.label
 
     @classmethod
-    def available(cls, session: "Session", request: object) -> AgentError | None:
+    def available(cls, session: Session, request: object) -> AgentError | None:
         """Why the operation cannot run now, or ``None`` when it can."""
 
         del session, request
@@ -87,7 +87,7 @@ class SessionOperation(
     @classmethod
     def request_for_selection(
         cls,
-        session: "Session",
+        session: Session,
         scope_ids: tuple[str, ...],
     ) -> object:
         """The request a renderer sends for the given row selection."""
@@ -97,10 +97,10 @@ class SessionOperation(
 
     @classmethod
     @abstractmethod
-    def run(cls, session: "Session", request: object) -> SessionOperationResult: ...
+    def run(cls, session: Session, request: object) -> SessionOperationResult: ...
 
     @classmethod
-    def invoke(cls, session: "Session", request: object) -> SessionOperationResult:
+    def invoke(cls, session: Session, request: object) -> SessionOperationResult:
         """Check availability, then run."""
 
         error = cls.available(session, request)
@@ -116,7 +116,7 @@ class SessionOperation(
     @classmethod
     def completed(
         cls,
-        session: "Session",
+        session: Session,
         scope_ids: tuple[str, ...] = (),
     ) -> SessionOperationResult:
         return SessionOperationResult(
@@ -130,7 +130,7 @@ class SessionOperation(
     @classmethod
     def accepted(
         cls,
-        session: "Session",
+        session: Session,
         scope_ids: tuple[str, ...] = (),
     ) -> SessionOperationResult:
         """Work continues in the background; follow the session's events."""
@@ -144,7 +144,7 @@ class SessionOperation(
         )
 
     @classmethod
-    def rejected(cls, session: "Session", error: AgentError) -> SessionOperationResult:
+    def rejected(cls, session: Session, error: AgentError) -> SessionOperationResult:
         return SessionOperationResult(
             operation_id=cls.operation_id or cls.__name__,
             status="rejected",
@@ -163,7 +163,7 @@ class RendererOperation(SessionOperation):
     confirmation_required = False
 
     @classmethod
-    def available(cls, session: "Session", request: object) -> AgentError | None:
+    def available(cls, session: Session, request: object) -> AgentError | None:
         error = super().available(session, request)
         if error is not None:
             return error
@@ -175,6 +175,6 @@ class RendererOperation(SessionOperation):
         return session.renderer.unavailable_reason(cls, request)
 
     @classmethod
-    def run(cls, session: "Session", request: object) -> SessionOperationResult:
+    def run(cls, session: Session, request: object) -> SessionOperationResult:
         session.renderer.present(cls, request)
         return cls.completed(session)

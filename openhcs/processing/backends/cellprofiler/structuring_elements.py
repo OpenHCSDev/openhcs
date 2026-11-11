@@ -52,7 +52,7 @@ class StructuringElementFactory(
     def for_structuring_element(
         cls,
         structuring_element: StructuringElement,
-    ) -> "StructuringElementFactory":
+    ) -> StructuringElementFactory:
         return cls.for_enum_member(structuring_element)
 
     @abstractmethod

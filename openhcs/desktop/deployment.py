@@ -65,7 +65,7 @@ class DesktopApplicationIdentity:
     gui_module: str
 
     @classmethod
-    def installed(cls) -> "DesktopApplicationIdentity":
+    def installed(cls) -> DesktopApplicationIdentity:
         installed_distribution = distribution(_DISTRIBUTION_NAME)
         distribution_key = canonicalize_name(installed_distribution.metadata["Name"])
         command_entry_points = tuple(
@@ -111,7 +111,7 @@ class DesktopDeploymentContext:
         environment_root: Path | None = None,
         home: Path | None = None,
         environment: dict[str, str] | None = None,
-    ) -> "DesktopDeploymentContext":
+    ) -> DesktopDeploymentContext:
         """Resolve one native-installer layout from its stable pointer."""
 
         values = os.environ if environment is None else environment
@@ -180,7 +180,7 @@ class DesktopEnvironmentCandidate:
         python_relative_path: Path,
         *,
         transaction_id: str | None = None,
-    ) -> "DesktopEnvironmentCandidate":
+    ) -> DesktopEnvironmentCandidate:
         identifier = transaction_id or uuid4().hex[:8]
         if len(identifier) != 8 or any(
             character not in "0123456789abcdef" for character in identifier
@@ -211,7 +211,7 @@ class _WindowsLauncherFingerprint:
     executable_sha256: str
 
     @classmethod
-    def read(cls, path: Path) -> "_WindowsLauncherFingerprint":
+    def read(cls, path: Path) -> _WindowsLauncherFingerprint:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             raise TypeError("Windows launcher fingerprint must be a JSON object.")
@@ -307,7 +307,7 @@ class DesktopDeployment(
     __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @classmethod
-    def current(cls) -> "DesktopDeployment":
+    def current(cls) -> DesktopDeployment:
         deployments = cls.strategy_types_for_nominal_type(
             AgentRuntimePlatform.current_type()
         )

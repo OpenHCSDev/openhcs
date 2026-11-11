@@ -600,9 +600,7 @@ class DebugInvocationParameter:
             )
         elif value is None or isinstance(value, (int, float, bool)):
             facts.append(f"value={value!r}")
-        elif isinstance(value, Mapping):
-            facts.append(f"item_count={len(value)}")
-        elif isinstance(value, (tuple, list, set, frozenset)):
+        elif isinstance(value, (Mapping, tuple, list, set, frozenset)):
             facts.append(f"item_count={len(value)}")
 
         if projection is not None:

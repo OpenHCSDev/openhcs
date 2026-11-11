@@ -27,7 +27,7 @@ class RuntimeArtifactProgressPayload(ProgressContextPayload):
     def from_records(
         cls,
         records: Sequence[StoredRuntimeValue],
-    ) -> "RuntimeArtifactProgressPayload | None":
+    ) -> RuntimeArtifactProgressPayload | None:
         addresses = tuple(
             RuntimeArtifactAddress.from_record(record) for record in records
         )

@@ -1404,9 +1404,7 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
                 first.dtype.type(first_threshold),
                 second.dtype.type(second_threshold),
             )
-            if count <= 2:
-                left = mid - 1
-            elif correlation < 0.0:
+            if count <= 2 or correlation < 0.0:
                 left = mid - 1
             elif correlation >= 0.0:
                 right = mid + 1

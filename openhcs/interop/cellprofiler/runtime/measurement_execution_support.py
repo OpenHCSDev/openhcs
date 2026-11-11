@@ -202,7 +202,7 @@ class PreparedObjectMeasurementInvocation(RuntimeBatchInvocationRequest):
 
     measurement_image: CellProfilerMeasurementImage
     object_spec: ArtifactSpec
-    invocation: "ObjectMeasurementInvocation"
+    invocation: ObjectMeasurementInvocation
     completion_label_payload: RuntimeCallableArgument
 
 
@@ -211,7 +211,7 @@ def object_label_stage_event(
     measurement_image: CellProfilerMeasurementImage,
     object_spec: ArtifactSpec,
     value: RuntimeCallableArgument,
-) -> "CellProfilerRuntimeProfileEvent":
+) -> CellProfilerRuntimeProfileEvent:
     return CellProfilerRuntimeProfileEvent(
         "cp_per_object_label_stage",
         0.0,
@@ -229,7 +229,7 @@ def dense_label_stage_event(
     measurement_image: CellProfilerMeasurementImage,
     object_spec: ArtifactSpec,
     value: RuntimeCallableArgument,
-) -> "CellProfilerRuntimeProfileEvent":
+) -> CellProfilerRuntimeProfileEvent:
     return CellProfilerRuntimeProfileEvent(
         "cp_per_object_label_stage",
         0.0,
@@ -274,7 +274,7 @@ class ObjectMeasurementOutputRecorder:
 
     callable_contract: CallableContract
     measurement_output_plan: ArtifactOutputPlan
-    row_policy: "CellProfilerObjectMeasurementRowPolicy"
+    row_policy: CellProfilerObjectMeasurementRowPolicy
     module_type: type["CellProfilerModule"]
     measurement_images: tuple["CellProfilerMeasurementImage", ...]
     object_inputs: tuple[ArtifactSpec, ...]
@@ -425,7 +425,7 @@ class ObjectMeasurementOutputRecorder:
         self,
         rows: ColumnarRows,
         *,
-        measurement_image: "CellProfilerMeasurementImage",
+        measurement_image: CellProfilerMeasurementImage,
         row_object_name: str | None,
     ) -> ColumnarRows:
         ownership = self.row_policy.row_ownership(
@@ -445,7 +445,7 @@ class ObjectMeasurementOutputRecorder:
     def record_non_object_rows(
         self,
         rows: ColumnarRows,
-        measurement_image: "CellProfilerMeasurementImage",
+        measurement_image: CellProfilerMeasurementImage,
     ) -> None:
         if not rows.row_count():
             return
@@ -462,7 +462,7 @@ class ObjectMeasurementOutputRecorder:
         self,
         rows: ColumnarRows,
         object_spec: ArtifactSpec,
-        measurement_image: "CellProfilerMeasurementImage",
+        measurement_image: CellProfilerMeasurementImage,
     ) -> None:
         annotate_started_at = time.perf_counter()
         projected_rows = self.project_owned_rows(

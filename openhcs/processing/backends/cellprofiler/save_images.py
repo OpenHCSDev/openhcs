@@ -97,7 +97,7 @@ class SaveImagesFilenameMethod(str, Enum):
         sequential_prefix: str,
         sequential_digits: int,
         suffix: str,
-        file_format: "SaveImagesFileFormat",
+        file_format: SaveImagesFileFormat,
     ) -> str | None:
         """Return the generic relative template for this naming mode."""
 
@@ -230,7 +230,7 @@ EnumT = TypeVar("EnumT", bound=Enum)
 
 
 def _enum_setting(
-    module: "ModuleBlock",
+    module: ModuleBlock,
     setting: str | SettingNameFamily,
     enum_type: type[EnumT],
     default: EnumT,
@@ -242,7 +242,7 @@ def _enum_setting(
 
 
 def _bool_setting(
-    module: "ModuleBlock",
+    module: ModuleBlock,
     setting: str | SettingNameFamily,
     default: bool,
 ) -> bool:
@@ -251,7 +251,7 @@ def _bool_setting(
 
 
 def _int_setting(
-    module: "ModuleBlock",
+    module: ModuleBlock,
     setting: str | SettingNameFamily,
     default: int,
 ) -> int:
@@ -481,7 +481,7 @@ class SaveImagesModule(
         return False
 
     @classmethod
-    def records_file_and_path(cls, module: "ModuleBlock") -> bool:
+    def records_file_and_path(cls, module: ModuleBlock) -> bool:
         """Return whether this declaration owns the recorded measurement port."""
 
         return _bool_setting(module, cls.record_file_setting, False)
@@ -519,7 +519,7 @@ class SaveImagesModule(
     @classmethod
     def resolve_function(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         contract,
         source_bindings,
@@ -577,8 +577,8 @@ class SaveImagesModule(
         cls,
         blocks,
         *,
-        invocation: "NormalizedFunctionItem",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ModuleBlock, ...]:
         """Select the exact saved-image source named by the active public callable."""
 
@@ -615,9 +615,9 @@ class SaveImagesModule(
     @classmethod
     def active_artifact_bindings(
         cls,
-        module: "ModuleBlock | None" = None,
+        module: ModuleBlock | None = None,
         *,
-        invocation_key: "FunctionInvocationKey | None" = None,
+        invocation_key: FunctionInvocationKey | None = None,
     ) -> tuple[SettingToKeywordBinding, ...]:
         """Declare the filename source only when source-derived naming is active."""
 
@@ -661,8 +661,8 @@ class SaveImagesModule(
         cls,
         *,
         binding: SettingToKeywordBinding,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Preserve every scoped image choice when selection is omitted."""
 
@@ -697,10 +697,10 @@ class SaveImagesModule(
     @classmethod
     def artifact_contract_outputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Declare the materialized image artifact absent from CellProfiler settings."""
@@ -816,7 +816,7 @@ class SaveImagesModule(
     @classmethod
     def _materialization_spec(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
         output_name: str,
     ) -> MaterializationSpec:

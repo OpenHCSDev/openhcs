@@ -213,7 +213,7 @@ class MainWindowLifecycleWorkflow:
     embedded_widgets: MainWindowEmbeddedWidgets
     floating_windows: dict[str, QWidget]
     status_progress_bar: QProgressBar
-    ui_bridge_lifecycle: "MainWindowUiBridgeLifecycle"
+    ui_bridge_lifecycle: MainWindowUiBridgeLifecycle
     ui_services: PyQtServiceAdapter
 
     def propagate_config(self, new_config: GlobalPipelineConfig) -> None:
@@ -307,7 +307,7 @@ class MainWindowLifecycleWorkflow:
 class MainWindowUiBridgeLifecycle:
     """Mutable owner for the optional main-window UI bridge server."""
 
-    server: "UiBridgeControlServer | None" = None
+    server: UiBridgeControlServer | None = None
 
     @property
     def bound_port(self) -> int | None:
@@ -318,8 +318,8 @@ class MainWindowUiBridgeLifecycle:
     def reconcile(
         self,
         *,
-        config: "AgentUiBridgeConfig",
-        transport_config: "OpenHCSZMQConfig",
+        config: AgentUiBridgeConfig,
+        transport_config: OpenHCSZMQConfig,
         create_server: Callable[
             ["AgentUiBridgeConfig", "OpenHCSZMQConfig"],
             "UiBridgeControlServer",

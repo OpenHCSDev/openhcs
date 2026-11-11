@@ -785,7 +785,7 @@ class PipelineEditorBridgeProviderSet(UiBridgeProviderSetABC):
         self._manager = manager
 
     @classmethod
-    def for_main_window(cls, main_window) -> "PipelineEditorBridgeProviderSet":
+    def for_main_window(cls, main_window) -> PipelineEditorBridgeProviderSet:
         return cls(main_window.pipeline_editor_widget)
 
     def register(self, context: UiBridgeRegistrationContext) -> None:

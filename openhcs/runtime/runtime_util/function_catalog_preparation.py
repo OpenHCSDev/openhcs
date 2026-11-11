@@ -50,7 +50,7 @@ class FunctionCatalogPreparation:
 
     def __init__(
         self,
-        function_catalog: "FunctionCatalogServiceABC",
+        function_catalog: FunctionCatalogServiceABC,
     ) -> None:
         self._lock = threading.RLock()
         self._future: Future[None] | None = None

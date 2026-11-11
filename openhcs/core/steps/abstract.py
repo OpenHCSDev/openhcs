@@ -151,14 +151,14 @@ class AbstractStep(abc.ABC):
         description: str = None,
         enabled: bool = True,
         debug_pause: bool = False,
-        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
-        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
-        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
-        step_partition_filter_config: "LazyStepPartitionFilterConfig" = LazyStepPartitionFilterConfig(),
-        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
-        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
-        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
-        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+        dtype_config: LazyDtypeConfig = LazyDtypeConfig(),
+        processing_config: LazyProcessingConfig = LazyProcessingConfig(),
+        source_bindings: LazyStepSourceBindingsConfig = LazyStepSourceBindingsConfig(),
+        step_partition_filter_config: LazyStepPartitionFilterConfig = LazyStepPartitionFilterConfig(),
+        step_materialization_config: LazyStepMaterializationConfig = LazyStepMaterializationConfig(),
+        streaming_defaults: LazyStreamingDefaults = LazyStreamingDefaults(),
+        napari_streaming_config: LazyNapariStreamingConfig = LazyNapariStreamingConfig(),
+        fiji_streaming_config: LazyFijiStreamingConfig = LazyFijiStreamingConfig(),
     ) -> None:
         """
         Initialize a step. These attributes are primarily used during the
@@ -227,9 +227,9 @@ class AbstractStep(abc.ABC):
     @abc.abstractmethod
     def process(
         self,
-        context: "ExecutingContext",
+        context: ExecutingContext,
         step_index: int,
-    ) -> "StepExecutionObservation":
+    ) -> StepExecutionObservation:
         """
         Process the step with the given context and step index.
 

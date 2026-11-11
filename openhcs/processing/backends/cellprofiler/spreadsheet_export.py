@@ -125,7 +125,7 @@ class SpreadsheetDelimiter(str, Enum):
     TAB = "\t"
 
     @classmethod
-    def from_cellprofiler(cls, value: str) -> "SpreadsheetDelimiter":
+    def from_cellprofiler(cls, value: str) -> SpreadsheetDelimiter:
         """Parse one CellProfiler delimiter setting."""
 
         normalized = value.strip().casefold()
@@ -149,7 +149,7 @@ class SpreadsheetNanRepresentation(str, Enum):
     NULL = "null"
 
     @classmethod
-    def from_cellprofiler(cls, value: str) -> "SpreadsheetNanRepresentation":
+    def from_cellprofiler(cls, value: str) -> SpreadsheetNanRepresentation:
         """Parse one CellProfiler NaN/Inf representation setting."""
 
         normalized = value.strip().casefold()
@@ -2139,8 +2139,8 @@ class ExportToSpreadsheetModule(ArtifactExportModule, ValidatedHighConfidenceMod
         cls,
         module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ArtifactSpec, ...]:
         """Select the exact ordered tables exported by this plate module."""
 
@@ -2160,8 +2160,8 @@ class ExportToSpreadsheetModule(ArtifactExportModule, ValidatedHighConfidenceMod
         cls,
         module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         """Declare the materialized spreadsheet bundle."""
@@ -2191,8 +2191,8 @@ class ExportToSpreadsheetModule(ArtifactExportModule, ValidatedHighConfidenceMod
         cls,
         module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
     ) -> str:
         step_index = step_context.step_index
         if not isinstance(step_index, int):

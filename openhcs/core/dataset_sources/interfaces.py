@@ -91,7 +91,7 @@ class MetadataComponentValueSet:
         component_values: Iterable[
             tuple[type[Axis], MetadataComponentValuesInput | None]
         ],
-    ) -> "MetadataComponentValueSet":
+    ) -> MetadataComponentValueSet:
         """Fill undeclared metadata axes with an explicit unavailable value."""
 
         partial = AxisValues.from_partial(
@@ -174,7 +174,7 @@ class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
     def provider_type_for_handler(
         cls,
         artifact_name: str,
-        handler: "MetadataHandler",
+        handler: MetadataHandler,
     ) -> type["MetadataArtifactProvider"] | None:
         for provider_type in cls.registered_provider_types():
             if (
@@ -186,13 +186,13 @@ class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def supports_handler(cls, handler: "MetadataHandler") -> bool:
+    def supports_handler(cls, handler: MetadataHandler) -> bool:
         """Return whether this provider can resolve artifacts for a handler."""
 
     @abstractmethod
     def resolve(
         self,
-        handler: "MetadataHandler",
+        handler: MetadataHandler,
         dataset_root: Union[str, Path],
     ) -> object:
         """Return this metadata artifact for a plate."""
@@ -205,12 +205,12 @@ class GridDimensionsMetadataArtifactProvider(MetadataArtifactProvider):
     description = "Grid dimensions (num_rows, num_cols) for position generation."
 
     @classmethod
-    def supports_handler(cls, handler: "MetadataHandler") -> bool:
+    def supports_handler(cls, handler: MetadataHandler) -> bool:
         return isinstance(handler, MetadataHandler)
 
     def resolve(
         self,
-        handler: "MetadataHandler",
+        handler: MetadataHandler,
         dataset_root: Union[str, Path],
     ) -> tuple[int, int]:
         return handler.get_grid_dimensions(dataset_root)
@@ -223,12 +223,12 @@ class PixelSizeMetadataArtifactProvider(MetadataArtifactProvider):
     description = "Pixel size in micrometers per pixel for physical-unit analysis."
 
     @classmethod
-    def supports_handler(cls, handler: "MetadataHandler") -> bool:
+    def supports_handler(cls, handler: MetadataHandler) -> bool:
         return isinstance(handler, MetadataHandler)
 
     def resolve(
         self,
-        handler: "MetadataHandler",
+        handler: MetadataHandler,
         dataset_root: Union[str, Path],
     ) -> float:
         return handler.get_pixel_size(dataset_root)
@@ -239,7 +239,7 @@ class MetadataViewEntry:
     """One metadata object projected for UI/document consumers."""
 
     name: str
-    object_instance: "OpenHCSMetadata"
+    object_instance: OpenHCSMetadata
     summary: str | None = None
 
 
@@ -456,7 +456,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     def source_dataset(
         self,
         dataset_root: Union[str, Path],
-    ) -> "SourcePlaneDataset | None":
+    ) -> SourcePlaneDataset | None:
         """Return exact store-emitted source planes when the metadata owner has them."""
 
         del dataset_root

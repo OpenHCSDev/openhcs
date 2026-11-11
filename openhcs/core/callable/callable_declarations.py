@@ -37,7 +37,7 @@ class CallableImportIdentity:
                 )
 
     @classmethod
-    def from_callable(cls, func: Callable[..., object]) -> "CallableImportIdentity":
+    def from_callable(cls, func: Callable[..., object]) -> CallableImportIdentity:
         """Return the import identity declared by a resolved callable object."""
 
         if not callable(func):
@@ -111,7 +111,7 @@ class FunctionStepExecutionScope(str, Enum):
     def require_uniform(
         cls,
         contracts: Iterable["CallableContract"],
-    ) -> "FunctionStepExecutionScope":
+    ) -> FunctionStepExecutionScope:
         """Return the one execution scope shared by all callable contracts."""
         scopes = tuple(contract.execution_scope for contract in contracts)
         if not scopes:

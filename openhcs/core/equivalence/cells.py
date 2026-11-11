@@ -60,7 +60,7 @@ class RuntimeCellSignature:
         return (self.kind.value, self.value)
 
     @classmethod
-    def from_cache_payload(cls, payload: object) -> "RuntimeCellSignature":
+    def from_cache_payload(cls, payload: object) -> RuntimeCellSignature:
         """Rebuild a cell signature from a semantic cache payload."""
         kind, value = payload  # type: ignore[misc]
         return cls(RuntimeCellValueKind(str(kind)), str(value))
@@ -77,7 +77,7 @@ class RuntimeCellMissingStrategy(ABC, metaclass=AutoRegisterMeta):
     def for_kind(
         cls,
         kind: RuntimeCellValueKind,
-    ) -> "RuntimeCellMissingStrategy":
+    ) -> RuntimeCellMissingStrategy:
         return _RUNTIME_CELL_MISSING_STRATEGY_BY_KIND[kind]
 
     @abstractmethod
@@ -146,7 +146,7 @@ class _SparseNumericInstability:
         rel_tolerance: float,
         max_unstable_values: int,
         max_unstable_fraction: float,
-    ) -> "_SparseNumericInstability":
+    ) -> _SparseNumericInstability:
         return cls(
             abs_tolerance=abs_tolerance,
             rel_tolerance=rel_tolerance,

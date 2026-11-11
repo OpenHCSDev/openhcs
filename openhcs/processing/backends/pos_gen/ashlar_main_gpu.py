@@ -485,11 +485,9 @@ class ArrayEdgeAlignerGPU:
                 o1, o2 = random_state.randint(max_offset, size=2)
 
                 # Check for non-overlapping strips and abort the retry loop
-                if t1 != t2 and (t1, t2) not in edges:
-                    # Different, non-neighboring tiles -- always OK
-                    break
-                elif t1 == t2 and abs(o1 - o2) > w:
-                    # Same tile OK if strips don't overlap within the image
+                if (t1 != t2 and (t1, t2) not in edges) or (
+                    t1 == t2 and abs(o1 - o2) > w
+                ):
                     break
                 elif (t1, t2) in edges:
                     # Neighbors OK if either strip is entirely outside the

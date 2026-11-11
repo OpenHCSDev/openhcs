@@ -959,7 +959,7 @@ class PlateDimensionStrategy(
     __enum_member_attr__ = "plate_type"
 
     @classmethod
-    def for_plate_type(cls, plate_type: PlateType) -> "PlateDimensionStrategy":
+    def for_plate_type(cls, plate_type: PlateType) -> PlateDimensionStrategy:
         return cls.for_enum_member(plate_type)
 
     @abstractmethod
@@ -1447,8 +1447,8 @@ class DisplayDataOnImageModule(
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
-    ) -> "BoundModuleSettings":
+        cls, module: ModuleBlock, bound: BoundModuleSettings
+    ) -> BoundModuleSettings:
         unsupported_font_settings = tuple(
             (setting_names(setting)[0], value)
             for setting in (cls.font_setting, cls.font_weight_setting)

@@ -249,7 +249,7 @@ class ObjectMeasurementRowCompletionSchema:
         object_id_field: str,
         axis_fields: Sequence[str],
         field_names: Sequence[str] = (),
-    ) -> "ObjectMeasurementRowCompletionSchema":
+    ) -> ObjectMeasurementRowCompletionSchema:
         """Build a completion schema from explicit object and axis fields."""
         return cls(
             fields=tuple(FieldSpec(str(field_name)) for field_name in field_names),
@@ -261,7 +261,7 @@ class ObjectMeasurementRowCompletionSchema:
     def from_fields(
         cls,
         fields: tuple[FieldSpec, ...],
-    ) -> "ObjectMeasurementRowCompletionSchema":
+    ) -> ObjectMeasurementRowCompletionSchema:
         """Build completion semantics from an exact producer-owned schema."""
         field_names = tuple(field.name for field in fields)
         if not field_names:
@@ -359,7 +359,7 @@ class ObjectMeasurementRowCompletionSchema:
 
     def axis_keys_for_label_payload(
         self,
-        projection: "ObjectMeasurementRowIdentityProjectionResult",
+        projection: ObjectMeasurementRowIdentityProjectionResult,
         *,
         label_payload: ObjectLabelValue,
     ) -> tuple[tuple[RuntimeCallableArgument, ...], ...]:
@@ -642,8 +642,8 @@ class ObjectMeasurementRowIdentityProjectionResult:
     """Rows plus their nominal object/axis identity after projection."""
 
     rows: ColumnarRows
-    row_keys: "ObjectMeasurementProjectedRowKeys"
-    measured_row_keys: "ObjectMeasurementProjectedRowKeys"
+    row_keys: ObjectMeasurementProjectedRowKeys
+    measured_row_keys: ObjectMeasurementProjectedRowKeys
     axis_keys: tuple[tuple[RuntimeCallableArgument, ...], ...]
 
     def within_axis_domain(
@@ -651,7 +651,7 @@ class ObjectMeasurementRowIdentityProjectionResult:
         *,
         axis_keys: Sequence[tuple[RuntimeCallableArgument, ...]],
         object_ids_by_axis: ObjectMeasurementIdsByAxis,
-    ) -> "ObjectMeasurementRowIdentityProjectionResult":
+    ) -> ObjectMeasurementRowIdentityProjectionResult:
         """Return projected rows constrained to the required object/axis domain."""
         required_row_keys = set(
             ObjectMeasurementProjectedRowKeys.required_axis_domain(
@@ -706,7 +706,7 @@ class ObjectMeasurementRowIdentityProjectionResult:
         object_ids: Sequence[int],
         axis_keys: Sequence[tuple[RuntimeCallableArgument, ...]],
         rows: ColumnarRows | None = None,
-        row_keys: "ObjectMeasurementProjectedRowKeys | None" = None,
+        row_keys: ObjectMeasurementProjectedRowKeys | None = None,
     ) -> ColumnarRows:
         """Return exact columnar rows in dense object/axis order."""
         ordered_rows = self.rows if rows is None else rows
@@ -851,7 +851,7 @@ class ObjectMeasurementProjectedRowKeys:
     def appended(
         self,
         entries: Sequence[ObjectMeasurementProjectedRowKey],
-    ) -> "ObjectMeasurementProjectedRowKeys":
+    ) -> ObjectMeasurementProjectedRowKeys:
         """Return keys with appended completion entries."""
         return ObjectMeasurementProjectedRowKeys((*self.entries, *tuple(entries)))
 

@@ -238,7 +238,7 @@ class NapariResultSelectionSurface:
     """One native mount and the event subscriptions owned by that mount."""
 
     dock: QDockWidget
-    manager: "QRoiManager"
+    manager: QRoiManager
     subscriptions: ExitStack = field(default_factory=ExitStack, init=False, repr=False, compare=False)
 
     def connect_event(self, emitter, callback: Callable) -> None:
@@ -404,7 +404,7 @@ class ShapePayload:
         )
 
     @property
-    def metadata(self) -> "VisualMetadata":
+    def metadata(self) -> VisualMetadata:
         return VisualMetadata(
             PayloadMap(self.payload, "Napari shape payload").optional_mapping(
                 ViewerWireField.METADATA
@@ -439,7 +439,7 @@ class NapariBatchPayload(ViewerDisplayBatchContext[NapariDisplaySettings]):
     def from_json_payload(
         cls,
         data: Mapping[str, NapariWireValue],
-    ) -> "NapariBatchPayload":
+    ) -> NapariBatchPayload:
         fields = ViewerBatchPayloadFields(data, "Napari batch message")
         display_config_payload = fields.required_mapping(
             ViewerBatchWireField.DISPLAY_CONFIG
@@ -469,7 +469,7 @@ class NapariBatchPayload(ViewerDisplayBatchContext[NapariDisplaySettings]):
 class NapariAcceptedStreamItem:
     """One stream item after receiver-owned payload materialization."""
 
-    payload: "NapariImagePayload"
+    payload: NapariImagePayload
     data: LayerData
 
 
@@ -480,7 +480,7 @@ class NapariAcceptedStreamBatch:
     payload: NapariBatchPayload
     items: tuple[NapariAcceptedStreamItem, ...]
 
-    def dispatch_to(self, server: "NapariViewerServer") -> None:
+    def dispatch_to(self, server: NapariViewerServer) -> None:
         """Apply copied payloads to viewer state on the Qt thread."""
 
         if self.payload.store:
@@ -613,7 +613,7 @@ class NapariStreamMessageReply:
     def success(
         cls,
         msg_type: ViewerBatchMessageType | None,
-    ) -> "NapariStreamMessageReply":
+    ) -> NapariStreamMessageReply:
         return cls(ViewerProtocolStatus.SUCCESS, msg_type)
 
     @classmethod
@@ -621,7 +621,7 @@ class NapariStreamMessageReply:
         cls,
         msg_type: ViewerBatchMessageType | None,
         error: str,
-    ) -> "NapariStreamMessageReply":
+    ) -> NapariStreamMessageReply:
         return cls(ViewerProtocolStatus.ERROR, msg_type, error)
 
     def to_wire_mapping(self) -> dict[str, NapariWireValue]:
@@ -652,7 +652,7 @@ class NapariStreamLayerContext(ViewerComponentAxisSemantics):
         payload: PayloadMap,
         layer_axis_projection_semantics: ViewerComponentAxisSemantics,
         display_config: NapariDisplaySettings,
-    ) -> "NapariStreamLayerContext":
+    ) -> NapariStreamLayerContext:
         data_type_value = payload.optional(ViewerWireField.DATA_TYPE)
         if data_type_value is None:
             data_type_value = DEFAULT_IMAGE_DATA_TYPE
@@ -703,9 +703,9 @@ class NapariStreamLayerContext(ViewerComponentAxisSemantics):
     def layer_route(
         self,
         *,
-        payload_layout_role: "NapariImagePayloadLayoutRole | None",
-        layer_route_state: "NapariLayerRouteStateStore",
-    ) -> "NapariLayerRoute":
+        payload_layout_role: NapariImagePayloadLayoutRole | None,
+        layer_route_state: NapariLayerRouteStateStore,
+    ) -> NapariLayerRoute:
         component_info = self.layout.normalizer().normalize(self.address.components)
         component_layout = self.layout
         base_layer_key = build_route_key(
@@ -769,7 +769,7 @@ class NapariImagePayload(NapariStreamLayerContext):
         image_info: Mapping[str, NapariWireValue],
         layer_axis_projection_semantics: ViewerComponentAxisSemantics,
         display_config: NapariDisplaySettings,
-    ) -> "NapariImagePayload":
+    ) -> NapariImagePayload:
         payload = PayloadMap(image_info, "Napari image message")
         stream_layer_context = NapariStreamLayerContext.from_payload_map(
             payload,
@@ -854,7 +854,7 @@ class NapariImagePayloadLayoutRole(str, Enum):
     def for_stream_layer_context(
         cls,
         stream_layer_context: NapariStreamLayerContext,
-    ) -> "NapariImagePayloadLayoutRole | None":
+    ) -> NapariImagePayloadLayoutRole | None:
         if (
             stream_layer_context.address.stream_layer_data_type
             is not StreamingDataType.IMAGE
@@ -942,7 +942,7 @@ class NapariComponentAwareDisplayCoordinator:
         *,
         data: LayerData,
         stream_layer_context: NapariStreamLayerContext,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
     ) -> None:
         routed_data = data
         self._reconcile_deleted_layers(server)
@@ -975,7 +975,7 @@ class NapariComponentAwareDisplayCoordinator:
         *,
         data: LayerData,
         stream_layer_context: NapariStreamLayerContext,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
     ) -> NapariLayerRoute:
         effective_context = (
             stream_layer_context.display_config.variable_size_handling.routing_context(
@@ -1010,7 +1010,7 @@ class NapariComponentAwareDisplayCoordinator:
 
     @staticmethod
     def _reconcile_deleted_layers(
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
     ) -> None:
         """Purge every route whose native layer was removed from the viewer."""
 
@@ -1022,7 +1022,7 @@ class NapariComponentAwareDisplayCoordinator:
 
     @staticmethod
     def _reconcile_deleted_layer(
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         layer_key: str,
     ) -> None:
         if (
@@ -1039,7 +1039,7 @@ class NapariComponentAwareDisplayCoordinator:
             )
 
     @staticmethod
-    def purge_route(server: "NapariViewerServer", route_key: str) -> None:
+    def purge_route(server: NapariViewerServer, route_key: str) -> None:
         """The one route-release recipe, for native deletion and explicit retirement."""
         server.layer_route_state.purge_route(route_key)
         server.display_pipeline.purge_display_work(route_key)
@@ -1048,7 +1048,7 @@ class NapariComponentAwareDisplayCoordinator:
         server.batch_processors.purge(route_key)
 
     def retire_layers(
-        self, server: "NapariViewerServer", request: ViewerWindowLayerRetirementRequest,
+        self, server: NapariViewerServer, request: ViewerWindowLayerRetirementRequest,
     ) -> tuple[str, ...]:
         """Validate the whole observed set before any ordinary native removal."""
         with server.layer_route_state.mutation_boundary():
@@ -1081,7 +1081,7 @@ class NapariComponentAwareDisplayCoordinator:
 
     @staticmethod
     def _group_for(
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         layer_key: str,
     ) -> list[NapariStreamLayerItem]:
         """Stage intake on its pending generation, never overwrite mounted facts."""
@@ -1404,7 +1404,7 @@ class NapariDimensionLabelRouteResolution:
 class NapariDimensionLabelStore:
     """Store semantic axis labels for one streamed layer route."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
 
     def apply(
@@ -1497,7 +1497,7 @@ class NapariDimensionLabelStore:
 class NapariDimensionLabelRouteResolver:
     """Resolve which route currently owns Napari dimension labels."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
 
     def resolve(
@@ -1618,7 +1618,7 @@ class NapariDimensionLabelOverlayController:
 
     def __init__(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         route_resolver: NapariDimensionLabelRouteResolver,
     ) -> None:
         self.server = server
@@ -1755,7 +1755,7 @@ class NapariDimensionLabelOverlayController:
 class NapariLayerDisplayRequest:
     """Typed request for displaying one Napari route with one stream data type."""
 
-    pipeline: "NapariLayerDisplayPipeline"
+    pipeline: NapariLayerDisplayPipeline
     items: list[NapariStreamLayerItem]
     presentation: NapariAxisPresentation
     display_config: NapariDisplaySettings
@@ -2350,7 +2350,7 @@ class NapariPointsLayerDisplayHandler(
 class NapariLayerDisplayPipeline:
     """Owns debounced Napari layer display and update routing."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
         self.axis_projector = ViewerLayerAxisProjector()
         self.payload_axis_policy = NapariImagePayloadAxisLabelPolicy()
@@ -2985,14 +2985,14 @@ class ShapeCoordinateBounds:
     coordinate_count: int = 0
 
     @classmethod
-    def empty(cls) -> "ShapeCoordinateBounds":
+    def empty(cls) -> ShapeCoordinateBounds:
         return cls(None, None, None, None, 0)
 
     @property
     def has_coordinates(self) -> bool:
         return self.coordinate_count > 0
 
-    def union(self, other: "ShapeCoordinateBounds") -> "ShapeCoordinateBounds":
+    def union(self, other: ShapeCoordinateBounds) -> ShapeCoordinateBounds:
         if not self.has_coordinates:
             return other
         if not other.has_coordinates:
@@ -3034,7 +3034,7 @@ class ShapeCoordinateBounds:
     def from_shape_payload(
         cls,
         payload: Mapping[str, NapariWireValue],
-    ) -> "ShapeCoordinateBounds | None":
+    ) -> ShapeCoordinateBounds | None:
         coordinates = payload.get(NapariWireField.COORDINATES.value)
         if coordinates is not None:
             return cls.from_yx_coordinates(coordinates)
@@ -3048,7 +3048,7 @@ class ShapeCoordinateBounds:
     def from_yx_coordinates(
         cls,
         coordinates: NapariWireValue,
-    ) -> "ShapeCoordinateBounds | None":
+    ) -> ShapeCoordinateBounds | None:
         array = np.asarray(coordinates, dtype=float)
         if array.ndim == 1 and array.size == 2:
             array = array.reshape(1, 2)
@@ -3062,7 +3062,7 @@ class ShapeCoordinateBounds:
         cls,
         center: NapariWireValue,
         radii: NapariWireValue,
-    ) -> "ShapeCoordinateBounds | None":
+    ) -> ShapeCoordinateBounds | None:
         center_array = np.asarray(center, dtype=float)
         radii_array = np.asarray(radii, dtype=float)
         if center_array.shape != (2,) or radii_array.shape != (2,):
@@ -3078,7 +3078,7 @@ class ShapeCoordinateBounds:
         )
 
     @classmethod
-    def from_points(cls, points: np.ndarray) -> "ShapeCoordinateBounds":
+    def from_points(cls, points: np.ndarray) -> ShapeCoordinateBounds:
         return cls(
             min_y=float(points[:, 0].min()),
             min_x=float(points[:, 1].min()),
@@ -3341,7 +3341,7 @@ class NapariResultElementSelections:
 class NapariResultSelectionController:
     """Turn native result selection into an unambiguous visible viewer state."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
         self._callbacks: weakref.WeakKeyDictionary[
             object,
@@ -4040,7 +4040,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
     payload_summary_type: ClassVar[type[ViewerPayloadSummary]] = ViewerPayloadSummary
     payload_record_type: ClassVar[type[ViewerPayloadRecord]] = ViewerPayloadRecord
 
-    server: "NapariViewerServer"
+    server: NapariViewerServer
     viewer: NapariViewerLayerCreator
     request: NapariViewerProjectionRequestT
 
@@ -4900,7 +4900,7 @@ class NapariStateControlAction(NapariAppliedFrameControlAction):
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         if server.viewer is None:
@@ -4931,7 +4931,7 @@ class NapariPayloadsControlAction(NapariControlAction):
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         if server.viewer is None:
@@ -4961,7 +4961,7 @@ class NapariMountedRouteControlAction(NapariAppliedFrameControlAction):
 
     def _mounted_layer(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         route_key: str,
     ) -> NapariLayerHandle:
         if not server.layer_route_state.has_layer(route_key):
@@ -5043,7 +5043,7 @@ class NapariFeatureMeasurementControlAction(
     request_type: ClassVar[type[ViewerFeatureMeasurementControlOptions]]
 
     def handle(
-        self, server: "NapariViewerServer", message: Mapping[str, object]
+        self, server: NapariViewerServer, message: Mapping[str, object]
     ) -> dict[str, object]:
         try:
             request = message.get(ViewerControlResponseField.PAYLOAD.value)
@@ -5077,7 +5077,7 @@ class NapariFeatureMeasurementControlAction(
 
     def _admitted_plane(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerFeatureMeasurementControlOptions,
     ) -> tuple[NativeImageMeasurement, ViewerMeasurementCoordinates]:
         if server.viewer is None or server.viewer.dims.ndisplay != 2:
@@ -5204,7 +5204,7 @@ class NapariPresentationControlAction(NapariAppliedFrameControlAction):
         """Apply through the actual native owner and return its current state."""
 
     def handle(
-        self, server: "NapariViewerServer", message: Mapping[str, object]
+        self, server: NapariViewerServer, message: Mapping[str, object]
     ) -> dict[str, object]:
         try:
             request = message.get(ViewerControlResponseField.PAYLOAD.value)
@@ -5276,7 +5276,7 @@ class NapariImageIntensityControlAction(NapariMountedRouteControlAction):
 
     def _state_reply(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerImageIntensityControlOptions,
         header: ViewerControlReplyHeader,
     ) -> dict[str, object]:
@@ -5294,7 +5294,7 @@ class NapariImageIntensityControlAction(NapariMountedRouteControlAction):
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         request = message.get(ViewerControlResponseField.PAYLOAD.value)
@@ -5351,7 +5351,7 @@ class NapariIntensityWindowControlAction(NapariMountedRouteControlAction):
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         if server.viewer is None:
@@ -5370,7 +5370,7 @@ class NapariIntensityWindowControlAction(NapariMountedRouteControlAction):
     @classmethod
     def _apply(
         cls,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerIntensityWindowControlOptions,
     ) -> dict[str, object]:
         route_key = request.route_key
@@ -5518,7 +5518,7 @@ class NapariPreparedNavigation:
     viewer_step: tuple[int, ...] | None
     viewer_order: tuple[int, ...] | None = None
 
-    def changes_viewer_state(self, server: "NapariViewerServer") -> bool:
+    def changes_viewer_state(self, server: NapariViewerServer) -> bool:
         viewer = server.viewer
         if viewer is None:
             raise RuntimeError("Napari viewer is not available.")
@@ -5581,7 +5581,7 @@ class NapariNavigationControlAction(
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         if server.viewer is None:
@@ -5631,7 +5631,7 @@ class NapariNavigationControlAction(
 
     def prepare(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerNavigationControlOptions,
     ) -> NapariPreparedNavigation:
         layer = self._mounted_layer(server, request.route_key)
@@ -5707,7 +5707,7 @@ class NapariNavigationControlAction(
 
     @staticmethod
     def _require_display_compatibility(
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         target: NapariLayerHandle,
         request: ViewerNavigationControlOptions,
         displayed: tuple[int, ...],
@@ -5763,7 +5763,7 @@ class NapariNavigationControlAction(
 
     def apply(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerNavigationControlOptions,
         *,
         refresh_overlay: bool = True,
@@ -5776,7 +5776,7 @@ class NapariNavigationControlAction(
 
     def apply_prepared(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         prepared: NapariPreparedNavigation,
         *,
         refresh_overlay: bool = True,
@@ -5809,7 +5809,7 @@ class NapariNavigationControlAction(
 
     def result_element_axis_indices(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         layer: NapariLayerHandle,
         route_key: str,
         data_index: int,
@@ -5857,7 +5857,7 @@ class NapariNavigationControlAction(
 
     def axis_step(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         layer: NapariLayerHandle,
         request: ViewerNavigationControlOptions,
     ) -> tuple[int, ...]:
@@ -5971,7 +5971,7 @@ class NapariLayerIsolationControlAction(NapariResidentFrameMutationControlAction
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         if server.viewer is None:
@@ -6026,7 +6026,7 @@ class NapariLayerIsolationControlAction(NapariResidentFrameMutationControlAction
 
     @staticmethod
     def _apply(
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         request: ViewerLayerIsolationControlOptions,
     ) -> tuple[int, tuple[str, ...]]:
         mounted_layers = tuple(
@@ -6078,7 +6078,7 @@ class NapariScreenshotControlAction(
 
     def handle(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         message: Mapping[str, object],
     ) -> dict[str, object]:
         """Snapshot capture requires the accepted local request budget."""
@@ -6183,7 +6183,7 @@ class NapariStreamMessageHandler(NapariMessageTypeBase, metaclass=AutoRegisterMe
     def for_message_type(
         cls,
         message_type: ViewerBatchMessageType,
-    ) -> "NapariStreamMessageHandler":
+    ) -> NapariStreamMessageHandler:
         if message_type not in cls.__registry__:
             raise ValueError(
                 f"Napari stream messages must be registered message types, got {message_type!r}."
@@ -6193,7 +6193,7 @@ class NapariStreamMessageHandler(NapariMessageTypeBase, metaclass=AutoRegisterMe
     @abstractmethod
     def accept(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         data: Mapping[str, NapariWireValue],
     ) -> NapariAcceptedStreamBatch:
         """Copy one decoded stream message into receiver-owned memory."""
@@ -6206,7 +6206,7 @@ class NapariBatchStreamMessageHandler(NapariStreamMessageHandler):
 
     def accept(
         self,
-        server: "NapariViewerServer",
+        server: NapariViewerServer,
         data: Mapping[str, NapariWireValue],
     ) -> NapariAcceptedStreamBatch:
         batch_payload = NapariBatchPayload.from_json_payload(data)
@@ -6226,7 +6226,7 @@ class NapariBatchStreamMessageHandler(NapariStreamMessageHandler):
 class NapariDataTransportPump:
     """Socket-owning stream intake that never waits for Qt rendering."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
         self._stop_event = threading.Event()
         self._ready_event = threading.Event()
@@ -6304,7 +6304,7 @@ class NapariDataTransportPump:
 class NapariControlTransportPump:
     """Socket owner that keeps typed settlement observable while Qt renders."""
 
-    def __init__(self, server: "NapariViewerServer") -> None:
+    def __init__(self, server: NapariViewerServer) -> None:
         self.server = server
         self._stop_event = threading.Event()
         self._ready_event = threading.Event()

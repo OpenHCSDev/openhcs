@@ -50,14 +50,14 @@ class RuntimeMeasurementFeatureRelation(ABC):
 
     @abstractmethod
     def source_family_names(
-        self, source_feature: "RuntimeMeasurementFeature"
+        self, source_feature: RuntimeMeasurementFeature
     ) -> tuple[str, ...]:
         """Return feature-family names that select the relation source."""
 
     @abstractmethod
     def target_family_name(
         self,
-        source_feature: "RuntimeMeasurementFeature",
+        source_feature: RuntimeMeasurementFeature,
         source_family_name: str,
         feature_type: type["RuntimeMeasurementFeature"],
     ) -> str | None:
@@ -68,7 +68,7 @@ class RuntimeMeasurementFeatureRelation(ABC):
 class RuntimeMeasurementFeatureRelationDeclaration:
     """One producer-owned relation declared between measurement feature families."""
 
-    source_feature: "RuntimeMeasurementFeature"
+    source_feature: RuntimeMeasurementFeature
     relation: RuntimeMeasurementFeatureRelation
 
     def source_family_names(
@@ -148,14 +148,14 @@ class RuntimeMeasurementFeatureSemanticMarker(ABC):
     family_qualifier: ClassVar[str | None] = None
 
     @classmethod
-    def matches_feature(cls, feature: "RuntimeMeasurementFeature") -> bool:
+    def matches_feature(cls, feature: RuntimeMeasurementFeature) -> bool:
         """Return whether ``feature`` carries this semantic marker."""
         return any(
             issubclass(marker_type, cls) for marker_type in feature.semantic_markers
         )
 
     @classmethod
-    def qualified_family(cls, feature: "RuntimeMeasurementFeature") -> str:
+    def qualified_family(cls, feature: RuntimeMeasurementFeature) -> str:
         """Return a marker-qualified feature family name."""
         if cls.family_qualifier is None:
             raise ValueError(f"{cls.__name__} does not declare family_qualifier.")

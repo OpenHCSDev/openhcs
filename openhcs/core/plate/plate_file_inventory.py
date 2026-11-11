@@ -60,7 +60,7 @@ class PlateFileInventoryQuery:
         """Return the public query value for one normalized kind selection."""
         return ALL_PLATE_FILE_KINDS if kind is None else kind.value
 
-    def normalized(self) -> "PlateFileInventoryQuery":
+    def normalized(self) -> PlateFileInventoryQuery:
         return PlateFileInventoryQuery(
             kinds=self.kinds,
             path_contains=self.path_contains,

@@ -124,7 +124,7 @@ class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
         self._execution_service = execution_service
 
     @classmethod
-    def for_main_window(cls, main_window) -> "PlateManagerBridgeProviderSet":
+    def for_main_window(cls, main_window) -> PlateManagerBridgeProviderSet:
         return cls(
             main_window.plate_manager_widget,
             execution_service=UiCodeDocumentExecutionService(

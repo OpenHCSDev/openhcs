@@ -7,6 +7,8 @@ axes. Each viewer owns a :class:`ViewerSlotFamily`: the native slots it can put
 an axis into, and which roles default to which slot.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -71,7 +73,7 @@ class DeclaredAxis:
     value_kind: type[AxisValueKind]
 
     @classmethod
-    def of(cls, axis: type[Axis]) -> "DeclaredAxis":
+    def of(cls, axis: type[Axis]) -> DeclaredAxis:
         return cls(
             name=axis.name,
             label=axis.label,
@@ -115,7 +117,7 @@ class DeclaredAxis:
         return result
 
     @classmethod
-    def from_wire(cls, payload: object) -> "DeclaredAxis":
+    def from_wire(cls, payload: object) -> DeclaredAxis:
         if not isinstance(payload, Mapping):
             raise TypeError("A declared axis must be a mapping.")
         name = payload["name"]
@@ -146,17 +148,17 @@ class DeclaredAxes:
             raise ValueError(f"Declared axes repeat a name: {names!r}.")
 
     @classmethod
-    def of(cls, axes: Sequence[type[Axis]]) -> "DeclaredAxes":
+    def of(cls, axes: Sequence[type[Axis]]) -> DeclaredAxes:
         return cls(tuple(DeclaredAxis.of(axis) for axis in axes))
 
     @classmethod
-    def from_wire(cls, payload: object) -> "DeclaredAxes":
+    def from_wire(cls, payload: object) -> DeclaredAxes:
         if isinstance(payload, str) or not isinstance(payload, Sequence):
             raise TypeError(f"{DECLARED_AXES_FIELD!r} must be a sequence of axes.")
         return cls(tuple(DeclaredAxis.from_wire(axis) for axis in payload))
 
     @classmethod
-    def from_display_payload(cls, payload: Mapping[str, ViewerWireValue]) -> "DeclaredAxes":
+    def from_display_payload(cls, payload: Mapping[str, ViewerWireValue]) -> DeclaredAxes:
         if DECLARED_AXES_FIELD not in payload:
             raise ValueError(f"Display config is missing {DECLARED_AXES_FIELD!r}.")
         return cls.from_wire(payload[DECLARED_AXES_FIELD])
@@ -346,7 +348,7 @@ class ViewerDisplaySettings(AnnotatedDataclassValidationMixin):
             ViewerDisplaySettings._viewer_settings.append(cls)
 
     @classmethod
-    def settings_type(cls) -> "type[ViewerDisplaySettings]":
+    def settings_type(cls) -> type[ViewerDisplaySettings]:
         """The viewer settings class this class is or inherits."""
 
         return next(
@@ -384,7 +386,7 @@ class NapariVariableSizeHandling(ABC, metaclass=AutoRegisterMeta):
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: "ClassVar[dict[str, type[NapariVariableSizeHandling]]]" = {}
+    __registry__: ClassVar[dict[str, type[NapariVariableSizeHandling]]] = {}
 
     name: ClassVar[str | None] = None
 

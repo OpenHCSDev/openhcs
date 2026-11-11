@@ -64,7 +64,7 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
     def execute(
         cls,
         contract: type["ProcessingContract"],
-        call: "ContractCall",
+        call: ContractCall,
         image: Any,
         kwargs: dict[str, Any],
     ) -> Any:
@@ -72,8 +72,8 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def batch_request(
-        cls, request: "RuntimeBatchInvocationRequest",
-    ) -> "RuntimeBatchInvocationRequest | None":
+        cls, request: RuntimeBatchInvocationRequest,
+    ) -> RuntimeBatchInvocationRequest | None:
         """Project a request into a batch executor's image domain, or ``None``."""
         return request
 
@@ -93,7 +93,7 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def for_plane_scoped_labels(
-        cls, projection: "RuntimePlaneAxisValueProjection | None",
+        cls, projection: RuntimePlaneAxisValueProjection | None,
     ) -> type[ImagePayloadExecutionMode]:
         """Return the mode for labels that still carry an unprojected plane axis."""
         del projection
@@ -365,7 +365,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
 class AlignedImageStackKwargResolver:
     """Materialize one kwarg for a specific aligned image-stack slice."""
 
-    projection_axis: "RuntimePlaneAxisValueProjection"
+    projection_axis: RuntimePlaneAxisValueProjection
     reference_payload: Any | None = None
 
     def resolve(self, value: Any) -> Any:
@@ -757,7 +757,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         metadata_mode: type[RuntimePlaneAxis] = (
             SourceBindingPlaneAxis
         ),
-    ) -> "ImagePayloadBundleContext":
+    ) -> ImagePayloadBundleContext:
         return cls(
             ImagePayloadSourceSpatialDomainAdapter.payloads_aligned_to_common_source_domain(
                 payloads
@@ -956,7 +956,7 @@ class AlignedImageSliceContext:
         *,
         projection_key: str | None = None,
         artifact_kind: str | None = None,
-    ) -> "AlignedImageSliceContext":
+    ) -> AlignedImageSliceContext:
         """Return declared context for one main-flow output surface."""
         return cls(
             output_kind=cls.MAIN_FLOW_OUTPUT_KIND,
@@ -1030,7 +1030,7 @@ class AlignedImageSliceContext:
         )
 
     @classmethod
-    def anonymous_main_flow(cls) -> "AlignedImageSliceContext":
+    def anonymous_main_flow(cls) -> AlignedImageSliceContext:
         """Return context for ordinary unnamed main-flow output."""
         return cls.main_flow(cls.ANONYMOUS_MAIN_FLOW_OUTPUT_KEY)
 
@@ -1095,7 +1095,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         *,
         memory_type: str,
         plane_axis: type[RuntimePlaneAxis],
-    ) -> "ProducedImageStack":
+    ) -> ProducedImageStack:
         """Wrap produced image slices as a stack without allocating its pixels."""
         return ProducedImageStack(
             tuple(slices), memory_type=memory_type, plane_axis=plane_axis,
@@ -1166,7 +1166,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
     def alignment_slices(self) -> tuple[Any, ...]:
         return self.slices
 
-    def map_slices(self, transform: Any) -> "ImagePayloadSliceStack":
+    def map_slices(self, transform: Any) -> ImagePayloadSliceStack:
         return self.with_slices(tuple(transform(image_slice) for image_slice in self.slices))
 
     def stored_slices(self) -> tuple[Any, ...]:
@@ -1256,14 +1256,14 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
             )
         return self.slices[slice_index]
 
-    def with_slices(self, slices: Sequence[Any]) -> "ImagePayloadSliceStack":
+    def with_slices(self, slices: Sequence[Any]) -> ImagePayloadSliceStack:
         """Replace payload slices while preserving the concrete alignment owner."""
 
         return type(self)(tuple(slices), self.slice_contexts)
 
     def copied(
         self, *, memory_type: str, device_id: int | None,
-    ) -> "ImagePayloadSliceStack":
+    ) -> ImagePayloadSliceStack:
         """Retain aligned member domains while copying them into independent buffers."""
         return self.with_slices(
             tuple(
@@ -1632,7 +1632,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             for index in range(data.shape[0])
         )
 
-    def with_slices(self, slices: Sequence[Any]) -> "ProducedImageStack":
+    def with_slices(self, slices: Sequence[Any]) -> ProducedImageStack:
         return type(self)(
             tuple(slices), self.slice_contexts,
             memory_type=self.memory_type, plane_axis=self.plane_axis,
@@ -1640,7 +1640,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
 
     def copied(
         self, *, memory_type: str, device_id: int | None,
-    ) -> "ProducedImageStack":
+    ) -> ProducedImageStack:
         """Snapshot produced pixels directly into one dense buffer.
 
         Input isolation and dense realization share one allocation. Copying

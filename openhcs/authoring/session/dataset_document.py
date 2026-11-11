@@ -45,7 +45,7 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
         carrier: SelectedScopeIdsCarrier,
         *,
         default: type[SelectionScope] = SelectedItems,
-    ) -> "DatasetDocumentScope":
+    ) -> DatasetDocumentScope:
         return cls.__registry__[carrier.selection_scope(default)](selected_scope_ids=tuple(carrier.selected_scope_ids))
 
     def require_payload_scope(self, scope_ids: tuple[str, ...]) -> None:
@@ -63,7 +63,7 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
 
     @abstractmethod
     def synchronize(
-        self, session: "Session", payload: PlateManagerOrchestratorCodePayload
+        self, session: Session, payload: PlateManagerOrchestratorCodePayload
     ) -> None:
         """Make the dataset list agree with the document within this scope."""
 
@@ -102,7 +102,7 @@ class DatasetDocument(SelectedScopeIdsCarrier):
     clean_mode: bool = True
 
 
-def live_global_config(session: "Session") -> GlobalPipelineConfig:
+def live_global_config(session: Session) -> GlobalPipelineConfig:
     state = ObjectStateRegistry.get_by_scope("")
     if state is None:
         return session.global_config
@@ -122,7 +122,7 @@ def authored_pipeline_config(scope_id: str) -> PipelineConfig:
 
 
 def render_dataset_document(
-    session: "Session",
+    session: Session,
     scope_ids: tuple[str, ...],
     *,
     selection_mode: type[SelectionScope],
@@ -146,7 +146,7 @@ def render_dataset_document(
 
 
 def apply_dataset_document(
-    session: "Session",
+    session: Session,
     payload: PlateManagerOrchestratorCodePayload,
     scope: DatasetDocumentScope,
 ) -> None:

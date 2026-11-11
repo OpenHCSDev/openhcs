@@ -281,7 +281,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         semantics: ViewerComponentAxisSemantics,
         display_config: NapariDisplaySettings,
         items: list[NapariStreamLayerItem] | None = None,
-    ) -> "NapariPendingLayerUpdate":
+    ) -> NapariPendingLayerUpdate:
         return cls(
             entries=semantics.entries,
             layout=semantics.layout,
@@ -540,7 +540,7 @@ class NapariStreamLayerAddress:
     path: str
     stream_layer_data_type: StreamingDataType
 
-    def with_components(self, components: ComponentMap) -> "NapariStreamLayerAddress":
+    def with_components(self, components: ComponentMap) -> NapariStreamLayerAddress:
         """Return the same payload address after component normalization."""
         return NapariStreamLayerAddress(
             components=components,
@@ -548,7 +548,7 @@ class NapariStreamLayerAddress:
             stream_layer_data_type=self.stream_layer_data_type,
         )
 
-    def same_layer_slot(self, other: "NapariStreamLayerAddress") -> bool:
+    def same_layer_slot(self, other: NapariStreamLayerAddress) -> bool:
         """Return whether two payloads replace the same component/data-type slot."""
         return (
             self.components == other.components
@@ -1129,11 +1129,11 @@ class NapariDimensionLayerState:
 
     labels: DimensionLabelMap
     scalar_labels: tuple[str, ...] = ()
-    presentation: "NapariAxisPresentation | None" = None
+    presentation: NapariAxisPresentation | None = None
     display_config: NapariDisplaySettings = field(default_factory=NapariDisplaySettings)
 
     @classmethod
-    def empty(cls) -> "NapariDimensionLayerState":
+    def empty(cls) -> NapariDimensionLayerState:
         return cls(labels={})
 
     @property
@@ -1389,7 +1389,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
 
     @contextmanager
     def preserve_native_axes(
-        self, dims, replacement: "NapariAxisPresentation",
+        self, dims, replacement: NapariAxisPresentation,
         items: Sequence[NapariStreamLayerItem],
     ):
         """Carry source positions/order through semantic slot or domain changes.
@@ -1637,7 +1637,7 @@ class NapariLayerRouteStateStore:
     )
 
     @classmethod
-    def empty(cls) -> "NapariLayerRouteStateStore":
+    def empty(cls) -> NapariLayerRouteStateStore:
         return cls(
             layers={},
             layer_titles={},
@@ -1978,8 +1978,8 @@ class NapariLayerBatchDebouncePolicy:
     def create_processor(
         self,
         *,
-        napari_server: "NapariViewerServer",
-    ) -> "NapariBatchProcessor":
+        napari_server: NapariViewerServer,
+    ) -> NapariBatchProcessor:
         from polystore.streaming.receivers.napari import NapariBatchProcessor
 
         return NapariBatchProcessor(
@@ -2005,8 +2005,8 @@ class NapariBatchProcessorStore:
         self,
         *,
         layer_key: str,
-        napari_server: "NapariViewerServer",
-    ) -> "NapariBatchProcessor":
+        napari_server: NapariViewerServer,
+    ) -> NapariBatchProcessor:
         with self.lock:
             if layer_key not in self.processors:
                 self.processors[layer_key] = self.debounce_policy.create_processor(
@@ -2070,7 +2070,7 @@ class NapariShapeLabelAllocator:
     def for_items(
         cls,
         layer_items: Sequence[NapariStreamLayerItem],
-    ) -> "NapariShapeLabelAllocator":
+    ) -> NapariShapeLabelAllocator:
         return cls(NapariShapeLabels.declared_labels(layer_items))
 
     def label_for(self, shape_dict: ShapePayloadMap) -> int:
@@ -2133,7 +2133,7 @@ class NapariShapeColorProjection:
     def from_labels(
         cls,
         labels: Sequence[object],
-    ) -> "NapariShapeColorProjection":
+    ) -> NapariShapeColorProjection:
         """Build the cycle and member projection in one label-domain pass."""
 
         label_order = tuple(dict.fromkeys(labels))
@@ -2203,7 +2203,7 @@ class NapariShapeLayerPayload:
         bounds.append((start, len(self.data)))
         return tuple(self._slice(start, stop) for start, stop in bounds)
 
-    def _slice(self, start: int, stop: int) -> "NapariShapeLayerPayload":
+    def _slice(self, start: int, stop: int) -> NapariShapeLayerPayload:
         result_metadata = dict(self.result_metadata)
         subject_ids = result_metadata.get(
             ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE
@@ -2224,8 +2224,8 @@ class NapariShapeLayerPayload:
 
     def align_display_axes(
         self,
-        presentation: "NapariAxisPresentation",
-    ) -> "NapariShapeLayerPayload":
+        presentation: NapariAxisPresentation,
+    ) -> NapariShapeLayerPayload:
         """Project every ROI into the viewer's declaration-owned axis slots."""
 
         return NapariShapeLayerPayload(
@@ -2245,7 +2245,7 @@ class NapariShapeLayerPayload:
         layer_items: Sequence[NapariStreamLayerItem],
         axis_projection: ViewerLayerAxisProjection,
         aggregate_axis_bindings: NapariAggregateAxisBindingSet | None = None,
-    ) -> "NapariShapeLayerPayload":
+    ) -> NapariShapeLayerPayload:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 

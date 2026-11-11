@@ -269,38 +269,38 @@ class CropModule(
     )
 
     @classmethod
-    def shape(cls, module: "ModuleBlock") -> "CropModule.Shape":
+    def shape(cls, module: ModuleBlock) -> CropModule.Shape:
         return cls.Shape(
             optional_setting_value(module, cls.shape_setting)
             or cls.Shape.RECTANGLE.value
         )
 
     @classmethod
-    def method(cls, module: "ModuleBlock") -> "CropModule.Method":
+    def method(cls, module: ModuleBlock) -> CropModule.Method:
         return cls.Method(
             optional_setting_value(module, cls.method_setting)
             or cls.Method.COORDINATES.value
         )
 
     @classmethod
-    def removal_method(cls, module: "ModuleBlock") -> "CropModule.RemovalMethod":
+    def removal_method(cls, module: ModuleBlock) -> CropModule.RemovalMethod:
         return cls.RemovalMethod(
             optional_setting_value(module, cls.removal_setting)
             or cls.RemovalMethod.NO.value
         )
 
     @classmethod
-    def input_image_name(cls, module: "ModuleBlock") -> str:
+    def input_image_name(cls, module: ModuleBlock) -> str:
         return required_setting_value(module, cls.input_image_setting)
 
     @classmethod
-    def output_image_name(cls, module: "ModuleBlock") -> str:
+    def output_image_name(cls, module: ModuleBlock) -> str:
         return required_setting_value(module, cls.output_image_setting)
 
     @classmethod
     def topology_input_binding(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
     ) -> SettingToKeywordBinding | None:
         """Return the exact setting binding for the selected Crop topology role."""
 
@@ -333,7 +333,7 @@ class CropModule(
         )
 
     @classmethod
-    def previous_cropping_image_name(cls, module: "ModuleBlock") -> str | None:
+    def previous_cropping_image_name(cls, module: ModuleBlock) -> str | None:
         from openhcs.interop.cellprofiler.setting_names import OptionalSettingSymbol
 
         return OptionalSettingSymbol(module, cls.previous_image_setting).value
@@ -341,10 +341,10 @@ class CropModule(
     @classmethod
     def finalize_artifact_contract_inputs(
         cls,
-        module: "ModuleBlock",
+        module: ModuleBlock,
         *,
-        invocation_key: "FunctionInvocationKey",
-        step_context: "ArtifactDeclarationStepContext",
+        invocation_key: FunctionInvocationKey,
+        step_context: ArtifactDeclarationStepContext,
         artifact_inputs: ArtifactSpecCollection,
     ) -> tuple[ArtifactSpec, ...]:
         inputs = ArtifactSpecCollection(
@@ -482,7 +482,7 @@ class CropShapeMaskStrategy(ABC, metaclass=AutoRegisterMeta):
     crop_shape: ClassVar[CropModule.Shape | None] = None
 
     @classmethod
-    def for_shape(cls, crop_shape: CropModule.Shape) -> "CropShapeMaskStrategy":
+    def for_shape(cls, crop_shape: CropModule.Shape) -> CropShapeMaskStrategy:
         strategy_type = cls.__registry__.get(crop_shape.value)
         if strategy_type is None:
             raise NotImplementedError(
