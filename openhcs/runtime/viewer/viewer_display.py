@@ -9,7 +9,7 @@ an axis into, and which roles default to which slot.
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum
 from functools import cache
