@@ -371,12 +371,8 @@ class RuntimeServerScanRequest(AgentCliRequest):
         return tuple(ports)
 
     def as_tool_arguments(self) -> JsonObject:
-        return {
-            "ports": list(self.ports) if self.ports is not None else None,
-            "host": self.host,
-            "transport_mode": TransportMode.optional_to_text(self.transport_mode),
-            "timeout_ms": self.timeout_ms,
-        }
+        from openhcs.agent.dto import _dto_wire_value
+        return {f.name: _dto_wire_value(getattr(self, f.name)) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True)
