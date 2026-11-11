@@ -38,10 +38,10 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 class OperationMethod(Enum):
     ENHANCE = "Enhance"
     SUPPRESS = "Suppress"
-
 
 class EnhanceMethod(Enum):
     SPECKLES = "Speckles"
@@ -51,19 +51,15 @@ class EnhanceMethod(Enum):
     TEXTURE = "Texture"
     DIC = "DIC"
 
-
 class SpeckleAccuracy(Enum):
     FAST = "Fast"
     SLOW = "Slow"
-
 
 class NeuriteMethod(Enum):
     GRADIENT = "Line structures"
     TUBENESS = "Tubeness"
 
-
 STRATEGY_REGISTRY_KEY = "method_label"
-
 
 @numpy(contract=Pure2DContract)
 def enhance_or_suppress_features(
@@ -117,7 +113,6 @@ def enhance_or_suppress_features(
         .payload_with(np.asarray(result, dtype=np.float32), image.mask)
     )
 
-
 class EnhanceOrSuppressFeaturesModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "EnhanceOrSuppressFeatures"
     function_name = "enhance_or_suppress_features"
@@ -157,7 +152,6 @@ class EnhanceOrSuppressFeaturesModule(CellProfilerModule, ValidatedHighConfidenc
             bound.setting_coverage,
         )
 
-
 @numpy(contract=Pure3DContract)
 def match_template(
     image: np.ndarray,
@@ -185,7 +179,6 @@ def match_template(
         axis=0,
     ).astype(np.float32)
 
-
 @dataclass(frozen=True, slots=True)
 class FeatureEnhancementMaskContext:
     """Image/mask authority for CP feature enhancement background semantics."""
@@ -201,7 +194,6 @@ class FeatureEnhancementMaskContext:
         output = np.asarray(result, dtype=np.float32).copy()
         output[~self.mask] = self.original[~self.mask]
         return output
-
 
 @dataclass(frozen=True, slots=True)
 class FeatureEnhancementRequest:
@@ -219,17 +211,10 @@ class FeatureEnhancementRequest:
     dic_angle: float
     dic_decay: float
 
-
 class FeatureOperationStrategy(
-    EnumKeyedStrategyMixin[OperationMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[OperationMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Top-level CP enhance/suppress operation semantics."""
-
-    __registry_key__ = STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
-    method: ClassVar[OperationMethod | None] = None
-    method_label: ClassVar[str | None] = None
 
     @classmethod
     def for_method(cls, method: OperationMethod) -> FeatureOperationStrategy:
@@ -239,7 +224,6 @@ class FeatureOperationStrategy(
     def apply(self, request: FeatureEnhancementRequest) -> np.ndarray:
         """Apply the top-level operation to a feature-enhancement request."""
 
-
 class EnhanceFeatureOperationStrategy(FeatureOperationStrategy):
     method = OperationMethod.ENHANCE
 
@@ -247,7 +231,6 @@ class EnhanceFeatureOperationStrategy(FeatureOperationStrategy):
         return FeatureEnhanceMethodStrategy.for_method(request.enhance_method).apply(
             request
         )
-
 
 class SuppressFeatureOperationStrategy(FeatureOperationStrategy):
     method = OperationMethod.SUPPRESS
@@ -261,17 +244,10 @@ class SuppressFeatureOperationStrategy(FeatureOperationStrategy):
         )
         return request.mask_context.restore_background(opened)
 
-
 class FeatureEnhanceMethodStrategy(
-    EnumKeyedStrategyMixin[EnhanceMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[EnhanceMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """CP feature enhancement method semantics."""
-
-    __registry_key__ = STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
-    method: ClassVar[EnhanceMethod | None] = None
-    method_label: ClassVar[str | None] = None
 
     @classmethod
     def for_method(cls, method: EnhanceMethod) -> FeatureEnhanceMethodStrategy:
@@ -281,19 +257,16 @@ class FeatureEnhanceMethodStrategy(
     def apply(self, request: FeatureEnhancementRequest) -> np.ndarray:
         """Apply one concrete CP feature enhancement method."""
 
-
 def _enhancement_mask(image: object, image_data: np.ndarray) -> np.ndarray:
     mask = image.mask
     if mask is None:
         return np.ones(image_data.shape, dtype=bool)
     return np.asarray(mask, dtype=bool)
 
-
 def _structuring_element(radius: float) -> np.ndarray:
     from skimage import morphology
 
     return morphology.disk(max(1, int(round(radius))))
-
 
 class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.SPECKLES
@@ -316,7 +289,6 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         else:
             result = morphology.white_tophat(masked, footprint=footprint)
         return request.mask_context.restore_background(result)
-
 
 class NeuritesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.NEURITES
@@ -343,7 +315,6 @@ class NeuritesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         if request.neurite_rescale:
             result = exposure.rescale_intensity(result, out_range=(0.0, 1.0))
         return request.mask_context.restore_background(result)
-
 
 @njit(cache=True)
 def _tubeness_response_2d_numba(
@@ -383,7 +354,6 @@ def _tubeness_response_2d_numba(
                 result[y, x] = -selected * scale
     return result
 
-
 class DarkHolesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.DARK_HOLES
 
@@ -402,7 +372,6 @@ class DarkHolesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         result = np.maximum.reduce(responses) if responses else np.zeros_like(masked)
         return request.mask_context.restore_background(result)
 
-
 class CirclesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.CIRCLES
 
@@ -413,7 +382,6 @@ class CirclesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         radius_i = max(1, int(round(request.radius)))
         result = transform.hough_circle(masked, [radius_i])[0]
         return request.mask_context.restore_background(result)
-
 
 class TextureFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.TEXTURE
@@ -426,7 +394,6 @@ class TextureFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         mean_squared = ndimage.gaussian_filter(masked * masked, request.smoothing_value)
         result = np.maximum(mean_squared - mean * mean, 0)
         return request.mask_context.restore_background(result)
-
 
 class DicFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.DIC
@@ -449,7 +416,6 @@ class DicFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         result = np.maximum(forward - backward, 0)
         return request.mask_context.restore_background(result)
 
-
 @processing_prepare(enhance_or_suppress_features)
 def _prepare_enhance_or_suppress_features() -> None:
     """Compile accelerated enhancement kernels before timed execution."""
@@ -461,7 +427,6 @@ def _prepare_enhance_or_suppress_features() -> None:
         neurite_method=NeuriteMethod.TUBENESS,
         smoothing_value=2.0,
     )
-
 
 class MatchTemplateModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "MatchTemplate"

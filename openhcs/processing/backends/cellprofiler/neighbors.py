@@ -104,6 +104,7 @@ from openhcs.core.payload.runtime_image_values import PlainImagePayload
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
 
@@ -156,15 +157,11 @@ class NeighborDistancePlan:
 
 
 class NeighborDistancePlanner(
-    EnumKeyedStrategyMixin[DistanceMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[DistanceMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Prepare neighbor-distance state for one closed distance method."""
 
     __registry_key__ = "method_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
-    method_label: ClassVar[str | None] = None
-    method: ClassVar[DistanceMethod | None] = None
 
     @classmethod
     def for_method(cls, method: DistanceMethod) -> NeighborDistancePlanner:

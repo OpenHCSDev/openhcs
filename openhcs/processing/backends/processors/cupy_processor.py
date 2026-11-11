@@ -20,6 +20,7 @@ from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     EdgeMagnitudeMethod,
@@ -721,9 +722,8 @@ def sobel_components(
 
 
 class CupyEdgeMagnitudeStrategy(
-    EnumKeyedStrategyMixin[EdgeMagnitudeMethod], metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[EdgeMagnitudeMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta
 ):
-    __enum_member_attr__ = "method"
 
     @abstractmethod
     def apply(

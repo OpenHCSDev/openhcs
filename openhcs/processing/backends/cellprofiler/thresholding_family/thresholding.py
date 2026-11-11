@@ -154,6 +154,7 @@ from openhcs.interop.cellprofiler.runtime.output_record_request import (
 CellProfilerOutputRecordRequest,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 CELLPROFILER_BASIC_THRESHOLD_SMOOTHING_SCALE = 1.3488
 SCIPY_CONSTANT_BOUNDARY_MODE = "constant"
 CELLPROFILER_THRESHOLD_SMOOTHING_TRUNCATE_SIGMAS = 4.0
@@ -1902,15 +1903,12 @@ class CellProfilerThresholdRequest:
 
 
 class GlobalThresholdMethodStrategy(
-    EnumKeyedStrategyMixin[CellProfilerThresholdMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[CellProfilerThresholdMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal implementation for one CellProfiler global threshold method."""
 
     __registry_key__ = "method_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
     method: ClassVar[CellProfilerThresholdMethod]
-    method_label: ClassVar[str | None] = None
 
     @classmethod
     def for_method(
