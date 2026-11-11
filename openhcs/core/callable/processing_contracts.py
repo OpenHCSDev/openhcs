@@ -1465,3 +1465,10 @@ class LibraryContractCall(ContractCall):
         )
 
 register_processing_contract_type(ProcessingContract)
+
+from openhcs.core.callable.runtime_batch_contracts import _register_SignatureFilteredKwargs
+_register_SignatureFilteredKwargs(SignatureFilteredKwargs)
+from openhcs.core.payload.aligned_image_payload import _register_Pure2DAuxiliaryOutputAggregator
+_register_Pure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator)
+from openhcs.core.payload.aligned_image_payload import _register_Pure2DSliceResultBatch
+_register_Pure2DSliceResultBatch(Pure2DSliceResultBatch)

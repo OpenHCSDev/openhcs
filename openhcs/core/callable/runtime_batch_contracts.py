@@ -22,6 +22,11 @@ from openhcs.core.payload.runtime_plane_projection import (
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.callable.callable_contract import register_runtime_batch_callable_family
 
+SignatureFilteredKwargs = None  # registration slot
+def _register_SignatureFilteredKwargs(val):
+    global SignatureFilteredKwargs
+    SignatureFilteredKwargs = val
+
 
 
 F = TypeVar("F", bound=Callable)
@@ -153,7 +158,6 @@ class RuntimeArtifactPartitionBatchRequest:
         compiler admission continues to own whether the invocation is enabled.
         """
         from python_introspect import Enableable
-        from openhcs.core.callable.processing_contracts import SignatureFilteredKwargs
 
         raw_callable = contract.resolve_raw_runtime_callable()
         kwargs = SignatureFilteredKwargs.accepted_kwargs(
@@ -427,3 +431,8 @@ def measurement_image_batch_executor(executor: Callable) -> Callable[[F], F]:
     )
 
 register_runtime_batch_callable_family(RuntimeBatchCallableFamily)
+
+from openhcs.core.payload.aligned_image_payload import _register_Pure2DSliceBatchExecutor
+_register_Pure2DSliceBatchExecutor(Pure2DSliceBatchExecutor)
+from openhcs.core.payload.aligned_image_payload import _register_RuntimePure2DSliceBatchRequest
+_register_RuntimePure2DSliceBatchRequest(RuntimePure2DSliceBatchRequest)

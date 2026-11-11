@@ -262,3 +262,6 @@ __all__ = tuple(
     for name, value in tuple(globals().items())
     if isinstance(value, type) and value.__module__ == __name__
 )
+
+from openhcs.core.debug.debug_runtime import _register_RuntimeValuesDebugViewSection
+_register_RuntimeValuesDebugViewSection(RuntimeValuesDebugViewSection)

@@ -13,6 +13,11 @@ from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.axes.axis_declarations import ColourAxis
 
+ImagePayloadMetadata = None  # registration slot
+def _register_ImagePayloadMetadata(val):
+    global ImagePayloadMetadata
+    ImagePayloadMetadata = val
+
 
 
 class RuntimeSliceProjectableValue(ABC):
@@ -34,7 +39,6 @@ class RuntimeSliceProjectableValue(ABC):
     @property
     def image_metadata(self) -> "ImagePayloadMetadata":
         """Return the image metadata this value carries; only images carry any."""
-        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
         return ImagePayloadMetadata()
 

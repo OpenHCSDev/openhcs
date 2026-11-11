@@ -33,6 +33,11 @@ from openhcs.core.dataset_sources.interfaces import (
 )
 from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
 
+source_bindings_defaults_to_base = None  # registration slot
+def _register_source_bindings_defaults_to_base(val):
+    global source_bindings_defaults_to_base
+    source_bindings_defaults_to_base = val
+
 logger = logging.getLogger(__name__)
 
 
@@ -199,7 +204,6 @@ class DatasetSourceChoice(ABC):
         """Construct the selected source bound to ``root``."""
 
         from openhcs.core.dataset_sources.source import DeclaredFileSource
-        from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
 
         root = Path(root)
         source_bindings = (

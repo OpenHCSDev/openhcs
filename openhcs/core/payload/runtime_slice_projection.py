@@ -651,3 +651,6 @@ class RuntimeSliceProjection:
                 f"Conflicting runtime slice counts from {source_description}."
             )
         return next(iter(slice_counts))
+
+from openhcs.core.payload.runtime_image_values import _register_RuntimeSliceProjection
+_register_RuntimeSliceProjection(RuntimeSliceProjection)

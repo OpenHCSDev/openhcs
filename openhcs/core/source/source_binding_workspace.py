@@ -1482,3 +1482,6 @@ def _frozen_workspace_mappings(
             for path, source_ref in mappings.items()
         }
     )
+
+from openhcs.core.source.source_workspace_projection import _register_SourceBindingWorkspaceProjector
+_register_SourceBindingWorkspaceProjector(SourceBindingWorkspaceProjector)

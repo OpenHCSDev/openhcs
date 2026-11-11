@@ -9,6 +9,11 @@ from typing import Any, Self
 import numpy as np
 from arraybridge import ArrayGeometry, ArrayPayload
 
+detect_memory_type = None  # registration slot
+def _register_detect_memory_type(val):
+    global detect_memory_type
+    detect_memory_type = val
+
 
 def runtime_array_ufunc_result(
     ufunc: Any,
@@ -161,7 +166,6 @@ def is_array_payload(data: Any) -> bool:
     """Return whether OpenHCS or ArrayBridge owns this array payload type."""
     if isinstance(data, RuntimeArrayPayload):
         return True
-    from openhcs.core.memory import detect_memory_type
 
     try:
         detect_memory_type(data)

@@ -69,6 +69,21 @@ from openhcs.core.source.source_spatial_domain import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, AxisRole, ColourAxis
 
+SourceImageObjectLabelBuildRequest = None  # registration slot
+def _register_SourceImageObjectLabelBuildRequest(val):
+    global SourceImageObjectLabelBuildRequest
+    SourceImageObjectLabelBuildRequest = val
+
+stack_image_payloads = None  # registration slot
+def _register_stack_image_payloads(val):
+    global stack_image_payloads
+    stack_image_payloads = val
+
+RuntimeSliceProjection = None  # registration slot
+def _register_RuntimeSliceProjection(val):
+    global RuntimeSliceProjection
+    RuntimeSliceProjection = val
+
 
 class RuntimeSliceProjectionDeclarationError(ValueError):
     """Raised when runtime-slice behavior has no complete nominal declaration."""
@@ -1086,7 +1101,6 @@ class ImagePayloadMetadata(
         if source_plane_selection == complete_source_axis:
             return self.attach_to(payload)
 
-        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 
         projected_planes = tuple(
             payload.value_for_slice(axis_projection.selected_plane(plane_index))
@@ -1555,7 +1569,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         output memory domain; it is used when no runtime-slice axis is declared.
         A context of None lets the runtime derive it from the step's outputs.
         """
-        from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
         projection = RuntimeSliceProjection.preserved_context_for_value(self)
         if projection is not None:
@@ -1660,9 +1673,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> Any:
         """Build object labels from these dense label pixels in ``source``'s domain."""
-        from openhcs.core.object_labels.runtime_object_label_building import (
-            SourceImageObjectLabelBuildRequest,
-        )
 
         return SourceImageObjectLabelBuildRequest(
             image=source,
@@ -1693,9 +1703,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     def _leading_plane_count(self) -> int:
         geometry = self.geometry
         if geometry.ndim <= AxisFamily.active().payload_spatial_rank:
-            from openhcs.core.payload.runtime_slice_projection import (
-                RuntimeSliceProjectionDeclarationError,
-            )
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Runtime-slice image payload must expose its declared plane axis "
@@ -2645,3 +2652,8 @@ class ImageMaskDomain:
             memory_type.reshape(candidate, tuple(broadcast_shape)),
             self.data_shape,
         )
+
+from openhcs.core.payload.runtime_plane_projection import _register_ImagePayloadMetadata
+_register_ImagePayloadMetadata(ImagePayloadMetadata)
+from openhcs.core.source.source_spatial_domain import _register_PlainImagePayload
+_register_PlainImagePayload(PlainImagePayload)

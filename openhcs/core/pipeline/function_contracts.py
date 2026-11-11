@@ -564,3 +564,6 @@ def special_input_parameter_accepts_sequence(
     return get_origin(parameter.annotation) in (Sequence, tuple, list)
 
 register_special_input_parameter_accepts_sequence(special_input_parameter_accepts_sequence)
+
+from openhcs.core.artifacts.kinds import _register_annotation_accepts_runtime_type
+_register_annotation_accepts_runtime_type(annotation_accepts_runtime_type)

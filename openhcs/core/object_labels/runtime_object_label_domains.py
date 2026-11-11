@@ -21,6 +21,16 @@ import numpy as np
 
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
+object_label_project_plane = None  # registration slot
+def _register_object_label_project_plane(val):
+    global object_label_project_plane
+    object_label_project_plane = val
+
+object_label_validate_plane_count = None  # registration slot
+def _register_object_label_validate_plane_count(val):
+    global object_label_validate_plane_count
+    object_label_validate_plane_count = val
+
 
 
 DeclaredObjectIds = tuple[int, ...] | list[int] | None
@@ -430,10 +440,6 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         *,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> ObjectLabelDomain:
-        from openhcs.core.object_labels.runtime_object_labels import (
-            object_label_project_plane,
-            object_label_validate_plane_count,
-        )
 
         if plane_projection is None:
             raise ValueError(
@@ -486,9 +492,6 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         labels: "ObjectLabelValue",
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> tuple["ObjectLabelValue", ...]:
-        from openhcs.core.object_labels.runtime_object_labels import (
-            object_label_project_plane,
-        )
 
         if projection is None:
             raise ValueError(

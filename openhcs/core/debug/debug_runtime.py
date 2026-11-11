@@ -52,6 +52,11 @@ from openhcs.core.progress.types import (
 from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.payload.vfs_protocol import FileManagerLike
 
+RuntimeValuesDebugViewSection = None  # registration slot
+def _register_RuntimeValuesDebugViewSection(val):
+    global RuntimeValuesDebugViewSection
+    RuntimeValuesDebugViewSection = val
+
 
 
 class DebugCommandType(ABC, metaclass=AutoRegisterMeta):
@@ -1359,7 +1364,6 @@ class DebugPausedWorkerController:
                 raise RuntimeError("Debug worker context is not available.")
             if self._state is not PausedDebugWorker:
                 raise RuntimeError("Runtime inspection requires a paused debug worker.")
-            from openhcs.core.debug.debug_views import RuntimeValuesDebugViewSection
 
             return RuntimeValuesDebugViewSection.view_model_for_store(
                 self._context.runtime_value_store,

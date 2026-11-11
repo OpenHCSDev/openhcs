@@ -177,3 +177,6 @@ def _observations_by_name(
 
 
 __all__ = ["HookObservations", "PostExecuteHook"]
+
+from openhcs.core.steps.function_artifact_materialization import _register_PostExecuteHook
+_register_PostExecuteHook(PostExecuteHook)

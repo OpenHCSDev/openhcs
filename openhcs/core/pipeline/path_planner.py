@@ -2317,3 +2317,6 @@ def _cached_analysis_results_dir_for(image_dir: str) -> str:
     """Return cached analysis-results sibling path for one image directory."""
     path = Path(image_dir)
     return str(path.parent / f"{path.name}{ANALYSIS_RESULTS_DIR_SUFFIX}")
+
+from openhcs.core.pipeline.artifact_planning import _register_MissingArtifactInputError
+_register_MissingArtifactInputError(MissingArtifactInputError)

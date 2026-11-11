@@ -1433,3 +1433,6 @@ def _normalize_projection(projection: SourceProjection) -> None:
             }
         ),
     )
+
+from openhcs.core.artifacts.kinds import _register_OpenHCSPlaneAddress
+_register_OpenHCSPlaneAddress(OpenHCSPlaneAddress)

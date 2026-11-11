@@ -1491,3 +1491,8 @@ logger.debug("Configuration framework initialized with OpenHCS types")
 # NOTE: Step editor cache warming is done in openhcs.core.steps.__init__ to avoid circular imports
 
 register_runtime_config_parameter(runtime_config_parameter)
+
+from openhcs.core.config.streaming_config_factory import _register_StreamingConfig
+_register_StreamingConfig(StreamingConfig)
+from openhcs.core.dataset_sources.source import _register_source_bindings_defaults_to_base
+_register_source_bindings_defaults_to_base(source_bindings_defaults_to_base)
