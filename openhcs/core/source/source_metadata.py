@@ -26,7 +26,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
-from openhcs.core.source.source_spatial_domain import CommonRuntimeValue
+from openhcs.core.source.common_runtime_value import CommonRuntimeValue
 
 SourceBindingValue = TypeVar("SourceBindingValue")
 
