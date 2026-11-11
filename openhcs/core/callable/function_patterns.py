@@ -33,6 +33,10 @@ from openhcs.core.artifacts.specs import (
     ArtifactSpecAccumulator,
     ArtifactSpecCollection,
 )
+from openhcs.core.callable.callable_declarations import (
+    FunctionStepExecutionScope,
+    ImagePayloadConsumption,
+)
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadStackComposition,
@@ -40,8 +44,6 @@ from openhcs.core.payload.aligned_image_payload import (
 from openhcs.core.callable.callable_contract import (
     CallableProjection,
     CallableContract,
-    FunctionStepExecutionScope,
-    ImagePayloadConsumption,
     PayloadAxisRequirement,
 )
 from openhcs.core.axes.component_group_scope import ComponentGroupScope

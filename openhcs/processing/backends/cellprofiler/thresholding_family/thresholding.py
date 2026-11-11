@@ -27,6 +27,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
@@ -35,10 +36,7 @@ from openhcs.core.payload.aligned_image_payload import (
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
-from openhcs.core.callable.callable_contract import (
-    KeywordRuntimeParameter,
-    runtime_image_execution_mode,
-)
+from openhcs.core.callable.callable_contract import runtime_image_execution_mode
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,

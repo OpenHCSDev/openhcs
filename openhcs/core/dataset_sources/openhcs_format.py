@@ -1702,3 +1702,48 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     # - get_grid_dimensions(self, dataset_root: Union[str, Path])
     # - get_pixel_size(self, dataset_root: Union[str, Path])
     # These will use our OpenHCSMetadataHandler correctly.
+
+
+def build_metadata_view_document(
+    handler: "MetadataHandler",
+    dataset_root: object,
+    microscope_handler: object,
+) -> "MetadataViewDocument":
+    """Build a metadata view document from a handler and microscope handler."""
+
+    component_values = handler.component_value_set(dataset_root)
+    grid_dims = handler.get_metadata_grid_dimensions(dataset_root)
+    pixel_size = handler.get_metadata_pixel_size(dataset_root)
+    image_files = handler.get_image_files(dataset_root)
+
+    parser = microscope_handler.parser
+    if parser is None:
+        raise ValueError(
+            f"{microscope_handler.__class__.__name__} cannot build metadata view without a parser."
+        )
+
+    metadata = OpenHCSMetadata.from_component_value_set(
+        component_values=component_values,
+        microscope_handler_name=microscope_handler.source_name,
+        source_filename_parser_name=parser.__class__.__name__,
+        grid_dimensions=list(grid_dims),
+        pixel_size=pixel_size,
+        image_files=image_files,
+        available_backends={"disk": True},
+        source_diagnostics=[
+            dict(diagnostic) for diagnostic in handler.source_diagnostics(dataset_root)
+        ]
+        or None,
+        main=None,
+    )
+    title = f"Metadata - {microscope_handler.source_name}"
+    return MetadataViewDocument(
+        title=title,
+        entries=(
+            MetadataViewEntry(
+                name=microscope_handler.source_name,
+                object_instance=metadata,
+                summary=f"Image files: {len(metadata.image_files)} (hidden)",
+            ),
+        ),
+    )

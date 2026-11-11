@@ -19,6 +19,10 @@ from typing import (
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import RuntimeParameterDeclarationABC, add_parameter_exclusions
 
+from openhcs.core.callable.callable_declarations import (
+    FunctionStepExecutionScope,
+    ImagePayloadConsumption,
+)
 from openhcs.core.payload.aligned_image_payload import (
     FullStackExecution,
     ImagePayloadExecutionMode,
@@ -26,11 +30,7 @@ from openhcs.core.payload.aligned_image_payload import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import SpecialArtifactType
-from openhcs.core.callable.callable_contract import (
-    CallableDeclaration,
-    FunctionStepExecutionScope,
-    ImagePayloadConsumption,
-)
+from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.callable.variable_component_stack_requirement import (

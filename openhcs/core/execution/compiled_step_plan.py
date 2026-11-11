@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpecRef,
 )
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,

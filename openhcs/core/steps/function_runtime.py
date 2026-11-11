@@ -4,6 +4,7 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
+from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 import logging
@@ -30,9 +31,6 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.payloads import NoMainFlowOutput
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable.callable_contract import (
-    ImagePayloadConsumption,
-)
 from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,

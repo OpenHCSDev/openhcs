@@ -28,15 +28,13 @@ from openhcs.constants.constants import (
     Backend,
 )
 
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.callable.function_step_transport import PipelineFunctionReferences
 from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.callable.callable_contract import (
-    FunctionStepExecutionScope,
-    PayloadAxisRequirement,
-)
+from openhcs.core.callable.callable_contract import PayloadAxisRequirement
 from openhcs.core.context.processing_context import (
     CompiledContext,
     CompilingContext,

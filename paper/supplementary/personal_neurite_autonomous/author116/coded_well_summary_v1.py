@@ -3,7 +3,7 @@ from math import isclose, nan
 from typing import cast
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType, SpecialArtifactType
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.measurements.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters
 from openhcs.core.measurements.runtime_measurements import MeasurementTable

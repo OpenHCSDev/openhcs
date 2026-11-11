@@ -23,15 +23,13 @@ from weakref import WeakKeyDictionary
 
 import numpy as np
 from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
 from openhcs.core.util.stated_types import require_stated_parameter_types
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    FunctionStepExecutionScope,
-)
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from python_introspect import is_declared_public_name
 from openhcs.processing.backends.lib_registry.unified_registry import (

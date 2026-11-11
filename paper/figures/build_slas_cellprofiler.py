@@ -15,7 +15,7 @@ import black
 from matplotlib.patches import Rectangle
 from objectstate import semantic_values_equal
 
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

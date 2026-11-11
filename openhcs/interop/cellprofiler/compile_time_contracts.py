@@ -9,7 +9,8 @@ from types import MappingProxyType
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.callable.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.callable.function_patterns import (
     FunctionInvocationKey,
     NormalizedFunctionGroup,

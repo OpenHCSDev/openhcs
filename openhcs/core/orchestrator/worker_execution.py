@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
 
+from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
@@ -24,7 +25,6 @@ from openhcs.core.execution.compiled_step_plan import (
     FrameworkDeviceAssignment,
 )
 from openhcs.core.config.pipeline_config import MultiprocessingStartMethod
-from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import (
     CompiledContext,
     ExecutingContext,

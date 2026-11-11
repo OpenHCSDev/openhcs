@@ -12,6 +12,7 @@ from __future__ import annotations
 import inspect
 
 from openhcs.core.axes.axis_declarations import ColourAxis, TileAxis
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -64,7 +65,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter, processing_prepare
+from openhcs.core.callable.callable_contract import processing_prepare
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Annotated, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.interop.cellprofiler.object_label_variants import SmallRemovedLabels
 from openhcs.constants.constants import MemoryType
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
@@ -21,7 +22,6 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
 from openhcs.core.memory import numpy
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

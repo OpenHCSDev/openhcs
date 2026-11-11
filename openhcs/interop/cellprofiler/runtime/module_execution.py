@@ -1,6 +1,7 @@
 """Execution bridge from generated CellProfiler modules to OpenHCS runtime state."""
 
 from __future__ import annotations
+from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
@@ -26,10 +27,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    ImagePayloadConsumption,
-)
+from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowOwnership,

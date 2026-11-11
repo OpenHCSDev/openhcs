@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from pycodify import FormatContext, PythonSourceLiteral, SourceFragment, imported_name
 
-from openhcs.core.callable.callable_contract import (
+from openhcs.core.callable.callable_contract import CallableDeclaration
+from openhcs.core.callable.callable_declarations import (
     CallableImportIdentity,
-    CallableDeclaration,
     FunctionStepExecutionScope,
 )
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
