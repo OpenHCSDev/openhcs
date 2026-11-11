@@ -55,9 +55,12 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
 
     value: ClassVar[str]
     payload_shape: ClassVar[type[PayloadShape]] = AnyPayloadShape
-    participates_in_measurement_source_names: ClassVar[bool] = False
     participates_in_main_flow_output: ClassVar[bool] = False
     _runtime_value_type: ClassVar[type | None] = None
+
+    @classmethod
+    def measurement_source_names_for_alias(cls, alias: str) -> tuple[str, ...]:
+        return ()
 
     @staticmethod
     def unwrap_runtime_value(value: object) -> object:
@@ -630,7 +633,14 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     """Image array artifact type."""
 
     value = "image"
-    participates_in_measurement_source_names = True
+
+    @classmethod
+    def measurement_source_names_for_alias(cls, alias: str) -> tuple[str, ...]:
+        normalized = alias.strip()
+        if not normalized:
+            return ()
+        parts = tuple(part for part in normalized.split("__") if part)
+        return parts or (normalized,)
 
     @classmethod
     def output_owns_source_context(

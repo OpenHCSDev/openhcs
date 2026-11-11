@@ -37,7 +37,6 @@ from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImageUnitIntervalIntensityMetadata
 
 
-SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
 
 
@@ -819,17 +818,6 @@ class SourceSelector:
         )
 
 
-def source_alias_measurement_names(alias: str) -> tuple[str, ...]:
-    """Return measurement source-name tokens represented by a source alias."""
-    normalized_alias = alias.strip()
-    if not normalized_alias:
-        return ()
-    parts = tuple(
-        part for part in normalized_alias.split(SOURCE_ALIAS_PART_SEPARATOR) if part
-    )
-    return parts or (normalized_alias,)
-
-
 @dataclass(frozen=True, slots=True)
 class SourceAssignmentBase(metaclass=AutoRegisterMeta):
     """Shared contract for selecting an alias and assigning its semantic identity."""
@@ -896,9 +884,7 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
     @property
     def measurement_source_names(self) -> tuple[str, ...]:
         """Return measurement feature source qualifiers declared by this alias."""
-        if not self.artifact_kind.participates_in_measurement_source_names:
-            return ()
-        return source_alias_measurement_names(self.alias)
+        return self.artifact_kind.measurement_source_names_for_alias(self.alias)
 
     def component_identity_with(
         self,
