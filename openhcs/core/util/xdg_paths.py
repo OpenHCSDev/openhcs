@@ -6,6 +6,8 @@ Provides standardized paths following XDG Base Directory Specification:
 - Cache: ~/.local/share/openhcs/cache/
 - Config: ~/.local/share/openhcs/config/
 """
+from __future__ import annotations
+
 
 import os
 from pathlib import Path

@@ -1,11 +1,9 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Optional
 
-from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.callable.function_patterns import (
-    DEFAULT_GROUP_KEY,
-    FunctionInvocationKey,
-)
+from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
 
 
 class MissingArtifactInputError(ValueError):

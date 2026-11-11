@@ -4,6 +4,8 @@ Core Log Utilities for OpenHCS
 Unified log discovery, classification, and monitoring utilities
 shared between TUI and PyQt GUI implementations.
 """
+from __future__ import annotations
+
 
 import logging
 import time

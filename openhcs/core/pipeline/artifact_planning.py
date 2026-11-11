@@ -1,4 +1,6 @@
 """Artifact graph extraction for compiled function patterns."""
+from __future__ import annotations
+
 
 import inspect
 from collections import Counter, OrderedDict, defaultdict
@@ -10,13 +12,11 @@ from openhcs.core.pipeline.artifact_declarations import (
     ArtifactProducer,
     MissingArtifactInputError,
 )
-from openhcs.core.util.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpecRef,
 )
-from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecAccumulator,
@@ -30,36 +30,15 @@ from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
-from openhcs.core.callable.function_patterns import FunctionInvocationKey
-from openhcs.core.callable.function_patterns import (
-    normalize_function_pattern,
-    NormalizedFunctionPattern,
-    NormalizedFunctionItem,
-)
-from openhcs.core.callable.invocation_artifacts import (
-    ArtifactDeclarationStepContext,
-    CompositeInvocationContractProvider,
-    InvocationContractProvider,
-    InvocationContractPlan,
-    unnamed_main_flow_artifact_name,
-    InvocationArtifactDeclarationProviderLike,
-    callable_contract_artifact_declarations,
-)
+from openhcs.core.callable.function_patterns import normalize_function_pattern
+from openhcs.core.callable.invocation_artifacts import unnamed_main_flow_artifact_name
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
-from openhcs.core.util.step_dependencies import (
-    NoMainFlowInput,
-    PipelineStartInput,
-    StepInputDependency,
-    StepOutputInput,
-    UnresolvedStepInput,
-)
-from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.util.step_dependencies import NoMainFlowInput, PipelineStartInput, StepOutputInput, UnresolvedStepInput
 from openhcs.core.steps.function_step import FunctionStep
 
 

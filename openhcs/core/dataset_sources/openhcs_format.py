@@ -5,6 +5,8 @@ This module provides the OpenHCSDatasetSource, which reads datasets
 that have been pre-processed and standardized into the OpenHCS format.
 The metadata for such plates is defined in an 'openhcs_metadata.json' file.
 """
+from __future__ import annotations
+
 
 import json
 import logging
@@ -23,7 +25,6 @@ from typing import (
 )
 
 from openhcs.constants.constants import Backend
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.source.source_metadata import (
     SourceVoxelSpacing,
 )
@@ -52,7 +53,7 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataViewDocument,
     MetadataViewEntry,
 )
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 logger = logging.getLogger(__name__)
@@ -1294,7 +1295,6 @@ from pathlib import PurePosixPath
 from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
 
 
-
 class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     """
     DatasetSource for OpenHCS pre-processed format.
@@ -1456,7 +1456,6 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # This is determined dynamically from metadata in initialize_workspace
         # Return empty string as placeholder (not used for virtual workspace)
         return ""
-
 
 
     @property

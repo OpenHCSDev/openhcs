@@ -4,6 +4,8 @@ Consolidated orchestrator module for OpenHCS.
 This module provides a unified PipelineOrchestrator class that implements
 a two-phase (compile-all-then-execute-all) pipeline execution model.
 """
+from __future__ import annotations
+
 
 import logging
 from pathlib import Path
@@ -16,40 +18,28 @@ from openhcs.constants.constants import (
     OrchestratorReady,
     OrchestratorState,
 )
-from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config.pipeline_config import (
     GlobalPipelineConfig,
     PipelineConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
 from openhcs.core.util.metadata_cache import MetadataCache
 from openhcs.core.context.processing_context import CompilingContext
-from openhcs.core.execution.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.source.source_binding_context import SourceBindingContext
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.steps.abstract import AbstractStep
 
-from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    RuntimeObservationMode,
-)
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.cancellation import ExecutionCancellationAuthority
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionRequest,
     execute_bundle_request,
 )
-from openhcs.core.debug.debug_runtime import (
-    DebugExecutionPolicy,
-    NoOpDebugExecutionPolicy,
-)
-from openhcs.core.progress.types import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress.types import ProgressExecutionContext
 from python_introspect import project_dataclass
 from openhcs.core.io.viewer_streaming_service import StreamingViewerLifecycle
 from openhcs.runtime.viewer.viewer_protocol import ViewerPersistenceMode
@@ -60,10 +50,9 @@ from polystore.filemanager import FileManager
 from polystore.zarr import ZarrStorageBackend
 
 # PipelineConfig now imported directly above
-from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.util.post_execute import PostExecuteHook
 from openhcs.core.axes.alias_property import AliasProperty
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner

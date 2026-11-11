@@ -1,11 +1,13 @@
 """Simple metadata cache service for OpenHCS."""
+from __future__ import annotations
+
 
 import logging
 import threading
 from pathlib import Path
 from typing import Dict, Optional
 
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 logger = logging.getLogger(__name__)
 

@@ -5,6 +5,8 @@ or a text pattern. It is decoded once into the member of the
 ``PartitionFilter`` family that owns its spelling; each member resolves itself
 against the dataset's ordered partition values.
 """
+from __future__ import annotations
+
 
 import ast
 import logging
@@ -14,7 +16,6 @@ from typing import ClassVar, List, Sequence, Set, Union
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.config.pipeline_config import PartitionFilterMode
 
 logger = logging.getLogger(__name__)
 
