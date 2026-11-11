@@ -740,8 +740,7 @@ class ImagePayloadMetadata(
         # Read current source fields before deriving the output. This private
         # snapshot owns its stripped axes; no intermediate image is published.
         source_context = source_metadata.replace_fields(plane_axis=NoPlaneAxis)
-        if not data.inherits_source_axes:
-            source_context.axes = PayloadAxes()
+        data.strip_source_axes_if_not_inherited(source_context)
         # Take current output calibration and geometry before replacing stale
         # source identity. These fields belong to the returned pixel domain.
         metadata = output_metadata.with_source_spatial_context_from(source_context)
@@ -1362,10 +1361,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Return one declared dimension per pixel axis."""
         return self.metadata.payload_axes(self)
 
-    @property
-    def inherits_source_axes(self) -> bool:
-        """Whether a derived output takes its declared axes from its source."""
-        return False
+    def strip_source_axes_if_not_inherited(self, source_context: ImagePayloadMetadata) -> None:
+        """Clear source axes when this payload does not inherit them."""
+        source_context.axes = PayloadAxes()
 
     @property
     def declared_plane_axis(self) -> type[RuntimePlaneAxis]:
@@ -1984,9 +1982,8 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     def metadata(self) -> ImagePayloadMetadata:
         return ImagePayloadMetadata()
 
-    @property
-    def inherits_source_axes(self) -> bool:
-        return True
+    def strip_source_axes_if_not_inherited(self, source_context: ImagePayloadMetadata) -> None:
+        pass
 
     @property
     def declares_whole_image_output(self) -> bool:
