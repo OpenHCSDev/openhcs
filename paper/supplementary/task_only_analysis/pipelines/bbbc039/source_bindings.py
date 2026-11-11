@@ -5,16 +5,18 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingOrigin,
     SourceBindingsConfig,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
-    SourceSelector,
 )
 
 source_bindings_config = SourceBindingsConfig(

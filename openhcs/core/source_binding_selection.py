@@ -17,7 +17,6 @@ from openhcs.constants.constants import Backend
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    MetadataExtractionRule,
     NamedSourceBinding,
     PairByMetadata,
     PairByOrder,
@@ -32,6 +31,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
     SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataRecord,

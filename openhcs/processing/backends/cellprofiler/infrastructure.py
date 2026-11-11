@@ -23,9 +23,7 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     FromFileName,
     FromFolderName,
     NamedSourceBinding,
@@ -44,9 +42,6 @@ from openhcs.core.source_bindings import (
     SourceBindingOrigin,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
     SourceSetRole,
@@ -60,7 +55,15 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_matching import source_metadata_component
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.cellprofiler_literals import (

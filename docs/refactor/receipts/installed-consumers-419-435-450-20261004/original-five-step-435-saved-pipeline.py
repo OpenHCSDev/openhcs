@@ -21,12 +21,14 @@ from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     NamedSourceBinding,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
-    SourceSelector,
+    SourceVoxelSpacing,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.color import (
     GrayToColorModule,

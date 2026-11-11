@@ -32,18 +32,18 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
-    MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
 )

@@ -20,11 +20,11 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
-    SourceFilterClause,
     SourceProjectionRole,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_metadata import (
+    SourceFilterClause,
     SourceMetadataFields,
     SourceMetadataMapping,
 )

@@ -9,15 +9,10 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingOrigin,
     SourceBindingsConfig,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 
@@ -90,7 +85,15 @@ from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMeth
 from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod, CellProfilerThresholdScope
 from openhcs.processing.backends.cellprofiler.object_images import ImageMode
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 pipeline_config = PipelineConfig(
  num_workers=2,
  materialize_runtime_artifacts=True,

@@ -102,10 +102,12 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressExecutionContext, ProgressIdentity
 from openhcs.core.source_bindings import (
-    MetadataExtractionRule,
     NamedSourceBinding,
-    SourceFilterClause,
     SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType

@@ -74,6 +74,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     object_label_dense_array,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassificationBinChoice,
     SingleMeasurementClassificationRule,
@@ -118,7 +119,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )

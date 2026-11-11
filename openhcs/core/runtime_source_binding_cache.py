@@ -7,11 +7,9 @@ from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any, Hashable, TYPE_CHECKING
 
-from openhcs.core.source_bindings import (
-    SourceBindingRuntimeMetadataNormalizer,
-    MetadataExtractionRule,
-)
+from openhcs.core.source_bindings import SourceBindingRuntimeMetadataNormalizer
 from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
     ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
 )

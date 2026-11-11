@@ -14,13 +14,13 @@ from openhcs.core.source_binding_selection import (
 )
 from openhcs.core.source_bindings import (
     FromFileName,
-    MetadataExtractionRule,
     PairByOrder,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
+    MetadataExtractionRule,
     ResolvedSourceMetadataRecord,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection

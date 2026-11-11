@@ -73,7 +73,7 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityCompatibility, SourceImageSetIdentityPolicy
+from openhcs.core.source_matching import SourceImageSetIdentityCompatibility
 from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.core.axes import Axis, AxisFamily
@@ -2261,7 +2261,7 @@ def test_exact_input_admits_no_shared_projected_context_constraints(
     # Exact artifact admission instead has a proven producer/address and only
     # checks the additional coordinates constrained on both sides.
     assert runtime_input.edge_plan.spec.source_context_sources() == (source.input_spec().ref(),)
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(runtime_input.source_binding_plan)
+    policy = runtime_input.source_binding_plan.image_set_identity_policy()
     components = ComponentSet.collect(
         (component for component, _value in producer_scope.source_component_values),
         (component for component, _value in consumer_scope.source_component_values),

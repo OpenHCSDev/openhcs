@@ -21,14 +21,11 @@ from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
-    FromFileName,
-    MetadataExtractionRule,
-)
+from openhcs.core.source_bindings import FromFileName
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import MetadataExtractionRule, SourceVoxelSpacing
 from openhcs.core.source_tile_geometry import SourceTileLayout
 from openhcs.core.virtual_workspace_metadata import FIELDS
 from openhcs.microscopes.imagexpress_source_metadata import (

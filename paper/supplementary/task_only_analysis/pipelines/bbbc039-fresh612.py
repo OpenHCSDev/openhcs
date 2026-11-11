@@ -2,6 +2,13 @@ from pathlib import Path
 from openhcs.constants.constants import GroupBy, Microscope, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import PipelineConfig, LazyProcessingConfig, LazySourceBindingsConfig, LazyStepSourceBindingsConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig, LazyTiffConfig
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
@@ -19,15 +26,10 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
     ImportedMetadataTable,
-    MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
     SourceBindingOrigin,
     SourceBindingsConfig,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
 )
 

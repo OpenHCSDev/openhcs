@@ -1,3 +1,4 @@
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.core.steps.abstract import StepExecutionObservation
 from pathlib import Path
 from types import SimpleNamespace
@@ -23,7 +24,6 @@ from openhcs.core.source_bindings import (
     PrimaryPlaneRole,
     SourceArtifactRole,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextEquals,
 )

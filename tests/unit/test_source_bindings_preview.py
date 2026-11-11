@@ -5,14 +5,12 @@ from openhcs.core.source_bindings import (
     FromFileName,
     FromPipelineStart,
     ImagePlaneSource,
-    MetadataExtractionRule,
     MetadataSelector,
     NamedSourceBinding,
     PairByOrder,
     PathIsTif,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
 )
@@ -21,6 +19,10 @@ from openhcs.core.source_bindings_preview import (
     SourceBindingDiagnosticSeverity,
     SourceBindingsPreview,
     SourceInventory,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
 )
 
 

@@ -23,11 +23,11 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceDirectory,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
     TextEquals,
 )
+from openhcs.core.source_metadata import SourceFilterClause
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsJavaAdapter
 from tests.unit.bioformats_fixture import bioformats_filemanager

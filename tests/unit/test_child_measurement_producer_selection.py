@@ -136,7 +136,6 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import SourcePlaneIdentitySequenceAlignment
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -273,7 +272,7 @@ def _source_axis(channel, *, sites=("1", "2"), well="A01", time="1"):
             for value in ("1", "2", "5", "3")
         )
     )
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(bindings)
+    policy = bindings.image_set_identity_policy()
     return SourceImageProvenance(
         source_image_provenance_planes=provenance
     ).image_set_axis(policy)
@@ -470,9 +469,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         axis_scope=RuntimeExecutionAxisScope.from_raw(
             "A01", component=Microscopy.Channel, value="3"
         ),
-        source_image_set_identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
-            bindings
-        ),
+        source_image_set_identity_policy=bindings.image_set_identity_policy(),
         source_payload=image,
         plane_projection=RuntimePlaneProjection.stack(2),
     )

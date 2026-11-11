@@ -2,8 +2,24 @@ from pathlib import Path
 from openhcs.constants.constants import Microscope, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyCompilationDebugConfig, LazyNapariStreamingConfig, PipelineConfig, LazySourceBindingsConfig, LazyPathPlanningConfig, LazyProcessingConfig
-from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource, NamedSourceBinding, SourceSelector, SourceFilterClause, SourceFilterSubject, SourceFilterMatchType, SourceBindingOrigin, SourceBindingMatchPlan, SourceBindingMatchMethod, SourceBindingMatchDimension, SourceBindingMatchField
-from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceSelector,
+    SourceBindingOrigin,
+    SourceBindingMatchPlan,
+    SourceBindingMatchMethod,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
+)
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    MetadataSource,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 pipeline_config = PipelineConfig(
     microscope=Microscope.SOURCE_BINDINGS,
     num_workers=2,

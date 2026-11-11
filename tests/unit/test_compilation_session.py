@@ -8,6 +8,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
+from openhcs.core.source_metadata import MetadataExtractionRule
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -50,7 +51,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceUniversePlan,
     ComponentSelector,
     FromFileName,
-    MetadataExtractionRule,
     NamedSourceBinding,
     PairByOrder,
     SourceSelector,

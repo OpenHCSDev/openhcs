@@ -22,7 +22,6 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     FromFileName,
     FromPipelineStart,
-    MetadataExtractionRule,
     MetadataSelector,
     NamedSourceBinding,
     PairByMetadata,
@@ -33,7 +32,6 @@ from openhcs.core.source_bindings import (
     SourceDirectory,
     SourceExtension,
     SourceFileName,
-    SourceFilterClause,
     SourceSelector,
     TextContains,
     TextDoesNotContainRegex,
@@ -48,6 +46,10 @@ from openhcs.core.config import (
     StepSourceBindingsConfig,
 )
 from openhcs.constants.constants import Backend
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_bindings_preview import SourceInventory
 from formbridge.forms.raw_display_value import RawDisplayValue

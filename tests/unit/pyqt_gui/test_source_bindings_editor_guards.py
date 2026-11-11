@@ -165,11 +165,13 @@ def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> 
     from PyQt6.QtWidgets import QApplication, QComboBox
 
     from openhcs.core.config import StepSourceBindingsConfig
+    from openhcs.core.source_metadata import (
+        SourceFilterClause,
+        SourceFilterSubject,
+    )
     from openhcs.core.source_bindings import (
         PairByMetadata,
         PathIsImage,
-        SourceFilterClause,
-        SourceFilterSubject,
     )
 
     app = QApplication.instance() or QApplication([])

@@ -840,10 +840,7 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
             for alias, channel in (("DNA", "1"), ("Actin", "2"))
         )
     )
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(
-        bindings,
-        group_component=Microscopy.Channel,
-    )
+    policy = bindings.image_set_identity_policy(group_component=Microscopy.Channel)
     records = []
     # Two independent fields, each with two cells. Local slice/object IDs repeat
     # intentionally: provenance, not runtime row position, owns field identity.

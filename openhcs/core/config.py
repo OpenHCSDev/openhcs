@@ -82,16 +82,16 @@ from openhcs.core.source_bindings import (
     ImportedMetadataTable,
     NamedSourceBinding,
     SourceBindingDeclarationsMixin,
-    SourceFilterClause,
     _SourceBindingPlanBase,
-    normalize_source_binding_values,
 )
 from openhcs.core.source_metadata import (
+    SourceFilterClause,
     SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
     SourceVoxelSpacing,
+    normalize_source_binding_values,
     source_metadata_scalar,
 )
 from openhcs.core.source_path_identity import source_path_posix

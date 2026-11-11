@@ -13,11 +13,21 @@ from openhcs.core.config import (
 )
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.core.source_bindings import (
-    NamedSourceBinding, ComponentSelector, SourceSelector, SourceFilterClause,
-    SourceFileName, TextContains, FromFileName, MetadataExtractionRule,
-    PairByMetadata, SourceBindingMatchDimension, SourceBindingMatchField,
+    NamedSourceBinding,
+    ComponentSelector,
+    SourceSelector,
+    SourceFileName,
+    TextContains,
+    FromFileName,
+    PairByMetadata,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import (
+    MetadataExtractionRule,
+    SourceFilterClause,
+    SourceVoxelSpacing,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur

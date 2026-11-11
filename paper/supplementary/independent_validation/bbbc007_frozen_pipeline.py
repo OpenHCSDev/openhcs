@@ -13,13 +13,15 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
+    NamedSourceBinding,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
-    NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
-    SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.primary_objects import (
