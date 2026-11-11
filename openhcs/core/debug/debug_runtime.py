@@ -130,7 +130,10 @@ class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     progress_status: ClassVar[type[ProgressStatus]]
     reports_output_artifacts: ClassVar[bool] = False
-    carries_exception: ClassVar[bool] = False
+
+    def validate_exception(self, exception: BaseException | None) -> None:
+        if exception is not None:
+            raise ValueError(f"{self.name!r} debug events cannot carry an exception.")
 
 
 class ReportsOutputArtifactsDebugBoundary:
@@ -152,7 +155,10 @@ class AfterInvocationDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBou
 class ExceptionDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBoundary):
     name = "exception"
     progress_status = ErrorProgressStatus
-    carries_exception = True
+
+    def validate_exception(self, exception: BaseException | None) -> None:
+        if exception is None:
+            raise ValueError(f"{self.name!r} debug events require an exception.")
 
 
 class DebugWorkerState(ABC, metaclass=AutoRegisterMeta):
@@ -1102,12 +1108,7 @@ class DebugEvent(DebugBoundaryState):
         timing_seconds: float | None = None,
         invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
     ) -> "DebugEvent":
-        if event_type.carries_exception != (exception is not None):
-            raise ValueError(
-                f"{event_type.name!r} debug events "
-                f"{'require' if event_type.carries_exception else 'cannot carry'} "
-                "an exception."
-            )
+        event_type.validate_exception(exception)
         reported_output_artifacts = (
             output_artifacts.refs if event_type.reports_output_artifacts else ()
         )
