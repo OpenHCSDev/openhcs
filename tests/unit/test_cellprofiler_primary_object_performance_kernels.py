@@ -7,7 +7,7 @@ from openhcs.interop.cellprofiler.object_label_variants import (
     UneditedLabels,
 )
 from openhcs.core.config.pipeline_config import DtypeConfig
-from openhcs.processing.backends.cellprofiler import morphology as morphology_backend
+from openhcs.processing.backends.cellprofiler.morphology_family import morphology as morphology_backend
 from openhcs.processing.backends.cellprofiler import (
     thresholding as thresholding_backend,
 )

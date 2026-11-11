@@ -14,7 +14,7 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
-from openhcs.processing.backends.cellprofiler import morphology as morphology_module
+from openhcs.processing.backends.cellprofiler.morphology_family import morphology as morphology_module
 
 from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CentrosomeNumpyMorphologyBackendStrategy,

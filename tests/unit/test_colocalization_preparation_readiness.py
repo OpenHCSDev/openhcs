@@ -19,7 +19,7 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
         from openhcs.core.callable.processing_preparation import CallablePreparation
         from openhcs.core.payload.payload_axes import PayloadAxes
         from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-        from openhcs.processing.backends.cellprofiler import colocalization as module
+        from openhcs.processing.backends.cellprofiler.colocalization_family import colocalization as module
 
         for process in (module.measure_colocalization, module.measure_colocalization_objects):
             for target in CallableProjection.from_callable(process).prepare_targets():

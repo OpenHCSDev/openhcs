@@ -1531,7 +1531,7 @@ def test_measure_colocalization_costes_thresholds_preserve_backend_values():
 
 
 def test_costes_backend_uses_compiled_forward_slope(monkeypatch):
-    from openhcs.processing.backends.cellprofiler import colocalization
+    from openhcs.processing.backends.cellprofiler.colocalization_family import colocalization
 
     monkeypatch.setattr(
         colocalization,

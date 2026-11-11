@@ -13,7 +13,7 @@ def test_declumping_preparation_rejects_late_compilation_or_disk_load(tmp_path):
         from unittest.mock import patch
         import numpy as np
         from openhcs.core.callable.processing_preparation import CallablePreparation
-        from openhcs.processing.backends.cellprofiler import morphology
+        from openhcs.processing.backends.cellprofiler.morphology_family import morphology
 
         kernels = (
             morphology._smooth_image_for_declumping_numba,
