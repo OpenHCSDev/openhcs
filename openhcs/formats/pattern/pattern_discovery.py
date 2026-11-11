@@ -109,10 +109,8 @@ class PatternDiscoveryEngine:
 
         for file_path in all_files:
             # Extract filename from path
-            if isinstance(file_path, str):
-                filename = os.path.basename(file_path)
-            elif isinstance(file_path, Path):
-                filename = file_path.name
+            if isinstance(file_path, (str, Path)):
+                filename = Path(file_path).name
             else:
                 continue
 
@@ -364,10 +362,8 @@ class PatternDiscoveryEngine:
         files_by_axis = defaultdict(list)
         for img_path in image_paths:
             # FileManager should return strings, but handle Path objects too
-            if isinstance(img_path, str):
-                filename = os.path.basename(img_path)
-            elif isinstance(img_path, Path):
-                filename = img_path.name
+            if isinstance(img_path, (str, Path)):
+                filename = Path(img_path).name
             else:
                 # Skip any unexpected types
                 logger.warning(f"Unexpected file path type: {type(img_path).__name__}")
@@ -415,10 +411,8 @@ class PatternDiscoveryEngine:
         component_combinations = defaultdict(list)
         for file_path in files:
             # FileManager should return strings, but handle Path objects too
-            if isinstance(file_path, str):
-                filename = os.path.basename(file_path)
-            elif isinstance(file_path, Path):
-                filename = file_path.name
+            if isinstance(file_path, (str, Path)):
+                filename = Path(file_path).name
             else:
                 # Skip any unexpected types
                 logger.warning(f"Unexpected file path type: {type(file_path).__name__}")
