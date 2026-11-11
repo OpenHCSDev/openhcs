@@ -393,17 +393,6 @@ class DebugArtifactIdentity:
             settings_digest=cls.settings_digest_for_plan(plan),
         )
 
-    def matches(self, other: "DebugArtifactIdentity") -> bool:
-        return (
-            self.name == other.name
-            and self.kind is other.kind
-            and self.group_keys == other.group_keys
-            and self.producer_step_index == other.producer_step_index
-            and self.producer_step_scope_id == other.producer_step_scope_id
-            and self.producer_step_name == other.producer_step_name
-            and self.settings_digest == other.settings_digest
-        )
-
     @staticmethod
     def settings_digest_for_plan(plan: ArtifactPlan) -> str | None:
         if not isinstance(plan, ArtifactOutputPlan):
@@ -835,7 +824,7 @@ class DebugWarmReplayArtifactReusePlan:
             for candidate in snapshot.output_artifact_refs:
                 if (
                     candidate.identity is not None
-                    and artifact_ref.identity.matches(candidate.identity)
+                    and artifact_ref.identity == candidate.identity
                     and candidate.storage_ref != artifact_ref.storage_ref
                 ):
                     return candidate
