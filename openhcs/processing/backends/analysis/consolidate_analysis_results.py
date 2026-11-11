@@ -742,19 +742,7 @@ def consolidated_plate_metadata(
     plate_metadata_config: "PlateMetadataConfig",
 ) -> dict[str, str]:
     """Return MetaXpress-compatible metadata for a consolidated summary."""
-    return {
-        "barcode": plate_metadata_config.barcode or f"OpenHCS-{results_dir.name}",
-        "plate_name": plate_metadata_config.plate_name or results_dir.name,
-        "plate_id": plate_metadata_config.plate_id
-        or str(hash(str(results_dir)) % 100000),
-        "description": plate_metadata_config.description
-        or (
-            "Consolidated analysis results from OpenHCS pipeline: "
-            f"{len(summary_df)} wells analyzed"
-        ),
-        "acquisition_user": plate_metadata_config.acquisition_user,
-        "z_step": str(plate_metadata_config.z_step),
-    }
+    return plate_metadata_config.to_metadata_dict(results_dir.name, len(summary_df))
 
 
 def write_consolidated_analysis_summary(

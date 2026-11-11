@@ -101,13 +101,18 @@ class DeclaredAxis:
                 return int(stripped)
         return value
 
+    _WIRE_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+        "roles": lambda roles: [role.__name__ for role in roles],
+        "value_kind": lambda vk: vk.__name__,
+    }
+
     def to_wire(self) -> dict[str, ViewerWireValue]:
-        return {
-            "name": self.name,
-            "label": self.label,
-            "roles": [role.__name__ for role in self.roles],
-            "value_kind": self.value_kind.__name__,
-        }
+        result: dict[str, ViewerWireValue] = {}
+        for f in dataclasses.fields(self):
+            value = getattr(self, f.name)
+            transform = self._WIRE_TRANSFORMS.get(f.name)
+            result[f.name] = transform(value) if transform else value
+        return result
 
     @classmethod
     def from_wire(cls, payload: object) -> "DeclaredAxis":

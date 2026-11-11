@@ -124,6 +124,20 @@ class PlateMetadataConfig(GlobalConfigSection, AnnotatedDataclassValidationMixin
     z_step: Annotated[PositiveFloat, abbreviation("z_step")] = 1.0
     """Positive Z-plane spacing recorded in the MetaXpress-compatible header."""
 
+    def to_metadata_dict(self, results_dir_name: str, well_count: int) -> dict[str, str]:
+        """Build MetaXpress-compatible metadata, filling defaults from context."""
+        return {
+            "barcode": self.barcode or f"OpenHCS-{results_dir_name}",
+            "plate_name": self.plate_name or results_dir_name,
+            "plate_id": self.plate_id or str(hash(results_dir_name) % 100000),
+            "description": self.description or (
+                f"Consolidated analysis results from OpenHCS pipeline: "
+                f"{well_count} wells analyzed"
+            ),
+            "acquisition_user": self.acquisition_user,
+            "z_step": str(self.z_step),
+        }
+
 
 @dataclass(frozen=True)
 class ExperimentalAnalysisConfig(AnnotatedDataclassValidationMixin):

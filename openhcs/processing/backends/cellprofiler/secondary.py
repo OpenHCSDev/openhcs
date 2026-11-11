@@ -1,3 +1,4 @@
+import dataclasses
 """Secondary-object backend strategies for CellProfiler-compatible processing."""
 
 from __future__ import annotations
@@ -866,8 +867,11 @@ class ThresholdCalculatorDeclaration(RegisteredLeafClassSpec):
             return primitive(backend, image)
 
         return {
-            "method": self.method,
-            "primitive": staticmethod(concrete_primitive),
+            f.name: (
+                staticmethod(concrete_primitive) if f.name == "primitive"
+                else getattr(self, f.name)
+            )
+            for f in dataclasses.fields(self)
         }
 
 
