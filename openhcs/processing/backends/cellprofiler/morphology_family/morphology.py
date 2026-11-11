@@ -683,7 +683,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology_connected_components_numba import (
     equal_value_components_numba,
 )
 from openhcs.core.payload.image_shapes import (

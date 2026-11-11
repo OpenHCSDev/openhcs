@@ -25,7 +25,7 @@ from openhcs.core.callable.function_reference import (
 from openhcs.core.callable.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape

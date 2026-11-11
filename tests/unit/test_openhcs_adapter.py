@@ -55,7 +55,7 @@ from openhcs.core.runtime_store.runtime_exports import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
 )
 from openhcs.authoring.session.compilation import DatasetPipelineRequest

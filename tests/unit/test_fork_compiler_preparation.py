@@ -18,7 +18,7 @@ from openhcs.core.callable.processing_preparation import AutoRegisterRegistryPre
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     ObjectIntensityBackendStrategy,
 )
 

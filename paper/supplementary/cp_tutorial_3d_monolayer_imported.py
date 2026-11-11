@@ -50,29 +50,29 @@ from openhcs.core.source.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     mask_image,
     resize_volumetric,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperation,
     image_math,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     AutomaticHigh,
     AutomaticLow,
     measure_object_intensity,
     rescale_intensity,
 )
 from openhcs.processing.backends.cellprofiler.median_filter import medianfilter
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     closing,
     erode_image,
     erode_objects,
     remove_holes_3d,
     resize_objects_3d,
 )
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ImageMode,
     convert_objects_to_image,
 )
@@ -88,7 +88,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
     threshold,

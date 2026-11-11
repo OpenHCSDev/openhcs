@@ -42,7 +42,7 @@ from openhcs.processing.backends.cellprofiler.tracking import (
     TrackingObjectMeasurement,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.image_geometry import TileModule, tile
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import TileModule, tile
 from openhcs.core.axes.axis_declarations import ColourAxis
 
 

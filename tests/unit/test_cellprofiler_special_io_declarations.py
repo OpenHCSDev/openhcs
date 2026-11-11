@@ -49,7 +49,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.crop import (
@@ -65,14 +65,14 @@ from openhcs.processing.backends.cellprofiler.grid import (
     IdentifyObjectsInGridModule,
     identify_objects_in_grid,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureImageIntensityModule,
     MeasureObjectIntensityModule,
     measure_image_intensity,
     measure_image_intensity_objects,
     measure_object_intensity,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CombineobjectsModule,
     combineobjects,
 )

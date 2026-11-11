@@ -319,7 +319,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_object_quantiles_numba import (
     ObjectIntensityArrays,
     ObjectIntensityFeatureValues,
     ObjectIntensityForegroundIndex,

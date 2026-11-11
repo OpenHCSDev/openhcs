@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from numba import njit
 
-from openhcs.processing.backends.cellprofiler.colocalization_costes_prefix import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization_costes_prefix import (
     _cellprofiler_mean_variance_float32,
     _correlation_slopes_numba,
     _costes_manders_numba,

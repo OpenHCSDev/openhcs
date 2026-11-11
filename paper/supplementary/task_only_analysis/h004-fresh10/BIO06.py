@@ -39,13 +39,13 @@ pipeline_config = PipelineConfig(
     )
 )
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
 from openhcs.processing.backends.cellprofiler.feature_enhancement import OperationMethod, EnhanceMethod, NeuriteMethod
 from openhcs.core.config.pipeline_config import LazyStepMaterializationConfig
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 
 def step(name, function_id, kwargs, alias=None, raw=False, checkpoint=False):
     return FunctionStep(name=name, func=(get_function(function_id),kwargs),

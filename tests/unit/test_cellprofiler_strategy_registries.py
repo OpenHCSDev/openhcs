@@ -13,7 +13,7 @@ from openhcs.processing.backends.cellprofiler.measurement_math import (
     MathOperationStrategy,
     RoundingStrategy,
 )
-from openhcs.processing.backends.cellprofiler.object_images import ImageModeRenderer
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageModeRenderer
 from openhcs.processing.backends.cellprofiler.illumination import (
     IlluminationCorrectionStrategy,
 )
@@ -23,12 +23,12 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 )
 from openhcs.processing.backends.cellprofiler.crop import CropShapeMaskStrategy
 from openhcs.processing.backends.cellprofiler.edge import EdgeEnhancementStrategy
-from openhcs.processing.backends.cellprofiler.object_filtering import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import (
     FilterSelectionStrategy,
     PerObjectAssignmentStrategy,
 )
 from openhcs.processing.backends.cellprofiler.color import GrayToColorSchemeRunner
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperationStrategy,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting

@@ -24,11 +24,11 @@ from openhcs.processing.backends.cellprofiler.grid import ShapeChoice, identify_
 from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-from openhcs.processing.backends.cellprofiler.image_quality import measure_image_quality
-from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import measure_image_quality
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_object_intensity
 from openhcs.processing.backends.cellprofiler.manual_objects import identify_objects_manually
-from openhcs.processing.backends.cellprofiler.object_images import convert_image_to_objects
-from openhcs.processing.backends.cellprofiler.thresholding import threshold
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import convert_image_to_objects
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
 from openhcs.processing.backends.cellprofiler.worms import (
     identify_dead_worms,
     untangle_worms,

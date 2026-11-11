@@ -49,14 +49,14 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.feature_enhancement import NeuriteMethod
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,
 )
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsDistanceMethod
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetFileSelection
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 

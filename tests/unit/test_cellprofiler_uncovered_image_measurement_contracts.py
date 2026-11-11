@@ -26,7 +26,7 @@ from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pip
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     measurement_table_for_module,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     FlipAndRotateModule,
     RotationResult,
     flip_and_rotate,

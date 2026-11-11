@@ -19,7 +19,7 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod
 from zmqruntime.config import TransportMode
 
 pipeline_config = PipelineConfig(
@@ -40,13 +40,13 @@ pipeline_config = PipelineConfig(
     napari_streaming_config=LazyNapariStreamingConfig(enabled=False,port=6023,host='127.0.0.1',transport_mode=TransportMode('tcp'),persistent=True,channel_mode=NapariDimensionMode('layer')),
 )
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.object_filtering import FilterMode, FilterMethod
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import FilterMode, FilterMethod
 
 pipeline_steps = [
     FunctionStep(name='NormalizeDetectionInputs',func={

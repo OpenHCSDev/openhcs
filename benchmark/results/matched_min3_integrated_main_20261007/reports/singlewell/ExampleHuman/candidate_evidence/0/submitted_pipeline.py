@@ -48,7 +48,7 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.outlines import (
     LineMode,
     OutlineSourceKind,
@@ -58,7 +58,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFileFormat,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
 )

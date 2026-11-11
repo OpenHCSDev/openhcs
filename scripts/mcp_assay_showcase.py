@@ -620,7 +620,7 @@ def _colocalization_source(plate_path: Path, output_path: Path) -> str:
             "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(
-            """from openhcs.processing.backends.cellprofiler.colocalization import (
+            """from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     measure_colocalization,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
@@ -798,7 +798,7 @@ def _radial_intensity_distribution_source(plate_path: Path, output_path: Path) -
     DetectionMethod,
     count_cells_single_channel,
 )
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     measure_object_intensity_distribution,
 )
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (

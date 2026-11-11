@@ -16,7 +16,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.processing.backends.cellprofiler import morphology as morphology_module
 
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CentrosomeNumpyMorphologyBackendStrategy,
     CellProfilerDeclumpMethod,
     CombineObjectsMethod,
@@ -34,7 +34,7 @@ from openhcs.processing.backends.cellprofiler.morphology import (
 from openhcs.processing.backends.cellprofiler.relationships import (
     ObjectRelationshipBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import threshold_primitives
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold_primitives
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
@@ -778,7 +778,7 @@ def test_specialized_morphology_backends_are_explicit_opt_in() -> None:
 
 
 def test_morph_convex_hull_routes_through_morphology_backend() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphOperation,
         morph,
     )
@@ -800,7 +800,7 @@ def test_morph_convex_hull_routes_through_morphology_backend() -> None:
 
 
 def test_fill_objects_convex_hull_routes_through_morphology_backend() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         FillMode,
         fill_objects,
     )
@@ -939,7 +939,7 @@ def test_split_or_merge_labels_only_uses_exact_public_callable() -> None:
 
 
 def test_split_or_merge_convex_hull_routes_through_morphology_backend() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         SplitOrMergeMergeMethod as MergeMethod,
         SplitOrMergeOperation as Operation,
         SplitOrMergeOutputObjectType as OutputObjectType,
@@ -973,7 +973,7 @@ def test_split_or_merge_convex_hull_routes_through_morphology_backend() -> None:
 
 
 def test_split_or_merge_per_parent_requires_parent_labels() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         SplitOrMergeMergeMethod as MergeMethod,
         SplitOrMergeOperation as Operation,
         split_or_merge_objects,
@@ -990,7 +990,7 @@ def test_split_or_merge_per_parent_requires_parent_labels() -> None:
 
 
 def test_morphology_backend_unregistered_provider_is_explicit_error() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphOperation,
         morph,
     )

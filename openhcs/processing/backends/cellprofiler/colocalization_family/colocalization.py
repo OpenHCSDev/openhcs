@@ -128,7 +128,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
-from openhcs.processing.backends.cellprofiler.colocalization_costes import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization_costes import (
     UnitIntervalDenseRankSemantics,
     _cellprofiler_mean_variance_float32,
     _correlation_slopes_numba,

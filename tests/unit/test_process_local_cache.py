@@ -15,10 +15,10 @@ from openhcs.core.runtime_store.runtime_artifact_queries import RuntimeMeasureme
 from openhcs.processing.backends.cellprofiler.granularity import (
     GranularityImageSeriesCache,
 )
-from openhcs.processing.backends.cellprofiler.image_quality import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
     RadialSpectrumGeometryCache,
 )
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     RadialLabelGeometryCache,
 )
 from openhcs.processing.backends.cellprofiler.zernike import ZernikeLabelGeometryCache

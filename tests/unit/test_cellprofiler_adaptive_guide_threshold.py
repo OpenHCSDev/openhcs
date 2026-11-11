@@ -40,7 +40,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     AdaptiveObjectThresholdResult,
     CellProfilerThresholdRequest,
     CellProfilerThresholdResult,

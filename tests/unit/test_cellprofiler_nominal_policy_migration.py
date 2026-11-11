@@ -107,13 +107,13 @@ def test_module_mro_overrides_of_module_classmethods_remain_class_bound() -> Non
 
 
 def test_object_measurement_columnar_rows_own_complete_domain_semantics() -> None:
-    from openhcs.processing.backends.cellprofiler.colocalization import (
+    from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
         ObjectColocalizationColumnarMeasurements,
     )
     from openhcs.processing.backends.cellprofiler.granularity import (
         ObjectGranularityMeasurementRows,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         ObjectIntensityMeasurementRows,
     )
     from openhcs.core.measurements.measurement_row_materialization import (

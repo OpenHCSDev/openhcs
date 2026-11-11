@@ -55,7 +55,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     enhance_or_suppress_features,
 )
-from openhcs.processing.backends.cellprofiler.intensity import measure_image_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_image_intensity
 from openhcs.processing.backends.cellprofiler.medial_axis import medialaxis
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
@@ -70,7 +70,7 @@ from openhcs.processing.backends.cellprofiler.skeleton import (
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     threshold,
 )
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution

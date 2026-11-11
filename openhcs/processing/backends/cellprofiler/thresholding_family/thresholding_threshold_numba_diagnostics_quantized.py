@@ -8,7 +8,7 @@ from typing import NamedTuple
 import numpy as np
 from numba import njit
 
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics import (
     CELLPROFILER_THRESHOLD_ENTROPY_BINS,
     CELLPROFILER_THRESHOLD_ENTROPY_DELTA,
     _histogram_entropy_numba,

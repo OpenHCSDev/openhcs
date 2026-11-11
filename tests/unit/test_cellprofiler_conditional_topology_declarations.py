@@ -32,7 +32,7 @@ from openhcs.processing.backends.cellprofiler.grid import (
     define_grid_automatic,
     define_grid_manual,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     MaskImageModule,
     ResizeMethod,
     ResizeModule,
@@ -42,17 +42,17 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     resize_volumetric,
     tile,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathModule,
     ImageMathOperation,
     image_math,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     ResizeObjectsModule,
     resize_objects,
     resize_objects_3d,
 )
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ConvertObjectsToImageModule,
     convert_objects_to_image,
 )

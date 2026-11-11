@@ -286,16 +286,16 @@ from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     CellProfilerPlaneGeometry,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MorphologyBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.outlines import (
     ObjectOutlineBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerAveragingMethod,
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,

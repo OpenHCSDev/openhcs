@@ -62,7 +62,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     setting_values,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     dilate_objects_3d,
     erode_image,
     remove_holes_3d,
@@ -310,8 +310,8 @@ FilterObjects:[module_num:5|enabled:True]
     import inspect
     import numpy as np
     from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
-    from openhcs.processing.backends.cellprofiler.object_images import convert_image_to_objects
-    from openhcs.processing.backends.cellprofiler.object_filtering import FilterMode, filter_objects
+    from openhcs.processing.backends.cellprofiler.object_analysis.object_images import convert_image_to_objects
+    from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import FilterMode, filter_objects
     from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
 
     image = np.zeros((12, 15), dtype=np.uint16)

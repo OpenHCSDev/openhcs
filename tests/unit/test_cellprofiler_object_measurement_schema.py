@@ -5,14 +5,14 @@ from openhcs.core.measurements.measurement_row_materialization import (
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ObjectColocalizationMetricArrays,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
     ObjectIntensityMeasurementRows,
 )
-from openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_object_quantiles_numba import (
     ObjectIntensityArrays,
     ObjectIntensityFeatureValues,
 )

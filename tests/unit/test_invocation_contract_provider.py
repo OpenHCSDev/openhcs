@@ -359,7 +359,7 @@ def test_classification_rules_remain_public_while_declaring_prior_measurements()
         ClassificationBinChoice,
         SingleMeasurementClassificationRule,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         MeasureObjectIntensityModule,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
@@ -1242,7 +1242,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
         calculate_math,
         measure_object_size_shape,
     )
-    from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+    from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 
     measurement_step = FunctionStep(
         func=(

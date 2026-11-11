@@ -486,7 +486,7 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
     _numpy124_aquicksort_indices,
     _numpy124_ordered_label_maximum_indices,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MorphologyBackendStrategy,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfiler

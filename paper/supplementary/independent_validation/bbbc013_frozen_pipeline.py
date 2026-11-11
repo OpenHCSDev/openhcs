@@ -25,7 +25,7 @@ from openhcs.core.source.source_metadata import (
     SourceFilterSubject,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_object_intensity
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
 )
@@ -34,7 +34,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     identify_secondary_objects_with_replacement_primary,
     identify_tertiary_objects,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
 )

@@ -69,7 +69,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFileFormat,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
 )

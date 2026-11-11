@@ -12,9 +12,9 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from polystore.config import TiffCompression
 from zmqruntime.config import TransportMode
 

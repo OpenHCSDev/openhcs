@@ -132,7 +132,7 @@ from openhcs.constants.input_source import InputSource
 from openhcs.core.config.pipeline_config import LazySourceBindingsConfig, PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyWellFilterConfig, LazyNapariStreamingConfig, NapariDimensionMode, LazyStepMaterializationConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod
 from zmqruntime.config import TransportMode
 
 pipeline_config = PipelineConfig(
@@ -152,24 +152,24 @@ pipeline_steps = [
 
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod
 from openhcs.processing.backends.cellprofiler.primary_objects import WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerOtsuMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdAssignment
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerAveragingMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerVarianceMethod
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdScope
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerOtsuMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdAssignment
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerAveragingMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerVarianceMethod
 from openhcs.processing.backends.cellprofiler.primary_objects import ExcessObjectHandling
 from openhcs.processing.backends.cellprofiler._backend import CellProfilerBackendProvider
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 from openhcs.processing.backends.cellprofiler.measurement_math import CalculateMathRoundingMethod
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetDelimiter
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetNanRepresentation
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
-from openhcs.processing.backends.cellprofiler.intensity import AutomaticLow
-from openhcs.processing.backends.cellprofiler.intensity import AutomaticHigh
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import AutomaticLow
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import AutomaticHigh
 
 def cpstep(name, fid, **kwargs):
     return FunctionStep(name=name, func=(get_function("openhcs:"+fid), kwargs), napari_streaming_config=LazyNapariStreamingConfig(enabled=name.startswith("Nuclei") or name.startswith("Cells")), step_materialization_config=LazyStepMaterializationConfig(enabled=name.startswith("Durable")))

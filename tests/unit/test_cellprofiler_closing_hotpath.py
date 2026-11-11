@@ -13,7 +13,7 @@ from skimage.morphology import opening as skimage_opening
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     NumpyMorphologyBackendStrategy,
     closing,
     dilate_image,

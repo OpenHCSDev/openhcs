@@ -55,12 +55,12 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFilenameMethod,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,

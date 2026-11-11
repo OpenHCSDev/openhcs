@@ -38,7 +38,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     classification_rgb_image,
     classify_objects_single_measurement,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ColocalizationThresholdMaskGroup,
     ColocalizationThresholdMaskObjectRelation,
     ColocalizationThresholdMaskRuntimeOutput,
@@ -47,7 +47,7 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization,
     measure_colocalization_objects,
 )
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     IntensityDistributionHeatmapGroup,
     IntensityDistributionHeatmapMeasurement,
     IntensityDistributionHeatmapObjectRelation,

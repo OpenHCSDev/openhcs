@@ -42,14 +42,14 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
 )
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     MeasureColocalizationModule,
 )
 from openhcs.processing.backends.cellprofiler.color import (
     ColorToGrayMode,
     color_to_gray,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureImageIntensityModule,
 )
 from tests.unit.cellprofiler_runtime_test_support import (

@@ -14,7 +14,7 @@ def prepare(queue):
     from numba import config
     from numba.core.registry import CPUDispatcher
 
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         ObjectIntensityBackendStrategy,
     )
     from openhcs.processing.backends.cellprofiler.shape import (

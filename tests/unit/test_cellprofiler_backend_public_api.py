@@ -128,7 +128,7 @@ def test_experiment_measurements_use_recorded_owner_without_catalog_discovery() 
         from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
         from openhcs.core.payload.runtime_tabular_values import FieldSpec
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-        from openhcs.processing.backends.cellprofiler.image_quality import MeasureImageQualityModule
+        from openhcs.processing.backends.cellprofiler.image_processing.image_quality import MeasureImageQualityModule
 
         feature = "ImageQuality_ThresholdOtsu_OrigHoechst_2W"
         table = MeasurementTable(
@@ -169,7 +169,7 @@ def test_recorded_measurement_owner_lookup_keeps_other_modules_lazy() -> None:
             cellprofiler_dialect_for_measurement_owner,
         )
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-        from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
+        from openhcs.processing.backends.cellprofiler.intensity_family.intensity import MeasureObjectIntensityModule
 
         prefix = "openhcs.processing.backends.cellprofiler."
         before = {name for name in sys.modules if name.startswith(prefix)}

@@ -3,11 +3,11 @@ from openhcs.constants.constants import AllComponents, GroupBy, VariableComponen
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config.pipeline_config import PipelineConfig, LazyProcessingConfig, LazyPathPlanningConfig, LazyNapariStreamingConfig, LazyStepMaterializationConfig
 from openhcs.core.source.source_bindings import LazySourceBindingsConfig, NamedSourceBinding, SourceSelector, ComponentSelector, SourceBindingOrigin, LazyStepSourceBindingsConfig
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod, CellProfilerThresholdScope
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod, CellProfilerThresholdScope
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.func_registry import get_function
 from openhcs.core.steps.function_step import FunctionStep
 from zmqruntime.config import TransportMode

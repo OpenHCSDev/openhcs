@@ -50,8 +50,8 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.morphology import MorphOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MorphOperation
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 from polystore.config import TiffCompression

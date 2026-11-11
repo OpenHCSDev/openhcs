@@ -73,7 +73,7 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
     CellProfilerLabelHull,
     _cellprofiler_column_envelope_vertices_numba,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MorphologyBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.perf_fixtures import (

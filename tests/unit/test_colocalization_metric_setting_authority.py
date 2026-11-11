@@ -10,7 +10,7 @@ from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.setting_names import setting_names
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     MeasureColocalizationModule,
 )
 
@@ -110,7 +110,7 @@ def test_recorded_source_pair_features_exclude_disabled_metrics(disabled, famili
     from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import (
         SourcePairObjectMeasurementInvocation,
     )
-    from openhcs.processing.backends.cellprofiler.colocalization import (
+    from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
         ColocalizationMeasurements,
         MeasureColocalizationMeasurementRowPolicy,
         ObjectColocalizationMetricArrays,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from openhcs.processing.backends.cellprofiler.colocalization_costes_prefix_numba_pearson import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization_costes_prefix_numba_pearson import (
     _correlation_slopes_numba,
     _cellprofiler_mean_variance_float32,
     _costes_manders_numba,

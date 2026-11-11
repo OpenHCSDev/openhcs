@@ -45,7 +45,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     image_math,
     MathOperation,
 )

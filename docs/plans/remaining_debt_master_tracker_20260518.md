@@ -1076,7 +1076,7 @@ Verification:
 
 ```bash
 .venv/bin/python - <<'PY'
-from openhcs.processing.backends.cellprofiler.intensity_distribution import __all__ as i
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import __all__ as i
 from openhcs.processing.backends.cellprofiler.watershed import __all__ as w
 print(i)
 print(w)
@@ -1109,7 +1109,7 @@ Verification:
 
 ```bash
 .venv/bin/python - <<'PY'
-from openhcs.processing.backends.cellprofiler.thresholding import __all__
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import __all__
 print(tuple(__all__))
 PY
 # tuple matched the previous thresholding export order and names

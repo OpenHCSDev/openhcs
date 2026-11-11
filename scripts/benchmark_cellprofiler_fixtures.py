@@ -23,7 +23,7 @@ def _time_call(call: Callable[[], object], repeats: int) -> tuple[float, float]:
 
 
 def _benchmark_threshold_application(path: Path, repeats: int) -> tuple[float, float]:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdApplicationSmoothing,
     )
 
@@ -39,7 +39,7 @@ def _benchmark_threshold_application(path: Path, repeats: int) -> tuple[float, f
 
 
 def _benchmark_threshold_diagnostics(path: Path, repeats: int) -> tuple[float, float]:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         cellprofiler_threshold_diagnostics,
     )
 
@@ -60,7 +60,7 @@ def _benchmark_threshold_diagnostics(path: Path, repeats: int) -> tuple[float, f
 
 
 def _benchmark_ipo_fill_after(path: Path, repeats: int) -> tuple[float, float]:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -74,7 +74,7 @@ def _benchmark_ipo_fill_after(path: Path, repeats: int) -> tuple[float, float]:
 
 
 def _benchmark_ipo_declump_smooth(path: Path, repeats: int) -> tuple[float, float]:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         CellProfilerDeclumpMethod,
         MorphologyBackendStrategy,
     )
@@ -99,7 +99,7 @@ def _benchmark_ipo_declump_smooth(path: Path, repeats: int) -> tuple[float, floa
 
 
 def _benchmark_ipo_declump_seed_points(path: Path, repeats: int) -> tuple[float, float]:
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 

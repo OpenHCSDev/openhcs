@@ -693,7 +693,7 @@ def measure_object_neighbors(
         percent_touching_colormap: Colormap for the retained percent-touching
             image; used only when ``retain_percent_touching_image`` is enabled.
     """
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
     from openhcs.processing.backends.cellprofiler.outlines import (

@@ -132,7 +132,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
     cellprofiler_runtime_equivalence_policy,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     MeasureColocalizationModule,
 )
 from openhcs.processing.backends.cellprofiler.grid import (

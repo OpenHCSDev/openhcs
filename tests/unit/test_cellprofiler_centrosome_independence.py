@@ -18,8 +18,8 @@ from openhcs.processing.backends.cellprofiler.edge import (
 from openhcs.processing.backends.cellprofiler.illumination import (
     ConvexHullSmoothingBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.image_quality import image_quality_backend
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import image_quality_backend
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MorphologyBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.outlines import (
@@ -37,7 +37,7 @@ from openhcs.processing.backends.cellprofiler.smoothing import (
     SmoothingStrategyKey,
     _cellprofiler_octagon,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import threshold_primitives
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold_primitives
 from openhcs.processing.backends.cellprofiler.worm_geometry import (
     rebuild_worm_from_control_points_approx,
 )

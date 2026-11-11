@@ -258,7 +258,7 @@ def test_cpu_only_inventory_resolves_memory_decorator_import_aliases() -> None:
 
     numpy_only = frozenset({"numpy"})
     assert _module_declares_allowed_memory_type(
-        "openhcs.processing.backends.cellprofiler.object_images",
+        "openhcs.processing.backends.cellprofiler.object_analysis.object_images",
         numpy_only,
     )
     assert _module_declares_allowed_memory_type(
@@ -780,7 +780,7 @@ def test_serving_readiness_completes_the_measurement_registry_before_lookup(
 
         from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-        from openhcs.processing.backends.cellprofiler.thresholding import threshold
+        from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
         from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
         assert not CellProfilerModule.__registry__._discovered

@@ -49,7 +49,7 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     measure_object_neighbors,
 )
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )

@@ -17,7 +17,7 @@ from typing import Annotated, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 import numpy as np
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu_weighted import (
     running_variance_numba,
 )
 
@@ -83,7 +83,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     threshold_primitives,

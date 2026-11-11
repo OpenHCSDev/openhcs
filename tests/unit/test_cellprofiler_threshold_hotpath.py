@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.config.pipeline_config import DtypeConfig
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
@@ -18,12 +18,12 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     threshold,
     threshold_method_for_class_count,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics import (
     _deterministic_normal_noise,
     _quantized_log_tables,
     _threshold_diagnostics_numba,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics_quantized import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics_quantized import (
     QuantizedThresholdDiagnosticContext,
     _threshold_diagnostics_unmasked_finite_quantized_numba,
     exact_quantized_threshold_codes,

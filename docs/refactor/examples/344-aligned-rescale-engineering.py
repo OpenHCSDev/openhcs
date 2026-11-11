@@ -26,7 +26,7 @@ from openhcs.core.source.source_metadata import (
     SourceVoxelSpacingUnit,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.intensity import RescaleIntensityModule, rescale_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleIntensityModule, rescale_intensity
 
 primary_binding, reference_binding = RescaleIntensityModule.declared_artifact_bindings(plan_type=ArtifactInputPlan, artifact_type=ImageArtifactType)
 (output_binding,) = RescaleIntensityModule.declared_artifact_bindings(plan_type=ArtifactOutputPlan, artifact_type=ImageArtifactType)

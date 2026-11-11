@@ -88,7 +88,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,
     render_spreadsheet_bundle,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
 )
 from openhcs.processing.backends.cellprofiler.crop import CropModule
@@ -2151,7 +2151,7 @@ def test_declared_reference_mean_uses_full_projected_objects_after_selection() -
     "selection_mode", ("ordinary", "combined", "relationships", "experiment", "all")
 )
 def test_partitioned_export_admits_only_consumed_relationship_subject(selection_mode):
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         MeasureImageQualityModule,
     )
     from openhcs.core.callable.runtime_batch_contracts import (

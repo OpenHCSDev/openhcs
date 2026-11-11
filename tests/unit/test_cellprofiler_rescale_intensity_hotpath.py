@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     AutomaticHigh,
     AutomaticLow,
     RescaleIntensityContext,

@@ -274,7 +274,7 @@ def test_table_wide_subject_owner_rejects_distinct_named_image_subjects(output_p
 
 
 def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         MeasureImageQualityModule,
     )
 
@@ -312,7 +312,7 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     CellProfilerRecordedArtifactOutputPolicy,
 ])
 def test_measurement_row_owner_controls_named_object_roster_admission(policy):
-    from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import MeasureObjectIntensityModule
 
     objects = tuple(
         ArtifactSpec.input(name, ObjectLabelsArtifactType)

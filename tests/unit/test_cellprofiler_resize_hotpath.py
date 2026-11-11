@@ -6,7 +6,7 @@ import scipy.ndimage as ndi
 import skimage.transform
 
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     InterpolationMethod,
     ResizeGeometry,
     resize,

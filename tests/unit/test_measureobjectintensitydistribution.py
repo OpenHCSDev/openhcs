@@ -5,7 +5,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-import openhcs.processing.backends.cellprofiler.intensity_distribution as mid
+import openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution as mid
 from openhcs.core.config.pipeline_config import DtypeConfig
 from openhcs.core.measurements.measurement_feature_queries import (
     MeasurementFeatureQuery,
@@ -34,7 +34,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     MeasureObjectIntensityDistributionModule,
     NativeNumpyRadialDistributionBackendStrategy,
     NumbaNumpyRadialDistributionBackendStrategy,

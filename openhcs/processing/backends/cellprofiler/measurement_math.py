@@ -94,7 +94,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_names,
     setting_values,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperation as MathOperation,
 )
 from openhcs.core.callable.processing_contracts import (

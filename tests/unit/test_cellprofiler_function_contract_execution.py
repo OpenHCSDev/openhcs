@@ -43,7 +43,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 )
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.processing.backends.cellprofiler.alignment import AlignShiftMeasurement
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MorphOperation,
     morph,
     morphologicalskeleton,

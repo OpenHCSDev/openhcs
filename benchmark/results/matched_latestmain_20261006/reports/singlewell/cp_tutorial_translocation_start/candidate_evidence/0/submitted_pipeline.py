@@ -50,12 +50,12 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFilenameMethod,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerAveragingMethod,
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,

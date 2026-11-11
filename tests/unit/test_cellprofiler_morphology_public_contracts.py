@@ -46,7 +46,7 @@ from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     fill_objects,
     morph,
     morphologicalskeleton,

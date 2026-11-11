@@ -24,7 +24,7 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
-from openhcs.processing.backends.cellprofiler.intensity import measure_image_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_image_intensity
 from openhcs.processing.backends.pos_gen.acquisition_positions import acquisition_tile_positions
 
 packet = Path(

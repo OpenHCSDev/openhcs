@@ -25,7 +25,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurem
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     CellProfilerObjectCoreMeasurementFeature,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ColocalizationMeasurements,
     MeasureColocalizationModule,
     MeasureColocalizationMeasurementRowPolicy,
@@ -37,7 +37,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     IdentifyTertiaryObjectsModule,
     SecondaryMethod,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdResult,
 )
 

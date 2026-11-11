@@ -36,7 +36,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     correct_illumination_apply,
     correct_illumination_calculate,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     ResizeDimensionSpecification,
     ResizeMethod,
     ResizeModule,

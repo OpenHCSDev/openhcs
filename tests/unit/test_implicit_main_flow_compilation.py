@@ -18,7 +18,7 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.thresholding import threshold
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.imagexpress import ImageXpressHandler

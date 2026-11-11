@@ -72,7 +72,7 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
 from openhcs.processing.backends.cellprofiler import (
     correct_illumination_calculate,
 )
-from openhcs.processing.backends.cellprofiler.object_filtering import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import (
     FilterMode,
     FilterObjectsModule,
     FilterObjectsRemovedObjectSourceRelation,

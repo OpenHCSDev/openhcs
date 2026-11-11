@@ -34,7 +34,7 @@ from openhcs.processing.backends.cellprofiler.color import (
     GrayToColorModule,
     ImageChannelType,
 )
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 from polystore.config import TiffCompression

@@ -21,7 +21,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ColocalizationThresholdMaskGroup,
     ColocalizationThresholdMaskRuntimeOutput,
     measure_colocalization,
@@ -32,7 +32,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     SmoothingMethod,
     correct_illumination_calculate,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperation,
     image_math,
 )

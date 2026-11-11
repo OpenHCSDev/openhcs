@@ -7,10 +7,10 @@ import math
 import numpy as np
 from numba import njit
 
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu_weighted import (
     weighted_otsu_threshold_numba_compatible as _weighted_otsu_threshold_numba_compatible,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_histogram_multiotsu import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu_histogram_multiotsu import (
     _binned_mode_numba,
     _histogram_range_numba,
     _isodata_threshold_numba,

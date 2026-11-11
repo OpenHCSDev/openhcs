@@ -108,19 +108,19 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
     capture_enabled,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics import (
     _deterministic_normal_noise,
     _threshold_diagnostics_numba,
     _threshold_diagnostics_unmasked_finite_numba,
     rectangular_mask_domain,
     smooth_with_deterministic_noise,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics_quantized import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics_quantized import (
     _threshold_diagnostics_rectangular_mask_quantized_numba,
     _threshold_diagnostics_unmasked_finite_quantized_numba,
     quantized_threshold_diagnostic_context,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu import (
     CELLPROFILER_LI_TOLERANCE,
     _binned_mode_numba,
     _finite_flat_float32,

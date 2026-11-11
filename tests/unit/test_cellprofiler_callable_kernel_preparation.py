@@ -83,7 +83,7 @@ def test_real_declarations_own_independent_registry_obligations():
     from openhcs.processing.backends.cellprofiler.grid import (
         GridKernelPreparation,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         ExpandOrShrinkObjectsKernelPreparation,
     )
     from openhcs.processing.backends.cellprofiler.primary_objects import (

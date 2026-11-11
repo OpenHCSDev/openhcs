@@ -51,15 +51,15 @@ from openhcs.core.source.source_metadata import (
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.feature_enhancement import NeuriteMethod
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.outlines import OutlineSourceKind
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,
 )
 from openhcs.processing.backends.cellprofiler.save_images import SaveImagesBitDepth
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,

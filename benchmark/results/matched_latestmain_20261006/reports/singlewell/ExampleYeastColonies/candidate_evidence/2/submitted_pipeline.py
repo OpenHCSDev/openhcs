@@ -59,7 +59,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,
@@ -69,7 +69,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesFileFormat,
 )
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetFileSelection
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdAssignment
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdAssignment
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 

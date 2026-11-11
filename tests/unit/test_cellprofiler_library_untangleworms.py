@@ -54,7 +54,7 @@ from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ColorImageModeRenderer,
 )
 from openhcs.processing.backends.cellprofiler.worm_geometry import (

@@ -54,7 +54,7 @@ from openhcs.core.source.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.export_to_database import (
@@ -67,15 +67,15 @@ from openhcs.processing.backends.cellprofiler.feature_enhancement import (
 from openhcs.processing.backends.cellprofiler.illumination import (
     correct_illumination_apply,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     MaskSource,
     mask_image,
 )
-from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     measure_object_intensity_distribution,
 )
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.neighbors import (
     DistanceMethod,
     measure_object_neighbors,
@@ -93,7 +93,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     identify_tertiary_objects,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,

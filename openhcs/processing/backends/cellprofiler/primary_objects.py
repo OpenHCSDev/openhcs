@@ -47,7 +47,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     CurrentPayloadMeasurementRecordMixin,
     NoObjectNameMeasurementRecordMixin,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerAveragingMethod,
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
@@ -72,7 +72,7 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
 from openhcs.processing.backends.cellprofiler.watershed import (
     cellprofiler_legacy_watershed,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CellProfilerDeclumpMethod,
     DeclumpingMaximaGeometry,
     FillHolesOption,
@@ -236,7 +236,7 @@ def identify_primary_objects(
         entirely invalid declump response/seed plane means that stage did not
         execute (disabled declumping or no foreground), not a measured zero.
     """
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 

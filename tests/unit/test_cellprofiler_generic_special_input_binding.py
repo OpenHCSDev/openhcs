@@ -43,11 +43,11 @@ from openhcs.processing.backends.cellprofiler import (
     convert_objects_to_image,
     mask_image,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     MaskImageModule,
     MaskSource,
 )
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ConvertObjectsToImageModule,
 )
 

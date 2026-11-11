@@ -26,7 +26,7 @@ from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelS
 from openhcs.core.steps.function_outputs import StreamOutputBatch
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.stream_component_semantics import StreamImagePayloadMetadataProjector
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     AutomaticHigh, AutomaticLow, RescaleIntensityModule, RescaleMethod, rescale_intensity,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
