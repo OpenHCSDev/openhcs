@@ -962,10 +962,6 @@ class WatershedSeedStrategy(
 ):
     """Build seed labels for non-marker Watershed modes."""
 
-    __registry_key__ = WATERSHED_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    strategy_key: ClassVar[WatershedSeedMethod | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
     def markers(
@@ -1047,10 +1043,6 @@ class WatershedDeclumpStrategy(
 ):
     """Build the watershed priority surface for one declumping family."""
 
-    __registry_key__ = WATERSHED_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    strategy_key: ClassVar[WatershedDeclumpMethod | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
     def priority_image(
@@ -1097,10 +1089,6 @@ class WatershedMethodStrategy(
 ):
     """Build seed labels for one CellProfiler watershed seed source."""
 
-    __registry_key__ = WATERSHED_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    strategy_key: ClassVar[WatershedMethod | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
     def seed_image(
@@ -1244,10 +1232,6 @@ class CellProfiler4InitialWatershedStrategy(
 ):
     """Build the CP4 module's initial watershed labels before advanced refinement."""
 
-    __registry_key__ = WATERSHED_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    strategy_key: ClassVar[WatershedMethod | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
     def labels(

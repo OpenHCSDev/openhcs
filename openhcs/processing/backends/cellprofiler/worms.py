@@ -181,7 +181,6 @@ class WormLabelOutputStrategy(
     """Own the exact UntangleWorms output topology for one overlap style."""
 
     __registry_key__ = "overlap_style_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "overlap_style"
     overlap_style_label: ClassVar[str | None] = None
     overlap_style: ClassVar[OverlapStyle | None] = None

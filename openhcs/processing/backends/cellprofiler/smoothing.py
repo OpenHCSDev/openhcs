@@ -155,7 +155,6 @@ class SmoothingBackendProviderPolicy(
     """Nominal SSOT for CellProfiler Smooth default backend semantics."""
 
     method: ClassVar[SmoothingMethod]
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def resolve(

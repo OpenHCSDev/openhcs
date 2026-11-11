@@ -43,7 +43,6 @@ class StructuringElementFactory(
     """Create one skimage structuring element for a closed enum case."""
 
     __registry_key__ = "structuring_element_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "structuring_element"
     structuring_element_label: ClassVar[str | None] = None
     structuring_element: ClassVar[StructuringElement | None] = None

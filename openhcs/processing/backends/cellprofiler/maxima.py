@@ -109,7 +109,6 @@ class MaximaInputStrategy(
     """Build the effective maxima source image for one CP exclusion mode."""
 
     __registry_key__ = "exclude_mode_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "exclude_mode"
     exclude_mode: ClassVar[ExcludeMode | None] = None
     exclude_mode_label: ClassVar[str | None] = None
