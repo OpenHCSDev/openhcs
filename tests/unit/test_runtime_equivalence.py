@@ -124,7 +124,7 @@ from openhcs.core.runtime_store.runtime_stores import (
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )

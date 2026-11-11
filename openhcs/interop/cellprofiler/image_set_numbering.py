@@ -54,7 +54,7 @@ class CellProfilerImageSetNumbering:
         paths: Sequence[str],
     ) -> None:
         """Bind actual exporter numbering to its relative bundle paths."""
-        from openhcs.core.steps.abstract import StepExecutionObservation
+        from openhcs.core.steps.step_observation import StepExecutionObservation
 
         # Direct rendering has no active execution observer. Actual FunctionSteps
         # retain their derived export ownership until materialization completes.

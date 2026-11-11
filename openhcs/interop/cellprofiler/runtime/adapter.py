@@ -29,6 +29,9 @@ from openhcs.core.runtime_store.runtime_artifact_values import (
 )
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.measurement_row_materialization import (
+    join_measurement_tables,
+)
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
@@ -447,7 +450,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             MeasurementsArtifactType,
             group_key=group_key,
         )
-        return MeasurementTable.join(
+        return join_measurement_tables(
             name, tuple(cast(MeasurementTable, record.data) for record in records)
         )
 

@@ -41,7 +41,7 @@ from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactLocation,
     RuntimeValueStore,
 )
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.runtime.zmq.zmq_execution_observation import (

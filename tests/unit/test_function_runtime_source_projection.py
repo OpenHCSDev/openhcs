@@ -1,5 +1,5 @@
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.core.steps.function_runtime import (

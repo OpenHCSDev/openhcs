@@ -34,6 +34,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowOwnership,
     MeasurementSparseColumnarRows,
+    joined_measurement_source_provenance,
 )
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
@@ -1203,7 +1204,7 @@ class CellProfilerModuleExecutor:
         if rows_only_declare_object_name:
             image_measurement_source_name = None
         source_metadata = ImagePayloadMetadata(
-            source_provenance=MeasurementTable.joined_source_provenance(
+            source_provenance=joined_measurement_source_provenance(
                 measurement_output_plan.name, tuple(combined_tables)
             )
         )

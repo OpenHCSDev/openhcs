@@ -48,7 +48,7 @@ from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     step_output_manifest,
 )
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.steps.function_outputs import finalize_function_step_outputs
 from openhcs.core.steps.function_runtime import (
     ArtifactPatternGroupExecutionRequest,

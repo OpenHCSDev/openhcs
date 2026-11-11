@@ -28,7 +28,7 @@ from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,

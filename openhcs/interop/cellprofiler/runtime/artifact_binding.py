@@ -26,7 +26,11 @@ from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.measurements.measurement_row_materialization import (
+    shared_measurement_row_axis_domain,
+)
 from openhcs.core.measurements.runtime_measurements import (
+    MeasurementRowAxisField,
     MeasurementTable,
 )
 from openhcs.core.object_labels.runtime_object_labels import (
@@ -38,9 +42,6 @@ from openhcs.core.payload.runtime_slice_alignment import (
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
-)
-from openhcs.core.measurements.runtime_measurements import (
-    MeasurementRowAxisField,
 )
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
@@ -218,7 +219,7 @@ class RuntimeInputBindingRequest:
                     MeasurementsArtifactType,
                 )
             )
-            MeasurementTable.shared_row_axis_domain(spec.name, spec_tables, slice_axis)
+            shared_measurement_row_axis_domain(spec.name, spec_tables, slice_axis)
             tables.extend(spec_tables)
         return tuple(tables)
 

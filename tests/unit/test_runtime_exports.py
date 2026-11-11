@@ -33,7 +33,7 @@ from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
-from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.steps.step_observation import StepExecutionObservation
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
