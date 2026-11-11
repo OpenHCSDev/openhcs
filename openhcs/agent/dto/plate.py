@@ -352,10 +352,7 @@ class PlatePathInspectionRequest(DatasetTarget):
             "plate_path": self.plate_path,
             "source_format": self.source_format,
             "pattern_format": self.pattern_format,
-            "max_sample_files": self.bounds.max_sample_files,
-            "max_component_values": self.bounds.max_component_values,
-            "max_parse_failure_samples": self.bounds.max_parse_failure_samples,
-            "max_files_to_parse": self.bounds.max_files_to_parse,
+            **self.bounds.tool_arguments(),
         }
 
 
